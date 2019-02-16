@@ -6,6 +6,9 @@ import {QueryStore} from "./QueryStore";
 import {computed, action} from "mobx";
 import {parse_search_query, perform_search_single, SearchResult} from "../../lib/textQueryUtils";
 import {cached} from 'mobxpromise';
+import getBrowserWindow from "../../lib/getBrowserWindow";
+
+export const PAN_CAN_SIGNATURE = "pan_can_atlas";
 
 export default class StudyListLogic
 {
@@ -292,6 +295,18 @@ export class FilteredCancerTreeView
 
     }
 
+    @computed get isFiltered(){
+		return this.store.selectedCancerTypeIds.length > 0 || this.store.searchText.length > 0;
+	}
+
+	// this is temporary until we can better configure quick selection
+	// if there are pan can studies and there is no filtering, we want to show quick select button
+	@computed get showQuickSelect(){
+		return !getBrowserWindow().navigator.webdriver &&
+			( _.some(this.store.cancerStudies.result, (study)=>study.studyId.includes(PAN_CAN_SIGNATURE)) &&
+			!this.isFiltered);
+	}
+
     @action toggleAllFiltered(){
 
         const {selectableSelectedStudyIds, selectableSelectedStudies, shownStudies, shownAndSelectedStudies} = this.getSelectionReport();
@@ -305,6 +320,24 @@ export class FilteredCancerTreeView
 
 		this.store.selectableSelectedStudyIds = updatedSelectableSelectedStudyIds.filter(id => !_.includes(this.store.deletedVirtualStudies,id));
 
+    }
+
+    @action selectAllMatchingStudies(str:string){
+
+        const {selectableSelectedStudyIds, selectableSelectedStudies, shownStudies, shownAndSelectedStudies} = this.getSelectionReport();
+
+        // let updatedSelectableSelectedStudyIds:string[] = []
+        // if (shownStudies.length === shownAndSelectedStudies.length) { // deselect
+        //     updatedSelectableSelectedStudyIds = _.without(this.store.selectableSelectedStudyIds, ... shownStudies.map((study:CancerStudy)=>study.studyId));
+        // } else {
+        //     updatedSelectableSelectedStudyIds = _.union(this.store.selectableSelectedStudyIds, shownStudies.map((study:CancerStudy)=>study.studyId));
+        // }
+
+        this.store.selectableSelectedStudyIds = shownStudies
+			.map((study)=>study.studyId)
+			.filter((studyId)=>{
+				return studyId.includes(str);
+			});
     }
 
 	private handleCheckboxStudyIds(clickedStudyIds:string[], checked:boolean)
