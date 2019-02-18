@@ -2023,7 +2023,7 @@
         "tags": [
           "Patients"
         ],
-        "summary": "fetchPatients",
+        "summary": "Fetch patients by ID",
         "operationId": "fetchPatientsUsingPOST",
         "consumes": [
           "application/json"
