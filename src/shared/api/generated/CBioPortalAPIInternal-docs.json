@@ -764,12 +764,12 @@
         }
       }
     },
-    "/molecular-profiles/co-expressions/fetch": {
+    "/molecular-profiles/{molecularProfileId}/co-expressions/fetch": {
       "post": {
         "tags": [
           "Co-Expressions"
         ],
-        "summary": "Calculates correlations between a genetic entity from a specific profile and another profile from the same study",
+        "summary": "Fetch co-expressions in a molecular profile",
         "operationId": "fetchCoExpressionsUsingPOST",
         "consumes": [
           "application/json"
@@ -779,27 +779,28 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileIdA",
-            "in": "query",
-            "description": "Molecular Profile ID from the Genetic Entity referenced in the co-expression filter e.g. acc_tcga_rna_seq_v2_mrna",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "molecularProfileIdB",
-            "in": "query",
-            "description": "Molecular Profile ID (can be the same as molecularProfileIdA) e.g. acc_tcga_rna_seq_v2_mrna",
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
             "required": true,
             "type": "string"
           },
           {
             "in": "body",
             "name": "coExpressionFilter",
-            "description": "List of Sample IDs/Sample List ID and Entrez Gene ID/Gene set ID",
+            "description": "List of Sample IDs/Sample List ID",
             "required": true,
             "schema": {
               "$ref": "#/definitions/CoExpressionFilter"
             }
+          },
+          {
+            "name": "entrezGeneId",
+            "in": "query",
+            "description": "Entrez Gene ID",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
           },
           {
             "name": "threshold",
@@ -1635,9 +1636,8 @@
       "type": "object",
       "required": [
         "cytoband",
-        "geneticEntityId",
-        "geneticEntityName",
-        "geneticEntityType",
+        "entrezGeneId",
+        "hugoGeneSymbol",
         "pValue",
         "spearmansCorrelation"
       ],
@@ -1645,18 +1645,12 @@
         "cytoband": {
           "type": "string"
         },
-        "geneticEntityId": {
-          "type": "string"
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
         },
-        "geneticEntityName": {
+        "hugoGeneSymbol": {
           "type": "string"
-        },
-        "geneticEntityType": {
-          "type": "string",
-          "enum": [
-            "GENE",
-            "GENESET"
-          ]
         },
         "pValue": {
           "type": "number"
@@ -1670,13 +1664,6 @@
     "CoExpressionFilter": {
       "type": "object",
       "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "genesetId": {
-          "type": "string"
-        },
         "sampleIds": {
           "type": "array",
           "items": {
@@ -2000,9 +1987,6 @@
         "value"
       ],
       "properties": {
-        "geneset": {
-          "$ref": "#/definitions/Geneset"
-        },
         "genesetId": {
           "type": "string"
         },
@@ -2013,9 +1997,6 @@
           "type": "string"
         },
         "sampleId": {
-          "type": "string"
-        },
-        "stableId": {
           "type": "string"
         },
         "studyId": {
