@@ -206,6 +206,10 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
         );
     }
 
+    componentDidMount() {
+        onNextRenderFrame(() => this.props.store.pdbChainDataStore.selectFirstChain());
+    }
+
     componentDidUpdate() {
         onNextRenderFrame(()=>{
           if (this.chainDiv) {

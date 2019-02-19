@@ -6,7 +6,7 @@ import ReactSelect from "react-select";
 import {MobxPromise} from "mobxpromise";
 import {computed, IObservableObject, observable, ObservableMap, reaction} from "mobx";
 import _ from "lodash";
-import {OncoprintClinicalAttribute, SortMode} from "../ResultsViewOncoprint";
+import {SortMode} from "../ResultsViewOncoprint";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
@@ -16,10 +16,11 @@ import EditableSpan from "shared/components/editableSpan/EditableSpan";
 import "./styles.scss";
 import ErrorIcon from "../../ErrorIcon";
 import classNames from "classnames";
-import {SpecialAttribute} from "../../../cache/OncoprintClinicalDataCache";
-import autobind from "autobind-decorator";
+import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
 import ClinicalAttributeSelector from "../../clinicalAttributeSelector/ClinicalAttributeSelector";
 import {ResultsViewPageStore} from "../../../../pages/resultsView/ResultsViewPageStore";
+import {ExtendedClinicalAttribute} from "../../../../pages/resultsView/ResultsViewPageStoreUtils";
+import {getNCBIlink} from "../../../api/urls";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -90,7 +91,7 @@ export interface IOncoprintControlsState {
     annotateCOSMICInputValue?:string,
 
     sortMode?:SortMode,
-    clinicalAttributesPromise?:MobxPromise<OncoprintClinicalAttribute[]>,
+    clinicalAttributesPromise?:MobxPromise<ExtendedClinicalAttribute[]>,
     clinicalAttributeSampleCountPromise?:MobxPromise<{[clinicalAttributeId:string]:number}>,
     selectedClinicalAttributeIds?:string[],
     heatmapProfilesPromise?:MobxPromise<MolecularProfile[]>,
@@ -645,7 +646,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     {this.props.state.annotateDriversHotspotsError && <ErrorIcon style={{marginRight:4}} tooltip={<span>Error loading Hotspots data. Please refresh the page or try again later.</span>}/>}
                                     Hotspots
                                     <DefaultTooltip
-                                        overlay={<div style={{maxWidth:"400px"}}>Identified as a recurrent hotspot (statistically significant) in a population-scale cohort of tumor samples of various cancer types using methodology based in part on <a href="http://www.ncbi.nlm.nih.gov/pubmed/26619011" target="_blank">Chang et al., Nat Biotechnol, 2016.</a>
+                                        overlay={<div style={{maxWidth:"400px"}}>Identified as a recurrent hotspot (statistically significant) in a population-scale cohort of tumor samples of various cancer types using methodology based in part on <a href={getNCBIlink('/pubmed/26619011')} target="_blank">Chang et al., Nat Biotechnol, 2016.</a>
                                             Explore all mutations at <a href="http://www.cancerhotspots.org" target="_blank">http://cancerhotspots.org</a></div>}
                                         placement="top"
                                     >
@@ -973,7 +974,6 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         );
     }
 
-    @autobind
     private getSortMenu() {
         if (this.props.oncoprinterMode) {
             return this.getSortMenuOncoprinter();

@@ -1,8 +1,7 @@
 import * as React from "react";
 import {observer} from "mobx-react";
 import {MobxPromise} from "mobxpromise";
-import {OncoprintClinicalAttribute} from "../oncoprint/ResultsViewOncoprint";
-import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {computed, observable} from "mobx";
 import {remoteData} from "../../api/remoteData";
 import _ from "lodash";
@@ -13,6 +12,7 @@ import {makeProfiledInClinicalAttributes} from "../oncoprint/ResultsViewOncoprin
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 import ReactSelect from "react-select";
 import autobind from "autobind-decorator";
+import {ExtendedClinicalAttribute} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 
 export interface IClinicalAttributeSelectorProps {
     store:ResultsViewPageStore;
@@ -71,7 +71,7 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         invoke: ()=>{
             const totalSampleCount = this.props.store.samples.result!.length;
             const clinicalAttributeIdToAvailableSampleCount = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
-            return Promise.resolve(_.reduce(this.sortedClinicalAttributes.result!, (options:{label:string, value:string}[], next:OncoprintClinicalAttribute)=>{
+            return Promise.resolve(_.reduce(this.sortedClinicalAttributes.result!, (options:{label:string, value:string}[], next:ExtendedClinicalAttribute)=>{
                 let sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
                 if (sampleCount === undefined && next.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix)) {
                     // for 'Profiled In' tracks, we have data for all the samples - gene panel data
@@ -132,13 +132,13 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
                 default:
                     // complete
                     disabled = false;
-                    placeholder = "Add clinical tracks..";
+                    placeholder = "Add clinical tracks";
                     options = this.options.result!;
             }
         } else {
             // not loading yet - only load on click
             disabled = false;
-            placeholder = "Add clinical tracks..";
+            placeholder = "Add clinical tracks";
             options = [];
         }
 

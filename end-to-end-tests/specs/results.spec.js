@@ -151,7 +151,7 @@ describe('Results Page', function() {
 
         describe('Lollipop Plot Tracks', () => {
             before(() => {
-                var url = `${CBIOPORTAL_URL}/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&case_ids=&gene_list=TP53&gene_set_choice=user-defined-list&Action=Submit`;
+                var url = `${CBIOPORTAL_URL}/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&case_ids=&gene_list=TP53+PTEN&gene_set_choice=user-defined-list&Action=Submit`;
                 browser.url(url);
                 browser.waitForExist('[data-test=view3DStructure]', 10000);
                 browser.waitForEnabled('[data-test=view3DStructure]', 10000);
@@ -173,6 +173,18 @@ describe('Results Page', function() {
                 browser.elements('.//*[text()[contains(.,"3D Structure")]]').value[0].click();
                 browser.waitForExist("[class=chain-0]", 10000);
             });
+
+            it('keeps tracks selection state when switching to another gene tab', () => {
+                // switch to the PTEN tab
+                browser.click('.tabAnchor_PTEN');
+
+                // check if the selected tracks still exist on this tab
+                browser.waitForExist("[class=cancer-hotspot-0]", 10000);
+                browser.waitForExist("[class=onco-kb-0]", 10000);
+                browser.waitForExist("[class=chain-0]", 10000);
+            });
+
+
         });
 
     });
