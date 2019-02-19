@@ -32,14 +32,16 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}>
 
     @computed get hotspotSpecs(): TrackItemSpec[] {
         if(!_.isEmpty(this.props.store.filteredHotspotsByProteinPosStart)) {
-            return _.keys(this.props.store.filteredHotspotsByProteinPosStart).map(position => ({
-                codon: Number(position),
-                color: "#FF9900",
-                tooltip: hotspotTooltip(
-                    this.props.store.filteredMutationsByPosition[Number(position)],
-                    this.props.store.indexedHotspotData.result || {},
-                    this.props.store.filteredHotspotsByProteinPosStart[Number(position)])
-            }));
+            return _.keys(this.props.store.filteredHotspotsByProteinPosStart)
+                .filter(position => Number(position) >= 0)
+                .map(position => ({
+                    codon: Number(position),
+                    color: "#FF9900",
+                    tooltip: hotspotTooltip(
+                        this.props.store.filteredMutationsByPosition[Number(position)],
+                        this.props.store.indexedHotspotData.result || {},
+                        this.props.store.filteredHotspotsByProteinPosStart[Number(position)])
+                }));
         }
         else {
             return [];
@@ -48,21 +50,23 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}>
 
     @computed get oncoKbSpecs(): TrackItemSpec[] {
         if(!_.isEmpty(this.props.store.filteredOncoKbDataByProteinPosStart)) {
-            return _.keys(this.props.store.filteredOncoKbDataByProteinPosStart).map(position => ({
-                codon: Number(position),
-                color: "#007FFF",
-                tooltip: (
-                    <OncoKbTrackTooltip
-                        mutations={this.props.store.filteredMutationsByPosition[Number(position)]}
-                        indicatorData={this.props.store.filteredOncoKbDataByProteinPosStart[Number(position)]}
-                        oncoKbData={
-                            this.props.store.oncoKbData.result instanceof Error ?
-                                undefined : this.props.store.oncoKbData.result
-                        }
-                        hugoGeneSymbol={this.props.store.gene.hugoGeneSymbol}
-                    />
-                )
-            }));
+            return _.keys(this.props.store.filteredOncoKbDataByProteinPosStart)
+                .filter(position => Number(position) >= 0)
+                .map(position => ({
+                    codon: Number(position),
+                    color: "#007FFF",
+                    tooltip: (
+                        <OncoKbTrackTooltip
+                            mutations={this.props.store.filteredMutationsByPosition[Number(position)]}
+                            indicatorData={this.props.store.filteredOncoKbDataByProteinPosStart[Number(position)]}
+                            oncoKbData={
+                                this.props.store.oncoKbData.result instanceof Error ?
+                                    undefined : this.props.store.oncoKbData.result
+                            }
+                            hugoGeneSymbol={this.props.store.gene.hugoGeneSymbol}
+                        />
+                    )
+                }));
         }
         else {
             return [];
