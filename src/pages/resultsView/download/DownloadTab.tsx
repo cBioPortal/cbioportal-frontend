@@ -25,6 +25,8 @@ import {remoteData} from "../../../shared/api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
+import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
+import ErrorMessage from "../../../shared/components/ErrorMessage";
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -204,9 +206,22 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     readonly sampleMatrix = remoteData<string[][]>({
         await:()=>[this.caseAlterationData],
-        invoke:()=>Promise.resolve(this.caseAlterationData.result!
-            .map(caseAlteration =>
-                [`${caseAlteration.studyId}:${caseAlteration.sampleId}`, caseAlteration.altered ? "1" : "0"]))
+        invoke:()=>{
+            let result : string[][] = [];
+            _.map(this.caseAlterationData.result!, (caseAlteration) => {
+                // if writing the first line, add titles
+                if (_.isEmpty(result)) {
+                    const titleMap = _.keys(caseAlteration.oqlDataByGene);
+                    result.push(['studyID:sampleId', 'Altered', ...titleMap]);
+                }
+                // get altered infomation by gene
+                const genesAlteredData = _.map(caseAlteration.oqlDataByGene, (oqlData) => {
+                    return _.isEmpty(oqlData.alterationTypes) ? "0" : "1";
+                });
+                result.push([`${caseAlteration.studyId}:${caseAlteration.sampleId}`, caseAlteration.altered ? "1" : "0", ...genesAlteredData]);
+            })
+            return Promise.resolve(result);
+        }
     });
 
     readonly sampleMatrixText = remoteData<string>({
@@ -221,70 +236,56 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     });
 
     public render() {
-        const loadingGeneAlterationData =
-            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.status === "pending" ||
-            this.props.store.sequencedSampleKeysByGene.status === "pending";
+        const status = getMobxPromiseGroupStatus(this.downloadableFilesTable, this.geneAlterationData, this.caseAlterationData, this.oqls);
 
-        const errorGeneAlterationData =
-            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.status === "error" ||
-            this.props.store.sequencedSampleKeysByGene.status === "error";
-
-        const loadingCaseAlterationData =
-            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.status === "pending" ||
-            this.props.store.samples.status === "pending" ||
-            this.props.store.coverageInformation.status === "pending";
-
-        const errorCaseAlterationData =
-            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.status === "error" ||
-            this.props.store.samples.status === "error" ||
-            this.props.store.coverageInformation.status === "error";
-
-        const loadingDownloadData = loadingGeneAlterationData ||
-            this.props.store.nonOqlFilteredCaseAggregatedData.status === "pending";
-
-        const errorDownloadData = errorCaseAlterationData ||
-            this.props.store.nonOqlFilteredCaseAggregatedData.status === "error";
-
-        return (
-            <WindowWidthBox data-test="downloadTabDiv" offset={60}>
-                <div className={"tabMessageContainer"}>
-                    <OqlStatusBanner className="download-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
-                </div>
-                <div>
-                    <FeatureTitle
-                        title="Downloadable Data Files"
-                        className="forceHeaderStyle h4"
-                        isLoading={this.downloadableFilesTable.isPending}
-                        style={{marginBottom:15}}
-                    />
-                    {this.downloadableFilesTable.isComplete && this.downloadableFilesTable.result}
-                </div>
-                <hr/>
-                <div className={styles["tables-container"]} data-test="dataDownloadGeneAlterationTable">
-                    <FeatureTitle
-                        title="Gene Alteration Frequency"
-                        isLoading={this.geneAlterationData.isPending}
-                        className="pull-left forceHeaderStyle h4"
-                    />
-                    {this.geneAlterationData.isComplete && (<GeneAlterationTable geneAlterationData={this.geneAlterationData.result} />)}
-                </div>
-                <hr/>
-                <div className={styles["tables-container"]}>
-                    <FeatureTitle
-                        title="Type of Genetic Alterations Across All Samples"
-                        isLoading={this.caseAlterationData.isPending || this.oqls.isPending}
-                        className="pull-left forceHeaderStyle h4"
-                    />
-                    {this.oqls.isComplete && this.caseAlterationData.isComplete && this.props.store.alterationsBySelectedMolecularProfiles.isComplete && (
-                        <CaseAlterationTable
-                            caseAlterationData={this.caseAlterationData.result}
-                            oqls={this.oqls.result}
-                            alterationTypes={this.props.store.alterationsBySelectedMolecularProfiles.result}
-                        />
-                    )}
-                </div>
-            </WindowWidthBox>
-        );
+        switch (status) {
+            case "pending":
+                return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
+            case "error":
+                return <ErrorMessage/>;
+            case "complete":
+            default:
+                return (
+                    <WindowWidthBox data-test="downloadTabDiv" offset={60}>
+                        <div className={"tabMessageContainer"}>
+                            <OqlStatusBanner className="download-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                        </div>
+                        <div>
+                            <FeatureTitle
+                                title="Downloadable Data Files"
+                                className="forceHeaderStyle h4"
+                                isLoading={false}
+                                style={{marginBottom:15}}
+                            />
+                            {this.downloadableFilesTable.isComplete && this.downloadableFilesTable.result}
+                        </div>
+                        <hr/>
+                        <div className={styles["tables-container"]} data-test="dataDownloadGeneAlterationTable">
+                            <FeatureTitle
+                                title="Gene Alteration Frequency"
+                                isLoading={false}
+                                className="pull-left forceHeaderStyle h4"
+                            />
+                            {this.geneAlterationData.isComplete && (<GeneAlterationTable geneAlterationData={this.geneAlterationData.result} />)}
+                        </div>
+                        <hr/>
+                        <div className={styles["tables-container"]}>
+                            <FeatureTitle
+                                title="Type of Genetic Alterations Across All Samples"
+                                isLoading={false}
+                                className="pull-left forceHeaderStyle h4"
+                            />
+                            {this.oqls.isComplete && this.caseAlterationData.isComplete && this.props.store.alterationsBySelectedMolecularProfiles.isComplete && (
+                                <CaseAlterationTable
+                                    caseAlterationData={this.caseAlterationData.result}
+                                    oqls={this.oqls.result}
+                                    alterationTypes={this.props.store.alterationsBySelectedMolecularProfiles.result}
+                                />
+                            )}
+                        </div>
+                    </WindowWidthBox>
+                );
+        }
     }
 
     readonly downloadableFilesTable = remoteData({

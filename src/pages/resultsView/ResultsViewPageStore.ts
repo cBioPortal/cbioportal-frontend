@@ -63,6 +63,7 @@ import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import AccessorsForOqlFilter, {SimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
 import {AugmentedData, CacheData} from "../../shared/lib/LazyMobXCache";
+import {IAlterationData} from "./cancerSummary/CancerSummaryContent";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {
     doesQueryContainMutationOQL,
@@ -87,9 +88,7 @@ import {
     AlterationEnrichment,
     CosmicMutation,
     ExpressionEnrichment,
-    Geneset, 
-    GenesetDataFilterCriteria,
-    GenesetMolecularData
+    Geneset, GenesetDataFilterCriteria
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
@@ -113,6 +112,7 @@ import {
     isRNASeqProfile,
     getSampleAlteredMap, makeEnrichmentDataPromise, fetchPatients
 } from "./ResultsViewPageStoreUtils";
+import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 import {
     isSampleProfiledInMultiple
@@ -120,7 +120,7 @@ import {
 import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl} from "../../shared/api/urls";
 import url from "url";
-import OncoprintClinicalDataCache, {SpecialAttribute} from "../../shared/cache/OncoprintClinicalDataCache";
+import ClinicalDataCache, {SpecialAttribute} from "../../shared/cache/ClinicalDataCache";
 import {getDefaultMolecularProfiles} from "../../shared/lib/getDefaultMolecularProfiles";
 import {getProteinPositionFromProteinChange} from "../../shared/lib/ProteinChangeUtils";
 import {isMutation} from "../../shared/lib/CBioPortalAPIUtils";
@@ -132,8 +132,7 @@ import {
     populateSampleSpecificationsFromVirtualStudies, ResultsViewTab,
     substitutePhysicalStudiesForVirtualStudies
 } from "./ResultsViewPageHelpers";
-import {filterAndSortProfiles, getGenesetProfiles,
-    sortRnaSeqProfilesToTop} from "./coExpression/CoExpressionTabUtils";
+import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
 import {makeProfiledInClinicalAttributes} from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
@@ -185,11 +184,6 @@ export enum SampleListCategoryType {
     "w_mut"="w_mut",
     "w_cna"="w_cna",
     "w_mut_cna"="w_mut_cna"
-}
-
-export enum GeneticEntityType {
-    "GENE"="gene",
-    "GENESET"="geneset"
 }
 
 export const SampleListCategoryTypeToFullId = {
@@ -253,14 +247,6 @@ export interface IQueriedMergedTrackCaseData {
     cases: CaseAggregatedData<AnnotatedExtendedAlteration>;
     oql: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>;
     mergedTrackOqlList?: IQueriedCaseData<object>[];
-}
-
-export type GeneticEntity = {
-    geneticEntityName: string, // hugo gene symbol for gene, gene set name for geneset
-    geneticEntityType: GeneticEntityType,
-    geneticEntityId: string|number, //entrezGeneId (number) for "gene", genesetId (string) for "geneset"
-    cytoband: string, //will be "" for "geneset"
-    geneticEntityData: Gene|Geneset
 }
 
 export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold: number, rppaScoreThreshold: number) {
@@ -771,8 +757,7 @@ export class ResultsViewPageStore {
 
     readonly coexpressionTabMolecularProfiles = remoteData<MolecularProfile[]>({
         await:()=>[this.molecularProfilesWithData],
-        invoke:()=>Promise.resolve(sortRnaSeqProfilesToTop(filterAndSortProfiles(this.molecularProfilesWithData.result!).
-            concat(getGenesetProfiles(this.molecularProfilesWithData.result!))))
+        invoke:()=>Promise.resolve(filterAndSortProfiles(this.molecularProfilesWithData.result!))
     });
 
     readonly isThereDataForCoExpressionTab = remoteData<boolean>({
@@ -1598,6 +1583,8 @@ export class ResultsViewPageStore {
                         () => (this.mutationsByGene[gene.hugoGeneSymbol] || []),
                         () => (this.mutationCountCache),
                         () => (this.genomeNexusCache),
+                        () => (this.discreteCNACache),
+                        this.studyToMolecularProfileDiscrete.result!,
                         this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
@@ -1621,7 +1608,13 @@ export class ResultsViewPageStore {
     }
 
     readonly oncoKbAnnotatedGenes = remoteData({
-        invoke:()=>fetchOncoKbAnnotatedGenesSuppressErrors()
+        invoke: () => {
+            if (AppConfig.serverConfig.show_oncokb) {
+                return fetchOncoKbAnnotatedGenesSuppressErrors();
+            } else {
+                return Promise.resolve({});
+            }
+        }
     }, {});
 
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>({
@@ -2130,25 +2123,6 @@ export class ResultsViewPageStore {
         },
         onResult:(genesets:Geneset[])=>{
             this.genesetCache.addData(genesets);
-        }
-    });
-
-    readonly geneticEntities = remoteData<GeneticEntity[]>({
-        await: ()=>[
-            this.genes,
-            this.genesets
-        ],
-        invoke: () => {
-            const res: GeneticEntity[] = [];
-            for (const gene of this.genes.result!) {
-                res.push({geneticEntityName: gene.hugoGeneSymbol, geneticEntityType: GeneticEntityType.GENE, 
-                    geneticEntityId: gene.entrezGeneId, cytoband: gene.cytoband, geneticEntityData: gene});
-            }
-            for (const geneset of this.genesets.result!) {
-                res.push({geneticEntityName: geneset.name, geneticEntityType: GeneticEntityType.GENESET, 
-                    geneticEntityId: geneset.genesetId, cytoband: "-", geneticEntityData: geneset});
-            }
-            return Promise.resolve(res);
         }
     });
 
@@ -2906,28 +2880,6 @@ export class ResultsViewPageStore {
         )
     });
 
-    public numericGenesetMolecularDataCache = new MobxPromiseCache<{genesetId:string, molecularProfileId:string}, GenesetMolecularData[]>(
-        q=>({
-            await: ()=>[
-                this.molecularProfileIdToDataQueryFilter
-            ],
-            invoke: ()=>{
-                const dqf = this.molecularProfileIdToDataQueryFilter.result![q.molecularProfileId];
-                if (dqf) {
-                    return internalClient.fetchGeneticDataItemsUsingPOST({
-                        geneticProfileId: q.molecularProfileId,
-                        genesetDataFilterCriteria: {
-                            genesetIds: [q.genesetId],
-                            ...dqf
-                        } as GenesetDataFilterCriteria
-                    });
-                } else {
-                    return Promise.resolve([]);
-                }
-            }
-        })
-    );
-
     readonly genesetCorrelatedGeneCache = remoteData({
         await:() => [
             this.molecularProfileIdToDataQueryFilter
@@ -2969,25 +2921,7 @@ export class ResultsViewPageStore {
         })
     );
 
-    public clinicalDataCache = new MobxPromiseCache<ClinicalAttribute, ClinicalData[]>(
-        attr=>({
-            await:()=>[
-                this.samples,
-                this.patients
-            ],
-            invoke:()=>client.fetchClinicalDataUsingPOST({
-                clinicalDataType: attr.patientAttribute ? "PATIENT" : "SAMPLE",
-                clinicalDataMultiStudyFilter: {
-                    attributeIds: [attr.clinicalAttributeId],
-                    identifiers: attr.patientAttribute ?
-                        this.patients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
-                        this.samples.result!.map(s=>({entityId:s.sampleId, studyId:s.studyId}))
-                }
-            })
-        })
-    );
-
-    public oncoprintClinicalDataCache = new OncoprintClinicalDataCache(
+    public clinicalDataCache = new ClinicalDataCache(
         this.samples,
         this.patients,
         this.studyToMutationMolecularProfile,

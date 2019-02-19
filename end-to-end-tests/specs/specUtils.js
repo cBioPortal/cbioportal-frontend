@@ -78,12 +78,12 @@ const useExternalFrontend = !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRON
 
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
 
-function waitForNetworkQuiet(){
+function waitForNetworkQuiet(timeout){
     browser.waitUntil(()=>{
         return browser.execute(function(){
             return window.ajaxQuiet === true;
         }).value == true
-    });
+    }, timeout);
 }
 
 function toStudyViewSummaryTab() {
@@ -121,6 +121,10 @@ function getNumberOfStudyViewCharts() {
     return browser.elements('div.react-grid-item').value.length;
 }
 
+function setInputText(selector, text){
+    browser.setValue(selector, '\uE003'.repeat(browser.getValue(selector).length) + text);
+}
+
 module.exports = {
     waitForOncoprint: waitForOncoprint,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
@@ -135,5 +139,6 @@ module.exports = {
     getTextFromElement: getTextFromElement,
     getNumberOfStudyViewCharts: getNumberOfStudyViewCharts,
     setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen,
-    getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements
+    getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements,
+    setInputText: setInputText,
 };
