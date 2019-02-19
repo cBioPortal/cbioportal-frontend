@@ -30,7 +30,7 @@ import {CoverageInformation, isPanCanStudy, isTCGAProvStudy} from "../ResultsVie
 import {sleep} from "../../../shared/lib/TimeUtils";
 import {
     CNA_STROKE_WIDTH,
-    getCnaQueries, IBoxScatterPlotPoint, INumberAxisData, IScatterPlotData, IScatterPlotSampleData, IStringAxisData,
+    getCnaQueries, IBoxScatterPlotPoint, INumberAxisData, IScatterPlotData, IPlotSampleData, IStringAxisData,
     makeBoxScatterPlotData, makeScatterPlotPointAppearance,
     mutationRenderPriority, MutationSummary, mutationSummaryToAppearance, scatterPlotLegendData,
     scatterPlotTooltip, boxPlotTooltip, scatterPlotZIndexSortBy
@@ -45,7 +45,7 @@ import {MobxPromise} from "mobxpromise";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
-import {ViewType} from "../plots/PlotsTab";
+import {ViewType, PlotType} from "../plots/PlotsTab";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import {maxPage} from "../../../shared/components/lazyMobXTable/utils";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
@@ -402,7 +402,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed get fill() {
         if (this.showCna || this.showMutations) {
-            return (d:IScatterPlotSampleData)=>this.scatterPlotAppearance(d).fill!;
+            return (d:IPlotSampleData)=>this.scatterPlotAppearance(d).fill!;
         } else {
             return mutationSummaryToAppearance[MutationSummary.Neither].fill;
         }
@@ -426,12 +426,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @autobind
-    private strokeOpacity(d:IScatterPlotSampleData) {
+    private strokeOpacity(d:IPlotSampleData) {
         return this.scatterPlotAppearance(d).strokeOpacity;
     }
 
     @autobind
-    private stroke(d:IScatterPlotSampleData) {
+    private stroke(d:IPlotSampleData) {
         return this.scatterPlotAppearance(d).stroke;
     }
 
@@ -468,7 +468,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get zIndexSortBy() {
-        return scatterPlotZIndexSortBy<IScatterPlotSampleData>(
+        return scatterPlotZIndexSortBy<IPlotSampleData>(
             this.viewType
         );
     }
@@ -502,7 +502,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         strokeWidth={this.strokeWidth}
                         useLogSpaceTicks={true}
                         legendData={scatterPlotLegendData(
-                            _.flatten(this.boxPlotData.result.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.driverAnnotationSettings.driversAnnotated
+                            _.flatten(this.boxPlotData.result.map(d=>d.data)), this.viewType, PlotType.BoxPlot, this.mutationDataExists, this.cnaDataExists, this.props.store.driverAnnotationSettings.driversAnnotated
                         )}
                         legendLocationWidthThreshold={900}
                         boxCalculationFilter={this.boxCalculationFilter}

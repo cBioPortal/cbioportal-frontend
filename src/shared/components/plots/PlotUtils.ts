@@ -2,6 +2,8 @@ import _ from "lodash";
 
 import Timer = NodeJS.Timer;
 import jStat from "jStat";
+import { IBaseScatterPlotData } from "./ScatterPlot";
+import { IPlotSampleData } from "pages/resultsView/plots/PlotsTabUtils";
 export function getDeterministicRandomNumber(seed:number, range?:[number, number]) {
     // source: https://stackoverflow.com/a/23304189
     seed = Math.sin(seed)*10000;
@@ -167,6 +169,7 @@ export function separateScatterDataByAppearance<D>(
     strokeWidth:number | ((d:D)=>number),
     strokeOpacity:number | ((d:D)=>number),
     fillOpacity:number | ((d:D)=>number),
+    symbol:string | ((d:D)=>string),
     zIndexSortBy?:((d:D)=>any)[] // second argument to _.sortBy
 ):{
     data:D[],
@@ -174,7 +177,8 @@ export function separateScatterDataByAppearance<D>(
     stroke:string,
     strokeWidth:number,
     strokeOpacity:number,
-    fillOpacity:number
+    fillOpacity:number,
+    symbol:string
 }[] {
     let buckets:{
         data:D[],
@@ -183,11 +187,12 @@ export function separateScatterDataByAppearance<D>(
         strokeWidth:number,
         strokeOpacity:number,
         fillOpacity:number,
+        symbol:string,
         sortBy:any[]
     }[] = [];
 
     let d_fill:string, d_stroke:string, d_strokeWidth:number, d_strokeOpacity:number, d_fillOpacity:number,
-        d_sortBy:any[], bucketFound:boolean;
+        d_symbol:string, d_sortBy:any[], bucketFound:boolean;
 
     for (const datum of data) {
         // compute appearance for datum
@@ -196,6 +201,7 @@ export function separateScatterDataByAppearance<D>(
         d_strokeWidth = (typeof strokeWidth === "function" ? strokeWidth(datum) : strokeWidth);
         d_strokeOpacity = (typeof strokeOpacity === "function" ? strokeOpacity(datum) : strokeOpacity);
         d_fillOpacity = (typeof fillOpacity === "function" ? fillOpacity(datum) : fillOpacity);
+        d_symbol = (typeof symbol === "function" ? symbol(datum) : symbol);
         d_sortBy = (zIndexSortBy ? zIndexSortBy.map(f=>f(datum)) : [1]);
 
         // look for existing bucket to put datum
@@ -203,7 +209,7 @@ export function separateScatterDataByAppearance<D>(
         for (const bucket of buckets) {
             if (bucket.fill === d_fill && bucket.stroke === d_stroke && bucket.strokeWidth === d_strokeWidth &&
                     bucket.strokeOpacity === d_strokeOpacity && bucket.fillOpacity === d_fillOpacity &&
-                    _.isEqual(bucket.sortBy, d_sortBy)) {
+                    bucket.symbol === d_symbol && _.isEqual(bucket.sortBy, d_sortBy)) {
                 // if bucket with matching appearance exists, add to bucket
                 bucket.data.push(datum);
                 // mark bucket has been found so we dont need to add a bucket
@@ -217,7 +223,7 @@ export function separateScatterDataByAppearance<D>(
                 data: [datum],
                 fill: d_fill, stroke: d_stroke, strokeWidth: d_strokeWidth,
                 strokeOpacity: d_strokeOpacity, fillOpacity: d_fillOpacity,
-                sortBy: d_sortBy
+                symbol: d_symbol, sortBy: d_sortBy
             });
         }
     }
@@ -247,4 +253,11 @@ export function computeCorrelationPValue(correlation:number, numSamples:number) 
     } else {
         return null;
     }
+}
+
+export function dataPointIsTruncated(point:IPlotSampleData) {
+    let o = (point.xtruncation !== undefined && point.xtruncation !== "")
+    || (point.ytruncation !== undefined && point.ytruncation !== "")
+    || (point.truncation !== undefined && point.truncation !== "");
+    return o;
 }

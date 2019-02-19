@@ -78,8 +78,10 @@ import {MergedGeneQuery} from '../../shared/lib/oql/oql-parser';
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GenesetCorrelatedGeneCache from "../../shared/cache/GenesetCorrelatedGeneCache";
+import TreatmentMolecularDataCache from "../../shared/cache/TreatmentMolecularDataCache";
 import GeneCache from "../../shared/cache/GeneCache";
 import GenesetCache from "../../shared/cache/GenesetCache";
+import TreatmentCache from "../../shared/cache/TreatmentCache";
 import {IHotspotIndex} from "../../shared/model/CancerHotspots";
 import {IOncoKbData} from "../../shared/model/OncoKB";
 import {generateQueryVariantId} from "../../shared/lib/OncoKbUtils";
@@ -89,7 +91,8 @@ import {
     ExpressionEnrichment,
     Geneset, 
     GenesetDataFilterCriteria,
-    GenesetMolecularData
+    GenesetMolecularData,
+    Treatment
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
@@ -155,7 +158,8 @@ export const AlterationTypeConstants = {
     PROTEIN_LEVEL: 'PROTEIN_LEVEL',
     FUSION: 'FUSION',
     GENESET_SCORE: 'GENESET_SCORE',
-    METHYLATION: 'METHYLATION'
+    METHYLATION: 'METHYLATION',
+    TREATMENT_RESPONSE: 'TREATMENT_RESPONSE'
 };
 
 export const AlterationTypeDisplayConstants = {
@@ -810,7 +814,8 @@ export class ResultsViewPageStore {
             this.molecularProfilesInStudies,
             this.studyToDataQueryFilter,
             this.genes,
-            this.genesets
+            this.genesets,
+            this.treatments
         ],
         invoke:async()=>{
             const ret:MolecularProfile[] = [];
@@ -844,7 +849,9 @@ export class ResultsViewPageStore {
                             ret.push(profile);
                         }
                     }));
-                } else if (profile.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE) {
+                } else if (profile.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE
+                            || profile.molecularAlterationType === AlterationTypeConstants.TREATMENT_RESPONSE
+                    ) {
                     // geneset profile, we dont have the META projection for geneset data, so just add it
                     /*promises.push(internalClient.fetchGeneticDataItemsUsingPOST({
                         geneticProfileId: molecularProfileId,
@@ -1968,6 +1975,7 @@ export class ResultsViewPageStore {
             const MRNA_EXPRESSION = AlterationTypeConstants.MRNA_EXPRESSION;
             const PROTEIN_LEVEL = AlterationTypeConstants.PROTEIN_LEVEL;
             const METHYLATION = AlterationTypeConstants.METHYLATION;
+            const TREATMENT_RESPONSE = AlterationTypeConstants.TREATMENT_RESPONSE;
             const selectedMolecularProfileIds = stringListToSet(
                 this.selectedMolecularProfiles.result!.map((profile)=>profile.molecularProfileId)
             );
@@ -1975,12 +1983,13 @@ export class ResultsViewPageStore {
             const expressionHeatmaps = _.sortBy(
                 _.filter(this.molecularProfilesInStudies.result!, profile=>{
                     return ((profile.molecularAlterationType === MRNA_EXPRESSION ||
-                        profile.molecularAlterationType === PROTEIN_LEVEL) && profile.showProfileInAnalysisTab) ||
-                        profile.molecularAlterationType === METHYLATION;
+                        profile.molecularAlterationType === PROTEIN_LEVEL ||
+                        profile.molecularAlterationType === TREATMENT_RESPONSE) && profile.showProfileInAnalysisTab) ||
+                        profile.molecularAlterationType === METHYLATION
                     }
                 ),
                 profile=>{
-                    // Sort order: selected and [mrna, protein, methylation], unselected and [mrna, protein, meth]
+                    // Sort order: selected and [mrna, protein, methylation, treatment], unselected and [mrna, protein, meth, treatment]
                     if (profile.molecularProfileId in selectedMolecularProfileIds) {
                         switch (profile.molecularAlterationType) {
                             case MRNA_EXPRESSION:
@@ -1989,6 +1998,8 @@ export class ResultsViewPageStore {
                                 return 1;
                             case METHYLATION:
                                 return 2;
+                            case TREATMENT_RESPONSE:
+                                return 3;
                         }
                     } else {
                         switch(profile.molecularAlterationType) {
@@ -1998,6 +2009,8 @@ export class ResultsViewPageStore {
                                 return 4;
                             case METHYLATION:
                                 return 5;
+                            case TREATMENT_RESPONSE:
+                                return 6;
                         }
                     }
                 }
@@ -2165,6 +2178,28 @@ export class ResultsViewPageStore {
                     geneticEntityId: geneset.genesetId, cytoband: "-", geneticEntityData: geneset});
             }
             return Promise.resolve(res);
+
+        }
+    });
+
+    readonly treatments = remoteData<Treatment[]>({
+        invoke: () => {
+            if (this.rvQuery.treatmentIds && this.rvQuery.treatmentIds.length > 0) {
+                return internalClient.fetchTreatmentsUsingPOST({treatmentIds: this.rvQuery.treatmentIds.slice()});
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+        onResult:(treatments:Treatment[])=>{
+            this.treatmentCache.addData(treatments);
+        }
+    });
+    
+    readonly selectedTreatments = remoteData<Treatment[]>({
+        await: ()=>[this.treatments],
+        invoke: () => {
+            const treatmentIdFromUrl =  this.rvQuery.treatmentIds;
+            return Promise.resolve(_.filter(this.treatments.result!, (d:Treatment) => treatmentIdFromUrl.includes(d.treatmentId)));
         }
     });
 
@@ -2971,12 +3006,27 @@ export class ResultsViewPageStore {
         )
     });
 
+    readonly treatmentMolecularDataCache = remoteData({
+        await:() => [
+            this.molecularProfileIdToDataQueryFilter
+        ],
+        invoke: () => Promise.resolve(
+            new TreatmentMolecularDataCache(
+                this.molecularProfileIdToDataQueryFilter.result!
+            )
+        )
+    });
+
     @cached get geneCache() {
         return new GeneCache();
     }
 
     @cached get genesetCache() {
         return new GenesetCache();
+    }
+
+    @cached get treatmentCache() {
+        return new TreatmentCache();
     }
 
     public numericGeneMolecularDataCache = new MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>(

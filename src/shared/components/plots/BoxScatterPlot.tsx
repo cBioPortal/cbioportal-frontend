@@ -451,6 +451,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
             ifndef(this.props.strokeWidth, 0),
             ifndef(this.props.strokeOpacity, 1),
             ifndef(this.props.fillOpacity, 1),
+            ifndef(this.props.symbol, "circle"),
             this.props.zIndexSortBy
         );
     }
@@ -607,7 +608,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                             />
                             {this.scatterPlotData.map(dataWithAppearance=>(
                                 <VictoryScatter
-                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity}`}
+                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
                                     style={{
                                         data: {
                                             fill: dataWithAppearance.fill,
@@ -618,7 +619,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                                         }
                                     }}
                                     size={this.scatterPlotSize}
-                                    symbol={this.props.symbol || "circle"}
+                                    symbol={dataWithAppearance.symbol}
                                     data={dataWithAppearance.data}
                                     events={this.mouseEvents}
                                     x={this.scatterPlotX}

@@ -1,3 +1,4 @@
+import _ from "lodash";
 import * as React from "react";
 import {observer, Observer} from "mobx-react";
 import bind from "bind-decorator";
@@ -9,12 +10,14 @@ import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import ifndef from "shared/lib/ifndef";
 import {tickFormatNumeral} from "./TickUtils";
-import {computeCorrelationPValue, makeScatterPlotSizeFunction, separateScatterDataByAppearance} from "./PlotUtils";
+import {computeCorrelationPValue, makeScatterPlotSizeFunction, separateScatterDataByAppearance, dataPointIsTruncated} from "./PlotUtils";
 import {toConditionalPrecision} from "../../lib/NumberUtils";
 
 export interface IBaseScatterPlotData {
     x:number;
     y:number;
+    xtruncation?:string;
+    ytruncation?:string;
 }
 
 export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
@@ -40,6 +43,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     }
     logX?:boolean;
     logY?:boolean;
+    excludeTruncatedValuesFromCalculation?:boolean;
     useLogSpaceTicks?:boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
     axisLabelX?:string;
     axisLabelY?:string;
@@ -193,9 +197,18 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     @computed get splitData() {
+
+        // when truncated values are shown in the legend, exclude
+        // these points from calculations of correlation coefficients
+        // TODO: decide whether this is the correct logic
+        let data = this.props.excludeTruncatedValuesFromCalculation?
+            _.filter(this.props.data, dataPointIsTruncated)
+            :
+            this.props.data;
+
         const x = [];
         const y = [];
-        for (const d of this.props.data) {
+        for (const d of data) {
             x.push(d.x);
             y.push(d.y);
         }
@@ -318,15 +331,17 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     @computed get data() {
-        return separateScatterDataByAppearance(
+        let o = separateScatterDataByAppearance(
             this.props.data,
             ifndef(this.props.fill, "0x000000"),
             ifndef(this.props.stroke, "0x000000"),
             ifndef(this.props.strokeWidth, 0),
             ifndef(this.props.strokeOpacity, 1),
             ifndef(this.props.fillOpacity, 1),
+            ifndef(this.props.symbol, "circle"),
             this.props.zIndexSortBy
         );
+        return o;
     }
 
 
@@ -385,7 +400,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                             />
                             { this.data.map(dataWithAppearance=>(
                                 <VictoryScatter
-                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity}`}
+                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
                                     style={{
                                         data: {
                                             fill: dataWithAppearance.fill,
@@ -396,7 +411,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                         }
                                     }}
                                     size={this.size}
-                                    symbol={this.props.symbol || "circle"}
+                                    symbol={dataWithAppearance.symbol}
                                     data={dataWithAppearance.data}
                                     events={this.mouseEvents}
                                     x={this.x}

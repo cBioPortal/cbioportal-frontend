@@ -36,8 +36,27 @@
       border-radius:4px;
     }
 
+    .btn.sort-order {
+      margin-right: 10px;
+      padding: 4px 9px;
+    }
+    
+    i.horizontal-axis {
+      transform: rotate(-90deg) scaleY(-1);
+    }
+
+    i.horz-descending {
+      transform: rotate(-90deg) scaleY(-1) scaleX(-1);
+    }
+
+    i.horz-ascending {
+      transform: rotate(-90deg) scaleY(-1);
+    }
+
+    i.vert-descending {
+      transform: scaleX(-1);
+    }
+
   }
-
-
 
 }
