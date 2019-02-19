@@ -42,6 +42,7 @@ export default class ChromosomeColumnFormatter
     {
         if (data.length > 0) {
             return data[0].chr;
+            return data[0].gene.chromosome;
         } else {
             return null;
         }

@@ -199,4 +199,5 @@ export default class AlleleFreqColumnFormatter {
 
         return false;
     }
+
 }
