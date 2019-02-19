@@ -46,8 +46,13 @@ const COLUMNS = [
         width:"30%"
     },
     makeNumberColumn(SPEARMANS_CORRELATION_COLUMN_NAME, "spearmansCorrelation", true, false),
-    makeNumberColumn(P_VALUE_COLUMN_NAME, "pValue", false, false),
-    Object.assign(makeNumberColumn(Q_VALUE_COLUMN_NAME, "qValue", false, true), {sortBy:(d:CoExpression) => [d.qValue, d.pValue]}),
+    Object.assign(makeNumberColumn(P_VALUE_COLUMN_NAME, "pValue", false, false), {
+        tooltip:<span>Derived from 2-sided t-test.</span>
+    }),
+    Object.assign(makeNumberColumn(Q_VALUE_COLUMN_NAME, "qValue", false, true), {
+        sortBy:(d:CoExpression) => [d.qValue, d.pValue],
+        tooltip:<span>Derived from Benjamini-Hochberg FDR correction procedure.</span>
+    })
 ];
 
 function makeNumberColumn(name:string, key:keyof CoExpression, colorByValue:boolean, formatSignificance: boolean) {
