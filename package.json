@@ -202,6 +202,7 @@
     "react-zeroclipboard": "^3.2.2",
     "reactable": "^0.14.1",
     "recompose": "^0.22.0",
+    "regression": "^2.0.1",
     "render-if": "^0.1.1",
     "reselect": "^2.5.4",
     "resolve-url-loader": "^1.6.1",
