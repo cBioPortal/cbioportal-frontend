@@ -37,9 +37,9 @@ export default class ExonColumnFormatter {
         } else if (genomeNexusCacheData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            let exonData = ExonColumnFormatter.getData(genomeNexusCacheData.data);
-            if (exonData == null) {
-                return exonData;
+            const exonData = ExonColumnFormatter.getData(genomeNexusCacheData.data);
+            if (!exonData) {
+                return null;
             }
             else {
                 return (

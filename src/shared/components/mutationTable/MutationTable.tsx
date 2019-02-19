@@ -120,7 +120,8 @@ export enum MutationTableColumnType {
     CANCER_TYPE,
     NUM_MUTATIONS,
     EXON,
-    HGVSC
+    HGVSC,
+    GENOME_NEXUS
 }
 
 type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=>boolean};
@@ -525,6 +526,17 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             name: "HGVSc",
             render: (d:Mutation[]) => (this.props.genomeNexusCache
                 ? HgvscColumnFormatter.renderFunction(d, this.props.genomeNexusCache)
+                : <span></span>),
+            download: (d:Mutation[]) => HgvscColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
+            sortBy: (d:Mutation[]) => HgvscColumnFormatter.getSortValue(d, this.props.genomeNexusCache as GenomeNexusCache),
+            visible: false,
+            align: "right"
+        };
+
+        this._columns[MutationTableColumnType.GENOME_NEXUS] = {
+            name: "Genome Nexus",
+            render: (d:Mutation[]) => (this.props.genomeNexusCache
+                ? <a target="_blank" href={`https://www.genomenexus.org/beta/annotation/genomic/${d[0].gene.chromosome},${d[0].startPosition},${d[0].endPosition},${d[0].referenceAllele},${d[0].variantAllele}?fields=annotation_summary,mutation_assessor&isoformOverrideSource=uniprot`}>GN</a>
                 : <span></span>),
             download: (d:Mutation[]) => HgvscColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
             sortBy: (d:Mutation[]) => HgvscColumnFormatter.getSortValue(d, this.props.genomeNexusCache as GenomeNexusCache),

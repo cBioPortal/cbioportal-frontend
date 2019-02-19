@@ -298,7 +298,7 @@ export function extractGenomicLocation(mutation: Mutation)
 
 export function genomicLocationString(genomicLocation: GenomicLocation)
 {
-    return `${genomicLocation.chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele},${genomicLocation.variantAllele}`;
+    return `${genomicLocation.chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele.substring(0,255)},${genomicLocation.variantAllele}`;
 }
 
 export function uniqueGenomicLocations(mutations: Mutation[]): GenomicLocation[]
