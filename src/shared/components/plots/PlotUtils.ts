@@ -174,7 +174,7 @@ export function separateScatterDataByAppearance<D>(
     stroke:string,
     strokeWidth:number,
     strokeOpacity:number,
-    fillOpacity:number
+    fillOpacity:number,
 }[] {
     let buckets:{
         data:D[],
@@ -187,7 +187,7 @@ export function separateScatterDataByAppearance<D>(
     }[] = [];
 
     let d_fill:string, d_stroke:string, d_strokeWidth:number, d_strokeOpacity:number, d_fillOpacity:number,
-        d_sortBy:any[], bucketFound:boolean;
+        d_symbol:string, d_sortBy:any[], bucketFound:boolean;
 
     for (const datum of data) {
         // compute appearance for datum
@@ -247,4 +247,11 @@ export function computeCorrelationPValue(correlation:number, numSamples:number) 
     } else {
         return null;
     }
+}
+
+export function dataPointIsTruncated(point:any) {
+    let o = (point.xtruncation !== undefined && point.xtruncation !== "")
+    || (point.ytruncation !== undefined && point.ytruncation !== "")
+    || (point.truncation !== undefined && point.truncation !== "");
+    return o;
 }

@@ -383,7 +383,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                 axisLabelComponent={<VictoryLabel dy={-35}/>}
                                 label={this.props.axisLabelY}
                             />
-                            { this.data.map(dataWithAppearance=>(
+                            { this.data.map( (dataWithAppearance:any)=>(
                                 <VictoryScatter
                                     key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity}`}
                                     style={{

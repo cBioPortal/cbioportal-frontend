@@ -1,10 +1,11 @@
-import Oncoprint, {ClinicalTrackSpec, GeneticTrackSpec, IGeneHeatmapTrackSpec} from "./Oncoprint";
+import Oncoprint, {ClinicalTrackSpec, GeneticTrackSpec, IHeatmapTrackSpec, IGenesetHeatmapTrackSpec, IBaseHeatmapTrackSpec} from "./Oncoprint";
 import fileDownload from "react-file-download";
 
 export default function tabularDownload(
     geneticTracks:GeneticTrackSpec[],
     clinicalTracks:ClinicalTrackSpec[],
-    heatmapTracks:IGeneHeatmapTrackSpec[],
+    heatmapTracks: IHeatmapTrackSpec[],
+    genesetTracks: IGenesetHeatmapTrackSpec[],
     uidOrder:string[],
     getCaseId:(uid:string)=>string,
     columnMode:"sample"|"patient",
@@ -131,7 +132,8 @@ export default function tabularDownload(
     }
 
     //Add heatmap data
-    for (const heatmapTrack of heatmapTracks) {
+    const exportedHeatmapTracks = (heatmapTracks as IBaseHeatmapTrackSpec[]).concat(genesetTracks as IBaseHeatmapTrackSpec[]);
+    for (const heatmapTrack of exportedHeatmapTracks) {
         const currentHeatmapGene = heatmapTrack.label;
         const currentHeatmapType = "HEATMAP "+heatmapTrack.molecularAlterationType+' '+ heatmapTrack.datatype;
         const currentHeatmapTrackData = heatmapTrack.data;

@@ -15,6 +15,7 @@ export class ResultsViewQuery {
     @observable public _rppaScoreThreshold:number|undefined;
     @observable public _zScoreThreshold:number|undefined;
     @observable public genesetIds:string[] = [];
+    @observable public treatmentIds:string[] = [];
     @observable public cohortIdsList:string[] = [];//queried id(any combination of physical and virtual studies)
     @observable public oqlQuery:string = "";
 
@@ -100,6 +101,14 @@ export function updateResultsViewQuery(
         const parsedGeneSetList = urlQuery.geneset_list.trim().length ? (urlQuery.geneset_list.trim().split(/\s+/)) : [];
         if (!_.isEqual(parsedGeneSetList, rvQuery.genesetIds)) {
             rvQuery.genesetIds = parsedGeneSetList;
+        }
+    }
+
+    if (urlQuery.treatment_list) {
+        // we have to trim because for some reason we get a single space from submission
+        const parsedTreatmentList = urlQuery.treatment_list.trim().length ? (urlQuery.treatment_list.trim().split(/;/)) : [];
+        if (!_.isEqual(parsedTreatmentList, rvQuery.treatmentIds)) {
+            rvQuery.treatmentIds = parsedTreatmentList;
         }
     }
 

@@ -9,7 +9,7 @@ import OncoprintJS from "oncoprintjs";
 import {
     CLINICAL_TRACK_GROUP_INDEX,
     GENETIC_TRACK_GROUP_INDEX,
-    IGeneHeatmapTrackSpec,
+    IHeatmapTrackSpec,
     IOncoprintProps
 } from "./Oncoprint";
 
