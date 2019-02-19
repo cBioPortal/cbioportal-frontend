@@ -25,7 +25,6 @@ import * as React from 'react';
 import DefaultTooltip from '../defaultTooltip/DefaultTooltip';
 import { observer } from 'mobx-react';
 import { observable, computed } from "mobx";
-//import { JsonToTable } from 'react-json-to-table';
 import './StudyTagsTooltip.scss';
 import { remoteData } from '../../api/remoteData';
 import client from "shared/api/cbioportalClientInstance";

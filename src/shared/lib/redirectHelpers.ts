@@ -7,12 +7,18 @@ import {StudyViewURLQuery} from "../../pages/studyView/StudyViewPageStore";
 
 export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStore }){
 
+    const win = getBrowserWindow();
+
     const key = injected.routing.location.query.key;
-    let restoreRoute = window.localStorage.getItem(key);
+    let restoreRoute = win.localStorage.getItem(key);
     if (restoreRoute) {
         restoreRoute = restoreRoute.replace(/^#/, '');
-        window.localStorage.removeItem(key);
-        injected.routing.push(restoreRoute);
+        win.localStorage.removeItem(key);
+        if (restoreRoute.includes(win.location.hostname)) {
+            win.location.href = restoreRoute;
+        } else {
+            injected.routing.push(restoreRoute);
+        }
     } else {
         injected.routing.push('/');
     }

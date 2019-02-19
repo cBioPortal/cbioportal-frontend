@@ -10,6 +10,7 @@ import {ResultsViewTab} from "../ResultsViewPageHelpers";
 import {CopyNumberSeg, Gene} from "shared/api/generated/CBioPortalAPI";
 import IntegrativeGenomicsViewer from "shared/components/igv/IntegrativeGenomicsViewer";
 import CNSegmentsDownloader from "shared/components/cnSegments/CNSegmentsDownloader";
+import WindowStore from "shared/components/window/WindowStore";
 import {
     WHOLE_GENOME, calcSegmentTrackHeight, defaultSegmentTrackProps, generateSegmentFeatures
 } from "shared/lib/IGVUtils";
@@ -20,11 +21,17 @@ import {default as ProgressIndicator, IProgressIndicatorItem} from "shared/compo
 export default class CNSegments extends React.Component<{ store: ResultsViewPageStore}, {}> {
 
     @observable renderingComplete = false;
-
     @observable selectedLocus: string;
+    @observable segmentTrackMaxHeight: number|undefined;
+
+    constructor(props: {store: ResultsViewPageStore})
+    {
+        super(props);
+        this.segmentTrackMaxHeight = WindowStore.size.height * 0.7;
+    }
 
     @computed get segmentTrackHeight() {
-        return calcSegmentTrackHeight(this.features);
+        return calcSegmentTrackHeight(this.features, this.segmentTrackMaxHeight);
     }
 
     @computed get activeLocus(): string {
@@ -101,7 +108,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
                 promises: this.indicatorPromises
             },
             {
-                label: "Rendering tracks.."
+                label: "Rendering"
             }
         ];
     }

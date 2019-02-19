@@ -80,7 +80,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                 </div>
             )
         },
-        filter: (d: ChartOption, f: string, filterStringUpper: string) => (d.label.toUpperCase().indexOf(filterStringUpper) > -1),
+        filter: (d: ChartOption, f: string, filterStringUpper: string) => d.label.toUpperCase().includes(filterStringUpper),
         sortBy: (d: ChartOption) => d.label,
         width: 320,
         defaultSortDirection: 'asc' as 'asc'

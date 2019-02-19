@@ -7,11 +7,10 @@ import {
     MutationSpectrum, MutationSpectrumFilter
 } from "../api/generated/CBioPortalAPIInternal";
 import {MobxPromise} from "mobxpromise";
-import {CoverageInformation} from "../../pages/resultsView/ResultsViewPageStoreUtils";
+import {CoverageInformation, ExtendedClinicalAttribute} from "../../pages/resultsView/ResultsViewPageStoreUtils";
 import _ from "lodash";
 import client from "../api/cbioportalClientInstance";
 import internalClient from "../api/cbioportalInternalClientInstance";
-import {OncoprintClinicalAttribute} from "../components/oncoprint/ResultsViewOncoprint";
 
 export enum SpecialAttribute {
     MutationSpectrum = "NO_CONTEXT_MUTATION_SIGNATURE",
@@ -33,7 +32,7 @@ export function clinicalAttributeIsLocallyComputed(attribute:{clinicalAttributeI
 type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
 
 function makeProfiledData(
-    attribute: OncoprintClinicalAttribute,
+    attribute: ExtendedClinicalAttribute,
     samples:Sample[],
     coverageInformation:CoverageInformation,
 ):ClinicalData[] {
@@ -65,7 +64,7 @@ function makeProfiledData(
 }
 
 async function fetch(
-    attribute:OncoprintClinicalAttribute,
+    attribute:ExtendedClinicalAttribute,
     samples:Sample[],
     patients:Patient[],
     studyToMutationMolecularProfile:{[studyId:string]:MolecularProfile},
@@ -135,7 +134,7 @@ async function fetch(
     return ret;
 }
 
-export default class OncoprintClinicalDataCache extends MobxPromiseCache<OncoprintClinicalAttribute, OncoprintClinicalData> {
+export default class ClinicalDataCache extends MobxPromiseCache<ExtendedClinicalAttribute, OncoprintClinicalData> {
     constructor(
         samplesPromise:MobxPromise<Sample[]>,
         patientsPromise:MobxPromise<Patient[]>,
