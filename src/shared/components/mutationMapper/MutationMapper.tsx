@@ -23,13 +23,16 @@ import ProteinChainPanel from "shared/components/proteinChainPanel/ProteinChainP
 import TrackPanel from "../tracks/TrackPanel";
 import {TrackDataStatus, TrackNames, TrackVisibility} from "../tracks/TrackSelector";
 import MutationMapperStore from "./MutationMapperStore";
+import {initDefaultTrackVisibility} from "./MutationMapperUserSelectionStore";
 import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
 import {IServerConfig} from "../../../config/IAppConfig";
 import WindowStore from "../window/WindowStore";
+import {getNCBIlink} from "../../api/urls";
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
+    trackVisibility?: TrackVisibility;
     config: IServerConfig;
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
@@ -45,12 +48,23 @@ export interface IMutationMapperProps {
 export default class MutationMapper<P extends IMutationMapperProps> extends React.Component<P, {}>
 {
     @observable protected lollipopPlotGeneX = 0;
-    @observable protected trackVisibility: TrackVisibility = {
-        [TrackNames.OncoKB]: 'hidden',
-        [TrackNames.CancerHotspots]: 'hidden',
-        [TrackNames.PDB]: 'hidden'
-    };
+    @observable private _trackVisibility: TrackVisibility|undefined;
     //@observable protected geneWidth = 665;
+
+    @computed
+    protected get trackVisibility(): TrackVisibility
+    {
+        if (this.props.trackVisibility) {
+            return this.props.trackVisibility!;
+        }
+        else {
+            if (!this._trackVisibility) {
+                this._trackVisibility = initDefaultTrackVisibility();
+            }
+
+            return this._trackVisibility;
+        }
+    }
 
     protected handlers:any;
 
@@ -122,7 +136,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                     <span data-test="GeneSummaryRefSeq">{'RefSeq: '}
                         {refseqMrnaId? (
                             <a
-                                href={`https://www.ncbi.nlm.nih.gov/nuccore/${refseqMrnaId}`}
+                                href={getNCBIlink(`/nuccore/${refseqMrnaId}`)}
                                 target="_blank"
                             >
                                 {refseqMrnaId}
@@ -156,7 +170,13 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                     <span data-test="GeneSummaryCCDS">{'CCDS: '}
                         {ccdsId? (
                             <a
-                                href={`http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA=${ccdsId}`}
+                                href={getNCBIlink({
+                                    pathname: '/CCDS/CcdsBrowse.cgi',
+                                    query: {
+                                        'REQUEST': 'CCDS',
+                                        'DATA': ccdsId
+                                    }
+                                })}
                                 target="_blank"
                             >
                                 {ccdsId}
@@ -345,7 +365,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
 
     protected proteinChainPanel(): JSX.Element|null
     {
-        return (
+        return this.is3dPanelOpen ? (
             <ProteinChainPanel
                 store={this.props.store}
                 pdbHeaderCache={this.props.pdbHeaderCache}
@@ -353,7 +373,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                 geneXOffset={this.lollipopPlotGeneX}
                 maxChainsHeight={200}
             />
-        );
+        ): null;
     }
 
     protected trackPanel(): JSX.Element|null
@@ -487,14 +507,12 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
     @action
     protected open3dPanel() {
         this.trackVisibility[TrackNames.PDB] = 'visible';
-        this.props.store.pdbChainDataStore.selectFirstChain();
     }
 
     @autobind
     @action
     protected close3dPanel() {
         this.trackVisibility[TrackNames.PDB] = 'hidden';
-        this.props.store.pdbChainDataStore.selectUid();
     }
 
     @autobind

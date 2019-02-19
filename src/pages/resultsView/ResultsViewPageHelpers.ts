@@ -73,7 +73,9 @@ export function getVirtualStudies(cancerStudyIds:string[]):Promise<VirtualStudy[
                 (virtualStudy: VirtualStudy) => (missingFromCancerStudies.includes(virtualStudy.id))
             );
             resolve(virtualStudies);
-        });
+        }).catch(()=>{
+            resolve([]);
+;       });
     });
     return prom;
 

@@ -1,10 +1,17 @@
 import {assert} from "chai";
 import {
-    CLIN_ATTR_DATA_TYPE, getMutationProfileDuplicateSamplesReport, makeAxisDataPromise_Molecular_MakeMutationData,
-    makeScatterPlotData, MUT_PROFILE_COUNT_MULTIPLE, MUT_PROFILE_COUNT_MUTATED, MUT_PROFILE_COUNT_NOT_MUTATED,
+    CLIN_ATTR_DATA_TYPE,
+    getMutationProfileDuplicateSamplesReport,
+    makeAxisDataPromise_Molecular_MakeMutationData,
+    makeClinicalAttributeOptions,
+    makeScatterPlotData,
+    MUT_PROFILE_COUNT_MULTIPLE,
+    MUT_PROFILE_COUNT_MUTATED,
+    MUT_PROFILE_COUNT_NOT_MUTATED,
     MUT_PROFILE_COUNT_NOT_PROFILED,
     mutationTypeToDisplayName,
-    mutTypeCategoryOrder, mutVsWildCategoryOrder
+    mutTypeCategoryOrder,
+    mutVsWildCategoryOrder
 } from "./PlotsTabUtils";
 import {MolecularProfile, Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {AlterationTypeConstants} from "../ResultsViewPageStore";
@@ -12,6 +19,54 @@ import {MutationCountBy} from "./PlotsTab";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 
 describe("PlotsTabUtils", ()=>{
+    describe("makeClinicalAttributeOptions", ()=>{
+        it("returns correct for empty input", ()=>{
+            assert.deepEqual(makeClinicalAttributeOptions([]), []);
+        });
+        it("returns correct options, sorted and filtering out everything besides number and string", ()=>{
+            assert.deepEqual(
+                makeClinicalAttributeOptions([
+                    {
+                        datatype:"string",
+                        clinicalAttributeId:"attribute2",
+                        displayName:"Second Attribute",
+                        priority:""
+                    },
+                    {
+                        datatype:"number",
+                        clinicalAttributeId:"attribute1",
+                        displayName:"First Attribute",
+                        priority:"0"
+                    },
+                    {
+                        datatype:"string",
+                        clinicalAttributeId:"attribute3",
+                        displayName:"Third Attribute",
+                        priority:""
+                    },
+                    {
+                        datatype:"counts_map",
+                        clinicalAttributeId:"attribute4",
+                        displayName:"Bad attribute",
+                        priority:"3"
+                    }
+                ]),
+                [{
+                    value: "attribute1",
+                    label:"First Attribute",
+                    priority:0
+                },{
+                    value:"attribute2",
+                    label:"Second Attribute",
+                    priority:-1
+                },{
+                    value:"attribute3",
+                    label:"Third Attribute",
+                    priority:-1
+                }]
+            );
+        });
+    });
     describe("makeScatterPlotData", ()=>{
         it ("does not create data for NaN values", ()=>{
             const data = makeScatterPlotData(
