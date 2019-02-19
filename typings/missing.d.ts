@@ -39,3 +39,4 @@ declare module 'react-spinkit';
 declare module 'react-portal';
 declare module 'little-loader';
 declare module 'react-mfb';
+declare module 'regression';
