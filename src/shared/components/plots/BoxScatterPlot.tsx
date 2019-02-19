@@ -605,7 +605,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                                 data={this.boxPlotData}
                                 horizontal={this.props.horizontal}
                             />
-                            {this.scatterPlotData.map(dataWithAppearance=>(
+                            {this.scatterPlotData.map((dataWithAppearance:any)=>(
                                 <VictoryScatter
                                     key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity}`}
                                     style={{

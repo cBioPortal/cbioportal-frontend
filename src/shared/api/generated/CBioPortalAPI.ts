@@ -1,4 +1,5 @@
 import * as request from "superagent";
+import { SortOrder, Treatment } from "./CBioPortalAPIInternal";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type CancerStudy = {
@@ -286,7 +287,7 @@ export type MolecularProfile = {
 
         'description': string
 
-        'molecularAlterationType': "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE"
+        'molecularAlterationType': "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE" | "TREATMENT_RESPONSE"
 
         'molecularProfileId': string
 
@@ -297,6 +298,10 @@ export type MolecularProfile = {
         'study': CancerStudy
 
         'studyId': string
+
+        'pivotThreshold': number
+
+        'sortOrder': SortOrder
 
 };
 export type MolecularProfileFilter = {

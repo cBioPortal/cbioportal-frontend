@@ -389,7 +389,8 @@ export function getMolecularProfiles(query:any){
         query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
         query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
         query.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
-        query.genetic_profile_ids_PROFILE_GENESET_SCORE
+        query.genetic_profile_ids_PROFILE_GENESET_SCORE,
+        query.genetic_profile_ids_TREATMENT_RESPONSE
     ].filter((profile:string|undefined)=>!!profile);
 
     // append 'genetic_profile_ids' which is sometimes in use

@@ -98,6 +98,7 @@ export interface IOncoprintControlsState {
     selectedHeatmapProfile?:string;
     heatmapIsDynamicallyQueried?:boolean;
     heatmapGeneInputValue?: string;
+    addToHeatmapButtonName?:string;
     clusterHeatmapButtonActive?:boolean;
     hideClusterHeatmapButton?:boolean;
     hideHeatmapMenu?:boolean;
@@ -447,7 +448,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 className="btn btn-sm btn-default"
                                 name={EVENT_KEY.addGenesToHeatmap}
                                 onClick={this.onButtonClick}
-                             >Add Genes to Heatmap</button>,
+                            >{this.props.state.addToHeatmapButtonName}</button>,
 
                             <button
                                 key="removeHeatmapButton"

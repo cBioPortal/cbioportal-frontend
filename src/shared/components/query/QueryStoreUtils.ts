@@ -6,12 +6,13 @@ import { VirtualStudy } from "shared/model/VirtualStudy";
 
 export type NonMolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'cancer_study_id' | 'cancer_study_list' | 'Z_SCORE_THRESHOLD' | 'RPPA_SCORE_THRESHOLD' | 'data_priority' |
-    'case_set_id' | 'case_ids' | 'gene_list' | 'geneset_list' | 'tab_index' | 'transpose_matrix' | 'Action'>;
+    'case_set_id' | 'case_ids' | 'gene_list' | 'geneset_list' | 'treatment_list' | 'tab_index' | 'transpose_matrix' | 'Action'>;
 
 export type MolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'genetic_profile_ids_PROFILE_MUTATION_EXTENDED' | 'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION' |
     'genetic_profile_ids_PROFILE_MRNA_EXPRESSION' | 'genetic_profile_ids_PROFILE_METHYLATION' |
-    'genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION' | 'genetic_profile_ids_PROFILE_GENESET_SCORE'>;
+    'genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION' | 'genetic_profile_ids_PROFILE_GENESET_SCORE' |
+    'genetic_profile_ids_PROFILE_TREATMENT_RESPONSE' >;
 
 
 export function currentQueryParams(store:QueryStore) {
@@ -52,6 +53,7 @@ export function nonMolecularProfileParams(store:QueryStore, whitespace_separated
         case_ids,
         gene_list: encodeURIComponent(normalizeQuery(store.geneQuery) || ' '), // empty string won't work
         geneset_list: normalizeQuery(store.genesetQuery) || ' ', //empty string won't work
+        treatment_list: normalizeQuery(store.treatmentQuery) || ' ', //empty string won't work
         tab_index: store.forDownloadTab ? 'tab_download' : 'tab_visualize' as any,
         transpose_matrix: store.transposeDataMatrix ? 'on' : undefined,
         Action: 'Submit',
@@ -71,7 +73,8 @@ export function molecularProfileParams(store:QueryStore, molecularProfileIds?:Re
         genetic_profile_ids_PROFILE_MRNA_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("MRNA_EXPRESSION", molecularProfileIds),
         genetic_profile_ids_PROFILE_METHYLATION: store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION", molecularProfileIds) || store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION_BINARY", molecularProfileIds),
         genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("PROTEIN_LEVEL", molecularProfileIds),
-        genetic_profile_ids_PROFILE_GENESET_SCORE: store.getSelectedProfileIdFromMolecularAlterationType("GENESET_SCORE", molecularProfileIds)
+        genetic_profile_ids_PROFILE_GENESET_SCORE: store.getSelectedProfileIdFromMolecularAlterationType("GENESET_SCORE", molecularProfileIds),
+        genetic_profile_ids_PROFILE_TREATMENT_RESPONSE: store.getSelectedProfileIdFromMolecularAlterationType("TREATMENT_RESPONSE", molecularProfileIds)
     };
 }
 
