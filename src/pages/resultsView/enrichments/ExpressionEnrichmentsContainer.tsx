@@ -24,8 +24,10 @@ import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/Enrichm
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];
     selectedProfile: MolecularProfile;
-    alteredGroupName?:string;
-    unalteredGroupName?:string;
+    group1Name?:string;
+    group2Name?:string;
+    group1Description?:string;
+    group2Description?:string;
     store?: ResultsViewPageStore;
     showMutexTendencyInTable?:boolean;
 }
@@ -34,8 +36,10 @@ export interface IExpressionEnrichmentContainerProps {
 export default class ExpressionEnrichmentContainer extends React.Component<IExpressionEnrichmentContainerProps, {}> {
 
     static defaultProps:Partial<IExpressionEnrichmentContainerProps> = {
-        alteredGroupName: "altered group",
-        unalteredGroupName: "unaltered group",
+        group1Name: "altered group",
+        group2Name: "unaltered group",
+        group1Description: "samples that have alterations in the query gene(s).",
+        group2Description: "samples that do not have alterations in the query gene(s).",
         showMutexTendencyInTable: true
     };
 
@@ -173,8 +177,10 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                         </Checkbox>
                     </div>
                     <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
-                       onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} alteredGroupName={this.props.alteredGroupName!} unalteredGroupName={this.props.unalteredGroupName!}
-                       mutexTendency={this.props.showMutexTendencyInTable}
+                                               onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}
+                                               mutexTendency={this.props.showMutexTendencyInTable}
+                                               group1Description={this.props.group1Description!}
+                                               group2Description={this.props.group2Description!}
                     />
                 </div>
             </div>

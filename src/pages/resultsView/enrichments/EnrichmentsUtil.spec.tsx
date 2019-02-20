@@ -56,7 +56,8 @@ const exampleAlterationEnrichmentRowData = [
         "unalteredPercentage": 0,
         "logRatio": Infinity,
         "pValue": 0.00003645111904935468,
-        "qValue": 0.2521323904643863
+        "qValue": 0.2521323904643863,
+        "value":undefined
     },
     {
         "checked": false,
@@ -70,7 +71,8 @@ const exampleAlterationEnrichmentRowData = [
         "unalteredPercentage": 0,
         "logRatio": Infinity,
         "pValue": 0.0015673981191222392,
-        "qValue": 0.9385345997286061
+        "qValue": 0.9385345997286061,
+        "value":undefined
     }, 
     {
         "checked": false,
@@ -84,7 +86,8 @@ const exampleAlterationEnrichmentRowData = [
         "unalteredPercentage": 0,
         "logRatio": Infinity,
         "pValue": 0.0015673981191222392,
-        "qValue": 0.9385345997286061
+        "qValue": 0.9385345997286061,
+        "value":undefined
     }
 ];
 
