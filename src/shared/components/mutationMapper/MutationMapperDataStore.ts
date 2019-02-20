@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 import {
     SimpleLazyMobXTableApplicationDataStore
-} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
-import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
+} from "shared/lib/ILazyMobXTableApplicationDataStore";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {action, computed, observable} from "mobx";
 import Immutable from "seamless-immutable";
 import {countDuplicateMutations, groupMutationsByGeneAndPatientAndProteinChange} from "shared/lib/MutationUtils";
@@ -13,6 +13,8 @@ type ImmutablePositionAttr = PositionAttr & Immutable.ImmutableObject<PositionAt
 export default class MutationMapperDataStore extends SimpleLazyMobXTableApplicationDataStore<Mutation[]>{
     @observable.ref private selectedPositions:ImmutablePositionAttr;
     @observable.ref private highlightedPositions:ImmutablePositionAttr;
+    @observable private dataSelectFilter: (d: Mutation[]) => boolean = () => true;
+    @observable private dataHighlightFilter: (d: Mutation[]) => boolean = () => true;
 
     @action public setPositionSelected(position:number, newVal:boolean) {
         const toMerge:PositionAttr = {};
@@ -36,6 +38,22 @@ export default class MutationMapperDataStore extends SimpleLazyMobXTableApplicat
         if (!_.isEmpty(this.highlightedPositions)) {
             this.highlightedPositions = Immutable.from<PositionAttr>({});
         }
+    }
+
+    @action public setDataSelectFilter(dataSelectorFilter: (d: Mutation[]) => boolean) {
+        this.dataSelectFilter = dataSelectorFilter;
+    }
+
+    @action public clearDataSelectFilter() {
+        this.dataSelectFilter = () => true;
+    }
+
+    @action public setDataHighlightFilter(dataHighlightFilter: (d: Mutation[]) => boolean) {
+        this.dataHighlightFilter = dataHighlightFilter;
+    }
+
+    @action public clearDataHighlightFilter() {
+        this.dataHighlightFilter = () => true;
     }
 
     public isPositionSelected(position:number) {
@@ -63,7 +81,9 @@ export default class MutationMapperDataStore extends SimpleLazyMobXTableApplicat
         super(data);
         this.selectedPositions = Immutable.from<PositionAttr>({});
         this.highlightedPositions = Immutable.from<PositionAttr>({});
-        this.dataSelector = (d:Mutation[])=>!!this.selectedPositions[d[0].proteinPosStart+""];
-        this.dataHighlighter = (d:Mutation[])=>!!this.highlightedPositions[d[0].proteinPosStart+""];
+        this.dataSelector = (d:Mutation[]) =>
+            (!!this.selectedPositions[d[0].proteinPosStart+""] && this.dataSelectFilter(d));
+        this.dataHighlighter = (d:Mutation[]) =>
+            (!!this.highlightedPositions[d[0].proteinPosStart+""] && this.dataHighlightFilter(d));
     }
 }
