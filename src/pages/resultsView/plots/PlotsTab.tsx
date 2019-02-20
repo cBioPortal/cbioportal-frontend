@@ -79,7 +79,8 @@ enum EventKey {
     utilities_viewCopyNumber,
     utilities_discreteVsDiscreteTable,
     utilities_stackedBarHorizontalBars,
-    utilities_showRegressionLine
+    utilities_showRegressionLine,
+    utilities_StackedBarPercentage
 }
 
 
@@ -158,6 +159,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     // discrete vs discrete settings
     @observable discreteVsDiscretePlotType = DiscreteVsDiscretePlotType.StackedBar;
     @observable stackedBarHorizontalBars = false;
+    @observable stackedBarPercentage = false;
 
     @observable searchCase:string = "";
     @observable searchMutation:string = "";
@@ -403,6 +405,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 break;
             case EventKey.utilities_stackedBarHorizontalBars:
                 this.stackedBarHorizontalBars = !this.stackedBarHorizontalBars;
+                break;
+            case EventKey.utilities_StackedBarPercentage:
+                this.stackedBarPercentage = !this.stackedBarPercentage;
                 break;
         }
     }
@@ -1140,7 +1145,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             /> Show Table Plot
                         </label></div>
                     )}
-                    {showStackedBarHorizontalOption && (
+                    {showStackedBarHorizontalOption && (<div>
                         <div className="checkbox"><label>
                             <input
                                 data-test="StackedBarHorizontalBars"
@@ -1151,7 +1156,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 onClick={this.onInputClick}
                             /> Horizontal Bars
                         </label></div>
-                    )}
+                        <div className="checkbox"><label>
+                            <input
+                                data-test="StackedBarPercentage"
+                                type="checkbox"
+                                name="utilities_StackedBarPercentage"
+                                value={EventKey.utilities_StackedBarPercentage}
+                                checked={this.stackedBarPercentage}
+                                onClick={this.onInputClick}
+                            /> Show Percentages
+                         </label></div>
+                    </div>)}
                     {showSampleColoringOptions && (
                         <div>
                             <label style={{marginBottom:0}}>Color Samples By</label>
@@ -1424,6 +1439,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     axisLabelY={this.vertLabel.result!}
                                     legendLocationWidthThreshold={550}
                                     horizontalBars={this.stackedBarHorizontalBars}
+                                    percentage={this.stackedBarPercentage}
                                 />
                             );
                         }
