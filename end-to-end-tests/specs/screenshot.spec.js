@@ -263,7 +263,13 @@ describe("coexpression tab screenshot tests", function() {
         var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
+    it('coexpression tab coadread_tcga_pub log scale x and y with regression line', function() {
+        browser.click('input[data-test="ShowRegressionLine"]');
+        var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
+        assertScreenShotMatch(res);
+    });
     it('coexpression tab coadread_tcga_pub loc scale x and y mutations off', function() {
+        browser.click('input[data-test="ShowRegressionLine"]');
         browser.click('div[data-test="coExpressionTabDiv"] input[data-test="ShowMutations"]');
         browser.moveToObject("body",0,0);
         var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
@@ -281,6 +287,11 @@ describe("coexpression tab screenshot tests", function() {
         browser.execute(function() { resultsViewCoExpressionTab.onSelectDataSet({ value: "coadread_tcga_pub_mrna"}); });
         browser.pause(100); // give time to start loading
         browser.waitForExist('div[data-test="CoExpressionPlot"]', 20000); // wait for plot to show up
+        var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub switch profiles + regression line', function() {
+        browser.click('input[data-test="ShowRegressionLine"]');
         var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
@@ -471,9 +482,12 @@ describe("plots tab screenshot tests", function() {
     });
     it("plots tab molecular vs molecular same gene changed gene", function() {
         browser.execute(function() { resultsViewPlotsTab.test__selectGeneOption(false, 4193); });
+        browser.waitForExist('input[data-test="ShowRegressionline"]', 3000);
+        browser.click('input[data-test="ShowRegressionline"]');
         waitForAndCheckPlotsTab();
     });
     it("plots tab copy number view", function() {
+        browser.click('input[data-test="ShowRegressionline"]');
         browser.click('input[data-test="ViewMutationType"]');
         waitForAndCheckPlotsTab();
     });
@@ -484,9 +498,12 @@ describe("plots tab screenshot tests", function() {
     it("plots tab molecular vs molecular different genes different profiles", function() {
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_rna_seq_v2_mrna" }); });
         browser.click('input[data-test="HorizontalLogCheckbox"]');
+        browser.waitForExist('input[data-test="ShowRegressionline"]', 3000);
+        browser.click('input[data-test="ShowRegressionline"]');
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular swapped axes", function() {
+        browser.click('input[data-test="ShowRegressionline"]');
         browser.click('[data-test="swapHorzVertButton"]');
         waitForAndCheckPlotsTab();
     });
