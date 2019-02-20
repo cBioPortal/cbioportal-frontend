@@ -569,8 +569,16 @@ describe("plots tab screenshot tests", function() {
         browser.click('input[data-test="StackedBarHorizontalBars"]');
         waitForAndCheckPlotsTab();
     });
-    it("plots tab clinical vs clinical table plot", function() {
+    it("plots tab clinical vs clinical horizontal percentage stacked bar plot", function() {
+        browser.click('input[data-test="StackedBarPercentage"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab clinical vs clinical percentage stacked bar plot", function() {
         browser.click('input[data-test="StackedBarHorizontalBars"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab clinical vs clinical table plot", function() {
+        browser.click('input[data-test="StackedBarPercentage"]');
         browser.click('input[data-test="DiscreteVsDiscreteTable"]');
         waitForAndCheckPlotsTab();
     });
@@ -583,8 +591,16 @@ describe("plots tab screenshot tests", function() {
         browser.click('input[data-test="StackedBarHorizontalBars"]');
         waitForAndCheckPlotsTab();
     });
-    it("plots tab copy number vs clinical table plot", function() {
+    it("plots tab copy number vs clinical horizontal percentage stacked bar plot", function() {
+        browser.click('input[data-test="StackedBarPercentage"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab copy number vs clinical percentage stacked bar plot", function() {
         browser.click('input[data-test="StackedBarHorizontalBars"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab copy number vs clinical table plot", function() {
+        browser.click('input[data-test="StackedBarPercentage"]');
         browser.click('input[data-test="DiscreteVsDiscreteTable"]');
         waitForAndCheckPlotsTab();
     });
@@ -598,8 +614,16 @@ describe("plots tab screenshot tests", function() {
         browser.click('input[data-test="StackedBarHorizontalBars"]');
         waitForAndCheckPlotsTab();
     });
-    it("plots tab mutations wildtype mode vs clinical table plot", function() {
+    it("plots tab mutations wildtype mode vs clinical horizontal percentage stacked bar plot", function() {
+        browser.click('input[data-test="StackedBarPercentage"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab mutations wildtype mode vs clinical percentage stacked bar plot", function() {
         browser.click('input[data-test="StackedBarHorizontalBars"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab mutations wildtype mode vs clinical table plot", function() {
+        browser.click('input[data-test="StackedBarPercentage"]');
         browser.click('input[data-test="DiscreteVsDiscreteTable"]');
         waitForAndCheckPlotsTab();
     });
@@ -612,8 +636,16 @@ describe("plots tab screenshot tests", function() {
         browser.click('input[data-test="StackedBarHorizontalBars"]');
         waitForAndCheckPlotsTab();
     });
-    it("plots tab mutations vs clinical table plot", function() {
+    it("plots tab mutations vs clinical horizontal percentage stacked bar plot", function() {
+        browser.click('input[data-test="StackedBarPercentage"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab mutations vs clinical percentage stacked bar plot", function() {
         browser.click('input[data-test="StackedBarHorizontalBars"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab mutations vs clinical table plot", function() {
+        browser.click('input[data-test="StackedBarPercentage"]');
         browser.click('input[data-test="DiscreteVsDiscreteTable"]');
         waitForAndCheckPlotsTab();
     });
