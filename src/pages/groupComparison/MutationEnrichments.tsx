@@ -63,7 +63,9 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                                                 unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
                                                 selectedProfile={this.props.store.mutationEnrichmentProfile.result!}
                                                 headerName={this.props.store.mutationEnrichmentProfile.result!.name}
-                                                alterationType="a mutation"/>
+                                                alterationType="a mutation"
+                                                showMutexTendencyInTable={false}
+                    />
                 </div>
             );
         },

@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 import {computed, observable} from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
 import {
-    calculateAlterationTendency, formatPercentage
+    calculateAlterationTendency, calculateExpressionTendency, calculateGenericTendency, formatPercentage
 } from "./EnrichmentsUtil";
 import { formatLogOddsRatio, formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
@@ -25,6 +25,7 @@ export interface IAlterationEnrichmentTableProps {
     dataStore: EnrichmentsTableDataStore;
     onCheckGene?: (hugoGeneSymbol: string) => void;
     onGeneNameClick?: (hugoGeneSymbol: string) => void;
+    mutexTendency?:boolean;
 }
 
 export enum AlterationEnrichmentTableColumnType {
@@ -57,7 +58,8 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
             AlterationEnrichmentTableColumnType.Q_VALUE,
             AlterationEnrichmentTableColumnType.TENDENCY
         ],
-        initialSortColumn: "q-Value"
+        initialSortColumn: "q-Value",
+        mutexTendency:true
     };
 
     private checkboxChange(hugoGeneSymbol: string) {
@@ -144,8 +146,9 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         };
 
         columns[AlterationEnrichmentTableColumnType.TENDENCY] = {
-            name: "Tendency",
-            render: (d: AlterationEnrichmentRow) => <div className={styles.Tendency}>{calculateAlterationTendency(Number(d.logRatio))}
+            name: this.props.mutexTendency ? "Tendency" : "Enriched in",
+            render: (d: AlterationEnrichmentRow) => <div className={styles.Tendency}>
+                {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.alteredGroupName, this.props.unalteredGroupName)}
                 {d.qValue < 0.05 ? <Badge style={{
                     backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
                 }}>Significant</Badge> : ""}</div>,
