@@ -78,7 +78,8 @@ enum EventKey {
     utilities_viewMutationType,
     utilities_viewCopyNumber,
     utilities_discreteVsDiscreteTable,
-    utilities_stackedBarHorizontalBars
+    utilities_stackedBarHorizontalBars,
+    utilities_showRegressionLine
 }
 
 
@@ -153,6 +154,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @observable searchMutationInput:string;
     @observable viewMutationType:boolean = true;
     @observable viewCopyNumber:boolean = false;
+    @observable showRegressionLine = false;
     // discrete vs discrete settings
     @observable discreteVsDiscretePlotType = DiscreteVsDiscretePlotType.StackedBar;
     @observable stackedBarHorizontalBars = false;
@@ -388,6 +390,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 break;
             case EventKey.utilities_viewMutationType:
                 this.viewMutationType = !this.viewMutationType;
+                break;
+            case EventKey.utilities_showRegressionLine:
+                this.showRegressionLine = !this.showRegressionLine;
                 break;
             case EventKey.utilities_discreteVsDiscreteTable:
                 if (this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.Table) {
@@ -1092,7 +1097,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         const showDiscreteVsDiscreteOption = this.plotType.isComplete && this.plotType.result === PlotType.DiscreteVsDiscrete;
         const showStackedBarHorizontalOption = showDiscreteVsDiscreteOption && this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.StackedBar;
         const showSampleColoringOptions = this.mutationDataCanBeShown || this.cnaDataCanBeShown;
-        if (!showSearchOptions && !showSampleColoringOptions && !showDiscreteVsDiscreteOption && !showStackedBarHorizontalOption) {
+        const showRegression = this.plotType.isComplete && this.plotType.result === PlotType.ScatterPlot;
+        if (!showSearchOptions && !showSampleColoringOptions && !showDiscreteVsDiscreteOption && !showStackedBarHorizontalOption && !showRegression) {
             return <span></span>;
         }
         return (
@@ -1148,34 +1154,48 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     )}
                     {showSampleColoringOptions && (
                         <div>
-                            <label>Color Samples By</label>
-                            {this.mutationDataCanBeShown && (
-                                <div className="checkbox"><label>
-                                    <input
-                                        data-test="ViewMutationType"
-                                        type="checkbox"
-                                        name="utilities_viewMutationType"
-                                        value={EventKey.utilities_viewMutationType}
-                                        checked={this.viewMutationType}
-                                        onClick={this.onInputClick}
-                                        disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
-                                    /> Mutation Type *
-                                </label></div>
-                            )}
-                            {this.cnaDataCanBeShown && (
-                                <div className="checkbox"><label>
-                                    <input
-                                        data-test="ViewCopyNumber"
-                                        type="checkbox"
-                                        name="utilities_viewCopyNumber"
-                                        value={EventKey.utilities_viewCopyNumber}
-                                        checked={this.viewCopyNumber}
-                                        onClick={this.onInputClick}
-                                        disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
-                                    /> Copy Number Alteration
-                                </label></div>
-                            )}
+                            <label style={{marginBottom:0}}>Color Samples By</label>
+                            <div style={{marginLeft:14, marginTop:-4}}>
+                                {this.mutationDataCanBeShown && (
+                                    <div className="checkbox"><label>
+                                        <input
+                                            data-test="ViewMutationType"
+                                            type="checkbox"
+                                            name="utilities_viewMutationType"
+                                            value={EventKey.utilities_viewMutationType}
+                                            checked={this.viewMutationType}
+                                            onClick={this.onInputClick}
+                                            disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
+                                        /> Mutation Type *
+                                    </label></div>
+                                )}
+                                {this.cnaDataCanBeShown && (
+                                    <div className="checkbox"><label>
+                                        <input
+                                            data-test="ViewCopyNumber"
+                                            type="checkbox"
+                                            name="utilities_viewCopyNumber"
+                                            value={EventKey.utilities_viewCopyNumber}
+                                            checked={this.viewCopyNumber}
+                                            onClick={this.onInputClick}
+                                            disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
+                                        /> Copy Number Alteration
+                                    </label></div>
+                                )}
+                            </div>
                         </div>
+                    )}
+                    {showRegression && (
+                        <div className="checkbox" style={{marginTop:14}}><label>
+                            <input
+                                data-test="ShowRegressionline"
+                                type="checkbox"
+                                name="utilities_showRegressionLine"
+                                value={EventKey.utilities_showRegressionLine}
+                                checked={this.showRegressionLine}
+                                onClick={this.onInputClick}
+                            /> Show Regression Line
+                        </label></div>
                     )}
                 </div>
             </div>
@@ -1421,6 +1441,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     chartHeight={PLOT_SIDELENGTH}
                                     tooltip={this.scatterPlotTooltip}
                                     highlight={this.scatterPlotHighlight}
+                                    showRegressionLine={this.showRegressionLine}
                                     logX={this.horzSelection.logScale}
                                     logY={this.vertSelection.logScale}
                                     fill={this.scatterPlotFill}
