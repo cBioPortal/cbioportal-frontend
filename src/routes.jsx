@@ -107,8 +107,8 @@ export const makeRoutes = (routing) => {
                 <Route path="/visualize" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Visualize)} />
                 <Route path="/about" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(AboutUs)} />
                 <Route path="/news" onEnter={handleEnter} getComponent={lazyLoadComponent(News)} />
-                <Route path="/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
-                <Route path="/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
+                <Route path="/faq" onEnter={handleEnter} getComponent={lazyLoadComponent(FAQ)} />
+                <Route path="/oql" onEnter={handleEnter} getComponent={lazyLoadComponent(OQL)} />
                 <Route path="/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
 
 
