@@ -31,6 +31,7 @@ export interface IAlterationEnrichmentContainerProps {
     selectedProfile:MolecularProfile;
     store?: ResultsViewPageStore;
     alterationType: string;
+    showMutexTendencyInTable?:boolean;
 }
 
 @observer
@@ -38,7 +39,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
     static defaultProps:Partial<IAlterationEnrichmentContainerProps> = {
         alteredGroupName: "altered group",
-        unalteredGroupName: "unaltered group"
+        unalteredGroupName: "unaltered group",
+        showMutexTendencyInTable: true
     };
 
     @observable mutualExclusivityFilter: boolean = true;
@@ -174,6 +176,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                     <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
                         onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} alterationType={this.props.alterationType} dataStore={this.dataStore}
                        alteredGroupName={this.props.alteredGroupName!} unalteredGroupName={this.props.unalteredGroupName!}
+                       mutexTendency={this.props.showMutexTendencyInTable}
                     />
                 </div>
             </div>

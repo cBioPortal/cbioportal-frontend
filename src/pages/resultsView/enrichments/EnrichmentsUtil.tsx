@@ -25,6 +25,12 @@ export function calculateExpressionTendency(logOddsRatio: number): string {
     return logOddsRatio > 0 ? "Over-expressed" : "Under-expressed";
 }
 
+export function calculateGenericTendency(
+    logOddsRatio:number, alteredGroupName:string, unalteredGroupName:string
+) {
+    return logOddsRatio > 0 ? alteredGroupName : unalteredGroupName;
+}
+
 export function formatPercentage(count: number, percentage: number): string {
 
     return count + " (" + percentage.toFixed(2) + "%)";
