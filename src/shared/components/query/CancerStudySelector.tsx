@@ -344,7 +344,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                             <If condition={shownStudies.length > 0}>
                                 <If condition={this.logic.mainView.showQuickSelect}>
                                     <div className={styles.quickSelect}>
-                                        Quick select: <button onClick={this.selectTCGAPanAtlas} data-test="selectPanCan" className={"btn btn-default btn-xs"}>TCGA Pancancer Atlas studies</button>
+                                        Quick select: <button onClick={this.selectTCGAPanAtlas} data-test="selectPanCan" className={"btn btn-default btn-xs"}>TCGA PanCancer Atlas studies</button>
                                     </div>
                                     <Else>
 
