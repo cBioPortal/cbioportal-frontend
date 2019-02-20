@@ -36,9 +36,6 @@ import {AppStore} from "../../AppStore";
 import ActionButtons from "./studyPageHeader/ActionButtons";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import {GACustomFieldsEnum, trackEvent} from "../../shared/lib/tracking";
-import {ComparisonSampleGroup, TEMP_localStorageGroupsKey} from "../groupComparison/GroupComparisonUtils";
-import {addGroupToLocalStorage, getLocalStorageGroups} from "../groupComparison/GroupPersistenceUtils";
-import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import ComparisonGroupManager from "../groupComparison/ComparisonGroupManager";
 import classNames from "classnames";
 
