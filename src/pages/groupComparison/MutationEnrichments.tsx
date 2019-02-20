@@ -8,7 +8,7 @@ import EnrichmentsDataSetDropdown from "../resultsView/enrichments/EnrichmentsDa
 import AlterationEnrichmentContainer from "../resultsView/enrichments/AlterationEnrichmentsContainer";
 import autobind from "autobind-decorator";
 import {MakeMobxView} from "../../shared/components/MobxView";
-import { ENRICHMENTS_TOO_MANY_GROUPS_MSG } from "./GroupComparisonUtils";
+import { ENRICHMENTS_NOT_2_GROUPS_MSG } from "./GroupComparisonUtils";
 
 export interface IMutationEnrichmentsProps {
     store: GroupComparisonStore
@@ -25,7 +25,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
     readonly tabUI = MakeMobxView({
         await:()=>{
             if (this.props.store.activeComparisonGroups.isComplete &&
-                this.props.store.activeComparisonGroups.result.length > 2) {
+                this.props.store.activeComparisonGroups.result.length !== 2) {
                 // dont bother loading data for and computing enrichments UI if its not valid situation for it
                 return [this.props.store.activeComparisonGroups];
             } else {
@@ -33,8 +33,8 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
             }
         },
         render:()=>{
-            if (this.props.store.activeComparisonGroups.result!.length > 2) {
-                return <span>{ENRICHMENTS_TOO_MANY_GROUPS_MSG}</span>;
+            if (this.props.store.activeComparisonGroups.result!.length !== 2) {
+                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeComparisonGroups.result!.length > 2)}</span>;
             } else {
                 return this.enrichmentsUI.component;
             }
@@ -52,24 +52,20 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
             this.props.store.activeComparisonGroups
         ],
         render:()=>{
-            if (this.props.store.activeComparisonGroups.result!.length > 2) {
-                return <span>{ENRICHMENTS_TOO_MANY_GROUPS_MSG}</span>;
-            } else {
-                return (
-                    <div data-test="GroupComparisonMutationEnrichments">
-                        <EnrichmentsDataSetDropdown dataSets={this.props.store.mutationEnrichmentProfiles} onChange={this.onChangeProfile}
-                                                    selectedValue={this.props.store.mutationEnrichmentProfile.result!.molecularProfileId}/>
-                        <AlterationEnrichmentContainer data={this.props.store.mutationEnrichmentData.result!}
-                                                    totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
-                                                    totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
-                                                    alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
-                                                    unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
-                                                    selectedProfile={this.props.store.mutationEnrichmentProfile.result!}
-                                                    headerName={this.props.store.mutationEnrichmentProfile.result!.name}
-                                                    alterationType="a mutation"/>
-                    </div>
-                );
-            }
+            return (
+                <div data-test="GroupComparisonMutationEnrichments">
+                    <EnrichmentsDataSetDropdown dataSets={this.props.store.mutationEnrichmentProfiles} onChange={this.onChangeProfile}
+                                                selectedValue={this.props.store.mutationEnrichmentProfile.result!.molecularProfileId}/>
+                    <AlterationEnrichmentContainer data={this.props.store.mutationEnrichmentData.result!}
+                                                totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
+                                                totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
+                                                alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
+                                                unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
+                                                selectedProfile={this.props.store.mutationEnrichmentProfile.result!}
+                                                headerName={this.props.store.mutationEnrichmentProfile.result!.name}
+                                                alterationType="a mutation"/>
+                </div>
+            );
         },
         renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
