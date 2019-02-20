@@ -1831,6 +1831,9 @@
             "type": "string"
           }
         },
+        "exon": {
+          "type": "string"
+        },
         "gene_id": {
           "type": "string",
           "description": "Ensembl gene id"
@@ -1918,6 +1921,9 @@
         "entrezGeneId": {
           "type": "string",
           "description": "Entrez gene id"
+        },
+        "exon": {
+          "type": "string"
         },
         "hgvsc": {
           "type": "string",

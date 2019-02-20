@@ -303,6 +303,121 @@
         }
       }
     },
+    "/cancer_hotspots/proteinLocations": {
+      "post": {
+        "tags": [
+          "cancer-hotspots-controller"
+        ],
+        "summary": "Retrieves hotspot annotations for the provided list of transcript id, protein location and mutation type",
+        "operationId": "fetchHotspotAnnotationByProteinLocationsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "proteinLocations",
+            "description": "List of transcript id, protein start location, protein end location, mutation type. \bThe mutation types are limited to 'Missense_Mutation', 'In_Frame_Ins', 'In_Frame_Del', 'Splice_Site', and 'Splice_Region'",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ProteinLocation"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AggregatedHotspots"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cancer_hotspots/transcript": {
+      "post": {
+        "tags": [
+          "cancer-hotspots-controller"
+        ],
+        "summary": "Retrieves hotspot annotations for the provided list of transcript ID",
+        "operationId": "fetchHotspotAnnotationByTranscriptIdPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "transcriptIds",
+            "description": "List of transcript Id. For example [\"ENST00000288602\",\"ENST00000256078\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AggregatedHotspots"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cancer_hotspots/transcript/{transcriptId}": {
+      "get": {
+        "tags": [
+          "cancer-hotspots-controller"
+        ],
+        "summary": "Retrieves hotspot annotations for the provided transcript ID",
+        "operationId": "fetchHotspotAnnotationByTranscriptIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "transcriptId",
+            "in": "path",
+            "description": "A Transcript Id. For example ENST00000288602",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Hotspot"
+              }
+            }
+          }
+        }
+      }
+    },
     "/isoform_override": {
       "post": {
         "tags": [
@@ -650,6 +765,12 @@
           "items": {
             "$ref": "#/definitions/Hotspot"
           }
+        },
+        "proteinLocation": {
+          "$ref": "#/definitions/ProteinLocation"
+        },
+        "transcriptId": {
+          "type": "string"
         },
         "variant": {
           "type": "string",
@@ -1237,6 +1358,35 @@
         }
       }
     },
+    "ProteinLocation": {
+      "type": "object",
+      "required": [
+        "end",
+        "mutationType",
+        "start",
+        "transcriptId"
+      ],
+      "properties": {
+        "transcriptId": {
+          "type": "string",
+          "description": "Ensembl Transcript ID"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Start Position Residue"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int32",
+          "description": "End Position Residue"
+        },
+        "mutationType": {
+          "type": "string",
+          "description": "Mutation Type e.g. Missense_Mutation"
+        }
+      }
+    },
     "Snpeff": {
       "type": "object",
       "properties": {
@@ -1263,6 +1413,9 @@
         "entrezGeneId": {
           "type": "string",
           "description": "Entrez gene id"
+        },
+        "exon": {
+          "type": "string"
         },
         "hgvsc": {
           "type": "string",
