@@ -38,5 +38,6 @@ declare module 'contrast';
 declare module 'react-spinkit';
 declare module 'react-portal';
 declare module 'little-loader';
+declare module 'igv/dist/igv.esm.js';
 declare module 'react-mfb';
 declare module 'regression';

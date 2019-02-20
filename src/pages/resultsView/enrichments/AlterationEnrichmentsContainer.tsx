@@ -6,7 +6,12 @@ import { observable, computed } from 'mobx';
 import AlterationEnrichmentTable from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
 import { AlterationEnrichment } from 'shared/api/generated/CBioPortalAPIInternal';
 import styles from "./styles.module.scss";
-import { getAlterationScatterData, getFilteredData, getAlterationRowData } from 'pages/resultsView/enrichments/EnrichmentsUtil';
+import {
+    getAlterationScatterData,
+    getFilteredData,
+    getAlterationRowData,
+    AlterationEnrichmentWithQ
+} from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { Checkbox, Button, Form, FormGroup, ControlLabel, FormControl } from 'react-bootstrap';
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
@@ -17,7 +22,7 @@ import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 
 export interface IAlterationEnrichmentContainerProps {
-    data: AlterationEnrichment[];
+    data: AlterationEnrichmentWithQ[];
     totalAlteredCount: number;
     totalUnalteredCount: number;
     headerName: string;

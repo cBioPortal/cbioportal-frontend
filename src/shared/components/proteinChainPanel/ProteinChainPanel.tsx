@@ -206,6 +206,10 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
         );
     }
 
+    componentDidMount() {
+        onNextRenderFrame(() => this.props.store.pdbChainDataStore.selectFirstChain());
+    }
+
     componentDidUpdate() {
         onNextRenderFrame(()=>{
           if (this.chainDiv) {
@@ -250,17 +254,17 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                     <div style={{
                         position:'relative',
                     }}>
-                        <div className="small" style={{display: this.isExpanded ? "inherit" : "none", position: "absolute", left: 20}}>
-                            PDB
+                        <div className="small" style={{position: "absolute"}}>
+                            {/* This span is a place holder for a possible PDB icon, for now manually aligning with a margin */}
+                            <span style={{marginRight: 16}} />
+                            PDB Chains
                             <DefaultTooltip
                                 placement="left"
                                 overlay={this.helpTooltipContent}
                                 destroyTooltipOnHide={true}
                             >
-                                <i className="fa fa-info-circle" style={{paddingLeft: 5}} />
+                                <i className="fa fa-info-circle" style={{paddingLeft: 3}} />
                             </DefaultTooltip>
-                            <br/>
-                            Chains
                         </div>
                         <div
                             ref={this.handlers.chainDivRef}

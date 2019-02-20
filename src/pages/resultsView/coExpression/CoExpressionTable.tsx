@@ -7,7 +7,7 @@ import {CoExpressionDataStore, TableMode} from "./CoExpressionViz";
 import Select from "react-select";
 import {observer} from "mobx-react";
 import {observable} from "mobx"
-import {tableSearchInformation} from "./CoExpressionTabUtils";
+import {CoExpressionWithQ, tableSearchInformation} from "./CoExpressionTabUtils";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import InfoIcon from "../../../shared/components/InfoIcon";
 import {bind} from "bind-decorator";
@@ -50,15 +50,15 @@ const COLUMNS = [
         tooltip:<span>Derived from 2-sided t-test.</span>
     }),
     Object.assign(makeNumberColumn(Q_VALUE_COLUMN_NAME, "qValue", false, true), {
-        sortBy:(d:CoExpression) => [d.qValue, d.pValue],
+        sortBy:(d:CoExpressionWithQ) => [d.qValue, d.pValue],
         tooltip:<span>Derived from Benjamini-Hochberg FDR correction procedure.</span>
     })
 ];
 
-function makeNumberColumn(name:string, key:keyof CoExpression, colorByValue:boolean, formatSignificance: boolean) {
+function makeNumberColumn(name:string, key:keyof CoExpressionWithQ, colorByValue:boolean, formatSignificance: boolean) {
     return {
         name:name,
-        render:(d:CoExpression)=>{
+        render:(d:CoExpressionWithQ)=>{
             return (
                 <span
                     style={{
@@ -70,8 +70,8 @@ function makeNumberColumn(name:string, key:keyof CoExpression, colorByValue:bool
                 >{formatSignificance? formatSignificanceValueWithStyle(d[key] as number) : toConditionalPrecision((d[key] as number), 3, 0.01)}</span>
             );
         },
-        download:(d:CoExpression)=>(d[key] as number).toString()+"",
-        sortBy:(d:CoExpression)=>correlationSortBy(d[key] as number),
+        download:(d:CoExpressionWithQ)=>(d[key] as number).toString()+"",
+        sortBy:(d:CoExpressionWithQ)=>correlationSortBy(d[key] as number),
         align: "right" as "right"
     };
 }
@@ -80,7 +80,7 @@ function makeNumberColumn(name:string, key:keyof CoExpression, colorByValue:bool
 export default class CoExpressionTable extends React.Component<ICoExpressionTableProps, {}> {
 
     @bind
-    private onRowClick(d:CoExpression) {
+    private onRowClick(d:CoExpressionWithQ) {
         this.props.dataStore.setHighlighted(d);
     }
 

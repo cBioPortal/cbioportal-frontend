@@ -12,7 +12,7 @@ import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome"
 import {IHotspotDataWrapper} from "shared/model/CancerHotspots";
 import {CancerStudy, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
-import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
+import {getEvidenceQuery, getIndicatorData, generateQueryVariantId} from "shared/lib/OncoKbUtils";
 import {is3dHotspot, isRecurrentHotspot} from "shared/lib/AnnotationUtils";
 import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {buildCivicEntry} from "shared/lib/CivicUtils";
@@ -179,12 +179,14 @@ export default class AnnotationColumnFormatter
             return undefined;
         }
         
-        const id = generateQueryVariantId(mutation.gene.entrezGeneId,
+        const id = generateQueryVariantId(
+            mutation.gene.entrezGeneId,
             oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
             mutation.proteinChange,
-            mutation.mutationType);
+            mutation.mutationType
+        );
 
-        let indicator = oncoKbData.indicatorMap[id];
+        const indicator = oncoKbData.indicatorMap[id];
         if (indicator.query.tumorType === null && studyIdToStudy) {
             const studyMetaData = studyIdToStudy[mutation.studyId];
             if (studyMetaData.cancerTypeId !== "mixed") {           
@@ -196,14 +198,7 @@ export default class AnnotationColumnFormatter
 
     public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query|undefined
     {
-        // return null in case sampleToTumorMap is null
-        return oncoKbData.uniqueSampleKeyToTumorType ? generateQueryVariant(mutation.gene.entrezGeneId,
-            oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
-            mutation.proteinChange,
-            mutation.mutationType,
-            mutation.proteinPosStart,
-            mutation.proteinPosEnd
-        ) : undefined;
+        return getEvidenceQuery(mutation, oncoKbData);
     }
 
     public static getMyCancerGenomeLinks(mutation:Mutation, myCancerGenomeData: IMyCancerGenomeData):string[] {

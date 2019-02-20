@@ -7,6 +7,7 @@ import annotationStyles from "./styles/annotation.module.scss";
 import {ICivicVariant, ICivicEntry} from "shared/model/Civic.ts";
 import {observable} from "mobx";
 import CivicCard from "./CivicCard";
+import {errorIcon, loaderIcon} from "./StatusHelpers";
 
 export interface ICivicProps { 
     civicEntry: ICivicEntry | null | undefined;
@@ -81,7 +82,7 @@ export default class Civic extends React.Component<ICivicProps, {}>
         }
 
         if (this.props.civicStatus == "error") {
-            civicContent = this.errorIcon();
+            civicContent = errorIcon("Error fetching Civic data");
         }
         else if (this.props.civicEntry !== undefined)
         {
@@ -117,33 +118,10 @@ export default class Civic extends React.Component<ICivicProps, {}>
         else
         {
             // It's still unknown (undefined) if the current gene has a Civic entry or not.
-            civicContent = this.loaderIcon();
+            civicContent = loaderIcon("pull-left");
         }
 
         return civicContent;
-    }
-
-    public loaderIcon()
-    {
-        return (
-            <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>
-        );
-    }
-    
-    public errorIcon()
-    {
-        return (
-            <DefaultTooltip
-                overlay={<span>Error fetching Civic data</span>}
-                placement="right"
-                trigger={['hover', 'focus']}
-                destroyTooltipOnHide={true}
-            >
-                <span className={`${annotationStyles["annotation-item-error"]}`}>
-                    <i className="fa fa-exclamation-triangle text-danger" />
-                </span>
-            </DefaultTooltip>
-        );
     }
 
     private cardContent(civicEntry: ICivicEntry): JSX.Element

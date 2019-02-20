@@ -22,6 +22,7 @@ import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import _ from "lodash";
 import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
+import {CoExpressionWithQ} from "./CoExpressionTabUtils";
 
 export interface ICoExpressionVizProps {
     plotState:{
@@ -44,23 +45,23 @@ export enum TableMode {
     SHOW_ALL, SHOW_POSITIVE, SHOW_NEGATIVE
 }
 
-export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<CoExpression> {
+export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<CoExpressionWithQ> {
     @observable public tableMode:TableMode;
 
     private reactionDisposer:IReactionDisposer;
 
     constructor(
-        getData:()=>CoExpression[],
-        getHighlighted:()=>CoExpression|undefined,
-        public setHighlighted:(c:CoExpression)=>void
+        getData:()=>CoExpressionWithQ[],
+        getHighlighted:()=>CoExpressionWithQ|undefined,
+        public setHighlighted:(c:CoExpressionWithQ)=>void
     ) {
         super(getData);
         this.tableMode = TableMode.SHOW_ALL;
-        this.dataHighlighter = (d:CoExpression) =>{
+        this.dataHighlighter = (d:CoExpressionWithQ) =>{
             const highlighted = getHighlighted();
             return !!(highlighted && (d.entrezGeneId === highlighted.entrezGeneId));
         };
-        this.dataSelector = (d:CoExpression) =>{
+        this.dataSelector = (d:CoExpressionWithQ) =>{
             let selected;
             switch (this.tableMode) {
                 case TableMode.SHOW_POSITIVE:
@@ -95,10 +96,10 @@ export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationD
 @observer
 export default class CoExpressionViz extends React.Component<ICoExpressionVizProps, {}> {
 
-    @observable.ref highlightedCoExpression:CoExpression|undefined; // only undefined initially, before data loaded
+    @observable.ref highlightedCoExpression:CoExpressionWithQ|undefined; // only undefined initially, before data loaded
     @observable allDataRequested:boolean = true; // set to true to request all data by default
 
-    private lastCoExpressionData:CoExpression[];
+    private lastCoExpressionData:CoExpressionWithQ[];
 
     get coExpressionDataPromise() {
         return this.props.coExpressionCache.get({
@@ -108,16 +109,16 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         });
     }
 
-    readonly coExpressionsWithQValues = remoteData<(CoExpression & { qValue:number})[]>({
+    readonly coExpressionsWithQValues = remoteData<CoExpressionWithQ[]>({
         await:()=>[this.coExpressionDataPromise],
         invoke:()=>{
             const coexpressions = this.coExpressionDataPromise.result!;
             const sortedByPvalue = _.sortBy(coexpressions, c=>c.pValue);
             const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));
             qValues.forEach((qValue, index)=>{
-                sortedByPvalue[index].qValue = qValue;
+                (sortedByPvalue[index] as CoExpressionWithQ).qValue = qValue;
             });
-            return Promise.resolve(sortedByPvalue);
+            return Promise.resolve(sortedByPvalue as CoExpressionWithQ[]);
         }
     });
 
@@ -141,7 +142,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         ()=>{
             return this.highlightedCoExpression;
         },
-        (c:CoExpression)=>{
+        (c:CoExpressionWithQ)=>{
             this.highlightedCoExpression = c;
         }
     );
@@ -158,7 +159,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         this.allDataRequested = true;
     }
 
-    private getPlotDataPromises(yAxisCoExpression?:CoExpression) {
+    private getPlotDataPromises(yAxisCoExpression?:CoExpressionWithQ) {
         const ret:{
             molecularX:MobxPromise<NumericGeneMolecularData[]>,
             molecularY:MobxPromise<NumericGeneMolecularData[]>|undefined,
