@@ -9,6 +9,7 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import { ENRICHMENTS_NOT_2_GROUPS_MSG } from "./GroupComparisonUtils";
+import {AlterationEnrichmentTableColumnType} from "../resultsView/enrichments/AlterationEnrichmentsTable";
 
 export interface ICopyNumberEnrichmentsProps {
     store: GroupComparisonStore
@@ -44,35 +45,29 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
-            this.props.store.copyNumberHomdelEnrichmentData,
-            this.props.store.copyNumberAmpEnrichmentData,
+            this.props.store.copyNumberData,
             this.props.store.copyNumberEnrichmentProfile,
             this.props.store.enrichmentsGroup1,
             this.props.store.enrichmentsGroup2
         ],
         render:()=>{
+            const group1Name = this.props.store.enrichmentsGroup1.result!.name;
+            const group2Name = this.props.store.enrichmentsGroup2.result!.name;
             return (
                 <div data-test="GroupComparisonCopyNumberEnrichments">
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles} onChange={this.onChangeProfile}
                                                 selectedValue={this.props.store.copyNumberEnrichmentProfile.result!.molecularProfileId}/>
-                    <AlterationEnrichmentContainer data={this.props.store.copyNumberHomdelEnrichmentData.result!}
-                                                totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
-                                                totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
-                                                alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
-                                                unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
-                                                selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
-                                                headerName={"Deep Deletion - " + this.props.store.copyNumberEnrichmentProfile.result!.name}
-                                                alterationType="a deep deletion"/>
-                    <hr />
-                    <AlterationEnrichmentContainer data={this.props.store.copyNumberAmpEnrichmentData.result!}
-                                                totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
-                                                totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
-                                                alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
-                                                unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
-                                                selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
-                                                headerName={"Amplification - " + this.props.store.copyNumberEnrichmentProfile.result!.name}
-                                                alterationType="an amplification"
-                                               showMutexTendencyInTable={false}
+                    <AlterationEnrichmentContainer data={this.props.store.copyNumberData.result!}
+                                                   totalGroup1Count={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
+                                                   totalGroup2Count={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
+                                                   group1Name={group1Name}
+                                                   group2Name={group2Name}
+                                                   group1Description={`in ${group1Name} that have the listed alteration in the listed gene.`}
+                                                   group2Description={`in ${group2Name} that have the listed alteration in the listed gene.`}
+                                                   selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
+                                                   headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
+                                                   showMutexTendencyInTable={false}
+                                                   showCNAInTable={true}
                     />
                 </div>
             );

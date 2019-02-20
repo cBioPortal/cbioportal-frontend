@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import { observer } from "mobx-react";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import { observable, computed } from 'mobx';
-import AlterationEnrichmentTable from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
+import AlterationEnrichmentTable, {AlterationEnrichmentTableColumnType} from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
 import { AlterationEnrichment } from 'shared/api/generated/CBioPortalAPIInternal';
 import styles from "./styles.module.scss";
 import {
@@ -23,25 +23,40 @@ import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/Enrichm
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
-    totalAlteredCount: number;
-    totalUnalteredCount: number;
-    alteredGroupName?:string;
-    unalteredGroupName?:string;
+    totalGroup1Count: number;
+    totalGroup2Count: number;
+    group1Name?:string;
+    group2Name?:string;
+    group1Description?:string;
+    group2Description?:string;
     headerName: string;
     selectedProfile:MolecularProfile;
     store?: ResultsViewPageStore;
-    alterationType: string;
+    alterationType?: string;
     showMutexTendencyInTable?:boolean;
+    showCNAInTable?:boolean;
 }
 
 @observer
 export default class AlterationEnrichmentContainer extends React.Component<IAlterationEnrichmentContainerProps, {}> {
 
     static defaultProps:Partial<IAlterationEnrichmentContainerProps> = {
-        alteredGroupName: "altered group",
-        unalteredGroupName: "unaltered group",
-        showMutexTendencyInTable: true
+        group1Name: "altered group",
+        group2Name: "unaltered group",
+        alterationType: "a mutation",
+        showMutexTendencyInTable: true,
+        showCNAInTable: false
     };
+
+    @computed get group1Description() {
+        return this.props.group1Description ||
+            `that have alterations in the query gene(s) that also have ${this.props.alterationType!} in the listed gene.`;
+    }
+
+    @computed get group2Description() {
+        return this.props.group2Description ||
+            `that do not have alterations in the query gene(s) that have ${this.props.alterationType!} in the listed gene.`;
+    }
 
     @observable mutualExclusivityFilter: boolean = true;
     @observable coOccurenceFilter: boolean = true;
@@ -52,7 +67,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
 
     @computed get data(): AlterationEnrichmentRow[] {
-        return getAlterationRowData(this.props.data, this.props.totalAlteredCount, this.props.totalUnalteredCount,
+        return getAlterationRowData(this.props.data, this.props.totalGroup1Count, this.props.totalGroup2Count,
             this.props.store ? this.props.store.hugoGeneSymbols : []);
     }
 
@@ -78,10 +93,10 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
         const clickedAlterationEnrichment: AlterationEnrichment = _.find(this.props.data, ['hugoGeneSymbol', this.clickedGene])!;
 
-        return [this.props.totalAlteredCount - clickedAlterationEnrichment.alteredCount, 
+        return [this.props.totalGroup1Count - clickedAlterationEnrichment.alteredCount,
             clickedAlterationEnrichment.alteredCount, 
             clickedAlterationEnrichment.unalteredCount, 
-            this.props.totalUnalteredCount - clickedAlterationEnrichment.unalteredCount];
+            this.props.totalGroup2Count - clickedAlterationEnrichment.unalteredCount];
     }
 
     @autobind
@@ -137,6 +152,23 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         }
     );
 
+    @computed get columns() {
+        const columns = [];
+        columns.push(AlterationEnrichmentTableColumnType.GENE,
+            AlterationEnrichmentTableColumnType.CYTOBAND);
+        if (this.props.showCNAInTable) {
+            columns.push(AlterationEnrichmentTableColumnType.ALTERATION);
+        }
+        columns.push(AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP1,
+        AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP2,
+        AlterationEnrichmentTableColumnType.LOG_RATIO,
+        AlterationEnrichmentTableColumnType.P_VALUE,
+        AlterationEnrichmentTableColumnType.Q_VALUE,
+        AlterationEnrichmentTableColumnType.TENDENCY);
+
+        return columns;
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
@@ -150,8 +182,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         xAxisLeftLabel="Mutual exclusivity" xAxisRightLabel="Co-occurrence" xAxisDomain={15} 
                         xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
                         onSelectionCleared={this.onSelectionCleared}/>
-                    {this.props.store && <MiniBarChart totalAlteredCount={this.props.totalAlteredCount} totalUnalteredCount={this.props.totalUnalteredCount}
-                        selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />}
+                    {this.props.store && <MiniBarChart totalAlteredCount={this.props.totalGroup1Count} totalUnalteredCount={this.props.totalGroup2Count}
+                                                       selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />}
                 </div>
                 <div className={styles.TableContainer}>
                     <div>
@@ -174,9 +206,12 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         </Checkbox>
                     </div>
                     <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
-                        onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} alterationType={this.props.alterationType} dataStore={this.dataStore}
-                       alteredGroupName={this.props.alteredGroupName!} unalteredGroupName={this.props.unalteredGroupName!}
-                       mutexTendency={this.props.showMutexTendencyInTable}
+                                               onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} alterationType={this.props.alterationType!} dataStore={this.dataStore}
+                                               group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}
+                                               group1Description={this.group1Description}
+                                               group2Description={this.group2Description}
+                                               mutexTendency={this.props.showMutexTendencyInTable}
+                                               columns={this.columns}
                     />
                 </div>
             </div>
