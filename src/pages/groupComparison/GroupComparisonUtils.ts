@@ -122,9 +122,12 @@ export function getPatientIdentifiers(
     return _.values(patientSet);
 }
 
-export const ENRICHMENTS_NOT_2_GROUPS_MSG = "We can only show enrichments when two groups are selected. Please select/deselect groups in the 'Active Groups' section so that only two are selected.";
+export function ENRICHMENTS_NOT_2_GROUPS_MSG(tooMany:boolean) {
+    return `We can only show enrichments when two groups are selected. Please ${tooMany ? "deselect" : "select"} groups in the 'Active Groups' section so that only two are selected.`;
+}
+
 export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
-    return `Selected comparison groups span more than one study, so we can't show ${enrichmentsType} enrichments. Please deselect groups from the top of the page, or try a different set of groups.`;
+    return `The selected comparison groups span more than one study, so we can't show ${enrichmentsType} enrichments. Please change your selection in the 'Active Groups' section so that all samples only come from one study.`;
 }
 
 export function getDefaultGroupName(filters:StudyViewFilter) {
