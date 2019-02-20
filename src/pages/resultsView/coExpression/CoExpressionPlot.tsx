@@ -41,9 +41,11 @@ export interface ICoExpressionPlotProps {
     showMutationControls?:boolean;
     showMutations?:boolean;
     logScale?:boolean;
+    showRegressionLine:boolean;
     handlers:{
         onClickShowMutations?:()=>void,
         onClickLogScale?:()=>void,
+        onClickShowRegressionLine:()=>void
     }
 }
 
@@ -229,6 +231,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 legendData={this.mutationLegendElements}
                 logX={this.props.logScale}
                 logY={this.props.logScale}
+                showRegressionLine={this.props.showRegressionLine}
                 useLogSpaceTicks={true}
                 axisLabelX={this.axisLabelX}
                 axisLabelY={this.axisLabelY}
@@ -265,6 +268,14 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                             </label></div>
                         </div>
                     )}
+                    <div className="checkbox coexpression-plot-toolbar-elt"><label>
+                        <input
+                            type="checkbox"
+                            checked={this.props.showRegressionLine}
+                            onClick={this.props.handlers.onClickShowRegressionLine}
+                            data-test="ShowRegressionLine"
+                        />Show Regression Line
+                    </label></div>
                 </div>
 
                 <DownloadControls
