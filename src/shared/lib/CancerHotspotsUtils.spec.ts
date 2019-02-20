@@ -24,6 +24,13 @@ describe('CancerHotspotsUtils', () => {
                 referenceAllele: "A",
                 variantAllele: "T"
             },
+            transcriptId: '',
+            proteinLocation: {
+                transcriptId: '',
+                start: 0,
+                end: 0,
+                mutationType: ''
+            },
             variant: "10:g.66A>T",
             hotspots: [
                 {
@@ -51,6 +58,13 @@ describe('CancerHotspotsUtils', () => {
                 end: 668,
                 referenceAllele: "G",
                 variantAllele: "CAT"
+            },
+            transcriptId: '',
+            proteinLocation: {
+                transcriptId: '',
+                start: 0,
+                end: 0,
+                mutationType: ''
             },
             variant: "4:g.666G>CAT",
             hotspots: [
@@ -80,6 +94,13 @@ describe('CancerHotspotsUtils', () => {
                 referenceAllele: "T",
                 variantAllele: "C"
             },
+            transcriptId: '',
+            proteinLocation: {
+                transcriptId: '',
+                start: 0,
+                end: 0,
+                mutationType: ''
+            },
             variant: "6:g.111T>C",
             hotspots: [
                 {
@@ -107,6 +128,13 @@ describe('CancerHotspotsUtils', () => {
                 end: 2,
                 referenceAllele: "A",
                 variantAllele: "T"
+            },
+            transcriptId: '',
+            proteinLocation: {
+                transcriptId: '',
+                start: 0,
+                end: 0,
+                mutationType: ''
             },
             variant: "1:g.2>T",
             hotspots: []
