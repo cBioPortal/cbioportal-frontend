@@ -42,6 +42,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_right_nav_show_data_sets:true,
     skin_right_nav_show_examples:true,
     skin_right_nav_show_testimonials:true,
+    skin_right_nav_show_whats_new:true,
     skin_show_about_tab:true,
     skin_show_data_tab:true,
     skin_show_faqs_tab:true,

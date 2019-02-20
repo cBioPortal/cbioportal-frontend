@@ -54,7 +54,7 @@ function runResultsTestSuite(prefix){
 
     it(`${prefix} coexpression tab`, function(){
         browser.click("a.tabAnchor_coexpression");
-        browser.waitForVisible('div[data-test="CoExpressionPlot"]',20000);
+        browser.waitForVisible('div[data-test="CoExpressionPlot"]',10000);
         var res = browser.checkElement('[data-test="coExpressionTabDiv"]', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });

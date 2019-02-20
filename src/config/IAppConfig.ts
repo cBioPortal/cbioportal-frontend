@@ -75,6 +75,7 @@ export interface IServerConfig {
     "skin_right_nav_show_data_sets": boolean;
     "skin_right_nav_show_examples": boolean;
     "skin_right_nav_show_testimonials": boolean;
+    "skin_right_nav_show_whats_new": boolean;
     "skin_right_nav_whats_new_blurb": string|null;
     "skin_show_about_tab": boolean;
     "skin_show_data_tab": boolean;

@@ -1,6 +1,8 @@
 import * as React from 'react';
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import {loaderIcon} from "./StatusHelpers";
+
 import annotationStyles from "./styles/annotation.module.scss";
 import hotspotStyles from "./styles/cancerHotspots.module.scss";
 import {getNCBIlink} from "../../api/urls";
@@ -36,11 +38,11 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         return score;
     }
 
-    public static hotspotInfo(isHotspot:boolean, is3dHotspot:boolean)
+    public static hotspotInfo(isHotspot:boolean, is3dHotspot:boolean, count?: number, customInfo?: JSX.Element)
     {
         return (
             <span className={hotspotStyles["hotspot-info"]}>
-                {CancerHotspots.title(isHotspot, is3dHotspot)}
+                {CancerHotspots.title(isHotspot, is3dHotspot, count, customInfo)}
                 <br/>
                 {CancerHotspots.publication(isHotspot, is3dHotspot)}
                 <br/><br/>
@@ -49,15 +51,22 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         );
     }
 
-    public static title(isHotspot:boolean, is3dHotspot:boolean)
+    public static title(isHotspot:boolean, is3dHotspot:boolean, count?: number, customInfo?: JSX.Element)
     {
-        const recurrentHotspot = isHotspot ? (<b>Recurrent Hotspot</b>) : "";
-        const maybeAnd = isHotspot && is3dHotspot ? "and" : "";
-        const clusteredHotspot = is3dHotspot ? (<b>3D Clustered Hotspot</b>) : "";
+        const recurrentHotspot = isHotspot ? (<b>Recurrent Hotspot</b>) : null;
+        const maybeAnd = isHotspot && is3dHotspot ? <span>and</span> : null;
+        const clusteredHotspot = is3dHotspot ? (<b>3D Clustered Hotspot</b>) : null;
+
+        let countInfo: JSX.Element|null = null;
+
+        if (count) {
+            const sample = count > 1 ? "samples" : "sample";
+            countInfo = <span><b>{count}</b> {sample} with</span>;
+        }
 
         return (
             <span>
-                {recurrentHotspot} {maybeAnd} {clusteredHotspot}
+                {countInfo} {recurrentHotspot} {maybeAnd} {clusteredHotspot} {customInfo}
             </span>
         );
     }
@@ -118,13 +127,6 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         this.state = {};
     }
 
-    public loaderIcon()
-    {
-        return (
-            <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>
-        );
-    }
-
     public render()
     {
         const {isHotspot, is3dHotspot} = this.props;
@@ -134,7 +136,7 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         );
 
         if (this.props.status === "pending") {
-            hotspotContent = this.loaderIcon();
+            hotspotContent = loaderIcon("pull-left");
         }
         else if (isHotspot || is3dHotspot)
         {

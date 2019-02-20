@@ -9,7 +9,7 @@ import _ from "lodash";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import CoExpressionViz from "./CoExpressionViz";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import {filterAndSortProfiles} from "./CoExpressionTabUtils";
+import {CoExpressionWithQ, filterAndSortProfiles} from "./CoExpressionTabUtils";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
 import {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {bind} from "bind-decorator";

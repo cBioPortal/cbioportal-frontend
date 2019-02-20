@@ -1426,7 +1426,6 @@
         "hugoGeneSymbol",
         "logRatio",
         "pValue",
-        "qValue",
         "unalteredCount"
       ],
       "properties": {
@@ -1448,9 +1447,6 @@
           "type": "string"
         },
         "pValue": {
-          "type": "number"
-        },
-        "qValue": {
           "type": "number"
         },
         "unalteredCount": {
@@ -1643,7 +1639,6 @@
         "entrezGeneId",
         "hugoGeneSymbol",
         "pValue",
-        "qValue",
         "spearmansCorrelation"
       ],
       "properties": {
@@ -1658,9 +1653,6 @@
           "type": "string"
         },
         "pValue": {
-          "type": "number"
-        },
-        "qValue": {
           "type": "number"
         },
         "spearmansCorrelation": {
@@ -1840,13 +1832,6 @@
             "type": "string"
           }
         },
-        "queryGenes": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
         "unalteredIds": {
           "type": "array",
           "items": {
@@ -1864,7 +1849,6 @@
         "meanExpressionInAlteredGroup",
         "meanExpressionInUnalteredGroup",
         "pValue",
-        "qValue",
         "standardDeviationInAlteredGroup",
         "standardDeviationInUnalteredGroup"
       ],
@@ -1886,9 +1870,6 @@
           "type": "number"
         },
         "pValue": {
-          "type": "number"
-        },
-        "qValue": {
           "type": "number"
         },
         "standardDeviationInAlteredGroup": {
@@ -2159,6 +2140,10 @@
           "format": "int32"
         },
         "numberOfCNAUnprofiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfCNSegmentSamples": {
           "type": "integer",
           "format": "int32"
         },

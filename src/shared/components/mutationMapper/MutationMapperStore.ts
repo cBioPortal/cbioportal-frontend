@@ -12,7 +12,16 @@ import {
     fetchPfamDomainData, fetchCanonicalTranscriptWithFallback,
     fetchEnsemblTranscriptsByEnsemblFilter
 } from "shared/lib/StoreUtils";
-import {EnsemblTranscript, PfamDomain, PfamDomainRange, VariantAnnotation, GenomicLocation, TranscriptConsequence} from "shared/api/generated/GenomeNexusAPI";
+import {
+    EnsemblTranscript,
+    PfamDomain,
+    PfamDomainRange,
+    VariantAnnotation,
+    GenomicLocation,
+    TranscriptConsequence,
+    Hotspot
+} from "shared/api/generated/GenomeNexusAPI";
+import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
@@ -20,10 +29,13 @@ import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownload
 
 import PdbChainDataStore from "./PdbChainDataStore";
 import MutationMapperDataStore from "./MutationMapperDataStore";
-import { uniqueGenomicLocations, genomicLocationString } from "shared/lib/MutationUtils";
+import {uniqueGenomicLocations, genomicLocationString, groupMutationsByProteinStartPos} from "shared/lib/MutationUtils";
+import {defaultHotspotFilter, groupHotspotsByMutations} from "shared/lib/CancerHotspotsUtils";
+import {defaultOncoKbIndicatorFilter, groupOncoKbIndicatorDataByMutations} from "shared/lib/OncoKbUtils";
 import { getMutationsToTranscriptId } from "shared/lib/MutationAnnotator";
 import Mutations from "pages/resultsView/mutation/Mutations";
-import {IServerConfig} from "../../../config/IAppConfig";
+
+import {IServerConfig} from "config/IAppConfig";
 
 
 export interface IMutationMapperStoreConfig {
@@ -280,6 +292,64 @@ export default class MutationMapperStore
             throw new Error("Failed to get transcriptsWithProteinLength");
         }
     }, undefined);
+
+    @computed get unfilteredMutationsByPosition(): {[pos: number]: Mutation[]} {
+        return groupMutationsByProteinStartPos(this.dataStore.sortedData);
+    }
+
+    @computed get filteredMutationsByPosition(): {[pos: number]: Mutation[]} {
+        return groupMutationsByProteinStartPos(this.dataStore.sortedFilteredData);
+    }
+
+    @computed get hotspotsByProteinPosStart(): {[pos: number]: Hotspot[]}
+    {
+        if (this.indexedHotspotData.result)
+        {
+            return groupHotspotsByMutations(
+                this.unfilteredMutationsByPosition, this.indexedHotspotData.result, defaultHotspotFilter);
+        }
+        else {
+            return {};
+        }
+    }
+
+    @computed get filteredHotspotsByProteinPosStart(): {[pos: number]: Hotspot[]}
+    {
+        if (this.indexedHotspotData.result)
+        {
+            return groupHotspotsByMutations(
+                this.filteredMutationsByPosition, this.indexedHotspotData.result, defaultHotspotFilter);
+        }
+        else {
+            return {};
+        }
+    }
+
+    @computed get oncoKbDataByProteinPosStart(): {[pos: number]: IndicatorQueryResp[]}
+    {
+        if (this.oncoKbData.result &&
+            !(this.oncoKbData.result instanceof Error))
+        {
+            return groupOncoKbIndicatorDataByMutations(
+                this.unfilteredMutationsByPosition, this.oncoKbData.result, defaultOncoKbIndicatorFilter);
+        }
+        else {
+            return {};
+        }
+    }
+
+    @computed get filteredOncoKbDataByProteinPosStart(): {[pos: number]: IndicatorQueryResp[]}
+    {
+        if (this.oncoKbData.result &&
+            !(this.oncoKbData.result instanceof Error))
+        {
+            return groupOncoKbIndicatorDataByMutations(
+                this.filteredMutationsByPosition, this.oncoKbData.result, defaultOncoKbIndicatorFilter);
+        }
+        else {
+            return {};
+        }
+    }
 
     @computed get isoformOverrideSource(): string {
         return this.config.isoformOverrideSource || "uniprot";

@@ -132,13 +132,13 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
                 default:
                     // complete
                     disabled = false;
-                    placeholder = "Add clinical tracks..";
+                    placeholder = "Add clinical tracks";
                     options = this.options.result!;
             }
         } else {
             // not loading yet - only load on click
             disabled = false;
-            placeholder = "Add clinical tracks..";
+            placeholder = "Add clinical tracks";
             options = [];
         }
 
