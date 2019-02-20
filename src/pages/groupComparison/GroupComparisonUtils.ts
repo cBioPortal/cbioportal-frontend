@@ -122,14 +122,20 @@ export function getPatientIdentifiers(
     return _.values(patientSet);
 }
 
-export const ENRICHMENTS_TOO_MANY_GROUPS_MSG = "Can't show enrichments for more than two groups - deselect some from the area at the top of the page.";
+export function ENRICHMENTS_NOT_2_GROUPS_MSG(tooMany:boolean) {
+    return `We can only show enrichments when two groups are selected. Please ${tooMany ? "deselect" : "select"} groups in the 'Active Groups' section so that only two are selected.`;
+}
+
 export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
-    return `Selected comparison groups span more than one study, so we can't show ${enrichmentsType} enrichments. Please deselect groups from the top of the page, or try a different set of groups.`;
+    return `The selected comparison groups span more than one study, so we can't show ${enrichmentsType} enrichments. Please change your selection in the 'Active Groups' section so that all samples only come from one study.`;
 }
 
 export function getDefaultGroupName(filters:StudyViewFilter) {
-    // TODO: generate describe name from filters
-    return "<DESCRIPTIVE GENERATED NAME FROM FILTERS>";
+    return _.sortBy( // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
+        filters.clinicalDataEqualityFilters,
+        filter=>filter.attributeId
+    ).map(filter=>filter.values.join("+")) // get each attributes selected values, joined by +
+    .join(", "); // comma separate each attributes values
 }
 
 export function getTabId(pathname:string) {
