@@ -29,11 +29,12 @@ export interface IStackedBarPlotProps {
     axisLabelX?: string;
     axisLabelY?: string;
     legendLocationWidthThreshold?: number;
+    percentage?:boolean;
 }
 
 export interface IStackedBarPlotData {
     minorCategory:string, 
-    counts:{majorCategory:string, count:number}[]
+    counts:{majorCategory:string, count:number, percentage:number}[]
 }
 
 const RIGHT_GUTTER = 120; // room for legend
@@ -215,6 +216,9 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     }
 
     @computed get maxMajorCount() {
+        if(this.props.percentage){
+            return 100;
+        }
         const majorCategoryCounts:{[major:string]:number} = {};
         for (const d of this.data) {
             for (const c of d.counts) {
@@ -336,7 +340,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
         //  this axis is for numbers, not categories
         const label = [this.props.axisLabelX];
         if (this.props.horizontalBars) {
-            label.unshift(COUNT_AXIS_LABEL);
+            label.unshift(`${COUNT_AXIS_LABEL}${this.props.percentage ? " (%)": ""}`);
         }
         return (
             <VictoryAxis
@@ -360,7 +364,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     @computed get vertAxis() {
         const label = [this.props.axisLabelY];
         if (!this.props.horizontalBars) {
-            label.push(COUNT_AXIS_LABEL);
+            label.push(`${COUNT_AXIS_LABEL}${this.props.percentage ? " (%)": ""}`);
         }
         return (
             <VictoryAxis
@@ -483,7 +487,8 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
             this.majorCategoryOrder,
             this.getColor,
             this.categoryCoord,
-            !!this.props.horizontalBars
+            !!this.props.horizontalBars,
+            !!this.props.percentage
         )
         return barSpecs.map(spec=>(
             <VictoryBar
@@ -499,7 +504,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
         return (
             <div>
                 <strong>{datum.majorCategory}</strong><br/>
-                <strong>{datum.minorCategory}</strong>:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}
+                <strong>{datum.minorCategory}</strong>:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}&nbsp;({datum.percentage}%)
             </div>
         );
     }
