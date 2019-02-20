@@ -160,16 +160,16 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         await:()=>[this.store.studies],
         render:()=>{
             const studies = this.store.studies.result!;
-            let ret = <span/>;
+            let studyHeader = <span/>;
             switch (studies.length) {
                 case 0:
-                    ret = <span/>;
+                    studyHeader = <span/>;
                     break;
                 case 1:
-                    ret = <h3><StudyLink studyId={studies[0].studyId}>{studies[0].name}</StudyLink></h3>;
+                    studyHeader = <h3><StudyLink studyId={studies[0].studyId}>{studies[0].name}</StudyLink></h3>;
                     break;
                 default:
-                    ret = (<h4>
+                    studyHeader = (<h4>
                         <a
                             href={`study?id=${studies.map(study => study.studyId).join(',')}`}
                             target="_blank"
@@ -178,11 +178,45 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                         </a>
                     </h4>);
             }
+            let ret;
+            if (this.store.fromChartSpec) {
+                ret = <span>{studyHeader}Groups from <span style={{color:"#3487c7"}}>{this.store.fromChartSpec.clinicalAttribute.displayName}</span></span>
+            } else {
+                ret = studyHeader;
+            }
             return ret;
         } 
     });
 
     render() {
+        let excludeOverlappingCheckbox:JSX.Element | null;
+
+        if (this.store.overlappingSelectedSamples.isComplete && this.store.overlappingSelectedPatients.isComplete &&
+            this.store.overlappingSelectedSamples.result.length === 0 &&
+            this.store.overlappingSelectedPatients.result.length === 0) {
+
+            excludeOverlappingCheckbox = null;
+        } else {
+            excludeOverlappingCheckbox = (
+                <div className={"checkbox"}>
+                    <label>
+                        <input
+                            type="checkbox"
+                            onChange={this.store.toggleExcludeOverlapping}
+                            checked={this.store.excludeOverlapping}
+                        />
+
+                        {`Exclude overlapping samples/patients ${caseCountsInParens(this.store.overlappingSelectedSamples, this.store.overlappingSelectedPatients)} from selected groups.`}
+
+                        {/*<InfoIcon*/}
+                        {/*tooltip={<span style={{maxWidth:200}}>Exclude samples from analysis which occur in more than one selected group.</span>}*/}
+                        {/*/>*/}
+
+                    </label>
+                </div>
+            );
+        }
+
         return (
             <PageLayout noMargin={true} className={"subhead-dark"}>
                 <div>
@@ -193,22 +227,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                                 <GroupSelector
                                     store = {this.store}
                                 />
-                                <div className={"checkbox"}>
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            onChange={this.store.toggleExcludeOverlapping}
-                                            checked={this.store.excludeOverlapping}
-                                        />
-
-                                        {`Exclude overlapping samples/patients ${caseCountsInParens(this.store.overlappingSelectedSamples, this.store.overlappingSelectedPatients)} from selected groups.`}
-
-                                        {/*<InfoIcon*/}
-                                        {/*tooltip={<span style={{maxWidth:200}}>Exclude samples from analysis which occur in more than one selected group.</span>}*/}
-                                        {/*/>*/}
-
-                                    </label>
-                                </div>
+                                {excludeOverlappingCheckbox}
                             </div>
                         </div>
                     </div>

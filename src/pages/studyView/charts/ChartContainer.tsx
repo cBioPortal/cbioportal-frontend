@@ -11,7 +11,7 @@ import {
     ClinicalDataCountWithColor,
     StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
-import {DataBin} from "shared/api/generated/CBioPortalAPIInternal";
+import {DataBin, StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import {svgToPdfPromise} from "shared/lib/svgToPdfDownload";
 import classnames from "classnames";
@@ -36,6 +36,8 @@ import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import {addChartGroupsSpec} from "../../groupComparison/GroupPersistenceUtils";
+import {getComparisonUrl} from "../../../shared/api/urls";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -53,6 +55,7 @@ export interface IChartContainerProps {
     title: string;
     promise: MobxPromise<any>;
     filters: any;
+    studyViewFilters:StudyViewFilter;
     onValueSelection?: any;
     onDataBinSelection?: any;
     download?: IChartContainerDownloadProps[];
@@ -177,6 +180,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         if (this.analysisGroupsPossible) {
             controls.showAnalysisGroupsIcon = true;
         }
+        if (this.comparisonPagePossible) {
+            controls.showComparisonPageIcon = true;
+        }
         return {
             ...controls,
             showResetIcon: this.props.filters && this.props.filters.length > 0
@@ -203,6 +209,27 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     setAnalysisGroups() {
         if (this.analysisGroupsPossible) {
             this.props.setAnalysisGroupsSettings(this.props.chartMeta.clinicalAttribute!, this.props.promise.result as ClinicalDataCountWithColor[]);
+        }
+    }
+
+    @computed
+    get comparisonPagePossible() {
+        return this.props.chartMeta.chartType === ChartTypeEnum.PIE_CHART &&
+            this.props.promise.isComplete &&
+            !!this.props.chartMeta.clinicalAttribute;
+    }
+
+    @autobind
+    @action
+    openComparisonPage() {
+        if (this.comparisonPagePossible) {
+            // save data in localstorage to be read by the comparison page
+            const key = addChartGroupsSpec(
+                this.props.chartMeta.clinicalAttribute!,
+                (this.props.promise.result! as ClinicalDataCountWithColor[]).map(d=>d.value),
+                this.props.studyViewFilters
+            );
+            window.open(getComparisonUrl({fromChart:"true", unshareableLocalKey:key}), "_blank");
         }
     }
 
@@ -453,6 +480,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     changeChartType={this.changeChartType}
                     download={this.downloadTypes}
                     setAnalysisGroups={this.setAnalysisGroups}
+                    openComparisonPage={this.openComparisonPage}
                 />
                 <div style={{display: 'flex', flexGrow: 1, margin: 'auto', alignItems: 'center'}}>
                     {(this.props.promise.isPending) && (

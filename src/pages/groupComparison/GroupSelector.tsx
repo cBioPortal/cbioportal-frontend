@@ -21,11 +21,11 @@ export interface IGroupSelectorProps {
 export default class GroupSelector extends React.Component<IGroupSelectorProps,{}> {
     readonly tabUI = MakeMobxView({
         await:()=>[
-            this.props.store.overlapFilteredAvailableComparisonGroups, 
+            this.props.store.allComparisonGroups_Filtered,
             this.props.store.activeComparisonGroups, 
         ],
         render:()=>{
-            if (this.props.store.availableComparisonGroups.result!.length === 0) {
+            if (this.props.store.allComparisonGroups_Unfiltered.result!.length === 0) {
                 return null;
             } else {
                 const selectedGroups = _.keyBy(this.props.store.activeComparisonGroups.result!, g=>g.id);
@@ -33,7 +33,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                     <div>
                         <strong>Active Groups: </strong>
                         <div className={styles.groupButtons}>
-                            {this.props.store.overlapFilteredAvailableComparisonGroups.result!.map(group=>(
+                            {this.props.store.allComparisonGroups_Filtered.result!.map(group=>(
                                 <button
                                     className={classNames('btn btn-xs', { "btn-primary":(group.id in selectedGroups), "btn-default":!(group.id in selectedGroups)})}
                                     onClick={()=>this.props.store.toggleComparisonGroupSelected(group.id)}
