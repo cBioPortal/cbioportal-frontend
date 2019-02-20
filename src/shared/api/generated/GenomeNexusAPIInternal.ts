@@ -6,6 +6,10 @@ export type AggregatedHotspots = {
 
         'hotspots': Array < Hotspot >
 
+        'proteinLocation': ProteinLocation
+
+        'transcriptId': string
+
         'variant': string
 
 };
@@ -265,6 +269,16 @@ export type MyVariantInfo = {
         'version': number
 
 };
+export type ProteinLocation = {
+    'transcriptId': string
+
+        'start': number
+
+        'end': number
+
+        'mutationType': string
+
+};
 export type Snpeff = {
     'license': string
 
@@ -275,6 +289,8 @@ export type TranscriptConsequenceSummary = {
         'consequenceTerms': string
 
         'entrezGeneId': string
+
+        'exon': string
 
         'hgvsc': string
 
@@ -885,6 +901,237 @@ export default class GenomeNexusAPIInternal {
         }): Promise < Array < Hotspot >
         > {
             return this.fetchHotspotAnnotationByHgvsGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchHotspotAnnotationByProteinLocationsPOSTURL(parameters: {
+        'proteinLocations': Array < ProteinLocation > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/cancer_hotspots/proteinLocations';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves hotspot annotations for the provided list of transcript id, protein location and mutation type
+     * @method
+     * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByProteinLocationsPOST
+     * @param {} proteinLocations - List of transcript id, protein start location, protein end location, mutation type. The mutation types are limited to 'Missense_Mutation', 'In_Frame_Ins', 'In_Frame_Del', 'Splice_Site', and 'Splice_Region'
+     */
+    fetchHotspotAnnotationByProteinLocationsPOSTWithHttpInfo(parameters: {
+        'proteinLocations': Array < ProteinLocation > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/cancer_hotspots/proteinLocations';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['proteinLocations'] !== undefined) {
+                body = parameters['proteinLocations'];
+            }
+
+            if (parameters['proteinLocations'] === undefined) {
+                reject(new Error('Missing required  parameter: proteinLocations'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves hotspot annotations for the provided list of transcript id, protein location and mutation type
+     * @method
+     * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByProteinLocationsPOST
+     * @param {} proteinLocations - List of transcript id, protein start location, protein end location, mutation type. The mutation types are limited to 'Missense_Mutation', 'In_Frame_Ins', 'In_Frame_Del', 'Splice_Site', and 'Splice_Region'
+     */
+    fetchHotspotAnnotationByProteinLocationsPOST(parameters: {
+            'proteinLocations': Array < ProteinLocation > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < AggregatedHotspots >
+        > {
+            return this.fetchHotspotAnnotationByProteinLocationsPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchHotspotAnnotationByTranscriptIdPOSTURL(parameters: {
+        'transcriptIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/cancer_hotspots/transcript';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves hotspot annotations for the provided list of transcript ID
+     * @method
+     * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByTranscriptIdPOST
+     * @param {} transcriptIds - List of transcript Id. For example ["ENST00000288602","ENST00000256078"]
+     */
+    fetchHotspotAnnotationByTranscriptIdPOSTWithHttpInfo(parameters: {
+        'transcriptIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/cancer_hotspots/transcript';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['transcriptIds'] !== undefined) {
+                body = parameters['transcriptIds'];
+            }
+
+            if (parameters['transcriptIds'] === undefined) {
+                reject(new Error('Missing required  parameter: transcriptIds'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves hotspot annotations for the provided list of transcript ID
+     * @method
+     * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByTranscriptIdPOST
+     * @param {} transcriptIds - List of transcript Id. For example ["ENST00000288602","ENST00000256078"]
+     */
+    fetchHotspotAnnotationByTranscriptIdPOST(parameters: {
+            'transcriptIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < AggregatedHotspots >
+        > {
+            return this.fetchHotspotAnnotationByTranscriptIdPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchHotspotAnnotationByTranscriptIdGETURL(parameters: {
+        'transcriptId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/cancer_hotspots/transcript/{transcriptId}';
+
+        path = path.replace('{transcriptId}', parameters['transcriptId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves hotspot annotations for the provided transcript ID
+     * @method
+     * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByTranscriptIdGET
+     * @param {string} transcriptId - A Transcript Id. For example ENST00000288602
+     */
+    fetchHotspotAnnotationByTranscriptIdGETWithHttpInfo(parameters: {
+        'transcriptId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/cancer_hotspots/transcript/{transcriptId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{transcriptId}', parameters['transcriptId'] + '');
+
+            if (parameters['transcriptId'] === undefined) {
+                reject(new Error('Missing required  parameter: transcriptId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves hotspot annotations for the provided transcript ID
+     * @method
+     * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByTranscriptIdGET
+     * @param {string} transcriptId - A Transcript Id. For example ENST00000288602
+     */
+    fetchHotspotAnnotationByTranscriptIdGET(parameters: {
+            'transcriptId': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < Hotspot >
+        > {
+            return this.fetchHotspotAnnotationByTranscriptIdGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
