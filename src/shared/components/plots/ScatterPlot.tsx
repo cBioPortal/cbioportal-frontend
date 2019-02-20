@@ -4,13 +4,15 @@ import bind from "bind-decorator";
 import {computed, observable} from "mobx";
 import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../theme/cBioPoralTheme";
 import Timer = NodeJS.Timer;
-import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel} from "victory";
+import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel, VictoryLine} from "victory";
 import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import ifndef from "shared/lib/ifndef";
 import {tickFormatNumeral} from "./TickUtils";
 import {computeCorrelationPValue, makeScatterPlotSizeFunction, separateScatterDataByAppearance} from "./PlotUtils";
 import {toConditionalPrecision} from "../../lib/NumberUtils";
+import regression from "regression";
+import {getRegressionComputations} from "./ScatterPlotUtils";
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -37,7 +39,8 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     correlation?: {
         pearson: number;
         spearman: number;
-    }
+    };
+    showRegressionLine?:boolean;
     logX?:boolean;
     logY?:boolean;
     useLogSpaceTicks?:boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
@@ -48,13 +51,12 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
 
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const CORRELATION_INFO_Y = 100; // experimentally determined
-export const LEGEND_Y = CORRELATION_INFO_Y + 30 /* approximate correlation info height */ + 30 /* top padding*/
+export const LEGEND_Y = CORRELATION_INFO_Y + 90; /* 90 ≈ approximate correlation info height + top padding */
 const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
 const MIN_LOG_ARGUMENT = 0.01;
 const LEFT_PADDING = 25;
-
 
 @observer
 export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.Component<IScatterPlotProps<D>, {}> {
@@ -145,8 +147,6 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
 
     private get legend() {
         const x = this.legendX;
-        const topPadding = 30;
-        const approximateCorrelationInfoHeight = 30;
         if (this.props.legendData && this.props.legendData.length) {
             return (
                 <VictoryLegend
@@ -171,23 +171,30 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                 <VictoryLabel  x={x + approxTextWidth}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
-                               text={`Pearson: ${this.pearsonCorr.toFixed(2)}`}
+                               text={`Spearman: ${this.spearmanCorr.toFixed(2)}`}
                                style={style}
-                ></VictoryLabel>
+                />
+                { (this.spearmanPval !== null) && <VictoryLabel  x={x + approxTextWidth}
+                                                                 y={CORRELATION_INFO_Y}
+                                                                 textAnchor="end"
+                                                                 dy="2"
+                                                                 text={`(p = ${toConditionalPrecision(this.spearmanPval, 3, 0.01)})`}
+                                                                 style={style}
+                />}
                 <VictoryLabel  x={x + approxTextWidth}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
-                               dy="2"
-                               text={`Spearman: ${this.spearmanCorr.toFixed(2)}`}
+                               dy="5"
+                               text={`Pearson: ${this.pearsonCorr.toFixed(2)}`}
                                style={style}
-                ></VictoryLabel>
-                { (this.spearmanPval !== null) && <VictoryLabel  x={x + approxTextWidth}
-                               y={CORRELATION_INFO_Y}
-                               textAnchor="end"
-                               dy="4"
-                               text={`p-Value: ${toConditionalPrecision(this.spearmanPval, 3, 0.01)}`}
-                               style={style}
-                ></VictoryLabel>}
+                />
+                { (this.pearsonPval !== null) && <VictoryLabel  x={x + approxTextWidth}
+                                                                 y={CORRELATION_INFO_Y}
+                                                                 textAnchor="end"
+                                                                 dy="7"
+                                                                 text={`(p = ${toConditionalPrecision(this.pearsonPval, 3, 0.01)})`}
+                                                                 style={style}
+                />}
             </g>
         );
     }
@@ -246,12 +253,17 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         if (this.props.correlation) {
             return this.props.correlation.spearman;
         } else {
+            // spearman is invariant to monotonic increasing transformations, so we dont need to check about log
             return jStat.spearmancoeff(this.splitData.x, this.splitData.y);
         }
     }
 
     @computed get spearmanPval() {
         return computeCorrelationPValue(this.spearmanCorr, this.splitData.x.length);
+    }
+
+    @computed get pearsonPval() {
+        return computeCorrelationPValue(this.pearsonCorr, this.splitData.x.length);
     }
 
     @computed get rightPadding() {
@@ -329,6 +341,40 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         );
     }
 
+    private get regressionLine() {
+        if (this.props.showRegressionLine && this.props.data.length >= 2) {
+            const regressionLineComputations = getRegressionComputations(this.props.data.map(
+                // perform same transformations on data for this calculation as we do for plot (i.e. log if necessary)
+                d=>([this.x(d), this.y(d)] as [number, number])
+            ));
+            const y = (x:number)=>regressionLineComputations.predict(x)[1];
+            const labelX = 0.7;
+            const xPoints = [this.plotDomain.x[0], this.plotDomain.x[0]*(1-labelX) + this.plotDomain.x[1]*labelX, this.plotDomain.x[1]];
+            const data:any[] = xPoints.map(x=>({ x, y:y(x), label:""}));
+            data[1].label = [regressionLineComputations.string, `R² = ${regressionLineComputations.r2}`];
+            return [
+                <VictoryLine
+                    style={{
+                        data: {
+                            stroke: "#c43a31", strokeWidth: 2
+                        },
+                        labels: {
+                            fontSize: 15,
+                            fill: "#000000",
+                            stroke: "#ffffff",
+                            strokeWidth:6,
+                            fontWeight:"bold",
+                            paintOrder:"stroke"
+                        }
+                    }}
+                    data={data}
+                    labelComponent={<VictoryLabel lineHeight={1.3}/>}
+                />
+            ];
+        } else {
+            return null;
+        }
+    }
 
     @bind
     private getChart() {
@@ -403,6 +449,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                     y={this.y}
                                 />
                             ))}
+                            {this.regressionLine}
                         </VictoryChart>
                         {this.correlationInfo}
                     </g>
