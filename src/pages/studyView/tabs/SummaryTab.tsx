@@ -132,6 +132,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             filters: [],
             onDeleteChart: this.handlers.onDeleteChart,
             isNewlyAdded: this.handlers.isNewlyAdded,
+            studyViewFilters: this.store.filters,
             analysisGroupsPossible:this.store.analysisGroupsPossible,
             setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grps:ReadonlyArray<AnalysisGroup>)=>{
                 this.store.updateAnalysisGroupsSettings(attribute, grps);
