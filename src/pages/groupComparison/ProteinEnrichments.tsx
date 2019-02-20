@@ -8,7 +8,7 @@ import ExpressionEnrichmentContainer from "../resultsView/enrichments/Expression
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupComparisonStore from "./GroupComparisonStore";
-import { ENRICHMENTS_TOO_MANY_GROUPS_MSG, ENRICHMENTS_TOO_MANY_STUDIES_MSG } from "./GroupComparisonUtils";
+import { ENRICHMENTS_NOT_2_GROUPS_MSG, ENRICHMENTS_TOO_MANY_STUDIES_MSG } from "./GroupComparisonUtils";
 
 export interface IProteinEnrichmentsProps {
     store: GroupComparisonStore
@@ -25,7 +25,7 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
         await:()=>{
             const ret = [this.props.store.activeComparisonGroups, this.props.store.activeStudyIds];
             if ((this.props.store.activeComparisonGroups.isComplete &&
-                this.props.store.activeComparisonGroups.result.length > 2) ||
+                this.props.store.activeComparisonGroups.result.length !== 2) ||
                 (this.props.store.activeStudyIds.isComplete && this.props.store.activeStudyIds.result.length > 1)) {
                 // dont bother loading data for and computing enrichments UI if its not valid situation for it
                 return ret;
@@ -34,8 +34,8 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
             }
         },
         render:()=>{
-            if (this.props.store.activeComparisonGroups.result!.length > 2) {
-                return <span>{ENRICHMENTS_TOO_MANY_GROUPS_MSG}</span>;
+            if (this.props.store.activeComparisonGroups.result!.length !== 2) {
+                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeComparisonGroups.result!.length > 2)}</span>;
             } else if (this.props.store.activeStudyIds.result!.length > 1) {
                 return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG("protein")}</span>;
             } else {

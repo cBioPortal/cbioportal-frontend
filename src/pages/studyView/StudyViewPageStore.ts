@@ -338,8 +338,13 @@ export class StudyViewPageStore {
         this._selectedComparisonGroups.set(groupId, !this.isComparisonGroupSelected(groupId));
     }
 
-    public isComparisonGroupSelected(groupId:string) {
-        return !!this._selectedComparisonGroups.get(groupId);
+    public isComparisonGroupSelected(groupId:string):boolean {
+        if (!this._selectedComparisonGroups.has(groupId)) {
+            return true; // default to selected, on page load or on group creation
+        } else {
+            // otherwise, return value held in map
+            return this._selectedComparisonGroups.get(groupId)!;
+        }
     }
 
     @action public removeComparisonGroupSelectionEntry(groupId:string) {
