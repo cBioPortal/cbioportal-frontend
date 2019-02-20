@@ -117,13 +117,19 @@ export default class Venn extends React.Component<IVennProps, {}> {
     }
 
     @computed get legendData() {
-        let legendData = _.map(this.props.categoryToColor, (color, category) => {
-            return {
-                name: category,
-                symbol: { fill: color }
+        const usedGroups = _.keyBy(_.uniq(
+            _.flattenDeep(this.props.sampleGroupsCombinationSets.map(combo=>combo.groups))
+        ));
+        const legendData:any[] = [];
+        _.forEach(this.props.categoryToColor, (color, category) => {
+            if (category in usedGroups) {
+                legendData.push({
+                    name: category,
+                    symbol: { fill: color }
+                });
             }
-        })
-        return legendData.reverse();
+        });
+        return legendData;
     }
 
     public render() {
@@ -167,12 +173,15 @@ export default class Venn extends React.Component<IVennProps, {}> {
                 />
                 <g id="patientVennDiagram" transform={`translate(${VENN_PLOT_WIDTH},${this.topPadding})`} />
 
-                <VictoryLegend
-                    x={2 * VENN_PLOT_WIDTH}
-                    y={this.topPadding}
-                    theme={CBIOPORTAL_VICTORY_THEME}
-                    standalone={false}
-                    data={this.legendData} />
+                {this.legendData.length > 0 && (
+                    <VictoryLegend
+                        x={2 * VENN_PLOT_WIDTH}
+                        y={this.topPadding}
+                        theme={CBIOPORTAL_VICTORY_THEME}
+                        standalone={false}
+                        data={this.legendData}
+                    />
+                )}
             </svg>
         </div>)
     }

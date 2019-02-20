@@ -28,8 +28,8 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     }
     @observable plotExists = false;
 
-    @computed get isStackedBar() {
-        return this.props.store.sampleGroups.isComplete && this.props.store.sampleGroups.result.length > 3 ? true : false
+    @computed get sampleGroups() {
+        return this.props.store.activeComparisonGroups;
     }
 
     componentDidUpdate() {
@@ -42,7 +42,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     }
 
     @computed get plotType() {
-        return this.props.store.sampleGroups.isComplete && this.props.store.sampleGroups.result.length > 3 ? PlotType.StackedBar : PlotType.Venn
+        return this.sampleGroups.isComplete && this.sampleGroups.result.length > 3 ? PlotType.StackedBar : PlotType.Venn
     }
 
     @computed get plot() {
