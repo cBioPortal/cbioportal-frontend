@@ -61,7 +61,9 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
                     <ExpressionEnrichmentContainer data={this.props.store.proteinEnrichmentData.result!}
                                                    alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
                                                    unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
-                                                   selectedProfile={this.props.store.proteinEnrichmentProfile.result!}/>
+                                                   selectedProfile={this.props.store.proteinEnrichmentProfile.result!}
+                                                   showMutexTendencyInTable={false}
+                    />
                 </div>
             );
         },

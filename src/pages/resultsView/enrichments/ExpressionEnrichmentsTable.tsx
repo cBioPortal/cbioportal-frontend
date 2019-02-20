@@ -4,7 +4,7 @@ import LazyMobXTable, { Column } from "../../../shared/components/lazyMobXTable/
 import { observer } from "mobx-react";
 import {computed, observable} from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
-import { calculateExpressionTendency } from "./EnrichmentsUtil";
+import {calculateExpressionTendency, calculateGenericTendency} from "./EnrichmentsUtil";
 import { formatLogOddsRatio, formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
@@ -22,6 +22,7 @@ export interface IExpressionEnrichmentTableProps {
     onGeneNameClick?: (hugoGeneSymbol: string, entrezGeneId: number) => void;
     alteredGroupName:string;
     unalteredGroupName:string;
+    mutexTendency?:boolean;
 }
 
 export enum ExpressionEnrichmentTableColumnType {
@@ -58,7 +59,8 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
             ExpressionEnrichmentTableColumnType.Q_VALUE,
             ExpressionEnrichmentTableColumnType.TENDENCY
         ],
-        initialSortColumn: "q-Value"
+        initialSortColumn: "q-Value",
+        mutexTendency: true
     };
 
     private checkboxChange(hugoGeneSymbol: string) {
@@ -157,8 +159,9 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.TENDENCY] = {
-            name: "Tendency",
-            render: (d: ExpressionEnrichmentRow) => <div className={styles.Tendency}>{calculateExpressionTendency(Number(d.logRatio))}
+            name: this.props.mutexTendency ? "Tendency" : "Enriched in",
+            render: (d: ExpressionEnrichmentRow) => <div className={styles.Tendency}>
+                {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.alteredGroupName, this.props.unalteredGroupName)}
                 {d.qValue < 0.05 ? <Badge style={{
                     backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
                 }}>Significant</Badge> : ""}</div>,

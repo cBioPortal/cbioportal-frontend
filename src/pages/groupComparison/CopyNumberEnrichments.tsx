@@ -71,7 +71,9 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                                                 unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
                                                 selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
                                                 headerName={"Amplification - " + this.props.store.copyNumberEnrichmentProfile.result!.name}
-                                                alterationType="an amplification"/>
+                                                alterationType="an amplification"
+                                               showMutexTendencyInTable={false}
+                    />
                 </div>
             );
         },

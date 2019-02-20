@@ -27,6 +27,7 @@ export interface IExpressionEnrichmentContainerProps {
     alteredGroupName?:string;
     unalteredGroupName?:string;
     store?: ResultsViewPageStore;
+    showMutexTendencyInTable?:boolean;
 }
 
 @observer
@@ -34,7 +35,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
 
     static defaultProps:Partial<IExpressionEnrichmentContainerProps> = {
         alteredGroupName: "altered group",
-        unalteredGroupName: "unaltered group"
+        unalteredGroupName: "unaltered group",
+        showMutexTendencyInTable: true
     };
 
     @observable overExpressedFilter: boolean = true;
@@ -171,7 +173,9 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                         </Checkbox>
                     </div>
                     <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
-                       onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} alteredGroupName={this.props.alteredGroupName!} unalteredGroupName={this.props.unalteredGroupName!}/>
+                       onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} alteredGroupName={this.props.alteredGroupName!} unalteredGroupName={this.props.unalteredGroupName!}
+                       mutexTendency={this.props.showMutexTendencyInTable}
+                    />
                 </div>
             </div>
         );
