@@ -1,4 +1,5 @@
 import MobxPromise from "mobxpromise";
+import * as _ from "lodash";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {
     default as GenomeNexusAPIInternal, AggregatedHotspots, GenomicLocation, Hotspot
@@ -51,16 +52,71 @@ export function indexHotspots(hotspots: AggregatedHotspots[]): IHotspotIndex
     return index;
 }
 
-export function isHotspot(mutation: Mutation, index: IHotspotIndex, filter?: (hotspot: Hotspot) => boolean): boolean
+export function groupHotspotsByMutations(mutationsByPosition: {[pos: number]: Mutation[]},
+                                         index: IHotspotIndex,
+                                         filter?: (hotspot: Hotspot) => boolean): {[pos: number]: Hotspot[]}
 {
-    const genomicLocation = extractGenomicLocation(mutation);
-    const aggregatedHotspots = genomicLocation ? index[genomicLocationString(genomicLocation)] : undefined;
+    const hotspotMap: {[pos: number]: Hotspot[]} = {};
 
-    let hotspots = aggregatedHotspots ? aggregatedHotspots.hotspots : [];
+    _.keys(mutationsByPosition).forEach(key => {
+        const position = Number(key);
+        const hotspots = filterHotspotsByMutations(mutationsByPosition[position], index, filter);
+
+        if (hotspots.length > 0) {
+            hotspotMap[position] = hotspots;
+        }
+    });
+
+    return hotspotMap;
+}
+
+export function filterHotspotsByMutations(mutations: Mutation[],
+                                          index: IHotspotIndex,
+                                          filter?: (hotspot: Hotspot) => boolean): Hotspot[]
+{
+    let hotspots: Hotspot[] = [];
+
+    mutations.forEach(mutation => {
+        const genomicLocation = extractGenomicLocation(mutation);
+        const aggregatedHotspots = genomicLocation ? index[genomicLocationString(genomicLocation)] : undefined;
+
+        // TODO remove redundant hotspots
+        if (aggregatedHotspots) {
+            hotspots = hotspots.concat(aggregatedHotspots.hotspots);
+        }
+    });
+
     if (filter) {
         hotspots = hotspots.filter(filter);
     }
 
-    return hotspots.length > 0;
+    return hotspots;
+}
+
+export function filterRecurrentHotspotsByMutations(mutations: Mutation[],
+                                                   index: IHotspotIndex): Hotspot[]
+{
+    return filterHotspotsByMutations(mutations, index, (hotspot: Hotspot) =>
+        hotspot.type.toLowerCase().includes("single") || hotspot.type.toLowerCase().includes("indel")
+    );
+}
+
+export function filter3dHotspotsByMutations(mutations: Mutation[],
+                                            index: IHotspotIndex): Hotspot[]
+{
+    return filterHotspotsByMutations(mutations, index, (hotspot: Hotspot) =>
+        hotspot.type.toLowerCase().includes("3d")
+    );
+}
+
+
+export function isHotspot(mutation: Mutation, index: IHotspotIndex, filter?: (hotspot: Hotspot) => boolean): boolean
+{
+    return filterHotspotsByMutations([mutation], index, filter).length > 0;
+}
+
+export function defaultHotspotFilter(hotspot: Hotspot)  {
+    const type = hotspot.type.toLowerCase();
+    return type.includes("single") || type.includes("indel") || type.includes("3d");
 }
 

@@ -6,20 +6,23 @@ import {LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
 import {remoteData} from "../../api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import request from "superagent";
-import classnames from 'classnames';
 import Response = request.Response;
 import {observer, Observer} from "mobx-react";
 import {computed, observable, action} from "mobx";
 import _ from "lodash";
 import {lollipopLabelText, lollipopLabelTextAnchor} from "shared/lib/LollipopPlotUtils";
-import {countUniqueMutations, getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
+import {
+    countUniqueMutations,
+    getColorForProteinImpactType,
+    groupMutationsByProteinStartPos,
+    IProteinImpactTypeColors
+} from "shared/lib/MutationUtils";
 import {generatePfamDomainColorMap} from "shared/lib/PfamUtils";
 import {getMutationAlignerUrl} from "shared/api/urls";
-import styles from "./lollipopMutationPlot.module.scss";
 import Collapse from "react-collapse";
 import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
-import EditableSpan from "../editableSpan/EditableSpan";
-import DownloadControls from "../downloadControls/DownloadControls";
+import LollipopMutationPlotControls from "./LollipopMutationPlotControls";
+import {TrackDataStatus, TrackVisibility} from "../tracks/TrackSelector";
 import autobind from "autobind-decorator";
 
 export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
@@ -27,6 +30,10 @@ export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
     store:MutationMapperStore;
     onXAxisOffset?:(offset:number)=>void;
     geneWidth:number;
+    trackVisibility?: TrackVisibility;
+    trackDataStatus?: TrackDataStatus;
+    onTrackVisibilityChange?: (selectedTrackIds: string[]) => void;
+    autoHideControls?: boolean;
 }
 
 @observer
@@ -41,7 +48,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     private divContainer:HTMLDivElement;
 
     @computed private get showControls(): boolean {
-        return (this.yMaxInputFocused || this.mouseInPlot);
+        return this.props.autoHideControls ? (this.yMaxInputFocused || this.mouseInPlot) : true;
     }
 
     readonly mutationAlignerLinks = remoteData<{[pfamAccession:string]:string}>({
@@ -97,19 +104,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     }
 
     @computed private get mutationsByPosition():{[pos:number]:Mutation[]} {
-        const ret:{[pos:number]:Mutation[]} = {};
-        let codon;
-        for (const mutations of this.props.store.dataStore.sortedFilteredData) {
-            for (const mutation of mutations) {
-                codon = mutation.proteinPosStart;
-
-                if (codon !== undefined && codon !== null) {
-                    ret[codon] = ret[codon] || [];
-                    ret[codon].push(mutation);
-                }
-            }
-        }
-        return ret;
+        return groupMutationsByProteinStartPos(this.props.store.dataStore.sortedFilteredData);
     }
 
     @computed private get uniqueMutationCountsByPosition(): {[pos: number]: number} {
@@ -315,16 +310,16 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     }
 
     @autobind
-    private getSVG(){
-            var svg:SVGElement = $(this.divContainer).find(".lollipop-svgnode")[0] as any;
-            return svg;
+    private getSVG(): SVGElement {
+        let svg:SVGElement = $(this.divContainer).find(".lollipop-svgnode")[0] as any;
+        return svg;
     }
 
     @computed get hugoGeneSymbol() {
         return this.props.store.gene.hugoGeneSymbol;
     }
 
-    @computed get countRange() {
+    @computed get countRange(): [number, number] {
         if (this.lollipops.length === 0) {
             return [0,0];
         } else {
@@ -424,53 +419,31 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         );
     }
 
-    @computed get controls() {
-        return (
-            <div className={ classnames((this.showControls ? styles["fade-in"] : styles["fade-out"])) }>
-                <span>
-                        <div style={{display:"flex", alignItems:"center"}}>
-                            <button className="btn btn-default btn-xs" onClick={this.handlers.handleToggleLegend}>
-                                Legend <i className="fa fa-eye" aria-hidden="true"></i>
-                            </button>
-                            <div className="small" style={{display:'flex', alignItems:'center', marginLeft:7}}>
-                                <span>Y-Axis Max:</span>
-                                    <input
-                                        style={{display:"inline-block", padding:0, width:200, marginLeft:10, marginRight:10}}
-                                        type="range"
-                                        min={this.countRange[0]}
-                                        max={this.countRange[1]}
-                                        step="1"
-                                        onChange={this.handlers.handleYAxisMaxSliderChange}
-                                        value={this.yMaxSlider}
-                                    />
-                                    <EditableSpan
-                                        className={styles["ymax-number-input"]}
-                                        value={`${this.yMaxInput}`}
-                                        setValue={this.handlers.handleYAxisMaxChange}
-                                        numericOnly={true}
-                                        onFocus={this.handlers.onYMaxInputFocused}
-                                        onBlur={this.handlers.onYMaxInputBlurred}
-                                    />
-                            </div>
-                            <DownloadControls
-                                getSvg={this.getSVG}
-                                filename={`${this.hugoGeneSymbol}_lollipop.svg`}
-                                dontFade={true}
-                                collapse={true}
-                                style={{marginLeft:"auto"}}
-                            />
-                        </div>
-                        {'  '}
-                </span>
-            </div>
-        );
-    }
-
     render() {
         if (this.props.store.pfamDomainData.isComplete && this.props.store.pfamDomainData.result) {
             return (
-                <div style={{display: "inline-block"}} ref={(div:HTMLDivElement)=>this.divContainer=div} onMouseEnter={this.handlers.onMouseEnterPlot} onMouseLeave={this.handlers.onMouseLeavePlot}>
-                    {this.controls}
+                <div
+                    style={{display: "inline-block"}}
+                    ref={(div:HTMLDivElement)=>this.divContainer=div}
+                    onMouseEnter={this.handlers.onMouseEnterPlot}
+                    onMouseLeave={this.handlers.onMouseLeavePlot}
+                >
+                    <LollipopMutationPlotControls
+                        showControls={this.showControls}
+                        hugoGeneSymbol={this.hugoGeneSymbol}
+                        countRange={this.countRange}
+                        onYAxisMaxSliderChange={this.handlers.handleYAxisMaxSliderChange}
+                        onYAxisMaxChange={this.handlers.handleYAxisMaxChange}
+                        onYMaxInputFocused={this.handlers.onYMaxInputFocused}
+                        onYMaxInputBlurred={this.handlers.onYMaxInputBlurred}
+                        onToggleLegend={this.handlers.handleToggleLegend}
+                        yMaxSlider={this.yMaxSlider}
+                        yMaxInput={this.yMaxInput}
+                        trackVisibility={this.props.trackVisibility}
+                        trackDataStatus={this.props.trackDataStatus}
+                        onTrackVisibilityChange={this.props.onTrackVisibilityChange}
+                        getSVG={this.getSVG}
+                    />
                     <Collapse isOpened={this.legendShown}>
                         {this.legend}
                     </Collapse>

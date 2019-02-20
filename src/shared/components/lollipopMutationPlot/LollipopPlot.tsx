@@ -3,9 +3,8 @@ import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import {default as LollipopPlotNoTooltip, LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
-import HitZone from "../HitZone";
+import {HitZoneConfig, defaultHitzoneConfig, initHitZoneFromConfig} from "../HitZone";
 import MutationMapperDataStore from "shared/components/mutationMapper/MutationMapperDataStore";
-import {Gene} from "../../api/generated/CBioPortalAPI";
 
 export type LollipopPlotProps = {
     sequence:SequenceSpec;
@@ -20,29 +19,9 @@ export type LollipopPlotProps = {
     onXAxisOffset?:(offset:number)=>void;
 };
 
-type HitZoneConfig = {
-    hitRect: {x:number, y:number, width:number, height:number};
-    content?: JSX.Element;
-    tooltipPlacement?: string;
-    cursor?: string;
-    onMouseOver?: () => void;
-    onClick?: () => void;
-    onMouseOut?: () => void;
-}
-
 @observer
 export default class LollipopPlot extends React.Component<LollipopPlotProps, {}> {
-    @observable private hitZoneConfig: HitZoneConfig = {
-        hitRect: {
-            x:0, y:0, width:0, height:0
-        },
-        content:(<span></span>),
-        tooltipPlacement: "top",
-        cursor: "pointer",
-        onMouseOver:()=>0,
-        onClick:()=>0,
-        onMouseOut:()=>0
-    };
+    @observable private hitZoneConfig: HitZoneConfig = defaultHitzoneConfig();
 
     private plot:LollipopPlotNoTooltip;
     private handlers:any;
@@ -79,18 +58,7 @@ export default class LollipopPlot extends React.Component<LollipopPlotProps, {}>
     }
 
     @computed private get hitZone() {
-        return (
-            <HitZone
-                y={this.hitZoneConfig.hitRect.y}
-                x={this.hitZoneConfig.hitRect.x}
-                width={this.hitZoneConfig.hitRect.width}
-                height={this.hitZoneConfig.hitRect.height}
-                onMouseOver={this.hitZoneConfig.onMouseOver}
-                onClick={this.hitZoneConfig.onClick}
-                onMouseOut={this.hitZoneConfig.onMouseOut}
-                cursor={this.hitZoneConfig.cursor}
-            />
-        );
+        return initHitZoneFromConfig(this.hitZoneConfig);
     }
 
     public toSVGDOMNode():Element {

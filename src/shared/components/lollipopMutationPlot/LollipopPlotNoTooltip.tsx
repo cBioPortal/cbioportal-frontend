@@ -10,6 +10,7 @@ import {computed, action} from "mobx";
 import $ from "jquery";
 import {LollipopPlotProps} from "./LollipopPlot";
 import {SyntheticEvent} from "react";
+import {getComponentIndex, unhoverAllComponents} from "shared/lib/SvgComponentUtils";
 
 export type LollipopSpec = {
     codon:number;
@@ -80,6 +81,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
         this.handlers = {
             ref: (svg:SVGElement)=>{this.svg = svg;},
             onBackgroundClick:()=>{
+                this.props.dataStore.clearDataSelectFilter();
                 this.props.dataStore.clearSelectedPositions();
             },
             onBackgroundMouseMove:()=>{
@@ -92,6 +94,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                 if (!this.shiftPressed) {
                     this.props.dataStore.clearSelectedPositions();
                 }
+                this.props.dataStore.clearDataSelectFilter();
                 this.props.dataStore.setPositionSelected(codon, !isSelected);
             },
             onKeyDown:(e: JQueryKeyEventObject)=>{
@@ -123,10 +126,11 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                                 lollipopComponent.circleHitRect,
                                 lollipopComponent.props.spec.tooltip,
                                 action(()=>{
+                                    this.props.dataStore.clearDataHighlightFilter();
                                     this.props.dataStore.setPositionHighlighted(lollipopComponent.props.spec.codon, true);
-                                    lollipopComponent.isHovered = true
+                                    lollipopComponent.isHovered = true;
                                 }),
-                                ()=>this.handlers.onLollipopClick(lollipopComponent.props.spec.codon)
+                                action(()=>this.handlers.onLollipopClick(lollipopComponent.props.spec.codon))
                             );
                         }
                     }
@@ -175,12 +179,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
     }
 
     private unhoverAllLollipops() {
-        for (const index of Object.keys(this.lollipopComponents)) {
-            const component = this.lollipopComponents[index];
-            if (component) {
-                component.isHovered = false;
-            }
-        }
+        unhoverAllComponents(this.lollipopComponents);
         this.props.dataStore.clearHighlightedPositions();
     }
 
@@ -300,7 +299,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
     }
 
     @computed private get geneX() {
-        return this.yAxisWidth + 20;
+        return this.yAxisWidth + 60;
     }
 
     @computed private get geneY() {
@@ -371,7 +370,11 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                     x={this.geneX + this.codonToX(lollipop.codon)}
                     stickBaseY={this.geneY}
                     stickHeight={this.countToHeight(lollipop.count)}
-                    headRadius={this.props.dataStore.isPositionSelected(lollipop.codon) ? 5 : 2.8}
+                    headRadius={
+                        this.props.dataStore.isPositionSelected(lollipop.codon) ||
+                        this.props.dataStore.isPositionHighlighted(lollipop.codon) ?
+                            5 : 2.8
+                    }
                     hoverHeadRadius={hoverHeadRadius}
                     label={lollipop.label}
                     headColor={lollipop.color}
@@ -425,26 +428,16 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
         return `${SEQUENCE_ID_CLASS_PREFIX}${index}`;
     }
 
-    private getComponentIndex(classes:string, classPrefix:string):number|null {
-        const match = classes.split(/[\s]+/g).map(c=>c.match(new RegExp(`^${classPrefix}(.*)$`)))
-            .find(x=>(x !== null));
-        if (!match) {
-            return null;
-        } else {
-            return parseInt(match[1], 10);
-        }
-    }
-
     private getDomainIndex(classes:string):number|null {
-        return this.getComponentIndex(classes, DOMAIN_ID_CLASS_PREFIX);
+        return getComponentIndex(classes, DOMAIN_ID_CLASS_PREFIX);
     }
 
     private getLollipopIndex(classes:string):number|null {
-        return this.getComponentIndex(classes, LOLLIPOP_ID_CLASS_PREFIX);
+        return getComponentIndex(classes, LOLLIPOP_ID_CLASS_PREFIX);
     }
 
     private getSequenceIndex(classes:string):number|null {
-        return this.getComponentIndex(classes, SEQUENCE_ID_CLASS_PREFIX);
+        return getComponentIndex(classes, SEQUENCE_ID_CLASS_PREFIX);
     }
 
     public toSVGDOMNode():Element {

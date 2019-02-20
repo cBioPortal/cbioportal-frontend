@@ -19,6 +19,7 @@ import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
 import {StudySummaryTab} from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from "./studyPageHeader/StudyPageHeader";
+import CNSegments from "./tabs/CNSegments";
 import "./styles.scss";
 import styles from './styles.module.scss';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
@@ -178,6 +179,17 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                             hide={this.store.MDACCHeatmapStudyMeta.result.length === 0}>
                                         <IFrameLoader height={700}
                                                       url={`//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={3}
+                                        id={StudyViewPageTabKeyEnum.CN_SEGMENTS}
+                                        linkText={StudyViewPageTabDescriptions.CN_SEGMENTS}
+                                        hide={
+                                            !this.store.initialMolecularProfileSampleCounts.result ||
+                                            !(this.store.initialMolecularProfileSampleCounts.result.numberOfCNSegmentSamples > 0)
+                                        }
+                                    >
+                                       <CNSegments store={this.store} />
                                     </MSKTab>
                                 </MSKTabs>
 

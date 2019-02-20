@@ -14,8 +14,6 @@ export type AlterationEnrichment = {
 
         'pValue': number
 
-        'qValue': number
-
         'unalteredCount': number
 
 };
@@ -98,8 +96,6 @@ export type CoExpression = {
 
         'pValue': number
 
-        'qValue': number
-
         'spearmansCorrelation': number
 
 };
@@ -180,8 +176,6 @@ export type DensityPlotBin = {
 export type EnrichmentFilter = {
     'alteredIds': Array < string >
 
-        'queryGenes': Array < number >
-
         'unalteredIds': Array < string >
 
 };
@@ -197,8 +191,6 @@ export type ExpressionEnrichment = {
         'meanExpressionInUnalteredGroup': number
 
         'pValue': number
-
-        'qValue': number
 
         'standardDeviationInAlteredGroup': number
 
@@ -323,6 +315,8 @@ export type MolecularProfileSampleCount = {
     'numberOfCNAProfiledSamples': number
 
         'numberOfCNAUnprofiledSamples': number
+
+        'numberOfCNSegmentSamples': number
 
         'numberOfMutationProfiledSamples': number
 

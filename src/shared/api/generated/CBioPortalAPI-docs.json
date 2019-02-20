@@ -472,6 +472,13 @@
             }
           },
           {
+            "name": "chromosome",
+            "in": "query",
+            "description": "Chromosome",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
@@ -516,7 +523,7 @@
           {
             "in": "body",
             "name": "genePanelMultipleStudyFilter",
-            "description": "List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Entrez Gene IDs",
+            "description": "List of Molecular Profile ID and Sample ID pairs",
             "required": true,
             "schema": {
               "$ref": "#/definitions/GenePanelMultipleStudyFilter"
@@ -716,6 +723,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "Search keyword that applies to hugo gene symbol of the genes",
+            "required": false,
+            "type": "string"
+          },
           {
             "name": "alias",
             "in": "query",
@@ -1812,7 +1826,7 @@
           {
             "in": "body",
             "name": "mutationMultipleStudyFilter",
-            "description": "List of Molecular Profile ID and Sample ID pairs and Entrez Gene IDs",
+            "description": "List of Molecular Profile IDs or List of Molecular Profile ID / Sample ID pairs, and List of Entrez Gene IDs",
             "required": true,
             "schema": {
               "$ref": "#/definitions/MutationMultipleStudyFilter"
@@ -1906,6 +1920,98 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/Mutation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients": {
+      "get": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Get all patients",
+        "operationId": "getAllPatientsUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "Search keyword that applies to ID of the patients",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "patientId"
+            ]
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Patient"
               }
             }
           }
@@ -2230,6 +2336,13 @@
         ],
         "parameters": [
           {
+            "name": "keyword",
+            "in": "query",
+            "description": "Search keyword that applies to name and cancer type of the studies",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
@@ -2361,6 +2474,46 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CancerStudy"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/studies/tags/fetch": {
+      "post": {
+        "tags": [
+          "Studies"
+        ],
+        "summary": "Get the study tags by IDs",
+        "operationId": "getTagsForMultipleStudiesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyIds",
+            "description": "List of Study IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CancerStudyTags"
               }
             }
           }
@@ -3603,6 +3756,13 @@
             "type": "string"
           },
           {
+            "name": "chromosome",
+            "in": "query",
+            "description": "Chromosome",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
@@ -3675,6 +3835,35 @@
               "items": {
                 "$ref": "#/definitions/CopyNumberSeg"
               }
+            }
+          }
+        }
+      }
+    },
+    "/studies/{studyId}/tags": {
+      "get": {
+        "tags": [
+          "Studies"
+        ],
+        "summary": "Get the tags of a study",
+        "operationId": "getTagsUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
             }
           }
         }
@@ -3768,6 +3957,19 @@
         }
       },
       "title": "CancerStudy"
+    },
+    "CancerStudyTags": {
+      "type": "object",
+      "properties": {
+        "cancerStudyId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "tags": {
+          "type": "string"
+        }
+      },
+      "title": "CancerStudyTags"
     },
     "ClinicalAttribute": {
       "type": "object",
@@ -4666,6 +4868,9 @@
         "studyId"
       ],
       "properties": {
+        "cancerStudy": {
+          "$ref": "#/definitions/CancerStudy"
+        },
         "patientId": {
           "type": "string"
         },

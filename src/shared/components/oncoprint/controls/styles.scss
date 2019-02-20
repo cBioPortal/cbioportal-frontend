@@ -24,7 +24,6 @@
     }
   }
 
-
   .dropdown-menu {
     width:270px;
     padding:12px !important;
@@ -35,6 +34,9 @@
     > :last-child {
       margin-bottom:0 !important;
     }
+    &.heatmap {
+      width:450px;
+    }  
   }
 
   .oncoprint__controls__heatmap_menu {
@@ -42,6 +44,7 @@
       width:100%;
       min-height:50px;
       border:1px solid $borderColor;
+      resize: vertical;
     }
     > *, button {
       margin-bottom:10px !important;
@@ -83,12 +86,17 @@
       height:32px;
     }
 
-    .Select-menu-outer {
-      width: 300px;
-    }
   }
 
   .clinical-track-selector .Select {
+
+    .Select-placeholder {
+      color: #000;
+    }
+
+    .Select-arrow {
+      border-color: #000 transparent transparent;
+    }
 
     .Select-menu-outer {
       max-height: 400px;
@@ -107,4 +115,7 @@
     }
   }
 
+  .clinical-track-selector .is-open .Select-control .Select-arrow {
+    border-color: transparent transparent #000;
+  }
 }
