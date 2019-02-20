@@ -50,7 +50,7 @@ const COLUMNS = [
         tooltip:<span>Derived from 2-sided t-test.</span>
     }),
     Object.assign(makeNumberColumn(Q_VALUE_COLUMN_NAME, "qValue", false, true), {
-        sortBy:(d:CoExpression) => [d.qValue, d.pValue],
+        sortBy:(d:CoExpressionWithQ) => [d.qValue, d.pValue],
         tooltip:<span>Derived from Benjamini-Hochberg FDR correction procedure.</span>
     })
 ];
