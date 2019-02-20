@@ -5,6 +5,7 @@ import _ from "lodash";
 import {ResultsViewTab} from "../resultsView/ResultsViewPageHelpers";
 import {GroupComparisonTab} from "./GroupComparisonPage";
 import {StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
 
 export type ComparisonSampleGroup = {
     // mandatory:
@@ -22,6 +23,8 @@ export type ComparisonGroup = ComparisonSampleGroup & {
     hasOverlappingSamples?:boolean; // whether the group has had samples filtered out because they overlapped in the selection
     hasOverlappingPatients?:boolean; // whether the group has had patients filtered out because they overlapped in the selection
 };
+
+export type CopyNumberEnrichment = AlterationEnrichmentWithQ & { value:number };
 
 export function getCombinations(groups: { name: string, cases: string[] }[]) {
     let combinations: { groups: string[], cases: string[] }[] = [];
