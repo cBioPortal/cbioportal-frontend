@@ -1,4 +1,10 @@
-import {ComparisonSampleGroup, TEMP_localStorageGroupsKey, getPatientIdentifiers, getCombinations, ComparisonGroup} from "./GroupComparisonUtils";
+import {
+    ComparisonSampleGroup,
+    getPatientIdentifiers,
+    getCombinations,
+    ComparisonGroup,
+    getOverlappingSamples
+} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
     MolecularProfile,
@@ -24,11 +30,16 @@ import { SURVIVAL_CHART_ATTRIBUTES } from "pages/resultsView/survival/SurvivalCh
 import { COLORS } from "pages/studyView/StudyViewUtils";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import ListIndexedMap from "shared/lib/ListIndexedMap";
-import {getLocalStorageGroups} from "./GroupPersistenceUtils";
+import {getLSChartGroupsSpec, getLSGroups} from "./GroupPersistenceUtils";
 import {GroupComparisonTab} from "./GroupComparisonPage";
 
 export type GroupComparisonURLQuery = {
     localGroups:string; // comma separated list
+
+    // OR
+
+    fromChart:string; //"true" or "false"
+    unshareableLocalKey:string;
 };
 
 export default class GroupComparisonStore {
@@ -36,10 +47,16 @@ export default class GroupComparisonStore {
     @observable currentTabId:GroupComparisonTab|undefined = undefined;
     @observable excludeOverlapping:boolean = false;
     @observable localGroupIds:string[] = [];
+    @observable fromChart:boolean = false;
+    @observable unshareableLocalKey:string = "";
 
     public updateStoreFromURL(query:Partial<GroupComparisonURLQuery>) {
         if (query.localGroups) {
             this.localGroupIds = query.localGroups.split(",");
+        }
+        if (query.fromChart !== undefined) {
+            this.fromChart = Boolean(query.fromChart);
+            this.unshareableLocalKey = query.unshareableLocalKey!;
         }
     }
 
@@ -55,30 +72,72 @@ export default class GroupComparisonStore {
 
     private _selectedComparisonGroupIds = observable.shallowMap<boolean>();
 
+    @computed get fromChartSpec() {
+        if (this.fromChart && this.unshareableLocalKey) {
+            return getLSChartGroupsSpec(this.unshareableLocalKey);
+        } else {
+            return null;
+        }
+    }
+
     readonly remoteSampleGroups = remoteData<ComparisonSampleGroup[]>({
-        invoke:()=>{
-            // TODO
-            return Promise.resolve([]);
+        invoke:async()=>{
+            if (this.fromChart) {
+                // fetch chart groups from filters
+                const spec = this.fromChartSpec;
+                if (spec) {
+                    const ret:ComparisonSampleGroup[] = [];
+                    for (const value of spec.values) {
+                        const categoryFilters = Object.assign({}, spec.filters);
+                        categoryFilters.clinicalDataEqualityFilters = categoryFilters.clinicalDataEqualityFilters || [];
+                        categoryFilters.clinicalDataEqualityFilters.push({
+                            attributeId: spec.clinicalAttribute.clinicalAttributeId,
+                            clinicalDataType:spec.clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE",
+                            values:[value]
+                        });
+                        const categorySamples = await internalClient.fetchFilteredSamplesUsingPOST({
+                            studyViewFilter:categoryFilters
+                        });
+                        ret.push({
+                            id: value, name: value,
+                            sampleIdentifiers: categorySamples.map(s=>({ studyId: s.studyId, sampleId:s.sampleId}))
+                        });
+                    }
+                    //id:string, // unique identifier
+                    //sampleIdentifiers:SampleIdentifier[], // samples in the group
+                    //name:string, // display name
+                    return ret;
+                } else {
+                    throw new Error("fromChart specified, but no chart filters found in localStorage.");
+                }
+            } else {
+                // TODO: get from session service
+                return [];
+            }
         }
     });
 
     @computed get localSampleGroups() {
-        const groupsMap = _.keyBy(getLocalStorageGroups(), group=>group.id);
-        return this.localGroupIds.map(id=>groupsMap[id]);
+        if (this.fromChart) {
+            return [];
+        } else {
+            const groupsMap = _.keyBy(getLSGroups(), group=>group.id);
+            return this.localGroupIds.map(id=>groupsMap[id]);
+        }
     }
 
-    readonly sampleGroups = remoteData<ComparisonSampleGroup[]>({
+    readonly allSampleGroups_Unfiltered = remoteData<ComparisonSampleGroup[]>({
         await:()=>[this.remoteSampleGroups],
         invoke:()=>{
             return Promise.resolve(this.localSampleGroups.concat(this.remoteSampleGroups.result!));
         }
     });
 
-    readonly availableComparisonGroups = remoteData<ComparisonGroup[]>({
-       await:()=>[this.sampleGroups, this.sampleSet],
+    readonly allComparisonGroups_Unfiltered = remoteData<ComparisonGroup[]>({
+       await:()=>[this.allSampleGroups_Unfiltered, this.sampleSet],
        invoke:()=>{
            const sampleSet = this.sampleSet.result!;
-           return Promise.resolve(this.sampleGroups.result!.map(group=>(
+           return Promise.resolve(this.allSampleGroups_Unfiltered.result!.map(group=>(
                 Object.assign({ 
                     patientIdentifiers: getPatientIdentifiers(group.sampleIdentifiers, sampleSet)
                 }, group)
@@ -86,34 +145,16 @@ export default class GroupComparisonStore {
        } 
     });
 
-    readonly selectedComparisonGroups = remoteData<ComparisonGroup[]>({
-        await:()=>[this.availableComparisonGroups],
+    readonly selectedComparisonGroups_Unfiltered = remoteData<ComparisonGroup[]>({
+        await:()=>[this.allComparisonGroups_Unfiltered],
         invoke:()=>Promise.resolve(
-            this.availableComparisonGroups.result!.filter(group=>this.isComparisonGroupSelected(group.id))
+            this.allComparisonGroups_Unfiltered.result!.filter(group=>this.isComparisonGroupSelected(group.id))
         )
     });
 
     readonly overlappingSelectedSamples = remoteData<SampleIdentifier[]>({
-        await:()=>[this.selectedComparisonGroups],
-        invoke:()=>{
-            // samples that are in at least two selected groups
-            const sampleUseCount = new ListIndexedMap<number>();
-            for (const group of this.selectedComparisonGroups.result!) {
-                for (const sample of group.sampleIdentifiers) {
-                    sampleUseCount.set(
-                        (sampleUseCount.get(sample.studyId, sample.sampleId) || 0) + 1,
-                        sample.studyId, sample.sampleId
-                    );
-                }
-            }
-            const overlapping = [];
-            for (const entry of sampleUseCount.entries()) {
-                if (entry.value > 1) {
-                    overlapping.push({ studyId: entry.key[0], sampleId: entry.key[1] });
-                }
-            }
-            return Promise.resolve(overlapping);
-        }
+        await:()=>[this.selectedComparisonGroups_Unfiltered],
+        invoke:()=>Promise.resolve(getOverlappingSamples(this.selectedComparisonGroups_Unfiltered.result!))
     });
 
     readonly overlappingSelectedPatients = remoteData<PatientIdentifier[]>({
@@ -121,9 +162,9 @@ export default class GroupComparisonStore {
         invoke:()=>Promise.resolve(getPatientIdentifiers(this.overlappingSelectedSamples.result!, this.sampleSet.result!))
     });
 
-    readonly overlapFilteredAvailableComparisonGroups = remoteData<ComparisonGroup[]>({
+    readonly allComparisonGroups_Filtered = remoteData<ComparisonGroup[]>({
         await:()=>[ 
-            this.availableComparisonGroups,
+            this.allComparisonGroups_Unfiltered,
             this.overlappingSelectedSamples, 
             this.overlappingSelectedPatients
          ],
@@ -132,7 +173,7 @@ export default class GroupComparisonStore {
                  // filter out overlapping samples and patients
                  const overlappingSamples = ListIndexedMap.from(this.overlappingSelectedSamples.result!, s=>[s.studyId, s.sampleId]);
                  const overlappingPatients = ListIndexedMap.from(this.overlappingSelectedPatients.result!, s=>[s.studyId, s.patientId]);
-                 return Promise.resolve(this.availableComparisonGroups.result!.map(group=>{
+                 return Promise.resolve(this.allComparisonGroups_Unfiltered.result!.map(group=>{
                      const ret:Partial<ComparisonGroup> = Object.assign({}, group);
                      ret.sampleIdentifiers = group.sampleIdentifiers.filter(s=>!overlappingSamples.has(s.studyId, s.sampleId));
                      ret.patientIdentifiers = group.patientIdentifiers.filter(p=>!overlappingPatients.has(p.studyId, p.patientId));
@@ -141,21 +182,21 @@ export default class GroupComparisonStore {
                      return ret as ComparisonGroup;
                  }));
              } else {
-                 return Promise.resolve(this.availableComparisonGroups.result!);
+                 return Promise.resolve(this.allComparisonGroups_Unfiltered.result!);
              }
          } 
     });
 
     readonly activeComparisonGroups = remoteData<ComparisonGroup[]>({
-        // ** these are the groups that are actually used for analysis! **
+        // ** these are the groups, in final, filtered form, that are, in this form, used for analysis! **
         await:()=>[
-           this.overlapFilteredAvailableComparisonGroups,
-           this.selectedComparisonGroups
+           this.allComparisonGroups_Filtered,
+           this.selectedComparisonGroups_Unfiltered
         ],
         invoke:()=>{
-            const selected = _.keyBy(this.selectedComparisonGroups.result!, g=>g.id);
+            const selected = _.keyBy(this.selectedComparisonGroups_Unfiltered.result!, g=>g.id);
             // filter out groups that are not selected, or are empty
-            return Promise.resolve(this.overlapFilteredAvailableComparisonGroups.result!.filter(group=>(
+            return Promise.resolve(this.allComparisonGroups_Filtered.result!.filter(group=>(
                 selected[group.id] && (group.sampleIdentifiers.length > 0 || group.patientIdentifiers.length > 0)
             )));
         }
@@ -192,21 +233,21 @@ export default class GroupComparisonStore {
     }
 
     readonly samples = remoteData({
-        await:()=>[this.sampleGroups],
+        await:()=>[this.allSampleGroups_Unfiltered],
         invoke:()=>client.fetchSamplesUsingPOST({
             sampleFilter:{
-                sampleIdentifiers: _.flatten(this.sampleGroups.result!.map(group=>group.sampleIdentifiers))
+                sampleIdentifiers: _.flatten(this.allSampleGroups_Unfiltered.result!.map(group=>group.sampleIdentifiers))
             } as SampleFilter,
             projection: "DETAILED"
         })
     });
 
     readonly studies = remoteData({
-        await: ()=>[this.sampleGroups],
+        await: ()=>[this.allSampleGroups_Unfiltered],
         invoke: () => {
             const studyIds = _.uniqBy(
                 _.flatten(
-                    this.sampleGroups.result!.map(group=>group.sampleIdentifiers)
+                    this.allSampleGroups_Unfiltered.result!.map(group=>group.sampleIdentifiers)
                 ),
                 id=>id.studyId
             ).map(id=>id.studyId);
@@ -475,12 +516,12 @@ export default class GroupComparisonStore {
 
     public readonly patientToAnalysisGroups = remoteData({
         await: () => [
-            this.sampleGroups,
+            this.allSampleGroups_Unfiltered,
             this.sampleSet
         ],
         invoke: () => {
             let sampleSet = this.sampleSet.result!
-            let patientToAnalysisGroups = _.reduce(this.sampleGroups.result, (acc, next) => {
+            let patientToAnalysisGroups = _.reduce(this.allSampleGroups_Unfiltered.result, (acc, next) => {
                 next.sampleIdentifiers.forEach(sampleIdentifier => {
                     let sample = sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId);
                     if (sample) {
@@ -615,7 +656,7 @@ export default class GroupComparisonStore {
 
     @computed get categoryToColor() {
         let colorIndex = 0;
-        return _.reduce(this.sampleGroups.result, (acc, next) => {
+        return _.reduce(this.allSampleGroups_Unfiltered.result, (acc, next) => {
             acc[next.name? next.name : next.id] = next.color ? next.color : COLORS[colorIndex++]
             return acc;
         }, {} as { [id: string]: string})
