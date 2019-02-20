@@ -34,7 +34,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
         },
         render:()=>{
             if (this.props.store.activeComparisonGroups.result!.length !== 2) {
-                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG}</span>;
+                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeComparisonGroups.result!.length > 2)}</span>;
             } else {
                 return this.enrichmentsUI.component;
             }

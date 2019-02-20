@@ -36,7 +36,7 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
         },
         render:()=>{
             if (this.props.store.activeComparisonGroups.result!.length !== 2) {
-                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG}</span>;
+                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeComparisonGroups.result!.length > 2)}</span>;
             } else if (this.props.store.activeStudyIds.result!.length > 1) {
                 return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG("mRNA")}</span>;
             } else {
