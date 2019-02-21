@@ -52,19 +52,22 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
             this.props.store.activeComparisonGroups
         ],
         render:()=>{
+            const group1Name = this.props.store.enrichmentsGroup1.result!.name;
+            const group2Name = this.props.store.enrichmentsGroup2.result!.name;
             return (
                 <div data-test="GroupComparisonMutationEnrichments">
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.mutationEnrichmentProfiles} onChange={this.onChangeProfile}
                                                 selectedValue={this.props.store.mutationEnrichmentProfile.result!.molecularProfileId}/>
                     <AlterationEnrichmentContainer data={this.props.store.mutationEnrichmentData.result!}
-                                                totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
-                                                totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
-                                                alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
-                                                unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
-                                                selectedProfile={this.props.store.mutationEnrichmentProfile.result!}
-                                                headerName={this.props.store.mutationEnrichmentProfile.result!.name}
-                                                alterationType="a mutation"
-                                                showMutexTendencyInTable={false}
+                                                   totalGroup1Count={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
+                                                   totalGroup2Count={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
+                                                   group1Name={group1Name}
+                                                   group2Name={group2Name}
+                                                   group1Description={`in ${group1Name} that have a mutation in the listed gene.`}
+                                                   group2Description={`in ${group2Name} that have a mutation in the listed gene.`}
+                                                   selectedProfile={this.props.store.mutationEnrichmentProfile.result!}
+                                                   headerName={this.props.store.mutationEnrichmentProfile.result!.name}
+                                                   showMutexTendencyInTable={false}
                     />
                 </div>
             );

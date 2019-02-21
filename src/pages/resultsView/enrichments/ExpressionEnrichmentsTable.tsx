@@ -20,18 +20,20 @@ export interface IExpressionEnrichmentTableProps {
     dataStore: EnrichmentsTableDataStore;
     onCheckGene?: (hugoGeneSymbol: string) => void;
     onGeneNameClick?: (hugoGeneSymbol: string, entrezGeneId: number) => void;
-    alteredGroupName:string;
-    unalteredGroupName:string;
+    group1Name:string;
+    group2Name:string;
+    group1Description:string;
+    group2Description:string;
     mutexTendency?:boolean;
 }
 
 export enum ExpressionEnrichmentTableColumnType {
     GENE,
     CYTOBAND,
-    MEAN_IN_ALTERED,
-    MEAN_IN_UNALTERED,
-    STANDARD_DEVIATION_IN_ALTERED,
-    STANDARD_DEVIATION_IN_UNALTERED,
+    MEAN_IN_GROUP1,
+    MEAN_IN_GROUP2,
+    STANDARD_DEVIATION_IN_GROUP1,
+    STANDARD_DEVIATION_IN_GROUP2,
     LOG_RATIO,
     P_VALUE,
     Q_VALUE,
@@ -50,10 +52,10 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns: [
             ExpressionEnrichmentTableColumnType.GENE,
             ExpressionEnrichmentTableColumnType.CYTOBAND,
-            ExpressionEnrichmentTableColumnType.MEAN_IN_ALTERED,
-            ExpressionEnrichmentTableColumnType.MEAN_IN_UNALTERED,
-            ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_ALTERED,
-            ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_UNALTERED,
+            ExpressionEnrichmentTableColumnType.MEAN_IN_GROUP1,
+            ExpressionEnrichmentTableColumnType.MEAN_IN_GROUP2,
+            ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_GROUP1,
+            ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_GROUP2,
             ExpressionEnrichmentTableColumnType.LOG_RATIO,
             ExpressionEnrichmentTableColumnType.P_VALUE,
             ExpressionEnrichmentTableColumnType.Q_VALUE,
@@ -102,34 +104,34 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
             download: (d: ExpressionEnrichmentRow) => d.cytoband
         };
 
-        columns[ExpressionEnrichmentTableColumnType.MEAN_IN_ALTERED] = {
-            name: `μ in ${this.props.alteredGroupName}`,
+        columns[ExpressionEnrichmentTableColumnType.MEAN_IN_GROUP1] = {
+            name: `μ in ${this.props.group1Name}`,
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInAlteredGroup.toFixed(2)}</span>,
-            tooltip: <span>Mean expression of the listed gene in samples that have alterations in the query gene(s).</span>,
+            tooltip: <span>Mean expression of the listed gene in {this.props.group1Description}</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInAlteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.meanExpressionInAlteredGroup.toFixed(2)
         };
 
-        columns[ExpressionEnrichmentTableColumnType.MEAN_IN_UNALTERED] = {
-            name: `μ in ${this.props.unalteredGroupName}`,
+        columns[ExpressionEnrichmentTableColumnType.MEAN_IN_GROUP2] = {
+            name: `μ in ${this.props.group2Name}`,
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInUnalteredGroup.toFixed(2)}</span>,
-            tooltip: <span>Mean expression of the listed gene in samples that do not have alterations in the query gene(s).</span>,
+            tooltip: <span>Mean expression of the listed gene in {this.props.group2Description}</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInUnalteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.meanExpressionInUnalteredGroup.toFixed(2)
         };
 
-        columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_ALTERED] = {
-            name: `σ in ${this.props.alteredGroupName}`,
+        columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_GROUP1] = {
+            name: `σ in ${this.props.group1Name}`,
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInAlteredGroup.toFixed(2)}</span>,
-            tooltip: <span>Standard deviation of expression of the listed gene in samples that have alterations in the query gene(s).</span>,
+            tooltip: <span>Standard deviation of expression of the listed gene in {this.props.group1Description}</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInAlteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.standardDeviationInAlteredGroup.toFixed(2)
         };
 
-        columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_UNALTERED] = {
-            name: `σ in ${this.props.unalteredGroupName}`,
+        columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_GROUP2] = {
+            name: `σ in ${this.props.group2Name}`,
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInUnalteredGroup.toFixed(2)}</span>,
-            tooltip: <span>Standard deviation of expression of the listed gene in samples that do not have alterations in the query gene(s).</span>,
+            tooltip: <span>Standard deviation of expression of the listed gene in {this.props.group2Description}</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInUnalteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.standardDeviationInUnalteredGroup.toFixed(2)
         };
@@ -161,7 +163,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.TENDENCY] = {
             name: this.props.mutexTendency ? "Tendency" : "Enriched in",
             render: (d: ExpressionEnrichmentRow) => <div className={styles.Tendency}>
-                {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.alteredGroupName, this.props.unalteredGroupName)}
+                {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.group1Name, this.props.group2Name)}
                 {d.qValue < 0.05 ? <Badge style={{
                     backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
                 }}>Significant</Badge> : ""}</div>,
@@ -169,11 +171,11 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
                 <table>
                     <tr>
                         <td>Log ratio > 0</td>
-                        <td>: Over-expressed in {this.props.alteredGroupName}</td>
+                        <td>: Over-expressed in {this.props.group1Name}</td>
                     </tr>
                     <tr>
                         <td>Log ratio &lt;= 0</td>
-                        <td>: Under-expressed in {this.props.alteredGroupName}</td>
+                        <td>: Under-expressed in {this.props.group1Name}</td>
                     </tr>
                     <tr>
                         <td>q-Value &lt; 0.05</td>

@@ -3,7 +3,7 @@ import {
     getPatientIdentifiers,
     getCombinations,
     ComparisonGroup,
-    getOverlappingSamples
+    getOverlappingSamples, CopyNumberEnrichment
 } from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
@@ -303,7 +303,7 @@ export default class GroupComparisonStore {
         invoke:()=>Promise.resolve(pickProteinEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!))
     });
 
-    private _mutationEnrichmentProfile:MolecularProfile|undefined = undefined;
+    @observable.ref private _mutationEnrichmentProfile:MolecularProfile|undefined = undefined;
     readonly mutationEnrichmentProfile = remoteData({
         await:()=>[this.mutationEnrichmentProfiles],
         invoke:()=>{
@@ -319,7 +319,7 @@ export default class GroupComparisonStore {
         this._mutationEnrichmentProfile = profile;
     }
 
-    private _copyNumberEnrichmentProfile:MolecularProfile|undefined = undefined;
+    @observable.ref private _copyNumberEnrichmentProfile:MolecularProfile|undefined = undefined;
     readonly copyNumberEnrichmentProfile = remoteData({
         await:()=>[this.copyNumberEnrichmentProfiles],
         invoke:()=>{
@@ -335,7 +335,7 @@ export default class GroupComparisonStore {
         this._copyNumberEnrichmentProfile = profile;
     }
 
-    private _mRNAEnrichmentProfile:MolecularProfile|undefined = undefined;
+    @observable.ref private _mRNAEnrichmentProfile:MolecularProfile|undefined = undefined;
     readonly mRNAEnrichmentProfile = remoteData({
         await:()=>[this.mRNAEnrichmentProfiles],
         invoke:()=>{
@@ -351,7 +351,7 @@ export default class GroupComparisonStore {
         this._mRNAEnrichmentProfile = profile;
     }
 
-    private _proteinEnrichmentProfile:MolecularProfile|undefined = undefined;
+    @observable.ref private _proteinEnrichmentProfile:MolecularProfile|undefined = undefined;
     readonly proteinEnrichmentProfile = remoteData({
         await:()=>[this.proteinEnrichmentProfiles],
         invoke:()=>{
@@ -387,7 +387,7 @@ export default class GroupComparisonStore {
         }
     });
 
-    public readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
+    readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.copyNumberEnrichmentProfile],
         shouldFetchData:()=>!!this.copyNumberEnrichmentProfile,// returns an empty array if the selected study doesn't have any CNA profiles
         fetchData:()=>{
@@ -405,7 +405,7 @@ export default class GroupComparisonStore {
         }
     });
 
-    public readonly copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
+    readonly copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.copyNumberEnrichmentProfile],
         shouldFetchData:()=>!!this.copyNumberEnrichmentProfile,// returns an empty array if the selected study doesn't have any CNA profiles
         fetchData:()=>{
@@ -420,6 +420,21 @@ export default class GroupComparisonStore {
             } else {
                 return Promise.resolve([]);
             }
+        }
+    });
+
+    public readonly copyNumberData = remoteData<CopyNumberEnrichment[]>({
+        await:()=>[this.copyNumberAmpEnrichmentData, this.copyNumberHomdelEnrichmentData],
+        invoke:()=>{
+            return Promise.resolve(
+                this.copyNumberAmpEnrichmentData.result!.map(d=>{
+                    (d as CopyNumberEnrichment).value = 2;
+                    return d as CopyNumberEnrichment;
+                }).concat(this.copyNumberHomdelEnrichmentData.result!.map(d=>{
+                    (d as CopyNumberEnrichment).value = -2;
+                    return d as CopyNumberEnrichment;
+                }))
+            );
         }
     });
 
