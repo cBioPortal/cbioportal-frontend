@@ -17,8 +17,10 @@ import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/Enrichm
 
 export interface IAlterationEnrichmentTableProps {
     columns?: AlterationEnrichmentTableColumnType[];
-    alteredGroupName:string;
-    unalteredGroupName:string;
+    group1Name:string;
+    group2Name:string;
+    group1Description:string;
+    group2Description:string;
     data: AlterationEnrichmentRow[];
     initialSortColumn?: string;
     alterationType: string;
@@ -31,13 +33,19 @@ export interface IAlterationEnrichmentTableProps {
 export enum AlterationEnrichmentTableColumnType {
     GENE,
     CYTOBAND,
-    PERCENTAGE_IN_ALTERED,
-    PERCENTAGE_IN_UNALTERED,
+    ALTERATION,
+    PERCENTAGE_IN_GROUP1,
+    PERCENTAGE_IN_GROUP2,
     LOG_RATIO,
     P_VALUE,
     Q_VALUE,
     TENDENCY
 }
+
+const cnaToAlteration:{[cna:number]:string} = {
+    "2": "Amplification",
+    "-2": "Deep Deletion"
+};
 
 type AlterationEnrichmentTableColumn = Column<AlterationEnrichmentRow> & { order?: number, shouldExclude?: () => boolean };
 
@@ -51,8 +59,8 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns: [
             AlterationEnrichmentTableColumnType.GENE,
             AlterationEnrichmentTableColumnType.CYTOBAND,
-            AlterationEnrichmentTableColumnType.PERCENTAGE_IN_ALTERED,
-            AlterationEnrichmentTableColumnType.PERCENTAGE_IN_UNALTERED,
+            AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP1,
+            AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP2,
             AlterationEnrichmentTableColumnType.LOG_RATIO,
             AlterationEnrichmentTableColumnType.P_VALUE,
             AlterationEnrichmentTableColumnType.Q_VALUE,
@@ -101,22 +109,30 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
             download: (d: AlterationEnrichmentRow) => d.cytoband
         };
 
-        columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_ALTERED] = {
-            name: `Samples with alteration in ${this.props.alteredGroupName}`,
+        columns[AlterationEnrichmentTableColumnType.ALTERATION] = {
+            name: "Alteration",
+            render: (d: AlterationEnrichmentRow) => <span>{cnaToAlteration[d.value!]}</span>,
+            tooltip: <span>Copy number alteration</span>,
+            filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
+                cnaToAlteration[d.value!].toUpperCase().includes(filterStringUpper),
+            sortBy: (d: AlterationEnrichmentRow) => cnaToAlteration[d.value!],
+            download: (d: AlterationEnrichmentRow) => cnaToAlteration[d.value!]
+        };
+
+        columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP1] = {
+            name: `Samples with alteration in ${this.props.group1Name}`,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
             headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
-            tooltip: <span>Number (percentage) of samples that have alterations in the query gene(s) that also 
-                have {this.props.alterationType} in the listed gene.</span>,
+            tooltip: <span>Number (percentage) of samples {this.props.group1Description}</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.alteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.alteredCount, d.alteredPercentage)
         };
 
-        columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_UNALTERED] = {
-            name: `Samples with alteration in ${this.props.unalteredGroupName}`,
+        columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP2] = {
+            name: `Samples with alteration in ${this.props.group2Name}`,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
             headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
-            tooltip: <span>Number (percentage) of samples that do not have alterations in the query gene(s) that 
-                have {this.props.alterationType} in the listed gene.</span>,
+            tooltip: <span>Number (percentage) of samples {this.props.group2Description}</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.unalteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.unalteredCount, d.unalteredPercentage)
         };
@@ -148,7 +164,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns[AlterationEnrichmentTableColumnType.TENDENCY] = {
             name: this.props.mutexTendency ? "Tendency" : "Enriched in",
             render: (d: AlterationEnrichmentRow) => <div className={styles.Tendency}>
-                {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.alteredGroupName, this.props.unalteredGroupName)}
+                {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.group1Name, this.props.group2Name)}
                 {d.qValue < 0.05 ? <Badge style={{
                     backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
                 }}>Significant</Badge> : ""}</div>,
@@ -156,11 +172,11 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
                 <table>
                     <tr>
                         <td>Log ratio > 0</td>
-                        <td>: Enriched in altered group</td>
+                        <td>: Enriched in {this.props.group1Name}</td>
                     </tr>
                     <tr>
                         <td>Log ratio &lt;= 0</td>
-                        <td>: Enriched in unaltered group</td>
+                        <td>: Enriched in {this.props.group2Name}</td>
                     </tr>
                     <tr>
                         <td>q-Value &lt; 0.05</td>
@@ -177,7 +193,10 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
     }
 
     public render() {
-        const orderedColumns = _.sortBy(this.columns, (c: AlterationEnrichmentTableColumn) => c.order);
+        const orderedColumns = _.sortBy(
+            this.props.columns!.map(column=>this.columns[column]),
+            (c: AlterationEnrichmentTableColumn) => c.order
+        );
         return (
             <AlterationEnrichmentTableComponent initialItemsPerPage={20} paginationProps={{ itemsPerPageOptions: [20] }}
                 columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn} 

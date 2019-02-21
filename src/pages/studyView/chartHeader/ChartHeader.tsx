@@ -198,7 +198,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                    onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}></i>
                             </DefaultTooltip>
                         </If>
-                        <If condition={this.props.chartControls && true}>
+                        <If condition={this.props.chartControls && this.props.chartControls.showComparisonPageIcon}>
                             <DefaultTooltip
                                 placement={tooltipPosition}
                                 align={tooltipAlign}
