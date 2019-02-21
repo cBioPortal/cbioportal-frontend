@@ -90,16 +90,12 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                     return acc;
                 }, []);
 
-                let filters = { patients: {}, samples: {} };
+                let { sampleIdentifiersSet, ...studyViewFilter } = this.props.filter;
 
-                /* 
-                    TODO: this is to support existing virtual study feature.
-                    but eventually we need to save StudyViewFilter
-                 */
                 let parameters = {
                     name: this.name || this.namePlaceHolder,
                     description: this.description,
-                    filters: filters,
+                    studyViewFilter: studyViewFilter,
                     origin: this.props.studyWithSamples.map(study => study.studyId),
                     studies: studies
                 }
