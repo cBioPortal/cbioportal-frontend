@@ -379,6 +379,8 @@ export type TranscriptConsequence = {
 
         'consequence_terms': Array < string >
 
+        'exon': string
+
         'gene_id': string
 
         'gene_symbol': string
@@ -416,6 +418,8 @@ export type TranscriptConsequenceSummary = {
         'consequenceTerms': string
 
         'entrezGeneId': string
+
+        'exon': string
 
         'hgvsc': string
 

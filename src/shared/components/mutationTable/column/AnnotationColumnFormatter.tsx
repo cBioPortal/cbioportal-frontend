@@ -187,12 +187,14 @@ export default class AnnotationColumnFormatter
         );
 
         const indicator = oncoKbData.indicatorMap[id];
-        if (indicator.query.tumorType === null && studyIdToStudy) {
+
+        if (indicator && indicator.query.tumorType === null && studyIdToStudy) {
             const studyMetaData = studyIdToStudy[mutation.studyId];
             if (studyMetaData.cancerTypeId !== "mixed") {           
                 indicator.query.tumorType = studyMetaData.cancerType.name;
             }
         }
+
         return indicator;
     }
 
