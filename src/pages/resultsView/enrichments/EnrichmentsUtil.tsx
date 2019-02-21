@@ -14,7 +14,7 @@ import {filterAndSortProfiles} from "../coExpression/CoExpressionTabUtils";
 const LOG_VALUE = "LOG-VALUE";
 const LOG2_VALUE = "LOG2-VALUE";
 
-export type AlterationEnrichmentWithQ = AlterationEnrichment & { qValue:number };
+export type AlterationEnrichmentWithQ = AlterationEnrichment & { qValue:number, value?:number /* used for copy number in group comparison */ };
 export type ExpressionEnrichmentWithQ = ExpressionEnrichment & { qValue:number };
 
 export function calculateAlterationTendency(logOddsRatio: number): string {
@@ -82,7 +82,8 @@ export function getAlterationRowData(alterationEnrichments: AlterationEnrichment
             unalteredPercentage: alterationEnrichment.unalteredCount / totalUnaltered * 100,
             logRatio: Number(alterationEnrichment.logRatio), 
             pValue: alterationEnrichment.pValue,
-            qValue: alterationEnrichment.qValue
+            qValue: alterationEnrichment.qValue,
+            value: alterationEnrichment.value
         };
     });
 }
