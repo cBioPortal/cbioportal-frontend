@@ -319,6 +319,14 @@ export function getVirtualStudyDescription(
             }).map(line => '  - ' + line));
         }
 
+        if(filter.withMutationData !== undefined) {
+            filterLines.push(`With Mutation data: ${filter.withMutationData ? 'YES' : 'NO'}`);
+        }
+
+        if(filter.withCNAData !== undefined) {
+            filterLines.push(`With CNA data: ${filter.withCNAData ? 'YES' : 'NO'}`);
+        }
+
         _.each(filter.clinicalDataEqualityFilters || [], (clinicalDataEqualityFilter) => {
             let name = attributeNamesSet[clinicalDataEqualityFilter.clinicalDataType + '_' + clinicalDataEqualityFilter.attributeId];
             filterLines.push(`- ${name}: ${clinicalDataEqualityFilter.values.join(', ')}`);
