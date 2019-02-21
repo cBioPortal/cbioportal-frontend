@@ -2,7 +2,8 @@ import {default as URL, QueryParams} from "url";
 import AppConfig from "appConfig";
 import getBrowserWindow from "../lib/getBrowserWindow";
 import * as _ from 'lodash';
-import {GroupComparisonURLQuery} from "../../pages/groupComparison/GroupComparisonStore";
+import {GroupComparisonURLQuery} from "../../pages/groupComparison/GroupComparisonPage";
+import {GroupComparisonLoadingParams} from "../../pages/groupComparison/GroupComparisonLoading";
 
 export function trimTrailingSlash(str:string){
    return str.replace(/\/$/g,"");
@@ -95,6 +96,14 @@ export function getComparisonUrl(params:Partial<GroupComparisonURLQuery>){
     return buildCBioPortalPageUrl('comparison', params)
 }
 
+export function redirectToComparisonPage(win:Window, params:Partial<GroupComparisonURLQuery>) {
+    (win as any).routingStore.updateRoute(params, "comparison", true);
+}
+
+export function getComparisonLoadingUrl(params?:Partial<GroupComparisonLoadingParams>) {
+    return buildCBioPortalPageUrl("loading/comparison",params || {});
+}
+
 export function getPubMedUrl(pmid:string) {
     return _.template(AppConfig.serverConfig.pubmed_url!)({ pmid });
 }
@@ -161,6 +170,39 @@ export function getSessionServiceUrl() {
         return buildCBioPortalPageUrl("api-legacy/proxy/session/main_session");
     } else {
         return buildCBioPortalAPIUrl("api-legacy/proxy/session/main_session");
+    }
+}
+
+export function fetchComparisonGroupsServiceUrl() {
+    if (AppConfig.serverConfig && AppConfig.serverConfig.hasOwnProperty("apiRoot")) {
+        // TODO: remove this after switch to AWS. This is a hack to use proxy
+        // session-service from non apiRoot. We'll have to come up with a better
+        // solution for auth portals
+        return buildCBioPortalPageUrl("api-legacy/proxy/session/groups/fetch");
+    } else {
+        return buildCBioPortalAPIUrl("api-legacy/proxy/session/groups/fetch");
+    }
+}
+
+export function getComparisonGroupServiceUrl() {
+    if (AppConfig.serverConfig && AppConfig.serverConfig.hasOwnProperty("apiRoot")) {
+        // TODO: remove this after switch to AWS. This is a hack to use proxy
+        // session-service from non apiRoot. We'll have to come up with a better
+        // solution for auth portals
+        return buildCBioPortalPageUrl("api-legacy/proxy/session/group");
+    } else {
+        return buildCBioPortalAPIUrl("api-legacy/proxy/session/group");
+    }
+}
+
+export function getComparisonSessionServiceUrl() {
+    if (AppConfig.serverConfig && AppConfig.serverConfig.hasOwnProperty("apiRoot")) {
+        // TODO: remove this after switch to AWS. This is a hack to use proxy
+        // session-service from non apiRoot. We'll have to come up with a better
+        // solution for auth portals
+        return buildCBioPortalPageUrl("api-legacy/proxy/session/comparison_session");
+    } else {
+        return buildCBioPortalAPIUrl("api-legacy/proxy/session/comparison_session");
     }
 }
 

@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, ObservableMap, reaction, toJS, IReactionDisposer} from "mobx";
+import {action, computed, IReactionDisposer, observable, ObservableMap, reaction, toJS} from "mobx";
 import {
     ClinicalDataBinCountFilter,
     ClinicalDataBinFilter,
@@ -37,23 +37,22 @@ import {
     Gene,
     MolecularProfile,
     MolecularProfileFilter,
-    Patient,
-    PatientFilter,
-    SampleFilter
+    Patient
 } from 'shared/api/generated/CBioPortalAPI';
 import {fetchCopyNumberSegmentsForSamples} from "shared/lib/StoreUtils";
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import {
     calculateLayout,
-    COLORS,
     generateScatterPlotDownloadData,
     getChartMetaDataType,
     getClinicalAttributeUniqueKey,
     getClinicalAttributeUniqueKeyByDataTypeAttrId,
+    getClinicalDataCountWithColorByCategoryCounts,
     getClinicalDataCountWithColorByClinicalDataCount,
     getClinicalDataIntervalFilterValues,
-    getClinicalDataType, getClinicalEqualityFilterValuesByString,
+    getClinicalDataType,
+    getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getDefaultPriorityByUniqueKey,
     getFilteredSampleIdentifiers,
@@ -70,8 +69,7 @@ import {
     MutationCountVsCnaYBinsMin,
     NA_DATA,
     showOriginStudiesInSummaryDescription,
-    submitToPage,
-    getClinicalDataCountWithColorByCategoryCounts
+    submitToPage
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -86,12 +84,22 @@ import {VirtualStudy} from 'shared/model/VirtualStudy';
 import windowStore from 'shared/components/window/WindowStore';
 import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
 import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG, StudyViewLayout} from "./StudyViewConfig";
-import {getMDAndersonHeatmapStudyMetaUrl, getStudyDownloadListUrl} from "../../shared/api/urls";
+import {
+    getComparisonLoadingUrl,
+    getMDAndersonHeatmapStudyMetaUrl,
+    getStudyDownloadListUrl,
+    redirectToComparisonPage
+} from "../../shared/api/urls";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import request from 'superagent';
 import {trackStudyViewFilterEvent} from "../../shared/lib/tracking";
-import {ComparisonSampleGroup} from "../groupComparison/GroupComparisonUtils";
-import {getLSGroups} from "../groupComparison/GroupPersistenceUtils";
+import {Group} from "../../shared/api/ComparisonGroupClient";
+import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
+import {getPieChartGroupFilters} from "../groupComparison/GroupComparisonUtils";
+import {getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
+import client from "../../shared/api/cbioportalClientInstance";
+import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
+import {sleepUntil} from "../../shared/lib/TimeUtils";
 
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
@@ -332,14 +340,22 @@ export class StudyViewPageStore {
         }
     }
 
+    // <comparison groups code>
     private _selectedComparisonGroups = observable.shallowMap<boolean>();
+    private _comparisonGroupsMarkedForDeletion = observable.shallowMap<boolean>();
 
     @action public toggleComparisonGroupSelected(groupId:string) {
         this._selectedComparisonGroups.set(groupId, !this.isComparisonGroupSelected(groupId));
     }
 
+    @action public toggleComparisonGroupMarkedForDeletion(groupId:string) {
+        this._comparisonGroupsMarkedForDeletion.set(groupId, !this.isComparisonGroupMarkedForDeletion(groupId));
+    }
+
     public isComparisonGroupSelected(groupId:string):boolean {
-        if (!this._selectedComparisonGroups.has(groupId)) {
+        if (this.isComparisonGroupMarkedForDeletion(groupId)) {
+            return false; // if marked for deletion, its not selected
+        } else if (!this._selectedComparisonGroups.has(groupId)) {
             return true; // default to selected, on page load or on group creation
         } else {
             // otherwise, return value held in map
@@ -347,23 +363,147 @@ export class StudyViewPageStore {
         }
     }
 
-    @action public removeComparisonGroupSelectionEntry(groupId:string) {
-        this._selectedComparisonGroups.delete(groupId);
+    public isComparisonGroupMarkedForDeletion(groupId:string):boolean {
+        if (!this._comparisonGroupsMarkedForDeletion.has(groupId)) {
+            return false; // default to no
+        } else {
+            // otherwise, return value held in map
+            return this._comparisonGroupsMarkedForDeletion.get(groupId)!;
+        }
     }
 
-    @computed get comparisonGroups() {
-        const allGroups = getLSGroups();
-        // filter out groups that arent from these studies
-        const relevantStudyIds = _.keyBy(this.studyIds);
-        return allGroups.filter(group=>{
-            const studyIdsInGroup = _.uniq(group.sampleIdentifiers.map(id=>id.studyId));
-            return _.every(studyIdsInGroup, studyId=>(studyId in relevantStudyIds));
+    @action public markSelectedGroupsForDeletion() {
+        onMobxPromise(
+            this.comparisonGroups,
+            groups=>{
+                for (const group of groups) {
+                    if (this.isComparisonGroupSelected(group.id)) {
+                        this.toggleComparisonGroupMarkedForDeletion(group.id);
+                    }
+                }
+            }
+        );
+    }
+
+    @action public async deleteMarkedComparisonGroups() {
+        const deletionPromises = [];
+        for (const groupId of this._comparisonGroupsMarkedForDeletion.keys()) {
+            if (this.isComparisonGroupMarkedForDeletion(groupId)) {
+                deletionPromises.push(comparisonClient.deleteGroup(groupId));
+                this._selectedComparisonGroups.delete(groupId);
+            }
+        }
+        await Promise.all(deletionPromises);
+        this._comparisonGroupsMarkedForDeletion.clear();
+        this.notifyComparisonGroupsChange();
+    }
+
+    readonly comparisonGroups = remoteData<Group[]>({
+        invoke:()=>{
+            // reference this so its responsive to changes
+            this._comparisonGroupsChangeCount;
+            if (this.studyIds.length > 0) {
+                return comparisonClient.getGroupsForStudies(this.studyIds.slice()); // slice because cant pass mobx
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    });
+
+    @observable private _comparisonGroupsChangeCount = 0;
+    @action public notifyComparisonGroupsChange() {
+        this._comparisonGroupsChangeCount += 1;
+    }
+
+    private createPieChartComparisonSession(
+        clinicalAttribute:ClinicalAttribute,
+        clinicalAttributeValues:{ value:string, color:string}[],
+        statusCallback:(phase:LoadingPhase)=>void
+    ) {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+        return new Promise<string>((resolve)=>{
+            onMobxPromise(this.selectedSamples,
+                async (selectedSamples)=>{
+                    // get clinical data for the given attribute
+                    const entityIdKey = (clinicalAttribute.patientAttribute ? "patientId" : "sampleId")
+                    const data = await client.fetchClinicalDataUsingPOST({
+                        clinicalDataType: clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE",
+                        clinicalDataMultiStudyFilter: {
+                            attributeIds: [clinicalAttribute.clinicalAttributeId],
+                            identifiers: selectedSamples.map(s=>({ studyId: s.studyId, entityId: s[entityIdKey] }))
+                        }
+                    });
+
+                    const lcValueToValue:{[lowerCaseValue:string]:string} = {};
+                    const lcValueToColor = _.keyBy(clinicalAttributeValues, d=>d.value.toLowerCase());
+                    let lcValueToSampleIdentifiers:{[value:string]:SampleIdentifier[]} = {};
+                    if (clinicalAttribute.patientAttribute) {
+                        const patientKeyToData = _.keyBy(data, (d:ClinicalData)=>d.uniquePatientKey);
+                        for (const sample of selectedSamples) {
+                            const datum = patientKeyToData[sample.uniquePatientKey];
+                            const value = datum ? datum.value : "NA";
+                            const lcValue = value.toLowerCase();
+                            lcValueToValue[lcValue] = lcValueToValue[lcValue] || value;
+                            lcValueToSampleIdentifiers[lcValue] = lcValueToSampleIdentifiers[lcValue] || [];
+                            lcValueToSampleIdentifiers[lcValue].push({
+                                sampleId: sample.sampleId,
+                                studyId: sample.studyId
+                            });
+                        }
+                    } else {
+                        lcValueToSampleIdentifiers = _.groupBy(data, (d:ClinicalData)=>{
+                            const value = d.value;
+                            const lcValue = value.toLowerCase();
+                            lcValueToValue[lcValue] = lcValueToValue[lcValue] || value;
+                            return lcValue;
+                        });
+                    }
+                    statusCallback(LoadingPhase.CREATING_SESSION);
+                    // create groups using data
+                    const groups = _.map(lcValueToSampleIdentifiers, (sampleIdentifiers, lcValue)=>{
+                        const value = lcValueToValue[lcValue];
+                        return {
+                            name: value,
+                            description: "",
+                            studies: getStudiesAttr(sampleIdentifiers),
+                            origin: this.studyIds,
+                            color: lcValueToColor[lcValue].color,
+                            studyViewFilter: getPieChartGroupFilters(this.filters, clinicalAttribute, value)
+                        };
+                    });
+                    // create session and get id
+                    const {id} = await comparisonClient.addComparisonSession({ groups, clinicalAttribute });
+                    return resolve(id);
+                }
+            );
         });
     }
 
-    @computed get selectedComparisonGroups() {
-        return this.comparisonGroups.filter(group=>this.isComparisonGroupSelected(group.id));
+    @autobind
+    public async openComparisonPage(params:{ clinicalAttribute: ClinicalAttribute, clinicalAttributeValues: {value:string, color:string}[]}) {
+        // open window before the first `await` call - this makes it a synchronous window.open,
+        //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
+        const comparisonWindow = window.open(getComparisonLoadingUrl({
+            phase: LoadingPhase.DOWNLOADING_GROUPS,
+            clinicalAttributeName: params.clinicalAttribute.displayName
+        }), "_blank");
+
+        // wait until the new window has routingStore available
+        await sleepUntil(()=>!!(comparisonWindow as any).routingStore);
+
+        // save comparison session, and get id
+        const sessionId = await this.createPieChartComparisonSession(
+            params.clinicalAttribute,
+            params.clinicalAttributeValues,
+            (phase:LoadingPhase)=>{
+                (comparisonWindow as any).routingStore.updateRoute({phase}, undefined, false);
+            }
+        );
+
+        // redirect window to correct URL
+        redirectToComparisonPage(comparisonWindow!, { sessionId });
     }
+    // < / comparison groups code>
 
     @observable private initialFiltersQuery: Partial<StudyViewFilter> = {};
 
