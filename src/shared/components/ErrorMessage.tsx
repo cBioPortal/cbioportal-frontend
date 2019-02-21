@@ -3,10 +3,15 @@ import {observer} from "mobx-react";
 import ErrorIcon from "./ErrorIcon";
 
 export interface IErrorMessageProps {
+    message?:string;
 }
 
 @observer
 export default class ErrorMessage extends React.Component<IErrorMessageProps, {}> {
+    static defaultProps = {
+        message: "Error encountered."
+    };
+
     render() {
         return <span>
             <i
@@ -17,7 +22,7 @@ export default class ErrorMessage extends React.Component<IErrorMessageProps, {}
                     marginRight:7
                 }}
             />
-            Error encountered. Please let us know about this error and how you got here at <b>cbioportal at googlegroups dot com.</b>
+            {this.props.message!} Please let us know about this error and how you got here at <b style={{whiteSpace:"nowrap"}}>cbioportal at googlegroups dot com.</b>
         </span>
     }
 }

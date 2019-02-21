@@ -8,7 +8,7 @@ import {MolecularProfile} from "../../shared/api/generated/CBioPortalAPI";
 import {MakeMobxView} from "../../shared/components/MobxView";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import { ENRICHMENTS_NOT_2_GROUPS_MSG } from "./GroupComparisonUtils";
+import {ENRICHMENTS_NOT_2_GROUPS_MSG, getNumSamples} from "./GroupComparisonUtils";
 import {AlterationEnrichmentTableColumnType} from "../resultsView/enrichments/AlterationEnrichmentsTable";
 
 export interface ICopyNumberEnrichmentsProps {
@@ -24,17 +24,17 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
 
     readonly tabUI = MakeMobxView({
         await:()=>{
-            if (this.props.store.activeComparisonGroups.isComplete &&
-                this.props.store.activeComparisonGroups.result.length !== 2) {
+            if (this.props.store.activeGroups.isComplete &&
+                this.props.store.activeGroups.result.length !== 2) {
                 // dont bother loading data for and computing enrichments UI if its not valid situation for it
-                return [this.props.store.activeComparisonGroups];
+                return [this.props.store.activeGroups];
             } else {
-                return [this.props.store.activeComparisonGroups, this.enrichmentsUI];
+                return [this.props.store.activeGroups, this.enrichmentsUI];
             }
         },
         render:()=>{
-            if (this.props.store.activeComparisonGroups.result!.length !== 2) {
-                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeComparisonGroups.result!.length > 2)}</span>;
+            if (this.props.store.activeGroups.result!.length !== 2) {
+                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeGroups.result!.length > 2)}</span>;
             } else {
                 return this.enrichmentsUI.component;
             }
@@ -58,8 +58,8 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles} onChange={this.onChangeProfile}
                                                 selectedValue={this.props.store.copyNumberEnrichmentProfile.result!.molecularProfileId}/>
                     <AlterationEnrichmentContainer data={this.props.store.copyNumberData.result!}
-                                                   totalGroup1Count={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
-                                                   totalGroup2Count={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
+                                                   totalGroup1Count={getNumSamples(this.props.store.enrichmentsGroup1.result!)}
+                                                   totalGroup2Count={getNumSamples(this.props.store.enrichmentsGroup2.result!)}
                                                    group1Name={group1Name}
                                                    group2Name={group2Name}
                                                    group1Description={`in ${group1Name} that have the listed alteration in the listed gene.`}
