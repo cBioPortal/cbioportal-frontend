@@ -79,7 +79,10 @@ export default class CNSegments extends React.Component<{ store: StudyViewPageSt
                     <span>
                         {this.hasNoSegmentData ? "No segmented" : "Segmented"} copy-number data for the selected {
                             this.props.store.selectedSamples.result && this.props.store.selectedSamples.result.length
-                        } sample(s).
+                        } {
+                            this.props.store.selectedSamples.result && this.props.store.selectedSamples.result.length === 1 ?
+                            "sample." : "samples."
+                        }
                     </span>
                     {
                         !this.hasNoSegmentData &&
