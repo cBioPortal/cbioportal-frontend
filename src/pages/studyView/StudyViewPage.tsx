@@ -36,8 +36,11 @@ import {AppStore} from "../../AppStore";
 import ActionButtons from "./studyPageHeader/ActionButtons";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import {GACustomFieldsEnum, trackEvent} from "../../shared/lib/tracking";
-import ComparisonGroupManager from "../groupComparison/ComparisonGroupManager";
+import ComparisonGroupManager from "../groupComparison/comparisonGroupManager/ComparisonGroupManager";
 import classNames from "classnames";
+import AppConfig from "appConfig";
+import SocialAuthButton from "../../shared/components/SocialAuthButton";
+import {ServerConfigHelpers} from "../../config/config";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -142,6 +145,45 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         } else {
             return '';
         }
+    }
+
+    @computed
+    get groupsButton() {
+        return (
+            <DefaultTooltip
+                visible={this.showGroupsTooltip}
+                placement="bottomLeft"
+                destroyTooltipOnHide={true}
+                onPopupAlign={(tooltipEl: any)=>{
+                    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
+                    arrowEl.style.right = '10px';
+                }}
+                getTooltipContainer={()=>document.getElementById("comparisonGroupManagerContainer")!}
+                overlay={
+                    <div style={{width: 300}}>
+                        {this.props.appStore.isLoggedIn ?
+                            <ComparisonGroupManager store={this.store} /> :
+                            (<span>
+                                Please log in to use the custom groups feature to save and compare sub-cohorts.
+                                <If condition={AppConfig.serverConfig.authenticationMethod === "social_auth"}>
+                                    <SocialAuthButton appStore={this.props.appStore}/>
+                                </If>
+                            </span>)
+                        }
+                    </div>
+                }
+            >
+                <button className={classNames('btn btn-primary btn-xs', {active:this.showGroupsTooltip})}
+                        data-test="groups-button"
+                        onClick={(e)=>{
+                            e.stopPropagation();
+                            this.showGroupsTooltip = !this.showGroupsTooltip;
+                        }}
+                        aria-pressed={this.showGroupsTooltip}
+                        style={{marginLeft: '10px'}}
+                >Groups {String.fromCharCode(9662)/*small solid down triangle*/}</button>
+            </DefaultTooltip>
+        );
     }
 
     content() {
@@ -267,34 +309,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                 />
                                             </span>
                                         )}
-                                        <DefaultTooltip
-                                            visible={this.showGroupsTooltip}
-                                            placement="bottomLeft"
-                                            destroyTooltipOnHide={true}
-                                            onPopupAlign={(tooltipEl: any)=>{
-                                                const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
-                                                arrowEl.style.right = '10px';
-                                            }}
-                                            getTooltipContainer={()=>document.getElementById("comparisonGroupManagerContainer")!}
-                                            overlay={()=>(
-                                                <div style={{width: 300}}
-                                                >
-                                                    <ComparisonGroupManager
-                                                        store={this.store}
-                                                    />
-                                                </div>
-                                            )}
-                                        >
-                                            <button className={classNames('btn btn-primary btn-xs', {active:this.showGroupsTooltip})}
-                                                    data-test="groups-button"
-                                                    onClick={(e)=>{
-                                                        e.stopPropagation();
-                                                        this.showGroupsTooltip = !this.showGroupsTooltip;
-                                                    }}
-                                                    aria-pressed={this.showGroupsTooltip}
-                                                    style={{marginLeft: '10px'}}
-                                            >Groups {String.fromCharCode(9662)/*small solid down triangle*/}</button>
-                                        </DefaultTooltip>
+                                        {ServerConfigHelpers.sessionServiceIsEnabled() && this.groupsButton}
                                     </div>
                                 </div>
                             </div>

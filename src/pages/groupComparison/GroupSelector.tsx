@@ -1,6 +1,11 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import { ComparisonSampleGroup, caseCountsInParens, ComparisonGroup } from "./GroupComparisonUtils";
+import {
+    caseCountsInParens,
+    ComparisonGroup,
+    getSampleIdentifiers,
+    getPatientIdentifiers
+} from "./GroupComparisonUtils";
 import MobxPromise from "mobxpromise";
 import { ButtonGroup, Button } from "react-bootstrap";
 import { MakeMobxView } from "shared/components/MobxView";
@@ -21,40 +26,45 @@ export interface IGroupSelectorProps {
 export default class GroupSelector extends React.Component<IGroupSelectorProps,{}> {
     readonly tabUI = MakeMobxView({
         await:()=>[
-            this.props.store.allComparisonGroups_Filtered,
-            this.props.store.activeComparisonGroups, 
+            this.props.store.filteredGroups,
+            this.props.store.sampleSet
         ],
         render:()=>{
-            if (this.props.store.allComparisonGroups_Unfiltered.result!.length === 0) {
+            if (this.props.store.filteredGroups.result!.length === 0) {
                 return null;
             } else {
-                const selectedGroups = _.keyBy(this.props.store.activeComparisonGroups.result!, g=>g.id);
                 return (
                     <div>
                         <strong>Active Groups: </strong>
                         <div className={styles.groupButtons}>
-                            {this.props.store.allComparisonGroups_Filtered.result!.map(group=>(
-                                <button
-                                    className={classNames('btn btn-xs', { "btn-primary":(group.id in selectedGroups), "btn-default":!(group.id in selectedGroups)})}
-                                    onClick={()=>this.props.store.toggleComparisonGroupSelected(group.id)}
-                                    disabled={!this.props.store.groupSelectionCanBeToggled(group)}
-                                >
-                                    {
-                                        (group.id in selectedGroups) ? <i className={'fa fa-check'}></i> : null
-                                    }
-                                    &nbsp;
-                                    {`${group.name} ${
-                                        caseCountsInParens(group.sampleIdentifiers, group.patientIdentifiers, group.hasOverlappingSamples, group.hasOverlappingPatients)
-                                    }`}
-                                </button>
-                            ))}
+                            {this.props.store.filteredGroups.result!.map(group=>{
+                                const active = this.props.store.isGroupActive(group);
+                                const sampleIdentifiers = getSampleIdentifiers([group]);
+                                const patientIdentifiers = getPatientIdentifiers(sampleIdentifiers, this.props.store.sampleSet.result!);
+                                return (
+                                    <button
+                                        className={classNames('btn btn-xs', { "btn-primary":active, "btn-default":!active})}
+                                        onClick={()=>this.props.store.toggleGroupSelected(group.uid)}
+                                        disabled={!this.props.store.groupSelectionCanBeToggled(group)}
+                                    >
+                                        {
+                                            active ? <i className={'fa fa-check'}></i> : null
+                                        }
+                                        &nbsp;
+                                        {`${group.name} ${
+                                            caseCountsInParens(sampleIdentifiers, patientIdentifiers, group.hasOverlappingSamples, group.hasOverlappingPatients)
+                                        }`}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 )
             }
         },
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
-        renderError:()=><ErrorMessage/>
+        renderError:()=><ErrorMessage/>,
+        showLastRenderWhenPending:true
     });
     render() {
         return this.tabUI.component;

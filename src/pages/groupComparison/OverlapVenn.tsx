@@ -7,19 +7,19 @@ import { VictoryLabel, VictoryLegend } from 'victory';
 import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
 import _ from "lodash";
 import { computed } from 'mobx';
-import { getVennPlotData } from './GroupComparisonUtils';
+import {ComparisonGroup, getCombinations, getVennPlotData} from './GroupComparisonUtils';
 
 export interface IVennProps {
     svgId?: string;
-    sampleGroupsCombinationSets: {
-        groups: string[];
+    sampleGroups: {
+        uid: string;
         cases: string[];
     }[];
-    patientGroupsCombinationSets: {
-        groups: string[];
+    patientGroups: {
+        uid: string;
         cases: string[];
     }[];
-    categoryToColor: { [cat: string]: string };
+    uidToGroup: { [uid: string]: ComparisonGroup };
 }
 
 const VENN_PLOT_WIDTH = 250
@@ -43,16 +43,16 @@ export default class Venn extends React.Component<IVennProps, {}> {
     }
 
     @computed get sampleSets() {
-        return getVennPlotData(this.props.sampleGroupsCombinationSets);
+        return getVennPlotData(getCombinations(this.props.sampleGroups));
     }
 
     @computed get patientSets() {
-        return getVennPlotData(this.props.patientGroupsCombinationSets);
+        return getVennPlotData(getCombinations(this.props.patientGroups));
     }
 
     @autobind
     getColor(categories: string[]) {
-        return categories.length === 1 ? this.props.categoryToColor[categories[0]] : undefined
+        return categories.length === 1 ? this.props.uidToGroup[categories[0]].color : undefined
     }
 
     @autobind
@@ -117,15 +117,13 @@ export default class Venn extends React.Component<IVennProps, {}> {
     }
 
     @computed get legendData() {
-        const usedGroups = _.keyBy(_.uniq(
-            _.flattenDeep(this.props.sampleGroupsCombinationSets.map(combo=>combo.groups))
-        ));
+        const usedGroups = _.keyBy(this.props.sampleGroups.map(group=>group.uid));
         const legendData:any[] = [];
-        _.forEach(this.props.categoryToColor, (color, category) => {
-            if (category in usedGroups) {
+        _.forEach(this.props.uidToGroup, (group) => {
+            if (group.uid in usedGroups) {
                 legendData.push({
-                    name: category,
-                    symbol: { fill: color }
+                    name: group.name,
+                    symbol: { fill: group.color }
                 });
             }
         });

@@ -1,6 +1,9 @@
-import { assert } from 'chai';
-import { getCombinations, getStackedBarData, getVennPlotData } from './GroupComparisonUtils';
+import chai, {assert, expect} from 'chai';
+import {ComparisonGroup, getCombinations, getStackedBarData, getVennPlotData} from './GroupComparisonUtils';
 import { COLORS } from 'pages/studyView/StudyViewUtils';
+import deepEqualInAnyOrder from "deep-equal-in-any-order";
+import {makePlotData} from "../../shared/components/plots/StackedBarPlotUtils";
+chai.use(deepEqualInAnyOrder);
 
 describe('GroupComparisonUtils', () => {
 
@@ -12,10 +15,10 @@ describe('GroupComparisonUtils', () => {
         it('when there are no overlapping groups', () => {
             assert.deepEqual(
                 getCombinations([{
-                    name: '1',
+                    uid: '1',
                     cases: ['1-1', '1-2']
                 }, {
-                    name: '2',
+                    uid: '2',
                     cases: ['2-1']
                 }]), [
                     { groups: ['1'], cases: ['1-1', '1-2'] },
@@ -27,10 +30,10 @@ describe('GroupComparisonUtils', () => {
         it('when there are one or more overlapping groups', () => {
             assert.deepEqual(
                 getCombinations([{
-                    name: '1',
+                    uid: '1',
                     cases: ['1-1', '1-2']
                 }, {
-                    name: '2',
+                    uid: '2',
                     cases: ['1-1']
                 }]), [
                     { groups: ['1'], cases: ['1-1', '1-2'] },
@@ -40,13 +43,13 @@ describe('GroupComparisonUtils', () => {
 
             assert.deepEqual(
                 getCombinations([{
-                    name: '1',
+                    uid: '1',
                     cases: ['1-1', '1-2']
                 }, {
-                    name: '2',
+                    uid: '2',
                     cases: ['1-1', '1-3']
                 }, {
-                    name: '3',
+                    uid: '3',
                     cases: ['1-1', '1-2', '1-3']
                 }]), [
                     { groups: ['1'], cases: ['1-1', '1-2'] },
@@ -60,13 +63,13 @@ describe('GroupComparisonUtils', () => {
 
             assert.deepEqual(
                 getCombinations([{
-                    name: '1',
+                    uid: '1',
                     cases: ['1-1', '1-2']
                 }, {
-                    name: '2',
+                    uid: '2',
                     cases: ['1-2', '1-3']
                 }, {
-                    name: '3',
+                    uid: '3',
                     cases: ['1-3', '1-1']
                 }]), [
                     { groups: ['1'], cases: ['1-1', '1-2'] },
@@ -81,16 +84,27 @@ describe('GroupComparisonUtils', () => {
     });
 
     describe('getStackedBarData', () => {
+        const uidToGroup = {
+            "1":{
+                uid:"1",
+                name:"1",
+                color:"#990099"
+            } as ComparisonGroup,
+            "2":{
+                uid:"2",
+                name:"2",
+                color:"#0099c6"
+            } as ComparisonGroup
+        };
         it('when no data', () => {
             assert.deepEqual(getStackedBarData([], {}), [])
         });
 
         it('when there no overlapping groups', () => {
             assert.deepEqual(getStackedBarData([
-                { groups: ['1'], cases: ['1-1'] },
-                { groups: ['1', '2'], cases: [] },
-                { groups: ['2'], cases: ['1-2'] }
-            ], { ['1']: '#990099', ['2']: '#0099c6' }),
+                { uid: '1', cases: ['1-1'] },
+                { uid: '2', cases: ['1-2'] }
+            ], uidToGroup),
                 [
                     [{ cases: ['1-1'], fill: '#990099', groupName: '1' }],
                     [{ cases: ['1-2'], fill: '#0099c6', groupName: '2' }]
@@ -98,16 +112,16 @@ describe('GroupComparisonUtils', () => {
         });
 
         it('when there one or more overlapping groups', () => {
-            assert.deepEqual(getStackedBarData([
-                { groups: ['1'], cases: ['1-1', '1-2'] },
-                { groups: ['1', '2'], cases: ['1-1'] },
-                { groups: ['2'], cases: ['1-1'] }
-            ], { ['1']: '#990099', ['2']: '#0099c6' }),
-                [
-                    [{ cases: ['1-1'], fill: '#CCCCCC', groupName: 'Overlapping Cases' }],
-                    [{ cases: [], fill: '#0099c6', groupName: '2' }],
-                    [{ cases: ['1-2'], fill: '#990099', groupName: '1' }]
-                ]);
+
+            (expect(getStackedBarData([
+                { uid: '1', cases: ['1-1', '1-2'] },
+                { uid: '2', cases: ['1-1'] }
+            ], uidToGroup))
+                .to.deep as any).equalInAnyOrder([
+                [{ cases: ['1-1'], fill: '#CCCCCC', groupName: 'Overlapping Cases' }],
+                [{ cases: [], fill: '#0099c6', groupName: '2' }],
+                [{ cases: ['1-2'], fill: '#990099', groupName: '1' }]
+            ]);
         });
     });
 

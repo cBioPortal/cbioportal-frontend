@@ -8,19 +8,19 @@ import { percentageRounder } from 'pages/resultsView/cancerSummary/CancerSummary
 import autobind from 'autobind-decorator';
 import ScatterPlotTooltip from 'shared/components/plots/ScatterPlotTooltip';
 import Timer = NodeJS.Timer;
-import { getStackedBarData } from './GroupComparisonUtils';
+import {ComparisonGroup, getStackedBarData} from './GroupComparisonUtils';
 
 export interface IOverlapStackedBarProps {
     svgId?: string;
-    sampleGroupsCombinationSets: {
-        groups: string[];
+    sampleGroups: {
+        uid: string;
         cases: string[];
     }[];
-    patientGroupsCombinationSets: {
-        groups: string[];
+    patientGroups: {
+        uid: string;
         cases: string[];
     }[];
-    categoryToColor: { [cat: string]: string };
+    uidToGroup: { [uid: string]: ComparisonGroup };
 };
 
 const STACKBAR_WIDTH = 250
@@ -87,23 +87,23 @@ export default class OverlapStackedBar extends React.Component<IOverlapStackedBa
     }
 
     @computed get sampleStackedBarData() {
-        return getStackedBarData(this.props.sampleGroupsCombinationSets, this.props.categoryToColor);
+        return getStackedBarData(this.props.sampleGroups, this.props.uidToGroup);
     }
 
 
     @computed get patientStackedBarData() {
-        return getStackedBarData(this.props.patientGroupsCombinationSets, this.props.categoryToColor);
+        return getStackedBarData(this.props.patientGroups, this.props.uidToGroup);
     }
 
     @computed get totalSamplesCount() {
-        return _.chain(this.props.sampleGroupsCombinationSets)
+        return _.chain(this.props.sampleGroups)
             .flatMap(set => set.cases)
             .uniq()
             .value().length;
     }
 
     @computed get totalPatientsCount() {
-        return _.chain(this.props.patientGroupsCombinationSets)
+        return _.chain(this.props.patientGroups)
             .flatMap(set => set.cases)
             .uniq()
             .value().length;
