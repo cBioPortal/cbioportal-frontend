@@ -89,6 +89,13 @@ describe('AnnotationUtils', () => {
                 referenceAllele: "A",
                 variantAllele: "T"
             },
+            transcriptId: '',
+            proteinLocation: {
+                transcriptId: '',
+                start: 0,
+                end: 0,
+                mutationType: ''
+            },
             variant: "17:g.66A>T",
             hotspots: [
                 {
@@ -116,6 +123,13 @@ describe('AnnotationUtils', () => {
                 end: 668,
                 referenceAllele: "G",
                 variantAllele: "CAT"
+            },
+            transcriptId: '',
+            proteinLocation: {
+                transcriptId: '',
+                start: 0,
+                end: 0,
+                mutationType: ''
             },
             variant: "3:g.666G>CAT",
             hotspots: [
@@ -147,6 +161,13 @@ describe('AnnotationUtils', () => {
                 end: 111,
                 referenceAllele: "T",
                 variantAllele: "C"
+            },
+            transcriptId: '',
+            proteinLocation: {
+                transcriptId: '',
+                start: 0,
+                end: 0,
+                mutationType: ''
             },
             variant: "4:g.111T>C",
             hotspots: [

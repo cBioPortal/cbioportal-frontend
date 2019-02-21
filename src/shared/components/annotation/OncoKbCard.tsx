@@ -44,9 +44,9 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
     get oncokbLinkOut() {
         let link: string | undefined = undefined;
         if (this.props.gene) {
-            link = `http://oncokb.org/#/gene/${this.props.gene}`;
+            link = `https://oncokb.org/gene/${this.props.gene}`;
             if (this.props.variant) {
-                link = `${link}/variant/${this.props.variant}`;
+                link = `${link}/${this.props.variant}`;
             }
         }
         return link;
