@@ -1,38 +1,23 @@
 import * as React from "react";
-import {
-    VictoryAxis,
-    VictoryChart,
-    VictoryContainer,
-    VictoryLabel,
-    VictoryLegend,
-    VictoryScatter,
-    VictoryTheme,
-    VictoryTooltip
-} from "victory";
-import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {action, computed, observable} from "mobx";
+import {computed} from "mobx";
 import {observer, Observer} from "mobx-react";
 import {MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
-import {AlterationTypeConstants} from "../ResultsViewPageStore";
-import svgToPdfDownload from "shared/lib/svgToPdfDownload";
+import {GeneticEntity} from "../ResultsViewPageStore";
 import {getSampleViewUrl} from "../../../shared/api/urls";
 import "./styles.scss";
 import {bind} from "bind-decorator";
 import ScatterPlot from "../../../shared/components/plots/ScatterPlot";
-import Timer = NodeJS.Timer;
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import {axisLabel, isNotProfiled} from "./CoExpressionPlotUtils";
 import _ from "lodash";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 
-type GeneId = { hugoGeneSymbol:string, entrezGeneId: number, cytoband:string};
-
 export interface ICoExpressionPlotProps {
-    xAxisGene:GeneId;
-    yAxisGene:GeneId;
+    xAxisGeneticEntity:GeneticEntity;
+    yAxisGeneticEntity:GeneticEntity;
     data:CoExpressionPlotData[];
-    coExpression:CoExpression;
-    molecularProfile:MolecularProfile;
+    molecularProfileY:MolecularProfile;
+    molecularProfileX:MolecularProfile;
 
     height:number;
     width:number;
@@ -41,12 +26,13 @@ export interface ICoExpressionPlotProps {
     showMutationControls?:boolean;
     showMutations?:boolean;
     logScale?:boolean;
+    showRegressionLine:boolean;
     handlers:{
         onClickShowMutations?:()=>void,
         onClickLogScale?:()=>void,
-    }
+        onClickShowRegressionLine:()=>void
+    };
 }
-
 
 export type CoExpressionPlotData = {
     x:number,
@@ -151,13 +137,13 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
         const ret = [];
         if (hasX) {
             ret.push({
-                name: [this.props.xAxisGene.hugoGeneSymbol, "mutated"],
+                name: [this.props.xAxisGeneticEntity.geneticEntityName, "mutated"],
                 symbol: { fill: X_MUT_FILL, stroke: X_MUT_STROKE }
             });
         }
         if (hasY) {
             ret.push({
-                name: [this.props.yAxisGene.hugoGeneSymbol, "mutated"],
+                name: [this.props.yAxisGeneticEntity.geneticEntityName, "mutated"],
                 symbol: { fill: Y_MUT_FILL, stroke: Y_MUT_STROKE }
             });
         }
@@ -199,15 +185,15 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     }
 
     private get title() {
-        return `${this.props.molecularProfile.name}: ${this.props.xAxisGene.hugoGeneSymbol} vs. ${this.props.yAxisGene.hugoGeneSymbol}`;
+        return `${this.props.xAxisGeneticEntity.geneticEntityName} vs. ${this.props.yAxisGeneticEntity.geneticEntityName}`;
     }
 
     @computed get axisLabelX() {
-        return axisLabel(this.props.xAxisGene, !!this.props.logScale);
+        return axisLabel({geneticEntityName: this.props.xAxisGeneticEntity.geneticEntityName}, !!this.props.logScale, this.props.molecularProfileX.name);
     }
 
     @computed get axisLabelY() {
-        return axisLabel(this.props.yAxisGene, !!this.props.logScale);
+        return axisLabel({geneticEntityName: this.props.yAxisGeneticEntity.geneticEntityName}, !!this.props.logScale, this.props.molecularProfileY.name);
     }
 
     @bind
@@ -229,6 +215,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 legendData={this.mutationLegendElements}
                 logX={this.props.logScale}
                 logY={this.props.logScale}
+                showRegressionLine={this.props.showRegressionLine}
                 useLogSpaceTicks={true}
                 axisLabelX={this.axisLabelX}
                 axisLabelY={this.axisLabelY}
@@ -265,6 +252,14 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                             </label></div>
                         </div>
                     )}
+                    <div className="checkbox coexpression-plot-toolbar-elt"><label>
+                        <input
+                            type="checkbox"
+                            checked={this.props.showRegressionLine}
+                            onClick={this.props.handlers.onClickShowRegressionLine}
+                            data-test="ShowRegressionLine"
+                        />Show Regression Line
+                    </label></div>
                 </div>
 
                 <DownloadControls
@@ -291,20 +286,20 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 </div>
                 <div>
                     <span>
-                        {this.props.xAxisGene.hugoGeneSymbol}:&nbsp;
+                        {this.props.xAxisGeneticEntity.geneticEntityName}:&nbsp;
                         <b>{d.x.toFixed(2)}</b>
                     </span>
                 </div>
                 <div>
                     <span>
-                        {this.props.yAxisGene.hugoGeneSymbol}:&nbsp;
+                        {this.props.yAxisGeneticEntity.geneticEntityName}:&nbsp;
                         <b>{d.y.toFixed(2)}</b>
                     </span>
                 </div>
                 {d.mutationsX && (
                     <div>
                         <span>
-                            {this.props.xAxisGene.hugoGeneSymbol} Mutation:&nbsp;
+                            {this.props.xAxisGeneticEntity.geneticEntityName} Mutation:&nbsp;
                             <b>{d.mutationsX}</b>
                         </span>
                     </div>
@@ -312,7 +307,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 {d.mutationsY && (
                     <div>
                         <span>
-                            {this.props.yAxisGene.hugoGeneSymbol} Mutation:&nbsp;
+                            {this.props.yAxisGeneticEntity.geneticEntityName} Mutation:&nbsp;
                             <b>{d.mutationsY}</b>
                         </span>
                     </div>
