@@ -66,7 +66,21 @@ export default class ExonColumnFormatter {
         {
             return null;
         }
-        return genomeNexusData.annotation_summary.transcriptConsequenceSummary.exon; 
+        const exon = genomeNexusData.annotation_summary.transcriptConsequenceSummary.exon;
+        if (exon) {
+            return exon;
+        }
+        else {
+            // find any other mutation affecting the exon on the same transcript
+            const transcriptConsequence = genomeNexusData.transcript_consequences.filter(
+                x => ((x.transcript_id === genomeNexusData.annotation_summary.transcriptConsequenceSummary.transcriptId) && x.exon)
+            )[0];
+            if (transcriptConsequence) {
+                return transcriptConsequence.exon;
+            } else {
+                return null;
+            }
+        }
     }
 
     public static download(data:Mutation[], genomeNexusCache:GenomeNexusCache): string
@@ -85,14 +99,14 @@ export default class ExonColumnFormatter {
     public static getSortValue(data:Mutation[], genomeNexusCache:GenomeNexusCache): number|null {
         const genomeNexusCacheData = ExonColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
         if (genomeNexusCacheData) {
-            let exonData = ExonColumnFormatter.getData(genomeNexusCacheData.data);            
+            let exonData = ExonColumnFormatter.getData(genomeNexusCacheData.data);
             if (exonData == null) {
                 return null;
             }
             else {
                 return parseInt(exonData.split("/")[0]);
             }
-        }    
+        }
         else {
             return null;
         }
