@@ -55,7 +55,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.TUMORS,
             MutationTableColumnType.EXON,
-            MutationTableColumnType.HGVSC
+            MutationTableColumnType.HGVSC,
+            MutationTableColumnType.GENOME_NEXUS
         ]
     };
 
@@ -141,6 +142,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.COSMIC].order = 184;
         this._columns[MutationTableColumnType.EXON].order = 185;
         this._columns[MutationTableColumnType.HGVSC].order = 186;
+        this._columns[MutationTableColumnType.GENOME_NEXUS].order = 187;
 
         // exclusions
         this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = ()=>{
