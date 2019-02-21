@@ -90,7 +90,8 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
 
     @observable private plotState = {
         plotLogScale: false,
-        plotShowMutations: true
+        plotShowMutations: true,
+        plotShowRegressionLine: false
     };
 
     private plotHandlers: ICoExpressionPlotProps["handlers"];
@@ -106,6 +107,9 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             }),
             onClickShowMutations: action(()=>{
                 this.plotState.plotShowMutations = !this.plotState.plotShowMutations;
+            }),
+            onClickShowRegressionLine: action(()=>{
+                this.plotState.plotShowRegressionLine = !this.plotState.plotShowRegressionLine;
             })
         };
     }
