@@ -52,7 +52,9 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
-            MutationTableColumnType.TUMORS
+            MutationTableColumnType.TUMORS,
+            MutationTableColumnType.EXON,
+            MutationTableColumnType.HGVSC
         ]
     };
 
@@ -107,7 +109,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.VAR_READS].download =
             (d:Mutation[])=>AlleleCountColumnFormatter.getReads(d, "tumorAltCount");
 
-
+        this._columns[MutationTableColumnType.EXON].sortBy = undefined;
+        
         // order columns
         this._columns[MutationTableColumnType.TUMORS].order = 5;
         this._columns[MutationTableColumnType.GENE].order = 20;
@@ -132,6 +135,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.MRNA_EXPR].order = 182;
         this._columns[MutationTableColumnType.COHORT].order = 183;
         this._columns[MutationTableColumnType.COSMIC].order = 184;
+        this._columns[MutationTableColumnType.EXON].order = 185;
+        this._columns[MutationTableColumnType.HGVSC].order = 186;
 
         // exclusions
         this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = ()=>{
