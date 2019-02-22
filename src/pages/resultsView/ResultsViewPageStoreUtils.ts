@@ -2,7 +2,7 @@ import {
     Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation, Patient, Sample, CancerStudy, ClinicalAttribute
 } from "../../shared/api/generated/CBioPortalAPI";
-import {action} from "mobx";
+import {action, computed} from "mobx";
 import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
 import {
     OQLLineFilterOutput,
@@ -19,7 +19,7 @@ import {
     AnnotatedMutation,
     CaseAggregatedData,
     IQueriedCaseData,
-    IQueriedMergedTrackCaseData
+    IQueriedMergedTrackCaseData, ResultsViewPageStore
 } from "./ResultsViewPageStore";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import _ from "lodash";
@@ -451,16 +451,27 @@ export function getMultipleGeneResultKey(groupedOql: MergedTrackLineFilterOutput
     return groupedOql.label ? groupedOql.label : _.map(groupedOql.list, (data) => data.gene).join(' / ');
 }
 
-export function makeEnrichmentDataPromise<T extends {pValue:number, qValue?:number}>(params:{
+export function makeEnrichmentDataPromise<T extends {hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
+    store:ResultsViewPageStore,
     await: MobxPromise_await,
-    shouldFetchData:()=>boolean,
+    getSelectedProfile:()=>MolecularProfile|undefined,
     fetchData:()=>Promise<T[]>
 }):MobxPromise<(T & {qValue:number})[]> {
     return remoteData({
-        await: params.await,
+        await: ()=>params.await().concat([params.store.selectedMolecularProfiles]),
         invoke:async()=>{
-            if (params.shouldFetchData()) {
-                const data = await params.fetchData();
+            const profile = params.getSelectedProfile();
+            if (profile) {
+                let data = await params.fetchData();
+
+                // filter out query genes, if looking at a queried profile
+                // its important that we filter out *before* calculating Q values
+                if (params.store.selectedMolecularProfiles.result!
+                        .findIndex(x=>x.molecularProfileId === profile.molecularProfileId) > -1) {
+                    const queryGenes = _.keyBy(params.store.hugoGeneSymbols, x=>x.toUpperCase());
+                    data = data.filter(d=>!(d.hugoGeneSymbol.toUpperCase() in queryGenes));
+                }
+
                 const sortedByPvalue = _.sortBy(data, c=>c.pValue);
                 const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));
                 qValues.forEach((qValue, index)=>{
