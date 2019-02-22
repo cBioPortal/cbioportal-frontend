@@ -29,3 +29,5 @@ env/custom.sh
 image-compare/errors.js
 errorshots/
 TESTS.xml
+key.pem
+cert.pem

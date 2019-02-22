@@ -44,7 +44,9 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
             MutationTableColumnType.CANCER_TYPE,
-            MutationTableColumnType.NUM_MUTATIONS
+            MutationTableColumnType.NUM_MUTATIONS,
+            MutationTableColumnType.EXON,
+            MutationTableColumnType.HGVSC
         ]
     };
 
@@ -87,6 +89,8 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.VAR_READS_N].order = 200;
         this._columns[MutationTableColumnType.REF_READS_N].order = 210;
         this._columns[MutationTableColumnType.NUM_MUTATIONS].order = 220;
+        this._columns[MutationTableColumnType.EXON].order = 230;
+        this._columns[MutationTableColumnType.HGVSC].order = 240;
 
         // exclude
         this._columns[MutationTableColumnType.CANCER_TYPE].shouldExclude = ()=>{
