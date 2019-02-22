@@ -1,10 +1,10 @@
 import chai, {assert, expect} from "chai";
-import { makePlotData, makeBarSpecs } from "./StackedBarPlotUtils";
+import { makePlotData, makeBarSpecs } from "./MultipleCategoryBarPlotUtils";
 import _ from "lodash";
 import deepEqualInAnyOrder from "deep-equal-in-any-order";
 chai.use(deepEqualInAnyOrder);
 
-describe("StackedBarPlotUtils", ()=>{
+describe("MultipleCategoryBarPlotUtils", ()=>{
     let singleValueHorzBarsData:any[];
     let singleValueVertBarsData:any[];
     let multipleValueHorzBarsData:any[];

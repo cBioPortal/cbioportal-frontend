@@ -1,6 +1,6 @@
-import { IStringAxisData } from './../../../pages/resultsView/plots/PlotsTabUtils';
+import { IStringAxisData } from '../../../pages/resultsView/plots/PlotsTabUtils';
 import _ from "lodash";
-import { IStackedBarPlotData } from './StackedBarPlot';
+import { IMultipleCategoryBarPlotData } from './MultipleCategoryBarPlot';
 
 export function makePlotData(
     horzData:IStringAxisData["data"],
@@ -88,7 +88,7 @@ export function sortDataByCategory<D>(
 }
 
 export function makeBarSpecs(
-    data: IStackedBarPlotData[],
+    data: IMultipleCategoryBarPlotData[],
     minorCategoryOrder:{[cat:string]:number} | undefined,
     majorCategoryOrder:{[cat:string]:number} | undefined,
     getColor:(minorCategory:string)=>string,
