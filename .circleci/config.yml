@@ -3,7 +3,7 @@
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
 defaults: &defaults
-  working_directory: ~/repo
+  working_directory: /tmp/repo
   docker:
     # specify the version you desire here
     - image: circleci/node:8.12.0-browsers
@@ -17,13 +17,17 @@ jobs:
           name: "Install yarn at specific version"
           command:
             sudo npm install --global yarn@1.13.0
-
       - run:
           name: "Show yarn and node versions"
           command: |
             node --version
             yarn --version
       - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "yarn.lock" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
       # Download and cache dependencies
       - run: yarn
       - run:
@@ -36,31 +40,28 @@ jobs:
       - run:
           name: "Run build"
           command: 'yarn run build'
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - repo
 
   api_sync:
     <<: *defaults
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "yarn.lock" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+      - attach_workspace:
+          at: /tmp/
       # check that all api responses are still the same
       - run: "bash src/test/check_api_sync.sh"
 
   unit_tests:
     <<: *defaults
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "yarn.lock" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
       - run:
-          name: "Run build"
-          command: 'yarn run build'
+          name: "Install yarn at specific version"
+          command:
+            sudo npm install --global yarn@1.13.0
+      - attach_workspace:
+          at: /tmp/
       # run tests!
       - run:
           command: "yarn run test"
@@ -69,26 +70,19 @@ jobs:
             JUNIT_REPORT_NAME: test-results.xml
           when: always
       - store_test_results:
-          path: ~/repo/junit
+          path: /tmp/repo/junit
       - store_artifacts:
-          path: ~/repo/junit
+          path: /tmp/repo/junit
 
   end_to_end_tests:
     <<: *defaults
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "yarn.lock" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
       - run:
           name: "Install yarn at specific version"
           command:
             sudo npm install --global yarn@1.13.0
-      - run:
-          name: "Run build"
-          command: 'yarn run build'
+      - attach_workspace:
+          at: /tmp/
       - run:
           name: "Spin up frontend over ssl if necessary and run end to end tests"
           command: |
@@ -117,20 +111,20 @@ jobs:
           name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
           command: 'for f in end-to-end-tests/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
       -  store_artifacts:
-          path: ~/repo/end-to-end-tests/screenshots
+          path: /tmp/repo/end-to-end-tests/screenshots
           destination: /screenshots
       -  store_artifacts:
-          path: ~/repo/end-to-end-tests/image-compare
+          path: /tmp/repo/end-to-end-tests/image-compare
           destination: /image-compare
       -  store_artifacts:
-          path: ~/repo/end-to-end-tests/errorShots
+          path: /tmp/repo/end-to-end-tests/errorShots
           destination: /errorShots
       - store_test_results:
-          path: ~/repo/end-to-end-tests/junit
+          path: /tmp/repo/end-to-end-tests/junit
       - store_artifacts:
-          path: ~/repo/end-to-end-tests/junit
+          path: /tmp/repo/end-to-end-tests/junit
       - store_artifacts:
-          path: ~/repo/end-to-end-tests/imageCompare.html
+          path: /tmp/repo/end-to-end-tests/imageCompare.html
           destination: /imageCompare.html
 
 
@@ -148,7 +142,6 @@ workflows:
             - end_to_end_tests:
                 requires:
                     - install
-
     nightly:
        triggers:
            - schedule:
@@ -170,4 +163,3 @@ workflows:
            - end_to_end_tests:
                requires:
                    - install
-
