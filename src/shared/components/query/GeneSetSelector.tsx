@@ -94,7 +94,8 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}>
 					onChange={option => this.store.geneQuery = option ? option.value : ''}
 				/>
 
-				{!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
+				{/* we are hiding these buttons on 02/27/2019 */}
+				{/* {!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
 					<FlexRow padded className={styles.buttonRow}>
 						{!!(this.store.mutSigForSingleStudy.result.length) && (
 							<button className="btn btn-default btn-sm" onClick={() => this.store.showMutSigPopup = true}>
@@ -107,7 +108,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}>
 							</button>
 						)}
 					</FlexRow>
-				)}
+				)} */}
 
 				<textarea
 					ref={this.textAreaRef}
