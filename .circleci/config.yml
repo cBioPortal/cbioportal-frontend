@@ -23,8 +23,14 @@ jobs:
             node --version
             yarn --version
       - checkout
+      # cache build artifacts. Use concatenation of all source files as cache
+      # key. If there are no changes to src/ and yarn.lock, no need to rebuild
+      - run:
+          name: "Concatenate all source files to use as hash key for caching dist folder"
+          command: "cat yarn.lock $(find src/ -type f | sort) > has_source_changed"
       - restore_cache:
           keys:
+          - v1-dependencies-plus-dist-{{ checksum "has_source_changed" }}
           - v1-dependencies-{{ checksum "yarn.lock" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
@@ -38,8 +44,14 @@ jobs:
             - node_modules
           key: v1-dependencies-{{ checksum "yarn.lock" }}
       - run:
-          name: "Run build"
-          command: 'yarn run build'
+          name: "Run build if no dist folder"
+          command: 'ls dist || yarn run build'
+      - save_cache:
+          paths:
+            - node_modules
+            - dist
+            - common-dist
+          key: v1-dependencies-plus-dist-{{ checksum "has_source_changed" }}
       - persist_to_workspace:
           root: /tmp
           paths:
