@@ -10,6 +10,7 @@ import { roundLogRatio } from 'shared/lib/FormatUtils';
 import * as _ from "lodash";
 import {AlterationTypeConstants} from "../ResultsViewPageStore";
 import {filterAndSortProfiles} from "../coExpression/CoExpressionTabUtils";
+import {IMiniFrequencyScatterChartData} from "./MiniFrequencyScatterChart";
 
 const LOG_VALUE = "LOG-VALUE";
 const LOG2_VALUE = "LOG2-VALUE";
@@ -46,6 +47,19 @@ export function getAlterationScatterData(alterationEnrichments: AlterationEnrich
             qValue: alterationEnrichment.qValue,
             logRatio: alterationEnrichment.logRatio,
             hovered: false
+        };
+    });
+}
+
+export function getAlterationFrequencyScatterData(alterationEnrichments: AlterationEnrichmentRow[], queryGenes: string[]): IMiniFrequencyScatterChartData[] {
+    return alterationEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((alterationEnrichment) => {
+        return {
+            x: alterationEnrichment.alteredPercentage,
+            y: alterationEnrichment.unalteredPercentage,
+            hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
+            pValue: alterationEnrichment.pValue,
+            qValue: alterationEnrichment.qValue,
+            logRatio: alterationEnrichment.logRatio
         };
     });
 }
