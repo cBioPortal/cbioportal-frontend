@@ -449,6 +449,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                 columnVisibilityProps={{
                                                     onColumnToggled: this.onMutationTableColumnVisibilityToggled
                                                 }}
+                                                showAllExon={true}
                                             />
                                         )
                                     }

@@ -92,6 +92,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 enableHotspot={this.props.config.show_hotspot}
                 enableMyCancerGenome={this.props.config.mycancergenome_show}
                 enableCivic={this.props.config.show_civic}
+                showAllExon={false}
             />
         );
     }
