@@ -11,11 +11,11 @@ export default class ExonColumnFormatter {
     
     public static renderFunction(data:Mutation[],
                                  genomeNexusCache:GenomeNexusCache|undefined,
-                                 showTotalNrOfExons?:boolean) {
+                                 showTotalNumberOfExons?:boolean) {
         const genomeNexusCacheData = ExonColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
         return (
             <div className={styles["exon-table"]}>
-                <span>{ExonColumnFormatter.getExonDataViz(genomeNexusCacheData, showTotalNrOfExons)}</span>
+                <span>{ExonColumnFormatter.getExonDataViz(genomeNexusCacheData, showTotalNumberOfExons)}</span>
             </div>
         );
     }
@@ -27,7 +27,7 @@ export default class ExonColumnFormatter {
         return cache.get(data[0]);
     }
 
-    private static getExonDataViz(genomeNexusCacheData:GenomeNexusCacheDataType|null, showTotalNrOfExons?:boolean) {
+    private static getExonDataViz(genomeNexusCacheData:GenomeNexusCacheDataType|null, showTotalNumberOfExons?:boolean) {
         let status:TableCellStatus | null = null;
 
         if (genomeNexusCacheData === null) {
@@ -45,7 +45,7 @@ export default class ExonColumnFormatter {
                 return (
                     <span style = {{display:"inline-block", float:"right"}}>
                         <span style = {{float:"left",width:"24px", textAlign:"right"}}> {exonData.split("/")[0]} </span>
-                        {showTotalNrOfExons && (
+                        {showTotalNumberOfExons && (
                             <span style = {{float:"left", width:"34px", textAlign:"left", marginLeft:"4px"}}> {`/ ${exonData.split("/")[1]}`} </span>
                         )}
                     </span>
