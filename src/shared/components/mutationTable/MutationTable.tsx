@@ -86,7 +86,7 @@ export interface IMutationTableProps {
     initialSortDirection?:SortDirection;
     paginationProps?:IPaginationControlsProps;
     showCountHeader?:boolean;
-    showAllExon?:boolean;
+    showTotalNrOfExons?:boolean;
     columnVisibility?: {[columnId: string]: boolean};
     columnVisibilityProps?: IColumnVisibilityControlsProps;
 }
@@ -514,7 +514,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.EXON] = {
             name: "Exon",
             render: (d:Mutation[]) => (this.props.genomeNexusCache
-                ? ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, this.props.showAllExon)
+                ? ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, this.props.showTotalNrOfExons)
                 : <span></span>),
             download: (d:Mutation[]) => ExonColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
             sortBy: (d:Mutation[]) => ExonColumnFormatter.getSortValue(d, this.props.genomeNexusCache as GenomeNexusCache),

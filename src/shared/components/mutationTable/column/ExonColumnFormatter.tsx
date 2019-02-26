@@ -11,11 +11,11 @@ export default class ExonColumnFormatter {
     
     public static renderFunction(data:Mutation[],
                                  genomeNexusCache:GenomeNexusCache|undefined,
-                                 showAllExon?:boolean) {
+                                 showTotalNrOfExons?:boolean) {
         const genomeNexusCacheData = ExonColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
         return (
             <div className={styles["exon-table"]}>
-                <span>{ExonColumnFormatter.getExonDataViz(genomeNexusCacheData, showAllExon)}</span>
+                <span>{ExonColumnFormatter.getExonDataViz(genomeNexusCacheData, showTotalNrOfExons)}</span>
             </div>
         );
     }
@@ -27,7 +27,7 @@ export default class ExonColumnFormatter {
         return cache.get(data[0]);
     }
 
-    public static getExonDataViz(genomeNexusCacheData:GenomeNexusCacheDataType|null, showAllExon?:boolean) {
+    public static getExonDataViz(genomeNexusCacheData:GenomeNexusCacheDataType|null, showTotalNrOfExons?:boolean) {
         let status:TableCellStatus | null = null;
 
         if (genomeNexusCacheData === null) {
@@ -42,12 +42,12 @@ export default class ExonColumnFormatter {
                 return exonData;
             }
             else {
-                let displayStyle = showAllExon?"inline":"none";
+                let displayStyle = showTotalNrOfExons?"inline":"none";
                 return <span style = {{display:"inline-block", float:"right"}}>
-                    <span style = {{float:"left",width:"24px", textAlign:"right"}}> {exonData.split("/")[0]} </span>
-                    <span style = {{float:"left", marginLeft:"4px", marginRight:"4px", display: displayStyle}}>/</span>
-                    <span style = {{float:"left",width:"24px", textAlign:"left", display: displayStyle}}> {exonData.split("/")[1]} </span>
-                </span>                
+                <span style = {{float:"left",width:"24px", textAlign:"right"}}> {exonData.split("/")[0]} </span>
+                {showTotalNrOfExons && (<span style = {{float:"left", marginLeft:"4px", marginRight:"4px"}}>/</span>)}
+                {showTotalNrOfExons && (<span style = {{float:"left",width:"24px", textAlign:"left"}}> {exonData.split("/")[1]} </span>)}
+                </span>
             }        
         }
 
