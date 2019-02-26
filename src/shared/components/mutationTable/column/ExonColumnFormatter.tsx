@@ -27,7 +27,7 @@ export default class ExonColumnFormatter {
         return cache.get(data[0]);
     }
 
-    public static getExonDataViz(genomeNexusCacheData:GenomeNexusCacheDataType|null, showTotalNrOfExons?:boolean) {
+    private static getExonDataViz(genomeNexusCacheData:GenomeNexusCacheDataType|null, showTotalNrOfExons?:boolean) {
         let status:TableCellStatus | null = null;
 
         if (genomeNexusCacheData === null) {
