@@ -42,10 +42,15 @@ export default class ExonColumnFormatter {
                 return exonData;
             }
             else {
-                return <span style = {{display:"inline-block", float:"right"}}>
-                <span style = {{float:"left",width:"24px", textAlign:"right"}}> {exonData.split("/")[0]} </span>
-                {showTotalNrOfExons && (<span style = {{float:"left", width:"34px", textAlign:"left", marginLeft:"4px"}}> {`/ ${exonData.split("/")[1]}`} </span>)}</span>
-            }        
+                return (
+                    <span style = {{display:"inline-block", float:"right"}}>
+                        <span style = {{float:"left",width:"24px", textAlign:"right"}}> {exonData.split("/")[0]} </span>
+                        {showTotalNrOfExons && (
+                            <span style = {{float:"left", width:"34px", textAlign:"left", marginLeft:"4px"}}> {`/ ${exonData.split("/")[1]}`} </span>
+                        )}
+                    </span>
+                );
+            }
         }
 
         if (status !== null) {
