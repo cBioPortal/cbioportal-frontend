@@ -392,4 +392,26 @@ describe('OncoprintUtils', () => {
             assert.equal(percentAltered(2,100), "2%");
         })
     });
+
+    describe('Treatment ruleset params', () => {
+        it('Is created from Track Spec param', () => {
+            const treatmentTracSpec = {
+                key: 'TREATMENTTRACK_1',
+                label: '',
+                molecularProfileId: "profile1",
+                molecularAlterationType: "TREATMENT_RESPONSE",
+                data: [
+                    {profile_data: 1, study: "study1", uid: "uid"}, 
+                    {profile_data: 2, study: "study1", uid: "uid"}, 
+                    {profile_data: 3, study: "study1", uid: "uid"}
+                ],
+                datatype: "TREATMENT_RESPONSE",
+                trackGroupIndex: 1,
+                onRemove: () => {}
+            };
+
+            const ruleSetParams = getTreatmentTrackRuleSetParams(treatmentTracSpec);
+
+
+    });
 });
