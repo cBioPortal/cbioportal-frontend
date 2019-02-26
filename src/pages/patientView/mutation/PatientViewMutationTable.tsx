@@ -110,11 +110,10 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.VAR_READS].download =
             (d:Mutation[])=>AlleleCountColumnFormatter.getReads(d, "tumorAltCount");
 
+        // customization for columns
         this._columns[MutationTableColumnType.EXON].sortBy = undefined;
         this._columns[MutationTableColumnType.EXON].render = 
-            (d:Mutation[]) => (this.props.genomeNexusCache
-            ? ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, true)
-            : <span></span>);
+            (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, true));
         
         // order columns
         this._columns[MutationTableColumnType.TUMORS].order = 5;

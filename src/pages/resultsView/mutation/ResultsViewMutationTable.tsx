@@ -104,8 +104,6 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
 
         // customization for columns
         this._columns[MutationTableColumnType.EXON].render = 
-        (d:Mutation[]) => (this.props.genomeNexusCache
-            ? ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, false)
-            : <span></span>);
+        (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, false));
     }
 }
