@@ -51,6 +51,25 @@ function makeMenuItem(spec:ButtonSpec) {
     );
 }
 
+function openPrintTab(svg: SVGElement) {
+    const mywindow = window.open('', 'Print', 'height=600,width=800');
+    if (mywindow) {
+        // write the element to the new tab
+        mywindow.document.write("<?xml version='1.0'?>"+replaceUnicodeChars((new XMLSerializer()).serializeToString(svg)));    
+        mywindow.document.close();
+        // focus and print the tab, then close
+        mywindow.focus()
+        mywindow.print();
+        mywindow.close();
+    }
+}
+
+function replaceUnicodeChars(svg: string) {
+    return svg
+        .replace(/≤/g, "&lt;=")
+        .replace(/≥/g, "&gt;=");
+}
+
 @observer
 export default class DownloadControls extends React.Component<IDownloadControlsProps, {}> {
     @observable private collapsed = true;
@@ -80,7 +99,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
         if (this.props.getSvg) {
             const svg = this.props.getSvg();
             if (svg) {
-                svgToPdfDownload(`${this.props.filename}.pdf`, svg);
+                openPrintTab(svg);
             }
         }
     }
