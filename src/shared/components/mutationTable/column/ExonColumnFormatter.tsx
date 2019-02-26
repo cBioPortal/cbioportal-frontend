@@ -42,12 +42,9 @@ export default class ExonColumnFormatter {
                 return exonData;
             }
             else {
-                let displayStyle = showTotalNrOfExons?"inline":"none";
                 return <span style = {{display:"inline-block", float:"right"}}>
                 <span style = {{float:"left",width:"24px", textAlign:"right"}}> {exonData.split("/")[0]} </span>
-                {showTotalNrOfExons && (<span style = {{float:"left", marginLeft:"4px", marginRight:"4px"}}>/</span>)}
-                {showTotalNrOfExons && (<span style = {{float:"left",width:"24px", textAlign:"left"}}> {exonData.split("/")[1]} </span>)}
-                </span>
+                {showTotalNrOfExons && (<span style = {{float:"left", width:"34px", textAlign:"left", marginLeft:"4px"}}> {`/ ${exonData.split("/")[1]}`} </span>)}</span>
             }        
         }
 
