@@ -11,11 +11,19 @@ export default class ExonColumnFormatter {
     
     public static renderFunction(data:Mutation[],
                                  genomeNexusCache:GenomeNexusCache|undefined,
+<<<<<<< HEAD
                                  showTotalNumberOfExons?:boolean) {
         const genomeNexusCacheData = ExonColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
         return (
             <div className={styles["exon-table"]}>
                 <span>{ExonColumnFormatter.getExonDataViz(genomeNexusCacheData, showTotalNumberOfExons)}</span>
+=======
+                                 showTotalNrOfExons?: boolean) {
+        const genomeNexusCacheData = ExonColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
+        return (
+            <div className={styles["exon-table"]}>
+                <span>{ExonColumnFormatter.getExonDataViz(genomeNexusCacheData, showTotalNrOfExons)}</span>
+>>>>>>> don't show total #exons on results view
             </div>
         );
     }

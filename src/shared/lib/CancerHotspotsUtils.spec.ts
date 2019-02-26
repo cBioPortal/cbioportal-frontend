@@ -24,6 +24,12 @@ describe('CancerHotspotsUtils', () => {
                 referenceAllele: "A",
                 variantAllele: "T"
             },
+            proteinLocation: {
+                transcriptId: '',
+                start: 0,
+                end: 0,
+                mutationType: ''
+            },
             transcriptId: '',
             variant: "10:g.66A>T",
             hotspots: [
