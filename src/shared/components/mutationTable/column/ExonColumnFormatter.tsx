@@ -10,11 +10,12 @@ import styles from "./exon.module.scss";
 export default class ExonColumnFormatter {
     
     public static renderFunction(data:Mutation[],
-                                 genomeNexusCache:GenomeNexusCache|undefined) {
+                                 genomeNexusCache:GenomeNexusCache|undefined,
+                                 showTotalNumberOfExons?:boolean) {
         const genomeNexusCacheData = ExonColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
         return (
             <div className={styles["exon-table"]}>
-                <span>{ExonColumnFormatter.getExonDataViz(genomeNexusCacheData)}</span>
+                <span>{ExonColumnFormatter.getExonDataViz(genomeNexusCacheData, showTotalNumberOfExons)}</span>
             </div>
         );
     }
@@ -26,7 +27,7 @@ export default class ExonColumnFormatter {
         return cache.get(data[0]);
     }
 
-    private static getExonDataViz(genomeNexusCacheData:GenomeNexusCacheDataType|null) {
+    private static getExonDataViz(genomeNexusCacheData:GenomeNexusCacheDataType|null, showTotalNumberOfExons?:boolean) {
         let status:TableCellStatus | null = null;
 
         if (genomeNexusCacheData === null) {
@@ -41,12 +42,15 @@ export default class ExonColumnFormatter {
                 return exonData;
             }
             else {
-                return <span style = {{display:"inline-block", float:"right"}}>            
-                    <span style = {{float:"left",width:"24px", textAlign:"right"}}> {exonData.split("/")[0]} </span>  
-                    <span style = {{float:"left", marginLeft:"4px", marginRight:"4px"}}>/</span>
-                    <span style = {{float:"left",width:"24px", textAlign:"left"}}> {exonData.split("/")[1]} </span>
-                </span>
-            }        
+                return (
+                    <span style = {{display:"inline-block", float:"right"}}>
+                        <span style = {{float:"left",width:"24px", textAlign:"right"}}> {exonData.split("/")[0]} </span>
+                        {showTotalNumberOfExons && (
+                            <span style = {{float:"left", width:"34px", textAlign:"left", marginLeft:"4px"}}> {`/ ${exonData.split("/")[1]}`} </span>
+                        )}
+                    </span>
+                );
+            }
         }
 
         if (status !== null) {
