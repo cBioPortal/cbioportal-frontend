@@ -11,6 +11,7 @@ import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import {isUncalled} from "shared/lib/MutationUtils";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
+import ExonColumnFormatter from "shared/components/mutationTable/column/ExonColumnFormatter";
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager:SampleManager | null;
@@ -109,7 +110,10 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.VAR_READS].download =
             (d:Mutation[])=>AlleleCountColumnFormatter.getReads(d, "tumorAltCount");
 
+        // customization for columns
         this._columns[MutationTableColumnType.EXON].sortBy = undefined;
+        this._columns[MutationTableColumnType.EXON].render = 
+            (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, true));
         
         // order columns
         this._columns[MutationTableColumnType.TUMORS].order = 5;
