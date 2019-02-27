@@ -17,7 +17,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     mygene_info_url: "https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot",
 
-    oncoprint_oncokb_hotspots_default:undefined,
+    oncoprint_oncokb_default:true,
+    oncoprint_hotspots_default:true,
     oncoprint_hide_vus_default:false,
     oncokb_public_api_url:"oncokb.org/api/v1",
 
