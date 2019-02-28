@@ -5,6 +5,8 @@ import {
 } from "shared/components/mutationTable/MutationTable";
 import CancerTypeColumnFormatter from "shared/components/mutationTable/column/CancerTypeColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
+import { Mutation } from "shared/api/generated/CBioPortalAPI";
+import ExonColumnFormatter from "shared/components/mutationTable/column/ExonColumnFormatter";
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
@@ -99,5 +101,9 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = ()=>{
             return !this.props.mutationCountCache;
         };
+
+        // customization for columns
+        this._columns[MutationTableColumnType.EXON].render = 
+            (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, false));
     }
 }
