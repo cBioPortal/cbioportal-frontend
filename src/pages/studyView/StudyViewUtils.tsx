@@ -964,7 +964,8 @@ export function isOccupied(matrix: string[][], position: Position, chartDimensio
 export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, currentGridLayout?: Layout[], currentFocusedChartByUser?: ChartMeta): Layout[] {
     let layout: Layout[] = [];
     let matrix = [new Array(cols).fill('')] as string[][];
-    let sortedVisibleAttributesByPriority = _.orderBy(visibleAttributes, ['priority'], ['desc']);
+    // sort the visibleAttributes by priority
+    visibleAttributes.sort(chartMetaComparator);
 
     // look if we need to put the chart to a fixed position and add the position to the matrix
     if (currentGridLayout && currentGridLayout.length > 0 && currentFocusedChartByUser) {
@@ -973,14 +974,14 @@ export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, cu
             const newChartLayout = calculateNewLayoutForFocusedChart(currentChartLayout, currentFocusedChartByUser, cols);
             layout.push(newChartLayout);
             matrix = generateMatrixByLayout(newChartLayout, cols);
-            _.remove(sortedVisibleAttributesByPriority, (chart: ChartMeta) => chart.uniqueKey === currentFocusedChartByUser.uniqueKey);
         }
         else {
             throw(new Error("cannot find matching unique key in the grid layout"));
         }
     }
 
-    _.forEach(sortedVisibleAttributesByPriority, (chart: ChartMeta) => {
+    // filter out the fixed position chart then calculate layout
+    _.forEach(_.filter(visibleAttributes, (chart: ChartMeta) => currentFocusedChartByUser ? chart.uniqueKey !== currentFocusedChartByUser.uniqueKey : true), (chart: ChartMeta) => {
         const position = findSpot(matrix, chart.dimension);
         while ((position.y + chart.dimension.h) >= matrix.length) {
             matrix.push(new Array(cols).fill(''));
@@ -1319,6 +1320,12 @@ export function clinicalDataCountComparator(a: ClinicalDataCount, b: ClinicalDat
     else {
         return b.count - a.count;
     }
+}
+
+// Descent sort priority then ascent sort by display name
+export function chartMetaComparator(a: ChartMeta, b: ChartMeta): number
+{
+    return b.priority - a.priority || a.displayName.localeCompare(b.displayName);
 }
 
 export function submitToPage(url:string, params: { [id: string]: string }, target?: string) {
