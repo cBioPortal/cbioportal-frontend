@@ -487,34 +487,31 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     }
                                 </MSKTab>
 
-                        {(patientViewPageStore.pageMode === 'patient') && (
-                        <MSKTab key={2} id="clinicalData" linkText="Clinical Data">
+                    <MSKTab key={2} id="clinicalData" linkText="Clinical Data">
 
-                                        <div className="clearfix">
-                                            <FeatureTitle title="Patient"
-                                                          isLoading={patientViewPageStore.clinicalDataPatient.isPending}
-                                                          className="pull-left"/>
-                                            {(patientViewPageStore.clinicalDataPatient.isComplete) && (
-                                                <ClinicalInformationPatientTable showTitleBar={true}
-                                                                                 data={patientViewPageStore.clinicalDataPatient.result}/>
-                                            )
-                                            }
-                                        </div>
+                        <div className="clearfix">
+                            <FeatureTitle title="Patient"
+                                            isLoading={patientViewPageStore.clinicalDataPatient.isPending}
+                                            className="pull-left"/>
+                            {(patientViewPageStore.clinicalDataPatient.isComplete) && (
+                                <ClinicalInformationPatientTable showTitleBar={true}
+                                                                    data={patientViewPageStore.clinicalDataPatient.result}/>
+                            )
+                            }
+                        </div>
 
-                                        <br />
+                        <br />
 
-                                        <div className="clearfix">
-                                            <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
-                                            {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
-                                                <ClinicalInformationSamples
-                                                    samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
-                                            )
-                                            }
-                                        </div>
-
-
-                                    </MSKTab>
-                                )}
+                        <div className="clearfix">
+                            <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
+                            {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
+                                <ClinicalInformationSamples
+                                    samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
+                            )
+                            }
+                        </div>
+                        
+                    </MSKTab>
 
 
                     <MSKTab key={3} id="pathologyReport" linkText="Pathology Report"
