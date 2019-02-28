@@ -3,6 +3,7 @@ import {
     calcIntervalBinValues,
     calculateLayout,
     clinicalDataCountComparator,
+    chartMetaComparator,
     filterCategoryBins,
     filterIntervalBins,
     filterNumericalBins,
@@ -1743,6 +1744,28 @@ describe('StudyViewUtils', () => {
             assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 6}, {value: "MALE", count: 16}), 10);
             assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 16}, {value: "MALE", count: 6}), -10);
             assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 666}, {value: "MALE", count: 666}), 0);
+        });
+    });
+
+    describe('chartMetaComparator', () => {
+        it('returns 0 if priority and display name are exactly same', () => {
+            assert.equal(chartMetaComparator({priority: 100, displayName: "test chart"} as ChartMeta, {priority: 100, displayName: "test chart"} as ChartMeta), 0);
+        });
+
+        it('returns difference if priority is higher', () => {
+            assert.equal(chartMetaComparator({priority: 100, displayName: "name b"} as ChartMeta, {priority: 50, displayName: "name a"} as ChartMeta), -50);
+        });
+
+        it('returns difference if priority is lower', () => {
+            assert.equal(chartMetaComparator({priority: 50, displayName: "name a"} as ChartMeta, {priority: 100, displayName: "name b"} as ChartMeta), 50);
+        });
+
+        it('when priority is same, returns 1 if displayName is alphabet higher', () => {
+            assert.equal(chartMetaComparator({priority: 100, displayName: "name z"} as ChartMeta, {priority: 100, displayName: "name a"} as ChartMeta), 1);
+        });
+
+        it('when priority is same, returns -1 if displayName is alphabet lower', () => {
+            assert.equal(chartMetaComparator({priority: 100, displayName: "name a"} as ChartMeta, {priority: 100, displayName: "name z"} as ChartMeta), -1);
         });
     });
 
