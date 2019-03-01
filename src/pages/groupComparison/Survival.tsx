@@ -18,15 +18,15 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     public readonly analysisGroups = remoteData({
         await: () => [
-            this.props.store.activeComparisonGroups
+            this.props.store.activeGroups
         ],
         invoke: () => {
             let colorIndex = 0;
-            return Promise.resolve(this.props.store.activeComparisonGroups.result!.map((group)=>({
+            return Promise.resolve(this.props.store.activeGroups.result!.map((group)=>({
                 name: group.name,
-                color: group.color ? group.color : COLORS[(colorIndex++) % COLORS.length],
-                value: group.id,
-                legendText: group.legendText
+                color: group.color,
+                value: group.uid,
+                legendText: group.name
             })));
         }
     });

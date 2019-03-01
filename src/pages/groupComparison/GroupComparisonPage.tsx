@@ -1,6 +1,6 @@
 import * as React from "react";
 import {inject, observer} from "mobx-react";
-import GroupComparisonStore, {GroupComparisonURLQuery} from "./GroupComparisonStore";
+import GroupComparisonStore from "./GroupComparisonStore";
 import MutationEnrichments from "./MutationEnrichments";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
@@ -14,7 +14,6 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupSelector from "./GroupSelector";
-import InfoIcon from "shared/components/InfoIcon";
 import {caseCountsInParens, getTabId} from "./GroupComparisonUtils";
 import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
@@ -37,6 +36,10 @@ export interface IGroupComparisonPageProps {
     appStore:AppStore;
 }
 
+export type GroupComparisonURLQuery = {
+    sessionId: string;
+};
+
 @inject('routing', 'appStore')
 @observer
 export default class GroupComparisonPage extends React.Component<IGroupComparisonPageProps, {}> {
@@ -47,8 +50,6 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
 
     constructor(props:IGroupComparisonPageProps) {
         super(props);
-        this.store = new GroupComparisonStore();
-        (window as any).groupComparisonStore = this.store;
         this.queryReaction = reaction(
             () => props.routing.location.query,
             query => {
@@ -58,7 +59,9 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     return;
                 }
 
-                this.store.updateStoreFromURL(query);
+                this.store = new GroupComparisonStore((query as GroupComparisonURLQuery).sessionId);
+                (window as any).groupComparisonStore = this.store;
+
                 this.lastQuery = query;
             },
             {fireImmediately: true}
@@ -93,7 +96,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
 
     readonly tabs = MakeMobxView({
         await:()=>[
-            this.store.activeComparisonGroups,
+            this.store.activeGroups,
             this.store.mutationEnrichmentProfiles,
             this.store.copyNumberEnrichmentProfiles,
             this.store.mRNAEnrichmentProfiles,
@@ -101,7 +104,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             this.store.survivalClinicalDataExists,
         ],
         render:()=>{
-            if (this.store.activeComparisonGroups.result!.length === 0) {
+            if (this.store.activeGroups.result!.length === 0) {
                 return <div style={{display:"flex", justifyContent:"center", alignItems:"center"}}>To get started, select groups from the Active Groups section above.</div>;
             } else if ((this.store.mutationEnrichmentProfiles.result!.length > 0) ||
                 (this.store.copyNumberEnrichmentProfiles.result!.length > 0) ||
@@ -179,8 +182,8 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     </h4>);
             }
             let ret;
-            if (this.store.fromChartSpec) {
-                ret = <span>{studyHeader}Groups from <span style={{color:"#3487c7"}}>{this.store.fromChartSpec.clinicalAttribute.displayName}</span></span>
+            if (this.store.sessionClinicalAttribute) {
+                ret = <span>{studyHeader}Groups from <span style={{color:"#3487c7"}}>{this.store.sessionClinicalAttribute.displayName}</span></span>
             } else {
                 ret = studyHeader;
             }
@@ -189,11 +192,15 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     });
 
     render() {
+        if (!this.store) {
+            return null;
+        }
+
         let excludeOverlappingCheckbox:JSX.Element | null;
 
-        if (this.store.overlappingSelectedSamples.isComplete && this.store.overlappingSelectedPatients.isComplete &&
-            this.store.overlappingSelectedSamples.result.length === 0 &&
-            this.store.overlappingSelectedPatients.result.length === 0) {
+        if (this.store.selectionInfo.isComplete &&
+            this.store.selectionInfo.result.overlappingSamples.length === 0 &&
+            this.store.selectionInfo.result.overlappingPatients.length === 0) {
 
             excludeOverlappingCheckbox = null;
         } else {
@@ -206,7 +213,10 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                             checked={this.store.excludeOverlapping}
                         />
 
-                        {`Exclude overlapping samples/patients ${caseCountsInParens(this.store.overlappingSelectedSamples, this.store.overlappingSelectedPatients)} from selected groups.`}
+                        {this.store.selectionInfo.isComplete ?
+                            `Exclude overlapping samples/patients ${caseCountsInParens(this.store.selectionInfo.result.overlappingSamples, this.store.selectionInfo.result.overlappingPatients)} from selected groups.` :
+                            ""
+                        }
 
                         {/*<InfoIcon*/}
                         {/*tooltip={<span style={{maxWidth:200}}>Exclude samples from analysis which occur in more than one selected group.</span>}*/}
