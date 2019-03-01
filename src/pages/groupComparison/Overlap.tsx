@@ -8,6 +8,11 @@ import _ from "lodash";
 import OverlapStackedBar from './OverlapStackedBar';
 import autobind from 'autobind-decorator';
 import DownloadControls from 'shared/components/downloadControls/DownloadControls';
+import {MakeMobxView} from "../../shared/components/MobxView";
+import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
+import ErrorMessage from "../../shared/components/ErrorMessage";
+import {getCombinations, getSampleIdentifiers} from "./GroupComparisonUtils";
+import {remoteData} from "../../shared/api/remoteData";
 
 export interface IOverlapProps {
     store: GroupComparisonStore
@@ -29,7 +34,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     @observable plotExists = false;
 
     @computed get sampleGroups() {
-        return this.props.store.activeComparisonGroups;
+        return this.props.store.activeGroups;
     }
 
     componentDidUpdate() {
@@ -41,36 +46,87 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         return document.getElementById(SVG_ID) as SVGElement | null;
     }
 
-    @computed get plotType() {
-        return this.sampleGroups.isComplete && this.sampleGroups.result.length > 3 ? PlotType.StackedBar : PlotType.Venn
-    }
+    readonly plotType = remoteData({
+        await:()=>[this.sampleGroups],
+        invoke:async()=>(this.sampleGroups.result!.length > 3 ? PlotType.StackedBar : PlotType.Venn)
+    });
 
-    @computed get plot() {
-        let plotElt: any = null;
-        switch (this.plotType) {
-            case PlotType.StackedBar:
-                plotElt = (
-                    <OverlapStackedBar
-                        svgId={SVG_ID}
-                        sampleGroupsCombinationSets={this.props.store.sampleGroupsCombinationSets.result!}
-                        patientGroupsCombinationSets={this.props.store.patientGroupsCombinationSets.result!}
-                        categoryToColor={this.props.store.categoryToColor}
-                    />)
-                break;
-            case PlotType.Venn:
-                plotElt = (
-                    <Venn
-                        svgId={SVG_ID}
-                        sampleGroupsCombinationSets={this.props.store.sampleGroupsCombinationSets.result!}
-                        patientGroupsCombinationSets={this.props.store.patientGroupsCombinationSets.result!}
-                        categoryToColor={this.props.store.categoryToColor}
-                    />)
-                break;
-            default:
-                return <span>Not implemented yet</span>
+    public readonly sampleGroupsWithCases = remoteData({
+        await: () => [
+            this.props.store.activeGroups,
+            this.props.store.sampleSet,
+        ],
+        invoke: () => {
+            const sampleSet = this.props.store.sampleSet.result!;
+            const groupsWithSamples = _.map(this.props.store.activeGroups.result, group => {
+                let samples = getSampleIdentifiers([group]).map(sampleIdentifier => sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId));
+                return {
+                    uid: group.uid,
+                    cases: _.map(samples, sample => sample!.uniqueSampleKey)
+                }
+            });
+            return Promise.resolve(groupsWithSamples);
         }
+    }, []);
 
-        return (
+    public readonly patientGroupsWithCases = remoteData({
+        await: () => [
+            this.props.store.activeGroups,
+            this.props.store.sampleSet,
+        ],
+        invoke: () => {
+            const sampleSet = this.props.store.sampleSet.result!;
+            const groupsWithPatients = _.map(this.props.store.activeGroups.result, group => {
+                let samples = getSampleIdentifiers([group]).map(sampleIdentifier => sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId));
+                return {
+                    uid: group.uid,
+                    cases: _.uniq(_.map(samples, sample => sample!.uniquePatientKey))
+                }
+            });
+            return Promise.resolve(groupsWithPatients);
+        }
+    }, []);
+
+    readonly plot = MakeMobxView({
+        await:()=>[
+            this.plotType,
+            this.sampleGroupsWithCases,
+            this.patientGroupsWithCases,
+            this.props.store.uidToGroup
+        ],
+        render:()=>{
+            let plotElt: any = null;
+            switch (this.plotType.result!) {
+                case PlotType.StackedBar:
+                    plotElt = (
+                        <OverlapStackedBar
+                            svgId={SVG_ID}
+                            sampleGroups={this.sampleGroupsWithCases.result!}
+                            patientGroups={this.patientGroupsWithCases.result!}
+                            uidToGroup={this.props.store.uidToGroup.result!}
+                        />)
+                    break;
+                case PlotType.Venn:
+                    plotElt = (
+                        <Venn
+                            svgId={SVG_ID}
+                            sampleGroups={this.sampleGroupsWithCases.result!}
+                            patientGroups={this.patientGroupsWithCases.result!}
+                            uidToGroup={this.props.store.uidToGroup.result!}
+                        />)
+                    break;
+                default:
+                    return <span>Not implemented yet</span>
+            }
+            return plotElt;
+        },
+        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderError:()=><ErrorMessage/>
+    });
+
+    readonly tabUI = MakeMobxView({
+        await:()=>[this.plot],
+        render:()=>(
             <div>
                 <div data-test="ComparisonTabOverlapDiv" className="borderedChart posRelative">
                     {this.plotExists && (
@@ -83,22 +139,20 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                         />
                     )}
                     <div style={{ position: "relative", display: "inline-block" }}>
-                        {plotElt}
+                        {this.plot.component}
                     </div>
                 </div>
             </div>
-        );
-    }
+        ),
+        renderPending:()=><LoadingIndicator isLoading={true} center={true} size="big"/>,
+        renderError:()=><ErrorMessage/>
+    });
 
 
     public render() {
-        if (this.props.store.sampleGroupsCombinationSets.isPending ||
-            this.props.store.patientGroupsCombinationSets.isPending) {
-            return <LoadingIndicator isLoading={true} size={"big"} center={true} />;
-        }
         return (
             <div className="inlineBlock">
-                {this.plot}
+                {this.tabUI.component}
             </div>
         )
     }
