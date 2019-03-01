@@ -292,10 +292,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                         </div>
                                                     )}
                                                 >
-                                                    <button className='btn btn-primary btn-sm'
+                                                    <button className={classNames('btn btn-primary btn-sm', {"active":this.showCustomSelectTooltip})}
                                                             data-test='custom-selection-button'
-                                                            onClick={() => {
-                                                                this.showCustomSelectTooltip = true;
+                                                            onClick={(evt:any) => {
+                                                                evt.stopPropagation();
+                                                                this.showCustomSelectTooltip = !this.showCustomSelectTooltip;
                                                             }}
                                                             style={{marginLeft: '10px'}}>Custom Selection
                                                     </button>
