@@ -24,19 +24,19 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
 
     readonly tabUI = MakeMobxView({
         await:()=>{
-            const ret = [this.props.store.activeComparisonGroups, this.props.store.activeStudyIds];
-            if ((this.props.store.activeComparisonGroups.isComplete &&
-                this.props.store.activeComparisonGroups.result.length !== 2) ||
+            const ret = [this.props.store.activeGroups, this.props.store.activeStudyIds];
+            if ((this.props.store.activeGroups.isComplete &&
+                this.props.store.activeGroups.result.length !== 2) ||
                 (this.props.store.activeStudyIds.isComplete && this.props.store.activeStudyIds.result.length > 1)) {
                 // dont bother loading data for and computing enrichments UI if its not valid situation for it
                 return ret;
             } else {
-                return [this.props.store.activeComparisonGroups, this.enrichmentsUI];
+                return [this.props.store.activeGroups, this.enrichmentsUI];
             }
         },
         render:()=>{
-            if (this.props.store.activeComparisonGroups.result!.length !== 2) {
-                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeComparisonGroups.result!.length > 2)}</span>;
+            if (this.props.store.activeGroups.result!.length !== 2) {
+                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeGroups.result!.length > 2)}</span>;
             } else if (this.props.store.activeStudyIds.result!.length > 1) {
                 return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG("mRNA")}</span>;
             } else {

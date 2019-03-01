@@ -1,22 +1,27 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {StudyViewPageStore, UniqueKey} from "../studyView/StudyViewPageStore";
-import {
-    addGroupToLocalStorage, addSamplesToGroup,
-    deleteGroups,
-    getLSGroups,
-    restoreRecentlyDeletedGroups
-} from "./GroupPersistenceUtils";
+import {StudyViewPageStore, UniqueKey} from "../../studyView/StudyViewPageStore";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import {SyntheticEvent} from "react";
-import {ComparisonGroup, getDefaultGroupName, ComparisonSampleGroup} from "./GroupComparisonUtils";
+import {ComparisonGroup, getDefaultGroupName, getNumSamples, getSampleIdentifiers} from "../GroupComparisonUtils";
 import _ from "lodash";
-import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
-import {getComparisonUrl} from "../../shared/api/urls";
-import styles from "./styles.module.scss";
+import {SampleIdentifier} from "../../../shared/api/generated/CBioPortalAPI";
+import {getComparisonLoadingUrl, getComparisonUrl, redirectToComparisonPage} from "../../../shared/api/urls";
+import styles from "../styles.module.scss";
 import ReactSelect from "react-select";
-import LazyMemo from "../../shared/lib/LazyMemo";
+import LazyMemo from "../../../shared/lib/LazyMemo";
+import {Group} from "../../../shared/api/ComparisonGroupClient";
+import {remoteData} from "../../../shared/api/remoteData";
+import {getGroupParameters, getSelectedGroups, addSamplesParameters} from "./ComparisonGroupManagerUtils";
+import comparisonClient from "../../../shared/api/comparisonGroupClientInstance";
+import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
+import {MakeMobxView} from "../../../shared/components/MobxView";
+import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import ErrorMessage from "../../../shared/components/ErrorMessage";
+import GroupCheckbox from "./GroupCheckbox";
+import {sleepUntil} from "../../../shared/lib/TimeUtils";
+import {LoadingPhase} from "../GroupComparisonLoading";
 
 export interface IComparisonGroupManagerProps {
     store:StudyViewPageStore;
@@ -25,23 +30,12 @@ export interface IComparisonGroupManagerProps {
 @observer
 export default class ComparisonGroupManager extends React.Component<IComparisonGroupManagerProps, {}> {
     @observable groupNameFilter:string = "";
-    @observable recentlyDeleted = false;
     @observable addGroupPanelOpen = false;
     @observable _inputGroupName:string = "";
     @computed get inputGroupName() {
         return this._inputGroupName;
     }
     @observable addSamplesTargetGroupId:string = "";
-
-    private groupCheckboxOnClick = new LazyMemo(
-        (group:ComparisonSampleGroup)=>group.id,
-        (group:ComparisonSampleGroup)=>{
-            return ()=>{
-                this.recentlyDeleted = false;
-                this.props.store.toggleComparisonGroupSelected(group.id);
-            };
-        }
-    );
 
     @autobind
     @action
@@ -55,10 +49,13 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         this._inputGroupName = (e.target as HTMLInputElement).value;
     }
 
-    @computed get filteredGroups() {
-        // TODO: fuzzy string search?
-        return this.props.store.comparisonGroups.filter(group=>group.name.toLowerCase().indexOf(this.groupNameFilter.toLowerCase()) > -1);
-    }
+    readonly filteredGroups = remoteData({
+        await:()=>[this.props.store.comparisonGroups],
+        invoke:()=>Promise.resolve(
+            // TODO: fuzzy string search?
+            this.props.store.comparisonGroups.result!.filter(group=>group.data.name.toLowerCase().indexOf(this.groupNameFilter.toLowerCase()) > -1)
+        )
+    });
 
     @autobind
     @action
@@ -99,61 +96,76 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         );
     }
 
-    private get noGroupsMessage() {
-        if (this.props.store.comparisonGroups.length === 0) {
-            return (
-                <div className={styles.noGroupsMessage}>
-                    <span>
-                        { this.addGroupPanelOpen ?
-                            <span>Use the <h6 style={{display:"inline-block", marginBottom:0}}>Add samples</h6> panel</span> :
-                            <span>Click the <span className="btn btn-xs btn-primary" style={{marginLeft:3, marginRight:3, paddingTop:0.5, paddingBottom:0.5}}onClick={this.showAddGroupPanel}>+ Add</span> button</span>
-                        }
-                        <span>&nbsp;below to create a group, which can be used to save your current selection, and to perform comparison analyses with other groups.</span>
-                    </span>
-                </div>
-            );
-        } else {
-            return null;
-        }
+    @autobind
+    private restoreGroup(group:Group) {
+        this.props.store.toggleComparisonGroupMarkedForDeletion(group.id);
     }
 
-    private get groupCheckboxes() {
-        if (this.props.store.comparisonGroups.length > 0) {
-            return (
-                <div className={styles.groupCheckboxes}>
-                    {this.filteredGroups.length > 0 && (
-                        this.filteredGroups.map(group=>(
-                            <div key={group.id} className="checkbox"><label>
-                                <input
-                                    type="checkbox"
-                                    value={group.id}
-                                    checked={this.props.store.isComparisonGroupSelected(group.id)}
-                                    onClick={this.groupCheckboxOnClick.get(group)}
-                                />{group.name} ({group.sampleIdentifiers.length})
-                            </label></div>
-                        ))
-                    )}
-                </div>
-            );
-        } else {
-            return null;
-        }
-    }
+    private readonly groupsSection = MakeMobxView({
+        await:()=>[
+            this.props.store.comparisonGroups,
+            this.filteredGroups
+        ],
+        render:()=>{
+            if (this.props.store.comparisonGroups.result!.length > 0) {
+                // show this component if there are groups, and if filteredGroups is complete
+                return (
+                    <div className={styles.groupCheckboxes}>
+                        {this.filteredGroups.result!.length > 0 ? (
+                            this.filteredGroups.result!.map(group=>(
+                                <GroupCheckbox
+                                    group={group}
+                                    store={this.props.store}
+                                    markedForDeletion={this.props.store.isComparisonGroupMarkedForDeletion(group.id)}
+                                    restore={this.restoreGroup}
+                                />
+                            ))
+                        ) : (
+                            <div className={styles.noGroupsMessage}>
+                                No results for your current search.
+                            </div>
+                        )}
+                    </div>
+                );
+            } else {
+                return (
+                    <div className={styles.noGroupsMessage}>
+                        <span>
+                            { this.addGroupPanelOpen ?
+                                <span>Use the <h6 style={{display:"inline-block", marginBottom:0}}>Add samples</h6> panel</span> :
+                                <span>Click the <span className="btn btn-xs btn-primary" style={{marginLeft:3, marginRight:3, paddingTop:0.5, paddingBottom:0.5}}onClick={this.showAddGroupPanel}>+ Add</span> button</span>
+                            }
+                            <span>&nbsp;below to create a group, which can be used to save your current selection, and to perform comparison analyses with other groups.</span>
+                        </span>
+                    </div>
+                );
+            }
+        },
+        renderPending:()=><LoadingIndicator isLoading={true}/>,
+        renderError:()=>(
+            <div className={styles.noGroupsMessage}>
+                <ErrorMessage message={"There was an error loading saved groups. Please try again."}/>
+            </div>
+        )
+    });
+
     private get selectButton() {
-        if (this.props.store.comparisonGroups.length > 0) {
+        if (this.props.store.comparisonGroups.isComplete &&
+            this.props.store.comparisonGroups.result.length > 0) {
+            // only show select button if there are any groups
             return (
                 <button
                     className="btn btn-sm btn-default"
-                    disabled={this.props.store.selectedComparisonGroups.length === 0}
+                    disabled={getSelectedGroups(this.props.store.comparisonGroups.result, this.props.store).length === 0}
                     style={{marginLeft:7}}
                     onClick={()=>{
                         this.props.store.clearAllFilters();
-                        const ids:SampleIdentifier[] =
-                            _.uniqWith(
-                                _.flattenDeep<SampleIdentifier>(this.props.store.selectedComparisonGroups.map(group=>group.sampleIdentifiers)),
-                                (id1, id2)=>((id1.sampleId === id2.sampleId) && (id1.studyId === id2.studyId))
-                            );
-                        this.props.store.updateChartSampleIdentifierFilter(UniqueKey.SELECTED_COMPARISON_GROUPS, ids);
+                        this.props.store.updateChartSampleIdentifierFilter(
+                            UniqueKey.SELECTED_COMPARISON_GROUPS,
+                            getSampleIdentifiers(
+                                getSelectedGroups(this.props.store.comparisonGroups.result!, this.props.store).map(group=>group.data)
+                            )
+                        );
                     }}
                 >Select</button>
             );
@@ -161,13 +173,30 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
             return null;
         }
     }
+
     private get compareButton() {
-        if (this.props.store.comparisonGroups.length >= 2) {
+        if (this.props.store.comparisonGroups.isComplete &&
+            this.props.store.comparisonGroups.result.length >=2) {
+            // only show if there are enough groups to possibly compare (i.e. 2)
             return (
                 <button className="btn btn-sm btn-primary"
-                        disabled={this.props.store.selectedComparisonGroups.length < 2}
-                        onClick={()=>{
-                            window.open(getComparisonUrl({localGroups:this.props.store.selectedComparisonGroups.map(group=>group.id).join(",")}), "_blank");
+                        disabled={getSelectedGroups(this.props.store.comparisonGroups.result, this.props.store).length < 2}
+                        onClick={async()=>{
+                            // open window before the first `await` call - this makes it a synchronous window.open,
+                            //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
+                            const comparisonWindow = window.open(getComparisonLoadingUrl({
+                                phase: LoadingPhase.CREATING_SESSION,
+                            }), "_blank");
+
+                            // wait until the new window has routingStore available
+                            await sleepUntil(()=>!!(comparisonWindow as any).routingStore);
+
+                            // save comparison session, and get id
+                            const groups = this.props.store.comparisonGroups.result!.map(group=>group.data);
+                            const {id} = await comparisonClient.addComparisonSession({groups});
+
+                            // redirect window to correct URL
+                            redirectToComparisonPage(comparisonWindow!, { sessionId: id });
                         }}
                 >Compare</button>
             );
@@ -175,38 +204,22 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
             return null;
         }
     }
-    private get restoreOrDeleteButton() {
-        if (this.recentlyDeleted) {
+
+    private get deleteButton() {
+        if (this.props.store.comparisonGroups.isComplete &&
+            this.props.store.comparisonGroups.result.length > 0) {
             return (
                 <button
                     className="btn btn-sm btn-default"
                     style={{marginLeft:7}}
                     onClick={()=>{
-                        restoreRecentlyDeletedGroups();
-                        this.recentlyDeleted = false;
+                        this.props.store.markSelectedGroupsForDeletion();
                     }}
-                >Restore</button>
+                    disabled={getSelectedGroups(this.props.store.comparisonGroups.result!, this.props.store).length === 0}
+                >Delete</button>
             );
         } else {
-            if (this.props.store.comparisonGroups.length > 0) {
-                return (
-                    <button
-                        className="btn btn-sm btn-default"
-                        style={{marginLeft:7}}
-                        onClick={()=>{
-                            const groupIds = this.props.store.selectedComparisonGroups.map(group=>group.id);
-                            for (const groupId of groupIds) {
-                                this.props.store.removeComparisonGroupSelectionEntry(groupId);
-                            }
-                            deleteGroups(groupIds);
-                            this.recentlyDeleted = true;
-                        }}
-                        disabled={this.props.store.selectedComparisonGroups.length === 0}
-                    >Delete</button>
-                );
-            } else {
-                return null;
-            }
+            return null;
         }
     }
 
@@ -221,7 +234,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
             >
                 {this.compareButton}
                 {this.selectButton}
-                {this.restoreOrDeleteButton}
+                {this.deleteButton}
             </div>
         );
     }
@@ -257,12 +270,14 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                         <button
                             className="btn btn-sm btn-primary"
                             style={{width:createOrAddButtonWidth}}
-                            onClick={()=>{
+                            onClick={async()=>{
                                 if (selectedSamples) {
-                                    addGroupToLocalStorage({
-                                        sampleIdentifiers:selectedSamples.map(s=>({ sampleId: s.sampleId, studyId: s.studyId})), // samples in the group
-                                        name:this.inputGroupName
-                                    });
+                                    await comparisonClient.addGroup(getGroupParameters(
+                                        this.inputGroupName,
+                                        selectedSamples,
+                                        this.props.store
+                                    ));
+                                    this.props.store.notifyComparisonGroupsChange();
                                     this.cancelAddGroup();
                                 }
                             }}
@@ -271,7 +286,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                     </div>
                 </div>
             ];
-            if (this.props.store.comparisonGroups.length > 0) {
+            if (this.props.store.comparisonGroups.isComplete && this.props.store.comparisonGroups.result.length > 0) {
                 contents.push(
                     <div style={{width:"100%", marginTop:7}}>
                         <h6>Or add to an existing group:</h6>
@@ -281,8 +296,8 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                                     name="select existing group"
                                     placeholder="Select or search.."
                                     onChange={(option:any|null)=>{ if (option) { this.addSamplesTargetGroupId = option.value; }}}
-                                    options={this.props.store.comparisonGroups.map(group=>({
-                                        label: group.name,
+                                    options={this.props.store.comparisonGroups.result!.map(group=>({
+                                        label: group.data.name,
                                         value: group.id
                                     }))}
                                     clearable={false}
@@ -293,12 +308,15 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                             <button
                                 className="btn btn-sm btn-primary"
                                 style={{width:createOrAddButtonWidth}}
-                                onClick={()=>{
+                                onClick={async()=>{
                                     if (selectedSamples) {
-                                        addSamplesToGroup(
+                                        const group = this.props.store.comparisonGroups.result!.find(x=>x.id === this.addSamplesTargetGroupId)!.data;
+                                        await comparisonClient.updateGroup(
                                             this.addSamplesTargetGroupId,
-                                            selectedSamples.map(s=>({ sampleId: s.sampleId, studyId: s.studyId}))
-                                        ); // samples in the group
+                                            addSamplesParameters(group, selectedSamples)
+                                        );
+                                        this.props.store.notifyComparisonGroupsChange();
+                                        this.cancelAddGroup();
                                     }
                                 }}
                                 disabled={!selectedSamples || !this.addSamplesTargetGroupId}
@@ -329,6 +347,10 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         );
     }
 
+    componentWillUnmount() {
+        this.props.store.deleteMarkedComparisonGroups();
+    }
+
     render() {
         return (
             <div className={styles.comparisonGroupManager}
@@ -338,8 +360,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                  }}
             >
                 {this.headerWithoutSearch}
-                {this.noGroupsMessage}
-                {this.groupCheckboxes}
+                {this.groupsSection.component}
                 {this.actionButtons}
                 <hr style={{width:"100%", borderTopColor:"#cccccc", marginTop:20, marginBottom:20}}/>
                 {this.addGroupPanel}
