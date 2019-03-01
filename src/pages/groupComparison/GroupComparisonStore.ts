@@ -1,63 +1,55 @@
 import {
-    ComparisonSampleGroup,
-    getPatientIdentifiers,
-    getCombinations,
     ComparisonGroup,
-    getOverlappingSamples, CopyNumberEnrichment
+    CopyNumberEnrichment,
+    getOverlapFilteredGroups,
+    getOverlappingPatients,
+    getOverlappingSamples,
+    getStudyIds,
+    isGroupEmpty,
+    OverlapFilteredComparisonGroup
 } from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
+    ClinicalData,
+    ClinicalDataMultiStudyFilter,
     MolecularProfile,
     MolecularProfileFilter,
+    PatientIdentifier,
+    Sample,
     SampleFilter,
-    ClinicalDataMultiStudyFilter,
-    ClinicalData, Sample, SampleIdentifier,PatientIdentifier
+    SampleIdentifier
 } from "../../shared/api/generated/CBioPortalAPI";
-import { computed, observable, action } from "mobx";
+import {action, computed, observable} from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
+import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import _ from "lodash";
 import {
-    pickCopyNumberEnrichmentProfiles, pickMRNAEnrichmentProfiles,
-    pickMutationEnrichmentProfiles, pickProteinEnrichmentProfiles
+    pickCopyNumberEnrichmentProfiles,
+    pickMRNAEnrichmentProfiles,
+    pickMutationEnrichmentProfiles,
+    pickProteinEnrichmentProfiles
 } from "../resultsView/enrichments/EnrichmentsUtil";
 import {makeEnrichmentDataPromise} from "../resultsView/ResultsViewPageStoreUtils";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import autobind from "autobind-decorator";
-import { PatientSurvival } from "shared/model/PatientSurvival";
+import {PatientSurvival} from "shared/model/PatientSurvival";
 import request from "superagent";
-import { getPatientSurvivals } from "pages/resultsView/SurvivalStoreHelper";
-import { SURVIVAL_CHART_ATTRIBUTES } from "pages/resultsView/survival/SurvivalChart";
-import { COLORS } from "pages/studyView/StudyViewUtils";
+import {getPatientSurvivals} from "pages/resultsView/SurvivalStoreHelper";
+import {SURVIVAL_CHART_ATTRIBUTES} from "pages/resultsView/survival/SurvivalChart";
+import {COLORS} from "pages/studyView/StudyViewUtils";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import ListIndexedMap from "shared/lib/ListIndexedMap";
-import {getLSChartGroupsSpec, getLSGroups} from "./GroupPersistenceUtils";
 import {GroupComparisonTab} from "./GroupComparisonPage";
-
-export type GroupComparisonURLQuery = {
-    localGroups:string; // comma separated list
-
-    // OR
-
-    fromChart:string; //"true" or "false"
-    unshareableLocalKey:string;
-};
+import {Session} from "../../shared/api/ComparisonGroupClient";
 
 export default class GroupComparisonStore {
 
     @observable currentTabId:GroupComparisonTab|undefined = undefined;
     @observable excludeOverlapping:boolean = false;
-    @observable localGroupIds:string[] = [];
-    @observable fromChart:boolean = false;
-    @observable unshareableLocalKey:string = "";
+    @observable sessionId:string;
 
-    public updateStoreFromURL(query:Partial<GroupComparisonURLQuery>) {
-        if (query.localGroups) {
-            this.localGroupIds = query.localGroups.split(",");
-        }
-        if (query.fromChart !== undefined) {
-            this.fromChart = Boolean(query.fromChart);
-            this.unshareableLocalKey = query.unshareableLocalKey!;
-        }
+    constructor(sessionId:string) {
+        this.sessionId = sessionId;
     }
 
     @autobind
@@ -70,187 +62,184 @@ export default class GroupComparisonStore {
         this.excludeOverlapping = !this.excludeOverlapping;
     }
 
-    private _selectedComparisonGroupIds = observable.shallowMap<boolean>();
+    private _selectedGroupIds = observable.shallowMap<boolean>();
 
-    @computed get fromChartSpec() {
-        if (this.fromChart && this.unshareableLocalKey) {
-            return getLSChartGroupsSpec(this.unshareableLocalKey);
+    readonly _session = remoteData<Session>({
+        invoke:()=>{
+            return comparisonClient.getComparisonSession(this.sessionId);
+        }
+    });
+
+    @computed get sessionClinicalAttribute() {
+        if (this._session.isComplete) {
+            return this._session.result.clinicalAttribute;
         } else {
-            return null;
+            return undefined;
         }
     }
 
-    readonly remoteSampleGroups = remoteData<ComparisonSampleGroup[]>({
-        invoke:async()=>{
-            if (this.fromChart) {
-                // fetch chart groups from filters
-                const spec = this.fromChartSpec;
-                if (spec) {
-                    const ret:ComparisonSampleGroup[] = [];
-                    for (const value of spec.values) {
-                        const categoryFilters = Object.assign({}, spec.filters);
-                        categoryFilters.clinicalDataEqualityFilters = categoryFilters.clinicalDataEqualityFilters || [];
-                        categoryFilters.clinicalDataEqualityFilters.push({
-                            attributeId: spec.clinicalAttribute.clinicalAttributeId,
-                            clinicalDataType:spec.clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE",
-                            values:[value]
-                        });
-                        const categorySamples = await internalClient.fetchFilteredSamplesUsingPOST({
-                            studyViewFilter:categoryFilters
-                        });
-                        ret.push({
-                            id: value, name: value,
-                            sampleIdentifiers: categorySamples.map(s=>({ studyId: s.studyId, sampleId:s.sampleId}))
-                        });
-                    }
-                    //id:string, // unique identifier
-                    //sampleIdentifiers:SampleIdentifier[], // samples in the group
-                    //name:string, // display name
-                    return ret;
-                } else {
-                    throw new Error("fromChart specified, but no chart filters found in localStorage.");
+    readonly unfilteredGroups = remoteData<ComparisonGroup[]>({
+        await:()=>[this._session, this.sampleSet],
+        invoke:()=>{
+            // (1) ensure color
+            // (2) filter out, and add list of, nonexistent samples
+            // (3) add patients
+
+            const ret:ComparisonGroup[] = [];
+            const sampleSet = this.sampleSet.result!;
+            let colorIndex = 0;
+
+            this._session.result!.groups.forEach((groupData, index)=>{
+                // assign color to group if no color given
+                let color = groupData.color;
+                if (!color) {
+                    color = COLORS[colorIndex];
+                    colorIndex += 1;
                 }
+
+                // keep track of nonexisting samples, existing patients
+                const nonExistentSamples = [];
+                const studies = [];
+
+                for (const study of groupData.studies) {
+                    const studyId = study.id;
+                    const samples = [];
+                    const patients = [];
+                    for (const sampleId of study.samples) {
+                        const sample = sampleSet.get(studyId, sampleId);
+                        if (!sample) {
+                            // filter out, and keep track of, nonexisting sample
+                            nonExistentSamples.push({ studyId, sampleId });
+                        } else {
+                            // add sample and corresponding patient
+                            samples.push(sampleId);
+                            patients.push(sample.patientId);
+                        }
+                    }
+                    studies.push({
+                        id: studyId,
+                        samples,
+                        patients: _.uniq(patients)
+                    });
+                }
+
+                ret.push(Object.assign({}, groupData, {
+                    color,
+                    studies,
+                    nonExistentSamples,
+                    uid: index.toString()
+                }));
+            });
+            return Promise.resolve(ret);
+        }
+    });
+
+    readonly selectionInfo = remoteData<{
+        groups:ComparisonGroup[],
+        overlappingSamples:SampleIdentifier[],
+        overlappingPatients:PatientIdentifier[],
+        overlappingSamplesSet:ListIndexedMap<boolean>,
+        overlappingPatientsSet:ListIndexedMap<boolean>
+    }>({
+        await:()=>[this.unfilteredGroups],
+        invoke:()=>{
+            // no overlap filter
+            const groups = this.unfilteredGroups.result!.filter(group=>this.isGroupSelected(group.uid));
+            const overlappingSamples = getOverlappingSamples(groups);
+            const overlappingPatients = getOverlappingPatients(groups);
+            const overlappingSamplesSet = new ListIndexedMap<boolean>();
+            const overlappingPatientsSet = new ListIndexedMap<boolean>();
+            for (const sample of overlappingSamples) {
+                overlappingSamplesSet.set(true, sample.studyId, sample.sampleId);
+            }
+            for (const patient of overlappingPatients) {
+                overlappingPatientsSet.set(true, patient.studyId, patient.patientId);
+            }
+            return Promise.resolve({groups, overlappingSamples, overlappingPatients, overlappingSamplesSet, overlappingPatientsSet});
+        }
+    });
+
+    readonly filteredGroups = remoteData<OverlapFilteredComparisonGroup[]>({
+        await:()=>[this.selectionInfo, this.unfilteredGroups],
+        invoke:()=>{
+            if (this.excludeOverlapping) {
+                return Promise.resolve(getOverlapFilteredGroups(this.unfilteredGroups.result!, this.selectionInfo.result!));
             } else {
-                // TODO: get from session service
-                return [];
+                return Promise.resolve(this.unfilteredGroups.result!.map(group=>Object.assign({}, group, {
+                    hasOverlappingSamples: false,
+                    hasOverlappingPatients: false
+                })));
             }
         }
     });
 
-    @computed get localSampleGroups() {
-        if (this.fromChart) {
-            return [];
-        } else {
-            const groupsMap = _.keyBy(getLSGroups(), group=>group.id);
-            return this.localGroupIds.map(id=>groupsMap[id]);
-        }
-    }
-
-    readonly allSampleGroups_Unfiltered = remoteData<ComparisonSampleGroup[]>({
-        await:()=>[this.remoteSampleGroups],
-        invoke:()=>{
-            return Promise.resolve(this.localSampleGroups.concat(this.remoteSampleGroups.result!));
-        }
+    readonly activeGroups = remoteData<OverlapFilteredComparisonGroup[]>({
+        await:()=>[this.filteredGroups],
+        invoke:()=>Promise.resolve(this.filteredGroups.result!.filter(group=>this.isGroupActive(group)))
     });
 
-    readonly allComparisonGroups_Unfiltered = remoteData<ComparisonGroup[]>({
-       await:()=>[this.allSampleGroups_Unfiltered, this.sampleSet],
-       invoke:()=>{
-           const sampleSet = this.sampleSet.result!;
-           return Promise.resolve(this.allSampleGroups_Unfiltered.result!.map(group=>(
-                Object.assign({ 
-                    patientIdentifiers: getPatientIdentifiers(group.sampleIdentifiers, sampleSet)
-                }, group)
-           )));
-       } 
-    });
-
-    readonly selectedComparisonGroups_Unfiltered = remoteData<ComparisonGroup[]>({
-        await:()=>[this.allComparisonGroups_Unfiltered],
-        invoke:()=>Promise.resolve(
-            this.allComparisonGroups_Unfiltered.result!.filter(group=>this.isComparisonGroupSelected(group.id))
-        )
-    });
-
-    readonly overlappingSelectedSamples = remoteData<SampleIdentifier[]>({
-        await:()=>[this.selectedComparisonGroups_Unfiltered],
-        invoke:()=>Promise.resolve(getOverlappingSamples(this.selectedComparisonGroups_Unfiltered.result!))
-    });
-
-    readonly overlappingSelectedPatients = remoteData<PatientIdentifier[]>({
-        await:()=>[this.sampleSet, this.overlappingSelectedSamples],
-        invoke:()=>Promise.resolve(getPatientIdentifiers(this.overlappingSelectedSamples.result!, this.sampleSet.result!))
-    });
-
-    readonly allComparisonGroups_Filtered = remoteData<ComparisonGroup[]>({
-        await:()=>[ 
-            this.allComparisonGroups_Unfiltered,
-            this.overlappingSelectedSamples, 
-            this.overlappingSelectedPatients
-         ],
-         invoke:()=>{
-             if (this.excludeOverlapping) {
-                 // filter out overlapping samples and patients
-                 const overlappingSamples = ListIndexedMap.from(this.overlappingSelectedSamples.result!, s=>[s.studyId, s.sampleId]);
-                 const overlappingPatients = ListIndexedMap.from(this.overlappingSelectedPatients.result!, s=>[s.studyId, s.patientId]);
-                 return Promise.resolve(this.allComparisonGroups_Unfiltered.result!.map(group=>{
-                     const ret:Partial<ComparisonGroup> = Object.assign({}, group);
-                     ret.sampleIdentifiers = group.sampleIdentifiers.filter(s=>!overlappingSamples.has(s.studyId, s.sampleId));
-                     ret.patientIdentifiers = group.patientIdentifiers.filter(p=>!overlappingPatients.has(p.studyId, p.patientId));
-                     ret.hasOverlappingSamples = (ret.sampleIdentifiers.length !== group.sampleIdentifiers.length);
-                     ret.hasOverlappingPatients = (ret.patientIdentifiers.length !== group.patientIdentifiers.length);
-                     return ret as ComparisonGroup;
-                 }));
-             } else {
-                 return Promise.resolve(this.allComparisonGroups_Unfiltered.result!);
-             }
-         } 
-    });
-
-    readonly activeComparisonGroups = remoteData<ComparisonGroup[]>({
-        // ** these are the groups, in final, filtered form, that are, in this form, used for analysis! **
-        await:()=>[
-           this.allComparisonGroups_Filtered,
-           this.selectedComparisonGroups_Unfiltered
-        ],
-        invoke:()=>{
-            const selected = _.keyBy(this.selectedComparisonGroups_Unfiltered.result!, g=>g.id);
-            // filter out groups that are not selected, or are empty
-            return Promise.resolve(this.allComparisonGroups_Filtered.result!.filter(group=>(
-                selected[group.id] && (group.sampleIdentifiers.length > 0 || group.patientIdentifiers.length > 0)
-            )));
-        }
-    });
 
     readonly enrichmentsGroup1 = remoteData({
-        await:()=>[this.activeComparisonGroups],
-        invoke:()=>Promise.resolve(this.activeComparisonGroups.result![0])
+        await:()=>[this.activeGroups],
+        invoke:()=>Promise.resolve(this.activeGroups.result![0])
     });
 
     readonly enrichmentsGroup2 = remoteData({
-        await:()=>[this.activeComparisonGroups],
-        invoke:()=>Promise.resolve(this.activeComparisonGroups.result![1])
+        await:()=>[this.activeGroups],
+        invoke:()=>Promise.resolve(this.activeGroups.result![1])
     });
 
     @autobind
-    @action public toggleComparisonGroupSelected(groupId:string) {
-        this._selectedComparisonGroupIds.set(groupId, !this.isComparisonGroupSelected(groupId));
+    @action public toggleGroupSelected(uid:string) {
+        this._selectedGroupIds.set(uid, !this.isGroupSelected(uid));
     }
 
     public groupSelectionCanBeToggled(group:ComparisonGroup) {
         return (
-            this.activeComparisonGroups.isComplete && // dont allow toggling until we know what the current active groups are
-            !(group.sampleIdentifiers.length === 0 && group.patientIdentifiers.length === 0) // cant be toggled if no cases in it
+            this.activeGroups.isComplete && // dont allow toggling until we know what the current active groups are
+            !isGroupEmpty(group) // cant be toggled if no cases in it
         );
     }
 
-    private isComparisonGroupSelected(groupId:string) {
-        if (!this._selectedComparisonGroupIds.has(groupId)) {
+    private isGroupSelected(uid:string) {
+        if (!this._selectedGroupIds.has(uid)) {
             return true; // selected by default, until user toggles and thus adds a value to the map
         } else {
-            return this._selectedComparisonGroupIds.get(groupId);
+            return this._selectedGroupIds.get(uid);
         }
     }
 
+    public isGroupActive(group:ComparisonGroup) {
+        return this.isGroupSelected(group.uid) && !isGroupEmpty(group);
+    }
+
     readonly samples = remoteData({
-        await:()=>[this.allSampleGroups_Unfiltered],
-        invoke:()=>client.fetchSamplesUsingPOST({
-            sampleFilter:{
-                sampleIdentifiers: _.flatten(this.allSampleGroups_Unfiltered.result!.map(group=>group.sampleIdentifiers))
-            } as SampleFilter,
-            projection: "DETAILED"
-        })
+        await:()=>[this._session],
+        invoke:()=>{
+            const sampleIdentifiers = [];
+            for (const groupData of this._session.result!.groups) {
+                for (const studySpec of groupData.studies) {
+                    const studyId = studySpec.id;
+                    for (const sampleId of studySpec.samples) {
+                        sampleIdentifiers.push({
+                            studyId, sampleId
+                        });
+                    }
+                }
+            }
+            return client.fetchSamplesUsingPOST({
+                sampleFilter:{
+                    sampleIdentifiers
+                } as SampleFilter,
+                projection: "DETAILED"
+            });
+        }
     });
 
     readonly studies = remoteData({
-        await: ()=>[this.allSampleGroups_Unfiltered],
+        await: ()=>[this._session],
         invoke: () => {
-            const studyIds = _.uniqBy(
-                _.flatten(
-                    this.allSampleGroups_Unfiltered.result!.map(group=>group.sampleIdentifiers)
-                ),
-                id=>id.studyId
-            ).map(id=>id.studyId);
+            const studyIds = getStudyIds(this._session.result!.groups);
             return client.fetchStudiesUsingPOST({
                 studyIds,
                 projection:'DETAILED'
@@ -259,15 +248,8 @@ export default class GroupComparisonStore {
     }, []);
 
     readonly activeStudyIds = remoteData({
-        await:()=>[this.activeComparisonGroups],
-        invoke:()=>Promise.resolve(
-            _.uniqBy(
-                _.flatten(
-                    this.activeComparisonGroups.result!.map(group=>group.sampleIdentifiers)
-                ),
-                id=>id.studyId
-            ).map(id=>id.studyId)
-        )
+        await:()=>[this.activeGroups],
+        invoke:()=>Promise.resolve(getStudyIds(this.activeGroups.result!))
     });
 
     readonly molecularProfilesInActiveStudies = remoteData<MolecularProfile[]>({
@@ -377,8 +359,8 @@ export default class GroupComparisonStore {
                     molecularProfileId: this.mutationEnrichmentProfile.result.molecularProfileId,
                     enrichmentType: "SAMPLE",
                     enrichmentFilter: {
-                        alteredIds: this.enrichmentsGroup1.result.sampleIdentifiers.map(s=>s.sampleId),
-                        unalteredIds: this.enrichmentsGroup2.result.sampleIdentifiers.map(s=>s.sampleId),
+                        alteredIds: _.flattenDeep<string>(this.enrichmentsGroup1.result.studies.map(study=>study.samples)),
+                        unalteredIds: _.flattenDeep<string>(this.enrichmentsGroup2.result.studies.map(study=>study.samples))
                     }
                 });
             } else {
@@ -395,8 +377,8 @@ export default class GroupComparisonStore {
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.copyNumberEnrichmentProfile.result) {
                 return this.getCopyNumberEnrichmentData(
                     this.copyNumberEnrichmentProfile.result.molecularProfileId,
-                    this.enrichmentsGroup1.result.sampleIdentifiers,
-                    this.enrichmentsGroup2.result.sampleIdentifiers,
+                    _.flattenDeep<SampleIdentifier>(this.enrichmentsGroup1.result.studies.map(study=>study.samples.map(sampleId=>({ sampleId, studyId: study.id})))),
+                    _.flattenDeep<SampleIdentifier>(this.enrichmentsGroup2.result.studies.map(study=>study.samples.map(sampleId=>({ sampleId, studyId: study.id})))),
                     "HOMDEL"
                 );
             } else {
@@ -413,8 +395,8 @@ export default class GroupComparisonStore {
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.copyNumberEnrichmentProfile.result) {
                 return this.getCopyNumberEnrichmentData(
                     this.copyNumberEnrichmentProfile.result.molecularProfileId,
-                    this.enrichmentsGroup1.result.sampleIdentifiers,
-                    this.enrichmentsGroup2.result.sampleIdentifiers,
+                    _.flattenDeep<SampleIdentifier>(this.enrichmentsGroup1.result.studies.map(study=>study.samples.map(sampleId=>({ sampleId, studyId: study.id})))),
+                    _.flattenDeep<SampleIdentifier>(this.enrichmentsGroup2.result.studies.map(study=>study.samples.map(sampleId=>({ sampleId, studyId: study.id})))),
                     "AMP"
                 );
             } else {
@@ -464,8 +446,8 @@ export default class GroupComparisonStore {
                     molecularProfileId: this.mRNAEnrichmentProfile.result.molecularProfileId,
                     enrichmentType: "SAMPLE",
                     enrichmentFilter: {
-                        alteredIds: this.enrichmentsGroup1.result.sampleIdentifiers.map(s=>s.sampleId),
-                        unalteredIds: this.enrichmentsGroup2.result.sampleIdentifiers.map(s=>s.sampleId),
+                        alteredIds: _.flattenDeep<string>(this.enrichmentsGroup1.result.studies.map(study=>study.samples)),
+                        unalteredIds: _.flattenDeep<string>(this.enrichmentsGroup2.result.studies.map(study=>study.samples))
                     }
                 });
             } else {
@@ -484,8 +466,8 @@ export default class GroupComparisonStore {
                     molecularProfileId: this.proteinEnrichmentProfile.result.molecularProfileId,
                     enrichmentType: "SAMPLE",
                     enrichmentFilter: {
-                        alteredIds: this.enrichmentsGroup1.result.sampleIdentifiers.map(s=>s.sampleId),
-                        unalteredIds: this.enrichmentsGroup2.result.sampleIdentifiers.map(s=>s.sampleId),
+                        alteredIds: _.flattenDeep<string>(this.enrichmentsGroup1.result.studies.map(study=>study.samples)),
+                        unalteredIds: _.flattenDeep<string>(this.enrichmentsGroup2.result.studies.map(study=>study.samples))
                     }
                 });
             } else {
@@ -496,24 +478,24 @@ export default class GroupComparisonStore {
 
     @computed get mutationsTabGrey() {
         // grey out unless two active groups
-        return (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length !== 2);
+        return (this.activeGroups.isComplete && this.activeGroups.result.length !== 2);
     }
 
     @computed get copyNumberTabGrey() {
         // grey out unless two active groups
-        return (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length !== 2);
+        return (this.activeGroups.isComplete && this.activeGroups.result.length !== 2);
     }
 
     @computed get mRNATabGrey() {
         // grey out if
         return (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) // more than one active study
-            || (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length !== 2); // not two active groups
+            || (this.activeGroups.isComplete && this.activeGroups.result.length !== 2); // not two active groups
     }
 
     @computed get proteinTabGrey() {
         // grey out if
         return (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) // more than one active study
-            || (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length !== 2); // not two active groups
+            || (this.activeGroups.isComplete && this.activeGroups.result.length !== 2); // not two active groups
     }
 
     public readonly sampleSet = remoteData({
@@ -531,61 +513,28 @@ export default class GroupComparisonStore {
 
     public readonly patientToAnalysisGroups = remoteData({
         await: () => [
-            this.allSampleGroups_Unfiltered,
+            this.unfilteredGroups,
             this.sampleSet
         ],
         invoke: () => {
-            let sampleSet = this.sampleSet.result!
-            let patientToAnalysisGroups = _.reduce(this.allSampleGroups_Unfiltered.result, (acc, next) => {
-                next.sampleIdentifiers.forEach(sampleIdentifier => {
-                    let sample = sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId);
-                    if (sample) {
-                        let groups = acc[sample.uniquePatientKey] || [];
-                        groups.push(next.id);
-                        acc[sample.uniquePatientKey] = groups;
-                    }
-                })
+            let sampleSet = this.sampleSet.result!;
+            let patientToAnalysisGroups = _.reduce(this.unfilteredGroups.result, (acc, next) => {
+                next.studies.forEach(study=>{
+                    const studyId = study.id;
+                    study.samples.forEach(sampleId => {
+                        let sample = sampleSet.get(studyId, sampleId);
+                        if (sample) {
+                            let groups = acc[sample.uniquePatientKey] || [];
+                            groups.push(next.uid);
+                            acc[sample.uniquePatientKey] = groups;
+                        }
+                    });
+                });
                 return acc;
-            }, {} as { [id: string]: string[] })
+            }, {} as { [patientKey: string]: string[] })
             return Promise.resolve(patientToAnalysisGroups);
         }
     });
-
-    public readonly sampleGroupsCombinationSets = remoteData({
-        await: () => [
-            this.activeComparisonGroups,
-            this.sampleSet
-        ],
-        invoke: () => {
-            let sampleSet = this.sampleSet.result!;
-            let groupsWithSamples = _.map(this.activeComparisonGroups.result, group => {
-                let samples = group.sampleIdentifiers.map(sampleIdentifier => sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId));
-                return {
-                    name: group.name ? group.name : group.id,
-                    cases: _.map(samples, sample => sample!.uniqueSampleKey)
-                }
-            })
-            return Promise.resolve(getCombinations(groupsWithSamples));
-        }
-    }, []);
-
-    public readonly patientGroupsCombinationSets = remoteData({
-        await: () => [
-            this.activeComparisonGroups,
-            this.sampleSet
-        ],
-        invoke: () => {
-            let sampleSet = this.sampleSet.result!;
-            let groupsWithPatients = _.map(this.activeComparisonGroups.result, group => {
-                let samples = group.sampleIdentifiers.map(sampleIdentifier => sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId));
-                return {
-                    name: group.name ? group.name : group.id,
-                    cases: _.uniq(_.map(samples, sample => sample!.uniquePatientKey))
-                }
-            })
-            return Promise.resolve(getCombinations(groupsWithPatients));
-        }
-    }, []);
 
     readonly survivalClinicalDataExists = remoteData<boolean>({
         await: () => [
@@ -669,12 +618,10 @@ export default class GroupComparisonStore {
         }
     }, []);
 
-    @computed get categoryToColor() {
-        let colorIndex = 0;
-        return _.reduce(this.allSampleGroups_Unfiltered.result, (acc, next) => {
-            acc[next.name? next.name : next.id] = next.color ? next.color : COLORS[colorIndex++]
-            return acc;
-        }, {} as { [id: string]: string})
-    }
-
+    readonly uidToGroup = remoteData({
+        await:()=>[this.unfilteredGroups],
+        invoke:()=>{
+            return Promise.resolve(_.keyBy(this.unfilteredGroups.result!, group=>group.uid));
+        }
+    });
 }

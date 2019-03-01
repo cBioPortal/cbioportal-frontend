@@ -36,7 +36,6 @@ import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import {addChartGroupsSpec} from "../../groupComparison/GroupPersistenceUtils";
 import {getComparisonUrl} from "../../../shared/api/urls";
 
 export interface AbstractChart {
@@ -69,6 +68,7 @@ export interface IChartContainerProps {
     onGeneSelect?:any;
     isNewlyAdded: (uniqueKey: string) => boolean;
 
+    openComparisonPage:(params:{clinicalAttribute:ClinicalAttribute, clinicalAttributeValues:{ value:string, color:string }[]})=>void;
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
     patientKeysWithNAInSelectedClinicalData?:MobxPromise<string[]>; // patients which have NA values for filtered clinical attributes
@@ -223,13 +223,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @action
     openComparisonPage() {
         if (this.comparisonPagePossible) {
-            // save data in localstorage to be read by the comparison page
-            const key = addChartGroupsSpec(
-                this.props.chartMeta.clinicalAttribute!,
-                (this.props.promise.result! as ClinicalDataCountWithColor[]).map(d=>d.value),
-                this.props.studyViewFilters
-            );
-            window.open(getComparisonUrl({fromChart:"true", unshareableLocalKey:key}), "_blank");
+            this.props.openComparisonPage({
+                clinicalAttribute: this.props.chartMeta.clinicalAttribute!,
+                clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]).map(d=>{
+                    return {
+                        value: d.value,
+                        color: d.color
+                    }
+                }),
+            });
         }
     }
 
