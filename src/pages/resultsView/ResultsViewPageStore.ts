@@ -2663,11 +2663,12 @@ export class ResultsViewPageStore {
     });
 
     readonly mutationEnrichmentData = makeEnrichmentDataPromise({
+        store:this,
         await: () => [
             this.alteredSamples,
             this.unalteredSamples
         ],
-        shouldFetchData:()=>!!this.selectedEnrichmentMutationProfile,// returns an empty array if the selected study doesn't have any mutation profiles
+        getSelectedProfile:()=>this.selectedEnrichmentMutationProfile,
         fetchData:()=>internalClient.fetchMutationEnrichmentsUsingPOST({
             molecularProfileId: this.selectedEnrichmentMutationProfile.molecularProfileId,
             enrichmentType: "SAMPLE",
@@ -2686,22 +2687,24 @@ export class ResultsViewPageStore {
     });
 
     readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
+        store:this,
         await: () => [
             this.alteredSamples,
             this.unalteredSamples
         ],
-        shouldFetchData:()=>!!this.selectedEnrichmentCopyNumberProfile,// returns an empty array if the selected study doesn't have any CNA profiles
+        getSelectedProfile:()=>this.selectedEnrichmentCopyNumberProfile,
         fetchData:()=>this.getCopyNumberEnrichmentData(this.alteredSamples.result,
                             this.unalteredSamples.result, "HOMDEL")
         }
     );
 
     readonly copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
+        store:this,
         await: () => [
             this.alteredSamples,
             this.unalteredSamples
         ],
-        shouldFetchData:()=>!!this.selectedEnrichmentCopyNumberProfile,// returns an empty array if the selected study doesn't have any CNA profiles
+        getSelectedProfile:()=>this.selectedEnrichmentCopyNumberProfile,
         fetchData:()=>this.getCopyNumberEnrichmentData(this.alteredSamples.result,
             this.unalteredSamples.result, "AMP")
     });
@@ -2726,11 +2729,12 @@ export class ResultsViewPageStore {
     });
 
     readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
+        store:this,
         await: () => [
             this.alteredSamples,
             this.unalteredSamples
         ],
-        shouldFetchData:()=>!!this.selectedEnrichmentMRNAProfile,// returns an empty array if the selected study doesn't have any mRNA profiles
+        getSelectedProfile:()=>this.selectedEnrichmentMRNAProfile,// returns an empty array if the selected study doesn't have any mRNA profiles
         fetchData:()=>internalClient.fetchExpressionEnrichmentsUsingPOST({
             molecularProfileId: this.selectedEnrichmentMRNAProfile.molecularProfileId,
             enrichmentType: "SAMPLE",
@@ -2747,11 +2751,12 @@ export class ResultsViewPageStore {
     });
 
     readonly proteinEnrichmentData = makeEnrichmentDataPromise({
+        store:this,
         await: () => [
             this.alteredSamples,
             this.unalteredSamples
         ],
-        shouldFetchData:()=>!!this.selectedEnrichmentProteinProfile, // returns an empty array if the selected study doesn't have any protein profiles
+        getSelectedProfile:()=>this.selectedEnrichmentProteinProfile, // returns an empty array if the selected study doesn't have any protein profiles
         fetchData:()=>internalClient.fetchExpressionEnrichmentsUsingPOST({
             molecularProfileId: this.selectedEnrichmentProteinProfile.molecularProfileId,
             enrichmentType: "SAMPLE",

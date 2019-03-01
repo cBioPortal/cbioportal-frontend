@@ -369,7 +369,7 @@ export default class GroupComparisonStore {
 
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.mutationEnrichmentProfile],
-        shouldFetchData:()=>!!this.mutationEnrichmentProfile,
+        getSelectedProfile:()=>this.mutationEnrichmentProfile.result,
         fetchData:()=>{
             // assumes single study for now
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.mutationEnrichmentProfile.result) {
@@ -389,7 +389,7 @@ export default class GroupComparisonStore {
 
     readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.copyNumberEnrichmentProfile],
-        shouldFetchData:()=>!!this.copyNumberEnrichmentProfile,// returns an empty array if the selected study doesn't have any CNA profiles
+        getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any CNA profiles
         fetchData:()=>{
             // assumes single study for now
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.copyNumberEnrichmentProfile.result) {
@@ -407,7 +407,7 @@ export default class GroupComparisonStore {
 
     readonly copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.copyNumberEnrichmentProfile],
-        shouldFetchData:()=>!!this.copyNumberEnrichmentProfile,// returns an empty array if the selected study doesn't have any CNA profiles
+        getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any CNA profiles
         fetchData:()=>{
             // assumes single study for now
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.copyNumberEnrichmentProfile.result) {
@@ -456,7 +456,7 @@ export default class GroupComparisonStore {
 
     readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.mRNAEnrichmentProfile],
-        shouldFetchData:()=>!!this.mRNAEnrichmentProfile,// returns an empty array if the selected study doesn't have any mRNA profiles
+        getSelectedProfile:()=>this.mRNAEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any mRNA profiles
         fetchData:()=>{
             // assumes single study for now
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.mRNAEnrichmentProfile.result) {
@@ -476,7 +476,7 @@ export default class GroupComparisonStore {
 
     readonly proteinEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.proteinEnrichmentProfile],
-        shouldFetchData:()=>!!this.proteinEnrichmentProfile,// returns an empty array if the selected study doesn't have any mRNA profiles
+        getSelectedProfile:()=>this.proteinEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any mRNA profiles
         fetchData:()=>{
             // assumes single study for now
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.proteinEnrichmentProfile.result) {            
