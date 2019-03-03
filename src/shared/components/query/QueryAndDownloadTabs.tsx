@@ -78,7 +78,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 				}
 
 				<MSKTabs activeTabId={this.activeTabId} onTabClick={this.onSelectTab} className={"mainTabs"}>
-					<MSKTab id={"advanced"} linkText={"Advanced"} onTabDidMount={()=>this.setDefaultTab(undefined)}>
+					<MSKTab id={"advanced"} linkText={"Query"} onTabDidMount={()=>this.setDefaultTab(undefined)}>
                         <QueryContainer onSubmit={this.props.onSubmit} store={this.store}/>
 					</MSKTab>
 					<MSKTab id={QUICK_SEARCH_TAB_ID} linkText={<span>Quick Search <strong className={"beta-text"}>Beta!</strong></span>}  onTabDidMount={()=>this.setDefaultTab(QUICK_SEARCH_TAB_ID)}>

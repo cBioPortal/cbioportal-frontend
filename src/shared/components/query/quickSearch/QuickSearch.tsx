@@ -212,28 +212,36 @@ export default class QuickSearch extends React.Component {
     render() {
 
         return (
-            <Select
-                options={this.options.result || []}
-                autoFocus={true}
-                onInputChange={this.handleInputChange}
-                onChange={this.handleChange}
-                components={{ Group, GroupHeading }}
-                formatOptionLabel={formatMyLabel}
-                controlShouldRenderValue={false}
-                filterOption={false}
-                inputValue={this.inputValue}
-                isLoading={this.options.isPending}
-                placeholder={"e.g. Lung, EGFR, TCGA-OR-A5J2"}
-                blurInputOnSelect={false}
-                closeMenuOnSelect={false}
-                onSelectResetsInput={false}
-                menuIsOpen={this.menuIsOpen}
-                maxMenuHeight={510}
-                styles={{
-                    dropdownIndicator: ()=>{ return { display:'none' } },
-                    control: (provided:any)=>{ return { ...provided, cursor:'text' } }
-                }}
-            />
+            <div>
+                <Select
+                    options={this.options.result || []}
+                    autoFocus={true}
+                    onInputChange={this.handleInputChange}
+                    onChange={this.handleChange}
+                    components={{ Group, GroupHeading }}
+                    formatOptionLabel={formatMyLabel}
+                    controlShouldRenderValue={false}
+                    filterOption={false}
+                    inputValue={this.inputValue}
+                    isLoading={this.options.isPending}
+                    placeholder={"e.g. Lung, EGFR, TCGA-OR-A5J2"}
+                    blurInputOnSelect={false}
+                    closeMenuOnSelect={false}
+                    onSelectResetsInput={false}
+                    menuIsOpen={this.menuIsOpen}
+                    maxMenuHeight={510}
+                    styles={{
+                        dropdownIndicator: ()=>{ return { display:'none' } },
+                        control: (provided:any)=>{ return { ...provided, cursor:'text' } }
+                    }}
+                />
+                <p style={{fontSize:"x-small",textAlign:"center",paddingTop:15}}>
+                    We would love to hear what you think:&nbsp;
+                    <a href="mailto:cbioportal@googlegroups.com">
+                        cbioportal@googlegroups.com
+                    </a>
+                </p>
+            </div>
         );
     }
 }
