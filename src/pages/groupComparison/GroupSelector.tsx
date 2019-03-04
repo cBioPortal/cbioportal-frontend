@@ -4,7 +4,7 @@ import {
     caseCountsInParens,
     ComparisonGroup,
     getSampleIdentifiers,
-    getPatientIdentifiers
+    getPatientIdentifiers, getMissingSamplesMessage
 } from "./GroupComparisonUtils";
 import MobxPromise from "mobxpromise";
 import { ButtonGroup, Button } from "react-bootstrap";
@@ -17,6 +17,7 @@ import classNames from "classnames";
 import ListIndexedMap from "shared/lib/ListIndexedMap";
 import { SampleIdentifier, PatientIdentifier } from "shared/api/generated/CBioPortalAPI";
 import styles from './styles.module.scss';
+import ErrorIcon from "../../shared/components/ErrorIcon";
 
 export interface IGroupSelectorProps {
     store:GroupComparisonStore;
@@ -54,6 +55,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                                         {`${group.name} ${
                                             caseCountsInParens(sampleIdentifiers, patientIdentifiers, group.hasOverlappingSamples, group.hasOverlappingPatients)
                                         }`}
+                                        {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={getMissingSamplesMessage(group.nonExistentSamples)}/>}
                                     </button>
                                 );
                             })}
