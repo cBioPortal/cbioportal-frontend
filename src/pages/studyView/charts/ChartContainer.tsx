@@ -214,9 +214,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get comparisonPagePossible() {
-        return this.props.chartMeta.chartType === ChartTypeEnum.PIE_CHART &&
+        return !!this.props.chartMeta.clinicalAttribute &&
             this.props.promise.isComplete &&
-            !!this.props.chartMeta.clinicalAttribute;
+            _.every(this.props.promise.result!, d=>(!!d.value && !!d.color))
     }
 
     @autobind
