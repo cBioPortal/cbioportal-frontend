@@ -40,7 +40,7 @@ export type StudyViewThreshold = {
     escapeTick: number,
     barRatio: number,
     rowsInTableForOneGrid: number,
-    clinicalChartsPerGroup: number,
+    clinicalCharts: number,
     chartHighlight: number,
 }
 
@@ -112,7 +112,9 @@ const studyViewFrontEnd = {
     },
     priority: {
         "SAMPLE_CANCER_TYPE": 3000,
+        "PATIENT_CANCER_TYPE": 3000,
         "SAMPLE_CANCER_TYPE_DETAILED": 2000,
+        "PATIENT_CANCER_TYPE_DETAILED": 2000,
         "OS_SURVIVAL": 400,
         "DFS_SURVIVAL": 300,
         "MUTATION_COUNT_CNA_FRACTION": 200,
@@ -125,8 +127,25 @@ const studyViewFrontEnd = {
         "MUTATION_COUNT": 30,
         "FRACTION_GENOME_ALTERED": 20,
         "PATIENT_GENDER": 9,
+        "SAMPLE_GENDER": 9,
         "PATIENT_SEX": 9,
-        "PATIENT_AGE": 9
+        "SAMPLE_SEX": 9,
+        "PATIENT_AGE": 9,
+        "SAMPLE_AGE": 9,
+        "PATIENT_RACE": 8,
+        "SAMPLE_RACE": 8,
+        "PATIENT_ETHNICITY": 8,
+        "SAMPLE_ETHNICITY": 8,
+        "SAMPLE_SAMPLE_TYPE": 8,
+        "PATIENT_SAMPLE_TYPE": 8,
+        "PATIENT_HISTOLOGY": 8,
+        "SAMPLE_HISTOLOGY": 8,
+        "SAMPLE_TUMOR_TYPE": 8,
+        "PATIENT_TUMOR_TYPE": 8,
+        "PATIENT_SUBTYPE": 8,
+        "SAMPLE_SUBTYPE": 8,
+        "PATIENT_TUMOR_SITE": 8,
+        "SAMPLE_TUMOR_SITE": 8
     },
     thresholds: {
         pieToTable: 20,
@@ -134,7 +153,7 @@ const studyViewFrontEnd = {
         escapeTick: 10,
         barRatio: 0.8,
         rowsInTableForOneGrid: 4,
-        clinicalChartsPerGroup: 10,
+        clinicalCharts: 20,
         chartHighlight: 10000
     },
     layout: {
