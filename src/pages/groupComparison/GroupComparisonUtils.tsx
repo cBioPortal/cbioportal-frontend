@@ -5,12 +5,19 @@ import _ from "lodash";
 import {GroupComparisonTab} from "./GroupComparisonPage";
 import {StudyViewFilter, ClinicalDataEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
-import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
+import {GroupData, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
+import * as React from "react";
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
 export type ComparisonGroup = Omit<SessionGroupData, "studies"|"color"> & {
     color:string; // color mandatory here, bc we'll assign one if its missing
+    uid:string; // unique in the session
+    studies:{ id:string, samples: string[], patients:string[] }[]; // include patients, filter out nonexistent samples
+    nonExistentSamples:SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
+};
+
+export type StudyViewComparisonGroup = Omit<GroupData, "color"> & {
     uid:string; // unique in the session
     studies:{ id:string, samples: string[], patients:string[] }[]; // include patients, filter out nonexistent samples
     nonExistentSamples:SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
@@ -189,6 +196,42 @@ export function getNumSamples(
     return _.sum(group.studies.map(study=>study.samples.length));
 }
 
+export function filterNonExistentSamples(
+    groupData:Pick<SessionGroupData, "studies">,
+    sampleSet:ListIndexedMap<Sample> // key: [studyId, sampleId]
+) {
+    // keep track of nonexisting samples, existing patients
+    const nonExistentSamples = [];
+    const studies = [];
+
+    for (const study of groupData.studies) {
+        const studyId = study.id;
+        const samples = [];
+        const patients = [];
+        for (const sampleId of study.samples) {
+            const sample = sampleSet.get(studyId, sampleId);
+            if (!sample) {
+                // filter out, and keep track of, nonexisting sample
+                nonExistentSamples.push({ studyId, sampleId });
+            } else {
+                // add sample and corresponding patient
+                samples.push(sampleId);
+                patients.push(sample.patientId);
+            }
+        }
+        studies.push({
+            id: studyId,
+            samples,
+            patients:_.uniq(patients)
+        });
+    }
+
+    return {
+        nonExistentSamples,
+        studies
+    };
+}
+
 export function getOverlapFilteredGroups(
     groups:ComparisonGroup[],
     info:{
@@ -279,4 +322,17 @@ export function getPieChartGroupFilters(
         });
     }
     return newFilters;
+}
+
+export function getMissingSamplesMessage(
+    samples:SampleIdentifier[]
+) {
+    return (
+        <div style={{width:380}}>
+            <div style={{marginBottom:7}}>The following samples cannot be found in our database. They might have been removed or changed since this group was created: </div>
+            <div style={{maxHeight:200, overflowY:"scroll"}}>
+                {samples.map(sample=><div>{`${sample.studyId}:${sample.sampleId}`}</div>)}
+            </div>
+        </div>
+    );
 }
