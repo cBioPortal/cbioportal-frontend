@@ -122,6 +122,9 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             setCustomChartFilters: (chartMeta: ChartMeta, values: string[]) => {
                 this.store.setCustomChartFilters(chartMeta, values);
             },
+            onLayoutChange: (layout: ReactGridLayout.Layout[]) => {
+                this.store.updateCurrentGridLayout(layout);
+            },
         }
     }
 
@@ -392,7 +395,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                                              layout={this.store.studyViewPageLayoutProps.layout}
                                              margin={[STUDY_VIEW_CONFIG.layout.gridMargin.x, STUDY_VIEW_CONFIG.layout.gridMargin.y]}
                                              useCSSTransforms={false}
-                                             draggableHandle={'.fa-arrows'}>
+                                             draggableHandle={'.fa-arrows'}
+                                             onLayoutChange={this.handlers.onLayoutChange} >
                                 {this.store.visibleAttributes.map(this.renderAttributeChart)}
                             </ReactGridLayout>
                         )}
