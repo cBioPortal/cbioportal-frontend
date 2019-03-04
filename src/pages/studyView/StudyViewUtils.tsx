@@ -256,11 +256,6 @@ export function getPriority(priorities: number[]): number {
     return priority;
 }
 
-export function isPreSelectedClinicalAttr(attr: string): boolean {
-    let result = attr.match(/(os_survival)|(dfs_survival)|(mut_cnt_vs_cna)|(mutated_genes)|(cna_details)|(^age)|(gender)|(sex)|(os_status)|(os_months)|(dfs_status)|(dfs_months)|(race)|(ethnicity)|(sample_type)|(histology)|(tumor_type)|(subtype)|(tumor_site)|(mutation_count)|(copy_number_alterations)|(.*(site|grade|stage).*)/i);
-    return _.isArray(result) && result.length > 0;
-}
-
 export function getClinicalDataType(patientAttribute: boolean): ClinicalDataType {
     return patientAttribute ? ClinicalDataTypeEnum.PATIENT : ClinicalDataTypeEnum.SAMPLE;
 }
@@ -1334,11 +1329,36 @@ export function clinicalDataCountComparator(a: ClinicalDataCount, b: ClinicalDat
     }
 }
 
-// Descent sort priority then ascent sort by display name
-export function chartMetaComparator(a: ChartMeta, b: ChartMeta): number
-{
+type ClinicalAttributeSorting = {
+    priority: number,
+    displayName: string
+}
+
+export function clinicalAttributeSortingComparator(a: ClinicalAttributeSorting, b: ClinicalAttributeSorting): number {
     return b.priority - a.priority || a.displayName.localeCompare(b.displayName);
 }
+
+export function clinicalAttributeComparator(a: ClinicalAttribute, b: ClinicalAttribute): number {
+    return clinicalAttributeSortingComparator({
+        priority: Number(a.priority),
+        displayName: a.displayName
+    }, {
+        priority: Number(b.priority),
+        displayName: b.displayName
+    });
+}
+
+// Descent sort priority then ascent sort by display name
+export function chartMetaComparator(a: ChartMeta, b: ChartMeta): number {
+    return clinicalAttributeSortingComparator({
+        priority: a.priority,
+        displayName: a.displayName
+    }, {
+        priority: b.priority,
+        displayName: b.displayName
+    });
+}
+
 
 export function submitToPage(url:string, params: { [id: string]: string }, target?: string) {
     try {
