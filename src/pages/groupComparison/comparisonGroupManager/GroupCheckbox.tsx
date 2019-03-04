@@ -1,23 +1,24 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {getNumSamples} from "../GroupComparisonUtils";
+import {getMissingSamplesMessage, getNumSamples, StudyViewComparisonGroup} from "../GroupComparisonUtils";
 import {Group} from "../../../shared/api/ComparisonGroupClient";
 import {StudyViewPageStore} from "../../studyView/StudyViewPageStore";
 import autobind from "autobind-decorator";
 import {computed, observable} from "mobx";
+import ErrorIcon from "../../../shared/components/ErrorIcon";
 
 export interface IGroupCheckboxProps {
-    group:Group;
+    group:StudyViewComparisonGroup;
     store:StudyViewPageStore;
     markedForDeletion:boolean;
-    restore:(group:Group)=>void;
+    restore:(group:StudyViewComparisonGroup)=>void;
 }
 
 @observer
 export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, {}> {
     @autobind
     private onCheckboxClick() {
-        this.props.store.toggleComparisonGroupSelected(this.props.group.id)
+        this.props.store.toggleComparisonGroupSelected(this.props.group.uid)
     }
 
     @autobind
@@ -26,36 +27,42 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
     }
 
     @computed get label() {
-        return `${this.props.group.data.name} (${getNumSamples(this.props.group.data)})`;
+        return `${this.props.group.name} (${getNumSamples(this.props.group)})`;
     }
 
     render() {
         const group = this.props.group;
-        if (!this.props.markedForDeletion) {
-            return (
-                <div key={group.id} className="checkbox groupItem"><label>
+        let checkboxAndLabel;
+        if (this.props.markedForDeletion) {
+            checkboxAndLabel = <span className="markedForDeletion">{this.label}</span>;
+        } else {
+            checkboxAndLabel = (
+                <div className="groupItem checkbox"><label>
                     <input
                         type="checkbox"
-                        value={group.id}
-                        checked={this.props.store.isComparisonGroupSelected(group.id)}
+                        value={group.uid}
+                        checked={this.props.store.isComparisonGroupSelected(group.uid)}
                         onClick={this.onCheckboxClick}
                     />{this.label}
                 </label></div>
             );
-        } else {
-            return (
-                <div className="groupItem"
-                     style={{
-                        display:"flex",
-                        flexDirection:"row",
-                        justifyContent:"space-between",
-                        alignItems:"center"
-                     }}
-                >
-                    <span className="markedForDeletion">{this.label}</span>
-                    <button className="btn btn-xs btn-default" onClick={this.onRestoreClick}>Restore</button>
-                </div>
-            );
         }
+        
+        return (
+            <div key={group.uid}
+                style={{
+                    display:"flex",
+                    flexDirection:"row",
+                    justifyContent:"space-between",
+                    alignItems:"center"
+                }}
+            >
+                {checkboxAndLabel}
+                <span>
+                    {this.props.group.nonExistentSamples.length > 0 && <ErrorIcon tooltip={getMissingSamplesMessage(this.props.group.nonExistentSamples)}/>}
+                    {this.props.markedForDeletion && (<button style={{marginLeft:10}} className="btn btn-xs btn-default" onClick={this.onRestoreClick}>Restore</button>)}
+                </span>
+            </div>
+        );
     }
 }
