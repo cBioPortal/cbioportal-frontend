@@ -9,7 +9,6 @@ import {QueryStore, QueryStoreComponent, CUSTOM_CASE_LIST_ID, ALL_CASES_LIST_ID}
 import {getStudySummaryUrl} from '../../api/urls';
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
-import {ReactSelectOption} from "react-select";
 import { getFilteredCustomCaseSets } from 'shared/components/query/CaseSetSelectorUtils';
 
 const styles = styles_any as {
@@ -17,6 +16,8 @@ const styles = styles_any as {
 	tooltip: string,
 	radioRow: string,
 };
+
+export type ReactSelectOption<T> = {label: React.ReactChild, value: T};
 
 export interface ReactSelectOptionWithName extends ReactSelectOption<any> {
 	textLabel:string;
@@ -78,7 +79,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 			<FlexRow padded overflow className={styles.CaseSetSelector} data-test='CaseSetSelector'>
 				<div>
 				<SectionHeader className="sectionLabel"
-							   secondaryComponent={<a href={getStudySummaryUrl(this.store.selectableSelectedStudyIds)} target="_blank">To build your own case set, try out our enhanced Study View.</a>}
+							   secondaryComponent={<a href={getStudySummaryUrl(this.store.selectableSelectedStudyIds)} target="_blank">To build your own case set,<br />try out our enhanced Study View.</a>}
 							   promises={[this.store.sampleLists, this.store.asyncCustomCaseSet, this.store.profiledSamplesCount]}>
 					Select Patient/Case Set:
 				</SectionHeader>
@@ -88,7 +89,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 					value={this.store.selectedSampleListId}
 					options={this.caseSetOptions}
 					filterOption={filterCaseSetOptions}
-					onChange={option => this.store.selectedSampleListId = option ? option.value : undefined}
+					onChange={(option:any) => this.store.selectedSampleListId = option ? option.value : undefined}
 					data-test='caseSetSelector'
 				/>
 

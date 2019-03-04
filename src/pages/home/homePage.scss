@@ -1,5 +1,10 @@
-.HomePageLayout {
+.homePageLayout {
     #mainColumn {
         background: white;
     }
+
+    .skinBlurb {
+        margin:0 $gutterWidth;
+    }
+
 }
