@@ -5,15 +5,19 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 if [[ "$CIRCLECI" ]]; then
+
     # on circle ci determine env variables based on branch or in case of PR
     # what branch the PR is pointing to
     if [[ "$CIRCLE_PR_NUMBER" ]] && ! [[ $CIRCLE_BRANCH == "release-"* ]]; then
-        BRANCH=$(curl "https://github.com/cBioPortal/cbioportal-frontend/pull/${CIRCLE_PR_NUMBER}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
+        # TODO !!!!!!!!!!!!!! change thehyve into cBioPortal
+        BRANCH=$(curl "https://github.com/thehyve/cbioportal-frontend/pull/${CIRCLE_PR_NUMBER}" | grep -oE 'title="thehyve/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
     elif [[ "$CIRCLE_PULL_REQUEST" ]] && ! [[ $CIRCLE_BRANCH == "release-"* ]]; then
-        BRANCH=$(curl "${CIRCLE_PULL_REQUEST}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
+        # TODO !!!!!!!!!!!!!! change thehyve into cBioPortal
+        BRANCH=$(curl "${CIRCLE_PULL_REQUEST}" | grep -oE 'title="thehyve/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
     else
         BRANCH=$CIRCLE_BRANCH
     fi
+
     cat $SCRIPT_DIR/../env/${BRANCH}.sh
 elif [[ "$BRANCH_ENV" ]]; then
     cat $SCRIPT_DIR/../env/${BRANCH_ENV}.sh

@@ -140,7 +140,7 @@ var config = {
         compare: new VisualRegressionCompare.LocalCompare({
             referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
             screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
-            diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/diff')),
+            diffName: getScreenshotName(path.join(process.cwd(), diffDir)),
             misMatchTolerance:0.01,
             ignoreComparison: "antialiasing"
         }),
