@@ -4,11 +4,6 @@ set -e
 set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# serve frontend as https if CBIOPORTAL_URL contains https, use http otherwise
-bash ${SCRIPT_DIR}/env_vars.sh || exit 1
-eval "$(bash $SCRIPT_DIR/env_vars.sh)"
 (echo $CBIOPORTAL_URL | grep -q https) \
 && ( \
     openssl \

@@ -1,21 +1,12 @@
-var CustomReporter = require('./customReporter');
-
+var browserstack = require('browserstack-local');
 
 var path = require('path');
 var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
+
 var getScreenshotName = require('./getScreenshotName');
-// enable require text files for testing
-var fs = require('fs');
-require.extensions['.txt'] = function (module, filename) {
-    module.exports = fs.readFileSync(filename, 'utf8');
-};
+const localIdentifier = `foobar_${Date.now()}`
 
-var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
-var refDir = process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
-var screenDir = process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
-var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
-
-var config = {
+exports.config = {
     //
     // ==================
     // Specify Test Files
@@ -25,13 +16,9 @@ var config = {
     // NPM script (see https://docs.npmjs.com/cli/run-script) then the current working
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
-    // specs: [
-    //     './specs/**/results.logic.spec.js'
-    // ],
     specs: [
-        process.env.SPEC_FILE_PATTERN || './specs/**/*.spec.js'  // './specs/**/screenshot.spec.js'
+        './specs/**/*.js' //'./specs/**/screenshot.spec.js'
     ],
-
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
@@ -52,25 +39,26 @@ var config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: 3,
+    maxInstances: 10,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
     // https://docs.saucelabs.com/reference/platforms-configurator
     //
     capabilities: [{
-
-        //browserName: 'chrome',
-        chromeOptions: {
-            args: ['--disable-composited-antialiasing','--allow-insecure-localhost']
-        },
-
+        // maxInstances can get overwritten per capability. So if you have an in-house Selenium
+        // grid with only 5 firefox instances available you can make sure that not more than
+        // 5 instances get started at a time.
+        maxInstances: 5,
         'os': 'OS X',
-        'os_version': 'High Sierra',
+        'os_version': 'Sierra',
         'browser': 'Chrome',
-        'browser_version': '74.0 beta',
-        'resolution': '1600x1200'
-
+        'browser_version': '63.0',
+        'resolution': '1600x1200',
+        build: 'webdriver-browserstack',
+        'browserstack.local': true,
+        'browserstack.localIdentifier': localIdentifier,
+        'browserstack.networkLogs':true
     }],
     //
     // ===================
@@ -82,10 +70,9 @@ var config = {
     // the wdio-sync package. If you still want to run your tests in an async way
     // e.g. using promises you can set the sync option to false.
     sync: true,
-
     //
     // Level of logging verbosity: silent | verbose | command | data | result | error
-    logLevel: 'verbose',
+    logLevel: 'silent',
     //
     // Enables colors for log output.
     coloredLogs: true,
@@ -95,14 +82,14 @@ var config = {
     bail: 0,
     //
     // Saves a screenshot to a given path if a command fails.
-    screenshotPath: errorDir,
+    screenshotPath: './errorShots/',
     //
     // Set a base URL in order to shorten url command calls. If your url parameter starts
     // with "/", then the base url gets prepended.
     baseUrl: 'http://localhost',
     //
     // Default timeout for all waitFor* commands.
-    waitforTimeout: 20000,
+    waitforTimeout: 10000,
     //
     // Default timeout in milliseconds for request
     // if Selenium Grid doesn't send response
@@ -133,26 +120,22 @@ var config = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-
-
-
-    services: [
-        'visual-regression'
-    ],
-
+    services: ['browserstack', 'visual-regression'],
 
     visualRegression: {
         compare: new VisualRegressionCompare.LocalCompare({
-            referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
-            screenshotName: getScreenshotName(path.join(process.cwd(), screenDir)),
-            diffName: getScreenshotName(path.join(process.cwd(), diffDir)),
-            misMatchTolerance:0.01,
-            ignoreComparison: "antialiasing"
+            referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
+            screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
+            diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/diff')),
+            misMatchTolerance:0.1
         }),
         viewportChangePause: 300,
         viewports: [{ width: 1600, height: 1000 }],
         orientations: ['landscape', 'portrait'],
     },
+
+    user: process.env.BROWSERSTACK_USERNAME,
+    key: process.env.BROWSERSTACK_ACCESS_KEY,
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
     // see also: http://webdriver.io/guide/testrunner/frameworks.html
@@ -164,18 +147,12 @@ var config = {
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
     // see also: http://webdriver.io/guide/testrunner/reporters.html
-    reporters: ['spec', 'junit', CustomReporter],
+    reporters: ['spec', 'junit'],
     reporterOptions: {
         junit: {
-            outputDir: process.env.JUNIT_REPORT_PATH || "./",
+            outputDir: process.env.JUNIT_REPORT_PATH,
             outputFileFormat: function(opts) { // optional
                 return `results-${opts.cid}.${opts.capabilities}.xml`
-            }
-        },
-        custom: {
-            outputDir: process.env.JUNIT_REPORT_PATH ||  "./",
-            outputFileFormat: function(opts) { // optional
-                return `custom-results-${opts.cid}.${opts.capabilities}.xml`
             }
         }
     },
@@ -184,7 +161,7 @@ var config = {
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 180000 // make big when using browser.debug()
+        timeout: 60000
     },
     //
     // =====
@@ -224,7 +201,6 @@ var config = {
      * @param {Object} suite suite details
      */
     // beforeSuite: function (suite) {
-    //
     // },
     /**
      * Hook that gets executed _before_ a hook within the suite starts (e.g. runs before calling
@@ -264,26 +240,8 @@ var config = {
      * Function to be executed after a test (in Mocha/Jasmine) or a step (in Cucumber) starts.
      * @param {Object} test test details
      */
-    afterTest: function (test) {
-
-        var networkLog = browser.execute(function() {
-
-            Object.keys(window.ajaxRequests).forEach((key)=>{
-                window.ajaxRequests[key].end = Date.now();
-                window.ajaxRequests[key].duration = window.ajaxRequests[key].end - window.ajaxRequests[key].started;
-            });
-
-            return JSON.stringify(window.ajaxRequests);
-
-        }).value;
-
-        process.send({
-            event: 'custom-report',
-            data: { test:test, network:JSON.parse(networkLog) }
-        });
-
-
-    },
+    // afterTest: function (test) {
+    // },
     /**
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details
@@ -314,25 +272,22 @@ var config = {
      */
     // onComplete: function(exitCode) {
     // }
-};
+    // Code to start browserstack local before start of test
+    onPrepare: function (config, capabilities) {
+        console.log("Connecting local");
+        return new Promise(function(resolve, reject){
+            exports.bs_local = new browserstack.Local();
+            exports.bs_local.start({'key': exports.config.key, localIdentifier }, function(error) {
+                if (error) return reject(error);
+                console.log('Connected. Now testing...');
 
-const doBrowserstack = false;
+                resolve();
+            });
+        });
+    },
 
-if (doBrowserstack) {
-    config.capabilities[0]['browserstack.local'] = true;
-
-    config.services =  ['visual-regression','browserstack'];
-
-    config.browserstackLocal = true;
-
-    config.user = process.env.BROWSERSTACK_USER;
-    config.key = process.env.BROWSERSTACK_KEY;
+    // Code to stop browserstack local after end of test
+    onComplete: function (capabilties, specs) {
+        exports.bs_local.stop(function() {});
+    }
 }
-
-// config.specs = [
-//     './specs/**/mutationTable.spec.js'
-// ];
-
-
-exports.config  = config;
-

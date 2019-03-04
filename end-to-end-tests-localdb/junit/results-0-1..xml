@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="homepage" timestamp="2019-06-04T12:58:28" time="1.596" tests="1" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="cffee1a1362ea60ebd9a4c0221309353"/>
+      <property name="suiteName" value="homepage"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./specs/home.spec.js"/>
+    </properties>
+    <testcase classname=".homepage" name="it_should_show_dev_mode_when_testing" time="0.523">
+      <system-out>
+        <![CDATA[
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/85532cf245d21444ca1d3a46b7e8880f/element - {"using":"css selector","value":".alert-warning"}
+RESULT: {"sessionId":"85532cf245d21444ca1d3a46b7e8880f","status":0,"value":{"ELEMENT":"0.5480020528554668-2"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/85532cf245d21444ca1d3a46b7e8880f/elements - {"using":"css selector","value":".alert-warning"}
+RESULT: {"sessionId":"85532cf245d21444ca1d3a46b7e8880f","status":0,"value":[{"ELEMENT":"0.5480020528554668-2"}]}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/85532cf245d21444ca1d3a46b7e8880f/elements - {"using":"css selector","value":".alert-warning"}
+RESULT: {"sessionId":"85532cf245d21444ca1d3a46b7e8880f","status":0,"value":[{"ELEMENT":"0.5480020528554668-2"}]}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/85532cf245d21444ca1d3a46b7e8880f/element/0.5480020528554668-2/text - {}
+RESULT: {"sessionId":"85532cf245d21444ca1d3a46b7e8880f","status":0,"value":"×\ncbioportal-frontend dev mode, using //localhost:3000/ clear"}
+COMMAND: DELETE http://127.0.0.1:4444/wd/hub/session/85532cf245d21444ca1d3a46b7e8880f - {}
+RESULT: {"sessionId":"85532cf245d21444ca1d3a46b7e8880f","status":0,"value":null}
+]]>
+      </system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

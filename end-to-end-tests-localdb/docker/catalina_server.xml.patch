@@ -1,0 +1,11 @@
+--- server.xml.default	2016-07-18 15:10:55.000000000 +0200
++++ server.xml	2016-07-18 15:30:38.000000000 +0200
+@@ -67,6 +67,8 @@
+          Define a non-SSL/TLS HTTP/1.1 Connector on port 8080
+     -->
+     <Connector port="8080" protocol="HTTP/1.1"
++               compression="on"
++               compressableMimeType="text/html,text/xml,application/json,text/plain,text/css,text/javascript,application/javascript"
+                connectionTimeout="20000"
+                redirectPort="8443" />
+     <!-- A "Connector" using the shared thread pool-->
