@@ -432,6 +432,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                             onChange={this.onHeatmapProfileSelect}
                             value={this.props.state.selectedHeatmapProfile}
                             options={this.heatmapProfileOptions}
+                            addAllTitle={"Select all"}
                         />
                         {this.props.state.heatmapIsDynamicallyQueried && [
                             <textarea
