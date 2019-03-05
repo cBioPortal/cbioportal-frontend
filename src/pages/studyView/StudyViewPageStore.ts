@@ -536,10 +536,18 @@ export class StudyViewPageStore {
             cols: cols,
             grid: STUDY_VIEW_CONFIG.layout.grid,
             gridMargin: STUDY_VIEW_CONFIG.layout.gridMargin,
-            layout: calculateLayout(this.visibleAttributes, cols),
+            layout: calculateLayout(this.visibleAttributes, cols, this.currentGridLayout, this.currentFocusedChartByUser),
             dimensions: STUDY_VIEW_CONFIG.layout.dimensions
         };
     }
+
+    @autobind
+    updateCurrentGridLayout(newGridLayout: ReactGridLayout.Layout[]) {
+        this.currentGridLayout = newGridLayout;
+    }
+
+    private currentGridLayout: ReactGridLayout.Layout[] | undefined = undefined;
+    private currentFocusedChartByUser: ChartMeta | undefined = undefined;
 
     public clinicalDataBinPromises: { [id: string]: MobxPromise<DataBin[]> } = {};
     public clinicalDataCountPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
@@ -2192,6 +2200,8 @@ export class StudyViewPageStore {
             this.chartsDimension[attr.uniqueKey] = STUDY_VIEW_CONFIG.layout.dimensions[newChartType];
             this.chartsType.set(attr.uniqueKey, newChartType);
         }
+        this.currentFocusedChartByUser = _.clone(attr);
+        this.currentFocusedChartByUser.dimension = this.chartsDimension[attr.uniqueKey];
     }
 
     readonly defaultVisibleAttributes = remoteData({
