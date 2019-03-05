@@ -21,6 +21,7 @@ import {IReactionDisposer, reaction} from "mobx";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
 import _ from "lodash";
+import ClinicalData from "./ClinicalData";
 
 export enum GroupComparisonTab {
     OVERLAP = "overlap",
@@ -28,7 +29,8 @@ export enum GroupComparisonTab {
     CNA = "cna",
     MRNA = "mrna",
     PROTEIN = "protein",
-    SURVIVAL = "survival"
+    SURVIVAL = "survival",
+    CLINICAL = "clinical"
 }
 
 export interface IGroupComparisonPageProps {
@@ -113,38 +115,41 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 this.store.showSurvivalTab
             ) {
                 return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.setTabId} className="primaryTabs mainTabs">
-                    <MSKTab id={GroupComparisonTab.OVERLAP.toString()} linkText="Overlapping">
+                    <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlapping">
                         <Overlap store={this.store}/>
                     </MSKTab>
                     {
                         this.store.showSurvivalTab &&
-                        <MSKTab id={GroupComparisonTab.SURVIVAL.toString()} linkText="Survival">
+                        <MSKTab id={GroupComparisonTab.SURVIVAL} linkText="Survival">
                             <Survival store={this.store}/>
                         </MSKTab>
                     }
+                    <MSKTab id={GroupComparisonTab.CLINICAL} linkText="Clinical">
+                        <ClinicalData store={this.store}/>
+                    </MSKTab>
                     {this.store.mutationEnrichmentProfiles.result!.length > 0 && (
-                        <MSKTab id={GroupComparisonTab.MUTATIONS.toString()} linkText="Mutations"
+                        <MSKTab id={GroupComparisonTab.MUTATIONS} linkText="Mutations"
                             anchorClassName={this.store.mutationsTabGrey ? "greyedOut" : ""}
                         >
                             <MutationEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.copyNumberEnrichmentProfiles.result!.length > 0 && (
-                        <MSKTab id={GroupComparisonTab.CNA.toString()} linkText="Copy-number"
+                        <MSKTab id={GroupComparisonTab.CNA} linkText="Copy-number"
                             anchorClassName={this.store.copyNumberTabGrey ? "greyedOut" : ""}
                         >
                             <CopyNumberEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.mRNAEnrichmentProfiles.result!.length > 0 && (
-                        <MSKTab id={GroupComparisonTab.MRNA.toString()} linkText="mRNA"
+                        <MSKTab id={GroupComparisonTab.MRNA} linkText="mRNA"
                             anchorClassName={this.store.mRNATabGrey ? "greyedOut" : ""}
                         >
                             <MRNAEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.proteinEnrichmentProfiles.result!.length > 0 && (
-                        <MSKTab id={GroupComparisonTab.PROTEIN.toString()} linkText="Protein"
+                        <MSKTab id={GroupComparisonTab.PROTEIN} linkText="Protein"
                             anchorClassName={this.store.proteinTabGrey ? "greyedOut" : ""}
                         >
                             <ProteinEnrichments store={this.store}/>
