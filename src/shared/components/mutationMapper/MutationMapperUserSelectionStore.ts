@@ -5,6 +5,7 @@ export function initDefaultTrackVisibility(): TrackVisibility {
     return {
         [TrackNames.OncoKB]: 'hidden',
         [TrackNames.CancerHotspots]: 'hidden',
+        [TrackNames.PTM]: 'hidden',
         [TrackNames.PDB]: 'hidden'
     };
 }
