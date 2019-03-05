@@ -2,7 +2,7 @@ import * as React from "react";
 import {observer, Observer} from "mobx-react";
 import {Button, ButtonGroup} from "react-bootstrap";
 import CustomDropdown from "./CustomDropdown";
-import ReactSelect from "react-select";
+import ReactSelect from "react-select-checked";
 import {MobxPromise} from "mobxpromise";
 import {computed, IObservableObject, observable, ObservableMap, reaction} from "mobx";
 import _ from "lodash";
