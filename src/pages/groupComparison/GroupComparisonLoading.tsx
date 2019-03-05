@@ -45,7 +45,7 @@ export default class GroupComparisonLoading extends React.Component<IGroupCompar
 
     render() {
         return (
-            <LoadingIndicator isLoading={true} center={true} size="big">
+            <LoadingIndicator isLoading={true} size="big">
                 <div style={{marginTop:20}}>
                     {this.message}
                 </div>
