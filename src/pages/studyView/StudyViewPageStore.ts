@@ -94,12 +94,13 @@ import {
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import request from 'superagent';
 import {trackStudyViewFilterEvent} from "../../shared/lib/tracking";
-import {Group} from "../../shared/api/ComparisonGroupClient";
+import {Group, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {
     finalizeStudiesAttr,
-    getPieChartGroupFilters,
-    StudyViewComparisonGroup
+    StudyViewComparisonGroup,
+    getNumberAttributeGroupFilters,
+    getStringAttributeGroupFilters
 } from "../groupComparison/GroupComparisonUtils";
 import {getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import client from "../../shared/api/cbioportalClientInstance";
@@ -424,9 +425,124 @@ export class StudyViewPageStore {
         this._comparisonGroupsChangeCount += 1;
     }
 
-    private createPieChartComparisonSession(
+    private async createNumberAttributeComparisonSession(
         clinicalAttribute:ClinicalAttribute,
-        clinicalAttributeValues:{ value:string, color:string}[],
+        statusCallback:(phase:LoadingPhase)=>void
+    ) {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+        return new Promise<string>((resolve)=>{
+            onMobxPromise(this.selectedSamples,
+                async (selectedSamples)=>{
+                    // get clinical data for the given attribute
+                    const entityIdKey = (clinicalAttribute.patientAttribute ? "patientId" : "sampleId")
+                    const data = await client.fetchClinicalDataUsingPOST({
+                        clinicalDataType: clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE",
+                        clinicalDataMultiStudyFilter: {
+                            attributeIds: [clinicalAttribute.clinicalAttributeId],
+                            identifiers: selectedSamples.map(s=>({ studyId: s.studyId, entityId: s[entityIdKey] }))
+                        }
+                    });
+
+                    // sort values
+                    // group into halves, thirds, or fourths, depending on how many distinct values there are
+                    const groupedByValue = _.groupBy(data, d=>parseFloat(d.value));
+                    const distinctValues = _.sortBy(Object.keys(groupedByValue).map(v=>parseFloat(v)));
+
+                    statusCallback(LoadingPhase.CREATING_SESSION);
+                    // create groups using data
+                    let groups:SessionGroupData[];
+                    let patientToSamples:{[uniquePatientKey:string]:SampleIdentifier[]} = {};
+                    if (clinicalAttribute.patientAttribute) {
+                        patientToSamples = _.groupBy(selectedSamples, s=>s.uniquePatientKey);
+                    }
+                    switch (distinctValues.length) {
+                        case 1:
+                        case 2:
+                        case 3:
+                            groups = distinctValues.map(value=>{
+                                let studies;
+                                if (clinicalAttribute.patientAttribute) {
+                                    studies = getStudiesAttr(
+                                        _.flattenDeep<any>(
+                                            groupedByValue[value.toString()].map(d=>{
+                                                return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }))
+                                            })
+                                        ) as SampleIdentifier[]
+                                    )
+                                } else {
+                                    studies = getStudiesAttr(groupedByValue[value.toString()].map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
+                                }
+                                return {
+                                    name: value.toString(),
+                                    description: "",
+                                    studies,
+                                    origin: this.studyIds,
+                                    studyViewFilter: getNumberAttributeGroupFilters(this.filters, clinicalAttribute, [value, value])
+                                };
+                            });
+                            break;
+                        default:
+                            // set up groups for quartiles
+                            // first, get the limit for each quartile
+                            const quartileTops:number[] = [];
+                            for (const q of [1,2,3]) {
+                                quartileTops.push(distinctValues[Math.floor(q*distinctValues.length/4)]);
+                            }
+                            // the last limit is the last element
+                            quartileTops.push(distinctValues[distinctValues.length - 1]);
+
+                            // now group samples into each quartile group
+                            const quartileGroups:ClinicalData[][] = [[], [], [], []];
+                            _.forEach(groupedByValue, (dataWithValue:ClinicalData[], value:string)=>{
+                                let q = 0;
+                                let v = parseFloat(value);
+                                while (v > quartileTops[q]) {
+                                    q += 1;
+                                }
+                                quartileGroups[q] = quartileGroups[q].concat(dataWithValue);
+                            });
+
+                            groups = quartileGroups.map((dataInGroup, index)=>{
+                                let range:[number,number] = [0,0];
+                                if (index === 0) {
+                                    range = [distinctValues[0], quartileTops[0]];
+                                } else {
+                                    range = [quartileTops[index-1], quartileTops[index]];
+                                }
+                                let studies;
+                                if (clinicalAttribute.patientAttribute) {
+                                    studies = getStudiesAttr(
+                                        _.flattenDeep<any>(
+                                            dataInGroup.map(d=>{
+                                                return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }))
+                                            })
+                                        ) as SampleIdentifier[]
+                                    )
+                                } else {
+                                    studies = getStudiesAttr(dataInGroup.map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
+                                }
+                                return {
+                                    name: `${range[0]}-${range[1]}`,
+                                    description: "",
+                                    studies,
+                                    origin: this.studyIds,
+                                    studyViewFilter: getNumberAttributeGroupFilters(this.filters, clinicalAttribute, range)
+                                };
+                            });
+                            break;
+                    }
+
+                    // create session and get id
+                    const {id} = await comparisonClient.addComparisonSession({ groups, clinicalAttribute });
+                    return resolve(id);
+                }
+            );
+        });
+    }
+
+    private createStringAttributeComparisonSession(
+        clinicalAttribute:ClinicalAttribute,
+        clinicalAttributeValues:{ value:string, color?:string}[],
         statusCallback:(phase:LoadingPhase)=>void
     ) {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
@@ -477,7 +593,7 @@ export class StudyViewPageStore {
                             studies: getStudiesAttr(sampleIdentifiers),
                             origin: this.studyIds,
                             color: lcValueToColor[lcValue].color,
-                            studyViewFilter: getPieChartGroupFilters(this.filters, clinicalAttribute, value)
+                            studyViewFilter: getStringAttributeGroupFilters(this.filters, clinicalAttribute, value)
                         };
                     });
                     // create session and get id
@@ -489,7 +605,11 @@ export class StudyViewPageStore {
     }
 
     @autobind
-    public async openComparisonPage(params:{ clinicalAttribute: ClinicalAttribute, clinicalAttributeValues: {value:string, color:string}[]}) {
+    public async openComparisonPage(params:{
+        type:ChartTypeEnum.PIE_CHART|ChartTypeEnum.TABLE|ChartTypeEnum.BAR_CHART,
+        clinicalAttribute: ClinicalAttribute,
+        clinicalAttributeValues?: {value:string, color:string}[]
+    }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
         const comparisonWindow = window.open(getComparisonLoadingUrl({
@@ -501,13 +621,29 @@ export class StudyViewPageStore {
         await sleepUntil(()=>!!(comparisonWindow as any).routingStore);
 
         // save comparison session, and get id
-        const sessionId = await this.createPieChartComparisonSession(
-            params.clinicalAttribute,
-            params.clinicalAttributeValues,
-            (phase:LoadingPhase)=>{
-                (comparisonWindow as any).routingStore.updateRoute({phase}, undefined, false);
-            }
-        );
+        let sessionId:string;
+        switch (params.type) {
+            case ChartTypeEnum.PIE_CHART:
+            case ChartTypeEnum.TABLE:
+                sessionId =
+                    await this.createStringAttributeComparisonSession(
+                        params.clinicalAttribute,
+                        params.clinicalAttributeValues!,
+                        (phase:LoadingPhase)=>{
+                            (comparisonWindow as any).routingStore.updateRoute({phase}, undefined, false);
+                        }
+                    );
+                break;
+            default:
+                sessionId =
+                    await this.createNumberAttributeComparisonSession(
+                        params.clinicalAttribute,
+                        (phase:LoadingPhase)=>{
+                            (comparisonWindow as any).routingStore.updateRoute({phase}, undefined, false);
+                        }
+                    );
+                break;
+        }
 
         // redirect window to correct URL
         redirectToComparisonPage(comparisonWindow!, { sessionId });
