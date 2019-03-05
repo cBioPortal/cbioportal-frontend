@@ -394,6 +394,7 @@ describe('OncoprintUtils', () => {
     });
 
     describe('Treatment ruleset params', () => {
+
         it('Is created from Track Spec param', () => {
             const treatmentTracSpec = {
                 key: 'TREATMENTTRACK_1',
@@ -410,8 +411,8 @@ describe('OncoprintUtils', () => {
                 onRemove: () => {}
             };
 
-            const ruleSetParams = getTreatmentTrackRuleSetParams(treatmentTracSpec);
+            // const ruleSetParams = getTreatmentTrackRuleSetParams(treatmentTracSpec);
 
-
+        });
     });
 });
