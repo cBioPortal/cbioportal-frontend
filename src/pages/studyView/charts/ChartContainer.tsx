@@ -31,7 +31,7 @@ import {
     mutationCountVsCnaTooltip,
     MutationCountVsCnaYBinsMin
 } from "../StudyViewUtils";
-import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
+import {ClinicalAttribute, ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
@@ -48,6 +48,8 @@ export interface IChartContainerDownloadProps {
     type: ChartDownloadType;
     initDownload?: () => Promise<string>;
 }
+
+const COMPARISON_CHART_TYPES:ChartType[] = [ChartTypeEnum.PIE_CHART, ChartTypeEnum.TABLE, ChartTypeEnum.BAR_CHART];
 
 export interface IChartContainerProps {
     chartMeta: ChartMeta;
@@ -68,7 +70,11 @@ export interface IChartContainerProps {
     onGeneSelect?:any;
     isNewlyAdded: (uniqueKey: string) => boolean;
 
-    openComparisonPage:(params:{clinicalAttribute:ClinicalAttribute, clinicalAttributeValues:{ value:string, color:string }[]})=>void;
+    openComparisonPage:(params:{
+        type:ChartType,
+        clinicalAttribute:ClinicalAttribute,
+        clinicalAttributeValues?:{ value:string, color:string }[]
+    })=>void;
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
     patientKeysWithNAInSelectedClinicalData?:MobxPromise<string[]>; // patients which have NA values for filtered clinical attributes
@@ -216,29 +222,42 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     get comparisonPagePossible() {
         return !!this.props.chartMeta.clinicalAttribute &&
             this.props.promise.isComplete &&
-            _.every(this.props.promise.result!, d=>(!!d.value && !!d.color))
-    }
-
-    @autobind
-    @action
-    openComparisonPage() {
-        if (this.comparisonPagePossible) {
-            this.props.openComparisonPage({
-                clinicalAttribute: this.props.chartMeta.clinicalAttribute!,
-                clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]).map(d=>{
-                    return {
-                        value: d.value,
-                        color: d.color
-                    }
-                }),
-            });
-        }
+            this.props.promise.result!.length > 1 &&
+            (COMPARISON_CHART_TYPES.indexOf(this.props.chartMeta.chartType) > -1);
     }
 
     @autobind
     @action
     toggleSurvivalHideNAPatients() {
         this.naPatientsHiddenInSurvival = !this.naPatientsHiddenInSurvival;
+    }
+
+    @autobind
+    @action
+    openComparisonPage() {
+        if (this.comparisonPagePossible) {
+            switch (this.props.chartMeta.chartType) {
+                case ChartTypeEnum.PIE_CHART:
+                case ChartTypeEnum.TABLE:
+                    this.props.openComparisonPage({
+                        type:this.props.chartMeta.chartType,
+                        clinicalAttribute: this.props.chartMeta.clinicalAttribute!,
+                        clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]).map(d=>{
+                            return {
+                                value: d.value,
+                                color: d.color
+                            }
+                        }),
+                    });
+                    break;
+                case ChartTypeEnum.BAR_CHART:
+                    this.props.openComparisonPage({
+                        type:ChartTypeEnum.BAR_CHART,
+                        clinicalAttribute: this.props.chartMeta.clinicalAttribute!
+                    });
+                    break;
+            }
+        }
     }
 
     @computed get survivalChartData() {
