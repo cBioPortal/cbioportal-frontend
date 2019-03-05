@@ -120,7 +120,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             }
             return plotElt;
         },
-        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderPending:()=><Loader isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
@@ -144,7 +144,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 </div>
             </div>
         ),
-        renderPending:()=><LoadingIndicator isLoading={true} center={true} size="big"/>,
+        renderPending:()=><LoadingIndicator isLoading={true} size="big"/>,
         renderError:()=><ErrorMessage/>
     });
 

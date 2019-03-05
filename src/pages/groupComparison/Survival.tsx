@@ -37,7 +37,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.diseaseFreePatientSurvivals.isPending ||
             this.analysisGroups.isPending ||
             this.props.store.patientToAnalysisGroups.isPending) {
-            return <LoadingIndicator isLoading={true} size={"big"} center={true} />;
+            return <LoadingIndicator isLoading={true} size={"big"} />;
         }
 
         let content: any = [];

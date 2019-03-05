@@ -39,7 +39,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                 return this.enrichmentsUI.component;
             }
         },
-        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderPending:()=><Loader isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
@@ -72,7 +72,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                 </div>
             );
         },
-        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderPending:()=><Loader isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
