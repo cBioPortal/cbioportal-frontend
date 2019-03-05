@@ -43,7 +43,7 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
                 return this.enrichmentsUI.component;
             }
         },
-        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderPending:()=><Loader isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
@@ -72,7 +72,7 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
                 </div>
             );
         },
-        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderPending:()=><Loader isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
