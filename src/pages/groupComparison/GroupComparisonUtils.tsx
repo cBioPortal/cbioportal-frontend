@@ -2,7 +2,7 @@ import {MobxPromise} from 'mobxpromise/dist/src/MobxPromise';
 import {ClinicalAttribute, PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 import {GroupComparisonTab} from "./GroupComparisonPage";
-import {ClinicalDataEnrichment, StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {ClinicalDataIntervalFilterValue, ClinicalDataEnrichment, StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
 import {GroupData, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import * as React from "react";
@@ -309,7 +309,40 @@ export function getTabId(pathname:string) {
     }
 }
 
-export function getPieChartGroupFilters(
+export function getNumberAttributeGroupFilters(
+    baseFilters: StudyViewFilter,
+    clinicalAttribute:ClinicalAttribute,
+    range:[number, number]
+) {
+    const clinicalDataType = clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE";
+    const newFilters = _.cloneDeep(baseFilters);
+
+    newFilters.clinicalDataIntervalFilters = newFilters.clinicalDataIntervalFilters || [];
+    const existingFilter = newFilters.clinicalDataIntervalFilters.find(f=>{
+        return f.attributeId === clinicalAttribute.clinicalAttributeId &&
+            f.clinicalDataType === clinicalDataType;
+    });
+
+    if (existingFilter) {
+        existingFilter.values = _.uniqWith(
+            existingFilter.values.concat([{
+                start:range[0],
+                end:range[1]
+            } as ClinicalDataIntervalFilterValue]
+        ), (a:ClinicalDataIntervalFilterValue, b:ClinicalDataIntervalFilterValue)=>{
+            return (a.start === b.start && a.end === b.end);
+        });
+    } else {
+        newFilters.clinicalDataIntervalFilters.push({
+            attributeId: clinicalAttribute.clinicalAttributeId,
+            clinicalDataType,
+            values:[{start:range[0], end:range[1], value:"what"}]
+        });
+    }
+    return newFilters;
+}
+
+export function getStringAttributeGroupFilters(
     baseFilters: StudyViewFilter,
     clinicalAttribute:ClinicalAttribute,
     clinicalAttributeValue:string
