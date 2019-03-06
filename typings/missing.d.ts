@@ -41,3 +41,5 @@ declare module 'little-loader';
 declare module 'igv/dist/igv.esm.js';
 declare module 'react-mfb';
 declare module 'regression';
+declare module 'svg2pdf.js';
+declare module 'jspdf-yworks';
