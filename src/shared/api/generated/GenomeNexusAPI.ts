@@ -385,7 +385,7 @@ export type TranscriptConsequence = {
 
         'gene_symbol': string
 
-        'hgnc_id': number
+        'hgnc_id': string
 
         'hgvsc': string
 
@@ -600,7 +600,7 @@ export default class GenomeNexusAPI {
      * Retrieves VEP annotation for the provided list of variants
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationPOST
-     * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"]
+     * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
@@ -656,7 +656,7 @@ export default class GenomeNexusAPI {
      * Retrieves VEP annotation for the provided list of variants
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationPOST
-     * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"]
+     * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
