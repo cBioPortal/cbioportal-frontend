@@ -2,25 +2,26 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
-import annotationStyles from "./styles/annotation.module.scss";
-import oncogenicIconStyles from "./styles/oncogenicIcon.module.scss";
+import annotationStyles from "../styles/annotation.module.scss";
+import oncogenicIconStyles from "../styles/oncokb/main.module.scss";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {
     oncogenicImageClassNames,
     calcOncogenicScore,
     calcSensitivityLevelScore,
-    calcResistanceLevelScore
+    calcResistanceLevelScore, oncogenicXPosition, oncogenicYPosition, normalizeLevel
 } from "shared/lib/OncoKbUtils";
 import {observable} from "mobx";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import OncokbPubMedCache from "shared/cache/PubMedCache";
-import {errorIcon, loaderIcon} from "./StatusHelpers";
+import {errorIcon, loaderIcon} from "../StatusHelpers";
 import OncoKbTooltip from "./OncoKbTooltip";
 import OncoKbFeedback from "./OncoKbFeedback";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 import AppConfig from "appConfig";
-import {getCurrentURLWithoutHash} from "../../api/urls";
+import {getCurrentURLWithoutHash} from "../../../api/urls";
 import {Modal} from 'react-bootstrap';
+import '../styles/oncokb/oncokb.scss';
 
 export interface IOncoKbProps {
     status: "pending" | "error" | "complete";
@@ -47,10 +48,12 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
     @observable showFeedback:boolean = false;
     @observable tooltipDataLoadComplete:boolean = false;
 
-    public static get ONCOGENIC_ICON_STYLE()
+    private getOncogenicIconsStyle(indicator: IndicatorQueryResp | undefined)
     {
         return {
-            backgroundImage: `url(${require('./images/oncogenic_v2_09302016.png')})`
+            backgroundImage: `url(${require('../images/oncokb_03062019.png')})`,
+            backgroundPositionX: oncogenicXPosition(indicator ? normalizeLevel(indicator.highestSensitiveLevel) : ''),
+            backgroundPositionY: indicator ? (oncogenicYPosition(indicator.oncogenic, indicator.vus, normalizeLevel(indicator.highestResistanceLevel))) : oncogenicYPosition('', false, '')
         };
     }
 
@@ -109,8 +112,8 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
             oncoKbContent = (
                 <span className={`${annotationStyles["annotation-item"]}`}>
                     <i
-                        className={`${oncogenicIconStyles['oncogenic-icon-image']} ${this.oncogenicImageClassNames(this.props.indicator)}`}
-                        style={OncoKB.ONCOGENIC_ICON_STYLE}
+                        className={`${oncogenicIconStyles['oncogenic-icon-image']}`}
+                        style={this.getOncogenicIconsStyle(this.props.indicator)}
                         data-test='oncogenic-icon-image'
                         data-test2={this.props.hugoGeneSymbol}
                     />
@@ -135,6 +138,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
             {
                 oncoKbContent = (
                     <DefaultTooltip
+                        overlayClassName="oncokb-tooltip"
                         overlay={this.tooltipContent}
                         placement="right"
                         trigger={['hover', 'focus']}
@@ -230,30 +234,5 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
 
     private handleFeedbackClose(): void {
         this.showFeedback = false;
-    }
-
-    public oncogenicImageClassNames(indicator?:IndicatorQueryResp):string
-    {
-        let classNames:string[];
-
-        if (indicator && indicator.oncogenic != null)
-        {
-            classNames = oncogenicImageClassNames(
-                indicator.oncogenic,
-                indicator.vus,
-                indicator.highestSensitiveLevel,
-                indicator.highestResistanceLevel
-            );
-        }
-        else
-        {
-            classNames = oncogenicImageClassNames("N/A", false, "", "");
-        }
-
-        classNames = classNames.map(function(name) {
-            return oncogenicIconStyles[name];
-        });
-
-        return classNames.join(' ');
     }
 }
