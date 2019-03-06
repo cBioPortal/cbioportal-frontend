@@ -39,7 +39,7 @@ import {getPatientSurvivals} from "pages/resultsView/SurvivalStoreHelper";
 import {SURVIVAL_CHART_ATTRIBUTES} from "pages/resultsView/survival/SurvivalChart";
 import {COLORS} from "pages/studyView/StudyViewUtils";
 import {AlterationEnrichment, Group} from "../../shared/api/generated/CBioPortalAPIInternal";
-import ListIndexedMap from "shared/lib/ListIndexedMap";
+import ListIndexedMap, {ListIndexedSet} from "shared/lib/ListIndexedMap";
 import {GroupComparisonTab} from "./GroupComparisonPage";
 import {Session} from "../../shared/api/ComparisonGroupClient";
 import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
@@ -131,8 +131,8 @@ export default class GroupComparisonStore {
         groups:ComparisonGroup[],
         overlappingSamples:SampleIdentifier[],
         overlappingPatients:PatientIdentifier[],
-        overlappingSamplesSet:ListIndexedMap<boolean>,
-        overlappingPatientsSet:ListIndexedMap<boolean>
+        overlappingSamplesSet:ListIndexedSet,
+        overlappingPatientsSet:ListIndexedSet
     }>({
         await:()=>[this._remoteGroups],
         invoke:()=>{
@@ -140,13 +140,13 @@ export default class GroupComparisonStore {
             const groups = this._remoteGroups.result!.filter(group=>this.isGroupSelected(group.uid));
             const overlappingSamples = getOverlappingSamples(groups);
             const overlappingPatients = getOverlappingPatients(groups);
-            const overlappingSamplesSet = new ListIndexedMap<boolean>();
-            const overlappingPatientsSet = new ListIndexedMap<boolean>();
+            const overlappingSamplesSet = new ListIndexedSet();
+            const overlappingPatientsSet = new ListIndexedSet();
             for (const sample of overlappingSamples) {
-                overlappingSamplesSet.set(true, sample.studyId, sample.sampleId);
+                overlappingSamplesSet.add(sample.studyId, sample.sampleId);
             }
             for (const patient of overlappingPatients) {
-                overlappingPatientsSet.set(true, patient.studyId, patient.patientId);
+                overlappingPatientsSet.add(patient.studyId, patient.patientId);
             }
             return Promise.resolve({groups, overlappingSamples, overlappingPatients, overlappingSamplesSet, overlappingPatientsSet});
         }

@@ -1,4 +1,4 @@
-import ListIndexedMap from 'shared/lib/ListIndexedMap';
+import ListIndexedMap, {ListIndexedSet} from 'shared/lib/ListIndexedMap';
 import {MobxPromise} from 'mobxpromise/dist/src/MobxPromise';
 import {ClinicalAttribute, PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
@@ -115,7 +115,7 @@ export function getPatientIdentifiers(
 }
 
 export function getOverlappingSamples(
-    groups:ComparisonGroup[]
+    groups:Pick<ComparisonGroup, "studies">[]
 ) {
     // samples that are in at least two selected groups
     const sampleUseCount = new ListIndexedMap<number>();
@@ -140,7 +140,7 @@ export function getOverlappingSamples(
 }
 
 export function getOverlappingPatients(
-    groups:ComparisonGroup[]
+    groups:Pick<ComparisonGroup, "studies">[]
 ) {
     // patients that are in at least two selected groups
     const patientUseCount = new ListIndexedMap<number>();
@@ -241,8 +241,8 @@ export function finalizeStudiesAttr(
 export function getOverlapFilteredGroups(
     groups:ComparisonGroup[],
     info:{
-        overlappingSamplesSet:ListIndexedMap<boolean>,
-        overlappingPatientsSet:ListIndexedMap<boolean>
+        overlappingSamplesSet:ListIndexedSet,
+        overlappingPatientsSet:ListIndexedSet
     }
 ) {
     // filter out overlap
@@ -255,25 +255,29 @@ export function getOverlapFilteredGroups(
         const studies = [];
         for (const study of group.studies) {
             const studyId = study.id;
-            studies.push({
-                id: studyId,
-                samples: study.samples.filter(sampleId=>{
-                    if (overlappingSamplesSet.has(studyId, sampleId)) {
-                        hasOverlappingSamples = true;
-                        return false;
-                    } else {
-                        return true;
-                    }
-                }),
-                patients: study.patients.filter(patientId=>{
-                    if (overlappingPatientsSet.has(studyId, patientId)) {
-                        hasOverlappingPatients = true;
-                        return false;
-                    } else {
-                        return true;
-                    }
-                }),
+            const samples = study.samples.filter(sampleId=>{
+                if (overlappingSamplesSet.has(studyId, sampleId)) {
+                    hasOverlappingSamples = true;
+                    return false;
+                } else {
+                    return true;
+                }
             });
+            const patients = study.patients.filter(patientId=>{
+                if (overlappingPatientsSet.has(studyId, patientId)) {
+                    hasOverlappingPatients = true;
+                    return false;
+                } else {
+                    return true;
+                }
+            });
+            if (samples.length > 0 || patients.length > 0) {
+                studies.push({
+                    id: studyId,
+                    samples,
+                    patients,
+                });
+            }
         }
         return Object.assign({}, group, {
             studies, hasOverlappingSamples, hasOverlappingPatients
