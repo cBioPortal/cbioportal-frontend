@@ -1,6 +1,5 @@
-import fileDownload from 'react-file-download';
-import {default as request, Request} from "superagent";
-import {buildCBioPortalPageUrl} from "../api/urls";
+import svg2pdf from "svg2pdf.js";
+import {jsPDF} from "jspdf-yworks";
 
 function base64ToArrayBuffer(base64:string) {
     const binaryString = window.atob(base64);
@@ -13,49 +12,65 @@ function base64ToArrayBuffer(base64:string) {
     return bytes;
 }
 
-export default function (filename:string, svg:Element, servletUrl?: string) {
-    const req = svgToPdfRequest(svg, servletUrl);
+export default function svgToPdfDownload(fileName: string, svg: any) {
+    const width = svg.scrollWidth || parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!), height = svg.scrollHeight || parseInt((svg.attributes.getNamedItem('height') as Attr).nodeValue!);
 
-    if (!req) {
-       return false;
-    }
-
-    req.end((err, res)=>{
-        if (!err && res.ok) {
-            fileDownload(base64ToArrayBuffer(res.text), filename);
+    // dealing with oncoprint svg (temporarily)
+    (svg as Element).childNodes.forEach(element => {
+        if ((element as Element).attributes.getNamedItem('x') !== null && (element as Element).attributes.getNamedItem('y') !== null && (element as Element).nodeName === 'g') {
+            (element as Element).attributes.removeNamedItem('y');
+            (element as Element).attributes.removeNamedItem('x');
         }
+        (element as ChildNode).childNodes.forEach(child => {
+            if ((child as Element).attributes.getNamedItem('x') !== null && (child as Element).attributes.getNamedItem('y') !== null  && (child as Element).nodeName === 'g') {
+                (child as Element).attributes.removeNamedItem('y');
+                (child as Element).attributes.removeNamedItem('x');
+            }
+        })
     });
-
-    return true;
-}
-
-export function svgToPdfRequest(svg:Element, servletUrl?: string): Request|undefined {
-    const svgelement = "<?xml version='1.0'?>"+replaceUnicodeChars((new XMLSerializer()).serializeToString(svg));
-    const two_megabyte_limit = 2000000;
-
-    if (svgelement.length > two_megabyte_limit) {
-        return undefined;
+    
+    // create a new jsPDF instance
+    let direction = 'l';
+    if (height > width) {
+        direction = 'p';
     }
 
-    const servletURL = servletUrl || buildCBioPortalPageUrl("svgtopdf.do");
-    const filetype = "pdf_data";
-
-    return request.post(servletURL)
-        .type('form')
-        .send({filetype, svgelement});
+    const pdf = new jsPDF(direction, 'pt', [width, height]);
+    
+    // render the svg element
+    svg2pdf(svg, pdf, {
+        xOffset: 0,
+        yOffset: 0,
+        scale: 1
+    });
+    pdf.save(fileName);
 }
 
-export async function svgToPdfPromise(svg:Element, servletUrl?: string) {
-    const res = await svgToPdfRequest(svg, servletUrl);
-
-    if(res && res.ok) {
-        return base64ToArrayBuffer(res.text);
+export function svgToPdfData(svg: Element) : string{
+    const width = svg.scrollWidth || parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!), height = svg.scrollHeight || parseInt((svg.attributes.getNamedItem('height') as Attr).nodeValue!);
+    // create a new jsPDF instance
+    
+    let direction = 'l';
+    if (height > width) {
+        direction = 'p';
     }
+
+    const pdf = new jsPDF(direction, 'pt', [width, height]);
+
+    // render the svg element
+    svg2pdf(svg, pdf, {
+        xOffset: 0,
+        yOffset: 0,
+        scale: 1
+    });
+    // return the svg data, we don't need the header
+    return pdf.output('dataurlstring').split(',').length >= 2 ? pdf.output('dataurlstring').split(',')[1] : "";
 }
 
-// TODO add more characters if needed
-function replaceUnicodeChars(svg: string) {
-    return svg
-        .replace(/≤/g, "&lt;=")
-        .replace(/≥/g, "&gt;=");
+export async function svgToPdfPromise(svg:Element) {
+    const res = await svgToPdfData(svg);
+
+    if(res) {
+        return base64ToArrayBuffer(res);
+    }
 }
