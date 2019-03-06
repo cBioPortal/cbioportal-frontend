@@ -96,7 +96,7 @@ import {trackStudyViewFilterEvent} from "../../shared/lib/tracking";
 import {Group} from "../../shared/api/ComparisonGroupClient";
 import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {
-    filterNonExistentSamples,
+    finalizeStudiesAttr,
     getPieChartGroupFilters,
     StudyViewComparisonGroup
 } from "../groupComparison/GroupComparisonUtils";
@@ -410,7 +410,7 @@ export class StudyViewPageStore {
             this._comparisonGroupsChangeCount;
             if (this.studyIds.length > 0) {
                 const groups = await comparisonClient.getGroupsForStudies(this.studyIds.slice()); // slice because cant pass mobx
-                return groups.map(group=>Object.assign(group.data, { uid: group.id }, filterNonExistentSamples(group.data, this.sampleSet.result!)));
+                return groups.map(group=>Object.assign(group.data, { uid: group.id }, finalizeStudiesAttr(group.data, this.sampleSet.result!)));
             } else {
                 return [];
             }

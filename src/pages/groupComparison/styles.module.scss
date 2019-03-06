@@ -19,7 +19,7 @@
             margin-top:0px;
         }
 
-        :global(.markedForDeletion) {
+        .markedForDeletion {
             color:#888888;
             text-decoration:line-through black;
             display:flex;
