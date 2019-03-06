@@ -196,18 +196,19 @@ export function getNumSamples(
     return _.sum(group.studies.map(study=>study.samples.length));
 }
 
-export function filterNonExistentSamples(
+export function finalizeStudiesAttr(
     groupData:Pick<SessionGroupData, "studies">,
     sampleSet:ListIndexedMap<Sample> // key: [studyId, sampleId]
 ) {
-    // keep track of nonexisting samples, existing patients
+    // (1) filter out, and keep track of nonexisting samples
+    // (2) add `patients` object
     const nonExistentSamples = [];
     const studies = [];
 
     for (const study of groupData.studies) {
         const studyId = study.id;
         const samples = [];
-        const patients = [];
+        let patients = [];
         for (const sampleId of study.samples) {
             const sample = sampleSet.get(studyId, sampleId);
             if (!sample) {
@@ -219,11 +220,14 @@ export function filterNonExistentSamples(
                 patients.push(sample.patientId);
             }
         }
-        studies.push({
-            id: studyId,
-            samples,
-            patients:_.uniq(patients)
-        });
+        patients = _.uniq(patients);
+        if (samples.length > 0 || patients.length > 0) {
+            studies.push({
+                id: studyId,
+                samples,
+                patients
+            });
+        }
     }
 
     return {
@@ -324,14 +328,16 @@ export function getPieChartGroupFilters(
     return newFilters;
 }
 
-export function getMissingSamplesMessage(
-    samples:SampleIdentifier[]
+export function MissingSamplesMessage(
+    props:{
+        samples:SampleIdentifier[]
+    }
 ) {
     return (
         <div style={{width:380}}>
             <div style={{marginBottom:7}}>The following samples cannot be found in our database. They might have been removed or changed since this group was created: </div>
             <div style={{maxHeight:200, overflowY:"scroll"}}>
-                {samples.map(sample=><div>{`${sample.studyId}:${sample.sampleId}`}</div>)}
+                {props.samples.map(sample=><div>{`${sample.studyId}:${sample.sampleId}`}</div>)}
             </div>
         </div>
     );
