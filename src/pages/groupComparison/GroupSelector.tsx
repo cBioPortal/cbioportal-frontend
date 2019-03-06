@@ -22,18 +22,18 @@ export interface IGroupSelectorProps {
 export default class GroupSelector extends React.Component<IGroupSelectorProps,{}> {
     readonly tabUI = MakeMobxView({
         await:()=>[
-            this.props.store.filteredGroups,
+            this.props.store.availableGroups,
             this.props.store.sampleSet
         ],
         render:()=>{
-            if (this.props.store.filteredGroups.result!.length === 0) {
+            if (this.props.store.availableGroups.result!.length === 0) {
                 return null;
             } else {
                 return (
                     <div>
                         <strong>Active Groups: </strong>
                         <div className={styles.groupButtons}>
-                            {this.props.store.filteredGroups.result!.map(group=>{
+                            {this.props.store.availableGroups.result!.map(group=>{
                                 const active = this.props.store.isGroupActive(group);
                                 const sampleIdentifiers = getSampleIdentifiers([group]);
                                 const patientIdentifiers = getPatientIdentifiers(sampleIdentifiers, this.props.store.sampleSet.result!);
