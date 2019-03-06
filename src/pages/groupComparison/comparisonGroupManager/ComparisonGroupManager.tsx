@@ -1,27 +1,16 @@
 import * as React from "react";
+import {SyntheticEvent} from "react";
 import {observer} from "mobx-react";
 import {StudyViewPageStore, UniqueKey} from "../../studyView/StudyViewPageStore";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
-import {SyntheticEvent} from "react";
-import {
-    ComparisonGroup,
-    getDefaultGroupName,
-    getNumSamples,
-    getSampleIdentifiers,
-    StudyViewComparisonGroup
-} from "../GroupComparisonUtils";
-import _ from "lodash";
-import {SampleIdentifier} from "../../../shared/api/generated/CBioPortalAPI";
-import {getComparisonLoadingUrl, getComparisonUrl, redirectToComparisonPage} from "../../../shared/api/urls";
+import {getDefaultGroupName, getSampleIdentifiers, StudyViewComparisonGroup} from "../GroupComparisonUtils";
+import {getComparisonLoadingUrl, redirectToComparisonPage} from "../../../shared/api/urls";
 import styles from "../styles.module.scss";
 import ReactSelect from "react-select";
-import LazyMemo from "../../../shared/lib/LazyMemo";
-import {Group} from "../../../shared/api/ComparisonGroupClient";
 import {remoteData} from "../../../shared/api/remoteData";
-import {getGroupParameters, getSelectedGroups, addSamplesParameters} from "./ComparisonGroupManagerUtils";
+import {addSamplesParameters, getGroupParameters, getSelectedGroups} from "./ComparisonGroupManagerUtils";
 import comparisonClient from "../../../shared/api/comparisonGroupClientInstance";
-import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
@@ -59,7 +48,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         await:()=>[this.props.store.comparisonGroups],
         invoke:()=>Promise.resolve(
             // TODO: fuzzy string search?
-            this.props.store.comparisonGroups.result!.filter(group=>group.name.toLowerCase().indexOf(this.groupNameFilter.toLowerCase()) > -1)
+            this.props.store.comparisonGroups.result!.filter(group=>(new RegExp(this.groupNameFilter, "i")).test(group.name))
         )
     });
 
