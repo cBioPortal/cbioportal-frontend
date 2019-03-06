@@ -50,6 +50,8 @@ export function getCombinations(groups: { uid: string, cases: string[] }[]) {
     return combinations;
 }
 
+export const OVERLAP_GROUP_COLOR = "#CCCCCC";
+
 export function getStackedBarData(groups:{ uid: string, cases:string[] }[], uidToGroup:{[uid:string]:ComparisonGroup}) {
     const overlappingCases = _.intersection(...groups.map(group=>group.cases));
 
@@ -61,7 +63,7 @@ export function getStackedBarData(groups:{ uid: string, cases:string[] }[], uidT
     if (overlappingCases.length > 0) {
         ret.unshift([{
             cases: overlappingCases,
-            fill: "#CCCCCC",
+            fill: OVERLAP_GROUP_COLOR,
             groupName: 'Overlapping Cases'
         }]);
     }
@@ -246,6 +248,7 @@ export function getOverlapFilteredGroups(
     // filter out overlap
     const overlappingSamplesSet = info.overlappingSamplesSet;
     const overlappingPatientsSet = info.overlappingPatientsSet;
+
     return groups.map(group=>{
         let hasOverlappingSamples = false;
         let hasOverlappingPatients = false;
