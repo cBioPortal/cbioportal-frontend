@@ -42,7 +42,7 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
                 return this.enrichmentsUI.component;
             }
         },
-        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderPending:()=><Loader isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
@@ -71,7 +71,7 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
                 </div>
             );
         },
-        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderPending:()=><Loader isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
