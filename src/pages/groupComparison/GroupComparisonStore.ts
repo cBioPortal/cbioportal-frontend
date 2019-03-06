@@ -1,6 +1,6 @@
 import {
     ComparisonGroup,
-    CopyNumberEnrichment, filterNonExistentSamples,
+    CopyNumberEnrichment, finalizeStudiesAttr,
     getOverlapFilteredGroups,
     getOverlappingPatients,
     getOverlappingSamples,
@@ -108,7 +108,7 @@ export default class GroupComparisonStore {
                     colorIndex += 1;
                 }
 
-                const { nonExistentSamples, studies} = filterNonExistentSamples(groupData, sampleSet);
+                const { nonExistentSamples, studies} = finalizeStudiesAttr(groupData, sampleSet);
 
                 ret.push(Object.assign({}, groupData, {
                     color,
