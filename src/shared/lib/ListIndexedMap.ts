@@ -62,3 +62,31 @@ export default class ListIndexedMap<R> {
         return this.map[folderKey];
     }
 }
+
+export class ListIndexedSet {
+    private map:ListIndexedMap<boolean> = new ListIndexedMap<boolean>();
+
+    public static from<T>(objs:T[], key:(t:T)=>string[]):ListIndexedSet {
+        const set = new ListIndexedSet();
+        for (const o of objs) {
+            set.add(...key(o));
+        }
+        return set;
+    }
+
+    public add(...key:string[]) {
+        this.map.set(true, ...key);
+    }
+
+    public delete(...key:string[]) {
+        this.map.set(false, ...key);
+    }
+
+    public has(...key:string[]) {
+        return !!this.map.get(...key);
+    }
+
+    public clear() {
+        this.map = new ListIndexedMap<boolean>();
+    }
+}
