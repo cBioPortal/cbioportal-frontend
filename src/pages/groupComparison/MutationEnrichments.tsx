@@ -39,7 +39,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                 return this.enrichmentsUI.component;
             }
         },
-        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderPending:()=><Loader isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
@@ -71,7 +71,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                 </div>
             );
         },
-        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderPending:()=><Loader isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 

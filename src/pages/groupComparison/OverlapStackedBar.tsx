@@ -38,6 +38,7 @@ export default class OverlapStackedBar extends React.Component<IOverlapStackedBa
     private mouseEvents: any = this.makeMouseEvents();
 
     @observable.ref private container: HTMLDivElement;
+    @observable legendWidth = 0;
 
     private makeMouseEvents() {
         let disappearTimeout: Timer | null = null;
@@ -161,15 +162,11 @@ export default class OverlapStackedBar extends React.Component<IOverlapStackedBa
     }
 
     @computed get chartWidth() {
-        return 2 * STACKBAR_WIDTH + 200;
+        return 2 * STACKBAR_WIDTH;
     }
 
     @computed get chartHeight() {
         return 500;
-    }
-
-    @computed get topPadding() {
-        return 100
     }
 
     @autobind
@@ -225,33 +222,50 @@ export default class OverlapStackedBar extends React.Component<IOverlapStackedBa
         )
     }
 
+    @computed
+    get svgWidth() {
+        return this.chartWidth + this.legendWidth;
+    }
+
+    componentDidUpdate() {
+        if (this.container) {
+            const legend = this.container.getElementsByClassName("overlapStackedBarLegend").item(0);
+            if (legend) {
+                this.legendWidth = legend.getBoundingClientRect().width;
+            }
+        }
+    }
+
     @autobind
     private getChart() {
         return (
             <div
                 ref={this.containerRef}
-                style={{ width: this.chartWidth, height: this.chartHeight }}
+                style={{ width: this.svgWidth, height: this.chartHeight }}
             >
                 <svg
                     id={this.props.svgId || ""}
                     style={{
-                        width: this.chartWidth,
+                        width: this.svgWidth,
                         height: this.chartHeight,
                         pointerEvents: "all"
                     }}
                     height={this.chartHeight}
-                    width={this.chartWidth}
+                    width={this.svgWidth}
                     role="img"
-                    viewBox={`0 0 ${this.chartWidth} ${this.chartHeight}`}
+                    viewBox={`0 0 ${this.svgWidth} ${this.chartHeight}`}
                 >
                     {this.getStackedBar(this.sampleStackedBarData, 'Samples Overlap', this.totalSamplesCount, 0)}
                     {this.getStackedBar(this.patientStackedBarData, 'Patients Overlap', this.totalPatientsCount, 1)}
                     <VictoryLegend
-                        x={2 * STACKBAR_WIDTH}
-                        y={this.topPadding}
+                        x={this.chartWidth}
+                        y={70}
                         theme={CBIOPORTAL_VICTORY_THEME}
                         standalone={false}
-                        data={this.legendData} />
+                        data={this.legendData}
+                        groupComponent={<g className="overlapStackedBarLegend"/>}
+                        itemsPerRow={14}
+                    />
                 </svg>
             </div>
         );
