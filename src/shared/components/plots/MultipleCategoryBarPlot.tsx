@@ -7,15 +7,15 @@ import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles, baseLabelStyles} from "..
 import {getTextWidth} from "../../lib/wrapText";
 import autobind from "autobind-decorator";
 import _ from "lodash";
-import {VictoryAxis, VictoryBar, VictoryChart, VictoryLabel, VictoryStack, VictoryLegend} from "victory";
+import {VictoryAxis, VictoryBar, VictoryChart, VictoryLabel, VictoryStack, VictoryLegend, VictoryGroup} from "victory";
 import Timer = NodeJS.Timer;
 import {tickFormatNumeral} from "./TickUtils";
 import {makeUniqueColorGetter} from "./PlotUtils";
 import {stringListToIndexSet} from "../../lib/StringUtils";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
-import { makePlotData, makeBarSpecs, sortDataByCategory } from "./StackedBarPlotUtils";
+import { makePlotData, makeBarSpecs, sortDataByCategory } from "./MultipleCategoryBarPlotUtils";
 
-export interface IStackedBarPlotProps {
+export interface IMultipleCategoryBarPlotProps {
     svgId?:string;
     domainPadding?:number;
     horzData:IStringAxisData["data"];
@@ -29,11 +29,13 @@ export interface IStackedBarPlotProps {
     axisLabelX?: string;
     axisLabelY?: string;
     legendLocationWidthThreshold?: number;
+    percentage?:boolean;
+    stacked?:boolean;
 }
 
-export interface IStackedBarPlotData {
+export interface IMultipleCategoryBarPlotData {
     minorCategory:string, 
-    counts:{majorCategory:string, count:number}[]
+    counts:{majorCategory:string, count:number, percentage:number}[]
 }
 
 const RIGHT_GUTTER = 120; // room for legend
@@ -48,7 +50,7 @@ const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const COUNT_AXIS_LABEL = "# samples";
 
 @observer
-export default class StackedBarPlot extends React.Component<IStackedBarPlotProps, {}> {
+export default class MultipleCategoryBarPlot extends React.Component<IMultipleCategoryBarPlotProps, {}> {
     @observable.ref tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;
     private mouseEvents:any = this.makeMouseEvents();
@@ -210,16 +212,23 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
         }
     }
 
-    @computed get data():IStackedBarPlotData[] {
+    @computed get data():IMultipleCategoryBarPlotData[] {
         return makePlotData(this.props.horzData, this.props.vertData, !!this.props.horizontalBars);
     }
 
     @computed get maxMajorCount() {
+        if(this.props.percentage){
+            return 100;
+        }
         const majorCategoryCounts:{[major:string]:number} = {};
         for (const d of this.data) {
             for (const c of d.counts) {
                 majorCategoryCounts[c.majorCategory] = majorCategoryCounts[c.majorCategory] || 0;
-                majorCategoryCounts[c.majorCategory] += c.count;
+                if (this.props.stacked) {
+                    majorCategoryCounts[c.majorCategory] += c.count;
+                } else {
+                    majorCategoryCounts[c.majorCategory] = Math.max(c.count, majorCategoryCounts[c.majorCategory]);
+                }
             }
         }
         return _.chain(majorCategoryCounts).values().max().value() as number;
@@ -243,6 +252,10 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
             y = countDomain;
         }
         return { x, y };
+    }
+
+    @computed get offset() {
+        return this.barWidth;
     }
 
     @computed get categoryAxisDomainPadding() {
@@ -280,15 +293,25 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     @computed get chartDomainPadding() {
         return {
             [this.countAxis]:this.countAxisDomainPadding,
-            [this.categoryAxis]:this.categoryAxisDomainPadding
+            [this.categoryAxis]:this.categoryAxisDomainPadding+this.additionalPadding
         };
     }
 
+    @computed get additionalPadding() {
+        //if not stacked add padding to move the bars right
+        return this.props.stacked ? 0 : this.categoryCoord(this.data.length / 2);
+    }
+
     @computed get chartExtent() {
-        const miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
+        let miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
         if (this.data.length > 0) {
-            const numBars = this.data[0].counts.length;
-            return this.categoryCoord(numBars - 1) + 2*this.categoryAxisDomainPadding + miscPadding;
+            let numBars = 0;
+            if (this.props.stacked) {
+                numBars = this.data[0].counts.length;
+            } else {
+                numBars = _.sumBy(this.data, categoryPlotData => categoryPlotData.counts.length);
+            }
+            return this.categoryCoord(numBars - 1) + 2 * (this.categoryAxisDomainPadding) + miscPadding + this.additionalPadding;
         } else {
             return miscPadding;
         }
@@ -331,17 +354,22 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
         return tickFormatNumeral(t, ticks);
     }
 
+    @computed get zeroCountOffset() {
+        //add a small offset when its not a stacked bar to show empty bar
+        return this.props.stacked ? 0 : (0.03 * (this.maxMajorCount / NUM_AXIS_TICKS));
+    }
+
     @computed get horzAxis() {
         // several props below are undefined in horizontal mode, thats because in horizontal mode
         //  this axis is for numbers, not categories
         const label = [this.props.axisLabelX];
         if (this.props.horizontalBars) {
-            label.unshift(COUNT_AXIS_LABEL);
+            label.unshift(`${COUNT_AXIS_LABEL}${this.props.percentage ? " (%)": ""}`);
         }
         return (
             <VictoryAxis
                 orientation="bottom"
-                offsetY={50}
+                offsetY={50 + (this.props.horizontalBars ? 0 : this.zeroCountOffset)}
                 crossAxis={false}
                 label={label}
 
@@ -360,12 +388,12 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     @computed get vertAxis() {
         const label = [this.props.axisLabelY];
         if (!this.props.horizontalBars) {
-            label.push(COUNT_AXIS_LABEL);
+            label.push(`${COUNT_AXIS_LABEL}${this.props.percentage ? " (%)": ""}`);
         }
         return (
             <VictoryAxis
                 orientation="left"
-                offsetX={50}
+                offsetX={50 + (this.props.horizontalBars ? this.zeroCountOffset : 0)}
                 crossAxis={false}
                 label={label}
                 dependentAxis={true}
@@ -483,13 +511,18 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
             this.majorCategoryOrder,
             this.getColor,
             this.categoryCoord,
-            !!this.props.horizontalBars
+            !!this.props.horizontalBars,
+            !!this.props.percentage
         )
         return barSpecs.map(spec=>(
             <VictoryBar
-                horizontal={this.props.horizontalBars}
                 style={{ data: { fill: spec.fill, width:this.barWidth } }}
-                data={ spec.data }
+                data={
+                    _.map(spec.data, datum => ({
+                        ...datum,
+                        y: datum.y + this.zeroCountOffset
+                    }))
+                }
                 events={this.mouseEvents}
             />
         ));
@@ -499,9 +532,20 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
         return (
             <div>
                 <strong>{datum.majorCategory}</strong><br/>
-                <strong>{datum.minorCategory}</strong>:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}
+                <strong>{datum.minorCategory}</strong>:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}&nbsp;({datum.percentage}%)
             </div>
         );
+    }
+
+    @computed get chartEtl() {
+        if (this.props.stacked) {
+            return (<VictoryStack horizontal={this.props.horizontalBars}>
+                {this.bars}
+            </VictoryStack>)
+        }
+        return (<VictoryGroup offset={this.offset} horizontal={this.props.horizontalBars}>
+            {this.bars}
+        </VictoryGroup>)
     }
 
     @autobind
@@ -542,9 +586,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
                                 {this.legend}
                                 {this.horzAxis}
                                 {this.vertAxis}
-                                <VictoryStack>
-                                    {this.bars}
-                                </VictoryStack>
+                                {this.chartEtl}
                             </VictoryChart>
                         </g>
                     </svg>

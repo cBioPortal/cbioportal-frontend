@@ -358,7 +358,7 @@ export function processEvidence(evidences:EvidenceQueryRes[]) {
                         _treatment.tumorType = getTumorTypeFromEvidence(evidence);
                         _treatment.level = evidence.levelOfEvidence;
                         _treatment.content = evidence.treatments;
-                        _treatment.description = description || 'No yet curated';
+                        _treatment.description = description || '';
 
                         if (LEVELS.sensitivity.indexOf(getLevel(evidence.levelOfEvidence)) !== -1) {
                             sensitivityTreatments.push(_treatment);
@@ -439,8 +439,11 @@ export function generateTreatments(evidenceTreatments:any)
                     tumorType: _tumorType,
                     alterations: item.alterations,
                     level: _level,
+                    description: item.description,
                     treatment: _treatment
                 };
+            } else {
+                treatments[_level][_alterations][_treatment][_tumorType].description = [treatments[_level][_alterations][_treatment][_tumorType].description, '<br/>', item.description].join();
             }
             treatments[_level][_alterations][_treatment][_tumorType].articles = _.union(treatments[_level][_alterations][_treatment][_tumorType].articles, item.articles);
         });
@@ -472,6 +475,7 @@ export function generateTreatments(evidenceTreatments:any)
                                 link: article.link
                             };
                         }),
+                        description: content.description,
                         cancerType: content.tumorType
                     });
                 });
