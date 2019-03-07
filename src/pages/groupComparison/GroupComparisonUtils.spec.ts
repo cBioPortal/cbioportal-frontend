@@ -1,18 +1,24 @@
 import chai, {assert, expect} from 'chai';
 import {
     ComparisonGroup,
-   finalizeStudiesAttr, getCombinations, getNumSamples,
-    getOverlapFilteredGroups, getOverlappingPatients, getOverlappingSamples, getSampleIdentifiers,
-    getStackedBarData, getStudyIds,
-    getVennPlotData, OverlapFilteredComparisonGroup
+    finalizeStudiesAttr,
+    getCombinations,
+    getNumSamples,
+    getOverlapFilteredGroups,
+    getOverlappingPatients,
+    getOverlappingSamples,
+    getSampleIdentifiers,
+    getStackedBarData,
+    getStudyIds,
+    getVennPlotData,
+    OverlapFilteredComparisonGroup
 } from './GroupComparisonUtils';
-import { COLORS } from 'pages/studyView/StudyViewUtils';
 import deepEqualInAnyOrder from "deep-equal-in-any-order";
-import {makePlotData} from "../../shared/components/plots/StackedBarPlotUtils";
-import ListIndexedMap, {ListIndexedSet} from "../../shared/lib/ListIndexedMap";
-import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
-import {StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
+import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
+import ListIndexedMap from "../../shared/lib/ListIndexedMap";
 import {Sample} from "../../shared/api/generated/CBioPortalAPI";
+import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
+
 chai.use(deepEqualInAnyOrder);
 
 describe('GroupComparisonUtils', () => {
@@ -190,8 +196,8 @@ describe('GroupComparisonUtils', () => {
                         })
                     ],
                 {
-                    overlappingSamplesSet: ListIndexedSet.from([{ sampleId:"sample1", studyId:"study1"}], x=>[x.studyId, x.sampleId]),
-                    overlappingPatientsSet: ListIndexedSet.from([{ patientId:"patient2", studyId:"study1"}], x=>[x.studyId, x.patientId])
+                    overlappingSamplesSet: ComplexKeySet.from([{ sampleId:"sample1", studyId:"study1"}]),
+                    overlappingPatientsSet: ComplexKeySet.from([{ patientId:"patient2", studyId:"study1"}])
                 }),
                 [makeGroup({
                     name: "group1",
@@ -238,8 +244,8 @@ describe('GroupComparisonUtils', () => {
                     })
                 ],
                 {
-                    overlappingSamplesSet: ListIndexedSet.from([{ sampleId:"sample1", studyId:"study1"}, { sampleId:"sample2", studyId:"study1"}, { sampleId:"sample2", studyId:"study2"}], x=>[x.studyId, x.sampleId]),
-                    overlappingPatientsSet: ListIndexedSet.from([{ patientId:"patient2", studyId:"study1"}, { patientId:"patient1", studyId:"study1"}, { patientId:"patient2", studyId:"study2"}], x=>[x.studyId, x.patientId])
+                    overlappingSamplesSet: ComplexKeySet.from([{ sampleId:"sample1", studyId:"study1"}, { sampleId:"sample2", studyId:"study1"}, { sampleId:"sample2", studyId:"study2"}]),
+                    overlappingPatientsSet: ComplexKeySet.from([{ patientId:"patient2", studyId:"study1"}, { patientId:"patient1", studyId:"study1"}, { patientId:"patient2", studyId:"study2"}])
                 }),
                 [makeGroup({
                     name: "group1",
@@ -280,8 +286,8 @@ describe('GroupComparisonUtils', () => {
         it("gives empty for empty", ()=>{
             assert.deepEqual(getOverlapFilteredGroups([],
                 {
-                    overlappingSamplesSet: ListIndexedSet.from([{ sampleId:"sample1", studyId:"study1"}], x=>[x.studyId, x.sampleId]),
-                    overlappingPatientsSet: ListIndexedSet.from([{ patientId:"patient2", studyId:"study1"}], x=>[x.studyId, x.patientId])
+                    overlappingSamplesSet: ComplexKeySet.from([{ sampleId:"sample1", studyId:"study1"}]),
+                    overlappingPatientsSet: ComplexKeySet.from([{ patientId:"patient2", studyId:"study1"}])
                 }),
                 []);
         });
@@ -593,11 +599,11 @@ describe('GroupComparisonUtils', () => {
     });
 
     describe("finalizeStudiesAttr", ()=>{
-        const sampleSet = ListIndexedMap.from([
+        const sampleSet = ComplexKeyMap.from([
             {studyId:"1", sampleId:"1", patientId:"1"}, {studyId:"1", sampleId:"2", patientId:"1"},
             {studyId:"2", sampleId:"2", patientId:"1"}, {studyId:"2", sampleId:"4", patientId:"4"},
             {studyId:"3", sampleId:"1", patientId:"1"}
-        ] as Sample[], s=>[s.studyId, s.sampleId]);
+        ] as Sample[], s=>({studyId: s.studyId, sampleId: s.sampleId}));
 
         it("empty for empty", ()=>{
             assert.deepEqual(finalizeStudiesAttr({studies:[]}, sampleSet), {

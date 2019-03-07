@@ -1,12 +1,14 @@
-import ListIndexedMap, {ListIndexedSet} from 'shared/lib/ListIndexedMap';
 import {MobxPromise} from 'mobxpromise/dist/src/MobxPromise';
 import {ClinicalAttribute, PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 import {GroupComparisonTab} from "./GroupComparisonPage";
-import {StudyViewFilter, ClinicalDataEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {ClinicalDataEnrichment, StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
 import {GroupData, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import * as React from "react";
+import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
+import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
+import ComplexKeyCounter from "../../shared/lib/complexKeyDataStructures/ComplexKeyCounter";
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -102,11 +104,11 @@ export function caseCountsInParens(
 
 export function getPatientIdentifiers(
     sampleIdentifiers:SampleIdentifier[],
-    sampleSet:ListIndexedMap<Sample>
+    sampleSet:ComplexKeyMap<Sample>
 ) {
     const patientSet:{[uniquePatientKey:string]:PatientIdentifier} = {};
     for (const sampleId of sampleIdentifiers) {
-        const sample = sampleSet.get(sampleId.studyId, sampleId.sampleId);
+        const sample = sampleSet.get({studyId:sampleId.studyId, sampleId: sampleId.sampleId});
         if (sample && !(sample.uniquePatientKey in patientSet)) {
             patientSet[sample.uniquePatientKey] = { patientId: sample.patientId, studyId: sample.studyId};
         }
@@ -118,22 +120,19 @@ export function getOverlappingSamples(
     groups:Pick<ComparisonGroup, "studies">[]
 ) {
     // samples that are in at least two selected groups
-    const sampleUseCount = new ListIndexedMap<number>();
+    const sampleUseCount = new ComplexKeyCounter();
     for (const group of groups) {
         for (const study of group.studies) {
             const studyId = study.id;
             for (const sampleId of study.samples) {
-                sampleUseCount.set(
-                    (sampleUseCount.get(studyId, sampleId) || 0) + 1,
-                    studyId, sampleId
-                );
+                sampleUseCount.increment({ studyId, sampleId });
             }
         }
     }
     const overlapping = [];
     for (const entry of sampleUseCount.entries()) {
         if (entry.value > 1) {
-            overlapping.push({ studyId: entry.key[0], sampleId: entry.key[1] });
+            overlapping.push(entry.key as SampleIdentifier);
         }
     }
     return overlapping;
@@ -143,22 +142,19 @@ export function getOverlappingPatients(
     groups:Pick<ComparisonGroup, "studies">[]
 ) {
     // patients that are in at least two selected groups
-    const patientUseCount = new ListIndexedMap<number>();
+    const patientUseCount = new ComplexKeyCounter();
     for (const group of groups) {
         for (const study of group.studies) {
             const studyId = study.id;
             for (const patientId of study.patients) {
-                patientUseCount.set(
-                    (patientUseCount.get(studyId, patientId) || 0) + 1,
-                    studyId, patientId
-                );
+                patientUseCount.increment({ studyId, patientId });
             }
         }
     }
     const overlapping = [];
     for (const entry of patientUseCount.entries()) {
         if (entry.value > 1) {
-            overlapping.push({ studyId: entry.key[0], patientId: entry.key[1] });
+            overlapping.push(entry.key as PatientIdentifier);
         }
     }
     return overlapping;
@@ -200,7 +196,7 @@ export function getNumSamples(
 
 export function finalizeStudiesAttr(
     groupData:Pick<SessionGroupData, "studies">,
-    sampleSet:ListIndexedMap<Sample> // key: [studyId, sampleId]
+    sampleSet:ComplexKeyMap<Sample>
 ) {
     // (1) filter out, and keep track of nonexisting samples
     // (2) add `patients` object
@@ -212,7 +208,7 @@ export function finalizeStudiesAttr(
         const samples = [];
         let patients = [];
         for (const sampleId of study.samples) {
-            const sample = sampleSet.get(studyId, sampleId);
+            const sample = sampleSet.get({studyId, sampleId});
             if (!sample) {
                 // filter out, and keep track of, nonexisting sample
                 nonExistentSamples.push({ studyId, sampleId });
@@ -241,8 +237,8 @@ export function finalizeStudiesAttr(
 export function getOverlapFilteredGroups(
     groups:ComparisonGroup[],
     info:{
-        overlappingSamplesSet:ListIndexedSet,
-        overlappingPatientsSet:ListIndexedSet
+        overlappingSamplesSet:ComplexKeySet,
+        overlappingPatientsSet:ComplexKeySet
     }
 ) {
     // filter out overlap
@@ -256,7 +252,7 @@ export function getOverlapFilteredGroups(
         for (const study of group.studies) {
             const studyId = study.id;
             const nonOverlappingSamples = study.samples.filter(sampleId=>{
-                if (overlappingSamplesSet.has(studyId, sampleId)) {
+                if (overlappingSamplesSet.has({studyId, sampleId})) {
                     hasOverlappingSamples = true;
                     return false;
                 } else {
@@ -264,7 +260,7 @@ export function getOverlapFilteredGroups(
                 }
             });
             const nonOverlappingPatients = study.patients.filter(patientId=>{
-                if (overlappingPatientsSet.has(studyId, patientId)) {
+                if (overlappingPatientsSet.has({studyId, patientId})) {
                     hasOverlappingPatients = true;
                     return false;
                 } else {
