@@ -46,9 +46,9 @@ import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCal
 import {getStudiesAttr} from "./comparisonGroupManager/ComparisonGroupManagerUtils";
 
 export enum OverlapStrategy {
-    INCLUDE = "INCLUDE",
-    EXCLUDE = "EXCLUDE",
-    GROUP = "GROUP"
+    INCLUDE = "Include overlapping samples",
+    EXCLUDE = "Exclude overlapping samples",
+    GROUP = "Treat overlapping samples as a separate group"
 }
 
 export default class GroupComparisonStore {
@@ -61,7 +61,7 @@ export default class GroupComparisonStore {
         this.sessionId = sessionId;
     }
 
-    @computed get currentTabId() {
+    get currentTabId() {
         return this._currentTabId;
     }
 
@@ -70,7 +70,7 @@ export default class GroupComparisonStore {
         this._currentTabId = id;
     }
 
-    @computed get overlapStrategy() {
+    get overlapStrategy() {
         return this._overlapStrategy;
     }
 

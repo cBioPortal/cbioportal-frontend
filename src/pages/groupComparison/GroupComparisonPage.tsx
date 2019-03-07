@@ -22,7 +22,7 @@ import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
 import _ from "lodash";
 import ClinicalData from "./ClinicalData";
-import ReactSelect from "react-select";
+import ReactSelect from "react-select2";
 
 export enum GroupComparisonTab {
     OVERLAP = "overlap",
@@ -197,15 +197,16 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         } 
     });
 
-    @computed get overlapStrategySelector() {
-        if (this.store._selectionInfo.isComplete) {
-            if (this.store._selectionInfo.result.overlappingSamples.length === 0 &&
-            this.store._selectionInfo.result.overlappingPatients.length === 0) {
+    readonly overlapStrategySelector = MakeMobxView({
+        await:()=>[this.store._selectionInfo],
+        render:()=>{
+            if (this.store._selectionInfo.result!.overlappingSamples.length === 0 &&
+                this.store._selectionInfo.result!.overlappingPatients.length === 0) {
                 return null;
             } else {
                 // (${caseCountsInParens(this.store._selectionInfo.result.overlappingSamples, this.store._selectionInfo.result.overlappingPatients)})
                 return (
-                    <div style={{width:333, zIndex:20}}>
+                    <div style={{width:355, zIndex:20}}>
                         <ReactSelect
                             name="select overlap strategy"
                             onChange={(option:any|null)=>{
@@ -214,19 +215,19 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                                 }
                             }}
                             options={[
-                                { label: "Include overlapping samples", value: OverlapStrategy.INCLUDE},
-                                { label: `Exclude overlapping samples`, value: OverlapStrategy.EXCLUDE},
-                                { label: "Treat overlapping samples as a separate group", value: OverlapStrategy.GROUP }
+                                { label: OverlapStrategy.INCLUDE, value: OverlapStrategy.INCLUDE},
+                                { label: OverlapStrategy.EXCLUDE, value: OverlapStrategy.EXCLUDE},
+                                { label: OverlapStrategy.GROUP, value: OverlapStrategy.GROUP }
                             ]}
                             clearable={false}
                             searchable={false}
-                            value={this.store.overlapStrategy}
+                            value={{ label: this.store.overlapStrategy, value: this.store.overlapStrategy}}
                         />
                     </div>
                 );
             }
         }
-    }
+    });
 
     render() {
         if (!this.store) {
@@ -243,7 +244,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                                 <GroupSelector
                                     store = {this.store}
                                 />
-                                {this.overlapStrategySelector}
+                                {this.overlapStrategySelector.component}
                             </div>
                         </div>
                     </div>

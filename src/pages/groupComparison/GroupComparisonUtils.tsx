@@ -255,7 +255,7 @@ export function getOverlapFilteredGroups(
         const studies = [];
         for (const study of group.studies) {
             const studyId = study.id;
-            const samples = study.samples.filter(sampleId=>{
+            const nonOverlappingSamples = study.samples.filter(sampleId=>{
                 if (overlappingSamplesSet.has(studyId, sampleId)) {
                     hasOverlappingSamples = true;
                     return false;
@@ -263,7 +263,7 @@ export function getOverlapFilteredGroups(
                     return true;
                 }
             });
-            const patients = study.patients.filter(patientId=>{
+            const nonOverlappingPatients = study.patients.filter(patientId=>{
                 if (overlappingPatientsSet.has(studyId, patientId)) {
                     hasOverlappingPatients = true;
                     return false;
@@ -271,11 +271,11 @@ export function getOverlapFilteredGroups(
                     return true;
                 }
             });
-            if (samples.length > 0 || patients.length > 0) {
+            if (nonOverlappingSamples.length > 0 || nonOverlappingPatients.length > 0) {
                 studies.push({
                     id: studyId,
-                    samples,
-                    patients,
+                    samples: nonOverlappingSamples,
+                    patients: nonOverlappingPatients,
                 });
             }
         }
