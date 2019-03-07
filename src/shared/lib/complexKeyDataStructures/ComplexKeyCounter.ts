@@ -14,4 +14,8 @@ export default class ComplexKeyCounter {
     public clear() {
         this.map.clear();
     }
+
+    public entries() {
+        return this.map.entries();
+    }
 }

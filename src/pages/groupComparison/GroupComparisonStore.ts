@@ -39,11 +39,12 @@ import {getPatientSurvivals} from "pages/resultsView/SurvivalStoreHelper";
 import {SURVIVAL_CHART_ATTRIBUTES} from "pages/resultsView/survival/SurvivalChart";
 import {COLORS} from "pages/studyView/StudyViewUtils";
 import {AlterationEnrichment, Group} from "../../shared/api/generated/CBioPortalAPIInternal";
-import ListIndexedMap, {ListIndexedSet} from "shared/lib/ListIndexedMap";
 import {GroupComparisonTab} from "./GroupComparisonPage";
 import {Session} from "../../shared/api/ComparisonGroupClient";
 import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {getStudiesAttr} from "./comparisonGroupManager/ComparisonGroupManagerUtils";
+import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
+import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples",
@@ -131,8 +132,8 @@ export default class GroupComparisonStore {
         groups:ComparisonGroup[],
         overlappingSamples:SampleIdentifier[],
         overlappingPatients:PatientIdentifier[],
-        overlappingSamplesSet:ListIndexedSet,
-        overlappingPatientsSet:ListIndexedSet
+        overlappingSamplesSet:ComplexKeySet,
+        overlappingPatientsSet:ComplexKeySet
     }>({
         await:()=>[this._remoteGroups],
         invoke:()=>{
@@ -140,13 +141,13 @@ export default class GroupComparisonStore {
             const groups = this._remoteGroups.result!.filter(group=>this.isGroupSelected(group.uid));
             const overlappingSamples = getOverlappingSamples(groups);
             const overlappingPatients = getOverlappingPatients(groups);
-            const overlappingSamplesSet = new ListIndexedSet();
-            const overlappingPatientsSet = new ListIndexedSet();
+            const overlappingSamplesSet = new ComplexKeySet();
+            const overlappingPatientsSet = new ComplexKeySet();
             for (const sample of overlappingSamples) {
-                overlappingSamplesSet.add(sample.studyId, sample.sampleId);
+                overlappingSamplesSet.add({ studyId: sample.studyId, sampleId: sample.sampleId });
             }
             for (const patient of overlappingPatients) {
-                overlappingPatientsSet.add(patient.studyId, patient.patientId);
+                overlappingPatientsSet.add({ studyId: patient.studyId, patientId: patient.patientId });
             }
             return Promise.resolve({groups, overlappingSamples, overlappingPatients, overlappingSamplesSet, overlappingPatientsSet});
         }
@@ -523,9 +524,9 @@ export default class GroupComparisonStore {
             this.samples
         ],
         invoke: () => {
-            const sampleSet = new ListIndexedMap<Sample>();
+            const sampleSet = new ComplexKeyMap<Sample>();
             for (const sample of this.samples.result!) {
-                sampleSet.set(sample, sample.studyId, sample.sampleId);
+                sampleSet.set({ studyId: sample.studyId, sampleId: sample.sampleId}, sample);
             }
             return Promise.resolve(sampleSet);
         }
@@ -564,7 +565,7 @@ export default class GroupComparisonStore {
                 next.studies.forEach(study=>{
                     const studyId = study.id;
                     study.samples.forEach(sampleId => {
-                        let sample = sampleSet.get(studyId, sampleId);
+                        let sample = sampleSet.get({studyId, sampleId});
                         if (sample) {
                             let groups = acc[sample.uniquePatientKey] || [];
                             groups.push(next.uid);
