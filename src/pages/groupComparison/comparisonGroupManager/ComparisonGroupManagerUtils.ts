@@ -2,13 +2,13 @@ import {Group, GroupData} from "../../../shared/api/ComparisonGroupClient";
 import {StudyViewPageStore} from "../../studyView/StudyViewPageStore";
 import {SampleIdentifier} from "../../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
-import {getSampleIdentifiers} from "../GroupComparisonUtils";
+import {getSampleIdentifiers, StudyViewComparisonGroup} from "../GroupComparisonUtils";
 
 export function getSelectedGroups(
-    allGroups:Group[],
+    allGroups:StudyViewComparisonGroup[],
     store:StudyViewPageStore
 ) {
-    return allGroups.filter(group=>store.isComparisonGroupSelected(group.id));
+    return allGroups.filter(group=>store.isComparisonGroupSelected(group.uid));
 }
 
 export function getStudiesAttr(sampleIdentifiers:SampleIdentifier[]) {

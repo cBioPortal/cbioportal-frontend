@@ -1,8 +1,16 @@
 import chai, {assert, expect} from 'chai';
-import {ComparisonGroup, getCombinations, getStackedBarData, getVennPlotData} from './GroupComparisonUtils';
+import {
+    ComparisonGroup,
+    finalizeStudiesAttr,
+    getCombinations,
+    getStackedBarData,
+    getVennPlotData
+} from './GroupComparisonUtils';
 import { COLORS } from 'pages/studyView/StudyViewUtils';
 import deepEqualInAnyOrder from "deep-equal-in-any-order";
 import {makePlotData} from "../../shared/components/plots/StackedBarPlotUtils";
+import ListIndexedMap from "../../shared/lib/ListIndexedMap";
+import {Sample} from "../../shared/api/generated/CBioPortalAPI";
 chai.use(deepEqualInAnyOrder);
 
 describe('GroupComparisonUtils', () => {
@@ -155,4 +163,54 @@ describe('GroupComparisonUtils', () => {
         });
     });
 
+    describe("finalizeStudiesAttr", ()=>{
+        const sampleSet = ListIndexedMap.from([
+            {studyId:"1", sampleId:"1", patientId:"1"}, {studyId:"1", sampleId:"2", patientId:"1"},
+            {studyId:"2", sampleId:"2", patientId:"1"}, {studyId:"2", sampleId:"4", patientId:"4"},
+            {studyId:"3", sampleId:"1", patientId:"1"}
+        ] as Sample[], s=>[s.studyId, s.sampleId]);
+
+        it("empty for empty", ()=>{
+            assert.deepEqual(finalizeStudiesAttr({studies:[]}, sampleSet), {
+                nonExistentSamples:[],
+                studies:[]
+            });
+        });
+
+        it("all samples existing", ()=>{
+            (expect(finalizeStudiesAttr({ studies: [
+                    { id: "1", samples:["1", "2"]},
+                    { id: "2", samples:["4"]},
+                    { id: "3", samples:["1"]}
+            ]}, sampleSet)).to.deep as any).equalInAnyOrder({
+                nonExistentSamples:[],
+                studies:[
+                    { id: "1", samples:["1", "2"], patients:["1"]},
+                    { id: "2", samples:["4"], patients:["4"]},
+                    { id: "3", samples:["1"], patients:["1"]}
+                ]
+            });
+        });
+
+        it("some samples not existing", ()=>{
+            (expect(finalizeStudiesAttr({ studies: [
+                    { id: "1", samples:["1", "2", "3", "4"]},
+                    { id: "2", samples:["2", "3", "4"]},
+                    { id: "3", samples:["2","3","4"]}
+                ]}, sampleSet)).to.deep as any).equalInAnyOrder({
+                nonExistentSamples:[
+                    {studyId:"1", sampleId:"3"},
+                    {studyId:"1", sampleId:"4"},
+                    {studyId:"2", sampleId:"3"},
+                    {studyId:"3", sampleId:"2"},
+                    {studyId:"3", sampleId:"3"},
+                    {studyId:"3", sampleId:"4"}
+                ],
+                studies:[
+                    { id: "1", samples:["1", "2"], patients:["1"]},
+                    { id: "2", samples:["2","4"], patients:["1", "4"]}
+                ]
+            });
+        });
+    });
 });

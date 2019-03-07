@@ -1,6 +1,6 @@
 import {
     ComparisonGroup,
-    CopyNumberEnrichment,
+    CopyNumberEnrichment, finalizeStudiesAttr,
     getOverlapFilteredGroups,
     getOverlappingPatients,
     getOverlappingSamples,
@@ -108,31 +108,7 @@ export default class GroupComparisonStore {
                     colorIndex += 1;
                 }
 
-                // keep track of nonexisting samples, existing patients
-                const nonExistentSamples = [];
-                const studies = [];
-
-                for (const study of groupData.studies) {
-                    const studyId = study.id;
-                    const samples = [];
-                    const patients = [];
-                    for (const sampleId of study.samples) {
-                        const sample = sampleSet.get(studyId, sampleId);
-                        if (!sample) {
-                            // filter out, and keep track of, nonexisting sample
-                            nonExistentSamples.push({ studyId, sampleId });
-                        } else {
-                            // add sample and corresponding patient
-                            samples.push(sampleId);
-                            patients.push(sample.patientId);
-                        }
-                    }
-                    studies.push({
-                        id: studyId,
-                        samples,
-                        patients: _.uniq(patients)
-                    });
-                }
+                const { nonExistentSamples, studies} = finalizeStudiesAttr(groupData, sampleSet);
 
                 ret.push(Object.assign({}, groupData, {
                     color,

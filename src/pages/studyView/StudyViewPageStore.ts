@@ -95,11 +95,16 @@ import request from 'superagent';
 import {trackStudyViewFilterEvent} from "../../shared/lib/tracking";
 import {Group} from "../../shared/api/ComparisonGroupClient";
 import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
-import {getPieChartGroupFilters} from "../groupComparison/GroupComparisonUtils";
+import {
+    finalizeStudiesAttr,
+    getPieChartGroupFilters,
+    StudyViewComparisonGroup
+} from "../groupComparison/GroupComparisonUtils";
 import {getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import client from "../../shared/api/cbioportalClientInstance";
 import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
+import ListIndexedMap from "../../shared/lib/ListIndexedMap";
 
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
@@ -377,8 +382,8 @@ export class StudyViewPageStore {
             this.comparisonGroups,
             groups=>{
                 for (const group of groups) {
-                    if (this.isComparisonGroupSelected(group.id)) {
-                        this.toggleComparisonGroupMarkedForDeletion(group.id);
+                    if (this.isComparisonGroupSelected(group.uid)) {
+                        this.toggleComparisonGroupMarkedForDeletion(group.uid);
                     }
                 }
             }
@@ -398,14 +403,16 @@ export class StudyViewPageStore {
         this.notifyComparisonGroupsChange();
     }
 
-    readonly comparisonGroups = remoteData<Group[]>({
-        invoke:()=>{
+    readonly comparisonGroups = remoteData<StudyViewComparisonGroup[]>({
+        await:()=>[this.sampleSet],
+        invoke:async()=>{
             // reference this so its responsive to changes
             this._comparisonGroupsChangeCount;
             if (this.studyIds.length > 0) {
-                return comparisonClient.getGroupsForStudies(this.studyIds.slice()); // slice because cant pass mobx
+                const groups = await comparisonClient.getGroupsForStudies(this.studyIds.slice()); // slice because cant pass mobx
+                return groups.map(group=>Object.assign(group.data, { uid: group.id }, finalizeStudiesAttr(group.data, this.sampleSet.result!)));
             } else {
-                return Promise.resolve([]);
+                return [];
             }
         }
     });
@@ -2537,6 +2544,20 @@ export class StudyViewPageStore {
         onError: (error => {}),
         default: []
     });
+
+    public readonly sampleSet = remoteData({
+        await: () => [
+            this.samples
+        ],
+        invoke: () => {
+            const sampleSet = new ListIndexedMap<Sample>();
+            for (const sample of this.samples.result!) {
+                sampleSet.set(sample, sample.studyId, sample.sampleId);
+            }
+            return Promise.resolve(sampleSet);
+        }
+    });
+
 
     readonly invalidSampleIds = remoteData<SampleIdentifier[]>({
         await: () => [this.queriedSampleIdentifiers, this.samples],
