@@ -105,6 +105,7 @@ import client from "../../shared/api/cbioportalClientInstance";
 import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ListIndexedMap from "../../shared/lib/ListIndexedMap";
+import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
@@ -2550,9 +2551,9 @@ export class StudyViewPageStore {
             this.samples
         ],
         invoke: () => {
-            const sampleSet = new ListIndexedMap<Sample>();
+            const sampleSet = new ComplexKeyMap<Sample>();
             for (const sample of this.samples.result!) {
-                sampleSet.set(sample, sample.studyId, sample.sampleId);
+                sampleSet.set({studyId: sample.studyId, sampleId: sample.sampleId}, sample);
             }
             return Promise.resolve(sampleSet);
         }
