@@ -1,16 +1,21 @@
 import * as _ from 'lodash';
 
 // Default grey
+export const BLACK = '#000000';
 export const LIGHT_GREY = '#D3D3D3';
 export const DEFAULT_GREY = "#BEBEBE";
 export const DARK_GREY = '#A9A9A9';
+
+// icon colors
+export const ICON_FILTER_ON = BLACK;
+export const ICON_FILTER_OFF = DEFAULT_GREY;
 
 // Mutation colors
 export const MUT_COLOR_MISSENSE = '#008000';
 export const MUT_COLOR_MISSENSE_PASSENGER = '#53D400';
 export const MUT_COLOR_INFRAME = '#993404';
 export const MUT_COLOR_INFRAME_PASSENGER = '#a68028';
-export const MUT_COLOR_TRUNC = '#000000';
+export const MUT_COLOR_TRUNC = BLACK;
 export const MUT_COLOR_TRUNC_PASSENGER = '#708090';
 export const MUT_COLOR_FUSION = '#8B00C9';
 export const MUT_COLOR_PROMOTER = '#00B7CE';
