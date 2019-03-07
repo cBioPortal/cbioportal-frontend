@@ -1,21 +1,16 @@
 import * as React from "react";
+import {SyntheticEvent} from "react";
 import {observer} from "mobx-react";
 import {StudyViewPageStore, UniqueKey} from "../../studyView/StudyViewPageStore";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
-import {SyntheticEvent} from "react";
-import {ComparisonGroup, getDefaultGroupName, getNumSamples, getSampleIdentifiers} from "../GroupComparisonUtils";
-import _ from "lodash";
-import {SampleIdentifier} from "../../../shared/api/generated/CBioPortalAPI";
-import {getComparisonLoadingUrl, getComparisonUrl, redirectToComparisonPage} from "../../../shared/api/urls";
+import {getDefaultGroupName, getSampleIdentifiers, StudyViewComparisonGroup} from "../GroupComparisonUtils";
+import {getComparisonLoadingUrl, redirectToComparisonPage} from "../../../shared/api/urls";
 import styles from "../styles.module.scss";
 import ReactSelect from "react-select";
-import LazyMemo from "../../../shared/lib/LazyMemo";
-import {Group} from "../../../shared/api/ComparisonGroupClient";
 import {remoteData} from "../../../shared/api/remoteData";
-import {getGroupParameters, getSelectedGroups, addSamplesParameters} from "./ComparisonGroupManagerUtils";
+import {addSamplesParameters, getGroupParameters, getSelectedGroups} from "./ComparisonGroupManagerUtils";
 import comparisonClient from "../../../shared/api/comparisonGroupClientInstance";
-import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
@@ -53,7 +48,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         await:()=>[this.props.store.comparisonGroups],
         invoke:()=>Promise.resolve(
             // TODO: fuzzy string search?
-            this.props.store.comparisonGroups.result!.filter(group=>group.data.name.toLowerCase().indexOf(this.groupNameFilter.toLowerCase()) > -1)
+            this.props.store.comparisonGroups.result!.filter(group=>(new RegExp(this.groupNameFilter, "i")).test(group.name))
         )
     });
 
@@ -97,8 +92,8 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     }
 
     @autobind
-    private restoreGroup(group:Group) {
-        this.props.store.toggleComparisonGroupMarkedForDeletion(group.id);
+    private restoreGroup(group:StudyViewComparisonGroup) {
+        this.props.store.toggleComparisonGroupMarkedForDeletion(group.uid);
     }
 
     private readonly groupsSection = MakeMobxView({
@@ -116,7 +111,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                                 <GroupCheckbox
                                     group={group}
                                     store={this.props.store}
-                                    markedForDeletion={this.props.store.isComparisonGroupMarkedForDeletion(group.id)}
+                                    markedForDeletion={this.props.store.isComparisonGroupMarkedForDeletion(group.uid)}
                                     restore={this.restoreGroup}
                                 />
                             ))
@@ -163,7 +158,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                         this.props.store.updateChartSampleIdentifierFilter(
                             UniqueKey.SELECTED_COMPARISON_GROUPS,
                             getSampleIdentifiers(
-                                getSelectedGroups(this.props.store.comparisonGroups.result!, this.props.store).map(group=>group.data)
+                                getSelectedGroups(this.props.store.comparisonGroups.result!, this.props.store)
                             )
                         );
                     }}
@@ -192,7 +187,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                             await sleepUntil(()=>!!(comparisonWindow as any).routingStore);
 
                             // save comparison session, and get id
-                            const groups = this.props.store.comparisonGroups.result!.map(group=>group.data);
+                            const groups = this.props.store.comparisonGroups.result!;
                             const {id} = await comparisonClient.addComparisonSession({groups});
 
                             // redirect window to correct URL
@@ -297,8 +292,8 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                                     placeholder="Select or search.."
                                     onChange={(option:any|null)=>{ if (option) { this.addSamplesTargetGroupId = option.value; }}}
                                     options={this.props.store.comparisonGroups.result!.map(group=>({
-                                        label: group.data.name,
-                                        value: group.id
+                                        label: group.name,
+                                        value: group.uid
                                     }))}
                                     clearable={false}
                                     searchable={true}
@@ -310,7 +305,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                                 style={{width:createOrAddButtonWidth}}
                                 onClick={async()=>{
                                     if (selectedSamples) {
-                                        const group = this.props.store.comparisonGroups.result!.find(x=>x.id === this.addSamplesTargetGroupId)!.data;
+                                        const group = this.props.store.comparisonGroups.result!.find(x=>x.uid === this.addSamplesTargetGroupId)!;
                                         await comparisonClient.updateGroup(
                                             this.addSamplesTargetGroupId,
                                             addSamplesParameters(group, selectedSamples)
