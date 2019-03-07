@@ -14,17 +14,12 @@
         overflow:auto;
         padding:3px;
 
-        :global(div.groupItem) {
-            margin-bottom:6px;
-        }
-        :global(div.groupItem):first-child {
+        :global(div.checkbox) {
+            margin-bottom:0px;
             margin-top:0px;
         }
-        :global(div.groupItem):last-child {
-            margin-bottom:0px;
-        }
 
-        :global(.markedForDeletion) {
+        .markedForDeletion {
             color:#888888;
             text-decoration:line-through black;
             display:flex;

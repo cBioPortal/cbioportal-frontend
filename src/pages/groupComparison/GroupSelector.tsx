@@ -2,21 +2,17 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import {
     caseCountsInParens,
-    ComparisonGroup,
+    getPatientIdentifiers,
     getSampleIdentifiers,
-    getPatientIdentifiers
+    MissingSamplesMessage
 } from "./GroupComparisonUtils";
-import MobxPromise from "mobxpromise";
-import { ButtonGroup, Button } from "react-bootstrap";
-import { MakeMobxView } from "shared/components/MobxView";
+import {MakeMobxView} from "shared/components/MobxView";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "shared/components/ErrorMessage";
-import _ from "lodash";
 import GroupComparisonStore from "./GroupComparisonStore";
 import classNames from "classnames";
-import ListIndexedMap from "shared/lib/ListIndexedMap";
-import { SampleIdentifier, PatientIdentifier } from "shared/api/generated/CBioPortalAPI";
 import styles from './styles.module.scss';
+import ErrorIcon from "../../shared/components/ErrorIcon";
 
 export interface IGroupSelectorProps {
     store:GroupComparisonStore;
@@ -54,6 +50,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                                         {`${group.name} ${
                                             caseCountsInParens(sampleIdentifiers, patientIdentifiers, group.hasOverlappingSamples, group.hasOverlappingPatients)
                                         }`}
+                                        {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
                                     </button>
                                 );
                             })}
