@@ -225,25 +225,28 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
                     getPseudoOqlSummaryByAlterationTypes(data.oqlDataByGene, oql.gene, alterationTypes)!.summaryContent.toUpperCase().includes(filterStringUpper),
                 visible: false
             });
-            //add column for each gene alteration combination
-            alterationTypes.forEach(alterationType => {
-                columns.push({
-                    name: `${oql.gene} ${alterationType}`,
-                    tooltip: <span>{oql.oql_line}</span>,
-                    headerDownload: (name: string) => `${oql.gene} ${alterationType}`,
-                    render: (data: ICaseAlteration) => {
-                        const pseudoOqlSummary = generatePseudoOqlSummary(data.oqlDataByGene, oql.gene, alterationType); 
-
-                        return <span className={pseudoOqlSummary!.summaryClass}>{pseudoOqlSummary!.summaryContent}</span>;
-                    },
-                    download: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlDataByGene, oql.gene, alterationType)!.summaryContent,
-                    sortBy: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlDataByGene, oql.gene, alterationType)!.summaryContent,
-                    filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) =>
-                        generatePseudoOqlSummary(data.oqlDataByGene, oql.gene, alterationType)!.summaryContent.toUpperCase().includes(filterStringUpper)
-                });
-            });
         });
 
+        this.props.oqls.forEach(oql => {
+            //add column for each gene alteration combination
+            const alterationTypes = oql.parsed_oql_line.alterations ? oql.parsed_oql_line.alterations.map((alteration) => {
+                return alteration.alteration_type.toUpperCase();
+            }) : [];
+            columns.push({
+                name: `${oql.oql_line}`,
+                tooltip: <span>{oql.oql_line}</span>,
+                headerDownload: (name: string) => `${oql.oql_line}`,
+                render: (data: ICaseAlteration) => {
+                    const pseudoOqlSummary = getPseudoOqlSummaryByAlterationTypes(data.oqlDataByGene, oql.gene, alterationTypes); 
+
+                    return <span className={pseudoOqlSummary.summaryClass}>{pseudoOqlSummary.summaryContent}</span>;
+                },
+                download: (data: ICaseAlteration) => getPseudoOqlSummaryByAlterationTypes(data.oqlDataByGene, oql.gene, alterationTypes)!.summaryContent,
+                sortBy: (data: ICaseAlteration) => getPseudoOqlSummaryByAlterationTypes(data.oqlDataByGene, oql.gene, alterationTypes)!.summaryContent,
+                filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) =>
+                    getPseudoOqlSummaryByAlterationTypes(data.oqlDataByGene, oql.gene, alterationTypes)!.summaryContent.toUpperCase().includes(filterStringUpper)
+            });
+        });
 
         return (
             <CaseAlterationTableComponent

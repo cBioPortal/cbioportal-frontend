@@ -309,14 +309,14 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     private cnaDownloadControls(): JSX.Element
     {
-        return this.downloadControlsRow("Copy-number Alterations",
+        return this.downloadControlsRow("Copy-number Alterations (OQL is not in effect)",
                                         this.handleCnaDownload,
                                         this.handleTransposedCnaDownload);
     }
 
     private mutationDownloadControls(): JSX.Element
     {
-        return this.downloadControlsRow("Mutations",
+        return this.downloadControlsRow("Mutations (OQL is not in effect)",
                                         this.handleMutationDownload,
                                         this.handleTransposedMutationDownload);
     }
