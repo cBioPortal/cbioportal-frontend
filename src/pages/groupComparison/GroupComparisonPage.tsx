@@ -1,6 +1,6 @@
 import * as React from "react";
 import {inject, observer} from "mobx-react";
-import GroupComparisonStore from "./GroupComparisonStore";
+import GroupComparisonStore, {OverlapStrategy} from "./GroupComparisonStore";
 import MutationEnrichments from "./MutationEnrichments";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
@@ -17,11 +17,12 @@ import GroupSelector from "./GroupSelector";
 import {caseCountsInParens, getTabId} from "./GroupComparisonUtils";
 import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
-import {IReactionDisposer, reaction} from "mobx";
+import {computed, IReactionDisposer, reaction} from "mobx";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
 import _ from "lodash";
 import ClinicalData from "./ClinicalData";
+import ReactSelect from "react-select2";
 
 export enum GroupComparisonTab {
     OVERLAP = "overlap",
@@ -196,40 +197,41 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         } 
     });
 
+    readonly overlapStrategySelector = MakeMobxView({
+        await:()=>[this.store._selectionInfo],
+        render:()=>{
+            if (this.store._selectionInfo.result!.overlappingSamples.length === 0 &&
+                this.store._selectionInfo.result!.overlappingPatients.length === 0) {
+                return null;
+            } else {
+                // (${caseCountsInParens(this.store._selectionInfo.result.overlappingSamples, this.store._selectionInfo.result.overlappingPatients)})
+                return (
+                    <div style={{width:355, zIndex:20}}>
+                        <ReactSelect
+                            name="select overlap strategy"
+                            onChange={(option:any|null)=>{
+                                if (option) {
+                                    this.store.setOverlapStrategy(option.value);
+                                }
+                            }}
+                            options={[
+                                { label: OverlapStrategy.INCLUDE, value: OverlapStrategy.INCLUDE},
+                                { label: OverlapStrategy.EXCLUDE, value: OverlapStrategy.EXCLUDE},
+                                { label: OverlapStrategy.GROUP, value: OverlapStrategy.GROUP }
+                            ]}
+                            clearable={false}
+                            searchable={false}
+                            value={{ label: this.store.overlapStrategy, value: this.store.overlapStrategy}}
+                        />
+                    </div>
+                );
+            }
+        }
+    });
+
     render() {
         if (!this.store) {
             return null;
-        }
-
-        let excludeOverlappingCheckbox:JSX.Element | null;
-
-        if (this.store.selectionInfo.isComplete &&
-            this.store.selectionInfo.result.overlappingSamples.length === 0 &&
-            this.store.selectionInfo.result.overlappingPatients.length === 0) {
-
-            excludeOverlappingCheckbox = null;
-        } else {
-            excludeOverlappingCheckbox = (
-                <div className={"checkbox"}>
-                    <label>
-                        <input
-                            type="checkbox"
-                            onChange={this.store.toggleExcludeOverlapping}
-                            checked={this.store.excludeOverlapping}
-                        />
-
-                        {this.store.selectionInfo.isComplete ?
-                            `Exclude overlapping samples/patients ${caseCountsInParens(this.store.selectionInfo.result.overlappingSamples, this.store.selectionInfo.result.overlappingPatients)} from selected groups.` :
-                            ""
-                        }
-
-                        {/*<InfoIcon*/}
-                        {/*tooltip={<span style={{maxWidth:200}}>Exclude samples from analysis which occur in more than one selected group.</span>}*/}
-                        {/*/>*/}
-
-                    </label>
-                </div>
-            );
         }
 
         return (
@@ -242,7 +244,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                                 <GroupSelector
                                     store = {this.store}
                                 />
-                                {excludeOverlappingCheckbox}
+                                {this.overlapStrategySelector.component}
                             </div>
                         </div>
                     </div>
