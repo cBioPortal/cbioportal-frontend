@@ -343,7 +343,8 @@ function hasGeneticTrackTooltipChanged(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
 ) {
-    return nextProps.alterationTypesInQuery !== prevProps.alterationTypesInQuery;
+    return nextProps.caseLinkOutInTooltips !== prevProps.caseLinkOutInTooltips ||
+        nextProps.alterationTypesInQuery !== prevProps.alterationTypesInQuery;
 }
 
 function hasGeneticTrackRuleSetChanged(
@@ -606,7 +607,7 @@ function transitionGeneticTrack(
             description: nextSpec.oql,
             data_id_key: "uid",
             data: nextSpec.data,
-            tooltipFn: makeGeneticTrackTooltip(getMolecularProfileMap, nextProps.alterationTypesInQuery),
+            tooltipFn: makeGeneticTrackTooltip(nextProps.caseLinkOutInTooltips, getMolecularProfileMap, nextProps.alterationTypesInQuery),
             track_info: nextSpec.info,
             $track_info_tooltip_elt: nextSpec.infoTooltip ? $('<div>'+nextSpec.infoTooltip+'</div>') : undefined,
             removeCallback: () => {
@@ -643,7 +644,7 @@ function transitionGeneticTrack(
         }
 
         if (hasGeneticTrackTooltipChanged(nextProps, prevProps)) {
-            oncoprint.setTrackTooltipFn(trackId, makeGeneticTrackTooltip(getMolecularProfileMap, nextProps.alterationTypesInQuery));
+            oncoprint.setTrackTooltipFn(trackId, makeGeneticTrackTooltip(nextProps.caseLinkOutInTooltips, getMolecularProfileMap, nextProps.alterationTypesInQuery));
         }
 
         if (nextSpec.info !== prevSpec.info) {

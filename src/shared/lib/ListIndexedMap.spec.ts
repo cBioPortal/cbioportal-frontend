@@ -1,34 +1,34 @@
 import {assert} from "chai";
-import ListIndexedMap from "./ListIndexedMap";
+import ListIndexedMap, {ListIndexedMapOfCounts} from "./ListIndexedMap";
 
 describe("ListIndexedMap", ()=>{
     it ("`get` returns `undefined` if theres no entry", () => {
-        const map = new ListIndexedMap<string>();
+        const map = new ListIndexedMap<string, string>();
         assert.equal(map.get(), undefined);
         assert.equal(map.get("yo"), undefined);
         assert.equal(map.get("whatsup","yo"), undefined);
         assert.equal(map.get("hello","there","hi"), undefined);
     });
     it ("`get` returns the value if there is an entry", () => {
-        const map = new ListIndexedMap<string>();
+        const map = new ListIndexedMap<string|number|boolean, any>();
         assert.equal(map.get(), undefined);
-        map.set("test");
-        assert.equal(map.get(), "test");
+        map.set(3);
+        assert.equal(map.get(), 3);
         assert.equal(map.get("asdf"), undefined);
         map.set("blah", "asdf");
         assert.equal(map.get("asdf"), "blah");
         assert.equal(map.get("yo","whatsup"), undefined);
         map.set("apsoidjfa", "yo","whatsup");
         assert.equal(map.get("yo","whatsup"), "apsoidjfa");
-        assert.equal(map.get("whatsup","yo"), undefined);
-        map.set("foobar", "whatsup","yo");
-        assert.equal(map.get("whatsup","yo"), "foobar");
-        assert.equal(map.get("whatsup","yo","bye"), undefined);
-        map.set("fubar", "whatsup","yo","bye");
-        assert.equal(map.get("whatsup","yo","bye"), "fubar");
+        assert.equal(map.get("whatsup",true), undefined);
+        map.set("foobar", "whatsup",true);
+        assert.equal(map.get("whatsup",true), "foobar");
+        assert.equal(map.get(-3,false,"bye"), undefined);
+        map.set("fubar", -3,false,"bye");
+        assert.equal(map.get(-3,false,"bye"), "fubar");
     });
     it("`get` returns the most recently-set value for a key", () => {
-        const map = new ListIndexedMap<string>();
+        const map = new ListIndexedMap<string, string>();
         assert.equal(map.get(), undefined);
         map.set("test");
         assert.equal(map.get(), "test");
@@ -54,7 +54,7 @@ describe("ListIndexedMap", ()=>{
         assert.equal(map.get("whatsup","yo","bye"), "test2");
     });
     it("`entries` returns the entries in insertion order", ()=>{
-        const map = new ListIndexedMap<string>();
+        const map = new ListIndexedMap<string, string>();
         map.set("test");
         map.set("blah", "asdf");
         map.set("apsoidjfa", "yo","whatsup");
@@ -84,7 +84,7 @@ describe("ListIndexedMap", ()=>{
         ]);
     });
     it("`has` returns true iff there is a corresponding entry", ()=>{
-        const map = new ListIndexedMap<string>();
+        const map = new ListIndexedMap<string, string>();
         assert.isFalse(map.has());
         map.set("test");
         assert.isTrue(map.has());
@@ -108,5 +108,22 @@ describe("ListIndexedMap", ()=>{
         assert.isTrue(map.has("whatsup","yo","bye"));
         map.set("test2", "whatsup","yo","bye");
         assert.isTrue(map.has("whatsup","yo","bye"));
+    });
+});
+
+describe("IntegerListIndexedMap",()=>{
+    it("adds 1 correctly in case that key doesnt exist, and in case key does exist", ()=>{
+        const map = new ListIndexedMapOfCounts();
+        assert.isFalse(map.has("yo"));
+        map.increment("yo");
+        assert.isTrue(map.has("yo"));
+        assert.equal(map.get("yo"), 1);
+        map.increment("yo");
+        assert.isTrue(map.has("yo"));
+        assert.equal(map.get("yo"), 2);
+
+        map.set(1.25, "hi");
+        map.increment("hi");
+        assert.equal(map.get("hi"), 2.25);
     });
 });
