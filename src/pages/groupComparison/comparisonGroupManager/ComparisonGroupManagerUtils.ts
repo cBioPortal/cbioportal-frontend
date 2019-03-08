@@ -1,6 +1,6 @@
 import {Group, GroupData} from "../../../shared/api/ComparisonGroupClient";
 import {StudyViewPageStore} from "../../studyView/StudyViewPageStore";
-import {SampleIdentifier} from "../../../shared/api/generated/CBioPortalAPI";
+import {PatientIdentifier, SampleIdentifier} from "../../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 import {getSampleIdentifiers, StudyViewComparisonGroup} from "../GroupComparisonUtils";
 
@@ -11,14 +11,32 @@ export function getSelectedGroups(
     return allGroups.filter(group=>store.isComparisonGroupSelected(group.uid));
 }
 
-export function getStudiesAttr(sampleIdentifiers:SampleIdentifier[]) {
-    return _.map(
-        _.groupBy(sampleIdentifiers, id=>id.studyId),
-        (sampleIdentifiers, studyId)=>({
+export function getStudiesAttr(
+    sampleIdentifiers:SampleIdentifier[]
+):{id:string, samples:string[]}[];
+
+export function getStudiesAttr(
+    sampleIdentifiers:SampleIdentifier[],
+    patientIdentifiers:PatientIdentifier[]
+):{id:string, samples:string[], patients:string[]}[];
+
+export function getStudiesAttr(
+    sampleIdentifiers:SampleIdentifier[],
+    patientIdentifiers?:PatientIdentifier[]
+) {
+    const samples = _.groupBy(sampleIdentifiers, id=>id.studyId);
+    let patients = patientIdentifiers ? _.groupBy(patientIdentifiers, id=>id.studyId) : {};
+    const studies = _.uniq(Object.keys(samples).concat(Object.keys(patients)));
+    return studies.map(studyId=>{
+        const ret:{id:string, samples:string[], patients?:string[]} = {
             id: studyId,
-            samples: sampleIdentifiers.map(id=>id.sampleId)
-        })
-    );
+            samples: (samples[studyId] || []).map(id=>id.sampleId)
+        };
+        if (patientIdentifiers) {
+            ret.patients = (patients[studyId] || []).map(id=>id.patientId);
+        }
+        return ret;
+    });
 }
 
 export function getGroupParameters(
