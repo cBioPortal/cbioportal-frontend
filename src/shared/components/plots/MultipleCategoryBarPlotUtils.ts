@@ -1,6 +1,6 @@
-import { IStringAxisData } from './../../../pages/resultsView/plots/PlotsTabUtils';
+import { IStringAxisData } from '../../../pages/resultsView/plots/PlotsTabUtils';
 import _ from "lodash";
-import { IStackedBarPlotData } from './StackedBarPlot';
+import { IMultipleCategoryBarPlotData } from './MultipleCategoryBarPlot';
 
 export function makePlotData(
     horzData:IStringAxisData["data"],
@@ -22,7 +22,6 @@ export function makePlotData(
             .value();
 
         const usedMajorCategories:any = {};
-        const usedMinorCategories:any = {};
         const categoryToCounts:{[minor:string]:{[major:string]:number}} = {};
         for (const d of majorCategoryData) {
             const minorCategories = sampleToMinorCategories[d.uniqueSampleKey];
@@ -32,7 +31,6 @@ export function makePlotData(
             const majorCategories = ([] as any).concat(d.value);
             for (const cat of minorCategories) {
                 categoryToCounts[cat] = categoryToCounts[cat] || {};
-                usedMinorCategories[cat] = true;
                 for (const countCat of majorCategories) {
                     usedMajorCategories[countCat] = true;
                     categoryToCounts[cat][countCat] = categoryToCounts[cat][countCat] || 0;
@@ -40,18 +38,28 @@ export function makePlotData(
                 }
             }
         }
+
+        const majorCategoryTotalCounts:{[id:string]:number} = {}
         // ensure entries for all used minor categories - we need 0 entries for those major/minor combos we didnt see
         _.forEach(usedMajorCategories, (z, major)=>{
+            let totalCount = 0;
             _.forEach(categoryToCounts, majorCounts=>{
                 majorCounts[major] = majorCounts[major] || 0;
+                totalCount += majorCounts[major];
             });
+            majorCategoryTotalCounts[major] = totalCount;
         });
 
         // turn counts into data
         let data = _.map(categoryToCounts, (countsMap:{[majorCategory:string]:number}, minorCategory:string)=>{
-            let counts = _.map(countsMap, (count, majorCategory)=>({
-                majorCategory, count
-            }));
+            let counts = _.map(countsMap, (count, majorCategory) => {
+                const percentage = (count / majorCategoryTotalCounts[majorCategory]) * 100;
+                return {
+                    majorCategory,
+                    count,
+                    percentage:parseFloat(percentage.toFixed(2))
+                }
+            });
             return {
                 minorCategory,
                 counts
@@ -80,15 +88,16 @@ export function sortDataByCategory<D>(
 }
 
 export function makeBarSpecs(
-    data: IStackedBarPlotData[],
+    data: IMultipleCategoryBarPlotData[],
     minorCategoryOrder:{[cat:string]:number} | undefined,
     majorCategoryOrder:{[cat:string]:number} | undefined,
     getColor:(minorCategory:string)=>string,
     categoryCoord:(categoryIndex:number)=>number,
-    horizontalBars:boolean
+    horizontalBars:boolean,
+    percentage:boolean
 ):{
     fill: string,
-    data:{ x:number, y: number, majorCategory: string, minorCategory:string, count:number}[] // one data per major category, in correct order - either specified, or alphabetical
+    data:{ x:number, y: number, majorCategory: string, minorCategory:string, count:number, percentage:number}[] // one data per major category, in correct order - either specified, or alphabetical
 }[] // one bar spec per minor category, in correct order - either specified, or alphabetical 
 {
     data = sortDataByCategory(data, d=>d.minorCategory, minorCategoryOrder);
@@ -101,7 +110,14 @@ export function makeBarSpecs(
         const sortedCounts = sortDataByCategory(counts, d=>d.majorCategory, majorCategoryOrder);
         return {
             fill,
-            data: sortedCounts.map((obj, index)=>({ x:categoryCoord(index), y: obj.count, majorCategory: obj.majorCategory, minorCategory:minorCategory, count:obj.count }))
+            data: sortedCounts.map((obj, index) => ({
+                x: categoryCoord(index),
+                y: percentage ? obj.percentage : obj.count,
+                majorCategory: obj.majorCategory,
+                minorCategory: minorCategory,
+                count: obj.count,
+                percentage: obj.percentage
+            }))
         };
     });
 }
