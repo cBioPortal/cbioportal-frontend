@@ -8,7 +8,6 @@ import { SimpleGetterLazyMobXTableApplicationDataStore } from "shared/lib/ILazyM
 import ClinicalDataEnrichmentsTable from "./ClinicalDataEnrichmentsTable";
 import _ from "lodash";
 import { remoteData } from "shared/api/remoteData";
-import StackedBarPlot from "shared/components/plots/StackedBarPlot";
 import client from "shared/api/cbioportalClientInstance";
 import { IAxisData, IStringAxisData, PLOT_SIDELENGTH, makeBoxScatterPlotData, IBoxScatterPlotPoint, INumberAxisData, isNumberData, isStringData, boxPlotTooltip, mutationSummaryToAppearance, MutationSummary } from "pages/resultsView/plots/PlotsTabUtils";
 import DownloadControls from "shared/components/downloadControls/DownloadControls";
@@ -17,6 +16,7 @@ import BoxScatterPlot, { IBoxScatterPlotData } from "shared/components/plots/Box
 import { getMobxPromiseGroupStatus } from "shared/lib/getMobxPromiseGroupStatus";
 import { scatterPlotSize } from "shared/components/plots/PlotUtils";
 import { ClinicalDataEnrichmentWithQ } from "./GroupComparisonUtils";
+import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCategoryBarPlot";
 
 export interface IClinicalDataProps {
     store: GroupComparisonStore
@@ -321,7 +321,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                         return <LoadingIndicator isLoading={true} size={"big"} />;
                     }
                 } else {
-                    plotElt = <StackedBarPlot
+                    plotElt = <MultipleCategoryBarPlot
                         svgId={SVG_ID}
                         horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
                         vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
