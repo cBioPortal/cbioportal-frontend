@@ -59,7 +59,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         invoke: () => {
             const sampleSet = this.props.store.sampleSet.result!;
             const groupsWithSamples = _.map(this.props.store.activeGroups.result, group => {
-                let samples = getSampleIdentifiers([group]).map(sampleIdentifier => sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId));
+                let samples = getSampleIdentifiers([group]).map(sampleIdentifier => sampleSet.get({studyId: sampleIdentifier.studyId, sampleId: sampleIdentifier.sampleId}));
                 return {
                     uid: group.uid,
                     cases: _.map(samples, sample => sample!.uniqueSampleKey)
@@ -77,7 +77,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         invoke: () => {
             const sampleSet = this.props.store.sampleSet.result!;
             const groupsWithPatients = _.map(this.props.store.activeGroups.result, group => {
-                let samples = getSampleIdentifiers([group]).map(sampleIdentifier => sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId));
+                let samples = getSampleIdentifiers([group]).map(sampleIdentifier => sampleSet.get({studyId: sampleIdentifier.studyId, sampleId: sampleIdentifier.sampleId}));
                 return {
                     uid: group.uid,
                     cases: _.uniq(_.map(samples, sample => sample!.uniquePatientKey))
