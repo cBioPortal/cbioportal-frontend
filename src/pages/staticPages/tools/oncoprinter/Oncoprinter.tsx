@@ -254,8 +254,8 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     }
 
     @computed get alterationInfo() {
-        if (this.props.store.sampleIds.isComplete && this.props.store.alteredSampleIds.isComplete ) {
-            const numSamples = this.props.store.sampleIds.result.length;
+        if (this.props.store.alteredSampleIds.isComplete ) {
+            const numSamples = this.props.store.sampleIds.length;
             const alteredSamples = this.props.store.alteredSampleIds.result.length;
             return (
                 <span style={{marginTop:"15px", marginBottom:"15px", display: "block"}}>
