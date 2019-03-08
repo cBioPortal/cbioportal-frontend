@@ -10,6 +10,7 @@ import { GeneReplacement, normalizeQuery } from 'shared/components/query/QuerySt
 import { action, computed } from '../../../../node_modules/mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import 'react-select/dist/react-select.css';
+import classNames from "classnames";
 
 export interface IGeneSymbolValidatorProps {
 	oql:{
@@ -23,8 +24,9 @@ export interface IGeneSymbolValidatorProps {
 	}>,
 	geneQuery:string;
 	updateGeneQuery:(query:string)=>void;
-	hideSuccessMessage?:boolean
-	hideValidatingMessage?:boolean
+	hideSuccessMessage?:boolean;
+	hideValidatingMessage?:boolean;
+	wrap?:boolean;
 }
 
 @observer
@@ -81,7 +83,11 @@ export default class GeneSymbolValidator extends React.Component<IGeneSymbolVali
 		    return null;
 
 		return (
-			<div className={styles.GeneSymbolValidator}>
+			<div className={
+				classNames(styles.GeneSymbolValidator,
+					{ [styles.nowrap]:!this.props.wrap }
+				)
+			}>
 				<div className={styles.validBubble} title="You can now submit the list.">
 					<FontAwesome className={styles.icon} name='check-circle'/>
 					<span>All gene symbols are valid.</span>
