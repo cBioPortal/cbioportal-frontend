@@ -1025,11 +1025,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
 
         return (
-            <form>
-                <h4>{vertical ? "Vertical" : "Horizontal"} Axis</h4>
+            <form className="main-form">
+                <h4 className="tab-title">{vertical ? "Vertical" : "Horizontal"} Axis</h4>
                 <div>
                     <div className="form-group">
-                        <label>Data Type</label>
+                        <label className="label-text">Data Type</label>
                         <ReactSelect
                             name={`${vertical ? "v" : "h"}-profile-type-selector`}
                             value={axisSelection.dataType}
@@ -1039,8 +1039,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             searchable={false}
                         />
                     </div>
-                    <div className="form-group">
-                        <label>{dataSourceLabel}</label>
+                    <div className="form-group ">
+                        <label className="label-text">{dataSourceLabel}</label>
                         <div style={{display:"flex", flexDirection:"row"}}>
                             <ReactSelect
                                 className="data-source-id"
@@ -1066,7 +1066,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         </label></div>
                     )}
                     {(axisSelection.dataType !== GENESET_DATA_TYPE) && (<div className="form-group" style={{opacity:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 0 : 1)}}>
-                        <label>Gene</label>
+                        <label className="label-text">Gene</label>
                         <div style={{display:"flex", flexDirection:"row"}}>
                             <ReactSelect
                                 name={`${vertical ? "v" : "h"}-gene-selector`}
@@ -1112,8 +1112,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
         return (
             <div>
-                <hr/>
-                <h4>Utilities</h4>
+                {/* <hr/>
+                <h4>Utilities</h4> */}
                 <div>
                     {showSearchOptions && (<div>
                         <div className="form-group">
@@ -1165,8 +1165,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         </label></div>
                     )}
                     {showSampleColoringOptions && (
-                        <div>
-                            <label style={{marginBottom:0}}>Color Samples By</label>
+                        <div className="color-samples">
+                            <label style={{marginBottom:0 }}>Color Samples By</label>
                             <div style={{marginLeft:14, marginTop:-4}}>
                                 {this.mutationDataCanBeShown && (
                                     <div className="checkbox"><label>
@@ -1229,7 +1229,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     </Observer>
                 </div>
                 <div style={{ textAlign:'center'}}>
-                    <button className="btn btn-default" data-test="swapHorzVertButton" onClick={this.swapHorzVertSelections}><i className="fa fa-arrow-up"></i> Swap Axes <i className="fa fa-arrow-down"></i></button>
+                    <button className="btn-sm btn-default" data-test="swapHorzVertButton" onClick={this.swapHorzVertSelections}><i className="fa fa-arrow-up"></i> Swap Axes <i className="fa fa-arrow-down"></i></button>
                 </div>
                 <div className="axisBlock">
                     <Observer>
@@ -1520,7 +1520,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         return <span>Not implemented yet</span>
                 }
                 return (
-                    <div>
+                    <div className="PlotsTab">
                         <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
                             <ScrollBar style={{position:'relative', top:-5}} getScrollEl={this.getScrollPane} />
                             {this.plotExists && (
