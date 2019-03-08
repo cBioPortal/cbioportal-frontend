@@ -5,18 +5,24 @@ import {observer} from 'mobx-react';
 import QueryContainer from "./QueryContainer";
 import { QueryStore} from "./QueryStore";
 import {observable} from "mobx";
+import {MSKTab, MSKTabs} from "../MSKTabs/MSKTabs";
+import QuickSearch from "./quickSearch/QuickSearch";
+import HomePageSummary from "./quickSearch/HomePageSummary";
+import getBrowserWindow from "../../lib/getBrowserWindow";
+import autobind from "autobind-decorator";
 
 const styles = styles_any as {
 	QueryAndDownloadTabs: string,
 };
 
-const DOWNLOAD = 'download';
-const QUERY = 'query';
+const ADVANCED = 'advanced';
+const QUICK_SEARCH_TAB_ID = 'quickSearch';
+const QUICK_SEARCH_LS_KEY = 'defaultHomePageTab';
 
 interface IQueryAndDownloadTabsProps
 {
 	onSubmit?:()=>void;
-	showDownloadTab?:boolean;
+	showQuickSearchTab?:boolean;
     getQueryStore:()=>QueryStore;
     showAlerts?:boolean;
 }
@@ -29,6 +35,10 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 	constructor(props:IQueryAndDownloadTabsProps){
 		super();
 
+		if (getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) === QUICK_SEARCH_TAB_ID) {
+			this.activeTabId = getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY);
+		}
+
 		// the query store models a single use of the query component and therefor a new one should
 		// be made when the component is instantiated and it should be destroyed when the component unmounts
 		// we use a callback because we want to create the query store at the moment the query form is instantiated/shown
@@ -38,38 +48,45 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 
 	@observable.ref store: QueryStore;
 
-	onSelectTab = (eventKey:string) =>
+	@observable activeTabId:string;
+
+	public get quickSearchDefaulted(){
+        return getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) === QUICK_SEARCH_TAB_ID;
+	}
+
+	@autobind
+	setDefaultTab(tabId:string|undefined){
+		// right now we only care if quick search or NOT
+		getBrowserWindow().localStorage.defaultHomePageTab =
+			(tabId === QUICK_SEARCH_TAB_ID) ? QUICK_SEARCH_TAB_ID : undefined;
+	}
+
+	@autobind
+	onSelectTab(tabId:string)
 	{
-		this.store.forDownloadTab = eventKey === DOWNLOAD;
-		this.store.selectableSelectedStudyIds = [];
+		this.activeTabId = tabId;
 	}
 
 	render()
 	{
 		return (
 			<div className={styles.QueryAndDownloadTabs}>
-
 				{
 					(this.props.showAlerts && this.store.genes.isComplete && this.store.genes.result.suggestions.length > 0) && (
                         <div className="alert alert-danger"><i className={"fa fa-exclamation-triangle"} /> Your query has invalid or out-dated gene symbols. Please correct below.</div>
 					)
 				}
 
-				<Tabs
-					id='QueryAndDownloadTabs'
-					animation={false}
-					activeKey={this.store.forDownloadTab ? DOWNLOAD : QUERY}
-					onSelect={this.onSelectTab as ReactBootstrap.SelectCallback}
-				>
-
-					<Tab eventKey='query' title="Query"/>
-
-					{
-						(this.props.showDownloadTab !== false) && (<Tab eventKey='download' title="Download Data"/>)
-					}
-
-				</Tabs>
-				<QueryContainer onSubmit={this.props.onSubmit} store={this.store}/>
+				<MSKTabs activeTabId={this.activeTabId} onTabClick={this.onSelectTab} className={"mainTabs"}>
+					<MSKTab id={"advanced"} linkText={"Query"} onTabDidMount={()=>this.setDefaultTab(undefined)}>
+                        <QueryContainer onSubmit={this.props.onSubmit} store={this.store}/>
+					</MSKTab>
+					<MSKTab id={QUICK_SEARCH_TAB_ID} linkText={<span>Quick Search <strong className={"beta-text"}>Beta!</strong></span>}  onTabDidMount={()=>this.setDefaultTab(QUICK_SEARCH_TAB_ID)}>
+                        <div>
+							<QuickSearch/>
+                        </div>
+					</MSKTab>
+				</MSKTabs>
 			</div>
 		);
 	}
