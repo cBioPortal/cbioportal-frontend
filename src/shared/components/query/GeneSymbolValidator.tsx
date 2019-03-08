@@ -108,7 +108,7 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 		}
 
 		let title = 'Ambiguous gene symbol. Click on one of the alternatives to replace it.';
-		let options = genes.map(gene => ({
+		let options: any = genes.map(gene => ({
 			label: gene.hugoGeneSymbol,
 			value: gene.hugoGeneSymbol
 		}));
@@ -120,7 +120,7 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 				<ReactSelect
 					placeholder='select a symbol'
 					options={options}
-					onChange={option => option && this.store.replaceGene(alias, option.value)}
+					onChange={(option: any) => option && this.store.replaceGene(alias, option.value)}
 					autosize
 				/>
 			</div>
