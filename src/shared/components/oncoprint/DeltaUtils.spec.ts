@@ -40,6 +40,7 @@ describe("Oncoprint DeltaUtils", ()=>{
 
     describe("transition", () => {
         const makeMinimalOncoprintProps = (): IOncoprintProps => ({
+            caseLinkOutInTooltips:false,
             clinicalTracks: [],
             geneticTracks: [],
             genesetHeatmapTracks: [],
