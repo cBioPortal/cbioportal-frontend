@@ -69,7 +69,7 @@ import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 import {getTablePlotDownloadData} from "../../../shared/components/plots/TablePlotUtils";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
-import StackedBarPlot from "../../../shared/components/plots/StackedBarPlot";
+import MultipleCategoryBarPlot from "../../../shared/components/plots/MultipleCategoryBarPlot";
 import {STUDY_VIEW_CONFIG} from "../../studyView/StudyViewConfig";
 
 enum EventKey {
@@ -77,8 +77,7 @@ enum EventKey {
     vert_logScale,
     utilities_viewMutationType,
     utilities_viewCopyNumber,
-    utilities_discreteVsDiscreteTable,
-    utilities_stackedBarHorizontalBars,
+    utilities_horizontalBars,
     utilities_showRegressionLine
 }
 
@@ -104,8 +103,10 @@ export enum PlotType {
 }
 
 export enum DiscreteVsDiscretePlotType {
-    Table,
-    StackedBar
+    Bar = "Bar",
+    StackedBar = "StackedBar",
+    PercentageStackedBar = "PercentageStackedBar",
+    Table = "Table"
 }
 
 export enum MutationCountBy {
@@ -143,6 +144,13 @@ const mutationCountByOptions = [
     { value: MutationCountBy.MutatedVsWildType, label: "Mutated vs Wild-type" }
 ];
 
+const discreteVsDiscretePlotTypeOptions = [
+    { value: DiscreteVsDiscretePlotType.Bar, label: "Bar chart" },
+    { value: DiscreteVsDiscretePlotType.StackedBar, label: "Stacked bar chart" },
+    { value: DiscreteVsDiscretePlotType.PercentageStackedBar, label: "100% stacked bar chart" },
+    { value: DiscreteVsDiscretePlotType.Table, label: "Table" }
+]
+
 @observer
 export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
@@ -156,8 +164,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @observable viewCopyNumber:boolean = false;
     @observable showRegressionLine = false;
     // discrete vs discrete settings
-    @observable discreteVsDiscretePlotType = DiscreteVsDiscretePlotType.StackedBar;
-    @observable stackedBarHorizontalBars = false;
+    @observable discreteVsDiscretePlotType:DiscreteVsDiscretePlotType = DiscreteVsDiscretePlotType.StackedBar;
+    @observable horizontalBars = false;
+    @observable percentageBar = false;
+    @observable stackedBar = false;
 
     @observable searchCase:string = "";
     @observable searchMutation:string = "";
@@ -394,15 +404,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             case EventKey.utilities_showRegressionLine:
                 this.showRegressionLine = !this.showRegressionLine;
                 break;
-            case EventKey.utilities_discreteVsDiscreteTable:
-                if (this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.Table) {
-                    this.discreteVsDiscretePlotType = DiscreteVsDiscretePlotType.StackedBar;
-                } else {
-                    this.discreteVsDiscretePlotType = DiscreteVsDiscretePlotType.Table;
-                }
-                break;
-            case EventKey.utilities_stackedBarHorizontalBars:
-                this.stackedBarHorizontalBars = !this.stackedBarHorizontalBars;
+            case EventKey.utilities_horizontalBars:
+                this.horizontalBars = !this.horizontalBars;
                 break;
         }
     }
@@ -715,6 +718,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @action
     public onHorizontalAxisMutationCountBySelect(option:any) {
         this.horzSelection.mutationCountBy = option.value;
+    }
+
+    @autobind
+    @action
+    private onDiscreteVsDiscretePlotTypeSelect(option:any){
+        this.discreteVsDiscretePlotType = option.value
     }
 
     @autobind
@@ -1095,7 +1104,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     private getUtilitiesMenu() {
         const showSearchOptions = this.plotType.isComplete && this.plotType.result !== PlotType.DiscreteVsDiscrete;
         const showDiscreteVsDiscreteOption = this.plotType.isComplete && this.plotType.result === PlotType.DiscreteVsDiscrete;
-        const showStackedBarHorizontalOption = showDiscreteVsDiscreteOption && this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.StackedBar;
+        const showStackedBarHorizontalOption = showDiscreteVsDiscreteOption && this.discreteVsDiscretePlotType !== DiscreteVsDiscretePlotType.Table;
         const showSampleColoringOptions = this.mutationDataCanBeShown || this.cnaDataCanBeShown;
         const showRegression = this.plotType.isComplete && this.plotType.result === PlotType.ScatterPlot;
         if (!showSearchOptions && !showSampleColoringOptions && !showDiscreteVsDiscreteOption && !showStackedBarHorizontalOption && !showRegression) {
@@ -1129,25 +1138,28 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         )}
                     </div>)}
                     {showDiscreteVsDiscreteOption && (
-                        <div className="checkbox"><label>
-                            <input
-                                data-test="DiscreteVsDiscreteTable"
-                                type="checkbox"
-                                name="utilities_discreteVsDiscreteTable"
-                                value={EventKey.utilities_discreteVsDiscreteTable}
-                                checked={this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.Table}
-                                onClick={this.onInputClick}
-                            /> Show Table Plot
-                        </label></div>
+                        <div className="form-group">
+                            <label>Plot Type</label>
+                            <div style={{ display: "flex", flexDirection: "row" }}>
+                                <ReactSelect
+                                    name="discrete-vs-discrete-plot-type"
+                                    value={this.discreteVsDiscretePlotType}
+                                    onChange={this.onDiscreteVsDiscretePlotTypeSelect}
+                                    options={discreteVsDiscretePlotTypeOptions}
+                                    clearable={false}
+                                    searchable={true}
+                                />
+                            </div>
+                        </div>
                     )}
                     {showStackedBarHorizontalOption && (
                         <div className="checkbox"><label>
                             <input
-                                data-test="StackedBarHorizontalBars"
+                                data-test="horizontalBars"
                                 type="checkbox"
-                                name="utilities_stackedBarHorizontalBars"
-                                value={EventKey.utilities_stackedBarHorizontalBars}
-                                checked={this.stackedBarHorizontalBars}
+                                name="utilities_horizontalBars"
+                                value={EventKey.utilities_horizontalBars}
+                                checked={this.horizontalBars}
                                 onClick={this.onInputClick}
                             /> Horizontal Bars
                         </label></div>
@@ -1382,6 +1394,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get plot() {
         const promises = [this.plotType, this.horzAxisDataPromise, this.vertAxisDataPromise, this.horzLabel, this.vertLabel];
         const groupStatus = getMobxPromiseGroupStatus(...promises);
+        const isPercentage = this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.PercentageStackedBar;
+        const isStacked = isPercentage || this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.StackedBar;
         switch (groupStatus) {
             case "pending":
                 return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
@@ -1410,7 +1424,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             );
                         } else {
                             plotElt = (
-                                <StackedBarPlot
+                                <MultipleCategoryBarPlot
                                     svgId={SVG_ID}
                                     horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
                                     vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
@@ -1423,7 +1437,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     axisLabelX={this.horzLabel.result!}
                                     axisLabelY={this.vertLabel.result!}
                                     legendLocationWidthThreshold={550}
-                                    horizontalBars={this.stackedBarHorizontalBars}
+                                    horizontalBars={this.horizontalBars}
+                                    percentage={isPercentage}
+                                    stacked={isStacked}
                                 />
                             );
                         }
