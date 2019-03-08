@@ -10,11 +10,12 @@ import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 import {observable} from "mobx";
 import {ReactChild} from "react";
 import {observer} from "mobx-react";
+import {JsxElement} from "typescript";
 
 export interface IMSKTabProps {
     inactive?:boolean;
     id:string;
-    linkText:string;
+    linkText:string | JSX.Element;
     activeId?:string;
     className?:string;
     hide?:boolean;
