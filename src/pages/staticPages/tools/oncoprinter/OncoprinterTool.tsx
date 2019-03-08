@@ -178,6 +178,10 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
         );
     }
 
+    @computed get error() {
+        return this.store.parsedInputLines.error;
+    }
+
     @autobind
     private getInputSection() {
         return (
@@ -215,6 +219,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                 />
                 <br/>
                 <Button className="oncoprinterSubmit" bsStyle="default" onClick={this.onClickSubmit} disabled={!!this.inputError}>Submit</Button>
+                { this.error && <div className="alert alert-danger" style={{marginTop:5, whiteSpace:"pre-wrap"}}>{this.error}</div> }
             </FormGroup>
         );
     }
@@ -235,11 +240,13 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                         <Observer>
                             {this.getInputSection}
                         </Observer>
-                        <Oncoprinter
-                            ref={this.oncoprinterRef}
-                            divId="oncoprinter"
-                            store={this.store}
-                        />
+                        { !this.error && (
+                            <Oncoprinter
+                                ref={this.oncoprinterRef}
+                                divId="oncoprinter"
+                                store={this.store}
+                            />
+                        )}
                     </div>
                 </WindowWidthBox>
             </PageLayout>
