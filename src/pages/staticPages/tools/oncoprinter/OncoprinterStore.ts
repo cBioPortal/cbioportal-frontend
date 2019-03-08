@@ -22,6 +22,7 @@ import client from "../../../../shared/api/cbioportalClientInstance";
 import _ from "lodash";
 import {countMutations, mutationCountByPositionKey} from "../../../resultsView/mutationCountHelpers";
 import {Mutation, MutationCountByPosition} from "../../../../shared/api/generated/CBioPortalAPI";
+import {sleep} from "../../../../shared/lib/TimeUtils";
 
 export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "ignoreUnknown" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
 
@@ -49,19 +50,20 @@ export default class OncoprinterStore {
         return this.oncoKbData.peekStatus === "complete" && (this.oncoKbData.result instanceof Error);
     }
 
-    readonly sampleIds = remoteData({
-        await:()=>[this.parsedInputLines],
-        invoke:async()=>{
-            if (this.inputSampleIdOrder) {
-                return this.inputSampleIdOrder;
-            } else {
-                return this.allSampleIds;
-            }
+    @computed get sampleIds() {
+        if (this.inputSampleIdOrder) {
+            return this.inputSampleIdOrder;
+        } else {
+            return this.allSampleIds;
         }
-    });
+    }
 
     @computed get allSampleIds() {
-        return getSampleIds(this.parsedInputLines.result!);
+        if (this.parsedInputLines.result) {
+            return getSampleIds(this.parsedInputLines.result);
+        } else {
+            return [];
+        }
     }
 
     @action setSampleIdOrder(input:string) {
@@ -113,67 +115,41 @@ export default class OncoprinterStore {
         this.setSampleIdOrder(samples);
     }
 
-    public readonly parsedInputLines = remoteData({
-        invoke:async()=>{
-            if (!this._dataInput) {
-                return [];
-            }
-            // parse input
-            const parsed = parseInput(this._dataInput);
-            if (parsed.status === "error") {
-                throw new Error(parsed.error);
-            } else {
-                let parsedLines = parsed.result;
-                /* Leaving commented only for reference, this will be replaced by unified input strategy
-                // fetch hugoGeneSymbols and hotspot for Type3 input lines
-                const toAnnotate =
-                    _.chain(parsedLines as any).filter(l=>isType3NoGene(l)).uniqBy(genomeNexusKey).values().value();
-                if (toAnnotate.length > 0) {
-                    try {
-                        // get data and store in map for querying
-                        const gnData = _.keyBy(await gnClient.fetchVariantAnnotationByGenomicLocationPOST({
-                            genomicLocations: toAnnotate.map(line=>({
-                                chromosome: line.chromosome,
-                                start: line.startPosition,
-                                end: line.endPosition,
-                                referenceAllele: line.referenceAllele,
-                                variantAllele: line.variantAllele
-                            })),
-                            fields:["hotspots", "annotation_summary"]
-                        }), d=>genomeNexusKey2(d.annotation_summary.genomicLocation));
-                        // annotate lines in place - this keeps their place in parsedLines in original data order
-                        for (const line of toAnnotate) {
-                            const gnDatum = gnData[genomeNexusKey(line)];
-                            (line as OncoprinterInputLineType3).hugoGeneSymbol = gnDatum.annotation_summary.transcriptConsequenceSummary.hugoGeneSymbol;
-                            (line as OncoprinterInputLineType3).isHotspot = _.flatten(gnDatum.hotspots.annotation).filter(recurrentHotspotFilter).length > 0;
-                        }
-                    } catch (e) {
-                        // GenomeNexus error - filter out type3 lines because we don't know how to use them
-                        alert("Error fetching data from GenomeNexus service - throwing out Type 3 (MAF/mutation) input data rows.");
-                        sendSentryMessage("There was an error fetching GenomeNexus data from Oncoprinter.");
-                        parsedLines = parsedLines.filter(l=>!isType3NoGene(l));
-                    }
-                }*/
-                return parsedLines as OncoprinterInputLine[];
-            }
+    @computed get parsedInputLines() {
+        if (!this._dataInput) {
+            return {
+                error:null,
+                result:[]
+            };
         }
-    });
 
-    readonly hugoGeneSymbols = remoteData({
-        await:()=>[this.parsedInputLines],
-        invoke:async()=>{
-            if (this.geneOrder) {
-                return this.geneOrder;
-            } else {
-                return getGeneSymbols(this.parsedInputLines.result!);
+        const parsed = parseInput(this._dataInput);
+        if (parsed.status === "error") {
+            return {
+                error: parsed.error,
+                result: null
+            };
+        } else {
+            return {
+                error:null,
+                result: parsed.result
             }
         }
-    });
+    }
+
+    @computed get hugoGeneSymbols() {
+        if (this.geneOrder) {
+            return this.geneOrder;
+        } else if (this.parsedInputLines.result) {
+            return getGeneSymbols(this.parsedInputLines.result);
+        } else {
+            return [];
+        }
+    }
 
     readonly hugoGeneSymbolToGene = remoteData({
-        await:()=>[this.hugoGeneSymbols],
         invoke:async()=>{
-            const geneIds = this.hugoGeneSymbols.result!;
+            const geneIds = this.hugoGeneSymbols;
             if (geneIds.length > 0) {
                 return _.keyBy(await client.fetchGenesUsingPOST({
                     geneIdType: "HUGO_GENE_SYMBOL",
@@ -263,20 +239,20 @@ export default class OncoprinterStore {
     });
 
     readonly alteredSampleIds = remoteData({
-        await:()=>[this.sampleIds, this.geneticTracks],
+        await:()=>[this.geneticTracks],
         invoke: async()=>{
             const allAlteredIds = _.chain(this.geneticTracks.result!).map(track=>track.data.filter(isAltered))
                     .flatten().map(datum=>datum.sample).uniq().value();
-            const visibleAlteredIds = _.intersection(this.sampleIds.result!, allAlteredIds);
+            const visibleAlteredIds = _.intersection(this.sampleIds, allAlteredIds);
             return visibleAlteredIds;
         },
         default: []
     });
 
     readonly unalteredSampleIds = remoteData({
-        await:()=>[this.sampleIds, this.alteredSampleIds],
+        await:()=>[this.alteredSampleIds],
         invoke: async()=>{
-            return _.difference(this.sampleIds.result!, this.alteredSampleIds.result!);
+            return _.difference(this.sampleIds, this.alteredSampleIds.result!);
         },
         default: []
     });
@@ -306,8 +282,14 @@ export default class OncoprinterStore {
     }
 
     readonly nonAnnotatedGeneticTrackData = remoteData({
-        await:()=>[this.parsedInputLines, this.hugoGeneSymbolToGene],
-        invoke: async()=>getSampleGeneticTrackData(this.parsedInputLines.result!, this.hugoGeneSymbolToGene.result!)
+        await:()=>[this.hugoGeneSymbolToGene],
+        invoke: async()=>{
+            if (this.parsedInputLines.result) {
+                return getSampleGeneticTrackData(this.parsedInputLines.result, this.hugoGeneSymbolToGene.result!)
+            } else {
+                return {};
+            }
+        }
     });
 
     readonly nonAnnotatedGeneticData = remoteData({
