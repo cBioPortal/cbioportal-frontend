@@ -3,7 +3,7 @@ import {Column, default as LazyMobXTable} from "shared/components/lazyMobXTable/
 import {observer} from "mobx-react";
 import * as _ from 'lodash';
 import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
-import {getClinicalAttributeOverlay, getClinicalAttributeUniqueKey} from "../StudyViewUtils";
+import {getClinicalAttributeOverlay, getClinicalAttributeUniqueKey, chartMetaComparator} from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ChartMeta, StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
 import {remoteData} from "shared/api/remoteData";
@@ -60,8 +60,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
             }, {
                 ...this.getDefaultColumnConfig('studyId', 'Cancer Study')
             }];
-            // Descent sort priority then ascent sort by display name
-            return _.reduce(this.props.store.visibleAttributes,
+            return _.reduce(this.props.store.visibleAttributes.sort(chartMetaComparator),
                 (acc: Column<{ [id: string]: string }>[], chartMeta: ChartMeta, index: number) => {
                     if (chartMeta.clinicalAttribute !== undefined) {
                         acc.push({
