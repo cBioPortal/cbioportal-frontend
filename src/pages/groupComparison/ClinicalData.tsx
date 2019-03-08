@@ -173,7 +173,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                 _.forEach(this.props.store.activeGroups.result!, group => {
                     group.studies.forEach(study => {
                         study.samples.forEach(sampleId=>{
-                            const sample = sampleSet.get(study.id, sampleId)
+                            const sample = sampleSet.get({studyId: study.id, sampleId});
                             if (sample) {
                                 axisData_Data.push({
                                     uniqueSampleKey: sample.uniqueSampleKey,
