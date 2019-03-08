@@ -3,6 +3,7 @@ import {
     calcIntervalBinValues,
     calculateLayout,
     clinicalDataCountComparator,
+    chartMetaComparator,
     filterCategoryBins,
     filterIntervalBins,
     filterNumericalBins,
@@ -35,7 +36,12 @@ import {
     showOriginStudiesInSummaryDescription,
     toFixedDigit,
     updateGeneQuery,
-    getClinicalDataCountWithColorByCategoryCounts
+    getClinicalDataCountWithColorByCategoryCounts,
+    calculateNewLayoutForFocusedChart,
+    generateMatrixByLayout,
+    isFocusedChartShrunk,
+    getPositionXByUniqueKey,
+    getPositionYByUniqueKey
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -1741,6 +1747,28 @@ describe('StudyViewUtils', () => {
         });
     });
 
+    describe('chartMetaComparator', () => {
+        it('returns 0 if priority and display name are exactly same', () => {
+            assert.equal(chartMetaComparator({priority: 100, displayName: "test chart"} as ChartMeta, {priority: 100, displayName: "test chart"} as ChartMeta), 0);
+        });
+
+        it('returns difference if priority is higher', () => {
+            assert.equal(chartMetaComparator({priority: 100, displayName: "name b"} as ChartMeta, {priority: 50, displayName: "name a"} as ChartMeta), -50);
+        });
+
+        it('returns difference if priority is lower', () => {
+            assert.equal(chartMetaComparator({priority: 50, displayName: "name a"} as ChartMeta, {priority: 100, displayName: "name b"} as ChartMeta), 50);
+        });
+
+        it('when priority is same, returns 1 if displayName is alphabet higher', () => {
+            assert.equal(chartMetaComparator({priority: 100, displayName: "name z"} as ChartMeta, {priority: 100, displayName: "name a"} as ChartMeta), 1);
+        });
+
+        it('when priority is same, returns -1 if displayName is alphabet lower', () => {
+            assert.equal(chartMetaComparator({priority: 100, displayName: "name a"} as ChartMeta, {priority: 100, displayName: "name z"} as ChartMeta), -1);
+        });
+    });
+
     describe('getRequestedAwaitPromisesForClinicalData', () => {
         // Create some references
         const unfilteredPromise: MobxPromise<any> = {
@@ -1875,4 +1903,191 @@ describe('StudyViewUtils', () => {
                 ], getClinicalDataCountWithColorByCategoryCounts(10, 10))
         });
     });
+
+    describe ('calculateNewLayoutForFocusedChart', () => {
+        it('should return the previous x, y, and new chartMeta dimension for not overflow position', () => {
+            const clinicalAttr: ClinicalAttribute = {
+                'clinicalAttributeId': 'test',
+                'datatype': 'STRING',
+                'description': '',
+                'displayName': '',
+                'patientAttribute': true,
+                'priority': '1',
+                'studyId': ''
+            };
+            const layout = {
+                x: 1,
+                y: 1,
+                w: 1,
+                h: 1
+            };
+            const focusedChartMeta = {
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test',
+                chartType: ChartTypeEnum.PIE_CHART,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
+                dimension: {w: 2, h: 2},
+                renderWhenDataChange: false,
+                priority: 1,
+            };
+            const cols = 5;
+            const newLayout = calculateNewLayoutForFocusedChart(layout, focusedChartMeta, cols);
+            assert.equal(newLayout.i, 'test');
+            assert.equal(newLayout.x, 1);
+            assert.equal(newLayout.y, 1);
+            assert.equal(newLayout.w, 2);
+            assert.equal(newLayout.h, 2);
+            assert.equal(newLayout.isResizable, false);
+        });
+
+        it('should return the fixed x, previous y, and new chartMeta dimension for the overflow positions', () => {
+            const clinicalAttr: ClinicalAttribute = {
+                'clinicalAttributeId': 'test',
+                'datatype': 'STRING',
+                'description': '',
+                'displayName': '',
+                'patientAttribute': true,
+                'priority': '1',
+                'studyId': ''
+            };
+            const layout = {
+                x: 4,
+                y: 1,
+                w: 1,
+                h: 1
+            };
+            const focusedChartMeta = {
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test',
+                chartType: ChartTypeEnum.PIE_CHART,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
+                dimension: {w: 2, h: 2},
+                renderWhenDataChange: false,
+                priority: 1,
+            };
+            const cols = 5;
+            const newLayout = calculateNewLayoutForFocusedChart(layout, focusedChartMeta, cols);
+            assert.equal(newLayout.i, 'test');
+            assert.equal(newLayout.x, 3);
+            assert.equal(newLayout.y, 1);
+            assert.equal(newLayout.w, 2);
+            assert.equal(newLayout.h, 2);
+            assert.equal(newLayout.isResizable, false);
+        });
+
+        it('should return the fixed x, previous y, and new chartMeta dimension for the shrunk chart', () => {
+            const clinicalAttr: ClinicalAttribute = {
+                'clinicalAttributeId': 'test',
+                'datatype': 'STRING',
+                'description': '',
+                'displayName': '',
+                'patientAttribute': true,
+                'priority': '1',
+                'studyId': ''
+            };
+            const layout = {
+                x: 1,
+                y: 1,
+                w: 2,
+                h: 2
+            };
+            const focusedChartMeta = {
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test',
+                chartType: ChartTypeEnum.PIE_CHART,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
+                dimension: {w: 1, h: 1},
+                renderWhenDataChange: false,
+                priority: 1,
+            }
+            const cols = 5;
+            const newLayout = calculateNewLayoutForFocusedChart(layout, focusedChartMeta, cols);
+            assert.equal(newLayout.i, 'test');
+            assert.equal(newLayout.x, 2);
+            assert.equal(newLayout.y, 1);
+            assert.equal(newLayout.w, 1);
+            assert.equal(newLayout.h, 1);
+            assert.equal(newLayout.isResizable, false);
+        });
+    })
+    
+    describe ('generateMatrixByLayout', () => {
+        it('should return the generated matrix', () => {
+            const layout = {
+                i: 'test',
+                x: 1,
+                y: 1,
+                w: 1,
+                h: 1,
+                isResizable: false
+            };
+            const cols = 5;
+            const matrix = generateMatrixByLayout(layout, cols);
+            for (let i = 0; i < matrix.length; i++) {
+                for (let j = 0; j < cols; j++) {
+                    if (i === 1 && j === 1) {
+                        assert.equal(matrix[i][j], 'test');
+                        break;
+                    }
+                    assert.equal(matrix[i][j], '');
+                }
+            }
+        });
+    })
+
+    describe ('isFocusedChartShrunk', () => {
+        const largeDimension = {w: 2, h: 2};
+        const smallDimension = {w: 1, h: 1};
+        it('should return true if the chart shrunk', () => {
+            assert.equal(isFocusedChartShrunk(largeDimension, smallDimension), true);
+        });
+        it('should return false if the chart not shrunk', () => {
+            assert.equal(isFocusedChartShrunk(smallDimension, largeDimension), false);
+        });
+        it('should return false if the dimension is not changed', () => {
+            assert.equal(isFocusedChartShrunk(smallDimension, smallDimension), false);
+            assert.equal(isFocusedChartShrunk(largeDimension, largeDimension), false);
+        });
+    })
+
+    const layoutForPositionTest = [
+        {
+            i: 'test',
+            x: 1,
+            y: 1,
+            w: 1,
+            h: 1
+        } as Layout
+    ];    
+
+    describe ('getPositionXByUniqueKey', () => {
+        it('should return undefined for the not exist uniqueKey', () => {
+            assert.equal(getPositionXByUniqueKey(layoutForPositionTest, 'test1'), undefined);
+            assert.equal(getPositionXByUniqueKey([], 'test'), undefined);
+            assert.equal(getPositionXByUniqueKey([], ''), undefined);
+        });
+        it('should return the X value of the layout which matches the uniqueKey', () => {
+            assert.equal(getPositionXByUniqueKey(layoutForPositionTest, 'test'), 1);
+        });
+    })
+
+    describe ('getPositionYByUniqueKey', () => {
+        it('should return undefined for the not exist uniqueKey', () => {
+            assert.equal(getPositionYByUniqueKey(layoutForPositionTest, 'test1'), undefined);
+            assert.equal(getPositionYByUniqueKey([], 'test'), undefined);
+            assert.equal(getPositionYByUniqueKey([], ''), undefined);
+        });
+        it('should return the Y value of the layout which matches the uniqueKey', () => {
+            assert.equal(getPositionYByUniqueKey(layoutForPositionTest, 'test'), 1);
+        });
+    })
 });

@@ -12,6 +12,7 @@ import {QueryStore} from "./QueryStore";
 import {providesStoreContext} from "../../lib/ContextUtils";
 import CaseSetSelector from "./CaseSetSelector";
 import UnknownStudiesWarning from "../unknownStudies/UnknownStudiesWarning";
+import classNames from 'classnames';
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -48,8 +49,8 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 	}
 
 	handleSubmit(){
-		const submitSucceeded = this.store.submit();
-		if (submitSucceeded && this.props.onSubmit) {
+		this.store.submit();
+		if (this.props.onSubmit) {
 			this.props.onSubmit();
 		}
 	}
@@ -62,7 +63,15 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
         //    <OverlappingStudiesWarning studies={this.store.selectedStudies}/>
         //}
         return (
-			<FlexCol padded overflow className={styles.QueryContainer}>
+			<FlexCol padded overflow className={classNames('small', styles.QueryContainer)}>
+				{/*{this.store.forQuickTab && */}
+					{/*<div>*/}
+						{/*<QuickSearch/>*/}
+						{/*<div style={{paddingTop: 25}}>*/}
+							{/*<HomePageSummary/>*/}
+						{/*</div>*/}
+					{/*</div>*/}
+				{/*}*/}
                 {
 					this.store.unknownStudyIds.isComplete &&
                     <UnknownStudiesWarning ids={this.store.unknownStudyIds.result} />
