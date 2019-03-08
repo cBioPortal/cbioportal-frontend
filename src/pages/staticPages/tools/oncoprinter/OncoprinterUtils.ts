@@ -21,7 +21,7 @@ import {getAlterationString} from "../../../../shared/lib/CopyNumberUtils";
 
 export type OncoprinterGeneticTrackDatum =
     Pick<GeneticTrackDatum, "trackLabel" | "study_id" | "uid" |
-                            "disp_mut" | "disp_cna" | "disp_mrna" | "disp_prot" | "disp_fusion" | "disp_germ"> & { sample:string, data:OncoprinterGeneticTrackDatum_Data[]} ;
+                            "disp_mut" | "disp_cna" | "disp_mrna" | "disp_prot" | "disp_fusion" | "disp_germ"> & { sample:string, patient:string, data:OncoprinterGeneticTrackDatum_Data[]} ;
 
 export type OncoprinterGeneticTrackDatum_Data =
     GeneticTrackDatum_Data & Pick<Partial<Mutation>, "proteinPosStart" | "proteinPosEnd" | "startPosition" | "endPosition">;
@@ -391,7 +391,7 @@ export function getOncoprintData(
         geneToSampleData,
         (sampleData, gene)=>sampleData.map(o=>(
             fillGeneticTrackDatum(
-                { sample: o.sampleId, study_id: "", uid: o.sampleId },
+                { sample: o.sampleId, patient: o.sampleId, study_id: "", uid: o.sampleId },
                 gene, o.data
             ) as OncoprinterGeneticTrackDatum
         ))

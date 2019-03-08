@@ -316,6 +316,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                                 heatmapTracks={[]}
                                 divId={this.props.divId}
                                 width={1050}
+                                caseLinkOutInTooltips={false}
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
                                 onReleaseRendering={this.onReleaseRendering}
