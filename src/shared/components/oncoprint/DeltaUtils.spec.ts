@@ -1,12 +1,12 @@
 import {assert} from "chai";
 import {
     heatmapClusterValueFn, numTracksWhoseDataChanged, transitionSortConfig,
-    transition, transitionTrackGroupSortPriority
+    transition,
+    transitionTrackGroupSortPriority
 } from "./DeltaUtils";
 import {createStubInstance, match, SinonStub, spy} from "sinon";
 import OncoprintJS from "oncoprintjs";
 import { MolecularProfile, CancerStudy } from 'shared/api/generated/CBioPortalAPI';
-import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import {
     CLINICAL_TRACK_GROUP_INDEX,
     GENETIC_TRACK_GROUP_INDEX,

@@ -2195,7 +2195,7 @@ export class ResultsViewPageStore {
         await: ()=>[this.treatments],
         invoke: () => {
             const treatmentIdFromUrl =  this.rvQuery.treatmentIds;
-            return Promise.resolve(_.filter(this.treatments.result, (d:Treatment) => { treatmentIdFromUrl.includes(d.treatmentId) } ));
+            return Promise.resolve(_.filter(this.treatments.result!, (d:Treatment) => { treatmentIdFromUrl.includes(d.treatmentId) } ));
         }
     });
 

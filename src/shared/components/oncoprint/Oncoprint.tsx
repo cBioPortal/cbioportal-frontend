@@ -121,7 +121,7 @@ export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     labelColor?: string;
     trackLinkUrl?: string | undefined;
     onRemove: () => void;
-    molecularProfileName?: string;
+    molecularProfileName?: String
     pivotThreshold?: number;
     sortOrder?: SortOrder;
     maxProfileValue?: number;
