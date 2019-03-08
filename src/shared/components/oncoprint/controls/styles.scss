@@ -1,9 +1,9 @@
 
 
 .oncoprint__controls {
-
+  
   display:flex;
-
+  
   .rangeslider {
     margin:0;
     .rangeslider__labels {
@@ -17,13 +17,12 @@
       }
     }
   }
-
+  
   .checkbox, .radio {
     &:first-child {
       margin-top:0px;
     }
   }
-
   .dropdown-menu {
     width:270px;
     padding:12px !important;
@@ -38,7 +37,7 @@
       width:450px;
     }
   }
-
+  
   .oncoprint__controls__heatmap_menu {
     textarea {
       width:100%;
@@ -54,8 +53,6 @@
       margin-bottom:0 !important;
     }
 
-<<<<<<< HEAD
-=======
     .treatment-selector {
       
       .Select {
@@ -107,9 +104,10 @@
       width:100%;
       min-height:50px;
       overflow: hidden;
+      margin-bottom: 5px;
 
       $iconMargin: 2px;
-      $iconPadding: 0px;
+      $iconPadding: 1px;
 
       .icon-area {
         min-height:0px;
@@ -141,45 +139,40 @@
 
     }
 
->>>>>>> 2915dd2b... Impl. wider heatmap menu
   }
-
+    
   .oncoprint__zoom-controls {
     display:flex !important;
     align-items:center;
-
+    
     > * {
       margin-right:10px;
     }
-
+    
     > :last-child {
       margin-right:0;
     }
-
+    
   }
-
+  
   .oncoprint__controls__minimap_button {
     padding: 5px 8px 6px 10px !important;
   }
-
+  
   .Select {
-
+    
     margin-right:10px;
-
+    
     .Select-control {
       height:32px;
     }
-
+    
     .Select-input {
       height:32px;
     }
-<<<<<<< HEAD
-
-=======
     
->>>>>>> 2915dd2b... Impl. wider heatmap menu
   }
-
+  
   .clinical-track-selector .Select {
 
     .Select-placeholder {
@@ -193,12 +186,12 @@
     .Select-menu-outer {
       max-height: 400px;
     }
-
+    
     .Select-menu {
       max-height: 398px; // needs to be 2 less than Select-menu-outer height to not hide border. Irrelevant
-                        //    as long as & > div > div:nth-child(2) max-height is less
+      //    as long as & > div > div:nth-child(2) max-height is less
       overflow:hidden;
-
+      
       & > div > div:nth-child(2){
         max-height:350px !important;
         overflow-x:hidden !important;

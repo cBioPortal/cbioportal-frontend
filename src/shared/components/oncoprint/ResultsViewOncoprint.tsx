@@ -584,15 +584,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         };
     }
 
-    @computed get addToHeatmapButtonName() {
-        let selectedMolecularProfileObj = this.props.store.molecularProfileIdToMolecularProfile.result[this.selectedHeatmapProfile];
-        if (selectedMolecularProfileObj.molecularAlterationType == AlterationTypeConstants.TREATMENT_RESPONSE) {
-            return "Add Treatments to Heatmap";
-        } else {
-            return "Add Genes to Heatmap";
-        };
-    };
-
     /**
      * Indicates whether dynamic heatmap querying controls are relevant.
      *
