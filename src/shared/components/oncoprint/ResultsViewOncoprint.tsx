@@ -1000,6 +1000,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 heatmapTracks={this.heatmapTracks.result}
                                 divId={this.props.divId}
                                 width={1050}
+                                caseLinkOutInTooltips={true}
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
                                 onReleaseRendering={this.onReleaseRendering}

@@ -219,7 +219,16 @@ export function getDocsUrl(sourceUrl:string,docsBaseUrl?:string): string {
 }
 
 export function getWholeSlideViewerUrl(ids: string[], userName: string): string {
-    return ids.length > 1 ? `https://slides.mskcc.org/cbioportal?ids=${ids.join('.svs;') + '.svs'}&user=${userName}&annotation=off` : ids.length === 1 ? `https://slides.mskcc.org/cbioportal?ids=${ids[0] + '.svs'}&user=${userName}&annotation=off&filetree=off` : "";
+    try {
+        const tokenInfo = JSON.parse(AppConfig.serverConfig.mskWholeSlideViewerToken);
+        const token = `&token=${tokenInfo.token}`;
+        const time = `&t=${tokenInfo.time}`;
+        const filterTree = ids.length === 1 ? '&filetree=off' : '';
+        return ids.length >= 1 ? `https://slides.mskcc.org/cbioportal?ids=${_.map(ids, (id)=>id+".svs").join(";")}&user=${userName}${time}${token}&annotation=off${filterTree}` : "";
+    }
+    catch (ex) {
+        throw("error parsing mskWholeSlideViewerToken");
+    }
 }
 
 export function getNCBIlink(pathnameOrParams?: BuildUrlParams | string): string {
