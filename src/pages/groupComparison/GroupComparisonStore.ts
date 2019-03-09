@@ -7,7 +7,7 @@ import {
     getStudyIds,
     isGroupEmpty,
     ClinicalDataEnrichmentWithQ,
-    OverlapFilteredComparisonGroup, OVERLAP_GROUP_COLOR
+    OverlapFilteredComparisonGroup, OVERLAP_GROUP_COLOR, getSampleIdentifiers
 } from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
@@ -255,6 +255,24 @@ export default class GroupComparisonStore {
                 projection: "DETAILED"
             });
         }
+    });
+
+    readonly activeSamples = remoteData({
+        await:()=>[this.sampleSet, this.activeGroups],
+        invoke:()=>{
+            const activeSampleIdentifiers = getSampleIdentifiers(this.activeGroups.result!);
+            const sampleSet = this.sampleSet.result!;
+            return Promise.resolve(
+                activeSampleIdentifiers.map(sampleIdentifier=>sampleSet.get(sampleIdentifier)!)
+            );
+        }
+    });
+
+    readonly activePatientKeys = remoteData({
+        await:()=>[this.activeSamples],
+        invoke:()=>Promise.resolve(
+            _.uniq(this.activeSamples.result!.map(s=>s.uniquePatientKey))
+        )
     });
 
     readonly studies = remoteData({
@@ -581,12 +599,12 @@ export default class GroupComparisonStore {
 
     readonly survivalClinicalDataExists = remoteData<boolean>({
         await: () => [
-            this.samples
+            this.activeSamples
         ],
         invoke: async () => {
             const filter: ClinicalDataMultiStudyFilter = {
                 attributeIds: SURVIVAL_CHART_ATTRIBUTES,
-                identifiers: this.samples.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
+                identifiers: this.activeSamples.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
             };
             const count = await client.fetchClinicalDataUsingPOSTWithHttpInfo({
                 clinicalDataType: "PATIENT",
@@ -605,12 +623,12 @@ export default class GroupComparisonStore {
 
     readonly survivalClinicalData = remoteData<ClinicalData[]>({
         await: () => [
-            this.samples
+            this.activeSamples
         ],
         invoke: () => {
             const filter: ClinicalDataMultiStudyFilter = {
                 attributeIds: SURVIVAL_CHART_ATTRIBUTES,
-                identifiers: this.samples.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
+                identifiers: this.activeSamples.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
             };
             return client.fetchClinicalDataUsingPOST({
                 clinicalDataType: 'PATIENT',
@@ -628,36 +646,25 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly patientKeys = remoteData({
-        await: () => [
-            this.samples
-        ],
-        invoke: () => {
-            return Promise.resolve(
-                _.uniq(this.samples.result!.map(s => s.uniquePatientKey))
-            );
-        }
-    }, []);
-
     readonly overallPatientSurvivals = remoteData<PatientSurvival[]>({
         await: () => [
             this.survivalClinicalDataGroupByUniquePatientKey,
-            this.patientKeys,
+            this.activePatientKeys,
         ],
         invoke: async () => {
             return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result,
-                this.patientKeys.result, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
+                this.activePatientKeys.result!, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
         }
     }, []);
 
     readonly diseaseFreePatientSurvivals = remoteData<PatientSurvival[]>({
         await: () => [
             this.survivalClinicalDataGroupByUniquePatientKey,
-            this.patientKeys,
+            this.activePatientKeys,
         ],
         invoke: async () => {
             return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result,
-                this.patientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred')
+                this.activePatientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred')
         }
     }, []);
 
