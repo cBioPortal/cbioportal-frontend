@@ -10,7 +10,7 @@ import {
     getAlterationScatterData,
     getFilteredData,
     getAlterationRowData,
-    AlterationEnrichmentWithQ
+    AlterationEnrichmentWithQ, getAlterationFrequencyScatterData
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { Checkbox, Button, Form, FormGroup, ControlLabel, FormControl } from 'react-bootstrap';
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
@@ -20,6 +20,7 @@ import MiniBarChart from 'pages/resultsView/enrichments/MiniBarChart';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
+import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -31,9 +32,14 @@ export interface IAlterationEnrichmentContainerProps {
     alterationType: string;
 }
 
+enum ChartType {
+    VOLCANO, FREQUENCY
+}
+
 @observer
 export default class AlterationEnrichmentContainer extends React.Component<IAlterationEnrichmentContainerProps, {}> {
 
+    @observable chartType:ChartType = ChartType.VOLCANO;
     @observable mutualExclusivityFilter: boolean = true;
     @observable coOccurenceFilter: boolean = true;
     @observable significanceFilter: boolean = false;
@@ -56,7 +62,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
         const clickedAlterationEnrichment: AlterationEnrichment = _.find(this.props.data, ['hugoGeneSymbol', this.clickedGene])!;
 
-        return [this.props.totalAlteredCount - clickedAlterationEnrichment.alteredCount, 
+        return [this.props.totalAlteredCount - clickedAlterationEnrichment.alteredCount,
             clickedAlterationEnrichment.alteredCount, 
             clickedAlterationEnrichment.unalteredCount, 
             this.props.totalUnalteredCount - clickedAlterationEnrichment.unalteredCount];
@@ -85,6 +91,15 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
             this.checkedGenes.splice(index, 1);
         } else {
             this.checkedGenes.push(hugoGeneSymbol);
+        }
+    }
+
+    @autobind
+    private toggleChart() {
+        if (this.chartType === ChartType.VOLCANO) {
+            this.chartType = ChartType.FREQUENCY;
+        } else {
+            this.chartType = ChartType.VOLCANO;
         }
     }
 
@@ -124,10 +139,28 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return (
             <div className={styles.Container}>
                 <div className={styles.LeftColumn}>
-                    <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store.hugoGeneSymbols)} 
-                        xAxisLeftLabel="Mutual exclusivity" xAxisRightLabel="Co-occurrence" xAxisDomain={15} 
-                        xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
-                        onSelectionCleared={this.onSelectionCleared}/>
+                    {this.chartType === ChartType.VOLCANO && (
+                        <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
+                            xAxisLeftLabel="Mutual exclusivity" xAxisRightLabel="Co-occurrence" xAxisDomain={15}
+                            xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
+                            onSelectionCleared={this.onSelectionCleared}/>
+                    )}
+                    {this.chartType === ChartType.FREQUENCY && (
+                        <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
+                                                   xGroupName={"Altered Tumors"} yGroupName={"Unaltered Tumors"} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
+                                                   onSelectionCleared={this.onSelectionCleared}/>
+                    )}
+                    <button
+                        className="btn btn-sm btn-default"
+                        onClick={this.toggleChart}
+                        style={{
+                            position:"absolute",
+                            top:10,
+                            left:10
+                        }}
+                    >
+                        {this.chartType === ChartType.VOLCANO ? "Show Frequency Plot" : "Show Volcano Plot"}
+                    </button>
                     <MiniBarChart totalAlteredCount={this.props.totalAlteredCount} totalUnalteredCount={this.props.totalUnalteredCount}
                         selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />
                 </div>
@@ -151,7 +184,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             Significant only
                         </Checkbox>
                     </div>
-                    <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} 
+                    <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene}
                         onGeneNameClick={this.onGeneNameClick} alterationType={this.props.alterationType} dataStore={this.dataStore}/>
                 </div>
             </div>
