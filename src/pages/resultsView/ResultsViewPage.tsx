@@ -192,7 +192,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     </MSKTab>
                 },
                 hide:()=>{
-                    return this.resultsViewPageStore.hugoGeneSymbols.length < 2;
+                    // we are using the size of isSampleAlteredMap as a proxy for the number of things we have to compare
+                    return !this.resultsViewPageStore.isSampleAlteredMap.isComplete || _.size(this.resultsViewPageStore.isSampleAlteredMap.result) < 2;
                 }
             },
 
