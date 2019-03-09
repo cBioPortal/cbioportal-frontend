@@ -319,6 +319,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
     }
 
     render() {
+        const numberOfMutationProfiledSamples : number | undefined = this.props.store.molecularProfileSampleCounts.isComplete ? this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples : undefined;
         return (
             <div>
 
@@ -338,7 +339,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                                         onChange={this.props.store.toggleWithMutationDataFilter}
                                         disabled={this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples === undefined}
                                     >
-                                        {this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples === undefined ? '0' : this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} w/ mutation data
+                                        {numberOfMutationProfiledSamples === undefined ? '0 samples' : numberOfMutationProfiledSamples.toLocaleString() + (numberOfMutationProfiledSamples === 1 ? " sample" : " samples")} with mutation data
                                     </LabeledCheckbox>
                                 )}
                             </div>
@@ -353,7 +354,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                                         onChange={this.props.store.toggleWithCNADataFilter}
                                         disabled={this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples === undefined}
                                     >
-                                        {this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples === undefined ? '0' : this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} w/ CNA data
+                                        {numberOfMutationProfiledSamples === undefined ? '0 samples' : numberOfMutationProfiledSamples.toLocaleString() + (numberOfMutationProfiledSamples === 1 ? " sample" : " samples")} with CNA data
                                     </LabeledCheckbox>
                                 )}
                             </div>
