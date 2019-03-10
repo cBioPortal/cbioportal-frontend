@@ -4,10 +4,10 @@ import {Button, ButtonGroup} from "react-bootstrap";
 import CustomDropdown from "./CustomDropdown";
 import ReactSelect from "react-select";
 import {MobxPromise} from "mobxpromise";
-import {computed, IObservableObject, observable, ObservableMap, reaction} from "mobx";
+import {action, computed, IObservableObject, observable, ObservableMap, reaction} from "mobx";
 import _ from "lodash";
 import {SortMode} from "../ResultsViewOncoprint";
-import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
+import {Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import Slider from "react-rangeslider";
@@ -21,6 +21,10 @@ import ClinicalAttributeSelector from "../../clinicalAttributeSelector/ClinicalA
 import {ResultsViewPageStore} from "../../../../pages/resultsView/ResultsViewPageStore";
 import {ExtendedClinicalAttribute} from "../../../../pages/resultsView/ResultsViewPageStoreUtils";
 import {getNCBIlink} from "../../../api/urls";
+import {GeneBoxType} from "../../GeneSelectionBox/GeneSelectionBox";
+import GeneSelectionBox from "../../GeneSelectionBox/GeneSelectionBox";
+import autobind from "autobind-decorator";
+import {SingleGeneQuery} from "../../../lib/oql/oql-parser";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -136,7 +140,6 @@ const EVENT_KEY = {
     sortByData:"9",
     sortByDrivers:"10",
     sortByHeatmapClustering:"11",
-    heatmapGeneInput:"12",
     addGenesToHeatmap: "13",
     removeHeatmap: "14",
     distinguishDrivers: "15",
@@ -161,6 +164,7 @@ const EVENT_KEY = {
 @observer
 export default class OncoprintControls extends React.Component<IOncoprintControlsProps, {}> {
     @observable horzZoomSliderState:number;
+    @observable heatmapGenesReady:boolean = false;
 
     constructor(props:IOncoprintControlsProps) {
         super(props);
@@ -364,12 +368,22 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         }
     }
 
+    @autobind
+    @action
+    private onChangeHeatmapGeneInput(oql:any, genes:any, queryStr:string, status:any) {
+        this.props.handlers.onChangeHeatmapGeneInputValue &&
+        this.props.handlers.onChangeHeatmapGeneInputValue(queryStr);
+
+        const foundGenes = _.keyBy(genes.found as Gene[], gene=>gene.hugoGeneSymbol.toUpperCase());
+
+        this.heatmapGenesReady = (
+            status === "complete" && // validation promise complete
+            _.every(oql.query as SingleGeneQuery[], query=>query.gene.toUpperCase() in foundGenes) // all genes valid
+        );
+    }
+
     private onType(event:React.ChangeEvent<HTMLTextAreaElement>) {
         switch ((event.target as HTMLTextAreaElement).name) {
-            case EVENT_KEY.heatmapGeneInput:
-                this.props.handlers.onChangeHeatmapGeneInputValue &&
-                this.props.handlers.onChangeHeatmapGeneInputValue(event.target.value);
-                break;
             case EVENT_KEY.annotateCBioPortalInput:
                 this.props.handlers.onChangeAnnotateCBioPortalInputValue &&
                 this.props.handlers.onChangeAnnotateCBioPortalInputValue(event.target.value);
@@ -433,20 +447,17 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                             options={this.heatmapProfileOptions}
                         />
                         {this.props.state.heatmapIsDynamicallyQueried && [
-                            <textarea
-                                key="heatmapGeneInputArea"
-                                placeholder="Type space- or comma-separated genes here, then click 'Add Genes to Heatmap'"
-                                name={EVENT_KEY.heatmapGeneInput}
-                                onChange={this.onType}
-                                value={this.props.state.heatmapGeneInputValue}
-                            >
-                            </textarea>,
-
+                            <GeneSelectionBox
+                                inputGeneQuery={this.props.state.heatmapGeneInputValue || ""}
+                                callback={this.onChangeHeatmapGeneInput}
+                                location={GeneBoxType.ONCOPRINT_HEATMAP}
+                            />,
                             <button
                                 key="addGenesToHeatmapButton"
                                 className="btn btn-sm btn-default"
                                 name={EVENT_KEY.addGenesToHeatmap}
                                 onClick={this.onButtonClick}
+                                disabled={!this.heatmapGenesReady}
                              >Add Genes to Heatmap</button>,
 
                             <button
