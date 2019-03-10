@@ -21,7 +21,7 @@ import {getAlterationString} from "../../../../shared/lib/CopyNumberUtils";
 
 export type OncoprinterGeneticTrackDatum =
     Pick<GeneticTrackDatum, "trackLabel" | "study_id" | "uid" |
-                            "disp_mut" | "disp_cna" | "disp_mrna" | "disp_prot" | "disp_fusion" | "disp_germ"> & { sample:string, data:OncoprinterGeneticTrackDatum_Data[]} ;
+                            "disp_mut" | "disp_cna" | "disp_mrna" | "disp_prot" | "disp_fusion" | "disp_germ"> & { sample:string, patient:string, data:OncoprinterGeneticTrackDatum_Data[]} ;
 
 export type OncoprinterGeneticTrackDatum_Data =
     GeneticTrackDatum_Data & Pick<Partial<Mutation>, "proteinPosStart" | "proteinPosEnd" | "startPosition" | "endPosition">;
@@ -391,7 +391,7 @@ export function getOncoprintData(
         geneToSampleData,
         (sampleData, gene)=>sampleData.map(o=>(
             fillGeneticTrackDatum(
-                { sample: o.sampleId, study_id: "", uid: o.sampleId },
+                { sample: o.sampleId, patient: o.sampleId, study_id: "", uid: o.sampleId },
                 gene, o.data
             ) as OncoprinterGeneticTrackDatum
         ))
@@ -513,13 +513,14 @@ export function annotateGeneticTrackData(
 }
 
 export function parseInput(input:string):{status:"complete", result:OncoprinterInputLine[], error:undefined}|{status:"error", result:undefined, error:string} {
-    const lines = input.trim().split("\n").map(line=>line.split(/\s+/));
-    if (_.isEqual(lines[0], ["Sample", "Gene", "Alteration", "Type"])) {
-        lines.shift(); // skip header line
-    }
+    const lines = input.trim().split("\n").map(line=>line.trim().split(/\s+/));
     try {
         const result = lines.map((line, lineIndex)=>{
-            const errorPrefix = `Data input error on line ${lineIndex}: `;
+            if (lineIndex === 0 &&
+                _.isEqual(lines[0].map(s=>s.toLowerCase()), ["sample", "gene", "alteration", "type"])) {
+                return null; // skip header line
+            }
+            const errorPrefix = `Data input error on line ${lineIndex+1}: \n${line.join("\t")}\n\n`;
             if (line.length === 1) {
                 // Type 1 line
                 return { sampleId: line[0] };
@@ -529,13 +530,14 @@ export function parseInput(input:string):{status:"complete", result:OncoprinterI
                 const hugoGeneSymbol = line[1];
                 const alteration = line[2];
                 const lcAlteration = alteration.toLowerCase();
-                const type = line[3].toLowerCase();
+                const type = line[3];
+                const lcType = type.toLowerCase();
                 let ret:Partial<OncoprinterInputLineType2> = { sampleId, hugoGeneSymbol };
 
-                switch (type) {
+                switch (lcType) {
                     case "cna":
                         if (["amp", "gain", "hetloss", "homdel"].indexOf(lcAlteration) === -1) {
-                            throw new Error(`${errorPrefix}Alteration must be "AMP", "GAIN" ,"HETLOSS", or "HOMDEL" if Type is "CNA"`);
+                            throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "AMP", "GAIN" ,"HETLOSS", or "HOMDEL" since Type is "CNA"`);
                         }
                         ret.alteration = lcAlteration as "amp"|"gain"|"hetloss"|"homdel";
                         break;
@@ -545,7 +547,7 @@ export function parseInput(input:string):{status:"complete", result:OncoprinterI
                         } else if (lcAlteration === "down") {
                             ret.alteration = "mrnaDown";
                         } else {
-                            throw new Error(`${errorPrefix}Alteration must be "UP" or "DOWN" if Type is "EXP"`);
+                            throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "UP" or "DOWN" if Type is "EXP"`);
                         }
                         break;
                     case "prot":
@@ -554,19 +556,19 @@ export function parseInput(input:string):{status:"complete", result:OncoprinterI
                         } else if (lcAlteration === "down") {
                             ret.alteration = "protDown";
                         } else {
-                            throw new Error(`${errorPrefix}Alteration must be "UP" or "DOWN" if Type is "PROT"`);
+                            throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "UP" or "DOWN" if Type is "PROT"`);
                         }
                         break;
                     default:
                         // everything else is a mutation
-                        if (["missense", "inframe", "fusion", "promoter", "trunc", "other"].indexOf(type) === -1) {
+                        if (["missense", "inframe", "fusion", "promoter", "trunc", "other"].indexOf(lcType) === -1) {
                             if (lcAlteration === "fusion") {
-                                throw new Error(`${errorPrefix}Type must be "FUSION" if Alteration is "FUSION"`);
+                                throw new Error(`${errorPrefix}Type "${type}" is not valid - it must be "FUSION" if Alteration is "FUSION"`);
                             } else {
-                                throw new Error(`${errorPrefix}Type must be "MISSENSE", "INFRAME", "TRUNC", "PROMOTER", or "OTHER" for a mutation alteration.`);
+                                throw new Error(`${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "PROMOTER", or "OTHER" for a mutation alteration.`);
                             }
                         }
-                        ret.alteration = type as OncoprintMutationType;
+                        ret.alteration = lcType as OncoprintMutationType;
                         ret.proteinChange = alteration;
                 }
                 return ret as OncoprinterInputLineType2;
@@ -576,7 +578,7 @@ export function parseInput(input:string):{status:"complete", result:OncoprinterI
         });
         return {
             status: "complete",
-            result,
+            result: result.filter(x=>!!x) as OncoprinterInputLine[],
             error:undefined
         };
     } catch (e) {
