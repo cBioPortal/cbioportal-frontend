@@ -100,7 +100,7 @@ import {
     finalizeStudiesAttr,
     StudyViewComparisonGroup,
     getNumberAttributeGroupFilters,
-    getStringAttributeGroupFilters
+    getStringAttributeGroupFilters, DataBinWithData, putDataIntoSortedBins, getDataBinGroupName
 } from "../groupComparison/GroupComparisonUtils";
 import {getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import client from "../../shared/api/cbioportalClientInstance";
@@ -108,6 +108,8 @@ import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ListIndexedMap from "../../shared/lib/ListIndexedMap";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
+import {sortedFindWith} from "../../shared/lib/sortedFindWith";
+import {toFixedWithoutTrailingZeros} from "../../shared/lib/FormatUtils";
 
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
@@ -427,6 +429,7 @@ export class StudyViewPageStore {
 
     private async createNumberAttributeComparisonSession(
         clinicalAttribute:ClinicalAttribute,
+        bins:DataBin[],
         statusCallback:(phase:LoadingPhase)=>void
     ) {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
@@ -443,94 +446,60 @@ export class StudyViewPageStore {
                         }
                     });
 
-                    // sort values
-                    // group into halves, thirds, or fourths, depending on how many distinct values there are
-                    const groupedByValue = _.groupBy(data, d=>parseFloat(d.value));
-                    const distinctValues = _.sortBy(Object.keys(groupedByValue).map(v=>parseFloat(v)));
+                    // copy bins, take out NA bin if there is one
+                    let binsWithData = _.cloneDeep(bins)
+                        .map(bin=>{
+                            (bin as any).data = [];
+                            return bin as DataBinWithData;
+                        });
 
+                    const naBinIndex = binsWithData.findIndex(bin=>bin.specialValue === "NA");
+                    let naBin:DataBinWithData|undefined = undefined;
+                    if (naBinIndex > -1) {
+                        naBin = binsWithData.splice(naBinIndex, 1)[0];
+                    }
+                    // put data into given bins
+                    // sort the bins so its faster to find the right one
+                    binsWithData = _.sortBy(binsWithData, bin=>(bin.start === undefined ? Number.NEGATIVE_INFINITY : bin.start));
+                    // add data to bins
+                    putDataIntoSortedBins(
+                        data,
+                        binsWithData,
+                        selectedSamples,
+                        clinicalAttribute.patientAttribute,
+                        naBin
+                    );
                     statusCallback(LoadingPhase.CREATING_SESSION);
                     // create groups using data
-                    let groups:SessionGroupData[];
                     let patientToSamples:{[uniquePatientKey:string]:SampleIdentifier[]} = {};
                     if (clinicalAttribute.patientAttribute) {
                         patientToSamples = _.groupBy(selectedSamples, s=>s.uniquePatientKey);
                     }
-                    switch (distinctValues.length) {
-                        case 1:
-                        case 2:
-                        case 3:
-                            groups = distinctValues.map(value=>{
-                                let studies;
-                                if (clinicalAttribute.patientAttribute) {
-                                    studies = getStudiesAttr(
-                                        _.flattenDeep<any>(
-                                            groupedByValue[value.toString()].map(d=>{
-                                                return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }))
-                                            })
-                                        ) as SampleIdentifier[]
-                                    )
-                                } else {
-                                    studies = getStudiesAttr(groupedByValue[value.toString()].map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
-                                }
-                                return {
-                                    name: value.toString(),
-                                    description: "",
-                                    studies,
-                                    origin: this.studyIds,
-                                    studyViewFilter: getNumberAttributeGroupFilters(this.filters, clinicalAttribute, [value, value])
-                                };
-                            });
-                            break;
-                        default:
-                            // set up groups for quartiles
-                            // first, get the limit for each quartile
-                            const quartileTops:number[] = [];
-                            for (const q of [1,2,3]) {
-                                quartileTops.push(distinctValues[Math.floor(q*distinctValues.length/4)]);
-                            }
-                            // the last limit is the last element
-                            quartileTops.push(distinctValues[distinctValues.length - 1]);
 
-                            // now group samples into each quartile group
-                            const quartileGroups:ClinicalData[][] = [[], [], [], []];
-                            _.forEach(groupedByValue, (dataWithValue:ClinicalData[], value:string)=>{
-                                let q = 0;
-                                let v = parseFloat(value);
-                                while (v > quartileTops[q]) {
-                                    q += 1;
-                                }
-                                quartileGroups[q] = quartileGroups[q].concat(dataWithValue);
-                            });
+                    const groups = binsWithData.map(bin=>{
+                        const name = getDataBinGroupName(bin);
 
-                            groups = quartileGroups.map((dataInGroup, index)=>{
-                                let range:[number,number] = [0,0];
-                                if (index === 0) {
-                                    range = [distinctValues[0], quartileTops[0]];
-                                } else {
-                                    range = [quartileTops[index-1], quartileTops[index]];
-                                }
-                                let studies;
-                                if (clinicalAttribute.patientAttribute) {
-                                    studies = getStudiesAttr(
-                                        _.flattenDeep<any>(
-                                            dataInGroup.map(d=>{
-                                                return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }))
-                                            })
-                                        ) as SampleIdentifier[]
-                                    )
-                                } else {
-                                    studies = getStudiesAttr(dataInGroup.map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
-                                }
-                                return {
-                                    name: `${range[0]}-${range[1]}`,
-                                    description: "",
-                                    studies,
-                                    origin: this.studyIds,
-                                    studyViewFilter: getNumberAttributeGroupFilters(this.filters, clinicalAttribute, range)
-                                };
-                            });
-                            break;
-                    }
+                        let studies;
+                        if (clinicalAttribute.patientAttribute) {
+                            studies = getStudiesAttr(
+                                _.flattenDeep<any>(
+                                    bin.data.map(d=>{
+                                        return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }))
+                                    })
+                                ) as SampleIdentifier[]
+                            )
+                        } else {
+                            studies = getStudiesAttr(bin.data.map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
+                        }
+                        return {
+                            name,
+                            description: "",
+                            studies,
+                            origin: this.studyIds,
+                            // TODO: how to get the proper filter for this?
+                            studyViewFilter: getNumberAttributeGroupFilters(this.filters, clinicalAttribute, bin)
+                        };
+                    });
 
                     // create session and get id
                     const {id} = await comparisonClient.addComparisonSession({ groups, clinicalAttribute });
@@ -609,6 +578,7 @@ export class StudyViewPageStore {
         type:ChartTypeEnum.PIE_CHART|ChartTypeEnum.TABLE|ChartTypeEnum.BAR_CHART,
         clinicalAttribute: ClinicalAttribute,
         clinicalAttributeValues?: {value:string, color:string}[]
+        bins?:DataBin[]
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
@@ -634,10 +604,12 @@ export class StudyViewPageStore {
                         }
                     );
                 break;
+            case ChartTypeEnum.BAR_CHART:
             default:
                 sessionId =
                     await this.createNumberAttributeComparisonSession(
                         params.clinicalAttribute,
+                        params.bins!,
                         (phase:LoadingPhase)=>{
                             (comparisonWindow as any).routingStore.updateRoute({phase}, undefined, false);
                         }

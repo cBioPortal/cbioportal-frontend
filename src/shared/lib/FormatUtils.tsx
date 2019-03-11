@@ -19,6 +19,19 @@ export function toPrecision(value:number, precision:number, threshold:number)
     return ret;
 }
 
+export function toFixedWithoutTrailingZeros(value:number, digits:number):string {
+    let fixed = value.toFixed(digits);
+    if (fixed.indexOf(".") > -1) {
+        // if theres a decimal point
+        const trailingRegexp = /\.?0+$/; // take out trailing zeros, and the decimal point if its right there
+        const match = fixed.match(trailingRegexp);
+        if (match) {
+            fixed = fixed.substring(0, match.index);
+        }
+    }
+    return fixed;
+}
+
 /**
  * Works the same as the default toFixed() function when the result string is not expected to be a zero value
  * such as 0.0, 0.00, 0.000, etc.
