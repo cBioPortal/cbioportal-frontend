@@ -73,7 +73,8 @@ export interface IChartContainerProps {
     openComparisonPage:(params:{
         type:ChartType,
         clinicalAttribute:ClinicalAttribute,
-        clinicalAttributeValues?:{ value:string, color:string }[]
+        clinicalAttributeValues?:{ value:string, color:string }[],
+        bins?:DataBin[]
     })=>void;
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
@@ -253,7 +254,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 case ChartTypeEnum.BAR_CHART:
                     this.props.openComparisonPage({
                         type:ChartTypeEnum.BAR_CHART,
-                        clinicalAttribute: this.props.chartMeta.clinicalAttribute!
+                        clinicalAttribute: this.props.chartMeta.clinicalAttribute!,
+                        bins: this.props.promise.result!
                     });
                     break;
             }
