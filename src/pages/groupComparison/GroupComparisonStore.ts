@@ -515,6 +515,11 @@ export default class GroupComparisonStore {
         }
     });
 
+    @computed get survivalTabGrey() {
+        // grey out if more than 10 active groups
+        return (this.activeGroups.isComplete && this.activeGroups.result.length > 10);
+    }
+
     @computed get mutationsTabGrey() {
         // grey out unless two active groups
         return (this.activeGroups.isComplete && this.activeGroups.result.length !== 2);
