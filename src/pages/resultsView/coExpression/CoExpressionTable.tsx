@@ -2,20 +2,15 @@ import * as React from "react";
 import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {correlationColor, correlationSortBy} from "./CoExpressionTableUtils";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
-import {ILazyMobXTableApplicationDataStore} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
-import {CoExpressionDataStore, TableMode} from "./CoExpressionViz";
 import Select from "react-select";
 import {observer} from "mobx-react";
-import {observable} from "mobx"
 import {CoExpressionWithQ, tableSearchInformation} from "./CoExpressionTabUtils";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import InfoIcon from "../../../shared/components/InfoIcon";
 import {bind} from "bind-decorator";
-import { cytobandFilter } from "pages/resultsView/ResultsViewTableUtils";
-import {PotentialViewType} from "../plots/PlotsTab";
-import {PLOT_SIDELENGTH} from "../plots/PlotsTabUtils";
-import { toConditionalPrecision } from "shared/lib/NumberUtils";
-import { formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
+import {cytobandFilter} from "pages/resultsView/ResultsViewTableUtils";
+import {toConditionalPrecision} from "shared/lib/NumberUtils";
+import {formatSignificanceValueWithStyle} from "shared/lib/FormatUtils";
+import {CoExpressionDataStore, TableMode} from "./CoExpressionDataStore";
 
 export interface ICoExpressionTableProps {
     referenceGene:{hugoGeneSymbol:string, cytoband:string};

@@ -4,16 +4,10 @@ import {observer, Observer} from "mobx-react";
 import CoExpressionTable from "./CoExpressionTable";
 import {action, autorun, computed, IReactionDisposer, observable} from "mobx";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import {
-    SimpleGetterLazyMobXTableApplicationDataStore,
-    SimpleLazyMobXTableApplicationDataStore
-} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
-import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import GeneMolecularDataCache from "../../../shared/cache/GeneMolecularDataCache";
+import {SimpleGetterLazyMobXTableApplicationDataStore} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
 import CoExpressionPlot, {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {remoteData} from "../../../shared/api/remoteData";
-import MutationDataCache from "../../../shared/cache/MutationDataCache";
-import {cached, MobxPromise} from "mobxpromise";
+import {MobxPromise} from "mobxpromise";
 import {computePlotData, requestAllDataMessage} from "./CoExpressionVizUtils";
 import {Button} from "react-bootstrap";
 import {CoExpressionCache} from "./CoExpressionTab";
@@ -23,6 +17,7 @@ import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import _ from "lodash";
 import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {CoExpressionWithQ} from "./CoExpressionTabUtils";
+import {CoExpressionDataStore, TableMode} from "./CoExpressionDataStore";
 
 export interface ICoExpressionVizProps {
     plotState:{
@@ -39,58 +34,6 @@ export interface ICoExpressionVizProps {
     studyToMutationMolecularProfile:MobxPromise<{[studyId:string]:MolecularProfile}>;
     mutationCache?:MobxPromiseCache<{entrezGeneId:number}, Mutation[]>;
     hidden?:boolean;
-}
-
-export enum TableMode {
-    SHOW_ALL, SHOW_POSITIVE, SHOW_NEGATIVE
-}
-
-export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<CoExpressionWithQ> {
-    @observable public tableMode:TableMode;
-
-    private reactionDisposer:IReactionDisposer;
-
-    constructor(
-        getData:()=>CoExpressionWithQ[],
-        getHighlighted:()=>CoExpressionWithQ|undefined,
-        public setHighlighted:(c:CoExpressionWithQ)=>void
-    ) {
-        super(getData);
-        this.tableMode = TableMode.SHOW_ALL;
-        this.dataHighlighter = (d:CoExpressionWithQ) =>{
-            const highlighted = getHighlighted();
-            return !!(highlighted && (d.entrezGeneId === highlighted.entrezGeneId));
-        };
-        this.dataSelector = (d:CoExpressionWithQ) =>{
-            let selected;
-            switch (this.tableMode) {
-                case TableMode.SHOW_POSITIVE:
-                    selected = (d.spearmansCorrelation >= 0);
-                    break;
-                case TableMode.SHOW_NEGATIVE:
-                    selected = (d.spearmansCorrelation <= 0);
-                    break;
-                default:
-                    selected = true;
-                    break;
-            }
-            return selected;
-        };
-
-        this.reactionDisposer = autorun(()=>{
-            if (
-                this.sortMetric &&
-                this.sortedFilteredData.length > 0 &&
-                !getHighlighted()
-            ) {
-                this.setHighlighted(this.sortedFilteredData[0]);
-            }
-        });
-    }
-
-    public destroy() {
-        this.reactionDisposer();
-    }
 }
 
 @observer
