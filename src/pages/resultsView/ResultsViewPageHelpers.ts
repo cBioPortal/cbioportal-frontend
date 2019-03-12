@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import {getMolecularProfiles} from "./ResultsViewPageStoreUtils";
 import {runInAction} from "mobx";
-import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
+import {ResultsViewPageStore} from "./ResultsViewPageStore";
 import client from "../../shared/api/cbioportalClientInstance";
 import sessionServiceClient from "../../shared/api/sessionServiceInstance";
 import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
@@ -11,6 +11,7 @@ import {
     CLINICAL_TRACKS_URL_PARAM, HEATMAP_TRACKS_URL_PARAM,
     SAMPLE_MODE_URL_PARAM
 } from "../../shared/components/oncoprint/ResultsViewOncoprint";
+import {SamplesSpecificationElement} from "./ResultsViewQuery";
 
 export enum ResultsViewTab {
     ONCOPRINT="oncoprint",

@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import $ from "jquery";
 import {inject, observer} from "mobx-react";
 import {computed, reaction, runInAction} from "mobx";
-import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
+import {ResultsViewPageStore} from "./ResultsViewPageStore";
 import CancerSummaryContainer from "pages/resultsView/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
@@ -30,7 +30,7 @@ import {getTabId, parseConfigDisabledTabs, parseSamplesSpecifications, ResultsVi
 import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsViewPageStoreUtils";
 import {AppStore} from "../../AppStore";
 import {bind} from "bind-decorator";
-import {updateResultsViewQuery} from "./ResultsViewQuery";
+import {SamplesSpecificationElement, updateResultsViewQuery} from "./ResultsViewQuery";
 import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 

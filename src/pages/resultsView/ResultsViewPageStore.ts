@@ -133,7 +133,7 @@ import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
 import {makeProfiledInClinicalAttributes} from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
-import {ResultsViewQuery} from "./ResultsViewQuery";
+import {ResultsViewQuery, SampleListCategoryTypeToFullId, SamplesSpecificationElement} from "./ResultsViewQuery";
 import {annotateAlterationTypes} from "../../shared/lib/oql/annotateAlterationTypes";
 import {ErrorMessages} from "../../shared/enums/ErrorEnums";
 
@@ -158,21 +158,6 @@ export const DataTypeConstants = {
     LOGVALUE:"LOG-VALUE",
     LOG2VALUE:"LOG2-VALUE"
 };
-
-export enum SampleListCategoryType {
-    "w_mut"="w_mut",
-    "w_cna"="w_cna",
-    "w_mut_cna"="w_mut_cna"
-}
-
-export const SampleListCategoryTypeToFullId = {
-    [SampleListCategoryType.w_mut]:"all_cases_with_mutation_data",
-    [SampleListCategoryType.w_cna]:"all_cases_with_cna_data",
-    [SampleListCategoryType.w_mut_cna]:"all_cases_with_mutation_and_cna_data"
-};
-
-export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
-    {studyId: string, sampleId: undefined, sampleListId: string};
 
 export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
     hugoGeneSymbol:string;

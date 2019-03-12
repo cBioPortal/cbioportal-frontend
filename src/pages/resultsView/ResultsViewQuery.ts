@@ -1,9 +1,22 @@
-import {SamplesSpecificationElement, SampleListCategoryType} from "./ResultsViewPageStore";
 import {computed, observable} from "mobx";
 import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
 import {getMolecularProfiles} from "./ResultsViewPageStoreUtils";
 import hashString from "../../shared/lib/hashString";
 import _ from "lodash";
+
+export enum SampleListCategoryType {
+    "w_mut" = "w_mut",
+    "w_cna" = "w_cna",
+    "w_mut_cna" = "w_mut_cna"
+}
+
+export const SampleListCategoryTypeToFullId = {
+    [SampleListCategoryType.w_mut]: "all_cases_with_mutation_data",
+    [SampleListCategoryType.w_cna]: "all_cases_with_cna_data",
+    [SampleListCategoryType.w_mut_cna]: "all_cases_with_mutation_and_cna_data"
+};
+export type SamplesSpecificationElement = { studyId: string, sampleId: string, sampleListId: undefined } |
+    { studyId: string, sampleId: undefined, sampleListId: string };
 
 export class ResultsViewQuery {
     // TODO: make sure i am initializing these the exact same way as they were in resultsviewpagestore to avoid any weird bugs w assuming undefined at start

@@ -1,6 +1,6 @@
 import {assert} from "chai";
 import {getTabId, parseSamplesSpecifications, ResultsViewTab} from "./ResultsViewPageHelpers";
-import {SamplesSpecificationElement} from "./ResultsViewPageStore";
+import {SamplesSpecificationElement} from "./ResultsViewQuery";
 
 describe("ResultsViewPageHelpers", () => {
     describe("getTabId", ()=>{
