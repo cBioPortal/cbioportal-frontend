@@ -142,7 +142,7 @@ export function doWithRenderingSuppressedAndSortingOff(oncoprint:OncoprintJS<any
 export function getHeatmapTrackRuleSetParams(molecularAlterationType: string) {
     let value_range:[number, number];
     let legend_label:string;
-    let colors:number[][];
+    let colors:[number, number, number, number][];
     let value_stop_points:number[];
     if (molecularAlterationType === "METHYLATION") {
         value_range = [0,1];
@@ -190,7 +190,7 @@ export function getGenesetHeatmapTrackRuleSetParams() {
             [222, 119, 174, 1],
             [197,  27, 125, 1],
             [142,   1,  82, 1]
-        ],
+        ] as [number,number,number,number][],
         value_stop_points: [
             -1, -0.8, -0.6, -0.4, -0.2,
             0, 0.2, 0.4, 0.6, 0.8, 1

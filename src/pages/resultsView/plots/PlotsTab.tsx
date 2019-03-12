@@ -1028,7 +1028,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             <form className="main-form">
                 <h4 className="tab-title">{vertical ? "Vertical" : "Horizontal"} Axis</h4>
                 <div>
-                    <div className="form-group">
+                    <div style={{marginBottom:"5px"}} className="form-group">
                         <label className="label-text">Data Type</label>
                         <ReactSelect
                             name={`${vertical ? "v" : "h"}-profile-type-selector`}
@@ -1039,7 +1039,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             searchable={false}
                         />
                     </div>
-                    <div className="form-group ">
+                    <div style={{marginBottom:"5px"}} className="form-group ">
                         <label className="label-text">{dataSourceLabel}</label>
                         <div style={{display:"flex", flexDirection:"row"}}>
                             <ReactSelect
@@ -1164,39 +1164,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             /> Horizontal Bars
                         </label></div>
                     )}
-                    {showSampleColoringOptions && (
-                        <div className="color-samples">
-                            <label style={{marginBottom:0 }}>Color Samples By</label>
-                            <div style={{marginLeft:14, marginTop:-4}}>
-                                {this.mutationDataCanBeShown && (
-                                    <div className="checkbox"><label>
-                                        <input
-                                            data-test="ViewMutationType"
-                                            type="checkbox"
-                                            name="utilities_viewMutationType"
-                                            value={EventKey.utilities_viewMutationType}
-                                            checked={this.viewMutationType}
-                                            onClick={this.onInputClick}
-                                            disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
-                                        /> Mutation Type *
-                                    </label></div>
-                                )}
-                                {this.cnaDataCanBeShown && (
-                                    <div className="checkbox"><label>
-                                        <input
-                                            data-test="ViewCopyNumber"
-                                            type="checkbox"
-                                            name="utilities_viewCopyNumber"
-                                            value={EventKey.utilities_viewCopyNumber}
-                                            checked={this.viewCopyNumber}
-                                            onClick={this.onInputClick}
-                                            disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
-                                        /> Copy Number Alteration
-                                    </label></div>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    
                     {showRegression && (
                         <div className="checkbox" style={{marginTop:14}}><label>
                             <input
@@ -1395,6 +1363,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         const promises = [this.plotType, this.horzAxisDataPromise, this.vertAxisDataPromise, this.horzLabel, this.vertLabel];
         const groupStatus = getMobxPromiseGroupStatus(...promises);
         const isPercentage = this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.PercentageStackedBar;
+        const showSampleColoringOptions = this.mutationDataCanBeShown || this.cnaDataCanBeShown;
         const isStacked = isPercentage || this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.StackedBar;
         switch (groupStatus) {
             case "pending":
@@ -1541,10 +1510,45 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>
                                 {plotElt}
                                 </div>
+                                {showSampleColoringOptions && (
+                        <div className="color-samples">
+                            <label style={{marginBottom:0 }}>Color Samples By</label>
+                            <div style={{marginLeft:14, marginTop:-4}}>
+                                {this.mutationDataCanBeShown && (
+                                    <div className="checkbox"><label>
+                                        <input
+                                            data-test="ViewMutationType"
+                                            type="checkbox"
+                                            name="utilities_viewMutationType"
+                                            value={EventKey.utilities_viewMutationType}
+                                            checked={this.viewMutationType}
+                                            onClick={this.onInputClick}
+                                            disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
+                                        /> Mutation Type *
+                                    </label></div>
+                                )}
+                                {this.cnaDataCanBeShown && (
+                                    <div className="checkbox"><label>
+                                        <input
+                                            data-test="ViewCopyNumber"
+                                            type="checkbox"
+                                            name="utilities_viewCopyNumber"
+                                            value={EventKey.utilities_viewCopyNumber}
+                                            checked={this.viewCopyNumber}
+                                            onClick={this.onInputClick}
+                                            disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
+                                        /> Copy Number Alteration
+                                    </label></div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                         </div>
                         {this.mutationDataCanBeShown && (
                             <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
                         )}
+                        
                         {/*this.mutationProfileDuplicateSamplesReport.isComplete && this.mutationProfileDuplicateSamplesReport.result.showMessage && (
                             <div className="alert alert-info" style={{marginTop:5, padding: 7}}>
                                 Notice: With Mutation profiles, there is one data point per mutation type, per sample. In

@@ -210,6 +210,7 @@ export function makeGeneticTrackData(
         for (const sample of cases) {
             const newDatum:Partial<GeneticTrackDatum> = {};
             newDatum.sample = sample.sampleId;
+            newDatum.patient = sample.patientId;
             newDatum.study_id = sample.studyId;
             newDatum.uid = sample.uniqueSampleKey;
 
@@ -283,7 +284,7 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
     data?: {value: number}[]
 ) {
     trackDatum[featureKey] = featureId;
-    trackDatum.study = case_.studyId;
+    trackDatum.study_id = case_.studyId;
     if (!data || !data.length) {
         trackDatum.profile_data = null;
         trackDatum.na = true;

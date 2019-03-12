@@ -3,7 +3,6 @@
 }
 
 .plotsTab {
-
   margin-top:$standardMargin;
 
   .leftColumn {
@@ -39,6 +38,10 @@
   } 
 }
 
+.borderedChart {
+  height: 700px;
+}
+
 .tab-title {
   font-size: 14px;
 }
@@ -50,21 +53,16 @@
   padding: 0px;
 }
 
-.form-group {
-  margin-bottom: 3px;
+.form-group-bspace {
+  margin-bottom: 5px;
 }
 
 .PlotsTab {
   width: 120%;
 }
 
-.color-samples {
-  position: fixed;
-  right:100px;
-  bottom:50px;
-  z-index:2;
-  padding:10px 10px;
-  border-radius:5px;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  background-color: white;
+.color-samples{
+  right: 10px;
+  bottom: 0;
+  position: absolute;
 }
