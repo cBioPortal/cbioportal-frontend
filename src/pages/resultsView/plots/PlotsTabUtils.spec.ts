@@ -15,7 +15,7 @@ import {
 } from "./PlotsTabUtils";
 import {MolecularProfile, Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
-import {MutationCountBy} from "./PlotsTab";
+import {MutationCountBy} from "./PlotsTabUtils";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 
 describe("PlotsTabUtils", ()=>{

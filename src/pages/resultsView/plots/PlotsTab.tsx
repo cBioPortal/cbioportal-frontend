@@ -2,68 +2,56 @@ import * as React from "react";
 import {action, computed, observable} from "mobx";
 import {Observer, observer} from "mobx-react";
 import "./styles.scss";
-import {DataTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
+import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {FormControl} from "react-bootstrap";
-import LockIcon from "../../../shared/components/LockIcon";
 import ReactSelect from "react-select";
 import _ from "lodash";
 import {
-    getAxisDescription,
-    getAxisLabel,
-    IScatterPlotData,
-    isNumberData,
-    isStringData,
-    logScalePossible,
-    makeAxisDataPromise,
-    makeScatterPlotData,
-    makeScatterPlotPointAppearance,
+    AxisMenuSelection,
+    boxPlotTooltip,
+    CLIN_ATTR_DATA_TYPE,
+    CNA_STROKE_WIDTH,
     dataTypeDisplayOrder,
     dataTypeToDisplayType,
-    scatterPlotTooltip,
-    scatterPlotLegendData,
-    IStringAxisData,
-    INumberAxisData,
-    makeBoxScatterPlotData,
-    IScatterPlotSampleData,
-    noMutationAppearance,
-    IBoxScatterPlotPoint,
-    boxPlotTooltip,
+    GENESET_DATA_TYPE,
+    getAxisLabel,
+    getBoxPlotDownloadData,
     getCnaQueries,
     getMutationQueries,
     getScatterPlotDownloadData,
-    getBoxPlotDownloadData,
-    mutationRenderPriority,
-    mutationSummaryRenderPriority,
+    IBoxScatterPlotPoint,
+    INumberAxisData,
+    IScatterPlotData,
+    IScatterPlotSampleData,
+    isNumberData,
+    isStringData,
+    IStringAxisData,
+    logScalePossible,
+    makeAxisDataPromise,
+    makeBoxScatterPlotData,
+    makeClinicalAttributeOptions,
+    makeScatterPlotData,
+    makeScatterPlotPointAppearance,
+    MutationCountBy,
     MutationSummary,
     mutationSummaryToAppearance,
-    CNA_STROKE_WIDTH,
     PLOT_SIDELENGTH,
-    CLIN_ATTR_DATA_TYPE,
-    sortMolecularProfilesForDisplay,
+    scatterPlotLegendData,
+    scatterPlotTooltip,
     scatterPlotZIndexSortBy,
-    getMutationProfileDuplicateSamplesReport,
-    GENESET_DATA_TYPE,
-    makeClinicalAttributeOptions
+    sortMolecularProfilesForDisplay,
+    ViewType
 } from "./PlotsTabUtils";
-import {
-    ClinicalAttribute, MolecularProfile, Mutation,
-    NumericGeneMolecularData
-} from "../../../shared/api/generated/CBioPortalAPI";
-import Timer = NodeJS.Timer;
+import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import ScatterPlot from "shared/components/plots/ScatterPlot";
 import TablePlot from "shared/components/plots/TablePlot";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import InfoIcon from "../../../shared/components/InfoIcon";
 import {remoteData} from "../../../shared/api/remoteData";
-import {MobxPromise} from "mobxpromise";
 import BoxScatterPlot, {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
-import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
-import {SpecialAttribute} from "../../../shared/cache/ClinicalDataCache";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
@@ -72,6 +60,7 @@ import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroup
 import MultipleCategoryBarPlot from "../../../shared/components/plots/MultipleCategoryBarPlot";
 import {STUDY_VIEW_CONFIG} from "../../studyView/StudyViewConfig";
 import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
+import Timer = NodeJS.Timer;
 
 enum EventKey {
     horz_logScale,
@@ -82,14 +71,6 @@ enum EventKey {
     utilities_showRegressionLine
 }
 
-
-export enum ViewType {
-    MutationType,
-    MutationTypeAndCopyNumber,
-    CopyNumber,
-    MutationSummary,
-    None
-}
 
 export enum PotentialViewType {
     MutationTypeAndCopyNumber,
@@ -109,22 +90,6 @@ export enum DiscreteVsDiscretePlotType {
     PercentageStackedBar = "PercentageStackedBar",
     Table = "Table"
 }
-
-export enum MutationCountBy {
-    MutationType = "MutationType",
-    MutatedVsWildType = "MutatedVsWildType"
-}
-
-export type AxisMenuSelection = {
-    entrezGeneId?:number;
-    genesetId?:string;
-    selectedGeneOption?:{value:number, label:string}; // value is entrez id, label is hugo symbol
-    selectedGenesetOption?:{value:string, label:string};
-    dataType?:string;
-    dataSourceId?:string;
-    mutationCountBy:MutationCountBy;
-    logScale: boolean;
-};
 
 export interface IPlotsTabProps {
     store:ResultsViewPageStore;

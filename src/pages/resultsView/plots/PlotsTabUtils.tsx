@@ -1,7 +1,11 @@
-import {AxisMenuSelection, MutationCountBy, ViewType} from "./PlotsTab";
 import {MobxPromise} from "mobxpromise";
 import {
-    ClinicalAttribute, ClinicalData, Gene, MolecularProfile, Mutation, NumericGeneMolecularData,
+    ClinicalAttribute,
+    ClinicalData,
+    Gene,
+    MolecularProfile,
+    Mutation,
+    NumericGeneMolecularData,
     Sample
 } from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
@@ -11,7 +15,8 @@ import {getSampleViewUrl} from "../../../shared/api/urls";
 import _ from "lodash";
 import * as React from "react";
 import {
-    getOncoprintMutationType, OncoprintMutationType,
+    getOncoprintMutationType,
+    OncoprintMutationType,
     selectDisplayValue
 } from "../../../shared/components/oncoprint/DataUtils";
 import {stringListToIndexSet} from "../../../shared/lib/StringUtils";
@@ -19,13 +24,19 @@ import {
     CNA_COLOR_AMP,
     CNA_COLOR_HOMDEL,
     DEFAULT_GREY,
-    MUT_COLOR_FUSION, MUT_COLOR_INFRAME, MUT_COLOR_INFRAME_PASSENGER,
-    MUT_COLOR_MISSENSE, MUT_COLOR_MISSENSE_PASSENGER, MUT_COLOR_OTHER, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC,
+    MUT_COLOR_FUSION,
+    MUT_COLOR_INFRAME,
+    MUT_COLOR_INFRAME_PASSENGER,
+    MUT_COLOR_MISSENSE,
+    MUT_COLOR_MISSENSE_PASSENGER,
+    MUT_COLOR_OTHER,
+    MUT_COLOR_PROMOTER,
+    MUT_COLOR_TRUNC,
     MUT_COLOR_TRUNC_PASSENGER
 } from "../../../shared/components/oncoprint/geneticrules";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
-import {AnnotatedMutation} from "../../../shared/lib/oql/AccessorsForOqlFilter";
+import {AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../../../shared/lib/oql/AccessorsForOqlFilter";
 import numeral from "numeral";
 import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
@@ -34,7 +45,6 @@ import {GenesetMolecularData} from "../../../shared/api/generated/CBioPortalAPII
 import {MUTATION_COUNT} from "../../studyView/StudyViewPageStore";
 import ClinicalDataCache from "../../../shared/cache/ClinicalDataCache";
 import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
-import {AnnotatedNumericGeneMolecularData} from "../../../shared/lib/oql/AccessorsForOqlFilter";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
 export const GENESET_DATA_TYPE = "GENESET_SCORE";
@@ -148,6 +158,30 @@ export function isStringData(d:IAxisData): d is IStringAxisData {
 export function isNumberData(d:IAxisData): d is INumberAxisData {
     return d.datatype === "number";
 }
+
+export enum ViewType {
+    MutationType,
+    MutationTypeAndCopyNumber,
+    CopyNumber,
+    MutationSummary,
+    None
+}
+
+export enum MutationCountBy {
+    MutationType = "MutationType",
+    MutatedVsWildType = "MutatedVsWildType"
+}
+
+export type AxisMenuSelection = {
+    entrezGeneId?: number;
+    genesetId?: string;
+    selectedGeneOption?: { value: number, label: string }; // value is entrez id, label is hugo symbol
+    selectedGenesetOption?: { value: string, label: string };
+    dataType?: string;
+    dataSourceId?: string;
+    mutationCountBy: MutationCountBy;
+    logScale: boolean;
+};
 
 export function scatterPlotZIndexSortBy<D extends Pick<IScatterPlotSampleData, "dispMutationType" | "dispMutationSummary" | "profiledMutations" | "dispCna" | "profiledCna">>(
     viewType:ViewType,

@@ -45,7 +45,7 @@ import {MobxPromise} from "mobxpromise";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
-import {ViewType} from "../plots/PlotsTab";
+import {ViewType} from "../plots/PlotsTabUtils";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import {maxPage} from "../../../shared/components/lazyMobXTable/utils";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
