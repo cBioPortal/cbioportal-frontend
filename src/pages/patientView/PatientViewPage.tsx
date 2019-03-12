@@ -12,7 +12,7 @@ import SignificantMutationalSignatures from "./patientHeader/SignificantMutation
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import {IColumnVisibilityDef} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import {toggleColumnVisibility} from "shared/components/lazyMobXTable/ColumnVisibilityResolver";
-import {parseCohortIds, PatientViewPageStore} from "./clinicalInformation/PatientViewPageStore";
+import {PatientViewPageStore} from "./clinicalInformation/PatientViewPageStore";
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
 import {inject, observer} from "mobx-react";
@@ -47,6 +47,7 @@ import {QueryParams} from "url";
 import {AppStore} from "../../AppStore";
 import request from 'superagent';
 import {remoteData} from "../../shared/api/remoteData";
+import {parseCohortIds} from "../../shared/lib/patientViewUrlUtils";
 
 const patientViewPageStore = new PatientViewPageStore();
 

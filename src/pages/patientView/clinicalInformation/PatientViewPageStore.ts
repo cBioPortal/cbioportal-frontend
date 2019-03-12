@@ -1,32 +1,32 @@
 import * as _ from 'lodash';
-import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
-    ClinicalData, MolecularProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
-    CopyNumberCount, ClinicalDataMultiStudyFilter
+    ClinicalData,
+    ClinicalDataMultiStudyFilter,
+    CopyNumberCount,
+    DiscreteCopyNumberData,
+    DiscreteCopyNumberFilter,
+    MolecularProfile,
+    Mutation,
+    MutationFilter,
+    Sample
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
-import {
-    Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
-} from "shared/api/generated/CBioPortalAPIInternal";
-import {computed, observable, action, runInAction} from "mobx";
+import {default as CBioPortalAPIInternal} from "shared/api/generated/CBioPortalAPIInternal";
+import {action, computed, observable, runInAction} from "mobx";
 import {remoteData} from "../../../shared/api/remoteData";
 import {IGisticData} from "shared/model/Gistic";
-import {labelMobxPromises, cached} from "mobxpromise";
+import {cached, labelMobxPromises} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
-import {
-    getDarwinUrl,
-    getDigitalSlideArchiveMetaUrl
-} from "../../../shared/api/urls";
+import {getDarwinUrl, getDigitalSlideArchiveMetaUrl} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
-import {IMutSigData} from "shared/model/MutSig";
-import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
+import {ICivicGene, ICivicVariant} from "shared/model/Civic.ts";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";
@@ -34,23 +34,46 @@ import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import AppConfig from "appConfig";
 import {
-    findMolecularProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData,
-    fetchCnaOncoKbData, mergeMutations, fetchMyCancerGenomeData, fetchMutationalSignatureData, fetchMutationalSignatureMetaData,
-    fetchCosmicData, fetchMutationData, fetchDiscreteCNAData, generateUniqueSampleKeyToTumorTypeMap, findMutationMolecularProfileId,
-    findUncalledMutationMolecularProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
-    fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
-    fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
-    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
-    fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenesSuppressErrors, concatMutationData
+    concatMutationData,
+    fetchCivicGenes,
+    fetchCivicVariants,
+    fetchClinicalData,
+    fetchClinicalDataForPatient,
+    fetchCnaCivicGenes,
+    fetchCnaOncoKbData,
+    fetchCopyNumberData,
+    fetchCopyNumberSegments,
+    fetchCosmicData,
+    fetchDiscreteCNAData,
+    fetchGisticData,
+    fetchMutationalSignatureData,
+    fetchMutationalSignatureMetaData,
+    fetchMutationData,
+    fetchMutSigData,
+    fetchMyCancerGenomeData,
+    fetchOncoKbAnnotatedGenesSuppressErrors,
+    fetchOncoKbData,
+    fetchSamplesForPatient,
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    findMolecularProfileIdDiscrete,
+    findMrnaRankMolecularProfileId,
+    findMutationMolecularProfileId,
+    findSamplesWithoutCancerTypeClinicalData,
+    findUncalledMutationMolecularProfileId,
+    generateUniqueSampleKeyToTumorTypeMap,
+    groupBySampleId,
+    makeStudyToCancerTypeMap,
+    mergeDiscreteCNAData,
+    mergeMutations,
+    mergeMutationsIncludingUncalled,
+    ONCOKB_DEFAULT
 } from "shared/lib/StoreUtils";
-import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
+import {fetchHotspotsData, indexHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
-import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
-import { fetchVariantAnnotationsIndexedByGenomicLocation } from 'shared/lib/MutationAnnotator';
-import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
-import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
-import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
+import {VariantAnnotation} from 'shared/api/generated/GenomeNexusAPI';
+import {fetchVariantAnnotationsIndexedByGenomicLocation} from 'shared/lib/MutationAnnotator';
+import {getNavCaseIdsCache} from "../../../shared/lib/patientViewUrlUtils";
 
 type PageMode = 'patient' | 'sample';
 
@@ -73,12 +96,6 @@ export type PathologyReportPDF = {
     name: string;
     url: string;
 
-}
-
-export function parseCohortIds(concatenatedIds:string){
-    return concatenatedIds.split(',').map((entityId:string)=>{
-        return entityId.includes(':') ? entityId : this.studyId + ':' + entityId;
-    });
 }
 
 export function handlePathologyReportCheckResponse(patientId: string, resp: any): PathologyReportPDF[] {
