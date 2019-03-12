@@ -4,6 +4,7 @@ var WebpackFailPlugin = require('webpack-fail-plugin');
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+var CircularDependencyPlugin = require('circular-dependency-plugin')
 
 var commit = '"unknown"';
 var version = '"unknown"';
@@ -141,7 +142,15 @@ var config = {
             {from: './src/shared/legacy/igv.min.js', to: 'reactapp/igv.min.js'},
             {from: './src/shared/legacy/igv.css', to: 'reactapp/igv.css'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css.map', to: 'reactapp/prefixed-bootstrap.min.css.map'}
-        ]) // destination is relative to dist directory
+        ]), // destination is relative to dist directory
+        new CircularDependencyPlugin({
+            // exclude detection of files based on a RegExp
+            exclude: /node_modules/,
+            // add errors to webpack instead of warnings
+            failOnError: true,
+            // set the current working directory for displaying module paths
+            cwd: process.cwd(),
+        })
     ],
 
     module: {
