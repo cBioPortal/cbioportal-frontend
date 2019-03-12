@@ -75,13 +75,31 @@ describe('StudyViewUtils', () => {
 
     describe('updateGeneQuery', () => {
         it('when gene selected in table', () => {
-            assert.equal(updateGeneQuery([{ gene: 'TP53', alterations: false }], 'TTN'), 'TP53 TTN',);
-            assert.equal(updateGeneQuery([{ gene: 'TP53', alterations: false }, { gene: 'TTN', alterations: false }], 'ALK'), 'TP53 TTN ALK',);
+            assert.deepEqual(updateGeneQuery([{gene: 'TP53', alterations: false}], 'TTN'), [{
+                gene: 'TP53',
+                alterations: false
+            }, {gene: 'TTN', alterations: false}]);
+            assert.deepEqual(updateGeneQuery([{gene: 'TP53', alterations: false}, {
+                gene: 'TTN',
+                alterations: false
+            }], 'ALK'), [{gene: 'TP53', alterations: false}, {gene: 'TTN', alterations: false}, {
+                gene: 'ALK',
+                alterations: false
+            }]);
         });
         it('when gene unselected in table', () => {
-            assert.equal(updateGeneQuery([{ gene: 'TP53', alterations: false }], 'TP53'), '');
-            assert.equal(updateGeneQuery([{ gene: 'TP53', alterations: false }, { gene: 'TTN', alterations: false }], 'TP53'), 'TTN',);
-            assert.equal(updateGeneQuery([{ gene: 'TP53', alterations: false }, { gene: 'TTN', alterations: false }], 'ALK'), 'TP53 TTN ALK',);
+            assert.deepEqual(updateGeneQuery([{gene: 'TP53', alterations: false}], 'TP53'), []);
+            assert.deepEqual(updateGeneQuery([{gene: 'TP53', alterations: false}, {
+                gene: 'TTN',
+                alterations: false
+            }], 'TP53'), [{gene: 'TTN', alterations: false}]);
+            assert.deepEqual(updateGeneQuery([{gene: 'TP53', alterations: false}, {
+                gene: 'TTN',
+                alterations: false
+            }], 'ALK'), [{gene: 'TP53', alterations: false}, {gene: 'TTN', alterations: false}, {
+                gene: 'ALK',
+                alterations: false
+            }]);
         });
     });
 
