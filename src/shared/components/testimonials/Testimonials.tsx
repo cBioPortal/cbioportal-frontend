@@ -106,9 +106,6 @@ export default class Testimonials extends React.Component <{}, {}> {
                     <cite>--{activeTestimonial.cite}</cite>
                     <div className="testimonial-links">
                         <Link to={'/testimonials'}>View All</Link>
-                        <a href="mailto:cbioportal@cbio.mskcc.org?subject=cBioPortal Testimonial&body=Job Title:%0D%0APlace of Employment:%0D%0ATestimonial:%0D%0A%0D%0AThank you for taking the time to submit your opinion.">
-                            Tell Us What You Think
-                        </a>
                     </div>
                 </div>
             </div>

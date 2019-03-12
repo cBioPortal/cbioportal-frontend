@@ -17,7 +17,7 @@ const SELECTED_PATIENTS = "strong[data-test='selected-patients']";
 const ADD_CHART_BUTTON = "[data-test='add-charts-button']";
 const ADD_CHART_CLINICAL_TAB = ".addChartTabs a.tabAnchor_Clinical";
 const ADD_CHART_GENOMIC_TAB = ".addChartTabs a.tabAnchor_Genomic";
-const ADD_CHART_CUSTOM_GROUPS_TAB = ".addChartTabs a[class='tabAnchor_Custom Groups']";
+const ADD_CHART_CUSTOM_DATA_TAB = ".addChartTabs a[class='tabAnchor_Custom Data']";
 const ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON = "[data-test='CustomCaseSetSubmitButton']";
 const ADD_CHART_CUSTOM_GROUPS_TEXTAREA = "[data-test='CustomCaseSetInput']";
 const STUDY_SUMMARY_RAW_DATA_DOWNLOAD="[data-test='studySummaryRawDataDownloadIcon']";
@@ -147,10 +147,10 @@ describe('study laml_tcga tests', () => {
         });
         describe('add custom chart', () => {
             before(()=>{
-                if (!browser.isVisible(ADD_CHART_CUSTOM_GROUPS_TAB)) {
+                if (!browser.isVisible(ADD_CHART_CUSTOM_DATA_TAB)) {
                     browser.click(ADD_CHART_BUTTON);
                 }
-                browser.click(ADD_CHART_CUSTOM_GROUPS_TAB);
+                browser.click(ADD_CHART_CUSTOM_DATA_TAB);
             });
             it('add chart button should be disabled when no content in the textarea', () => {
                 assert(!browser.isEnabled(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON));
@@ -186,7 +186,7 @@ describe('study laml_tcga tests', () => {
             });
             after(()=>{
                 // Close the tooltip
-                if (browser.isVisible(ADD_CHART_CUSTOM_GROUPS_TAB)) {
+                if (browser.isVisible(ADD_CHART_CUSTOM_DATA_TAB)) {
                     browser.click(ADD_CHART_BUTTON);
                 }
             })
