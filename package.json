@@ -248,7 +248,7 @@
     "colors": "^1.1.2",
     "deep-equal-in-any-order": "^1.0.10",
     "enzyme": "^3.8.0",
-    "enzyme-adapter-react-16": "^1.7.1",
+    "enzyme-adapter-react-16": "^1.12.1",
     "eslint": "^3.14.1",
     "eslint-config-airbnb": "^14.0.0",
     "eslint-plugin-import": "^2.14.0",

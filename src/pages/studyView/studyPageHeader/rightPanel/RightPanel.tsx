@@ -12,7 +12,6 @@ import fileDownload from 'react-file-download';
 import {Else, If, Then} from 'react-if';
 import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import classnames from "classnames";
-import shareUIstyles from '../../../resultsView/querySummary/shareUI.module.scss';
 import {serializeEvent} from "../../../../shared/lib/tracking";
 
 export interface IRightPanelProps {
@@ -29,6 +28,8 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
     @observable downloadingData = false;
     @observable showDownloadErrorMessage = false;
 
+    @observable geneValidationHasIssue = false;
+
     @autobind
     @action
     private updateSelectedGenes(oql: {
@@ -39,13 +40,16 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                                     found: Gene[];
                                     suggestions: GeneReplacement[];
                                 },
-                                queryStr: string,
-                                status: "pending" | "error" | "complete") {
-        this._isQueryButtonDisabled = queryStr==='' || (status === 'pending') || !_.isUndefined(oql.error) || genes.suggestions.length !== 0;
-        if (status === "complete") {
-            this.props.store.updateSelectedGenes(oql.query, genes.found);
-        }
+                                queryStr: string) {
+        this.geneValidationHasIssue = queryStr==='' || !_.isUndefined(oql.error) || genes.suggestions.length !== 0;
+        this.props.store.updateSelectedGenes(oql.query);
     }
+
+    @computed
+    get isQueryButtonDisabled() {
+        return this.props.store.geneQueryStr === '' || this.geneValidationHasIssue;
+    }
+
 
     render() {
         return (
@@ -53,10 +57,11 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                 <div className={styles.rightPanel}>
                     <GeneSelectionBox
                         inputGeneQuery={this.props.store.geneQueryStr}
+                        validateInputGeneQuery={false}
                         callback={this.updateSelectedGenes}
                         location={GeneBoxType.STUDY_VIEW_PAGE}
                     />
-                    <button disabled={this._isQueryButtonDisabled}
+                    <button disabled={this.isQueryButtonDisabled}
                             className={classnames('btn btn-primary btn-sm', styles.submitQuery)}
                             data-event={serializeEvent({ category:"studyPage", action:"submitQuery", label:this.props.store.queriedPhysicalStudyIds.result })}
                             onClick={() => this.props.store.onSubmitQuery()}>
