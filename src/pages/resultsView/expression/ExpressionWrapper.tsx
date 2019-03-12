@@ -37,7 +37,7 @@ import {
 } from "../plots/PlotsTabUtils";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
 import {getSampleViewUrl} from "../../../shared/api/urls";
-import {AnnotatedMutation, ResultsViewPageStore} from "../ResultsViewPageStore";
+import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import {remoteData} from "../../../shared/api/remoteData";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
@@ -49,6 +49,7 @@ import {ViewType} from "../plots/PlotsTab";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import {maxPage} from "../../../shared/components/lazyMobXTable/utils";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
+import {AnnotatedMutation} from "../../../shared/lib/oql/AccessorsForOqlFilter";
 
 export interface ExpressionWrapperProps {
     store:ResultsViewPageStore;

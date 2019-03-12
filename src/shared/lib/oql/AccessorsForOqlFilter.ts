@@ -1,9 +1,5 @@
-import {Mutation, MolecularProfile, NumericGeneMolecularData} from "../../api/generated/CBioPortalAPI";
+import {MolecularProfile, Mutation, NumericGeneMolecularData} from "../../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
-import {
-    AnnotatedExtendedAlteration,
-    AnnotatedMutation, AnnotatedNumericGeneMolecularData
-} from "../../../pages/resultsView/ResultsViewPageStore";
 import {isNotGermlineMutation} from "../MutationUtils";
 import {AlterationTypeConstants} from "../StoreUtils";
 
@@ -80,6 +76,19 @@ export function getSimplifiedMutationType(type: string):SimplifiedMutationType {
     }
     return ret;
 };
+
+export interface AnnotatedMutation extends Mutation {
+    hugoGeneSymbol: string;
+    putativeDriver: boolean;
+    oncoKbOncogenic: string;
+    isHotspot: boolean;
+    simplifiedMutationType: SimplifiedMutationType;
+}
+
+export interface AnnotatedNumericGeneMolecularData extends NumericGeneMolecularData {
+    hugoGeneSymbol: string;
+    oncoKbOncogenic: string;
+}
 
 export default class AccessorsForOqlFilter {
     private molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile};

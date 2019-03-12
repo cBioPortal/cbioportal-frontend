@@ -8,14 +8,12 @@ import {
     doesQueryContainMutationOQL, doesQueryContainOQL
 } from './oqlfilter';
 import {NumericGeneMolecularData, MolecularProfile, Mutation} from '../../api/generated/CBioPortalAPI';
-import AccessorsForOqlFilter from './AccessorsForOqlFilter';
+import AccessorsForOqlFilter, {AnnotatedNumericGeneMolecularData} from './AccessorsForOqlFilter';
 import * as _ from 'lodash';
 import {assert} from 'chai';
 import sinon from 'sinon';
 import {
-    AnnotatedMutation,
-    AnnotatedNumericGeneMolecularData
-} from "../../../pages/resultsView/ResultsViewPageStore";
+    AnnotatedMutation} from "./AccessorsForOqlFilter";
 import {AlterationTypeConstants} from "../StoreUtils";
 
 // This file uses type assertions to force functions that use overly specific

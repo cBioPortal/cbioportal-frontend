@@ -16,7 +16,7 @@ import {
 import {OncoprintPatientGeneticTrackData, OncoprintSampleGeneticTrackData} from "../../lib/QuerySession";
 import {
     AnnotatedExtendedAlteration,
-    AnnotatedMutation, CaseAggregatedData, ExtendedAlteration, IQueriedCaseData, IQueriedMergedTrackCaseData,
+    CaseAggregatedData, ExtendedAlteration, IQueriedCaseData, IQueriedMergedTrackCaseData,
     ResultsViewPageStore
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
@@ -42,6 +42,7 @@ import {
 import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {STUDY_VIEW_CONFIG} from "../../../pages/studyView/StudyViewConfig";
 import {AlterationTypeConstants} from "../../lib/StoreUtils";
+import {AnnotatedMutation} from "../../lib/oql/AccessorsForOqlFilter";
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IGeneHeatmapTrackSpec[];

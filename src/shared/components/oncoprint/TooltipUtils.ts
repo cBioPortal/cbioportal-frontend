@@ -7,13 +7,13 @@ import {
 import client from "shared/api/cbioportalClientInstance";
 import {ClinicalTrackSpec, GeneticTrackDatum} from "./Oncoprint";
 import {
-    AnnotatedExtendedAlteration, AnnotatedMutation, AnnotatedNumericGeneMolecularData,
-    ExtendedAlteration
+    AnnotatedExtendedAlteration, ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import _ from "lodash";
 import {alterationTypeToProfiledForText} from "./ResultsViewOncoprintUtils";
 import {isNotGermlineMutation} from "../../lib/MutationUtils";
 import ListIndexedMap, {ListIndexedMapOfCounts} from "../../lib/ListIndexedMap";
+import {AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../../lib/oql/AccessorsForOqlFilter";
 
 const hotspotsImg = require("../../../rootImages/cancer-hotspots.svg");
 const oncokbImg = require("../../../rootImages/oncokb-oncogenic-1.svg");

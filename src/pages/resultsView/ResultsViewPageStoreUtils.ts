@@ -3,7 +3,11 @@ import {
     Mutation, Patient, Sample, CancerStudy, ClinicalAttribute
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action, computed} from "mobx";
-import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
+import AccessorsForOqlFilter, {
+    AnnotatedMutation,
+    AnnotatedNumericGeneMolecularData,
+    getSimplifiedMutationType
+} from "../../shared/lib/oql/AccessorsForOqlFilter";
 import {
     OQLLineFilterOutput,
     UnflattenedOQLLineFilterOutput,
@@ -15,8 +19,6 @@ import oql_parser from '../../shared/lib/oql/oql-parser';
 import {groupBy} from "../../shared/lib/StoreUtils";
 import {
     AnnotatedExtendedAlteration,
-    AnnotatedNumericGeneMolecularData,
-    AnnotatedMutation,
     CaseAggregatedData,
     IQueriedCaseData,
     IQueriedMergedTrackCaseData, ResultsViewPageStore

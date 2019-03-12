@@ -6,13 +6,12 @@ import {
 } from "./TooltipUtils";
 import {GeneticTrackDatum} from "./Oncoprint";
 import {
-    AnnotatedExtendedAlteration,
-    AnnotatedMutation
-} from "../../../pages/resultsView/ResultsViewPageStore";
+    AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import $ from "jquery";
 import {MolecularProfile, Mutation} from "../../api/generated/CBioPortalAPI";
 import {getPatientViewUrl, getSampleViewUrl} from "../../api/urls";
 import {AlterationTypeConstants} from "../../lib/StoreUtils";
+import {AnnotatedMutation} from "../../lib/oql/AccessorsForOqlFilter";
 
 describe("Oncoprint TooltipUtils", ()=>{
     describe("getCaseViewElt", ()=>{

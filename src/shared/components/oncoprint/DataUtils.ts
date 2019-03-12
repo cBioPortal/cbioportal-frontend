@@ -1,6 +1,5 @@
 import {
     AnnotatedExtendedAlteration,
-    AnnotatedMutation,
     CaseAggregatedData, ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {
@@ -16,7 +15,11 @@ import {
     IGeneHeatmapTrackDatum,
 } from "./Oncoprint";
 import {isSample, isSampleList} from "../../lib/CBioPortalAPIUtils";
-import {getSimplifiedMutationType, SimplifiedMutationType} from "../../lib/oql/AccessorsForOqlFilter";
+import {
+    AnnotatedMutation,
+    getSimplifiedMutationType,
+    SimplifiedMutationType
+} from "../../lib/oql/AccessorsForOqlFilter";
 import _ from "lodash";
 import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {CoverageInformation, ExtendedClinicalAttribute} from "../../../pages/resultsView/ResultsViewPageStoreUtils";

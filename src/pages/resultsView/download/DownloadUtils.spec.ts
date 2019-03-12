@@ -6,8 +6,9 @@ import {
     generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData, updateOqlData
 } from "./DownloadUtils";
 import {
-    AnnotatedMutation, ExtendedAlteration
+    ExtendedAlteration
 } from "../ResultsViewPageStore";
+import {AnnotatedMutation} from "../../../shared/lib/oql/AccessorsForOqlFilter";
 
 describe('DownloadUtils', () => {
 

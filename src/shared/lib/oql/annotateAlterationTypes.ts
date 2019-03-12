@@ -1,7 +1,6 @@
-import AccessorsForOqlFilter from "./AccessorsForOqlFilter";
+import AccessorsForOqlFilter, {AnnotatedMutation} from "./AccessorsForOqlFilter";
 import {NumericGeneMolecularData} from "../../api/generated/CBioPortalAPI";
 import {
-    AnnotatedMutation,
     ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {isMutation} from "../CBioPortalAPIUtils";

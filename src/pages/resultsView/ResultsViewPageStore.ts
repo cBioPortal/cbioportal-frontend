@@ -63,7 +63,10 @@ import * as _ from "lodash";
 import {stringListToSet} from "../../shared/lib/StringUtils";
 import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
-import AccessorsForOqlFilter, {SimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
+import AccessorsForOqlFilter, {
+    AnnotatedMutation,
+    AnnotatedNumericGeneMolecularData
+} from "../../shared/lib/oql/AccessorsForOqlFilter";
 import {AugmentedData, CacheData} from "../../shared/lib/LazyMobXCache";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {
@@ -179,19 +182,6 @@ export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
     alterationType: string
     alterationSubType: string
 };
-
-export interface AnnotatedMutation extends Mutation {
-    hugoGeneSymbol:string;
-    putativeDriver: boolean;
-    oncoKbOncogenic:string;
-    isHotspot:boolean;
-    simplifiedMutationType: SimplifiedMutationType;
-}
-
-export interface AnnotatedNumericGeneMolecularData extends NumericGeneMolecularData {
-    hugoGeneSymbol: string;
-    oncoKbOncogenic: string;
-}
 
 export interface AnnotatedExtendedAlteration extends ExtendedAlteration, AnnotatedMutation, AnnotatedNumericGeneMolecularData {};
 

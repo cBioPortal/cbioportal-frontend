@@ -6,10 +6,10 @@ import {computed} from "mobx";
 import {transition} from "./DeltaUtils";
 import _ from "lodash";
 import {
-    AnnotatedMutation, AnnotatedNumericGeneMolecularData,
     ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import "./styles.scss";
+import {AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../../lib/oql/AccessorsForOqlFilter";
 
 export type ClinicalTrackDatum = {
     attr_id: string;

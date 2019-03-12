@@ -25,7 +25,7 @@ import {
 } from "../../../shared/components/oncoprint/geneticrules";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
-import {AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../ResultsViewPageStore";
+import {AnnotatedMutation} from "../../../shared/lib/oql/AccessorsForOqlFilter";
 import numeral from "numeral";
 import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
@@ -34,6 +34,7 @@ import {GenesetMolecularData} from "../../../shared/api/generated/CBioPortalAPII
 import {MUTATION_COUNT} from "../../studyView/StudyViewPageStore";
 import ClinicalDataCache from "../../../shared/cache/ClinicalDataCache";
 import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
+import {AnnotatedNumericGeneMolecularData} from "../../../shared/lib/oql/AccessorsForOqlFilter";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
 export const GENESET_DATA_TYPE = "GENESET_SCORE";

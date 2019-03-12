@@ -19,7 +19,7 @@ import {
 } from "../../shared/lib/oql/oqlfilter";
 import {observable} from "mobx";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
-import {AnnotatedMutation} from "./ResultsViewPageStore";
+import {AnnotatedMutation} from "../../shared/lib/oql/AccessorsForOqlFilter";
 import * as _ from 'lodash';
 import sinon from 'sinon';
 import sessionServiceClient from "shared/api//sessionServiceInstance";

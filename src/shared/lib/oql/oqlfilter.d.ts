@@ -7,8 +7,9 @@
 //var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction)
 
 import {SingleGeneQuery, MergedGeneQuery} from "./oql-parser";
-import {AnnotatedMutation, ExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
+import {ExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import {NumericGeneMolecularData, Mutation} from "../../api/generated/CBioPortalAPI";
+import {AnnotatedMutation} from "./AccessorsForOqlFilter";
 
 type OQLAlterationFilterString = string;
 
