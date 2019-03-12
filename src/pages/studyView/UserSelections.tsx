@@ -4,8 +4,13 @@ import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import styles from "./styles.module.scss";
 import {ClinicalDataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
-import {ChartMeta, StudyViewFilterWithSampleIdentifierFilters, UniqueKey} from 'pages/studyView/StudyViewPageStore';
-import {getCNAColorByAlteration, intervalFiltersDisplayValue} from 'pages/studyView/StudyViewUtils';
+import {UniqueKey} from 'pages/studyView/StudyViewUtils';
+import {
+    ChartMeta,
+    getCNAColorByAlteration,
+    intervalFiltersDisplayValue,
+    StudyViewFilterWithSampleIdentifierFilters
+} from 'pages/studyView/StudyViewUtils';
 import {PillTag} from "../../shared/components/PillTag/PillTag";
 import {GroupLogic} from "./filters/groupLogic/GroupLogic";
 import classnames from 'classnames';

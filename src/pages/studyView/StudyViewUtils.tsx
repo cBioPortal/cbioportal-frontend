@@ -13,23 +13,6 @@ import * as React from "react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import {BarDatum} from "./charts/barChart/BarChart";
-import {
-    AnalysisGroup,
-    ClinicalDataTypeEnum,
-    StudyViewFilterWithSampleIdentifierFilters,
-    StudyWithSamples,
-    Datalabel
-} from "pages/studyView/StudyViewPageStore";
-import {
-    ChartMeta,
-    ChartMetaDataType,
-    ChartMetaDataTypeEnum,
-    ChartType,
-    ClinicalDataCountSet,
-    ClinicalDataCountWithColor,
-    ClinicalDataType,
-    UniqueKey
-} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
@@ -197,6 +180,57 @@ export function mutationCountVsCnaTooltip(d:IStudyViewDensityScatterPlotDatum) {
         );
     };
 }*/
+
+// Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
+export enum ClinicalDataTypeEnum {
+    SAMPLE = 'SAMPLE',
+    PATIENT = 'PATIENT',
+}
+
+export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
+export type ChartType =
+    'PIE_CHART'
+    | 'BAR_CHART'
+    | 'SURVIVAL'
+    | 'TABLE'
+    | 'SCATTER'
+    | 'MUTATED_GENES_TABLE'
+    | 'CNA_GENES_TABLE'
+    | 'NONE';
+export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
+export type AnalysisGroup = { value: string, color: string, legendText?: string };
+
+export enum ChartMetaDataTypeEnum {
+    CLINICAL = 'CLINICAL',
+    GENOMIC = 'GENOMIC'
+}
+
+export type ChartMetaDataType = ChartMetaDataTypeEnum.CLINICAL | ChartMetaDataTypeEnum.GENOMIC;
+export type ChartMeta = {
+    clinicalAttribute?: ClinicalAttribute,
+    uniqueKey: string,
+    displayName: string,
+    description: string,
+    dimension: ChartDimension,
+    priority: number,
+    dataType: ChartMetaDataType,
+    patientAttribute: boolean,
+    chartType: ChartType,
+    renderWhenDataChange: boolean
+}
+export type ClinicalDataCountSet = { [attrId: string]: number };
+export type StudyWithSamples = CancerStudy & {
+    uniqueSampleKeys: string[]
+}
+export type StudyViewFilterWithSampleIdentifierFilters = StudyViewFilter & {
+    sampleIdentifiersSet: { [id: string]: SampleIdentifier[] }
+}
+
+export enum Datalabel {
+    YES = 'YES',
+    NO = 'NO',
+    NA = "NA"
+}
 
 export function generateScatterPlotDownloadData(data: IStudyViewScatterPlotData[],
                                                 sampleToAnalysisGroup?: {[sampleKey:string]:string},
@@ -785,6 +819,20 @@ export function toFixedDigit(value: number, fractionDigits: number = 2)
     }
 
     return `${Number(value.toFixed(digits))}`;
+}
+
+export enum UniqueKey {
+    MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
+    CNA_GENES_TABLE = 'CNA_GENES_TABLE',
+    CUSTOM_SELECT = 'CUSTOM_SELECT',
+    MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
+    DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
+    OVERALL_SURVIVAL = 'OS_SURVIVAL',
+    CANCER_STUDIES = 'CANCER_STUDIES',
+    MUTATION_COUNT = "SAMPLE_MUTATION_COUNT",
+    FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
+    WITH_MUTATION_DATA = "WITH_MUTATION_DATA",
+    WITH_CNA_DATA = "WITH_CNA_DATA"
 }
 
 export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {

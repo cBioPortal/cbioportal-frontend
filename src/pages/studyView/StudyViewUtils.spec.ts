@@ -41,7 +41,7 @@ import {
     generateMatrixByLayout,
     isFocusedChartShrunk,
     getPositionXByUniqueKey,
-    getPositionYByUniqueKey
+    getPositionYByUniqueKey, StudyViewFilterWithSampleIdentifierFilters, ChartMeta, ChartMetaDataTypeEnum
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -51,11 +51,8 @@ import {
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {CancerStudy, ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
 import {
-    ChartMeta,
-    ChartMetaDataTypeEnum,
-    StudyViewFilterWithSampleIdentifierFilters,
     UniqueKey
-} from "./StudyViewPageStore";
+} from "./StudyViewUtils";
 import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';

@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, ObservableMap, reaction, toJS, IReactionDisposer} from "mobx";
+import {action, computed, IReactionDisposer, observable, ObservableMap, reaction, toJS} from "mobx";
 import {
     ClinicalDataBinCountFilter,
     ClinicalDataBinFilter,
@@ -37,23 +37,30 @@ import {
     Gene,
     MolecularProfile,
     MolecularProfileFilter,
-    Patient,
-    PatientFilter,
-    SampleFilter
+    Patient
 } from 'shared/api/generated/CBioPortalAPI';
 import {fetchCopyNumberSegmentsForSamples} from "shared/lib/StoreUtils";
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import {
+    AnalysisGroup,
     calculateLayout,
-    COLORS,
+    ChartMeta,
+    ChartMetaDataTypeEnum,
+    ChartType,
+    ClinicalDataCountSet,
+    ClinicalDataCountWithColor,
+    ClinicalDataTypeEnum,
+    Datalabel,
     generateScatterPlotDownloadData,
     getChartMetaDataType,
     getClinicalAttributeUniqueKey,
     getClinicalAttributeUniqueKeyByDataTypeAttrId,
+    getClinicalDataCountWithColorByCategoryCounts,
     getClinicalDataCountWithColorByClinicalDataCount,
     getClinicalDataIntervalFilterValues,
-    getClinicalDataType, getClinicalEqualityFilterValuesByString,
+    getClinicalDataType,
+    getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getDefaultPriorityByUniqueKey,
     getFilteredSampleIdentifiers,
@@ -70,8 +77,9 @@ import {
     MutationCountVsCnaYBinsMin,
     NA_DATA,
     showOriginStudiesInSummaryDescription,
+    StudyWithSamples,
     submitToPage,
-    getClinicalDataCountWithColorByCategoryCounts
+    UniqueKey
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -91,30 +99,6 @@ import onMobxPromise from "../../shared/lib/onMobxPromise";
 import request from 'superagent';
 import {trackStudyViewFilterEvent} from "../../shared/lib/tracking";
 
-export enum ClinicalDataTypeEnum {
-    SAMPLE = 'SAMPLE',
-    PATIENT = 'PATIENT',
-}
-
-// Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
-export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
-
-
-export type ChartType = 'PIE_CHART' | 'BAR_CHART' | 'SURVIVAL' | 'TABLE' | 'SCATTER' | 'MUTATED_GENES_TABLE' | 'CNA_GENES_TABLE' | 'NONE';
-
-export enum UniqueKey {
-    MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
-    CNA_GENES_TABLE = 'CNA_GENES_TABLE',
-    CUSTOM_SELECT = 'CUSTOM_SELECT',
-    MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
-    DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
-    OVERALL_SURVIVAL = 'OS_SURVIVAL',
-    CANCER_STUDIES = 'CANCER_STUDIES',
-    MUTATION_COUNT = "SAMPLE_MUTATION_COUNT",
-    FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
-    WITH_MUTATION_DATA = "WITH_MUTATION_DATA",
-    WITH_CNA_DATA = "WITH_CNA_DATA"
-}
 
 export enum StudyViewPageTabKeyEnum {
     SUMMARY = 'summary',
@@ -146,8 +130,6 @@ export const DFS_MONTHS = "DFS_MONTHS";
 export const SELECTED_ANALYSIS_GROUP_VALUE = "Selected";
 export const UNSELECTED_ANALYSIS_GROUP_VALUE = "Unselected";
 
-export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
-export type AnalysisGroup = { value:string, color:string, legendText?:string};
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
 export type SurvivalType = {
@@ -157,26 +139,6 @@ export type SurvivalType = {
     filter: string[],
     alteredGroup: PatientSurvival[]
     unalteredGroup: PatientSurvival[]
-}
-
-export enum ChartMetaDataTypeEnum {
-    CLINICAL = 'CLINICAL',
-    GENOMIC = 'GENOMIC'
-}
-
-export type ChartMetaDataType = ChartMetaDataTypeEnum.CLINICAL | ChartMetaDataTypeEnum.GENOMIC;
-
-export type ChartMeta = {
-    clinicalAttribute?: ClinicalAttribute,
-    uniqueKey: string,
-    displayName: string,
-    description: string,
-    dimension: ChartDimension,
-    priority: number,
-    dataType: ChartMetaDataType,
-    patientAttribute: boolean,
-    chartType: ChartType,
-    renderWhenDataChange: boolean
 }
 
 export type StudyViewURLQuery = {
@@ -241,20 +203,10 @@ export type NewChart = {
     groups: CustomGroup[]
 }
 
-export type ClinicalDataCountSet = { [attrId: string]: number };
-
-export type StudyWithSamples = CancerStudy & {
-    uniqueSampleKeys : string[]
-}
-
 export const DataBinMethodConstants: {[key: string]: 'DYNAMIC' | 'STATIC'}= {
     STATIC: 'STATIC',
     DYNAMIC: 'DYNAMIC'
 };
-
-export type StudyViewFilterWithSampleIdentifierFilters = StudyViewFilter & {
-    sampleIdentifiersSet: { [id: string]: SampleIdentifier[] }
-}
 
 export type CustomChartIdentifier = {
     studyId: string,
@@ -280,12 +232,6 @@ export type StatusMessage = {
     status: 'success' | 'warning' | 'danger' | 'info',
     message: string
 };
-
-export enum Datalabel {
-    YES = 'YES',
-    NO = 'NO',
-    NA = "NA"
-}
 
 export class StudyViewPageStore {
     private reactionDisposers:IReactionDisposer[] = [];

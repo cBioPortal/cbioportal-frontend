@@ -3,9 +3,6 @@ import styles from "./studySummaryTabStyles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
 import {observable} from 'mobx';
 import {
-    AnalysisGroup,
-    ChartMeta,
-    ChartType,
     CopyNumberAlterationIdentifier,
     GeneIdentifier,
     StudyViewPageStore
@@ -28,6 +25,7 @@ import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
+import {AnalysisGroup, ChartMeta, ChartType} from "../StudyViewUtils";
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore

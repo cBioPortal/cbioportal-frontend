@@ -5,10 +5,6 @@ import {action, computed, observable} from "mobx";
 import _ from "lodash";
 import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
 import {
-    AnalysisGroup,
-    ChartMeta,
-    ChartType,
-    ClinicalDataCountWithColor,
     StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
 import {DataBin} from "shared/api/generated/CBioPortalAPIInternal";
@@ -25,6 +21,8 @@ import autobind from 'autobind-decorator';
 import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {
+    AnalysisGroup,
+    ChartMeta, ChartType, ClinicalDataCountWithColor,
     getHeightByDimension,
     getTableHeightByDimension,
     getWidthByDimension,

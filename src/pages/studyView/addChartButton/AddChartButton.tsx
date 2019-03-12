@@ -4,8 +4,6 @@ import {observer} from "mobx-react";
 import {ChildButton, MainButton, Menu} from 'react-mfb';
 import 'react-mfb/mfb.css';
 import {
-    ChartMetaDataTypeEnum, ChartType,
-    ClinicalDataCountSet,
     NewChart,
     StudyViewPageStore, StudyViewPageTabKey,
     StudyViewPageTabKeyEnum
@@ -15,7 +13,11 @@ import * as _ from 'lodash';
 import AddChartByType from "./addChartByType/AddChartByType";
 import {remoteData} from "../../../shared/api/remoteData";
 import CustomCaseSelection from "./customCaseSelection/CustomCaseSelection";
-import {calculateClinicalDataCountFrequency, getOptionsByChartMetaDataType} from "../StudyViewUtils";
+import {
+    calculateClinicalDataCountFrequency, ChartMetaDataTypeEnum, ChartType,
+    ClinicalDataCountSet,
+    getOptionsByChartMetaDataType
+} from "../StudyViewUtils";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import {ChartTypeEnum, ChartTypeNameEnum} from "../StudyViewConfig";
