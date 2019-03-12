@@ -116,7 +116,7 @@ export function getClinicalAttributeOverlay(displayName: string, description: st
     </div>;
 }
 
-export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
+export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): SingleGeneQuery[] {
 
     let updatedQueries = _.filter(geneQueries,query=> query.gene !== selectedGene)
     if(updatedQueries.length === geneQueries.length){
@@ -125,7 +125,7 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
             alterations: false
         })
     }
-    return updatedQueries.map(query=>unparseOQLQueryLine(query)).join(' ');
+    return updatedQueries;
 
 }
 
