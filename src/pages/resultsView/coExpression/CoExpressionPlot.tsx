@@ -13,7 +13,7 @@ import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal"
 import {action, computed, observable} from "mobx";
 import {observer, Observer} from "mobx-react";
 import {MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
-import {AlterationTypeConstants} from "../ResultsViewPageStore";
+import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import {getSampleViewUrl} from "../../../shared/api/urls";
 import "./styles.scss";

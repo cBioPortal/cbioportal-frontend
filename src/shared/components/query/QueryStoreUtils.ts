@@ -1,6 +1,6 @@
 import {CancerStudyQueryUrlParams, normalizeQuery, QueryStore} from "./QueryStore";
 import { MolecularProfile, SampleList } from "shared/api/generated/CBioPortalAPI";
-import { AlterationTypeConstants } from "pages/resultsView/ResultsViewPageStore";
+import { AlterationTypeConstants } from "shared/lib/StoreUtils";
 import * as _ from "lodash";
 import { VirtualStudy } from "shared/model/VirtualStudy";
 

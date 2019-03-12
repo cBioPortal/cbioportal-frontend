@@ -3,7 +3,7 @@ import {ClinicalAttribute, MolecularProfile, Sample} from "../../api/generated/C
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import _ from "lodash";
 import naturalSort from "javascript-natural-sort";
-import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants} from "../../lib/StoreUtils";
 
 export const alterationTypeToProfiledForText:{[alterationType:string]:string} = {
     "MUTATION_EXTENDED": "mutations",

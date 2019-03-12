@@ -1,6 +1,6 @@
 import {MolecularProfile} from "../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
-import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants} from "./StoreUtils";
 
 export enum MolecularProfileFilterEnum {
     MutationAndCNA = 0,

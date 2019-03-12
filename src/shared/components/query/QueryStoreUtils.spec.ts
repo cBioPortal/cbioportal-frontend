@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import {QueryStore, normalizeQuery} from "./QueryStore";
 import {nonMolecularProfileParams, profileAvailability, categorizedSamplesCount} from "./QueryStoreUtils";
-import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants} from "../../lib/StoreUtils";
 import {MolecularProfile, SampleList} from "../../api/generated/CBioPortalAPI";
 import Sinon from 'sinon';
 import { VirtualStudy } from 'shared/model/VirtualStudy';

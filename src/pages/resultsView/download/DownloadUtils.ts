@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import {
-    AlterationTypeConstants, AnnotatedExtendedAlteration, CaseAggregatedData, ExtendedAlteration,
+    AnnotatedExtendedAlteration, CaseAggregatedData, ExtendedAlteration,
     IQueriedCaseData
 } from "../ResultsViewPageStore";
 import {
@@ -12,6 +12,7 @@ import {Sample, Gene, MolecularProfile, GenePanelData} from "shared/api/generate
 import {ICaseAlteration, IOqlData, ISubAlteration} from "./CaseAlterationTable";
 import {IGeneAlteration} from "./GeneAlterationTable";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
+import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
 
 export interface IDownloadFileRow {
     studyId: string;

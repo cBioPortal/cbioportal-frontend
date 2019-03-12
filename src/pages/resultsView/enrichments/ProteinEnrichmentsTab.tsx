@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from "mobx-react";
-import {AlterationTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
+import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import { observable } from 'mobx';
 import ExpressionEnrichmentContainer from 'pages/resultsView/enrichments/ExpressionEnrichmentsContainer';
 import Loader from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -8,6 +8,7 @@ import EnrichmentsDataSetDropdown from 'pages/resultsView/enrichments/Enrichment
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import autobind from 'autobind-decorator';
 import ErrorMessage from "../../../shared/components/ErrorMessage";
+import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
 
 export interface IProteinEnrichmentsTabProps {
     store: ResultsViewPageStore

@@ -4,7 +4,7 @@ import expect from 'expect';
 import expectJSX from 'expect-jsx';
 import {shallow} from "enzyme";
 import {checkBoxes} from "./DataTypePrioritySelector";
-import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants} from "../../lib/StoreUtils";
 import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {stringListToSet} from "../../lib/StringUtils";
 import {QueryStore} from "./QueryStore";

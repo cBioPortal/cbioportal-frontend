@@ -2,7 +2,7 @@ import * as React from "react";
 import {action, computed, observable} from "mobx";
 import {Observer, observer} from "mobx-react";
 import "./styles.scss";
-import {AlterationTypeConstants, DataTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
+import {DataTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
 import {FormControl} from "react-bootstrap";
 import LockIcon from "../../../shared/components/LockIcon";
 import ReactSelect from "react-select";
@@ -71,6 +71,7 @@ import {getTablePlotDownloadData} from "../../../shared/components/plots/TablePl
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import MultipleCategoryBarPlot from "../../../shared/components/plots/MultipleCategoryBarPlot";
 import {STUDY_VIEW_CONFIG} from "../../studyView/StudyViewConfig";
+import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
 
 enum EventKey {
     horz_logScale,

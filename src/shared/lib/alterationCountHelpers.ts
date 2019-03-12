@@ -1,10 +1,11 @@
 import {
-    AlterationTypeConstants, ExtendedAlteration,
+    ExtendedAlteration,
     ExtendedSample
 } from "../../pages/resultsView/ResultsViewPageStore";
 import {IAlterationCountMap, IAlterationData} from "../../pages/resultsView/cancerSummary/CancerSummaryContent";
 import {Sample} from "../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
+import {AlterationTypeConstants} from "./StoreUtils";
 
 export function getAlterationCountsForCancerTypesByGene(alterationsByGeneBySampleKey:{ [geneName:string]: {[sampleId: string]: ExtendedAlteration[]} },
                                                         samplesExtendedWithClinicalData:ExtendedSample[],

@@ -2,7 +2,7 @@ import * as React from "react";
 import {Gene, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
 import {action, computed, observable} from "mobx";
 import {observer, Observer} from "mobx-react";
-import {AlterationTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
+import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 import {CoExpression, CoExpressionFilter} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import _ from "lodash";
@@ -16,6 +16,7 @@ import {bind} from "bind-decorator";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import MolecularProfileSelector from "../../../shared/components/MolecularProfileSelector";
+import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
 
 export interface ICoExpressionTabProps {
     store:ResultsViewPageStore;

@@ -13,7 +13,8 @@ import {
     MUT_COLOR_INFRAME, MUT_COLOR_MISSENSE, MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC
 } from "../components/oncoprint/geneticrules";
-import {AlterationTypeConstants, AnnotatedExtendedAlteration} from "../../pages/resultsView/ResultsViewPageStore";
+import {AnnotatedExtendedAlteration} from "../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants} from "./StoreUtils";
 
 export interface IProteinImpactTypeColors
 {

@@ -13,9 +13,10 @@ import * as _ from 'lodash';
 import {assert} from 'chai';
 import sinon from 'sinon';
 import {
-    AlterationTypeConstants, AnnotatedMutation,
+    AnnotatedMutation,
     AnnotatedNumericGeneMolecularData
 } from "../../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants} from "../StoreUtils";
 
 // This file uses type assertions to force functions that use overly specific
 // Swagger-generated types as parameters to accept mocked literals believed to

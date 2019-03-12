@@ -15,7 +15,6 @@ import {
 } from "./geneticrules";
 import {OncoprintPatientGeneticTrackData, OncoprintSampleGeneticTrackData} from "../../lib/QuerySession";
 import {
-    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
     AnnotatedMutation, CaseAggregatedData, ExtendedAlteration, IQueriedCaseData, IQueriedMergedTrackCaseData,
     ResultsViewPageStore
@@ -42,6 +41,7 @@ import {
 } from "../../api/generated/CBioPortalAPI";
 import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {STUDY_VIEW_CONFIG} from "../../../pages/studyView/StudyViewConfig";
+import {AlterationTypeConstants} from "../../lib/StoreUtils";
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IGeneHeatmapTrackSpec[];

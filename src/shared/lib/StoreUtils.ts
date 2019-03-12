@@ -1,46 +1,64 @@
 import * as _ from 'lodash';
 import request from "superagent";
-import Response = request.Response;
 import {
-    default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
-    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier, CopyNumberSeg,
-    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, NumericGeneMolecularData, SampleFilter, Gene
+    CancerStudy,
+    ClinicalData,
+    ClinicalDataMultiStudyFilter,
+    ClinicalDataSingleStudyFilter,
+    CopyNumberCountIdentifier,
+    CopyNumberSeg,
+    default as CBioPortalAPI,
+    DiscreteCopyNumberData,
+    DiscreteCopyNumberFilter,
+    Gene,
+    MolecularProfile,
+    Mutation,
+    MutationFilter,
+    NumericGeneMolecularData,
+    Sample,
+    SampleFilter
 } from "shared/api/generated/CBioPortalAPI";
-import { EnsemblFilter, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
+import GenomeNexusAPI, {EnsemblFilter, EnsemblTranscript} from "shared/api/generated/GenomeNexusAPI";
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import g2sClient from "shared/api/g2sClientInstance";
 import {Alignment, default as Genome2StructureAPI} from "shared/api/generated/Genome2StructureAPI";
 import {
-    CosmicMutation, default as CBioPortalAPIInternal,
-    GisticToGene, Gistic, MutSig
+    CosmicMutation,
+    default as CBioPortalAPIInternal,
+    Gistic,
+    GisticToGene,
+    MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import oncokbClient from "shared/api/oncokbClientInstance";
-import civicClient from "shared/api/civicClientInstance";
 import genomeNexusClient from "shared/api/genomeNexusClientInstance";
-import {
-    generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery
-} from "shared/lib/OncoKbUtils";
-import {
-    getCivicVariants, getCivicGenes
-} from "shared/lib/CivicUtils";
-import {Query, default as OncoKbAPI, Gene as OncoKbGene} from "shared/api/generated/OncoKbAPI";
+import {generateEvidenceQuery, generateIdToIndicatorMap, generateQueryVariant} from "shared/lib/OncoKbUtils";
+import {getCivicGenes, getCivicVariants} from "shared/lib/CivicUtils";
+import {default as OncoKbAPI, Gene as OncoKbGene, Query} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
-import {keywordToCosmic, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
+import {geneToMyCancerGenome, keywordToCosmic} from "shared/lib/AnnotationUtils";
 import {indexPdbAlignments} from "shared/lib/PdbUtils";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
-import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
+import {IMyCancerGenome, IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {IMutationalSignature, IMutationalSignatureMeta} from "shared/model/MutationalSignature";
-import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
+import {ICivicGene, ICivicVariant} from "shared/model/Civic.ts";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
-import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
-import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
 import {stringListToIndexSet} from "./StringUtils";
-import {GeneticTrackDatum_Data} from "../components/oncoprint/Oncoprint";
+import Response = request.Response;
+
+export const AlterationTypeConstants = {
+    MUTATION_EXTENDED: 'MUTATION_EXTENDED',
+    COPY_NUMBER_ALTERATION: 'COPY_NUMBER_ALTERATION',
+    MRNA_EXPRESSION: 'MRNA_EXPRESSION',
+    PROTEIN_LEVEL: 'PROTEIN_LEVEL',
+    FUSION: 'FUSION',
+    GENESET_SCORE: 'GENESET_SCORE',
+    METHYLATION: 'METHYLATION'
+};
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     uniqueSampleKeyToTumorType : {},
@@ -616,11 +634,11 @@ export async function fetchCnaOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSamp
 }
 
 export async function fetchCnaOncoKbDataWithNumericGeneMolecularData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
-                                         annotatedGenes:{[entrezGeneId:number]:boolean},
-                                         geneMolecularData:MobxPromise<NumericGeneMolecularData[]>,
-                                          molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
-                                         evidenceTypes?: string,
-                                         client: OncoKbAPI = oncokbClient)
+                                                                     annotatedGenes:{[entrezGeneId:number]:boolean},
+                                                                     geneMolecularData:MobxPromise<NumericGeneMolecularData[]>,
+                                                                     molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
+                                                                     evidenceTypes?: string,
+                                                                     client: OncoKbAPI = oncokbClient)
 {
     if (!geneMolecularData.result || geneMolecularData.result.length === 0) {
         return ONCOKB_DEFAULT;

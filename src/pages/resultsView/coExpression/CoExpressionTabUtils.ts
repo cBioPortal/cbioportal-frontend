@@ -1,5 +1,5 @@
 import {MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
-import {AlterationTypeConstants} from "../ResultsViewPageStore";
+import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
 import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
 
 export type CoExpressionWithQ = CoExpression & { qValue:number };

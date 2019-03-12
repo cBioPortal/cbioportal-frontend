@@ -14,7 +14,7 @@ import {
     mutVsWildCategoryOrder
 } from "./PlotsTabUtils";
 import {MolecularProfile, Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
-import {AlterationTypeConstants} from "../ResultsViewPageStore";
+import {AlterationTypeConstants} from "../../../shared/lib/StoreUtils";
 import {MutationCountBy} from "./PlotsTab";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 

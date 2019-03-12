@@ -1,11 +1,11 @@
 import {Mutation, MolecularProfile, NumericGeneMolecularData} from "../../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
 import {
-    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
     AnnotatedMutation, AnnotatedNumericGeneMolecularData
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {isNotGermlineMutation} from "../MutationUtils";
+import {AlterationTypeConstants} from "../StoreUtils";
 
 export const cna_profile_data_to_string: any = {
     "-2": "homdel",

@@ -1,6 +1,7 @@
 import {
     CancerStudy,
-    ClinicalAttribute, ClinicalAttributeCount,
+    ClinicalAttribute,
+    ClinicalAttributeCount,
     ClinicalAttributeCountFilter,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
@@ -38,6 +39,7 @@ import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
+    AlterationTypeConstants,
     cancerTypeForOncoKb,
     fetchCnaOncoKbDataWithNumericGeneMolecularData,
     fetchCopyNumberSegmentsForSamples,
@@ -63,19 +65,17 @@ import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import AccessorsForOqlFilter, {SimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
 import {AugmentedData, CacheData} from "../../shared/lib/LazyMobXCache";
-import {IAlterationData} from "./cancerSummary/CancerSummaryContent";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {
     doesQueryContainMutationOQL,
     doesQueryContainOQL,
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
-    filterCBioPortalWebServiceDataByUnflattenedOQLLine, uniqueGenesInOQLQuery,
+    filterCBioPortalWebServiceDataByUnflattenedOQLLine,
     OQLLineFilterOutput,
-    parseOQLQuery,
     UnflattenedOQLLineFilterOutput,
+    uniqueGenesInOQLQuery,
 } from "../../shared/lib/oql/oqlfilter";
-import {MergedGeneQuery} from '../../shared/lib/oql/oql-parser';
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GenesetCorrelatedGeneCache from "../../shared/cache/GenesetCorrelatedGeneCache";
@@ -84,12 +84,7 @@ import GenesetCache from "../../shared/cache/GenesetCache";
 import {IHotspotIndex} from "../../shared/model/CancerHotspots";
 import {IOncoKbData} from "../../shared/model/OncoKB";
 import {generateQueryVariantId} from "../../shared/lib/OncoKbUtils";
-import {
-    AlterationEnrichment,
-    CosmicMutation,
-    ExpressionEnrichment,
-    Geneset, GenesetDataFilterCriteria
-} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {AlterationEnrichment, CosmicMutation, Geneset} from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
@@ -107,16 +102,14 @@ import {
     fetchQueriedStudies,
     filterSubQueryData,
     getOncoKbOncogenic,
+    getSampleAlteredMap,
     groupDataByCase,
     initializeCustomDriverAnnotationSettings,
     isRNASeqProfile,
-    getSampleAlteredMap, makeEnrichmentDataPromise
+    makeEnrichmentDataPromise
 } from "./ResultsViewPageStoreUtils";
-import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
-import {
-    isSampleProfiledInMultiple
-} from "../../shared/lib/isSampleProfiled";
+import {isSampleProfiledInMultiple} from "../../shared/lib/isSampleProfiled";
 import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl} from "../../shared/api/urls";
 import url from "url";
@@ -129,7 +122,8 @@ import {VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
 import {ServerConfigHelpers} from "../../config/config";
 import {
     getVirtualStudies,
-    populateSampleSpecificationsFromVirtualStudies, ResultsViewTab,
+    populateSampleSpecificationsFromVirtualStudies,
+    ResultsViewTab,
     substitutePhysicalStudiesForVirtualStudies
 } from "./ResultsViewPageHelpers";
 import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
@@ -138,7 +132,6 @@ import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils"
 import {makeProfiledInClinicalAttributes} from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
 import {ResultsViewQuery} from "./ResultsViewQuery";
 import {annotateAlterationTypes} from "../../shared/lib/oql/annotateAlterationTypes";
-import ErrorMessage from "../../shared/components/ErrorMessage";
 import {ErrorMessages} from "../../shared/enums/ErrorEnums";
 
 type Optional<T> = (
@@ -146,16 +139,6 @@ type Optional<T> = (
     | {isApplicable: false, value?: undefined}
 );
 
-
-export const AlterationTypeConstants = {
-    MUTATION_EXTENDED: 'MUTATION_EXTENDED',
-    COPY_NUMBER_ALTERATION: 'COPY_NUMBER_ALTERATION',
-    MRNA_EXPRESSION: 'MRNA_EXPRESSION',
-    PROTEIN_LEVEL: 'PROTEIN_LEVEL',
-    FUSION: 'FUSION',
-    GENESET_SCORE: 'GENESET_SCORE',
-    METHYLATION: 'METHYLATION'
-};
 
 export const AlterationTypeDisplayConstants = {
     COPY_NUMBER_ALTERATION: 'CNA',

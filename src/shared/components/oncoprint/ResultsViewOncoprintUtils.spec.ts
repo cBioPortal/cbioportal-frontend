@@ -1,6 +1,6 @@
 import {assert} from "chai";
 import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
-import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants} from "../../lib/StoreUtils";
 import {alterationTypeToProfiledForText, makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 

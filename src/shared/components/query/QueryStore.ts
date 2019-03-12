@@ -48,7 +48,7 @@ import formSubmit from "../../lib/formSubmit";
 import {ServerConfigHelpers} from "../../../config/config";
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import {QueryParameter} from "../../lib/ExtendedRouterStore";
-import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants} from "../../lib/StoreUtils";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {

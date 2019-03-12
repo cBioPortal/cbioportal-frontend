@@ -8,7 +8,7 @@ import {
     IGeneHeatmapTrackDatum,
     IGenesetHeatmapTrackDatum
 } from "shared/components/oncoprint/Oncoprint";
-import {AlterationTypeConstants, AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
+import {AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import {
     ClinicalAttribute,
     GenePanelData,
@@ -19,6 +19,7 @@ import {
 } from "../../api/generated/CBioPortalAPI";
 import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
+import {AlterationTypeConstants} from "../../lib/StoreUtils";
 
 /* Type assertions are used throughout this file to force functions to accept
 /* mocked parameters known to be sufficient. */

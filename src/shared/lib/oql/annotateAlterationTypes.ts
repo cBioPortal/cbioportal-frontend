@@ -1,11 +1,11 @@
 import AccessorsForOqlFilter from "./AccessorsForOqlFilter";
 import {NumericGeneMolecularData} from "../../api/generated/CBioPortalAPI";
 import {
-    AlterationTypeConstants,
     AnnotatedMutation,
     ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {isMutation} from "../CBioPortalAPIUtils";
+import {AlterationTypeConstants} from "../StoreUtils";
 
 export function annotateAlterationTypes(datum:(AnnotatedMutation | NumericGeneMolecularData)&Partial<ExtendedAlteration>, accessors:AccessorsForOqlFilter):ExtendedAlteration {
     const molecularAlterationType = accessors.molecularAlterationType(datum.molecularProfileId);
