@@ -4,10 +4,7 @@ import {
     getOncoprintMutationType, makeGeneticTrackData, selectDisplayValue
 } from "./DataUtils";
 import {
-    GeneticTrackDatum,
-    IGeneHeatmapTrackDatum,
-    IGenesetHeatmapTrackDatum
-} from "shared/components/oncoprint/Oncoprint";
+    IGeneHeatmapTrackDatum} from "shared/components/oncoprint/OncoprintUtils";
 import {AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import {
     ClinicalAttribute,
@@ -20,6 +17,7 @@ import {
 import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {AlterationTypeConstants} from "../../lib/StoreUtils";
+import {GeneticTrackDatum, IGenesetHeatmapTrackDatum} from "./OncoprintUtils";
 
 /* Type assertions are used throughout this file to force functions to accept
 /* mocked parameters known to be sufficient. */

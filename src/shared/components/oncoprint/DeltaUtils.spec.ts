@@ -7,11 +7,9 @@ import {
 import {createStubInstance, match, SinonStub, spy} from "sinon";
 import OncoprintJS from "oncoprintjs";
 import {
-    CLINICAL_TRACK_GROUP_INDEX,
-    GENETIC_TRACK_GROUP_INDEX,
-    IGeneHeatmapTrackSpec,
     IOncoprintProps
 } from "./Oncoprint";
+import {CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX, IGeneHeatmapTrackSpec} from "./OncoprintUtils";
 
 describe("Oncoprint DeltaUtils", ()=>{
     describe("numTracksWhoseDataChanged", ()=>{

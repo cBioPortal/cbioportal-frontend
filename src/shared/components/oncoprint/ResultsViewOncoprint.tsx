@@ -2,7 +2,7 @@ import * as React from "react";
 import {Observer, observer} from "mobx-react";
 import {action, computed, IObservableObject, IReactionDisposer, observable, ObservableMap, reaction} from "mobx";
 import {remoteData} from "../../api/remoteData";
-import Oncoprint, {GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
+import Oncoprint from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
@@ -10,6 +10,7 @@ import OncoprintControls, {
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {ClinicalAttribute, Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {
+    GENETIC_TRACK_GROUP_INDEX,
     getAlteredUids,
     getUnalteredUids,
     makeClinicalTracksMobxPromise,

@@ -1,48 +1,137 @@
-import OncoprintJS, {IGeneticAlterationRuleSetParams, RuleSetParams, TrackSortComparator} from "oncoprintjs";
+import OncoprintJS, {CustomTrackOption, IGeneticAlterationRuleSetParams, RuleSetParams} from "oncoprintjs";
 import {
-    ClinicalTrackSpec, GeneticTrackDatum,
-    GeneticTrackSpec,
-    IGeneHeatmapTrackDatum,
-    IGeneHeatmapTrackSpec,
-    IGenesetHeatmapTrackDatum,
-    IGenesetHeatmapTrackSpec,
-} from "./Oncoprint";
-import {
+    genetic_rule_set_different_colors_no_recurrence,
+    genetic_rule_set_different_colors_recurrence,
     genetic_rule_set_same_color_for_all_no_recurrence,
     genetic_rule_set_same_color_for_all_recurrence,
-    genetic_rule_set_different_colors_no_recurrence,
-    genetic_rule_set_different_colors_recurrence, germline_rule_params
+    germline_rule_params
 } from "./geneticrules";
-import {OncoprintPatientGeneticTrackData, OncoprintSampleGeneticTrackData} from "../../lib/QuerySession";
 import {
     AnnotatedExtendedAlteration,
-    CaseAggregatedData, ExtendedAlteration, IQueriedCaseData, IQueriedMergedTrackCaseData,
-    ResultsViewPageStore
+    CaseAggregatedData,
+    IQueriedCaseData,
+    IQueriedMergedTrackCaseData
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import {remoteData} from "../../api/remoteData";
-import {
-    makeClinicalTrackData,
-    makeGeneticTrackData,
-    makeHeatmapTrackData
-} from "./DataUtils";
+import {makeClinicalTrackData, makeGeneticTrackData, makeHeatmapTrackData} from "./DataUtils";
 import ResultsViewOncoprint from "./ResultsViewOncoprint";
 import _ from "lodash";
-import {action, runInAction, ObservableMap, IObservableArray} from "mobx";
+import {action, IObservableArray, ObservableMap, runInAction} from "mobx";
 import {MobxPromise} from "mobxpromise";
 import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
-import Spec = Mocha.reporters.Spec;
-import {UnflattenedOQLLineFilterOutput, isMergedTrackFilter} from "../../lib/oql/oqlfilter";
-import {
-    ClinicalAttribute,
-    MolecularProfile,
-    Patient,
-    Sample
-} from "../../api/generated/CBioPortalAPI";
+import {isMergedTrackFilter, UnflattenedOQLLineFilterOutput} from "../../lib/oql/oqlfilter";
+import {ClinicalAttribute, MolecularProfile, Patient, Sample} from "../../api/generated/CBioPortalAPI";
 import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {STUDY_VIEW_CONFIG} from "../../../pages/studyView/StudyViewConfig";
-import {AlterationTypeConstants} from "../../lib/StoreUtils";
-import {AnnotatedMutation} from "../../lib/oql/AccessorsForOqlFilter";
+import {GeneticTrackDatum_Data, GeneticTrackDatum_ProfiledIn} from "./Oncoprint";
+
+export type ClinicalTrackDatum = {
+    attr_id: string;
+    study_id: string;
+    sample?: string;
+    patient?: string;
+    uid: string;
+    attr_val_counts: { [val: string]: number };
+    attr_val?: string | number | ClinicalTrackDatum["attr_val_counts"];
+    na?: boolean;
+};
+export type ClinicalTrackSpec = {
+    key: string; // for efficient diffing, just like in React. must be unique
+    label: string;
+    description: string;
+    data: ClinicalTrackDatum[];
+    altered_uids?: string[];
+    na_legend_label?: string;
+    na_tooltip_value?: string; // If given, then show a tooltip over NA columns that has this value
+    custom_options?: CustomTrackOption[];
+} & ({
+    datatype: "counts";
+    countsCategoryLabels: string[];
+    countsCategoryFills: string[];
+} | {
+    datatype: "number";
+    numberRange: [number, number];
+    numberLogScale: boolean;
+} | {
+    datatype: "string";
+    category_to_color?: { [category: string]: string }
+});
+
+export interface IBaseHeatmapTrackDatum {
+    profile_data: number | null;
+    sample?: string;
+    patient: string;
+    study_id: string;
+    uid: string;
+    na?: boolean;
+}
+
+export interface IGeneHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
+    hugo_gene_symbol: string;
+}
+
+export interface IGenesetHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
+    geneset_id: string;
+}
+
+export type GeneticTrackDatum = {
+    trackLabel: string;
+    sample?: string;
+    patient: string;
+    study_id: string;
+    uid: string;
+    data: GeneticTrackDatum_Data[];
+    profiled_in?: GeneticTrackDatum_ProfiledIn[];
+    not_profiled_in?: GeneticTrackDatum_ProfiledIn[];
+    na?: boolean;
+    disp_mut?: string;
+    disp_cna?: string;
+    disp_mrna?: string;
+    disp_prot?: string;
+    disp_fusion?: boolean;
+    disp_germ?: boolean;
+};
+export type GeneticTrackSpec = {
+    key: string; // for efficient diffing, just like in React. must be unique
+    label: string;
+    sublabel?: string;
+    oql?: string; // OQL corresponding to the track
+    info: string;
+    infoTooltip?: string;
+    data: GeneticTrackDatum[];
+    expansionCallback?: () => void;
+    removeCallback?: () => void;
+    expansionTrackList?: GeneticTrackSpec[];
+    labelColor?: string;
+};
+
+interface IBaseHeatmapTrackSpec {
+    key: string; // for efficient diffing, just like in React. must be unique
+    label: string;
+    molecularProfileId: string; // source
+    molecularAlterationType: MolecularProfile["molecularAlterationType"];
+    datatype: MolecularProfile["datatype"];
+    data: IBaseHeatmapTrackDatum[];
+    trackGroupIndex: number;
+}
+
+export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
+    data: IGeneHeatmapTrackDatum[];
+    onRemove: () => void;
+    info?: string;
+    labelColor?: string;
+}
+
+export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
+    data: IGenesetHeatmapTrackDatum[];
+    trackLinkUrl: string | undefined;
+    expansionTrackList: IGeneHeatmapTrackSpec[];
+    expansionCallback: () => void;
+}
+
+export const GENETIC_TRACK_GROUP_INDEX = 1;
+export const CLINICAL_TRACK_GROUP_INDEX = 0;
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IGeneHeatmapTrackSpec[];

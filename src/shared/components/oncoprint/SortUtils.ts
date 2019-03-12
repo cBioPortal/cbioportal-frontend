@@ -1,6 +1,7 @@
 import {TrackSortComparator,TrackSortVector} from "oncoprintjs";
-import {ClinicalTrackSpec, GeneticTrackDatum} from "./Oncoprint";
+import {ClinicalTrackSpec} from "./OncoprintUtils";
 import naturalSort from 'javascript-natural-sort';
+import {GeneticTrackDatum} from "./OncoprintUtils";
 
 /**
  * Make comparator metric

@@ -4,7 +4,7 @@ import {
     makeClinicalTrackTooltip, makeGeneticTrackTooltip, makeGeneticTrackTooltip_getCoverageInformation,
     makeHeatmapTrackTooltip
 } from "./TooltipUtils";
-import {GeneticTrackDatum} from "./Oncoprint";
+import {GeneticTrackDatum} from "./OncoprintUtils";
 import {
     AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import $ from "jquery";

@@ -1,5 +1,6 @@
-import Oncoprint, {ClinicalTrackSpec, GeneticTrackSpec, IGeneHeatmapTrackSpec} from "./Oncoprint";
+import Oncoprint from "./Oncoprint";
 import fileDownload from "react-file-download";
+import {ClinicalTrackSpec, GeneticTrackSpec, IGeneHeatmapTrackSpec} from "./OncoprintUtils";
 
 export default function tabularDownload(
     geneticTracks:GeneticTrackSpec[],

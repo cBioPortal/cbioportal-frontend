@@ -3,11 +3,11 @@ import {
     AnnotatedExtendedAlteration, CaseAggregatedData, ExtendedAlteration,
     IQueriedCaseData
 } from "../ResultsViewPageStore";
-import {
-    alterationInfoForCaseAggregatedDataByOQLLine
-} from "shared/components/oncoprint/OncoprintUtils";
 import {makeGeneticTrackData} from "shared/components/oncoprint/DataUtils";
-import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
+import {
+    alterationInfoForCaseAggregatedDataByOQLLine,
+    GeneticTrackDatum
+} from "shared/components/oncoprint/OncoprintUtils";
 import {Sample, Gene, MolecularProfile, GenePanelData} from "shared/api/generated/CBioPortalAPI";
 import {ICaseAlteration, IOqlData, ISubAlteration} from "./CaseAlterationTable";
 import {IGeneAlteration} from "./GeneAlterationTable";

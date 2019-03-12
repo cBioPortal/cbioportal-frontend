@@ -9,11 +9,8 @@ import {
     Sample
 } from "../../api/generated/CBioPortalAPI";
 import {
-    ClinicalTrackDatum,
-    GeneticTrackDatum, GeneticTrackDatum_Data,
-    IBaseHeatmapTrackDatum,
-    IGeneHeatmapTrackDatum,
-} from "./Oncoprint";
+    GeneticTrackDatum_Data,
+    } from "./Oncoprint";
 import {isSample, isSampleList} from "../../lib/CBioPortalAPIUtils";
 import {
     AnnotatedMutation,
@@ -27,6 +24,7 @@ import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {stringListToIndexSet} from "../../lib/StringUtils";
 import {isNotGermlineMutation} from "../../lib/MutationUtils";
+import {ClinicalTrackDatum, GeneticTrackDatum, IBaseHeatmapTrackDatum, IGeneHeatmapTrackDatum} from "./OncoprintUtils";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "-2": "homdel",

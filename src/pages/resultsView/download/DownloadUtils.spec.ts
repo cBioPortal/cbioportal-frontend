@@ -1,6 +1,6 @@
 import {assert} from 'chai';
 
-import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
+import {GeneticTrackDatum} from "shared/components/oncoprint/OncoprintUtils";
 import {GenePanelData, MolecularProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import {
     generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData, updateOqlData

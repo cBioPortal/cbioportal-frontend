@@ -1,14 +1,20 @@
 import {
-    IOncoprintProps, default as Oncoprint, GeneticTrackSpec, IGenesetHeatmapTrackSpec,
-    IGeneHeatmapTrackSpec, ClinicalTrackSpec, IBaseHeatmapTrackDatum,
-    CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX
-} from "./Oncoprint";
+    IOncoprintProps, default as Oncoprint} from "./Oncoprint";
 import OncoprintJS, {TrackId, SortConfig} from "oncoprintjs";
 import {ObservableMap} from "mobx";
 import _ from "lodash";
 import {
-    getClinicalTrackRuleSetParams, getGeneticTrackRuleSetParams,
-    getGenesetHeatmapTrackRuleSetParams, getHeatmapTrackRuleSetParams
+    getClinicalTrackRuleSetParams,
+    getGeneticTrackRuleSetParams,
+    getGenesetHeatmapTrackRuleSetParams,
+    getHeatmapTrackRuleSetParams,
+    CLINICAL_TRACK_GROUP_INDEX,
+    GENETIC_TRACK_GROUP_INDEX,
+    IGenesetHeatmapTrackSpec,
+    IGeneHeatmapTrackSpec,
+    GeneticTrackSpec,
+    IBaseHeatmapTrackDatum,
+    ClinicalTrackSpec
 } from "./OncoprintUtils";
 import {getClinicalTrackSortComparator, getGeneticTrackSortComparator, heatmapTrackSortComparator} from "./SortUtils";
 import {

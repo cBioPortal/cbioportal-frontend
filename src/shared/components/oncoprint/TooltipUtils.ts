@@ -5,7 +5,7 @@ import {
     Mutation
 } from "../../api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
-import {ClinicalTrackSpec, GeneticTrackDatum} from "./Oncoprint";
+import {ClinicalTrackSpec} from "./OncoprintUtils";
 import {
     AnnotatedExtendedAlteration, ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
@@ -14,6 +14,7 @@ import {alterationTypeToProfiledForText} from "./ResultsViewOncoprintUtils";
 import {isNotGermlineMutation} from "../../lib/MutationUtils";
 import ListIndexedMap, {ListIndexedMapOfCounts} from "../../lib/ListIndexedMap";
 import {AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../../lib/oql/AccessorsForOqlFilter";
+import {GeneticTrackDatum} from "./OncoprintUtils";
 
 const hotspotsImg = require("../../../rootImages/cancer-hotspots.svg");
 const oncokbImg = require("../../../rootImages/oncokb-oncogenic-1.svg");
