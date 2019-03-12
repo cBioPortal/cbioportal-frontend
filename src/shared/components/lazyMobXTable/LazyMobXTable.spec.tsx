@@ -3,7 +3,7 @@ import {default as chai, assert} from 'chai';
 import chaiEnzyme from 'chai-enzyme';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
-import {lazyMobXTableSort, default as LazyMobXTable, Column} from "./LazyMobXTable";
+import {default as LazyMobXTable, Column} from "./LazyMobXTable";
 import SimpleTable from "../simpleTable/SimpleTable";
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import expect from 'expect';
@@ -15,7 +15,7 @@ import {Button, FormControl, Checkbox} from 'react-bootstrap';
 import {ColumnVisibilityControls} from "../columnVisibilityControls/ColumnVisibilityControls";
 import {SimpleLazyMobXTableApplicationDataStore} from "../../lib/ILazyMobXTableApplicationDataStore";
 import cloneJSXWithoutKeyAndRef from "shared/lib/cloneJSXWithoutKeyAndRef";
-import {maxPage} from "./utils";
+import {lazyMobXTableSort, maxPage} from "./utils";
 import _ from "lodash";
 
 expect.extend(expectJSX);

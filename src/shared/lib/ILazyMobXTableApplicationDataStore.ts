@@ -1,6 +1,6 @@
 import {SortMetric} from "./ISortMetric";
 import {observable, computed, action} from "mobx";
-import {lazyMobXTableSort} from "../components/lazyMobXTable/LazyMobXTable";
+import {lazyMobXTableSort} from "../components/lazyMobXTable/utils";
 export interface ILazyMobXTableApplicationDataStore<T> {
     // setter
     setFilter:(fn:(d:T, filterString?:string, filterStringUpper?:string, filterStringLower?:string)=>boolean)=>void;

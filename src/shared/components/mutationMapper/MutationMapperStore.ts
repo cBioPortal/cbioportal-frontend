@@ -24,7 +24,6 @@ import {
 import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
-import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 
 import PdbChainDataStore from "./PdbChainDataStore";
@@ -36,6 +35,7 @@ import { getMutationsToTranscriptId } from "shared/lib/MutationAnnotator";
 import Mutations from "pages/resultsView/mutation/Mutations";
 
 import {IServerConfig} from "config/IAppConfig";
+import {lazyMobXTableSort} from "../lazyMobXTable/utils";
 
 
 export interface IMutationMapperStoreConfig {
