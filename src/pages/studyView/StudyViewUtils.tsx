@@ -16,9 +16,9 @@ import {BarDatum} from "./charts/barChart/BarChart";
 import {
     AnalysisGroup,
     ClinicalDataTypeEnum,
+    Datalabel,
     StudyViewFilterWithSampleIdentifierFilters,
-    StudyWithSamples,
-    Datalabel
+    StudyWithSamples
 } from "pages/studyView/StudyViewPageStore";
 import {
     ChartMeta,
@@ -544,6 +544,10 @@ export function isLogScaleByValues(values: number[]) {
             (value !== 0 && getExponent(value) % 0.5 !== 0)
         ) === undefined
     );
+}
+
+export function shouldShowChart(filer: Partial<StudyViewFilterWithSampleIdentifierFilters>, uniqueDataSize: number, sizeOfAllSamples: number) {
+    return isFiltered(filer) || uniqueDataSize >= 2 || sizeOfAllSamples === 1;
 }
 
 export function isEveryBinDistinct(data?: DataBin[]) {
