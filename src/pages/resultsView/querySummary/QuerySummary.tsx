@@ -28,10 +28,6 @@ import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
 
-    constructor() {
-        super();
-    }
-
     @autobind
     private toggleQueryFormVisibility() {
         this._queryFormVisible = !this._queryFormVisible;
