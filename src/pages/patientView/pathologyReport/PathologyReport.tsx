@@ -22,7 +22,7 @@ export default class PathologyReport extends React.Component<IPathologyReportPro
 
     constructor(props: IPathologyReportProps){
 
-        super();
+        super(props);
 
         this.state = { pdfUrl: this.buildPDFUrl(props.pdfs[0].url) }
 

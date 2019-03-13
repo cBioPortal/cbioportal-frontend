@@ -122,7 +122,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     @observable private viewCountsByCancerSubType = false;
 
     constructor(props: ICancerSummaryContentProps) {
-        super();
+        super(props);
         this.handleYAxisChange = this.handleYAxisChange.bind(this);
         this.handleXAxisChange = this.handleXAxisChange.bind(this);
         this.handleGenomicCheckboxChange = this.handleGenomicCheckboxChange.bind(this);
