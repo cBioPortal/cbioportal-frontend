@@ -8,10 +8,6 @@ export default class NonClosingDropdown extends React.Component<DropdownButtonPr
     private _forceOpen:boolean = false;
     @observable private open:boolean = false;
 
-    constructor() {
-        super();
-    }
-
     @computed private get onToggle() {
         return (newVal:boolean)=>{
             if (this._forceOpen) {
