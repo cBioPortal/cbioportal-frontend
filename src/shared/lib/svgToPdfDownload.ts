@@ -1,5 +1,6 @@
 import svg2pdf from "svg2pdf.js";
 import {jsPDF} from "jspdf-yworks";
+import _ from "lodash";
 
 function base64ToArrayBuffer(base64:string) {
     const binaryString = window.atob(base64);
@@ -16,18 +17,18 @@ export default function svgToPdfDownload(fileName: string, svg: any) {
     const width = svg.scrollWidth || parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!), height = svg.scrollHeight || parseInt((svg.attributes.getNamedItem('height') as Attr).nodeValue!);
 
     // dealing with oncoprint svg (temporarily)
-    (svg as Element).childNodes.forEach(element => {
+    _.forEach((svg as Element).childNodes, (element => {
         if ((element as Element).attributes.getNamedItem('x') !== null && (element as Element).attributes.getNamedItem('y') !== null && (element as Element).nodeName === 'g') {
             (element as Element).attributes.removeNamedItem('y');
             (element as Element).attributes.removeNamedItem('x');
         }
-        (element as ChildNode).childNodes.forEach(child => {
+        _.forEach((element as ChildNode).childNodes,(child => {
             if ((child as Element).attributes.getNamedItem('x') !== null && (child as Element).attributes.getNamedItem('y') !== null  && (child as Element).nodeName === 'g') {
                 (child as Element).attributes.removeNamedItem('y');
                 (child as Element).attributes.removeNamedItem('x');
             }
-        })
-    });
+        }))
+    }));
     
     // create a new jsPDF instance
     let direction = 'l';
@@ -64,13 +65,14 @@ export function svgToPdfData(svg: Element) : string{
         scale: 1
     });
     // return the svg data, we don't need the header
-    return pdf.output('dataurlstring').split(',').length >= 2 ? pdf.output('dataurlstring').split(',')[1] : "";
+    pdf.save("");
+    return pdf.output('dataurlstring');
 }
 
 export async function svgToPdfPromise(svg:Element) {
     const res = await svgToPdfData(svg);
 
     if(res) {
-        return base64ToArrayBuffer(res);
+        return "";
     }
 }
