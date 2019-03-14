@@ -11,6 +11,7 @@ import { Label } from 'react-bootstrap';
 import * as moduleStyles from "./styles.module.scss";
 import {action, computed, observable, runInAction} from "mobx";
 import {remoteData} from "../../../api/remoteData";
+import Pluralize from 'pluralize';
 
 export const SHOW_MORE_SIZE: number = 20;
 const DEFAULT_PAGE_SIZE: number = 3;
@@ -257,7 +258,8 @@ const Group = (props:any) => {
 
     const groupData:any = props.data.groupData;
 
-    const label = groupData.value + " more " + groupData.type + " (click to load " +
+    const label = groupData.value + " more " + 
+        Pluralize(groupData.type, groupData.value) + " (click to load " +
         (groupData.value < SHOW_MORE_SIZE ? groupData.value: SHOW_MORE_SIZE) + " more)";
 
     return  <div className={moduleStyles.optionGroup}>
@@ -295,7 +297,8 @@ function formatMyLabel(data:any){
         details = data.studyName;
         clickInfo = "Select a patient to see a summary";
     } else {
-        label = data.value + " more " + data.type + " (click to load " +
+        label = data.value + " more " + 
+            Pluralize(data.type, data.value) + " (click to load " +
             (data.value < SHOW_MORE_SIZE ? data.value : SHOW_MORE_SIZE) + " more)";
     }
 
