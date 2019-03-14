@@ -318,6 +318,7 @@ describe('DownloadUtils', () => {
 
             const geneticTrackDatum: GeneticTrackDatum = {
                 sample: "TCGA-BF-A1PV-01",
+                patient: "TCGA-BF-A1PV",
                 study_id: "skcm_tcga",
                 uid: "VENHQS1CRi1BMVBWLTAxOnNrY21fdGNnYQ",
                 trackLabel: "PTEN",
@@ -344,6 +345,7 @@ describe('DownloadUtils', () => {
 
             const geneticTrackDatum: GeneticTrackDatum = {
                 sample: "TCGA-EE-A20C-06",
+                patient: "TCGA-EE-A20C",
                 study_id: "skcm_tcga",
                 uid: "VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ",
                 trackLabel: "PTEN",
@@ -378,6 +380,7 @@ describe('DownloadUtils', () => {
 
             const geneticTrackDatum: GeneticTrackDatum = {
                 sample: "P-0000378-T01-IM3",
+                patient: "P-0000378",
                 study_id: "msk_impact_2017",
                 uid: "UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3",
                 trackLabel: "EGFR",
@@ -686,6 +689,7 @@ describe('DownloadUtils', () => {
             const notProfiledGeneticTrackDatum: GeneticTrackDatum[] = [
                 {
                     "sample": "TCGA-S9-A7J0-01",
+                    "patient": "TCGA-S9-A7J0",
                     "study_id": "lgg_tcga",
                     "uid": "VENHQS1TOS1BN0owLTAxOmxnZ190Y2dh",
                     "profiled_in": [
@@ -713,6 +717,7 @@ describe('DownloadUtils', () => {
                 },
                 {
                     "sample": "TCGA-F6-A8O3-01",
+                    "patient": "TCGA-F6-A8O3",
                     "study_id": "lgg_tcga",
                     "uid": "VENHQS1GNi1BOE8zLTAxOmxnZ190Y2dh",
                     "profiled_in": [
@@ -742,6 +747,7 @@ describe('DownloadUtils', () => {
                 },
                 {
                     "sample": "TCGA-DU-6396-01",
+                    "patient": "TCGA-DU-6396",
                     "study_id": "lgg_tcga",
                     "uid": "VENHQS1EVS02Mzk2LTAxOmxnZ190Y2dh",
                     "profiled_in": [],
