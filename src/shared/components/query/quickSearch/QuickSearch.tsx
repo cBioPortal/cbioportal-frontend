@@ -229,7 +229,7 @@ export default class QuickSearch extends React.Component {
                     closeMenuOnSelect={false}
                     onSelectResetsInput={false}
                     menuIsOpen={this.menuIsOpen}
-                    maxMenuHeight={510}
+                    maxMenuHeight={550}
                     styles={{
                         dropdownIndicator: ()=>{ return { display:'none' } },
                         control: (provided:any)=>{ return { ...provided, cursor:'text' } }
