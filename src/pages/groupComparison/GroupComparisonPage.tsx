@@ -121,7 +121,9 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     </MSKTab>
                     {
                         this.store.showSurvivalTab &&
-                        <MSKTab id={GroupComparisonTab.SURVIVAL} linkText="Survival">
+                        <MSKTab id={GroupComparisonTab.SURVIVAL} linkText="Survival"
+                                anchorClassName={this.store.survivalTabGrey ? "greyedOut" : ""}
+                        >
                             <Survival store={this.store}/>
                         </MSKTab>
                     }
