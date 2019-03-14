@@ -90,6 +90,9 @@ export interface IServerConfig {
     "skin_show_tissue_image_tab": boolean;
     "skin_title": string;
     "skin_authorization_message": string|null;
+    "skin_quick_search_show": boolean;
+    "skin_quick_search_gene_query_cancer_study_list": string|null;
+    "skin_quick_search_gene_query_session_id": string|null;
     "study_view": StudyView;
     "uniprot_id_url": string|null,
     "studiesWithGermlineConsentedSamples":string[]|undefined;
