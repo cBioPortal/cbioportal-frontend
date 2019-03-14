@@ -63,6 +63,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         "sarc_tcga_pan_can_atlas_2018,skcm_tcga_pan_can_atlas_2018,stad_tcga_pan_can_atlas_2018," +
         "tgct_tcga_pan_can_atlas_2018,thym_tcga_pan_can_atlas_2018,thca_tcga_pan_can_atlas_2018,ucs_tcga_pan_can_atlas_2018," +
         "ucec_tcga_pan_can_atlas_2018,uvm_tcga_pan_can_atlas_2018",
+    skin_quick_search_gene_query_cancer_study_list_name: "TCGA PanCancer Atlas studies",
     skin_title:"cBioPortal for Cancer Genomics",
 
     skin_blurb:`The cBioPortal for Cancer Genomics provides 
