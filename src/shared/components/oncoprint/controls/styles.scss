@@ -88,29 +88,35 @@
 
   }
 
-  .clinical-track-selector .Select {
-
-    .Select-placeholder {
-      color: #000;
+  .clinical-track-selector {
+    .Select-control {
+      height:33px;
     }
 
-    .Select-arrow {
-      border-color: #000 transparent transparent;
-    }
+    .Select {
 
-    .Select-menu-outer {
-      max-height: 400px;
-    }
+      .Select-placeholder {
+        color: #000;
+      }
 
-    .Select-menu {
-      max-height: 398px; // needs to be 2 less than Select-menu-outer height to not hide border. Irrelevant
-                        //    as long as & > div > div:nth-child(2) max-height is less
-      overflow:hidden;
+      .Select-arrow {
+        border-color: #000 transparent transparent;
+      }
 
-      & > div > div:nth-child(2){
-        max-height:350px !important;
-        overflow-x:hidden !important;
-        overflow-y:scroll !important;
+      .Select-menu-outer {
+        max-height: 400px;
+      }
+
+      .Select-menu {
+        max-height: 398px; // needs to be 2 less than Select-menu-outer height to not hide border. Irrelevant
+                          //    as long as & > div > div:nth-child(2) max-height is less
+        overflow:hidden;
+
+        & > div > div:nth-child(2){
+          max-height:350px !important;
+          overflow-x:hidden !important;
+          overflow-y:scroll !important;
+        }
       }
     }
   }
