@@ -1072,7 +1072,7 @@
           "application/json"
         ],
         "produces": [
-          "*/*"
+          "application/json"
         ],
         "responses": {
           "200": {
@@ -1123,7 +1123,7 @@
           "application/json"
         ],
         "produces": [
-          "*/*"
+          "application/json"
         ],
         "responses": {
           "200": {
@@ -2119,7 +2119,8 @@
       "type": "object",
       "properties": {
         "entrezGeneId": {
-          "type": "string"
+          "type": "integer",
+          "format": "int32"
         },
         "foundation": {
           "type": "boolean"

@@ -500,7 +500,8 @@ describe("DataUtils", ()=>{
    describe("fillGeneticTrackDatum", ()=>{
        const makeMinimalUnfilledDatum = () => ({
            study_id: 'study1',
-           uid: 'SAMPLE1=='
+           uid: 'SAMPLE1==',
+           patient:"patient1"
        });
        it("fills a datum w no data correctly", ()=>{
            assert.deepEqual(
@@ -1189,7 +1190,7 @@ describe("DataUtils", ()=>{
                    {sampleId:"sample", studyId:"study"} as Sample,
                    data
                ),
-               {hugo_gene_symbol:"gene", study:"study", profile_data:3}
+               {hugo_gene_symbol:"gene", study_id:"study", profile_data:3}
            );
        });
        it("throws exception if more than one data given for sample",()=>{
@@ -1223,7 +1224,7 @@ describe("DataUtils", ()=>{
                    {patientId:"patient", studyId:"study"} as Sample,
                    data
                ),
-               {hugo_gene_symbol:"gene", study:"study", profile_data:3}
+               {hugo_gene_symbol:"gene", study_id:"study", profile_data:3}
            );
 
            data = [
@@ -1237,7 +1238,7 @@ describe("DataUtils", ()=>{
                    {patientId:"patient", studyId:"study"} as Sample,
                    data
                ),
-               {hugo_gene_symbol:"gene", study:"study", profile_data:2}
+               {hugo_gene_symbol:"gene", study_id:"study", profile_data:2}
            );
 
            data = [
@@ -1253,7 +1254,7 @@ describe("DataUtils", ()=>{
                    {patientId:"patient", studyId:"study"} as Sample,
                    data
                ),
-               {hugo_gene_symbol:"gene", study:"study", profile_data:4}
+               {hugo_gene_symbol:"gene", study_id:"study", profile_data:4}
            );
 
            data = [
@@ -1269,7 +1270,7 @@ describe("DataUtils", ()=>{
                    {patientId:"patient", studyId:"study"} as Sample,
                    data
                ),
-               {hugo_gene_symbol:"gene", study:"study", profile_data:-10}
+               {hugo_gene_symbol:"gene", study_id:"study", profile_data:-10}
            );
        });
        it("fills data for a gene set if that's requested", ()=>{
@@ -1283,7 +1284,7 @@ describe("DataUtils", ()=>{
            );
            assert.deepEqual(
                partialTrackDatum,
-               {geneset_id:"MY_FAVORITE_GENE_SET-3", study:"study", profile_data:7}
+               {geneset_id:"MY_FAVORITE_GENE_SET-3", study_id:"study", profile_data:7}
            );
        });
    });

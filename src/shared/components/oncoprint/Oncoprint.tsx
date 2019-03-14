@@ -47,8 +47,8 @@ export type ClinicalTrackSpec = {
 export interface IBaseHeatmapTrackDatum {
     profile_data: number|null;
     sample?: string;
-    patient?: string;
-    study: string;
+    patient: string;
+    study_id: string;
     uid: string;
     na?:boolean;
 }
@@ -70,7 +70,7 @@ export type GeneticTrackDatum_ProfiledIn = {genePanelId?:string, molecularProfil
 export type GeneticTrackDatum = {
     trackLabel: string;
     sample?:string;
-    patient?:string;
+    patient:string;
     study_id:string;
     uid:string;
     data:GeneticTrackDatum_Data[];
@@ -134,6 +134,7 @@ export interface IOncoprintProps {
     heatmapTracks: IGeneHeatmapTrackSpec[];
     divId:string;
     width:number;
+    caseLinkOutInTooltips:boolean;
 
     molecularProfileIdToMolecularProfile?:{[molecularProfileId:string]:MolecularProfile};
 
