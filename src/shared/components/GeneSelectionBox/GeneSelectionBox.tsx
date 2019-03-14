@@ -39,7 +39,8 @@ export enum DisplayStatus {
 }
 export enum GeneBoxType {
     DEFAULT,
-    STUDY_VIEW_PAGE
+    STUDY_VIEW_PAGE,
+    ONCOPRINT_HEATMAP
 }
 
 function isInteger(str: string) {
@@ -201,13 +202,19 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
     @computed private get textAreaClasses() {
         let classNames: string[] = [];
 
-        if (this.props.location === GeneBoxType.STUDY_VIEW_PAGE) {
-            classNames.push(styles.studyView);
-            if (this.isFocused || this.hasErrors) {
-                classNames.push(styles.studyViewFocus);
-            }
-        } else {
-            classNames.push(styles.default);
+        switch (this.props.location) {
+            case GeneBoxType.STUDY_VIEW_PAGE:
+                classNames.push(styles.studyView);
+                if (this.isFocused || this.hasErrors) {
+                    classNames.push(styles.studyViewFocus);
+                }
+                break;
+            case GeneBoxType.ONCOPRINT_HEATMAP:
+                classNames.push(styles.oncoprintHeatmap);
+                break;
+            default:
+                classNames.push(styles.default);
+                break;
         }
         this.geneQuery ? classNames.push(styles.notEmpty) : classNames.push(styles.empty);
         return classNames;
