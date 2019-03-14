@@ -90,7 +90,8 @@ export interface IServerConfig {
     "skin_title": string;
     "skin_authorization_message": string|null;
     "skin_quick_search_show": boolean;
-    "skin_quick_search_gene_query_cancer_study_list": string|null;
+    "skin_quick_search_gene_query_cancer_study_list": string; // this has a default
+    "skin_quick_search_gene_query_cancer_study_list_name": string; // this has a default
     "skin_quick_search_gene_query_session_id": string|null;
     "study_view": StudyView;
     "uniprot_id_url": string|null,

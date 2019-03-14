@@ -14,6 +14,8 @@ import {remoteData} from "../../../api/remoteData";
 import Pluralize from 'pluralize';
 import { Gene } from "shared/api/generated/CBioPortalAPI";
 import AppConfig from "appConfig";
+import { ServerConfigHelpers } from "config/config";
+import sessionServiceClient from "shared/api/sessionServiceInstance";
 
 export const SHOW_MORE_SIZE: number = 20;
 const DEFAULT_PAGE_SIZE: number = 3;
@@ -86,12 +88,41 @@ export default class QuickSearch extends React.Component {
     }
 
     // tslint:disable-next-line:member-ordering
-    private geneStudyQuery = remoteData<GeneStudyQuery>(()=>{
-        return Promise.resolve({
-            type: GeneStudyQueryType.STUDY_LIST,
-            query: AppConfig.serverConfig.skin_quick_search_gene_query_cancer_study_list!,
-            name: "TCGA PanCancer Atlas studies"
-        });
+    readonly geneStudyQueryVirtualStudy = remoteData(async () => {
+        const virtualStudyId = AppConfig.serverConfig.skin_quick_search_gene_query_session_id;
+
+        if (ServerConfigHelpers.sessionServiceIsEnabled() && virtualStudyId) {
+            try {
+                const study = await sessionServiceClient.getVirtualStudy(virtualStudyId);
+                return study;
+            } catch (ex) {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }, null);
+
+    // tslint:disable-next-line:member-ordering
+    private geneStudyQuery = remoteData<GeneStudyQuery>({
+        await: () => [
+            this.geneStudyQueryVirtualStudy
+        ],
+        invoke: ()=>{
+            if (this.geneStudyQueryVirtualStudy.result) {
+                return Promise.resolve({
+                    type: GeneStudyQueryType.SESSION,
+                    query: this.geneStudyQueryVirtualStudy.result.id,
+                    name: this.geneStudyQueryVirtualStudy.result.data.name,
+                });
+            } else {
+                return Promise.resolve({
+                    type: GeneStudyQueryType.STUDY_LIST,
+                    query: AppConfig.serverConfig.skin_quick_search_gene_query_cancer_study_list,
+                    name: AppConfig.serverConfig.skin_quick_search_gene_query_cancer_study_list_name,
+                });
+            }
+        }
     });
 
     // tslint:disable-next-line:member-ordering
