@@ -10,7 +10,7 @@ import {
     getAlterationScatterData,
     getFilteredData,
     getAlterationRowData,
-    AlterationEnrichmentWithQ
+    AlterationEnrichmentWithQ, getAlterationFrequencyScatterData
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { Checkbox, Button, Form, FormGroup, ControlLabel, FormControl } from 'react-bootstrap';
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
@@ -20,6 +20,7 @@ import MiniBarChart from 'pages/resultsView/enrichments/MiniBarChart';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
+import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -35,6 +36,10 @@ export interface IAlterationEnrichmentContainerProps {
     alterationType?: string;
     showMutexTendencyInTable?:boolean;
     showCNAInTable?:boolean;
+}
+
+enum ChartType {
+    VOLCANO, FREQUENCY
 }
 
 @observer
@@ -58,6 +63,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
             `that do not have alterations in the query gene(s) that have ${this.props.alterationType!} in the listed gene.`;
     }
 
+    @observable chartType:ChartType = ChartType.VOLCANO;
     @observable mutualExclusivityFilter: boolean = true;
     @observable coOccurenceFilter: boolean = true;
     @observable significanceFilter: boolean = false;
@@ -109,6 +115,15 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
             this.checkedGenes.splice(index, 1);
         } else {
             this.checkedGenes.push(hugoGeneSymbol);
+        }
+    }
+
+    @autobind
+    private toggleChart() {
+        if (this.chartType === ChartType.VOLCANO) {
+            this.chartType = ChartType.FREQUENCY;
+        } else {
+            this.chartType = ChartType.VOLCANO;
         }
     }
 
@@ -165,10 +180,28 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return (
             <div className={styles.Container}>
                 <div className={styles.LeftColumn}>
-                    <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
-                        xAxisLeftLabel="Mutual exclusivity" xAxisRightLabel="Co-occurrence" xAxisDomain={15} 
-                        xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
-                        onSelectionCleared={this.onSelectionCleared}/>
+                    {this.chartType === ChartType.VOLCANO && (
+                        <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
+                                          xAxisLeftLabel="Mutual exclusivity" xAxisRightLabel="Co-occurrence" xAxisDomain={15}
+                                          xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
+                                          onSelectionCleared={this.onSelectionCleared}/>
+                    )}
+                    {this.chartType === ChartType.FREQUENCY && (
+                        <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
+                                                   xGroupName={this.props.group1Name!} yGroupName={this.props.group2Name!} onGeneNameClick={this.onGeneNameClick}
+                                                   onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared}/>
+                    )}
+                    <button
+                        className="btn btn-sm btn-default"
+                        onClick={this.toggleChart}
+                        style={{
+                            position:"absolute",
+                            top:10,
+                            left:10
+                        }}
+                    >
+                        {this.chartType === ChartType.VOLCANO ? "Show Frequency Plot" : "Show Volcano Plot"}
+                    </button>
                     {this.props.store && <MiniBarChart totalAlteredCount={this.props.totalGroup1Count} totalUnalteredCount={this.props.totalGroup2Count}
                                                        selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />}
                 </div>

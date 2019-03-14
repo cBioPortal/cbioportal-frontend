@@ -12,4 +12,9 @@
   .simple-table tbody>tr:nth-of-type(even).clickable:hover {
     background-color: #FFFFFF !important;
   }
+
+  .oncoprintjs__tooltip {
+    display:none !important;
+  }
+
 }
