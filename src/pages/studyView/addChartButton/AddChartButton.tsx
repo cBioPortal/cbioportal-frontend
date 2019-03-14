@@ -39,13 +39,13 @@ export interface IAddChartButtonProps extends IAddChartTabsProps {
 
 
 export enum TabKeysEnum {
-    CUSTOM_GROUPS = 'Custom Groups',
+    CUSTOM_DATA = 'Custom Data',
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic'
 }
 
 export type TabKeys =
-    TabKeysEnum.CUSTOM_GROUPS
+    TabKeysEnum.CUSTOM_DATA
     | TabKeysEnum.GENOMIC
     | TabKeysEnum.CLINICAL
     | "";
@@ -74,7 +74,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     constructor(props: IAddChartTabsProps, context: any) {
         super(props, context);
 
-        this.activeId = props.initialActiveTab || (props.disableClinicalTab ? "" : TabKeysEnum.CLINICAL) || (props.disableGenomicTab ? "" : TabKeysEnum.GENOMIC) || (props.disableCustomTab ? "" : TabKeysEnum.CUSTOM_GROUPS)
+        this.activeId = props.initialActiveTab || (props.disableClinicalTab ? "" : TabKeysEnum.CLINICAL) || (props.disableGenomicTab ? "" : TabKeysEnum.GENOMIC) || (props.disableCustomTab ? "" : TabKeysEnum.CUSTOM_DATA)
     }
 
     readonly getClinicalDataCount = remoteData<ClinicalDataCountSet>({
@@ -242,7 +242,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     onClearAll={this.onClearAll}
                                     onToggleOption={this.onToggleOption}/>
                 </MSKTab>
-                <MSKTab key={2} id={TabKeysEnum.CUSTOM_GROUPS} linkText={TabKeysEnum.CUSTOM_GROUPS}
+                <MSKTab key={2} id={TabKeysEnum.CUSTOM_DATA} linkText={TabKeysEnum.CUSTOM_DATA}
                         hide={this.props.disableCustomTab}>
                     <CustomCaseSelection
                         allSamples={this.props.store.samples.result}
