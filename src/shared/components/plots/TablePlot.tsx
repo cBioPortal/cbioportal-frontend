@@ -5,7 +5,7 @@ import {bind} from "bind-decorator";
 import CBIOPORTAL_VICTORY_THEME from "../../theme/cBioPoralTheme";
 import {VictoryAxis, VictoryBoxPlot, VictoryChart, VictoryLabel, VictoryLegend, VictoryScatter} from "victory";
 import {IStringAxisData, tableCellTextColor} from "../../../pages/resultsView/plots/PlotsTabUtils";
-import ListIndexedMap from "../../lib/ListIndexedMap";
+import {StringListIndexedMap} from "../../lib/ListIndexedMap";
 import naturalSort from "javascript-natural-sort";
 import * as d3Scale from "d3-scale";
 import Timer = NodeJS.Timer;
@@ -129,7 +129,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     
     @computed get tableData():ITableData {
         // count by categories
-        const tableCounts:ListIndexedMap<number> = new ListIndexedMap();
+        const tableCounts:StringListIndexedMap<number> = new StringListIndexedMap();
         for (const entry of iterateOverEntries(this.props.horzData, this.props.vertData)) {
             if (entry.horz !== undefined && entry.vert !== undefined) {
                 tableCounts.set(
