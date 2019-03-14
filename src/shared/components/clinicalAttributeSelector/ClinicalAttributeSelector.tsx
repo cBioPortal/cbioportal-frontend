@@ -1,6 +1,5 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {MobxPromise} from "mobxpromise";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {computed, observable} from "mobx";
 import {remoteData} from "../../api/remoteData";
@@ -8,19 +7,19 @@ import _ from "lodash";
 import {ClinicalAttribute} from "../../api/generated/CBioPortalAPI";
 import {getPercentage} from "../../lib/FormatUtils";
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
-import {makeProfiledInClinicalAttributes} from "../oncoprint/ResultsViewOncoprintUtils";
-const CheckedSelect = require("react-select-checked").CheckedSelect;
-import ReactSelect from "react-select";
+import ReactSelect from "react-select2";
 import autobind from "autobind-decorator";
 import {ExtendedClinicalAttribute} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
+import onMobxPromise from "../../lib/onMobxPromise";
 
 export interface IClinicalAttributeSelectorProps {
     store:ResultsViewPageStore;
     selectedClinicalAttributeIds:(string|SpecialAttribute)[];
     onChange:(selectedAttributeIds:(string|SpecialAttribute)[])=>void;
-    multiple?:boolean;
     name?:string;
 }
+
+type Option = { label:string, value:string };
 
 @observer
 export default class ClinicalAttributeSelector extends React.Component<IClinicalAttributeSelectorProps, {}> {
@@ -100,17 +99,13 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         return this.props.selectedClinicalAttributeIds.map(x=>({value:x}));
     }
 
-    @computed get onChangeMultiple() {
-        return (values:{value:string|SpecialAttribute}[])=>{
-            this.props.onChange(values.map(o=>o.value));
-        };
+    @computed get valueMap() {
+        return _.keyBy(this.value, v=>v.value);
     }
 
-    @computed get onChangeSingle() {
-        return (option:any|null)=>{
-            if (option !== null) {
-                this.props.onChange([option.value]);
-            }
+    @computed get onChange() {
+        return (values:{value:string|SpecialAttribute}[])=>{
+            this.props.onChange(values.map(o=>o.value));
         };
     }
 
@@ -118,18 +113,67 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         this.focused = true;
     }
 
+    @autobind private getOptionLabel(option:Option) {
+        let box = "";
+        if (option.value in this.valueMap) {
+            box = String.fromCodePoint(9745); // checked box
+        } else {
+            box = String.fromCodePoint(9744); // empty box
+        }
+        return `${box} ${option.label}`;
+    }
+
+    @autobind private addAll() {
+        onMobxPromise(
+            this.options,
+            options=>this.onChange(options)
+        );
+    }
+
+    @autobind private clear() {
+        this.onChange([]);
+    }
+
+    @autobind private buttonsSection() {
+        return (
+            <div style={{
+                marginTop:-7,
+                paddingBottom:5,
+                display:"flex",
+                justifyContent:"center",
+                alignItems:"center",
+                borderBottom:"1px solid #ccc"
+            }}>
+                <button
+                    className="btn btn-sm btn-default"
+                    onClick={this.addAll}
+                    style={{marginRight:5}}
+                    disabled={this.options.peekStatus === "complete" && this.options.result!.length === this.value.length}
+                >
+                    {`Add all ${this.options.peekStatus === "complete" ? "("+this.options.result!.length+")" : ""}`}
+                </button>
+                <button
+                    className="btn btn-sm btn-default"
+                    disabled={this.value.length === 0}
+                    onClick={this.clear}
+                >Clear</button>
+            </div>
+        );
+    }
+
     render() {
         let disabled:boolean, placeholder:string, options:any[];
         if (this.focused) {
+            // only load options once its been focused
             switch (this.options.status) {
                 case "pending":
                     disabled = false;
-                    placeholder = "Downloading clinical tracks...";
+                    placeholder = "Downloading...";
                     options = [];
                     break;
                 case "error":
                     disabled = true;
-                    placeholder = "Error downloading clinical tracks.";
+                    placeholder = "Error";
                     options = [];
                     break;
                 default:
@@ -139,43 +183,76 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
                     options = this.options.result!;
             }
         } else {
-            // not loading yet - only load on click
+            // not loading yet - only load on focus
             disabled = false;
             placeholder = "Add clinical tracks";
             options = [];
         }
 
-        let selectElt:any = null;
-        if (this.props.multiple) {
-            selectElt = (
-                <CheckedSelect
-                    name={this.props.name}
-                    disabled={disabled}
-                    placeholder={placeholder}
-                    onChange={this.onChangeMultiple}
-                    options={options}
-                    value={this.value}
-                    labelKey="label"
-                />
-            );
-        } else {
-            selectElt = (
-                <ReactSelect
-                    name={this.props.name}
-                    disabled={disabled}
-                    placeholder={placeholder}
-                    onChange={this.onChangeSingle}
-                    options={options}
-                    clearable={false}
-                    searchable={true}
-                    value={this.value}
-                />
-            );
-        }
-
         return (
             <span onFocus={this.onFocus}>
-                {selectElt}
+                <ReactSelect
+                    styles={{
+                        control: (provided:any)=>({
+                            ...provided,
+                            height:33.5,
+                            minHeight:33.5,
+                            border: "1px solid rgb(204,204,204)"
+                        }),
+                        menu: (provided:any)=>({
+                            ...provided,
+                            maxHeight: 400
+                        }),
+                        menuList: (provided:any)=>({
+                            ...provided,
+                            maxHeight:400
+                        }),
+                        placeholder:(provided:any)=>({
+                            ...provided,
+                            color: "#000000"
+                        }),
+                        dropdownIndicator:(provided:any)=>({
+                            ...provided,
+                            color:"#000000"
+                        }),
+                        option:(provided:any, state:any)=>{
+                            const ret:any = {
+                                ...provided,
+                                cursor:"pointer",
+                                color:"black"
+                            };
+                            if (state.isSelected && !state.isFocused) {
+                                ret.backgroundColor = state.theme.colors.primary25;
+                            }
+                            return ret;
+                        }
+                    }}
+                    theme={(theme:any)=>({
+                        ...theme,
+                        colors: {
+                            ...theme.colors,
+                            primary: theme.colors.primary50
+                        },
+                    })}
+                    components={{ GroupHeading: this.buttonsSection }}
+                    name={this.props.name}
+                    closeMenuOnSelect={false}
+                    isDisabled={disabled}
+                    isClearable={false}
+                    isSearchable={true}
+                    placeholder={placeholder}
+                    getOptionLabel={this.getOptionLabel}
+                    hideSelectedOptions={false}
+                    onChange={this.onChange}
+                    options={[{
+                        label:"dummy label, this is only here to create group so we can add the buttons section as the group label component",
+                        options
+                    }]}
+                    value={this.value}
+                    labelKey="label"
+                    isMulti={true}
+                    controlShouldRenderValue={false}
+                />
             </span>
         );
     }
