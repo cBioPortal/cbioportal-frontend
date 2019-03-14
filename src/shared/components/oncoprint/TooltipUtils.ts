@@ -13,6 +13,13 @@ import {
 import _ from "lodash";
 import {alterationTypeToProfiledForText} from "./ResultsViewOncoprintUtils";
 import {isNotGermlineMutation} from "../../lib/MutationUtils";
+import ListIndexedMap, {ListIndexedMapOfCounts} from "../../lib/ListIndexedMap";
+
+const hotspotsImg = require("../../../rootImages/cancer-hotspots.svg");
+const oncokbImg = require("../../../rootImages/oncokb-oncogenic-1.svg");
+const customDriverImg = require("../../../rootImages/driver.png");
+const customDriverTiersImg = require("../../../rootImages/driver_tiers.png");
+
 
 export const TOOLTIP_DIV_CLASS = "oncoprint__tooltip";
 
@@ -23,8 +30,8 @@ function patientViewAnchorTag(study_id:string, patient_id:string) {
     return `<a href="${getPatientViewUrl(study_id, patient_id)}" target="_blank">${patient_id}</a>`;
 };
 
-function makeGenePanelPopupLink(gene_panel_id:string, profiled:boolean) {
-    let anchor = $(`<a href="#" ${!profiled ? 'style="color:red;"': ""} oncontextmenu="return false;">${gene_panel_id}</a>`);
+function makeGenePanelPopupLink(gene_panel_id:string, profiled:boolean, numSamples?:number) {
+    let anchor = $(`<span style="white-space:nowrap"><a href="#" ${!profiled ? 'style="color:red;"': ""} oncontextmenu="return false;">${gene_panel_id}</a>${numSamples ? ` (${numSamples})` : ""}</span>`);
     anchor.ready(()=>{
         anchor.click(function() {
             client.getGenePanelUsingGET({ genePanelId: gene_panel_id }).then((panel:GenePanel)=>{
@@ -57,43 +64,65 @@ export function linebreakGenesetId(
 }
 
 export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boolean) {
-    return function(d:any) {
+    return function(dataUnderMouse:any[]) {
         let ret = '';
         if (track.datatype === "counts") {
+            const d = dataUnderMouse[0];
             for (let i=0; i<track.countsCategoryLabels.length; i++) {
                 ret += '<span style="color:' + track.countsCategoryFills[i] + ';font-weight:bold;">'+track.countsCategoryLabels[i]+'</span>: '+d.attr_val_counts[track.countsCategoryLabels[i]]+'<br>';
             }
         } else {
-            const attr_vals = ((d.attr_val_counts && Object.keys(d.attr_val_counts)) || []);
-            if (attr_vals.length > 1) {
-                ret += track.label+':<br>';
-                for (let i = 0; i < attr_vals.length; i++) {
-                    const val = attr_vals[i];
-                    ret += '<b>' + val + '</b>: ' + d.attr_val_counts[val] + '<br>';
-                }
-            } else if (attr_vals.length === 1) {
-                let displayVal = attr_vals[0];
-                if (track.datatype === "number") {
-                    displayVal = parseFloat(attr_vals[0]).toFixed(2);
-                    if (displayVal.substring(displayVal.length-3) === ".00") {
-                        displayVal = displayVal.substring(0, displayVal.length-3);
+            let attr_val_counts:{[attr_val:string]:number} = {};
+            for (const d of dataUnderMouse) {
+                if (d.attr_val_counts) {
+                    for (const key of Object.keys(d.attr_val_counts)) {
+                        attr_val_counts[key] = attr_val_counts[key] || 0;
+                        attr_val_counts[key] += d.attr_val_counts[key];
                     }
                 }
-                ret += track.label+': <b>' + displayVal + '</b><br>';
+            }
+            const attr_vals = Object.keys(attr_val_counts);
+            if (track.datatype === "number") {
+                // average
+                let sum = 0;
+                let count = 0;
+                for (const attr_val of attr_vals) {
+                    const numSamplesWithVal = attr_val_counts[attr_val];
+                    sum += numSamplesWithVal*parseFloat(attr_val);
+                    count += numSamplesWithVal;
+                }
+                let displayVal = (sum/count).toFixed(2);
+                if (displayVal.substring(displayVal.length-3) === ".00") {
+                    displayVal = displayVal.substring(0, displayVal.length-3);
+                }
+                ret += track.label+': <span style="white-space:nowrap"><b>' + displayVal + `${count > 1 ? ` (average of ${count} values)`:""}</b></span><br>`;
+            } else {
+                if (attr_vals.length > 1) {
+                    ret += track.label+':<br>';
+                    for (let i = 0; i < attr_vals.length; i++) {
+                        const val = attr_vals[i];
+                        ret += '<span style="white-space:nowrap"><b>' + val + '</b>: ' + attr_val_counts[val] + ` sample${attr_val_counts[val] === 1 ? "" : "s"}</span><br>`;
+                    }
+                } else if (attr_vals.length === 1) {
+                    let displayVal = attr_vals[0];
+                    ret += track.label+': <span style="white-space:nowrap"><b>' + displayVal + `</b>${dataUnderMouse.length > 1 ? ` (${attr_val_counts[attr_vals[0]]} samples)` : ""}</span><br>`;
+                }
             }
         }
-        if (d.na && track.na_tooltip_value) {
-            ret += `${track.label}: <b>${track.na_tooltip_value}</b><br/>`;
+        let naCount = 0;
+        for (const d of dataUnderMouse) {
+            if (d.na) {
+                naCount += 1;
+            }
         }
-        ret += '<span>'+(d.sample ? "Sample" : "Patient")+": ";
-        ret += (link_id ? (d.sample? sampleViewAnchorTag(d.study_id, d.sample) : patientViewAnchorTag(d.study_id, d.patient))
-            : (d.sample ? d.sample : d.patient));
-        ret += '</span>';
-        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(ret);
+        if (naCount > 0 && track.na_tooltip_value) {
+            ret += `${track.label}: <b>${track.na_tooltip_value}</b> (${naCount} samples)<br/>`;
+        }
+        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(getCaseViewElt(dataUnderMouse, !!link_id)).append("<br/>").append(ret);
     };
 }
 export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile["molecularAlterationType"], link_id?:boolean) {
-    return function (d:any) {
+    return function (dataUnderMouse:any[]) {
         let data_header = '';
         let profile_data = 'N/A';
         switch(genetic_alteration_type) {
@@ -107,12 +136,22 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
                 data_header = 'METHYLATION: ';
                 break;
         }
-        if ((d.profile_data !== null) && (typeof d.profile_data !== "undefined")) {
-            profile_data = d.profile_data.toFixed(2);
+        let profileDataSum = 0;
+        let profileDataCount = 0;
+        for (const d of dataUnderMouse) {
+            if ((d.profile_data !== null) && (typeof d.profile_data !== "undefined")) {
+                profileDataSum += d.profile_data;
+                profileDataCount += 1;
+            }
         }
-        let ret = data_header + '<b>' + profile_data + '</b><br>';
-        ret += (d.sample ? (link_id ? sampleViewAnchorTag(d.study, d.sample) : d.sample) : (link_id ? patientViewAnchorTag(d.study, d.patient) : d.patient));
-        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(ret);
+        if (profileDataCount > 0) {
+            profile_data = (profileDataSum/profileDataCount).toFixed(2);
+            if (profileDataCount > 1) {
+                profile_data = `${profile_data} (average of ${profileDataCount} values)`;
+            }
+        }
+        let ret = data_header + '<b>' + profile_data + '</b><br/>';
+        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(getCaseViewElt(dataUnderMouse, !!link_id)).append("<br/>").append(ret);
     };
 };
 
@@ -165,44 +204,131 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
     };
 }
 
+export function getCaseViewElt(
+    dataUnderMouse:Pick<GeneticTrackDatum, "sample"|"patient"|"study_id">[],
+    caseViewLinkout:boolean
+) {
+    if (!dataUnderMouse.length) {
+        return "";
+    }
+
+    let caseIdElt;
+    if (dataUnderMouse[0].sample) {
+        if (dataUnderMouse.length > 1) {
+            caseIdElt = (
+                caseViewLinkout ?
+                    `<a href=${
+                        getSampleViewUrl(dataUnderMouse[0].study_id, dataUnderMouse[0].sample, dataUnderMouse.map(d=>({studyId:d.study_id, patientId:d.patient})))
+                        } target="_blank">View these ${dataUnderMouse.length} samples<a/>` :
+                    `<span>${dataUnderMouse.length} samples</span>`
+            );
+        } else {
+            caseIdElt = (caseViewLinkout ? sampleViewAnchorTag(dataUnderMouse[0].study_id, dataUnderMouse[0].sample) : `<span>${dataUnderMouse[0].sample}</span>`);
+        }
+    } else if (dataUnderMouse[0].patient) {
+        if (dataUnderMouse.length > 1) {
+            caseIdElt = (
+                caseViewLinkout ?
+                    `<a href=${
+                        getPatientViewUrl(dataUnderMouse[0].study_id, dataUnderMouse[0].patient, dataUnderMouse.map(d=>({studyId:d.study_id, patientId:d.patient!})))
+                        } target="_blank">View these ${dataUnderMouse.length} patients<a/>` :
+                    `<span>${dataUnderMouse.length} patients</span>`
+            );
+        } else {
+            caseIdElt = (caseViewLinkout ? patientViewAnchorTag(dataUnderMouse[0].study_id, dataUnderMouse[0].patient) : `<span>${dataUnderMouse[0].patient}</span>`);
+        }
+    } else {
+        caseIdElt = "";
+    }
+    return caseIdElt;
+}
+
 export function makeGeneticTrackTooltip(
+    caseViewLinkout:boolean,
     getMolecularProfileMap?:()=>{[molecularProfileId:string]:MolecularProfile}|undefined,
     alterationTypesInQuery?:string[],
 ) {
     // TODO: all the data here is old API data
-    function listOfMutationOrFusionDataToHTML(data:any[]) {
-        return data.map(function(d:any) {
-            var ret = $('<span>');
-            ret.append(`<b>${d.hugo_gene_symbol} ${d.amino_acid_change}</b>`);
-            if (d.cancer_hotspots_hotspot) {
-                ret.append(`<img src="${require("../../../rootImages/cancer-hotspots.svg")}" title="Hotspot" style="height:11px; width:11px; margin-left:3px"/>`);
+    function listOfMutationOrFusionDataToHTML(data:any[], multipleSamplesUnderMouse:boolean) {
+        const countsMap = new ListIndexedMapOfCounts();
+        for (const d of data) {
+            countsMap.increment(
+                d.hugo_gene_symbol, d.amino_acid_change, d.cancer_hotspots_hotspot,
+                d.oncokb_oncogenic, d.driver_filter, d.driver_filter_annotation,
+                d.driver_tiers_filter, d.driver_tiers_filter_annotation, d.germline
+            );
+        }
+        return countsMap.entries().map((
+            {key:[hugo_gene_symbol, amino_acid_change, cancer_hotspots_hotspot,
+            oncokb_oncogenic, driver_filter, driver_filter_annotation,
+                driver_tiers_filter, driver_tiers_filter_annotation, germline],
+            value:count})=>{
+            var ret = $('<span>').css("white-space", "nowrap");
+            ret.append(`<b>${hugo_gene_symbol} ${amino_acid_change}</b>`);
+            if (cancer_hotspots_hotspot) {
+                ret.append(`<img src="${hotspotsImg}" title="Hotspot" style="height:11px; width:11px; margin-left:3px"/>`);
             }
-            if (d.oncokb_oncogenic) {
-                ret.append(`<img src="${require("../../../rootImages/oncokb-oncogenic-1.svg")}" title="${d.oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`);
+            if (oncokb_oncogenic) {
+                ret.append(`<img src="${oncokbImg}" title="${oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`);
             }
             //If we have data for the binary custom driver annotations, append an icon to the tooltip with the annotation information
-            if (d.driver_filter && d.driver_filter === "Putative_Driver") {
-                ret.append(`<img src="${require("../../../rootImages/driver.png")}" title="${d.driver_filter}: ${d.driver_filter_annotation}" alt="driver filter" style="height:11px; width:11px;margin-left:3px"/>`);
+            if (driver_filter && driver_filter === "Putative_Driver") {
+                ret.append(`<img src="${customDriverImg}" title="${driver_filter}: ${driver_filter_annotation}" alt="driver filter" style="height:11px; width:11px;margin-left:3px"/>`);
             }
             //If we have data for the class custom driver annotations, append an icon to the tooltip with the annotation information
-            if (d.driver_tiers_filter) {
-                ret.append(`<img src="${require("../../../rootImages/driver_tiers.png")}" title="${d.driver_tiers_filter}: ${d.driver_tiers_filter_annotation}" alt="driver tiers filter" style="height:11px; width:11px;margin-left:3px"/>`);
+            if (driver_tiers_filter) {
+                ret.append(`<img src="${customDriverTiersImg}" title="${driver_tiers_filter}: ${driver_tiers_filter_annotation}" alt="driver tiers filter" style="height:11px; width:11px;margin-left:3px"/>`);
             }
 
 
             // AT THE END, append germline symbol if necessary
-            if (d.germline) {
+            if (germline) {
                 ret.append(generateGermlineLabel());
+            }
+            // finally, add the number of samples with this, if multipleSamplesUnderMouse
+            if (multipleSamplesUnderMouse) {
+                ret.append(`&nbsp;(${count})`);
             }
             return ret;
         });
-    };
-    function listOfCNAToHTML(data:any[]) {
-        return data.map(function(d:any) {
+    }
+    function listOfCNAToHTML(data:any[], multipleSamplesUnderMouse:boolean) {
+        const countsMap = new ListIndexedMapOfCounts();
+        for (const d of data) {
+            countsMap.increment(
+                d.hugo_gene_symbol, d.cna, d.oncokb_oncogenic
+            );
+        }
+        return countsMap.entries().map((
+            {key:[hugo_gene_symbol, cna, oncokb_oncogenic],
+            value:count})=>{
             var ret = $('<span>');
-            ret.append(`<b>${d.hugo_gene_symbol} ${d.cna}</b>`);
-            if (d.oncokb_oncogenic) {
-                ret.append(`<img src=${require("../../../rootImages/oncokb-oncogenic-1.svg")} title="${d.oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`);
+            ret.append(`<b>${hugo_gene_symbol} ${cna}</b>`);
+            if (oncokb_oncogenic) {
+                ret.append(`<img src=${oncokbImg} title="${oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`);
+            }
+            // finally, add the number of samples with this, if multipleSamplesUnderMouse
+            if (multipleSamplesUnderMouse) {
+                ret.append(`&nbsp;(${count})`);
+            }
+            return ret;
+        });
+    }
+    function listOfMRNAOrPROTToHTML(data:any[], multipleSamplesUnderMouse:boolean) {
+        const countsMap = new ListIndexedMapOfCounts();
+        for (const d of data) {
+            countsMap.increment(
+                d.hugo_gene_symbol, d.direction
+            );
+        }
+        return countsMap.entries().map((
+            {key:[hugo_gene_symbol, direction],
+                value:count})=>{
+            var ret = $('<span>');
+            ret.append(`<b>${hugo_gene_symbol} ${direction}</b>`);
+            // finally, add the number of samples with this, if multipleSamplesUnderMouse
+            if (multipleSamplesUnderMouse) {
+                ret.append(`&nbsp;(${count})`);
             }
             return ret;
         });
@@ -215,66 +341,70 @@ export function makeGeneticTrackTooltip(
     }
 
     const disp_cna:{[integerCN:string]:string} = {'-2': 'HOMODELETED', '-1': 'HETLOSS', '1': 'GAIN', '2': 'AMPLIFIED'};
-    return function (d:Pick<GeneticTrackDatum, "data"|"profiled_in"|"sample"|"patient"|"study_id"|"na"|"not_profiled_in"|"disp_germ">) {
+    return function (dataUnderMouse:Pick<GeneticTrackDatum, "data"|"profiled_in"|"sample"|"patient"|"study_id"|"na"|"not_profiled_in"|"disp_germ">[]) {
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
+        ret.append(getCaseViewElt(dataUnderMouse, caseViewLinkout)).append("<br/>");
         let mutations:any[] = [];
         let cna:any[] = [];
-        const mrna:{hugo_gene_symbol:string, direction:"UPREGULATED"|"DOWNREGULATED"}[] = [];
-        const prot:typeof mrna = [];
+        let mrna:any[] = [];
+        let prot:any[] = [];
         let fusions:any[] = [];
-        for (let i = 0; i < d.data.length; i++) {
-            const datum = d.data[i];
-            const molecularAlterationType = datum.molecularProfileAlterationType;
-            const hugoGeneSymbol = datum.hugoGeneSymbol;
-            switch (molecularAlterationType) {
-                case "MUTATION_EXTENDED":
-                    const tooltip_datum:any = {};
-                    tooltip_datum.hugo_gene_symbol = hugoGeneSymbol;
-                    tooltip_datum.amino_acid_change = datum.proteinChange;
-                    tooltip_datum.driver_filter = datum.driverFilter;
-                    tooltip_datum.driver_filter_annotation = datum.driverFilterAnnotation;
-                    tooltip_datum.driver_tiers_filter = datum.driverTiersFilter;
-                    tooltip_datum.driver_tiers_filter_annotation = datum.driverTiersFilterAnnotation;
-                    if (datum.isHotspot) {
-                        tooltip_datum.cancer_hotspots_hotspot = true;
-                    }
-                    if (!isNotGermlineMutation(datum)) {
-                        tooltip_datum.germline = true;
-                    }
-                    const oncokb_oncogenic = datum.oncoKbOncogenic;
-                    if (oncokb_oncogenic) {
-                        tooltip_datum.oncokb_oncogenic = oncokb_oncogenic;
-                    }
-                    (datum.alterationSubType === "fusion" ? fusions : mutations).push(tooltip_datum);
-                    break;
-                case "COPY_NUMBER_ALTERATION":
-                    if (disp_cna.hasOwnProperty(datum.value as AnnotatedNumericGeneMolecularData["value"])) {
-                        const tooltip_datum:any = {
-                            cna: disp_cna[datum.value as AnnotatedNumericGeneMolecularData["value"]],
-                            hugo_gene_symbol: hugoGeneSymbol
-                        };
+        // collect all data under mouse
+        for (const d of dataUnderMouse) {
+            for (let i = 0; i < d.data.length; i++) {
+                const datum = d.data[i];
+                const molecularAlterationType = datum.molecularProfileAlterationType;
+                const hugoGeneSymbol = datum.hugoGeneSymbol;
+                switch (molecularAlterationType) {
+                    case "MUTATION_EXTENDED":
+                        const tooltip_datum:any = {};
+                        tooltip_datum.hugo_gene_symbol = hugoGeneSymbol;
+                        tooltip_datum.amino_acid_change = datum.proteinChange;
+                        tooltip_datum.driver_filter = datum.driverFilter;
+                        tooltip_datum.driver_filter_annotation = datum.driverFilterAnnotation;
+                        tooltip_datum.driver_tiers_filter = datum.driverTiersFilter;
+                        tooltip_datum.driver_tiers_filter_annotation = datum.driverTiersFilterAnnotation;
+                        if (datum.isHotspot) {
+                            tooltip_datum.cancer_hotspots_hotspot = true;
+                        }
+                        if (!isNotGermlineMutation(datum)) {
+                            tooltip_datum.germline = true;
+                        }
                         const oncokb_oncogenic = datum.oncoKbOncogenic;
                         if (oncokb_oncogenic) {
                             tooltip_datum.oncokb_oncogenic = oncokb_oncogenic;
                         }
-                        cna.push(tooltip_datum);
-                    }
-                    break;
-                case "MRNA_EXPRESSION":
-                case "PROTEIN_LEVEL":
-                    let direction = datum.alterationSubType;
-                    let array = (molecularAlterationType === "MRNA_EXPRESSION" ? mrna : prot);
-                    if (direction === "up") {
-                        array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "UPREGULATED"});
-                    } else if (direction === "down") {
-                        array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "DOWNREGULATED"});
-                    }
-                    break;
+                        (datum.alterationSubType === "fusion" ? fusions : mutations).push(tooltip_datum);
+                        break;
+                    case "COPY_NUMBER_ALTERATION":
+                        if (disp_cna.hasOwnProperty(datum.value as AnnotatedNumericGeneMolecularData["value"])) {
+                            const tooltip_datum:any = {
+                                cna: disp_cna[datum.value as AnnotatedNumericGeneMolecularData["value"]],
+                                hugo_gene_symbol: hugoGeneSymbol
+                            };
+                            const oncokb_oncogenic = datum.oncoKbOncogenic;
+                            if (oncokb_oncogenic) {
+                                tooltip_datum.oncokb_oncogenic = oncokb_oncogenic;
+                            }
+                            cna.push(tooltip_datum);
+                        }
+                        break;
+                    case "MRNA_EXPRESSION":
+                    case "PROTEIN_LEVEL":
+                        let direction = datum.alterationSubType;
+                        let array = (molecularAlterationType === "MRNA_EXPRESSION" ? mrna : prot);
+                        if (direction === "up") {
+                            array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "UPREGULATED"});
+                        } else if (direction === "down") {
+                            array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "DOWNREGULATED"});
+                        }
+                        break;
+                }
             }
         }
         if (fusions.length > 0) {
             ret.append('Fusion: ');
-            fusions = listOfMutationOrFusionDataToHTML(fusions);
+            fusions = listOfMutationOrFusionDataToHTML(fusions, dataUnderMouse.length > 1);
             for (var i = 0; i < fusions.length; i++) {
                 if (i > 0) {
                     ret.append(",");
@@ -285,7 +415,7 @@ export function makeGeneticTrackTooltip(
         }
         if (mutations.length > 0) {
             ret.append('Mutation: ');
-            mutations = listOfMutationOrFusionDataToHTML(mutations);
+            mutations = listOfMutationOrFusionDataToHTML(mutations, dataUnderMouse.length > 1);
             for (var i = 0; i < mutations.length; i++) {
                 if (i > 0) {
                     ret.append(", ");
@@ -296,7 +426,7 @@ export function makeGeneticTrackTooltip(
         }
         if (cna.length > 0) {
             ret.append('Copy Number Alteration: ');
-            cna = listOfCNAToHTML(cna);
+            cna = listOfCNAToHTML(cna, dataUnderMouse.length > 1);
             for (var i = 0; i < cna.length; i++) {
                 if (i > 0) {
                     ret.append(", ");
@@ -306,71 +436,142 @@ export function makeGeneticTrackTooltip(
             ret.append('<br>');
         }
         if (mrna.length > 0) {
-            ret.append(`MRNA: <b>${mrna.map(x=>`${x.hugo_gene_symbol} ${x.direction}`).join(", ")}</b><br>`);
+            ret.append('MRNA: ');
+            mrna = listOfMRNAOrPROTToHTML(mrna, dataUnderMouse.length > 1);
+            for (var i = 0; i < mrna.length; i++) {
+                if (i > 0) {
+                    ret.append(", ");
+                }
+                ret.append(mrna[i]);
+            }
+            ret.append('<br>');
         }
         if (prot.length > 0) {
-            ret.append(`PROT: <b>${prot.map(x=>`${x.hugo_gene_symbol} ${x.direction}`).join(", ")}</b><br>`);
+            ret.append('PROT: ');
+            prot = listOfMRNAOrPROTToHTML(prot, dataUnderMouse.length > 1);
+            for (var i = 0; i < prot.length; i++) {
+                if (i > 0) {
+                    ret.append(", ");
+                }
+                ret.append(prot[i]);
+            }
+            ret.append('<br>');
         }
-        // CoverageInformation
+        // Gene panel coverage
         const molecularProfileMap = getMolecularProfileMap && getMolecularProfileMap();
-        const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(d.profiled_in, d.not_profiled_in, alterationTypesInQuery, molecularProfileMap);
-        if (coverageInformation.dispProfiledGenePanelIds.length || coverageInformation.dispNotProfiledGenePanelIds.length) {
+        const profiledGenePanelCounts = new ListIndexedMapOfCounts<string>();
+        const notProfiledGenePanelCounts = new ListIndexedMapOfCounts<string>();
+        const profiledMolecularProfileCounts = new ListIndexedMapOfCounts<string>();
+        const notProfiledMolecularProfileCounts = new ListIndexedMapOfCounts<string>();
+        let allProfiledCount = 0;
+        let noneProfiledCount = 0;
+
+        for (const d of dataUnderMouse) {
+            const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(d.profiled_in, d.not_profiled_in, alterationTypesInQuery, molecularProfileMap);
+            for (const genePanelId of coverageInformation.dispProfiledGenePanelIds) {
+                profiledGenePanelCounts.increment(genePanelId);
+            }
+            for (const genePanelId of coverageInformation.dispNotProfiledGenePanelIds) {
+                notProfiledGenePanelCounts.increment(genePanelId);
+            }
+            if (coverageInformation.dispProfiledIn) {
+                for (const molecularProfileId of coverageInformation.dispProfiledIn) {
+                    profiledMolecularProfileCounts.increment(molecularProfileId);
+                }
+            }
+            if (coverageInformation.dispNotProfiledIn) {
+                for (const molecularProfileId of coverageInformation.dispNotProfiledIn) {
+                    notProfiledMolecularProfileCounts.increment(molecularProfileId);
+                }
+            }
+            if (coverageInformation.dispAllProfiled) {
+                allProfiledCount += 1;
+            } else if (coverageInformation.dispNotProfiled) {
+                noneProfiledCount += 1;
+            }
+        }
+        const profiledGenePanelEntries = profiledGenePanelCounts.entries();
+        const notProfiledGenePanelEntries = notProfiledGenePanelCounts.entries();
+
+        if (profiledGenePanelEntries.length || notProfiledGenePanelEntries.length) {
             ret.append("Gene Panels: ");
             let needsCommaFirst = false;
-            for (let i=0; i<coverageInformation.dispProfiledGenePanelIds.length; i++) {
+            for (const entry of profiledGenePanelEntries) {
                 if (needsCommaFirst) {
-                    ret.append(",");
+                    ret.append(",&nbsp;");
                 }
                 needsCommaFirst = true;
-                ret.append(makeGenePanelPopupLink(coverageInformation.dispProfiledGenePanelIds[i], true));
+                ret.append(makeGenePanelPopupLink(
+                    entry.key[0],
+            true,
+                    (dataUnderMouse.length > 1 ? entry.value : undefined)
+                ));
             }
-            for (let i=0; i<coverageInformation.dispNotProfiledGenePanelIds.length; i++) {
+            for (const entry of notProfiledGenePanelEntries) {
+                if (profiledGenePanelCounts.has(...entry.key)) {
+                    // only add again, as "not profiled", if we didn't already add it as "profiled"
+                    continue;
+                }
                 if (needsCommaFirst) {
-                    ret.append(",");
+                    ret.append(",&nbsp;");
                 }
                 needsCommaFirst = true;
-                ret.append(makeGenePanelPopupLink(coverageInformation.dispNotProfiledGenePanelIds[i], false));
+                ret.append(makeGenePanelPopupLink(
+                    entry.key[0],
+                    false,
+                    (dataUnderMouse.length > 1 ? entry.value : undefined)
+                ));
             }
             ret.append("<br>");
-        }
-        if (coverageInformation.dispAllProfiled) {
-            ret.append("Profiled in all selected molecular profiles.");
-            ret.append("<br>");
-        } else if (coverageInformation.dispNotProfiled) {
-            ret.append('Not profiled in selected molecular profiles.');
-            ret.append('<br>');
-        } else {
-            if (coverageInformation.dispProfiledIn && coverageInformation.dispProfiledIn.length) {
-                ret.append("Profiled in: "+coverageInformation.dispProfiledIn.map(x=>{
-                        if (molecularProfileMap && (x in molecularProfileMap)) {
-                            return molecularProfileMap[x].name;
-                        } else {
-                            return x;
-                        }
-                    }).join(", "));
-                ret.append("<br>");
-            }
-            if (coverageInformation.dispNotProfiledIn && coverageInformation.dispNotProfiledIn.length) {
-                ret.append("<span style='color:red; font-weight:bold'>Not profiled in: "+coverageInformation.dispNotProfiledIn.map(x=>{
-                        if (molecularProfileMap && (x in molecularProfileMap)) {
-                            return molecularProfileMap[x].name;
-                        } else {
-                            return x;
-                        }
-                    }).join(", ")+"</span>");
-                ret.append("<br>");
-            }
         }
 
-        let caseIdElt;
-        if (d.sample) {
-            caseIdElt = (d.study_id.length > 0) ? sampleViewAnchorTag(d.study_id, d.sample) : d.sample;
-        } else if (d.patient) {
-            caseIdElt = (d.study_id.length > 0) ? patientViewAnchorTag(d.study_id, d.patient) : d.patient;
+        // Molecular profile coverage
+        const profiledInEntries = profiledMolecularProfileCounts.entries();
+        const notProfiledInEntries = notProfiledMolecularProfileCounts.entries();
+
+        // only show specifics if not all profiled or all unprofiled
+        if (allProfiledCount === dataUnderMouse.length) {
+            ret.append("Profiled in all selected molecular profiles." + (dataUnderMouse.length > 1 ? ` (${allProfiledCount})` : ""));
+            ret.append("<br>");
+        } else if (noneProfiledCount === dataUnderMouse.length) {
+            ret.append("Not profiled in selected molecular profiles." + (dataUnderMouse.length > 1 ? ` (${noneProfiledCount})` : ""));
+            ret.append("<br>");
         } else {
-            caseIdElt = "";
+            if (profiledInEntries.length) {
+                ret.append("Profiled in: "+profiledInEntries.map(
+                e=>{
+                        const molecularProfileId = e.key[0];
+                        let displayName = molecularProfileId;
+                        if (molecularProfileMap && (molecularProfileId in molecularProfileMap)) {
+                            displayName = molecularProfileMap[molecularProfileId].name;
+                        }
+                        return `${displayName}${dataUnderMouse.length > 1 ? ` (${e.value})` : ""}`;
+                    }
+                ).join(", "));
+                ret.append("<br>");
+            }
+            if (notProfiledInEntries.length) {
+                ret.append("<span style='color:red; font-weight:bold'>Not profiled in: "+notProfiledInEntries.map(
+                    e=>{
+                        const molecularProfileId = e.key[0];
+                        let displayName = molecularProfileId;
+                        if (molecularProfileMap && (molecularProfileId in molecularProfileMap)) {
+                            displayName = molecularProfileMap[molecularProfileId].name;
+                        }
+                        return `${displayName}${dataUnderMouse.length > 1 ? ` (${e.value})` : ""}`;
+                    }
+                ).join(", ")+"</span>");
+                ret.append("<br>");
+            }
+            if (allProfiledCount > 0) {
+                ret.append("Profiled in all selected molecular profiles." + (dataUnderMouse.length > 1 ? ` (${allProfiledCount})` : ""));
+                ret.append("<br>");
+            }
+            if (noneProfiledCount > 0) {
+                ret.append("Not profiled in selected molecular profiles." + (dataUnderMouse.length > 1 ? ` (${noneProfiledCount})` : ""));
+                ret.append("<br>");
+            }
         }
-        ret.append(caseIdElt);
         return ret;
     };
 }
