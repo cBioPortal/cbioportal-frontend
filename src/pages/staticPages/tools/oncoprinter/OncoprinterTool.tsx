@@ -13,8 +13,15 @@ import $ from "jquery";
 import {SyntheticEvent} from "react";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
 import {WindowWidthBox} from "../../../../shared/components/WindowWidthBox/WindowWidthBox";
+import {MSKTab, MSKTabs} from "../../../../shared/components/MSKTabs/MSKTabs";
+import MutualExclusivityTab from "../../../resultsView/mutualExclusivity/MutualExclusivityTab";
 
 export interface IOncoprinterToolProps {
+}
+
+export enum OncoprinterTab {
+    ONCOPRINT="oncoprint",
+    MUTUAL_EXCLUSIVITY="mutualExclusivity",
 }
 
 const helpSection = (
@@ -86,11 +93,14 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
     private store = new OncoprinterStore();
     private oncoprinter:Oncoprinter|null;
     private filesInput:HTMLInputElement|null;
+    @observable private activeTabId:OncoprinterTab = OncoprinterTab.ONCOPRINT;
 
     @autobind
     private oncoprinterRef(o:Oncoprinter|null) {
         this.oncoprinter = o;
     }
+
+    @observable dataInputOpened = true;
 
     // help
     @observable helpOpened = false;
@@ -99,14 +109,6 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
     @observable dataInput = "";
     @observable geneOrderInput = "";
     @observable sampleOrderInput = "";
-
-    @computed get inputError() {
-        /*if (this.store.parsedInputLines.isError) {
-            return this.store.parsedInputLines.error;
-        } else {*/
-            return null;
-        //}
-    }
 
     @autobind
     private toggleHelpOpened() {
@@ -135,12 +137,14 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
 
     @action private doSubmit(dataInput:string) {
         this.store.setInput(dataInput, this.geneOrderInput, this.sampleOrderInput);
+        if (!this.store.parsedInputLines.error) {
+            this.dataInputOpened = false;
+        }
 
         onMobxPromise(this.store.alteredSampleIds,
             (alteredUids:string[])=>{
                 this.oncoprinter && this.oncoprinter.oncoprint.setHorzZoomToFit(alteredUids);
             });
-
     }
 
     @autobind private filesInputRef(input:HTMLInputElement|null) {
@@ -218,7 +222,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                     style={{"height":35, width:475}}
                 />
                 <br/>
-                <Button className="oncoprinterSubmit" bsStyle="default" onClick={this.onClickSubmit} disabled={!!this.inputError}>Submit</Button>
+                <Button className="oncoprinterSubmit" bsSize="large" bsStyle="primary" disabled={this.dataInput.trim().length === 0} onClick={this.onClickSubmit}>Submit</Button>
                 { this.error && <div className="alert alert-danger" style={{marginTop:5, whiteSpace:"pre-wrap"}}>{this.error}</div> }
             </FormGroup>
         );
@@ -234,19 +238,40 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                     <div className="cbioportal-frontend">
                         <h1 style={{display: "inline"}}>Oncoprinter</h1> generates Oncoprints from your own data.
                         <br/><br/>
-                        <Observer>
-                            {this.getHelpSection}
-                        </Observer>
-                        <Observer>
-                            {this.getInputSection}
-                        </Observer>
-                        { !this.error && (
-                            <Oncoprinter
-                                ref={this.oncoprinterRef}
-                                divId="oncoprinter"
-                                store={this.store}
-                            />
+                        <Collapse isOpened={this.dataInputOpened} hasNestedCollapse={true}>
+                            <Observer>
+                                {this.getHelpSection}
+                            </Observer>
+                            <Observer>
+                                {this.getInputSection}
+                            </Observer>
+                        </Collapse>
+                        { !this.dataInputOpened && (
+                            <button className="btn btn-primary btn-lg" style={{paddingLeft:50, paddingRight:50, marginBottom:15}}
+                                    onClick={()=>{ this.dataInputOpened = true; }}
+                            >
+                                Modify Input
+                            </button>
                         )}
+                        <div style={{display:(this.store.hasData() && !this.error ? "block" : "none")}}>
+                            <MSKTabs activeTabId={this.activeTabId} unmountOnHide={false}
+                                     onTabClick={(id:string)=>{ this.activeTabId=id as OncoprinterTab; }}
+                                     className="mainTabs"
+                            >
+                                <MSKTab key={0} id={OncoprinterTab.ONCOPRINT} linkText="Oncoprint">
+                                    <div style={{marginTop:10}}>
+                                        <Oncoprinter
+                                            ref={this.oncoprinterRef}
+                                            divId="oncoprinter"
+                                            store={this.store}
+                                        />
+                                    </div>
+                                </MSKTab>
+                                <MSKTab key={1} id={OncoprinterTab.MUTUAL_EXCLUSIVITY} linkText="Mutual Exclusivity">
+                                    <span>Mutual exclusivity goes here.</span>
+                                </MSKTab>
+                            </MSKTabs>
+                        </div>
                     </div>
                 </WindowWidthBox>
             </PageLayout>
