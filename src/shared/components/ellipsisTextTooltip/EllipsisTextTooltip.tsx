@@ -7,7 +7,7 @@ import $ from "jquery";
 import autobind from "autobind-decorator";
 
 @observer
-export default class EllipsisTextTooltip extends React.Component<{ text:string },{}> {
+export default class EllipsisTextTooltip extends React.Component<{ text:string; shownWidth?:number },{}> {
 
     @observable tooltipVisible = false;
 
@@ -16,7 +16,16 @@ export default class EllipsisTextTooltip extends React.Component<{ text:string }
     @autobind
     @action
     onVisibleChange(isVisible:boolean){
-        const isOverflowed = (this.el.scrollWidth - $(this.el).innerWidth()) > 1;
+        // if shownWidth exist, using the shownWidth
+        let shownWidth =  $(this.el).innerWidth();
+        let actualWidth = this.el.scrollWidth;
+
+        if (this.props.shownWidth) {
+            shownWidth = this.props.shownWidth;
+            actualWidth = this.el.offsetWidth;
+        }
+        
+        const isOverflowed = (actualWidth - shownWidth) > 1;
         this.tooltipVisible = isVisible && isOverflowed;
     }
 
