@@ -59,6 +59,8 @@ export type CoverageInformation = {
         {[uniquePatientKey:string]:CoverageInformationForCase};
 };
 
+export type SampleAlteredMap = {[trackOqlKey:string]:boolean[]};
+
 export function computeCustomDriverAnnotationReport(mutations:Mutation[]):CustomDriverAnnotationReport {
     let hasBinary = false;
     let tiersMap:{[tier:string]:boolean} = {};
@@ -409,7 +411,7 @@ export function doesQueryHaveCNSegmentData(
 }
 
 export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackCaseData[], samples: Sample[], oqlQuery: string){
-    const result : {[x: string]: boolean[]} = {};  
+    const result : SampleAlteredMap = {};
     filteredAlterationData.forEach((element, key) => {
         //1: is not group
         if (element.mergedTrackOqlList === undefined) {
