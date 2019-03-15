@@ -105,6 +105,11 @@ export default class OncoprinterStore {
         }
     }
 
+
+    public hasData() {
+        return !!this._dataInput;
+    }
+
     @action setDataInput(input:string) {
         this._dataInput = input;
     }
