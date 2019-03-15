@@ -232,7 +232,22 @@ export default class QuickSearch extends React.Component {
                     maxMenuHeight={550}
                     styles={{
                         dropdownIndicator: ()=>{ return { display:'none' } },
-                        control: (provided:any)=>{ return { ...provided, cursor:'text' } }
+                        control: (provided:any)=>{ return { ...provided, cursor:'text' } },
+                        option: (base:any, state:any) => {
+                            if (state.isSelected) {
+                                return {
+                                    ...base,
+                                    backgroundColor: 'inherit',
+                                    color: 'inherit',
+                                    ':hover': {
+                                        backgroundColor: '#DEEBFF'
+                                    }
+                                }
+                            }
+                            return {
+                                ...base
+                            }
+                        }
                     }}
                 />
                 <p style={{fontSize:"x-small",textAlign:"center",paddingTop:15}}>
