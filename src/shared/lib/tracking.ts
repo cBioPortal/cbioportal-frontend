@@ -53,21 +53,43 @@ export function serializeEvent(gaEvent:GAEvent){
     } catch (ex) {}
 }
 
+function sendToLoggly(){
+    // temporary
+    if (window.location.hostname==="www.cbioportal.org" && !window.navigator.webdriver) {
+        const LOGGLY_TOKEN = "b7a422a1-9878-49a2-8a30-2a8d5d33518f";
+        $.ajax({
+            url:`//logs-01.loggly.com/inputs/${LOGGLY_TOKEN}.gif`,
+            data:{
+                message:"PAGE_VIEW"
+            }
+        });
+    }
+}
+
 export function embedGoogleAnalytics(ga_code:string){
 
     $(document).ready(function() {
+
         $('<script async src="https://www.google-analytics.com/analytics.js"></script>').appendTo("body");
         $('<script async src="https://cdnjs.cloudflare.com/ajax/libs/autotrack/2.4.1/autotrack.js"></script>').appendTo("body");
         getBrowserWindow().ga=getBrowserWindow().ga||function(){(ga.q=ga.q||[]).push(arguments)};
         const ga:UniversalAnalytics.ga = getBrowserWindow().ga;
         ga.l=+new Date;
         ga('create', ga_code, 'auto');
-        ga('require', 'urlChangeTracker');
+
+
+        ga('require', 'urlChangeTracker', {
+            hitFilter: function(model:any) {
+                sendToLoggly();
+            }
+        });
+
         ga('require', 'cleanUrlTracker', {
             stripQuery:true,
             trailingSlash:'remove'
         });
         ga('send', 'pageview');
+        sendToLoggly();
     });
 }
 
