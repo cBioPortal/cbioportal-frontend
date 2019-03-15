@@ -268,7 +268,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                                     </div>
                                 </MSKTab>
                                 <MSKTab key={1} id={OncoprinterTab.MUTUAL_EXCLUSIVITY} linkText="Mutual Exclusivity">
-                                    <span>Mutual exclusivity goes here.</span>
+                                    <MutualExclusivityTab isSampleAlteredMap={this.store.isSampleAlteredMap}/>
                                 </MSKTab>
                             </MSKTabs>
                         </div>

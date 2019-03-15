@@ -11,8 +11,8 @@ import {
     getSampleGeneticTrackData,
     getSampleIds,
     initDriverAnnotationSettings,
-    isAltered,
-    OncoprinterInputLine,
+    isAltered, isType2,
+    OncoprinterInputLine, OncoprinterInputLineType2,
     parseInput
 } from "./OncoprinterUtils";
 import {remoteData} from "../../../../shared/api/remoteData";
@@ -22,7 +22,7 @@ import client from "../../../../shared/api/cbioportalClientInstance";
 import _ from "lodash";
 import {countMutations, mutationCountByPositionKey} from "../../../resultsView/mutationCountHelpers";
 import {Mutation, MutationCountByPosition} from "../../../../shared/api/generated/CBioPortalAPI";
-import {sleep} from "../../../../shared/lib/TimeUtils";
+import {SampleAlteredMap} from "../../../resultsView/ResultsViewPageStoreUtils";
 
 export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "ignoreUnknown" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
 
@@ -260,6 +260,28 @@ export default class OncoprinterStore {
             return _.difference(this.sampleIds, this.alteredSampleIds.result!);
         },
         default: []
+    });
+
+    readonly isSampleAlteredMap = remoteData<SampleAlteredMap>({
+        await:()=>[this.geneticTracks],
+        invoke:async ()=>{
+            // The boolean array value represents "is sample altered in this track" for each sample id.
+            // The samples in the lists corresponding to each entry are assumed to be the same and in the same order.
+
+            return _.reduce(this.geneticTracks.result!, (map:SampleAlteredMap, next)=>{
+                const sampleToDatum = _.keyBy(next.data, d=>d.sample);
+                map[next.label] = this.sampleIds.map(sampleId=>{
+                    const datum = sampleToDatum[sampleId];
+                    if (!datum) {
+                        return false;
+                    } else {
+                        return datum.data.length > 0;
+                    }
+                });
+                return map;
+            }, {});
+
+        }
     });
 
     @computed get annotationData():any {
