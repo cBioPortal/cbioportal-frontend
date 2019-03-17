@@ -54,6 +54,8 @@ export default class Tutorials extends React.Component<{}, {}> {
                 src="https://docs.google.com/presentation/d/1U39xgVujtBodwW20qIfcGu4E5n2zzaKkl2KmzzHqj4A/embed?startfalse&loop=false&delayms=60000"
                 frameBorder="0" width="720" height="434"
                 allowFullScreen={true}></iframe>
+            <hr />
+            <h2>Get the sildes <a href="https://drive.google.com/drive/u/0/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">here</a>!</h2>
 
 
         </PageLayout>
