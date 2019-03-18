@@ -1112,8 +1112,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
         return (
             <div>
-                {/* <hr/>
-                <h4>Utilities</h4> */}
+                <hr/>
+                <h4>Utilities</h4>
                 <div>
                     {showSearchOptions && (<div>
                         <div className="form-group">
