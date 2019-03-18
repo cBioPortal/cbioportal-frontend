@@ -2731,7 +2731,7 @@ export class StudyViewPageStore {
                 data.push([
                     record.hugoGeneSymbol,
                     record.qValue === undefined ? '' : getQValue(record.qValue),
-                    record.totalCount, record.countByEntity, getFrequencyStr(record.frequency)].join("\t"));
+                    record.totalCount, record.numberOfAlteredCases, getFrequencyStr(record.frequency)].join("\t"));
             });
             return data.join("\n");
         } else
@@ -2746,7 +2746,7 @@ export class StudyViewPageStore {
                     record.hugoGeneSymbol,
                     record.qValue === undefined ? '' : getQValue(record.qValue),
                     record.cytoband, getCNAByAlteration(record.alteration),
-                    record.countByEntity, getFrequencyStr(record.frequency)].join("\t"));
+                    record.numberOfAlteredCases, getFrequencyStr(record.frequency)].join("\t"));
             });
             return data.join("\n");
         } else
