@@ -194,7 +194,10 @@ export default class QuickSearch extends React.Component {
                 this.genePageMultiplier = 0;
                 this.patientPageMultiplier = 0;
             }
-            this.inputValue = inputValue;
+            // allow user to click and edit the search text
+            if (action === "input-change") {
+                this.inputValue = inputValue;
+            }
         }
     }
 
