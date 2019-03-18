@@ -378,9 +378,9 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     private get legend() {
         return (
             <div style={{maxWidth: 700, marginTop: 5}}>
-                <span style={{color: "#2153AA", fontWeight:"bold", fontSize:"14px", fontFamily:"verdana, arial"}}>
+                <strong style={{color: "#2153AA"}}>
                     Color Codes
-                </span>
+                </strong>
                 <p>
                     Mutation diagram circles are colored with respect to the corresponding mutation types.
                     In case of different mutation types at a single position, color of the circle is determined with
@@ -391,26 +391,26 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                     Mutation types and corresponding color codes are as follows:
                     <ul>
                         <li>
-                            <span style={{color:this.props.missenseColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
+                            <strong style={{color:this.props.missenseColor}}>
                                 Missense Mutations
-                            </span>
+                            </strong>
                         </li>
                         <li>
-                            <span style={{color:this.props.truncatingColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
+                            <strong style={{color:this.props.truncatingColor}}>
                                 Truncating Mutations
-                            </span>
+                            </strong>
                             : Nonsense, Nonstop, Frameshift deletion, Frameshift insertion, Splice site
                         </li>
                         <li>
-                            <span style={{color:this.props.inframeColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
+                            <strong style={{color:this.props.inframeColor}}>
                                 Inframe Mutations
-                            </span>
+                            </strong>
                             : Inframe deletion, Inframe insertion
                         </li>
                         <li>
-                            <span style={{color:this.props.otherColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
+                            <strong style={{color:this.props.otherColor}}>
                                 Other Mutations
-                            </span>
+                            </strong>
                             : All other types of mutations
                         </li>
                     </ul>
