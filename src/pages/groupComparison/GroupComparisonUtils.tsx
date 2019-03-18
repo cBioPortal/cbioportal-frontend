@@ -7,33 +7,17 @@ import {
     SampleIdentifier
 } from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
-import {
-    ClinicalDataIntervalFilterValue,
-    ClinicalDataEnrichment,
-    StudyViewFilter,
-    DataBin
-} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {GroupComparisonTab} from "./GroupComparisonPage";
+import {ClinicalDataIntervalFilterValue, ClinicalDataEnrichment, StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
 import {GroupData, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import * as React from "react";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 import ComplexKeyCounter from "../../shared/lib/complexKeyDataStructures/ComplexKeyCounter";
-import {sortedFindWith} from "../../shared/lib/sortedFindWith";
-import {toFixedWithoutTrailingZeros} from "../../shared/lib/FormatUtils";
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
-export enum GroupComparisonTab {
-    OVERLAP = "overlap",
-    MUTATIONS = "mutations",
-    CNA = "cna",
-    MRNA = "mrna",
-    PROTEIN = "protein",
-    SURVIVAL = "survival",
-    CLINICAL = "clinical"
-}
-//
 export type ComparisonGroup = Omit<SessionGroupData, "studies"|"color"> & {
     color:string; // color mandatory here, bc we'll assign one if its missing
     uid:string; // unique in the session
@@ -334,7 +318,7 @@ export function getTabId(pathname:string) {
 export function getNumberAttributeGroupFilters(
     baseFilters: StudyViewFilter,
     clinicalAttribute:ClinicalAttribute,
-    bin:DataBin
+    range:[number, number]
 ) {
     const clinicalDataType = clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE";
     const newFilters = _.cloneDeep(baseFilters);
@@ -345,29 +329,20 @@ export function getNumberAttributeGroupFilters(
             f.clinicalDataType === clinicalDataType;
     });
 
-    const newFilterValue:ClinicalDataIntervalFilterValue = {} as ClinicalDataIntervalFilterValue;
-    if (bin.specialValue === "NA") {
-        newFilterValue.value = "NA";
-    } else {
-        if (bin.start !== undefined) {
-            newFilterValue.start = bin.start;
-        }
-        if (bin.end !== undefined) {
-            newFilterValue.end = bin.end;
-        }
-    }
     if (existingFilter) {
         existingFilter.values = _.uniqWith(
-            existingFilter.values.concat([newFilterValue]),
-            (a:ClinicalDataIntervalFilterValue, b:ClinicalDataIntervalFilterValue)=>{
-                return _.isEqual(a, b);
-            }
-        );
+            existingFilter.values.concat([{
+                start:range[0],
+                end:range[1]
+            } as ClinicalDataIntervalFilterValue]
+        ), (a:ClinicalDataIntervalFilterValue, b:ClinicalDataIntervalFilterValue)=>{
+            return (a.start === b.start && a.end === b.end);
+        });
     } else {
         newFilters.clinicalDataIntervalFilters.push({
             attributeId: clinicalAttribute.clinicalAttributeId,
             clinicalDataType,
-            values:[newFilterValue]
+            values:[{start:range[0], end:range[1], value:""}]
         });
     }
     return newFilters;
@@ -413,69 +388,21 @@ export function MissingSamplesMessage(
     );
 }
 
-export type DataBinWithData = DataBin & { data:Pick<ClinicalData, "studyId"|"sampleId"|"patientId"|"uniquePatientKey">[] };
-
-export function putDataIntoSortedBins(
-    data:Pick<ClinicalData, "value"|"studyId"|"sampleId"|"patientId"|"uniquePatientKey"|"uniqueSampleKey">[],
-    sortedBins: DataBinWithData[],
-    selectedSamples:Pick<Sample, "uniquePatientKey"|"uniqueSampleKey"|"studyId"|"sampleId"|"patientId">[],
-    isPatientAttribute:boolean,
-    naBin?:DataBinWithData
-):void {
-    const casesWithData:{[key:string]:boolean} = {};
-    for (const datum of data) {
-        const value = parseFloat(datum.value);
-        const targetBin = sortedFindWith(sortedBins, bin=>{
-            const rangeLower = bin.start === undefined ? Number.NEGATIVE_INFINITY : bin.start;
-            const rangeUpper = bin.end === undefined ? Number.POSITIVE_INFINITY : bin.end;
-            // important note: bins are (lower, upper], in other words (lower < x <= upper)
-            if (rangeLower >= value) {
-                // bin too big
-                return 1;
-            } else if (rangeUpper < value) {
-                // bin too small
-                return -1;
-            } else {
-                return 0;
-            }
-        });
-        targetBin!.data.push(datum);
-        if (isPatientAttribute) {
-            casesWithData[datum.uniquePatientKey] = true;
-        } else {
-            casesWithData[datum.uniqueSampleKey] = true;
-        }
-    }
-    // add NA bin, if there is one
-    if (naBin) {
-        let naCases = selectedSamples.filter(sample=>{
-            if (isPatientAttribute) {
-                return !(sample.uniquePatientKey in casesWithData);
-            } else {
-                return !(sample.uniqueSampleKey in casesWithData);
-            }
-        });
-        if (isPatientAttribute) {
-            naCases = _.uniqWith(naCases, (a,b)=>(a.studyId === b.studyId && a.patientId === b.patientId));
-        } else {
-            naCases = _.uniqWith(naCases, (a,b)=>(a.studyId === b.studyId && a.sampleId === b.sampleId));
-        }
-        naBin.data = naCases;
-        sortedBins.push(naBin);
-    }
-}
-
-export function getDataBinGroupName(
-    bin:DataBin
+export function sortDataIntoQuartiles<D>(
+    groupedByValue:{[value:number]:D[]},
+    inclusiveQuartileTops:[number, number, number] // assumed sorted ascending, and distinct
 ) {
-    let name;
-    if (bin.specialValue === "NA") {
-        name = "NA";
-    } else if (bin.specialValue) {
-        let bound = (bin.start === undefined ? bin.end : bin.start);
-        name = `${bin.specialValue}${toFixedWithoutTrailingZeros(bound, 2)}`;
-    } else {
-        name = `${toFixedWithoutTrailingZeros(bin.start, 2)}-${toFixedWithoutTrailingZeros(bin.end, 2)}`;
-    }
-    return name;
+    const quartileGroups:[D[], D[], D[], D[]] = [[],[],[],[]];
+    _.forEach(groupedByValue, (dataWithValue:D[], value:string)=>{
+        let q = 0;
+        let v = parseFloat(value);
+        while (v > inclusiveQuartileTops[q]) {
+            q += 1;
+            if (q > 2) {
+                break;
+            }
+        }
+        quartileGroups[q] = quartileGroups[q].concat(dataWithValue);
+    });
+    return quartileGroups;
 }
