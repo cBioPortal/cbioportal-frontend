@@ -1,9 +1,9 @@
 import * as React from 'react';
-import {getNCBIlink} from "../../../api/urls";
+import {getNCBIlink} from "public-lib/lib/urls";
 import mainStyles from "../styles/oncokb/main.module.scss";
-import ReferenceList from "./ReferenceList";
-import DefaultTooltip from "../../defaultTooltip/DefaultTooltip";
-import {ICache} from "../../../lib/SimpleCache";
+import ReferenceList from "public-lib/components/oncokb/ReferenceList";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {ICache} from "public-lib/lib/SimpleCache";
 
 export default class RefComponent extends React.Component<{ content: string, componentType: 'tooltip' | 'linkout', pmidData:ICache<any>}> {
     render() {

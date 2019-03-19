@@ -1,8 +1,4 @@
-import {AggregatedHotspots} from "shared/api/generated/GenomeNexusAPIInternal";
-
-export interface IHotspotIndex {
-    [genomicLocation: string]: AggregatedHotspots;
-}
+import {IHotspotIndex} from "react-mutation-mapper";
 
 export interface IHotspotDataWrapper {
     status: "pending" | "error" | "complete";

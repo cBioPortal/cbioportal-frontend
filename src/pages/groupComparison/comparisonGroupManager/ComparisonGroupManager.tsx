@@ -12,7 +12,7 @@ import {
 } from "../GroupComparisonUtils";
 import {getComparisonLoadingUrl, redirectToComparisonPage} from "../../../shared/api/urls";
 import styles from "../styles.module.scss";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../public-lib/api/remoteData";
 import {addSamplesParameters, getGroupParameters, getSelectedGroups} from "./ComparisonGroupManagerUtils";
 import comparisonClient from "../../../shared/api/comparisonGroupClientInstance";
 import {MakeMobxView} from "../../../shared/components/MobxView";
@@ -21,7 +21,7 @@ import ErrorMessage from "../../../shared/components/ErrorMessage";
 import GroupCheckbox from "./GroupCheckbox";
 import {sleepUntil} from "../../../shared/lib/TimeUtils";
 import {LoadingPhase} from "../GroupComparisonLoading";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import _ from "lodash";
 import {serializeEvent} from "shared/lib/tracking";
 

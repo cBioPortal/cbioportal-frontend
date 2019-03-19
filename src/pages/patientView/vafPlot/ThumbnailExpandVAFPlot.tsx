@@ -1,5 +1,5 @@
 import * as React from 'react';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {VAFPlot, IVAFPlotProps, MutationFrequenciesBySample} from './VAFPlot';
 import Tooltip, {RCTooltip} from "rc-tooltip";

@@ -1,4 +1,5 @@
 import * as React from "react";
+import {IProteinImpactTypeColors} from "react-mutation-mapper";
 
 import {Mutation} from "../../api/generated/CBioPortalAPI";
 import {ILazyMobXTableApplicationDataStore} from "../../lib/ILazyMobXTableApplicationDataStore";
@@ -6,8 +7,7 @@ import {observer} from "mobx-react";
 import {
     ProteinImpactType,
     getProteinImpactType
-} from "../../lib/getCanonicalMutationType";
-import {IProteinImpactTypeColors} from "shared/lib/MutationUtils";
+} from "public-lib/lib/getCanonicalMutationType";
 
 import styles from './styles.module.scss';
 

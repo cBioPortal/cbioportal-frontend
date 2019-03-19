@@ -10,7 +10,7 @@ import naturalSort from "javascript-natural-sort";
 import * as d3Scale from "d3-scale";
 import Timer = NodeJS.Timer;
 import measureText from "measure-text";
-import {stringListToIndexSet, stringListToMap} from "../../lib/StringUtils";
+import {stringListToIndexSet, stringListToMap} from "../../../public-lib/lib/StringUtils";
 import {wrapTick} from "./TickUtils";
 import {iterateOverEntries} from "./TablePlotUtils";
 

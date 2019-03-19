@@ -1,7 +1,7 @@
 import {default as Genome2StructureAPI, Alignment, ResidueMapping} from "shared/api/generated/Genome2StructureAPI";
 import g2sClient from "shared/api/g2sClientInstance";
 import {CacheData} from "shared/lib/LazyMobXCache";
-import {remoteData} from "shared/api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {MobxPromise} from "mobxpromise";
 
 export type ResidueMappingQuery = {

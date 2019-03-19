@@ -1,23 +1,28 @@
 import {action, computed, observable} from "mobx";
 import * as _ from "lodash";
 import {cached} from "mobxpromise";
+import {
+    annotateMutations,
+    IHotspotIndex,
+    indexHotspotsData,
+    resolveDefaultsForMissingValues
+} from "react-mutation-mapper";
 
 import AppConfig from "appConfig";
 
-import {remoteData} from "shared/api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {ClinicalData, Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {
     fetchGenes, fetchMyCancerGenomeData, fetchOncoKbData,
     ONCOKB_DEFAULT,
-    fetchCanonicalEnsemblGeneIds,
-    getCanonicalTranscriptsByHugoSymbol, fetchOncoKbCancerGenes
+    getCanonicalTranscriptsByHugoSymbol,
+    fetchOncoKbCancerGenes,
+    fetchVariantAnnotationsIndexedByGenomicLocation
 } from "shared/lib/StoreUtils";
-import {annotateMutations, resolveDefaultsForMissingValues, fetchVariantAnnotationsIndexedByGenomicLocation} from "shared/lib/MutationAnnotator";
 import {getClinicalData, getGeneList, mutationInputToMutation, MutationInput} from "shared/lib/MutationInputParser";
 import {updateMissingGeneInfo} from "shared/lib/MutationUtils";
 import {IOncoKbData} from "shared/model/OncoKB";
-import {fetchHotspotsData, indexHotspotsData} from "shared/lib/CancerHotspotsUtils";
-import {IHotspotIndex} from "shared/model/CancerHotspots";
+import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
@@ -139,7 +144,7 @@ export default class MutationMapperToolStore
             this.genes
         ],
         invoke: () => {
-            let mutations: Mutation[] = [];
+            let mutations: Partial<Mutation>[] = [];
 
             if (this.annotatedMutations) {
                 mutations =  this.annotatedMutations;
@@ -147,7 +152,7 @@ export default class MutationMapperToolStore
                 updateMissingGeneInfo(mutations, this.genesByHugoSymbol);
             }
 
-            return Promise.resolve(mutations);
+            return Promise.resolve(mutations as Mutation[]);
         }
     }, []);
 
@@ -222,9 +227,11 @@ export default class MutationMapperToolStore
         return mutationInputToMutation(this.mutationData) as Mutation[] || [];
     }
 
-    @computed get annotatedMutations(): Mutation[]
+    @computed get annotatedMutations(): Partial<Mutation>[]
     {
-        return this.indexedVariantAnnotations.result? annotateMutations(this.rawMutations, this.indexedVariantAnnotations.result) : [];
+        return this.indexedVariantAnnotations.result ?
+            annotateMutations(this.rawMutations, this.indexedVariantAnnotations.result) as Partial<Mutation>[]:
+            [];
     }
     @computed get mutationsNotAnnotated(): {lineNumber:number, mutationInput:Partial<MutationInput>}[]
     {

@@ -4,7 +4,7 @@ import {
     ClinicalAttribute, ClinicalData, Gene, MolecularProfile, Mutation, NumericGeneMolecularData,
     Sample
 } from "../../../shared/api/generated/CBioPortalAPI";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../public-lib/api/remoteData";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
 import {IBaseScatterPlotData} from "../../../shared/components/plots/ScatterPlot";
 import {getSampleViewUrl} from "../../../shared/api/urls";
@@ -14,7 +14,7 @@ import {
     getOncoprintMutationType, OncoprintMutationType,
     selectDisplayValue
 } from "../../../shared/components/oncoprint/DataUtils";
-import {stringListToIndexSet} from "../../../shared/lib/StringUtils";
+import {stringListToIndexSet} from "../../../public-lib/lib/StringUtils";
 import {
     CNA_COLOR_AMP,
     CNA_COLOR_HOMDEL,

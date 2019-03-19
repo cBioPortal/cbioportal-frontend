@@ -4,7 +4,7 @@ import {observable} from "mobx";
 import {observer} from "mobx-react";
 import {Button} from "react-bootstrap";
 import classnames from "classnames";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {CopyNumberSeg} from "shared/api/generated/CBioPortalAPI";
 import {generateSegmentFileContent} from "shared/lib/IGVUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";

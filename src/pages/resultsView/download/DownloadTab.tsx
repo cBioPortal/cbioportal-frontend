@@ -21,7 +21,7 @@ import classNames from 'classnames';
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import WindowStore from "../../../shared/components/window/WindowStore";
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../public-lib/api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";

@@ -5,7 +5,7 @@ import { GeneReplacement, normalizeQuery } from 'shared/components/query/QuerySt
 import { action, computed } from '../../../../node_modules/mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import 'react-select/dist/react-select.css';
-import {remoteData} from "shared/api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import client from "shared/api/cbioportalClientInstance";
 import memoize from 'memoize-weak-decorator';
 import {OQL} from "shared/components/GeneSelectionBox/GeneSelectionBox";
