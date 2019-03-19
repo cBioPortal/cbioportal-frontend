@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import styles from "./styles.module.scss";
 import { observer } from "mobx-react";
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, reaction, IReactionDisposer } from 'mobx';
 import { CancerStudy, Sample } from 'shared/api/generated/CBioPortalAPI';
 import classnames from 'classnames';
 import { remoteData } from 'shared/api/remoteData';
@@ -24,6 +24,8 @@ export interface IVirtualStudyProps {
     selectedSamples: Sample[];
     filter: StudyViewFilterWithSampleIdentifierFilters;
     attributesMetaSet: { [id: string]: ChartMeta };
+    name?: string,
+    description?: string,
     user?: string;
 }
 
@@ -59,8 +61,8 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
 @observer
 export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}> {
 
-    @observable private name: string = '';
-    @observable private description: string = '';
+    @observable private name: string;
+    @observable private description: string;
 
     @observable private saving = false;
     @observable private sharing = false;
@@ -68,6 +70,8 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
 
     constructor(props: IVirtualStudyProps) {
         super(props);
+        this.name = props.name || '';
+        this.description = props.description || '';
     }
 
     @computed get namePlaceHolder() {
@@ -173,6 +177,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
         },
         onResult: (genes) => {
             this.description = getVirtualStudyDescription(
+                this.props.description,
                 this.props.studyWithSamples,
                 this.props.filter,
                 this.attributeNamesSet,
@@ -206,6 +211,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                                             <input
                                                 type="text"
                                                 className="form-control"
+                                                value={this.name}
                                                 placeholder={this.namePlaceHolder || "Virtual study name"}
                                                 onInput={(event) => this.name = event.currentTarget.value} />
                                             <div className="input-group-btn">
