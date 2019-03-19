@@ -15,7 +15,7 @@ import {
     OncoprinterInputLine, OncoprinterInputLineType2,
     parseInput
 } from "./OncoprinterUtils";
-import {remoteData} from "../../../../shared/api/remoteData";
+import {remoteData} from "../../../../public-lib/api/remoteData";
 import {IOncoKbData} from "../../../../shared/model/OncoKB";
 import {fetchOncoKbCancerGenes, ONCOKB_DEFAULT} from "../../../../shared/lib/StoreUtils";
 import client from "../../../../shared/api/cbioportalClientInstance";

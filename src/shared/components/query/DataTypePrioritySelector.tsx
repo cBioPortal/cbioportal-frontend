@@ -6,7 +6,6 @@ import {toJS} from "mobx";
 import {observer} from "mobx-react";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import SectionHeader from "../sectionHeader/SectionHeader";
-import {remoteData} from "../../api/remoteData";
 import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {MolecularProfile} from "../../api/generated/CBioPortalAPI";

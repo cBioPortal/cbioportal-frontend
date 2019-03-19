@@ -1,5 +1,6 @@
 import * as React from 'react';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
+import {getProteinPositionFromProteinChange} from "public-lib/lib/ProteinChangeUtils";
 import * as _ from 'lodash';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
@@ -7,7 +8,6 @@ import CosmicMutationTable from "shared/components/cosmic/CosmicMutationTable";
 import styles from "./cosmic.module.scss";
 import {ICosmicData} from "shared/model/Cosmic";
 import generalStyles from "./styles.module.scss";
-import {getProteinPositionFromProteinChange} from "../../../lib/ProteinChangeUtils";
 
 export function placeArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');

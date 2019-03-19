@@ -1,6 +1,5 @@
 import { assert } from 'chai';
-import {indexHotspots} from "./CancerHotspotsUtils";
-import {IHotspotIndex} from "shared/model/CancerHotspots";
+import {IHotspotIndex, indexHotspots} from "react-mutation-mapper";
 import {isRecurrentHotspot, is3dHotspot} from './AnnotationUtils';
 import {initMutation} from "test/MutationMockUtils";
 

@@ -7,7 +7,7 @@ import {getPercentage} from "shared/lib/FormatUtils";
 
 import CopyNumberCountCache from "../../clinicalInformation/CopyNumberCountCache";
 import {CacheData} from "../../../../shared/lib/LazyMobXCache";
-import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 export default class CohortColumnFormatter
 {

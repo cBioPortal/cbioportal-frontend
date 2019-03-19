@@ -7,7 +7,7 @@ import {observer} from "mobx-react";
 import {CSSProperties} from "react";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 import autobind from "autobind-decorator";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import {adjustedLongestLabelLength} from "../../../shared/lib/VictoryChartUtils";
 
 interface CancerSummaryChartProps {

@@ -14,7 +14,7 @@ import { getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel,
 import autobind from 'autobind-decorator';
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 import {getSampleViewUrl} from "../../../shared/api/urls";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 
 export interface IMiniBoxPlotProps {
     selectedGeneHugo: string;

@@ -5,7 +5,7 @@ import {action, computed, observable} from 'mobx';
 import styles from "../styles.module.scss";
 import autobind from "autobind-decorator";
 import {getPatientViewUrl} from 'shared/api/urls';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import VirtualStudy from 'pages/studyView/virtualStudy/VirtualStudy';
 import fileDownload from 'react-file-download';
 import {Else, If, Then} from 'react-if';

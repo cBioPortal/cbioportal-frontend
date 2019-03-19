@@ -11,7 +11,7 @@ import * as ReactDOM from "react-dom";
 import {Popover} from "react-bootstrap";
 import classnames from "classnames";
 import styles from "../resultsView/survival/styles.module.scss";
-import {pluralize} from "../../shared/lib/StringUtils";
+import {pluralize} from "../../public-lib/lib/StringUtils";
 import {
     blendColors,
     getExcludedIndexes,
