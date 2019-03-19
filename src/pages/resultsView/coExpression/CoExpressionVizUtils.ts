@@ -2,7 +2,6 @@ import {MolecularProfile, Mutation, NumericGeneMolecularData} from "../../../sha
 import {GenesetMolecularData} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
-import data from "pages/patientView/genomicOverview/mockData";
 
 
 const nonBreakingSpace = '\xa0';

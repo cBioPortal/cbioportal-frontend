@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import DatasetList from './DatasetList';
 import {observer} from 'mobx-react';
 import client from "shared/api/cbioportalClientInstance";
-import {remoteData} from "shared/api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import AppConfig from "appConfig";
 import styles from './styles.module.scss';
 import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";

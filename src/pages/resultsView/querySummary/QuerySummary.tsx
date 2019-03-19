@@ -5,7 +5,7 @@ import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
 import classNames from 'classnames';
 import './styles.scss';
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {action, computed, observable} from "mobx";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";

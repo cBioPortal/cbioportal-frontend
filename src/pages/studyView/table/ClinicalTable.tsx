@@ -14,7 +14,7 @@ import {
     getFrequencyStr
 } from "../StudyViewUtils";
 import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
-import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import EllipsisTextTooltip from "../../../public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import {DEFAULT_SORTING_COLUMN} from "../StudyViewConfig";
 
 export interface IClinicalTableProps {

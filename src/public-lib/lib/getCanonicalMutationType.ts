@@ -1,4 +1,3 @@
-import {Mutation} from "../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
 
 
@@ -109,8 +108,10 @@ export function getProteinImpactTypeFromCanonical(mutationType:CanonicalMutation
             return "other";
     }
 }
-export default function getCanonicalMutationType(mutationType:string):CanonicalMutationType {
+export function getCanonicalMutationType(mutationType:string):CanonicalMutationType {
     return canonicalType[mutationType.toLowerCase()] || "other";
 }
 
 export const CanonicalMutationTypeList: CanonicalMutationType[] = _.chain(canonicalType).values().uniq().value();
+
+export default getCanonicalMutationType;

@@ -1,5 +1,5 @@
 import * as React from "react";
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./../styles/annotation.module.scss";
 import classNames from 'classnames';
 import tooltipStyles from "./styles/polyPhen2Tooltip.module.scss";

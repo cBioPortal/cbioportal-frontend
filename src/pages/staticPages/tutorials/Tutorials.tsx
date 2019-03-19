@@ -3,7 +3,7 @@ import {observer} from 'mobx-react';
 import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
 import './styles.scss';
 import Helmet from "react-helmet";
-import {getNCBIlink} from "../../../shared/api/urls";
+import {getNCBIlink} from "../../../public-lib/lib/urls";
 
 @observer
 export default class Tutorials extends React.Component<{}, {}> {

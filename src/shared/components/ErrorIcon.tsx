@@ -1,5 +1,5 @@
 import * as React from "react";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 
 export interface IErrorIconProps {
     tooltip:JSX.Element;

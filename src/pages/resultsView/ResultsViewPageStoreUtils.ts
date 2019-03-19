@@ -28,7 +28,7 @@ import client from "shared/api/cbioportalClientInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
 import MobxPromise, {MobxPromise_await} from "mobxpromise";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
-import {remoteData} from "../../shared/api/remoteData";
+import {remoteData} from "../../public-lib/api/remoteData";
 import {calculateQValues} from "../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {SpecialAttribute} from "../../shared/cache/ClinicalDataCache";
 import { isSampleProfiled } from "shared/lib/isSampleProfiled";

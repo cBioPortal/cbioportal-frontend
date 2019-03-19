@@ -1,6 +1,6 @@
 import * as React from 'react';
+import {calcProteinChangeSortValue} from "public-lib/lib/ProteinChangeUtils";
 import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
-import ProteinChangeColumnFormatter from "../mutationTable/column/ProteinChangeColumnFormatter";
 import {Column, default as LazyMobXTable} from "../lazyMobXTable/LazyMobXTable";
 
 // TODO interface ICosmicTableProps extends IMSKTableProps<CosmicMutation>
@@ -44,7 +44,7 @@ export default class CosmicMutationTable extends React.Component<ICosmicTablePro
                 name: "Protein Change",
                 order: 2.00,
                 render: (d:CosmicMutation) => (<span>{d.proteinChange}</span>),
-                sortBy: (d:CosmicMutation) => ProteinChangeColumnFormatter.extractSortValue(d.proteinChange)
+                sortBy: (d:CosmicMutation) => calcProteinChangeSortValue(d.proteinChange)
             },
             {
                 name: "Occurrence",
