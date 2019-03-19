@@ -14,7 +14,7 @@ import {If, Then, Else} from 'react-if';
 import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import {Modal, Button} from 'react-bootstrap';
-import Autosuggest from 'react-bootstrap-autosuggest'
+import Autosuggest from 'react-bootstrap-autosuggest';
 import ReactElement = React.ReactElement;
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import FontAwesome from "react-fontawesome";
@@ -23,6 +23,7 @@ import {ServerConfigHelpers} from "../../../config/config";
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import {PAN_CAN_SIGNATURE} from "./StudyListLogic";
+import QuickSelectButtons from "./QuickSelectButtons";
 
 const styles = styles_any as {
     SelectedStudiesWindow: string,
@@ -61,7 +62,7 @@ const styles = styles_any as {
 
 export interface ICancerStudySelectorProps {
     style?: React.CSSProperties;
-    queryStore:QueryStore;
+    queryStore: QueryStore;
 }
 
 @observer
@@ -78,7 +79,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
         }
     };
 
-    public store:QueryStore;
+    public store: QueryStore;
 
     constructor(props: ICancerStudySelectorProps) {
         super(props);
@@ -137,8 +138,23 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
     @autobind
     @action
-    selectTCGAPanAtlas(){
+    selectTCGAPanAtlas() {
         this.logic.mainView.selectAllMatchingStudies(PAN_CAN_SIGNATURE);
+    }
+
+    @autobind
+    @action
+    selectMatchingStudies(matches: string[]){
+        if (matches) {
+            // if there is only one item and it has wildcard markers (*) then pass single string
+            // otherwise pass array of exactly matching studyIds
+            if (matches.length === 1 && /^\*.*\*$/.test(matches[0])) {
+                // match wildcard of one
+                this.logic.mainView.selectAllMatchingStudies(matches[0].replace(/\*/g,""));
+            } else {
+                this.logic.mainView.selectAllMatchingStudies(matches);
+            }
+        }
     }
 
 
@@ -146,6 +162,8 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
         const {selectableSelectedStudyIds, selectableSelectedStudies, shownStudies, shownAndSelectedStudies} =
             this.logic.mainView.getSelectionReport();
+
+        const quickSetButtons = this.logic.mainView.quickSelectButtons(AppConfig.serverConfig.skin_quick_select_buttons);
 
         return (
             <FlexCol overflow data-test="studyList" className={styles.CancerStudySelector}>
@@ -190,7 +208,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                                             <a data-test='globalDeselectAllStudiesButton' style={{marginLeft: 10}}
                                                onClick={() => {
                                                    (hasSelection) ? this.logic.mainView.clearAllSelection() :
-                                                       this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !hasSelection)
+                                                       this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !hasSelection);
                                                }}>
                                                 Deselect all
                                             </a>
@@ -210,7 +228,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                                     const studyLimitReached = (this.store.selectableSelectedStudyIds.length > 50);
                                     const tooltipMessage = studyLimitReached ?
                                         <span>Too many studies selected for study summary (limit: 50)</span> :
-                                        <span>Open summary of selected studies in a new window.</span>
+                                        <span>Open summary of selected studies in a new window.</span>;
 
                                     return (
                                         <DefaultTooltip
@@ -242,13 +260,13 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
                     <Observer>
                         {() => {
-                            let searchTextOptions =  ServerConfigHelpers.skin_example_study_queries(AppConfig.serverConfig!.skin_example_study_queries || "");
+                            let searchTextOptions = ServerConfigHelpers.skin_example_study_queries(AppConfig.serverConfig!.skin_example_study_queries || "");
                             if (this.store.searchText && searchTextOptions.indexOf(this.store.searchText) < 0)
                                 searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
                             let searchTimeout: number | null = null;
 
-                            const optionsWithSortKeys = searchTextOptions.map((name,i)=>{
-                                return { value: name, sortKey: i }
+                            const optionsWithSortKeys = searchTextOptions.map((name, i) => {
+                                return {value: name, sortKey: i};
                             });
 
                             return (
@@ -257,8 +275,9 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                                         (this.store.searchText) && (
                                             <span data-test="clearStudyFilter"
                                                   onClick={(e) => {
-                                                      this.autosuggest.setState({ inputValue:"" });
-                                                      this.handlers.onClearFilter() }
+                                                      this.autosuggest.setState({inputValue: ""});
+                                                      this.handlers.onClearFilter();
+                                                  }
                                                   }
                                                   style={{
                                                       fontSize: 18,
@@ -289,7 +308,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                                             if (value.length === 0) {
                                                 setTimeout(() => {
                                                     this.autosuggest.setState({open: true});
-                                                }, 400)
+                                                }, 400);
                                             }
                                         }}
                                     />
@@ -342,24 +361,26 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
                         <div className="checkbox" style={{marginLeft: 19}}>
                             <If condition={shownStudies.length > 0}>
-                                <If condition={this.logic.mainView.showQuickSelect}>
-                                    <div className={styles.quickSelect}>
-                                        Quick select: <button onClick={this.selectTCGAPanAtlas} data-test="selectPanCan" className={"btn btn-default btn-xs"}>TCGA PanCancer Atlas studies</button>
-                                    </div>
+                                <If condition={!this.logic.mainView.isFiltered && !_.isEmpty(quickSetButtons)}>
+                                    <Then>
+                                        <div className={styles.quickSelect}>
+                                            <QuickSelectButtons onSelect={this.selectMatchingStudies}
+                                                                buttonsConfig={quickSetButtons}/>
+                                        </div>
+                                    </Then>
                                     <Else>
-
-                                            <label>
-                                                <input type="checkbox"
-                                                       data-test="selectAllStudies"
-                                                       style={{top: -2}}
-                                                       onClick={this.handlers.onCheckAllFiltered}
-                                                       checked={shownAndSelectedStudies.length === shownStudies.length}
-                                                />
-                                                <strong>{(shownAndSelectedStudies.length === shownStudies.length) ?
-                                                    `Deselect all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""} (${shownStudies.length})` :
-                                                    `Select all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""}  (${shownStudies.length})`}
-                                                </strong>
-                                            </label>
+                                        <label>
+                                            <input type="checkbox"
+                                                   data-test="selectAllStudies"
+                                                   style={{top: -2}}
+                                                   onClick={this.handlers.onCheckAllFiltered}
+                                                   checked={shownAndSelectedStudies.length === shownStudies.length}
+                                            />
+                                            <strong>{(shownAndSelectedStudies.length === shownStudies.length) ?
+                                                `Deselect all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""} (${shownStudies.length})` :
+                                                `Select all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""}  (${shownStudies.length})`}
+                                            </strong>
+                                        </label>
 
                                     </Else>
                                 </If>
