@@ -4,12 +4,11 @@ import getBrowserWindow from "../lib/getBrowserWindow";
 import * as _ from 'lodash';
 import {GroupComparisonURLQuery} from "../../pages/groupComparison/GroupComparisonPage";
 import {GroupComparisonLoadingParams} from "../../pages/groupComparison/GroupComparisonLoading";
+import {BuildUrlParams} from "../../public-lib/lib/urls";
 
 export function trimTrailingSlash(str:string){
    return str.replace(/\/$/g,"");
 }
-
-export type BuildUrlParams = {pathname:string, query?:QueryParams, hash?:string};
 
 export function buildCBioPortalAPIUrl(params:BuildUrlParams):string;
 export function buildCBioPortalAPIUrl(pathname:string, query?:QueryParams, hash?:string):string;
@@ -279,13 +278,4 @@ export function getWholeSlideViewerUrl(ids: string[], userName: string): string 
     catch (ex) {
         throw("error parsing mskWholeSlideViewerToken");
     }
-}
-
-export function getNCBIlink(pathnameOrParams?: BuildUrlParams | string): string {
-    let params = typeof pathnameOrParams === 'string' ? {pathname: pathnameOrParams} : pathnameOrParams;
-    return URL.format({
-        protocol: 'https',
-        host: 'www.ncbi.nlm.nih.gov',
-        ...params
-    });
 }

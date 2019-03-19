@@ -19,7 +19,7 @@ import MiniBoxPlot from 'pages/resultsView/enrichments/MiniBoxPlot';
 import * as _ from "lodash";
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
-import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import EllipsisTextTooltip from "../../../public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 import classNames from 'classnames';
 

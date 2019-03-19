@@ -3,7 +3,7 @@ import OncoKbCard from "./OncoKbCard";
 import {observer} from "mobx-react";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import OncokbPubMedCache from "shared/cache/PubMedCache";
-import {ICache, ICacheData} from "shared/lib/SimpleCache";
+import {ICache, ICacheData} from "public-lib/lib/SimpleCache";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {IEvidence} from "shared/model/OncoKB";
 import {extractPmids, generateOncogenicCitations, generateTreatments} from "shared/lib/OncoKbUtils";
