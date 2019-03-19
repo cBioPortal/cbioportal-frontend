@@ -88,6 +88,8 @@ export default class ActionButtons extends React.Component<ActionButtonsProps, {
                     overlay={
                         <VirtualStudy
                             user={this.props.appStore.userName}
+                            name={this.props.store.isSingleVirtualStudyPageWithoutFilter ? this.props.store.filteredVirtualStudies.result[0].data.name : undefined}
+                            description={this.props.store.isSingleVirtualStudyPageWithoutFilter ? this.props.store.filteredVirtualStudies.result[0].data.description : undefined}
                             studyWithSamples={this.props.store.studyWithSamples.result}
                             selectedSamples={this.props.store.selectedSamples.result}
                             filter={this.props.store.userSelections}

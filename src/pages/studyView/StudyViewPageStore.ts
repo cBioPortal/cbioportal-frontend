@@ -1856,6 +1856,10 @@ export class StudyViewPageStore {
         }
     }, []);
 
+    @computed get isSingleVirtualStudyPageWithoutFilter() {
+        return (this.filteredPhysicalStudies.result.length + this.filteredVirtualStudies.result.length) === 1 && this.filteredVirtualStudies.result.length > 0 && !this.chartsAreFiltered;
+    }
+
     @computed get analysisGroupsPossible() {
         // analysis groups possible iff there are visible analysis groups-capable charts
         const analysisGroupsCharts =
