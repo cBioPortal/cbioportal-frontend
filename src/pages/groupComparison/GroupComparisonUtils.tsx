@@ -7,7 +7,6 @@ import {
     SampleIdentifier
 } from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
-import {GroupComparisonTab} from "./GroupComparisonPage";
 import {ClinicalDataIntervalFilterValue, ClinicalDataEnrichment, StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
 import {GroupData, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
@@ -15,6 +14,16 @@ import * as React from "react";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 import ComplexKeyCounter from "../../shared/lib/complexKeyDataStructures/ComplexKeyCounter";
+
+export enum GroupComparisonTab {
+    OVERLAP = "overlap",
+    MUTATIONS = "mutations",
+    CNA = "cna",
+    MRNA = "mrna",
+    PROTEIN = "protein",
+    SURVIVAL = "survival",
+    CLINICAL = "clinical"
+}
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
