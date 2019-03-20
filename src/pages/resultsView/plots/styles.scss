@@ -34,10 +34,32 @@
     .axisBlock {
       background:#eee;
       border-radius:4px;
+      padding-bottom: 0;
     }
-
-  }
-
-
-
+  } 
 }
+
+.tab-title {
+  font-size: 14px;
+}
+
+.label-text {
+  font-size: 13px;
+  color: #333333;
+  margin-bottom: 5px;
+  padding: 0px;
+}
+
+.form-group-bspace {
+  margin-bottom: 5px;
+}
+
+.PlotsTab {
+  width: 120%;
+}
+
+.color-samples{
+  right: 10px;
+  bottom: 0;
+  position: absolute;
+} 
