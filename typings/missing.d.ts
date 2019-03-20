@@ -43,3 +43,4 @@ declare module 'react-mfb';
 declare module 'regression';
 declare module 'react-select2';
 declare module 'react-select';
+declare module 'pluralize';

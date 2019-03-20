@@ -2,8 +2,9 @@ import {assert} from 'chai';
 import {
     calcIntervalBinValues,
     calculateLayout,
-    clinicalDataCountComparator,
+    calculateNewLayoutForFocusedChart,
     chartMetaComparator,
+    clinicalDataCountComparator,
     filterCategoryBins,
     filterIntervalBins,
     filterNumericalBins,
@@ -11,15 +12,20 @@ import {
     formatFrequency,
     formatNumericalTickValues,
     generateCategoricalData,
+    generateMatrixByLayout,
     generateNumericalData,
+    getClinicalDataCountWithColorByCategoryCounts,
     getClinicalDataCountWithColorByClinicalDataCount,
-    getClinicalDataIntervalFilterValues, getClinicalEqualityFilterValuesByString,
+    getClinicalDataIntervalFilterValues,
+    getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
     getExponent,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getPositionXByUniqueKey,
+    getPositionYByUniqueKey,
     getPriorityByClinicalAttribute,
     getQValue,
     getRequestedAwaitPromisesForClinicalData,
@@ -27,6 +33,7 @@ import {
     getVirtualStudyDescription,
     intervalFiltersDisplayValue,
     isEveryBinDistinct,
+    isFocusedChartShrunk,
     isLogScaleByDataBins,
     isLogScaleByValues,
     isOccupied,
@@ -34,14 +41,9 @@ import {
     needAdditionShiftForLogScaleBarChart,
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
+    shouldShowChart,
     toFixedDigit,
-    updateGeneQuery,
-    getClinicalDataCountWithColorByCategoryCounts,
-    calculateNewLayoutForFocusedChart,
-    generateMatrixByLayout,
-    isFocusedChartShrunk,
-    getPositionXByUniqueKey,
-    getPositionYByUniqueKey
+    updateGeneQuery
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -64,6 +66,12 @@ import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {MobxPromise} from "mobxpromise";
 
 describe('StudyViewUtils', () => {
+    const emptyStudyViewFilter: StudyViewFilter = {
+        clinicalDataEqualityFilters: [],
+        clinicalDataIntervalFilters: [],
+        cnaGenes: [],
+        mutatedGenes: []
+    } as any;
 
     describe('updateGeneQuery', () => {
         it('when gene selected in table', () => {
@@ -168,6 +176,31 @@ describe('StudyViewUtils', () => {
                     [],
                     'user1'
                 ).endsWith('by user1'));
+        });
+    });
+
+    describe('shouldShowChart', () => {
+        const hasInfoFilter = {
+            clinicalDataEqualityFilters: [{
+                'attributeId': 'attribute1',
+                'clinicalDataType': "SAMPLE" as 'SAMPLE',
+                'values': ['value1']
+            }],
+            clinicalDataIntervalFilters: [],
+            mutatedGenes: [],
+            cnaGenes: []
+        };
+        it("return true when there is only one sample in the study", () => {
+            assert.isTrue(shouldShowChart(emptyStudyViewFilter, 1, 1));
+        });
+        it("return true when unique number of data bigger than one", () => {
+            assert.isTrue(shouldShowChart(emptyStudyViewFilter, 2, 2));
+        });
+        it("return true when study view is filtered", () => {
+            assert.isTrue(shouldShowChart(hasInfoFilter, 1, 2));
+        });
+        it("return false when study view is not filtered, unique number of data less than 2, and there are more than one sample in the study", () => {
+            assert.isFalse(shouldShowChart(emptyStudyViewFilter, 1, 2));
         });
     });
 
@@ -1478,12 +1511,6 @@ describe('StudyViewUtils', () => {
 
     describe('getSamplesByExcludingFiltersOnChart', () => {
         let fetchStub: sinon.SinonStub;
-        const emptyStudyViewFilter: StudyViewFilter = {
-            clinicalDataEqualityFilters: [],
-            clinicalDataIntervalFilters: [],
-            cnaGenes: [],
-            mutatedGenes: []
-        } as any
         beforeEach(() => {
             fetchStub = sinon.stub(internalClient, 'fetchFilteredSamplesUsingPOST');
             fetchStub
