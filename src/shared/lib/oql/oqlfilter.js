@@ -174,20 +174,30 @@ export function parsedOQLAlterationToSourceOQL(alteration) {
             } else {
                 ret = ["CNA",alteration.constr_rel,alteration.constr_val].join("");
             }
-            ret += alteration.modifiers.map(function(modifier) { return "_"+modifier; }).join("");
+            if (alteration.modifiers.length > 0) {
+                ret += "_";
+                ret += alteration.modifiers.join("_");
+            }
             return ret;
         case "mut":
             var ret;
+            var underscoreBeforeModifiers = true;
             if (alteration.constr_rel) {
                 if (alteration.constr_type === "position") {
                     ret = ["MUT",alteration.constr_rel,alteration.info.amino_acid,alteration.constr_val].join("");
                 } else {
                     ret = ["MUT",alteration.constr_rel,alteration.constr_val].join("");
+                    if (!alteration.constr_val) {
+                        underscoreBeforeModifiers = false;
+                    }
                 }
             } else {
                 ret = "MUT";
             }
-            ret += alteration.modifiers.map(function(modifier) { return "_"+modifier; }).join("");
+            if (underscoreBeforeModifiers && alteration.modifiers.length > 0) {
+                ret += "_";
+            }
+            ret += alteration.modifiers.join("_");
             return ret;
         case "exp":
             return "EXP" + alteration.constr_rel + alteration.constr_val;
@@ -445,7 +455,8 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
 
         var matches = false;
         // If no constraint relation ('=' or '!='), then every mutation matches
-        if (!alt_cmd.constr_rel) {
+        // If no constraint type, then every mutation matches
+        if (!alt_cmd.constr_rel || !alt_cmd.constr_type) {
             matches = true;
         }
         // Decide based on what type of mutation specification
