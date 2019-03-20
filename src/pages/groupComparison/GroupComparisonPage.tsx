@@ -14,7 +14,7 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupSelector from "./GroupSelector";
-import {caseCountsInParens, getTabId} from "./GroupComparisonUtils";
+import {caseCountsInParens, getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
 import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
 import {computed, IReactionDisposer, reaction} from "mobx";
@@ -23,16 +23,6 @@ import {AppStore} from "../../AppStore";
 import _ from "lodash";
 import ClinicalData from "./ClinicalData";
 import ReactSelect from "react-select2";
-
-export enum GroupComparisonTab {
-    OVERLAP = "overlap",
-    MUTATIONS = "mutations",
-    CNA = "cna",
-    MRNA = "mrna",
-    PROTEIN = "protein",
-    SURVIVAL = "survival",
-    CLINICAL = "clinical"
-}
 
 export interface IGroupComparisonPageProps {
     routing:any;
