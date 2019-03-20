@@ -2668,14 +2668,20 @@ export class ResultsViewPageStore {
             this.unalteredSamples
         ],
         getSelectedProfile:()=>this.selectedEnrichmentMutationProfile,
-        fetchData:()=>internalClient.fetchMutationEnrichmentsUsingPOST({
-            molecularProfileId: this.selectedEnrichmentMutationProfile.molecularProfileId,
-            enrichmentType: "SAMPLE",
-            enrichmentFilter: {
-                alteredIds: this.alteredSamples.result.map(s => s.sampleId),
-                unalteredIds: this.unalteredSamples.result.map(s => s.sampleId),
-            }
-        })
+        fetchData:()=>{
+            const molecularProfile = this.selectedEnrichmentMutationProfile;
+            return internalClient.fetchMutationEnrichmentsUsingPOST({
+                enrichmentType: "SAMPLE",
+                multipleStudiesEnrichmentFilter: {
+                    molecularProfileCaseSet1: this.alteredSamples.result!
+                        .filter(s=>s.studyId === molecularProfile.studyId)
+                        .map(s=>({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                    molecularProfileCaseSet2: this.unalteredSamples.result!
+                        .filter(s=>s.studyId === molecularProfile.studyId)
+                        .map(s=>({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                }
+            });
+        }
     });
 
     readonly copyNumberEnrichmentProfiles = remoteData<MolecularProfile[]>({
@@ -2710,14 +2716,18 @@ export class ResultsViewPageStore {
 
     private getCopyNumberEnrichmentData(alteredSamples: Sample[], unalteredSamples: Sample[],
         copyNumberEventType: "HOMDEL" | "AMP"): Promise<AlterationEnrichment[]> {
-        
+
+        const molecularProfile = this.selectedEnrichmentCopyNumberProfile;
         return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
-            molecularProfileId: this.selectedEnrichmentCopyNumberProfile.molecularProfileId,
             copyNumberEventType: copyNumberEventType,
             enrichmentType: "SAMPLE",
-            enrichmentFilter: {
-                alteredIds: alteredSamples.map(s => s.sampleId),
-                unalteredIds: unalteredSamples.map(s => s.sampleId),
+            multipleStudiesEnrichmentFilter: {
+                molecularProfileCaseSet1: this.alteredSamples.result!
+                    .filter(s=>s.studyId === molecularProfile.studyId)
+                    .map(s=>({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                molecularProfileCaseSet2: this.unalteredSamples.result!
+                    .filter(s=>s.studyId === molecularProfile.studyId)
+                    .map(s=>({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
             }
         });
     }
@@ -2738,8 +2748,10 @@ export class ResultsViewPageStore {
             molecularProfileId: this.selectedEnrichmentMRNAProfile.molecularProfileId,
             enrichmentType: "SAMPLE",
             enrichmentFilter: {
-                alteredIds: this.alteredSamples.result.map(s => s.sampleId),
-                unalteredIds: this.unalteredSamples.result.map(s => s.sampleId),
+                alteredIds: this.alteredSamples.result
+                    .filter(s=>(s.studyId === this.selectedEnrichmentMRNAProfile.studyId)).map(s => s.sampleId),
+                unalteredIds: this.unalteredSamples.result
+                    .filter(s=>(s.studyId === this.selectedEnrichmentMRNAProfile.studyId)).map(s => s.sampleId),
             }
         })
     });
