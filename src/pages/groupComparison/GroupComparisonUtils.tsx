@@ -1,14 +1,29 @@
 import {MobxPromise} from 'mobxpromise/dist/src/MobxPromise';
-import {ClinicalAttribute, PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
+import {
+    ClinicalAttribute,
+    ClinicalData,
+    PatientIdentifier,
+    Sample,
+    SampleIdentifier
+} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
-import {GroupComparisonTab} from "./GroupComparisonPage";
-import {ClinicalDataEnrichment, StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {ClinicalDataIntervalFilterValue, ClinicalDataEnrichment, StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
 import {GroupData, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import * as React from "react";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 import ComplexKeyCounter from "../../shared/lib/complexKeyDataStructures/ComplexKeyCounter";
+
+export enum GroupComparisonTab {
+    OVERLAP = "overlap",
+    MUTATIONS = "mutations",
+    CNA = "cna",
+    MRNA = "mrna",
+    PROTEIN = "protein",
+    SURVIVAL = "survival",
+    CLINICAL = "clinical"
+}
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -309,7 +324,40 @@ export function getTabId(pathname:string) {
     }
 }
 
-export function getPieChartGroupFilters(
+export function getNumberAttributeGroupFilters(
+    baseFilters: StudyViewFilter,
+    clinicalAttribute:ClinicalAttribute,
+    range:[number, number]
+) {
+    const clinicalDataType = clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE";
+    const newFilters = _.cloneDeep(baseFilters);
+
+    newFilters.clinicalDataIntervalFilters = newFilters.clinicalDataIntervalFilters || [];
+    const existingFilter = newFilters.clinicalDataIntervalFilters.find(f=>{
+        return f.attributeId === clinicalAttribute.clinicalAttributeId &&
+            f.clinicalDataType === clinicalDataType;
+    });
+
+    if (existingFilter) {
+        existingFilter.values = _.uniqWith(
+            existingFilter.values.concat([{
+                start:range[0],
+                end:range[1]
+            } as ClinicalDataIntervalFilterValue]
+        ), (a:ClinicalDataIntervalFilterValue, b:ClinicalDataIntervalFilterValue)=>{
+            return (a.start === b.start && a.end === b.end);
+        });
+    } else {
+        newFilters.clinicalDataIntervalFilters.push({
+            attributeId: clinicalAttribute.clinicalAttributeId,
+            clinicalDataType,
+            values:[{start:range[0], end:range[1], value:""}]
+        });
+    }
+    return newFilters;
+}
+
+export function getStringAttributeGroupFilters(
     baseFilters: StudyViewFilter,
     clinicalAttribute:ClinicalAttribute,
     clinicalAttributeValue:string
@@ -347,4 +395,23 @@ export function MissingSamplesMessage(
             </div>
         </div>
     );
+}
+
+export function sortDataIntoQuartiles<D>(
+    groupedByValue:{[value:number]:D[]},
+    inclusiveQuartileTops:[number, number, number] // assumed sorted ascending, and distinct
+) {
+    const quartileGroups:[D[], D[], D[], D[]] = [[],[],[],[]];
+    _.forEach(groupedByValue, (dataWithValue:D[], value:string)=>{
+        let q = 0;
+        let v = parseFloat(value);
+        while (v > inclusiveQuartileTops[q]) {
+            q += 1;
+            if (q > 2) {
+                break;
+            }
+        }
+        quartileGroups[q] = quartileGroups[q].concat(dataWithValue);
+    });
+    return quartileGroups;
 }

@@ -11,7 +11,7 @@ import {
     getStackedBarData,
     getStudyIds,
     getVennPlotData,
-    OverlapFilteredComparisonGroup
+    OverlapFilteredComparisonGroup, sortDataIntoQuartiles
 } from './GroupComparisonUtils';
 import deepEqualInAnyOrder from "deep-equal-in-any-order";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
@@ -646,6 +646,64 @@ describe('GroupComparisonUtils', () => {
                     { id: "2", samples:["2","4"], patients:["1", "4"]}
                 ]
             });
+        });
+    });
+
+    describe("sortDataIntoQuartiles", ()=>{
+        it("sorts data into quartiles when theres only one value per quartile", ()=>{
+            assert.deepEqual(sortDataIntoQuartiles(
+                {
+                    3: [{id:"a"}, {id:"b"}, {id:"c"}],
+                    50:[{id:"e"}],
+                    60:[{id:"f"}],
+                    82:[{id:"g"}, {id:"h"}],
+                },
+                [25, 50, 75]
+            ),
+                [
+                    [{id:"a"}, {id:"b"}, {id:"c"}],
+                    [{id:"e"}],
+                    [{id:"f"}],
+                    [{id:"g"}, {id:"h"}]
+                ]
+            );
+        });
+        it("sorts data into quartiles when theres various values per quartile", ()=>{
+            assert.deepEqual(sortDataIntoQuartiles(
+                {
+                    3: [{id:"a"}, {id:"b"}, {id:"c"}],
+                    4: [{id:"d"}, {id:"e"}, {id:"f"}],
+                    5: [{id:"g"}, {id:"h"}, {id:"i"}],
+                    6: [{id:"j"}, {id:"k"}, {id:"l"}],
+                    51: [{id:"m"}, {id:"n"}, {id:"o"}],
+                    60:[{id:"p"}],
+                    62: [{id:"q"}, {id:"r"}, {id:"s"}],
+                    75: [{id:"t"}, {id:"u"}, {id:"v"}],
+                    82:[{id:"w"}, {id:"x"}],
+                    90:[{id:"y"}, {id:"z"}],
+                },
+                [25, 50, 75]
+                ),
+                [
+                    [
+                        {id:"a"}, {id:"b"}, {id:"c"},
+                        {id:"d"}, {id:"e"}, {id:"f"},
+                        {id:"g"}, {id:"h"}, {id:"i"},
+                        {id:"j"}, {id:"k"}, {id:"l"}
+                    ],
+                    [],
+                    [
+                        {id:"m"}, {id:"n"}, {id:"o"},
+                        {id:"p"}, {id:"q"}, {id:"r"},
+                        {id:"s"}, {id:"t"}, {id:"u"},
+                        {id:"v"}
+                    ],
+                    [
+                        {id:"w"}, {id:"x"}, {id:"y"},
+                        {id:"z"}
+                    ]
+                ]
+            );
         });
     });
 });
