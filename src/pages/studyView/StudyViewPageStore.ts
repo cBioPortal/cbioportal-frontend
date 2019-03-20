@@ -69,7 +69,8 @@ import {
     MutationCountVsCnaYBinsMin,
     NA_DATA,
     showOriginStudiesInSummaryDescription,
-    submitToPage
+    submitToPage,
+    shouldShowChart
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -2524,7 +2525,7 @@ export class StudyViewPageStore {
     initializeClinicalDataBinCountCharts() {
         _.each(_.groupBy(this.initialVisibleAttributesClinicalDataBinCountData.result, 'attributeId'), (item:DataBin[], attributeId:string) => {
             const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item[0].clinicalDataType, attributeId);
-            if (isFiltered(this.initialFilters) || item.length >= 2) {
+            if (shouldShowChart(this.initialFilters, item.length, this.samples.result.length)) {
                 this._chartVisibility.set(uniqueKey, true);
             }
             this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
@@ -2938,7 +2939,7 @@ export class StudyViewPageStore {
                 data.push([
                     record.hugoGeneSymbol,
                     record.qValue === undefined ? '' : getQValue(record.qValue),
-                    record.totalCount, record.countByEntity, getFrequencyStr(record.frequency)].join("\t"));
+                    record.totalCount, record.numberOfAlteredCases, getFrequencyStr(record.frequency)].join("\t"));
             });
             return data.join("\n");
         } else
@@ -2953,7 +2954,7 @@ export class StudyViewPageStore {
                     record.hugoGeneSymbol,
                     record.qValue === undefined ? '' : getQValue(record.qValue),
                     record.cytoband, getCNAByAlteration(record.alteration),
-                    record.countByEntity, getFrequencyStr(record.frequency)].join("\t"));
+                    record.numberOfAlteredCases, getFrequencyStr(record.frequency)].join("\t"));
             });
             return data.join("\n");
         } else
@@ -3468,7 +3469,7 @@ export class StudyViewPageStore {
 
     @action
     showAsPieChart(uniqueKey: string, dataSize: number) {
-        if (isFiltered(this.initialFilters) || dataSize >= 2) {
+        if (shouldShowChart(this.initialFilters, dataSize, this.samples.result.length)) {
             this.changeChartVisibility(uniqueKey, true);
 
             if (dataSize > STUDY_VIEW_CONFIG.thresholds.pieToTable || _.includes(STUDY_VIEW_CONFIG.tableAttrs, uniqueKey)) {
