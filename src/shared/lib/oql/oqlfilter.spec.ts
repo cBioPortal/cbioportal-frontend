@@ -148,8 +148,8 @@ describe("unparseOQLQueryLine", ()=>{
         assert.equal(unparseOQLQueryLine(parsedLine), "TP53: MUT_GERMLINE MUT=MISSENSE_SOMATIC MUT=proteinchange_GERMLINE;");
     });
     it("unparses queries with driver modifier", ()=>{
-        const parsedLine = parseOQLQuery("TP53: DRIVER CNA_DRIVER DRIVER_CNA FUSION_DRIVER DRIVER_FUSION TRUNC_DRIVER DRIVER_TRUNC AMP_DRIVER DRIVER_HOMDEL GERMLINE SOMATIC_MISSENSE proteinchange_GERMLINE;")[0];
-        assert.equal(unparseOQLQueryLine(parsedLine), "TP53: DRIVER CNA_DRIVER CNA_DRIVER FUSION_DRIVER FUSION_DRIVER MUT=TRUNC_DRIVER MUT=TRUNC_DRIVER AMP_DRIVER HOMDEL_DRIVER MUT_GERMLINE MUT=MISSENSE_SOMATIC MUT=proteinchange_GERMLINE;");
+        const parsedLine = parseOQLQuery("TP53: DRIVER MUT=DRIVER CNA_DRIVER DRIVER_CNA FUSION_DRIVER DRIVER_FUSION TRUNC_DRIVER DRIVER_TRUNC AMP_DRIVER DRIVER_HOMDEL GERMLINE SOMATIC_MISSENSE proteinchange_GERMLINE;")[0];
+        assert.equal(unparseOQLQueryLine(parsedLine), "TP53: DRIVER MUT=DRIVER CNA_DRIVER CNA_DRIVER FUSION_DRIVER FUSION_DRIVER MUT=TRUNC_DRIVER MUT=TRUNC_DRIVER AMP_DRIVER HOMDEL_DRIVER MUT_GERMLINE MUT=MISSENSE_SOMATIC MUT=proteinchange_GERMLINE;");
     });
 });
 
@@ -217,7 +217,23 @@ describe('filterCBioPortalWebServiceData', ()=>{
         assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [-1, 0, 1, 3, 7]);
 
         filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:MUT=DRIVER",
+            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0, 1, 3]);
+
+        filteredData = filterCBioPortalWebServiceData(
             "BRCA1:MISSENSE_DRIVER",
+            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0, 1]);
+
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:MUT=MISSENSE_DRIVER",
             [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
             accessorsInstance,
             ""
@@ -263,6 +279,7 @@ describe('filterCBioPortalWebServiceData', ()=>{
             ""
         );
         assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [-1]);
+
         filteredData = filterCBioPortalWebServiceData(
             "BRCA1:DRIVER_FUSION",
             [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
