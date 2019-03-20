@@ -106,7 +106,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             this.cellMargin[ColumnKey.NUMBER] = correctMargin(
                 (this.columnsWidth[ColumnKey.NUMBER] - 10 - (
                     getFixedHeaderTableMaxLengthStringPixel(
-                        _.max(this.props.promise.result!.map(item => item.countByEntity))!.toLocaleString()
+                        _.max(this.props.promise.result!.map(item => item.numberOfAlteredCases))!.toLocaleString()
                     ) + 20
                 )) / 2);
             this.cellMargin[ColumnKey.FREQ] = correctMargin(
@@ -208,12 +208,12 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                         className: styles.autoMarginCheckbox
                     }}
                 >
-                    {data.countByEntity.toLocaleString()}
+                    {data.numberOfAlteredCases.toLocaleString()}
                 </LabeledCheckbox>,
-            sortBy: (data: CopyNumberCountByGene) => data.countByEntity,
+            sortBy: (data: CopyNumberCountByGene) => data.numberOfAlteredCases,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: CopyNumberCountByGene, filterString: string) => {
-                return _.toString(data.countByEntity).includes(filterString);
+                return _.toString(data.numberOfAlteredCases).includes(filterString);
             },
             width: 75
         }, {
