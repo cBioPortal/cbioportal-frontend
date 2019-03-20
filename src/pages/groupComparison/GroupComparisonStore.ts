@@ -38,7 +38,11 @@ import request from "superagent";
 import {getPatientSurvivals} from "pages/resultsView/SurvivalStoreHelper";
 import {SURVIVAL_CHART_ATTRIBUTES} from "pages/resultsView/survival/SurvivalChart";
 import {COLORS} from "pages/studyView/StudyViewUtils";
-import {AlterationEnrichment, Group} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {
+    AlterationEnrichment,
+    Group,
+    MolecularProfileCaseIdentifier
+} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {GroupComparisonTab} from "./GroupComparisonPage";
 import {Session} from "../../shared/api/ComparisonGroupClient";
 import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
@@ -394,12 +398,24 @@ export default class GroupComparisonStore {
         fetchData:()=>{
             // assumes single study for now
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.mutationEnrichmentProfile.result) {
+                const molecularProfile = this.mutationEnrichmentProfile.result;
                 return internalClient.fetchMutationEnrichmentsUsingPOST({
-                    molecularProfileId: this.mutationEnrichmentProfile.result.molecularProfileId,
                     enrichmentType: "SAMPLE",
-                    enrichmentFilter: {
-                        alteredIds: _.flattenDeep<string>(this.enrichmentsGroup1.result.studies.map(study=>study.samples)),
-                        unalteredIds: _.flattenDeep<string>(this.enrichmentsGroup2.result.studies.map(study=>study.samples))
+                    multipleStudiesEnrichmentFilter: {
+                        molecularProfileCaseSet1: _.flattenDeep<MolecularProfileCaseIdentifier>(
+                            this.enrichmentsGroup1.result.studies
+                                .filter(studyElt=>studyElt.id === molecularProfile.studyId)
+                                .map(study=>study.samples.map(
+                                    caseId=>({ caseId, molecularProfileId: molecularProfile.molecularProfileId })
+                                ))
+                        ),
+                        molecularProfileCaseSet2: _.flattenDeep<MolecularProfileCaseIdentifier>(
+                            this.enrichmentsGroup2.result.studies
+                                .filter(studyElt=>studyElt.id === molecularProfile.studyId)
+                                .map(study=>study.samples.map(
+                                    caseId=>({ caseId, molecularProfileId: molecularProfile.molecularProfileId })
+                                ))
+                        ),
                     }
                 });
             } else {
@@ -410,14 +426,15 @@ export default class GroupComparisonStore {
 
     readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.copyNumberEnrichmentProfile],
-        getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any CNA profiles
+        getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,
         fetchData:()=>{
             // assumes single study for now
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.copyNumberEnrichmentProfile.result) {
+                const molecularProfile = this.copyNumberEnrichmentProfile.result;
                 return this.getCopyNumberEnrichmentData(
-                    this.copyNumberEnrichmentProfile.result.molecularProfileId,
-                    _.flattenDeep<SampleIdentifier>(this.enrichmentsGroup1.result.studies.map(study=>study.samples.map(sampleId=>({ sampleId, studyId: study.id})))),
-                    _.flattenDeep<SampleIdentifier>(this.enrichmentsGroup2.result.studies.map(study=>study.samples.map(sampleId=>({ sampleId, studyId: study.id})))),
+                    molecularProfile,
+                    this.enrichmentsGroup1.result,
+                    this.enrichmentsGroup2.result,
                     "HOMDEL"
                 );
             } else {
@@ -428,14 +445,15 @@ export default class GroupComparisonStore {
 
     readonly copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.copyNumberEnrichmentProfile],
-        getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any CNA profiles
+        getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,
         fetchData:()=>{
             // assumes single study for now
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.copyNumberEnrichmentProfile.result) {
+                const molecularProfile = this.copyNumberEnrichmentProfile.result;
                 return this.getCopyNumberEnrichmentData(
-                    this.copyNumberEnrichmentProfile.result.molecularProfileId,
-                    _.flattenDeep<SampleIdentifier>(this.enrichmentsGroup1.result.studies.map(study=>study.samples.map(sampleId=>({ sampleId, studyId: study.id})))),
-                    _.flattenDeep<SampleIdentifier>(this.enrichmentsGroup2.result.studies.map(study=>study.samples.map(sampleId=>({ sampleId, studyId: study.id})))),
+                    molecularProfile,
+                    this.enrichmentsGroup1.result,
+                    this.enrichmentsGroup2.result,
                     "AMP"
                 );
             } else {
@@ -460,19 +478,28 @@ export default class GroupComparisonStore {
     });
 
     private getCopyNumberEnrichmentData(
-        molecularProfileId:string,
-        group1Samples: SampleIdentifier[], group2Samples: SampleIdentifier[],
+        molecularProfile:MolecularProfile,
+        group1:Pick<ComparisonGroup, "studies">,
+        group2:Pick<ComparisonGroup, "studies">,
         copyNumberEventType: "HOMDEL" | "AMP")
     : Promise<AlterationEnrichment[]> {
-        return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
-            molecularProfileId,
-            copyNumberEventType: copyNumberEventType,
-            enrichmentType: "SAMPLE",
-            enrichmentFilter: {
-                alteredIds: group1Samples.map(s => s.sampleId),
-                unalteredIds: group2Samples.map(s => s.sampleId),
-            }
-        });
+        const group1Samples = group1.studies
+            .find(studyElt=>studyElt.id === molecularProfile.studyId);
+        const group2Samples = group2.studies
+            .find(studyElt=>studyElt.id === molecularProfile.studyId);
+
+        if (group1Samples && group2Samples) {
+            return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
+                copyNumberEventType: copyNumberEventType,
+                enrichmentType: "SAMPLE",
+                multipleStudiesEnrichmentFilter: {
+                    molecularProfileCaseSet1: group1Samples.samples.map(caseId=>({ caseId, molecularProfileId: molecularProfile.molecularProfileId })),
+                    molecularProfileCaseSet2: group2Samples.samples.map(caseId=>({ caseId, molecularProfileId: molecularProfile.molecularProfileId })),
+                }
+            });
+        } else {
+            return Promise.resolve([]);
+        }
     }
 
     readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
