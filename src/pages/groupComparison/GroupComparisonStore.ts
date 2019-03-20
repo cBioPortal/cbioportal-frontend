@@ -7,7 +7,8 @@ import {
     getStudyIds,
     isGroupEmpty,
     ClinicalDataEnrichmentWithQ,
-    OverlapFilteredComparisonGroup, OVERLAP_GROUP_COLOR, getSampleIdentifiers
+    OverlapFilteredComparisonGroup, OVERLAP_GROUP_COLOR, getSampleIdentifiers,
+    GroupComparisonTab
 } from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
@@ -43,7 +44,6 @@ import {
     Group,
     MolecularProfileCaseIdentifier
 } from "../../shared/api/generated/CBioPortalAPIInternal";
-import {GroupComparisonTab} from "./GroupComparisonPage";
 import {Session} from "../../shared/api/ComparisonGroupClient";
 import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {getStudiesAttr} from "./comparisonGroupManager/ComparisonGroupManagerUtils";
