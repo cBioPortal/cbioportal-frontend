@@ -621,7 +621,7 @@ Error:  No case lists available for cancer_study_id:  gbs.
                 <p><a href="ln?cancer_study_id=gbm_tcga&amp;q=EGFR+NF1">ln?cancer_study_id=gbm_tcga&amp;q=EGFR+NF1</a>
                 </p>
                 <p>And a link to TP53 mutations across all cancer studies:</p>
-                <p><a href="ln?q=TP53:MUT">ln?q=EGFR:MUT</a></p>
+                <p><a href="ln?q=TP53:MUT">ln?q=TP53:MUT</a></p>
         </PageLayout>;
 
     }
