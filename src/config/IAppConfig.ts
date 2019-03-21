@@ -7,7 +7,7 @@ export interface IAppConfig {
     hide_login?:boolean;
 }
 
-export type PriorityStudies = {
+export type CategorizedConfigItems = {
     [category:string]: string[]
 };
 
@@ -97,6 +97,7 @@ export interface IServerConfig {
     "oncoprint_custom_driver_annotation_tiers_menu_label": string|null;
     "enable_darwin": boolean;
     "query_sets_of_genes": string|null;
+    "skin_quick_select_buttons": string|null;
     "base_url": string|null;
     "user_email_address": string;
     "sessionServiceEnabled": boolean;
