@@ -16,20 +16,6 @@ function base64ToArrayBuffer(base64:string) {
 export default function svgToPdfDownload(fileName: string, svg: any) {
     const width = svg.scrollWidth || parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!), height = svg.scrollHeight || parseInt((svg.attributes.getNamedItem('height') as Attr).nodeValue!);
 
-    // dealing with oncoprint svg (temporarily)
-    _.forEach((svg as Element).childNodes, (element => {
-        if ((element as Element).attributes.getNamedItem('x') !== null && (element as Element).attributes.getNamedItem('y') !== null && (element as Element).nodeName === 'g') {
-            (element as Element).attributes.removeNamedItem('y');
-            (element as Element).attributes.removeNamedItem('x');
-        }
-        _.forEach((element as ChildNode).childNodes,(child => {
-            if ((child as Element).attributes.getNamedItem('x') !== null && (child as Element).attributes.getNamedItem('y') !== null  && (child as Element).nodeName === 'g') {
-                (child as Element).attributes.removeNamedItem('y');
-                (child as Element).attributes.removeNamedItem('x');
-            }
-        }))
-    }));
-    
     // create a new jsPDF instance
     let direction = 'l';
     if (height > width) {
@@ -37,7 +23,11 @@ export default function svgToPdfDownload(fileName: string, svg: any) {
     }
 
     const pdf = new jsPDF(direction, 'pt', [width, height]);
-    
+
+    const font = require("shared/static-data/font.json");
+    pdf.addFileToVFS("FreeSans-normal.ttf", font.FreeSans);
+    pdf.addFont("FreeSans-normal.ttf", "FreeSans", "normal");
+
     // render the svg element
     svg2pdf(svg, pdf, {
         xOffset: 0,
