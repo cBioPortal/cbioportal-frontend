@@ -339,6 +339,8 @@ export function getNumberAttributeGroupFilters(
     });
 
     if (existingFilter) {
+        // if theres an existing filter object for this clinical attribute, then we need to
+        //    add this range to that filter
         existingFilter.values = _.uniqWith(
             existingFilter.values.concat([{
                 start:range[0],
@@ -348,10 +350,11 @@ export function getNumberAttributeGroupFilters(
             return (a.start === b.start && a.end === b.end);
         });
     } else {
+        // if no existing filter object, add one
         newFilters.clinicalDataIntervalFilters.push({
             attributeId: clinicalAttribute.clinicalAttributeId,
             clinicalDataType,
-            values:[{start:range[0], end:range[1], value:""}]
+            values:[{start:range[0], end:range[1]} as ClinicalDataIntervalFilterValue]
         });
     }
     return newFilters;
