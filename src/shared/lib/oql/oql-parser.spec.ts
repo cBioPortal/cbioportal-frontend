@@ -95,7 +95,8 @@ describe("OQL parser", ()=>{
         {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "INFRAME", info: {}, modifiers:["DRIVER", "GERMLINE"]},
         {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "INFRAME", info: {}, modifiers:["DRIVER", "GERMLINE"]}
     ] as Alteration[]}])
-    doTest("TP53:MUT_DRIVER DRIVER_MUT CNA_DRIVER DRIVER_CNA", [{gene:"TP53", alterations:[
+    doTest("TP53:MUT=DRIVER MUT_DRIVER DRIVER_MUT CNA_DRIVER DRIVER_CNA", [{gene:"TP53", alterations:[
+            {alteration_type: "mut", constr_rel:"=", constr_type: undefined, constr_val: undefined, info: {}, modifiers:["DRIVER"]},
             {alteration_type: "mut", info: {}, modifiers:["DRIVER"]},
             {alteration_type: "mut", info: {}, modifiers:["DRIVER"]},
             {alteration_type: "cna", modifiers:["DRIVER"]},
