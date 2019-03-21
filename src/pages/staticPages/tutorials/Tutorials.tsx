@@ -23,6 +23,8 @@ export default class Tutorials extends React.Component<{}, {}> {
                 <i>Sci. Signal.</i> 6, pl1 (2013).
                 [<a href={getNCBIlink('/pubmed/23550210')}>Reprint</a>].</p>
 
+            <hr />
+            <h2>View tutorial slides below or download slides <a href="https://drive.google.com/drive/u/0/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">here</a>.</h2>
             <hr/>
 
             <h2>Tutorial #1: Single Study Exploration</h2>
@@ -54,7 +56,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 src="https://docs.google.com/presentation/d/1U39xgVujtBodwW20qIfcGu4E5n2zzaKkl2KmzzHqj4A/embed?startfalse&loop=false&delayms=60000"
                 frameBorder="0" width="720" height="434"
                 allowFullScreen={true}></iframe>
-
+            
 
         </PageLayout>
 
