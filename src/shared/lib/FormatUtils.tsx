@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 
 import { toConditionalPrecision } from "shared/lib/NumberUtils";
+import numeral from "numeral";
 
 export function toPrecision(value:number, precision:number, threshold:number)
 {
@@ -21,15 +22,12 @@ export function toPrecision(value:number, precision:number, threshold:number)
 
 export function toFixedWithoutTrailingZeros(value:number, digits:number):string {
     let fixed = value.toFixed(digits);
-    if (fixed.indexOf(".") > -1) {
-        // if theres a decimal point
-        const trailingRegexp = /\.?0+$/; // take out trailing zeros, and the decimal point if its right there
-        const match = fixed.match(trailingRegexp);
-        if (match) {
-            fixed = fixed.substring(0, match.index);
-        }
+    let zeros = "";
+    for (let i=0; i<digits; i++) {
+        zeros += "0";
     }
-    return fixed;
+
+    return numeral(value).format(`0[.][${zeros}]`);
 }
 
 /**
