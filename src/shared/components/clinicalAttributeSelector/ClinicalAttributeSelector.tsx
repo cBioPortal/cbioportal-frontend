@@ -1,5 +1,6 @@
 import * as React from "react";
 import {observer} from "mobx-react";
+import {MobxPromise} from "mobxpromise";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {computed, observable} from "mobx";
 import {remoteData} from "../../api/remoteData";
@@ -7,20 +8,19 @@ import _ from "lodash";
 import {ClinicalAttribute} from "../../api/generated/CBioPortalAPI";
 import {getPercentage} from "../../lib/FormatUtils";
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
-import ReactSelect from "react-select2";
+import {makeProfiledInClinicalAttributes} from "../oncoprint/ResultsViewOncoprintUtils";
+const CheckedSelect = require("react-select-checked").CheckedSelect;
+import ReactSelect from "react-select";
 import autobind from "autobind-decorator";
 import {ExtendedClinicalAttribute} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
-
-const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 export interface IClinicalAttributeSelectorProps {
     store:ResultsViewPageStore;
     selectedClinicalAttributeIds:(string|SpecialAttribute)[];
     onChange:(selectedAttributeIds:(string|SpecialAttribute)[])=>void;
+    multiple?:boolean;
     name?:string;
 }
-
-type Option = { label:string, value:string };
 
 @observer
 export default class ClinicalAttributeSelector extends React.Component<IClinicalAttributeSelectorProps, {}> {
@@ -97,28 +97,22 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         return this.props.selectedClinicalAttributeIds.map(x=>({value:x}));
     }
 
-    @computed get valueMap() {
-        return _.keyBy(this.value, v=>v.value);
-    }
-
-    @computed get onChange() {
+    @computed get onChangeMultiple() {
         return (values:{value:string|SpecialAttribute}[])=>{
             this.props.onChange(values.map(o=>o.value));
         };
     }
 
-    @autobind private onFocus() {
-        this.focused = true;
+    @computed get onChangeSingle() {
+        return (option:any|null)=>{
+            if (option !== null) {
+                this.props.onChange([option.value]);
+            }
+        };
     }
 
-    @autobind private getOptionLabel(option:Option) {
-        let box = "";
-        if (option.value in this.valueMap) {
-            box = String.fromCodePoint(9745); // checked box
-        } else {
-            box = String.fromCodePoint(9744); // empty box
-        }
-        return `${box} ${option.label}`;
+    @autobind private onFocus() {
+        this.focused = true;
     }
 
     render() {
@@ -127,12 +121,12 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
             switch (this.options.status) {
                 case "pending":
                     disabled = false;
-                    placeholder = "Downloading...";
+                    placeholder = "Downloading clinical tracks...";
                     options = [];
                     break;
                 case "error":
                     disabled = true;
-                    placeholder = "Error";
+                    placeholder = "Error downloading clinical tracks.";
                     options = [];
                     break;
                 default:
@@ -148,51 +142,37 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
             options = [];
         }
 
-        return (
-            <span onFocus={this.onFocus}>
-                <ReactSelect
-                    styles={{
-                        control: (provided:any)=>({
-                            ...provided,
-                            height:33.5,
-                            minHeight:33.5,
-                            border: "1px solid rgb(204,204,204)"
-                        }),
-                        menu: (provided:any)=>({
-                            ...provided,
-                            maxHeight: 400
-                        }),
-                        menuList: (provided:any)=>({
-                            ...provided,
-                            maxHeight:400
-                        }),
-                        placeholder:(provided:any)=>({
-                            ...provided,
-                            color: "#000000"
-                        }),
-                        dropdownIndicator:(provided:any)=>({
-                            ...provided,
-                            color:"#000000"
-                        }),
-                        option:(provided:any)=>({
-                            ...provided,
-                            cursor:"pointer"
-                        })
-                    }}
+        let selectElt:any = null;
+        if (this.props.multiple) {
+            selectElt = (
+                <CheckedSelect
                     name={this.props.name}
-                    isDisabled={disabled}
-                    isClearable={false}
-                    isSearchable={true}
+                    disabled={disabled}
                     placeholder={placeholder}
-                    getOptionLabel={this.getOptionLabel}
-                    hideSelectedOptions={false}
-                    onChange={this.onChange}
+                    onChange={this.onChangeMultiple}
                     options={options}
                     value={this.value}
                     labelKey="label"
-                    isMulti={true}
-                    controlShouldRenderValue={false}
                 />
+            );
+        } else {
+            selectElt = (
+                <ReactSelect
+                    name={this.props.name}
+                    disabled={disabled}
+                    placeholder={placeholder}
+                    onChange={this.onChangeSingle}
+                    options={options}
+                    clearable={false}
+                    searchable={true}
+                    value={this.value}
+                />
+            );
+        }
+
+        return (
+            <span onFocus={this.onFocus}>
+                {selectElt}
             </span>
         );
     }
