@@ -30,8 +30,12 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                 return null;
             } else {
                 return (
-                    <div>
-                        <strong>Active Groups: </strong>
+                    <div style={{
+                        display:"flex",
+                        flexDirection:"row",
+                        alignItems:"center"
+                    }}>
+                        <strong style={{marginRight:5}}>Active Groups: </strong>
                         <div className={styles.groupButtons}>
                             {this.props.store.availableGroups.result!.map(group=>{
                                 const active = this.props.store.isGroupActive(group);
@@ -54,6 +58,20 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                                     </button>
                                 );
                             })}
+                        </div>
+                        <div className="btn-group" style={{marginLeft:5}}>
+                            <button
+                                className="btn btn-sm btn-default"
+                                disabled={!this.props.store.availableGroups.isComplete}
+                                onClick={this.props.store.selectAllGroups}
+                            >Select all
+                            </button>
+                            <button
+                                className="btn btn-sm btn-default"
+                                disabled={!this.props.store.availableGroups.isComplete}
+                                onClick={this.props.store.deselectAllGroups}
+                            >Deselect all
+                            </button>
                         </div>
                     </div>
                 )
