@@ -2,7 +2,7 @@ import chai, {assert, expect} from 'chai';
 import {
     ComparisonGroup,
     finalizeStudiesAttr,
-    getCombinations,
+    getCombinations, getNumPatients,
     getNumSamples,
     getOverlapFilteredGroups,
     getOverlappingPatients,
@@ -594,6 +594,19 @@ describe('GroupComparisonUtils', () => {
                     { id:"study1", samples:["sample1", "sample2"]},
                     { id:"study2", samples:["sample1", "sample2", "sample3"]},
                     { id:"study3", samples:["sample1"]}]}), 6);
+
+        });
+    });
+
+    describe("getNumPatients", ()=>{
+        it("empty for empty", ()=>{
+            assert.deepEqual(getNumPatients({studies:[]}), 0);
+        });
+        it("nonempty", ()=>{
+            assert.deepEqual(getNumPatients({ studies: [
+                    { id:"study1", samples:["sample1", "sample2"], patients:["patient1"]},
+                    { id:"study2", samples:["sample1", "sample2", "sample3"], patients:["patient1", "patient3"]},
+                    { id:"study3", samples:["sample1"], patients:["patient2"]}]}), 4);
 
         });
     });
