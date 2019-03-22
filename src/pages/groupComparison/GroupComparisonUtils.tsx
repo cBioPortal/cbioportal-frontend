@@ -111,7 +111,9 @@ export function caseCountsInParens(
         if (samplesArr.length === patientsArr.length) {
             text = `(${samplesArr.length}${asteriskForSamples || asteriskForPatients ? "*" : ""})`;
         } else {
-            text = `(${samplesArr.length}${asteriskForSamples ? "*" : ""} samples/${patientsArr.length}${asteriskForPatients ? "*" : ""} patients)`;
+            const pluralSamples = (samplesArr.length !== 1);
+            const pluralPatients = (patientsArr.length !== 1);
+            text = `(${samplesArr.length}${asteriskForSamples ? "*" : ""} sample${pluralSamples ? "s" : ""}/${patientsArr.length}${asteriskForPatients ? "*" : ""} patient${pluralPatients ? "s" : ""})`;
         }
     }
     return text;
