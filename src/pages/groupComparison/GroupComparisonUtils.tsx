@@ -111,7 +111,7 @@ export function caseCountsInParens(
         if (samplesArr.length === patientsArr.length) {
             text = `(${samplesArr.length}${asteriskForSamples || asteriskForPatients ? "*" : ""})`;
         } else {
-            text = `(${samplesArr.length}${asteriskForSamples ? "*" : ""} s/${patientsArr.length}${asteriskForPatients ? "*" : ""} p)`;
+            text = `(${samplesArr.length}${asteriskForSamples ? "*" : ""} samples/${patientsArr.length}${asteriskForPatients ? "*" : ""} patients)`;
         }
     }
     return text;
