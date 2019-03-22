@@ -609,13 +609,20 @@ export class StudyViewPageStore {
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
-        const comparisonWindow = window.open(getComparisonLoadingUrl({
+        const comparisonWindow:any = window.open(getComparisonLoadingUrl({
             phase: LoadingPhase.DOWNLOADING_GROUPS,
             clinicalAttributeName: params.clinicalAttribute.displayName
         }), "_blank");
 
-        // wait until the new window has routingStore available
-        await sleepUntil(()=>!!(comparisonWindow as any).routingStore);
+        // wait until the new window has routingStore available, or its closed
+        await sleepUntil(()=>{
+            return comparisonWindow.closed || !!comparisonWindow.routingStore
+        });
+
+        if (comparisonWindow.closed) {
+            // cancel if the windows already closed
+            return;
+        }
 
         // save comparison session, and get id
         let sessionId:string;
@@ -627,7 +634,9 @@ export class StudyViewPageStore {
                         params.clinicalAttribute,
                         params.clinicalAttributeValues!,
                         (phase:LoadingPhase)=>{
-                            (comparisonWindow as any).routingStore.updateRoute({phase}, undefined, false);
+                            if (!comparisonWindow.closed) {
+                                comparisonWindow.routingStore.updateRoute({phase}, undefined, false);
+                            }
                         }
                     );
                 break;
@@ -636,14 +645,18 @@ export class StudyViewPageStore {
                     await this.createNumberAttributeComparisonSession(
                         params.clinicalAttribute,
                         (phase:LoadingPhase)=>{
-                            (comparisonWindow as any).routingStore.updateRoute({phase}, undefined, false);
+                            if (!comparisonWindow.closed) {
+                                comparisonWindow.routingStore.updateRoute({phase}, undefined, false);
+                            }
                         }
                     );
                 break;
         }
 
-        // redirect window to correct URL
-        redirectToComparisonPage(comparisonWindow!, { sessionId });
+        if (!comparisonWindow.closed) {
+            // redirect window to correct URL
+            redirectToComparisonPage(comparisonWindow!, { sessionId });
+        }
     }
     // < / comparison groups code>
 
