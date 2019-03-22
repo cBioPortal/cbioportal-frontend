@@ -34,7 +34,7 @@ export type ComparisonGroup = Omit<SessionGroupData, "studies"|"color"> & {
     nonExistentSamples:SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
 };
 
-export type StudyViewComparisonGroup = Omit<GroupData, "color"> & {
+export type StudyViewComparisonGroup = Omit<GroupData, "studies"|"color"> & {
     uid:string; // unique in the session
     studies:{ id:string, samples: string[], patients:string[] }[]; // include patients, filter out nonexistent samples
     nonExistentSamples:SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
@@ -207,6 +207,12 @@ export function getNumSamples(
     group:Pick<SessionGroupData, "studies">
 ) {
     return _.sum(group.studies.map(study=>study.samples.length));
+}
+
+export function getNumPatients(
+    group:Pick<StudyViewComparisonGroup, "studies">
+) {
+    return _.sum(group.studies.map(study=>study.patients.length));
 }
 
 export function finalizeStudiesAttr(

@@ -1,6 +1,7 @@
 import * as React from "react";
 import {observer} from "mobx-react";
 import {
+    getNumPatients,
     getNumSamples,
     MissingSamplesMessage,
     StudyViewComparisonGroup
@@ -32,7 +33,7 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
     }
 
     @computed get label() {
-        return `${this.props.group.name} (${getNumSamples(this.props.group)})`;
+        return `${this.props.group.name} (${getNumSamples(this.props.group)} samples / ${getNumPatients(this.props.group)} patients)`;
     }
 
     render() {
