@@ -22,8 +22,9 @@ export interface IVennProps {
     uidToGroup: { [uid: string]: ComparisonGroup };
 }
 
-const VENN_PLOT_WIDTH = 250
-const VENN_PLOT_HEIGHT = 200
+const VENN_PLOT_WIDTH = 250;
+const PADDING_BTWN_SAMPLE_AND_PATIENT = 50;
+const VENN_PLOT_HEIGHT = 200;
 
 @observer
 export default class Venn extends React.Component<IVennProps, {}> {
@@ -105,7 +106,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
     }
 
     @computed get chartWidth() {
-        return 2 * VENN_PLOT_WIDTH + 200;
+        return this.vennPlotAreaWidth + 200;
     }
 
     @computed get chartHeight() {
@@ -128,6 +129,10 @@ export default class Venn extends React.Component<IVennProps, {}> {
             }
         });
         return legendData;
+    }
+
+    @computed get vennPlotAreaWidth() {
+        return 2*VENN_PLOT_WIDTH + PADDING_BTWN_SAMPLE_AND_PATIENT;
     }
 
     public render() {
@@ -165,15 +170,15 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         textAnchor: "middle"
                     }}
                     x={VENN_PLOT_WIDTH / 2}
-                    dx={VENN_PLOT_WIDTH}
+                    dx={VENN_PLOT_WIDTH+PADDING_BTWN_SAMPLE_AND_PATIENT}
                     y="1.2em"
                     text={'Patients overlap'}
                 />
-                <g id="patientVennDiagram" transform={`translate(${VENN_PLOT_WIDTH},${this.topPadding})`} />
+                <g id="patientVennDiagram" transform={`translate(${VENN_PLOT_WIDTH+PADDING_BTWN_SAMPLE_AND_PATIENT},${this.topPadding})`} />
 
                 {this.legendData.length > 0 && (
                     <VictoryLegend
-                        x={2 * VENN_PLOT_WIDTH}
+                        x={this.vennPlotAreaWidth}
                         y={this.topPadding}
                         theme={CBIOPORTAL_VICTORY_THEME}
                         standalone={false}
