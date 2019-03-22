@@ -50,9 +50,7 @@ module.exports = {
 	x = x || 0;
 	y = y || 0;
 	return makeSVGElement('g', {
-	    'transform':'translate('+x+','+y+')',
-	    'x':x,
-	    'y':y
+	    'transform':'translate('+x+','+y+')'
 	});
     },
     svg: function(width, height) {
