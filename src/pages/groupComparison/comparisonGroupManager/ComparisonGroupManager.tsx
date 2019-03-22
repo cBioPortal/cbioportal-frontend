@@ -155,12 +155,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                     style={{marginLeft:7}}
                     onClick={()=>{
                         this.props.store.clearAllFilters();
-                        this.props.store.updateChartSampleIdentifierFilter(
-                            UniqueKey.SELECTED_COMPARISON_GROUPS,
-                            getSampleIdentifiers(
-                                getSelectedGroups(this.props.store.comparisonGroups.result!, this.props.store)
-                            )
-                        );
+                        this.props.store.updateComparisonGroupsFilter();
                     }}
                 >Select</button>
             );
