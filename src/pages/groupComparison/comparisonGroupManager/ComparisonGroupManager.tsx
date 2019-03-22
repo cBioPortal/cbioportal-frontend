@@ -187,7 +187,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                             await sleepUntil(()=>!!(comparisonWindow as any).routingStore);
 
                             // save comparison session, and get id
-                            const groups = this.props.store.comparisonGroups.result!;
+                            const groups = getSelectedGroups(this.props.store.comparisonGroups.result!, this.props.store);
                             const {id} = await comparisonClient.addComparisonSession({groups});
 
                             // redirect window to correct URL
