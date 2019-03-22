@@ -123,7 +123,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
             if (group.uid in usedGroups) {
                 legendData.push({
                     name: group.name,
-                    symbol: { fill: group.color }
+                    symbol: { fill: group.color, strokeOpacity:0, type:"square", size: 6 }
                 });
             }
         });
