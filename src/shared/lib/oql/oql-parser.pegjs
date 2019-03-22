@@ -133,7 +133,7 @@ MutationWithModifiers
     // modifier has to come first because mutation matches every string as protein change code
     = modifier:MutationModifier "_" mutationWithModifiers:MutationWithModifiers { mutationWithModifiers.modifiers.unshift(modifier); return mutationWithModifiers; }
     / mutation:Mutation "_" modifiers:MutationModifiers { mutation.modifiers = modifiers; return mutation; }
-    / modifier:MutationModifier { return { modifiers: [modifier] }; }
+    / modifier:MutationModifier { return { info: {}, modifiers: [modifier] }; }
     / mutation:Mutation { mutation.modifiers = []; return mutation; }
 
 MutationModifiers
@@ -141,7 +141,7 @@ MutationModifiers
     / modifier:MutationModifier { return [modifier]; }
 
 Mutation
-	= "MUT"i { return {}; }
+	= "MUT"i { return {"info":{}}; }
 	/ "MISSENSE"i { return {"type":"class", "value":"MISSENSE", "info":{}}; }
 	/ "NONSENSE"i { return {"type":"class", "value":"NONSENSE", "info":{}}; }
 	/ "NONSTART"i { return {"type":"class", "value":"NONSTART", "info":{}}; }

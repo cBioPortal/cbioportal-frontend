@@ -4,7 +4,7 @@ import * as styles_any from './styles/styles.module.scss';
 import {observer} from 'mobx-react';
 import QueryContainer from "./QueryContainer";
 import { QueryStore} from "./QueryStore";
-import {observable} from "mobx";
+import {observable, action} from "mobx";
 import {MSKTab, MSKTabs} from "../MSKTabs/MSKTabs";
 import QuickSearch from "./quickSearch/QuickSearch";
 import HomePageSummary from "./quickSearch/HomePageSummary";
@@ -15,6 +15,7 @@ const styles = styles_any as {
 	QueryAndDownloadTabs: string,
 };
 
+const DOWNLOAD = 'download';
 const ADVANCED = 'advanced';
 const QUICK_SEARCH_TAB_ID = 'quickSearch';
 const QUICK_SEARCH_LS_KEY = 'defaultHomePageTab';
@@ -62,8 +63,11 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 	}
 
 	@autobind
+	@action
 	onSelectTab(tabId:string)
 	{
+		this.store.forDownloadTab = tabId === DOWNLOAD
+		this.store.selectableSelectedStudyIds = [];
 		this.activeTabId = tabId;
 	}
 
@@ -85,6 +89,9 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
                         <div>
 							<QuickSearch/>
                         </div>
+					</MSKTab>
+					<MSKTab id={DOWNLOAD} linkText={"Download"} onTabDidMount={()=>this.setDefaultTab(undefined)}>
+                        <QueryContainer onSubmit={this.props.onSubmit} store={this.store}/>
 					</MSKTab>
 				</MSKTabs>
 			</div>
