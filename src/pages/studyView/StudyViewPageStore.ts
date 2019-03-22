@@ -100,9 +100,9 @@ import {
     finalizeStudiesAttr,
     StudyViewComparisonGroup,
     getNumberAttributeGroupFilters,
-    getStringAttributeGroupFilters, sortDataIntoQuartiles
+    getStringAttributeGroupFilters, sortDataIntoQuartiles, getSampleIdentifiers
 } from "../groupComparison/GroupComparisonUtils";
-import {getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
+import {getSelectedGroups, getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import client from "../../shared/api/cbioportalClientInstance";
 import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
@@ -879,8 +879,25 @@ export class StudyViewPageStore {
     public customChartFilterSet =  observable.map<string[]>();
 
     @observable numberOfSelectedSamplesInCustomSelection: number = 0;
-    @computed get numberOfSelectedSamplesInComparisonGroupSelection() {
-        return this.getChartSampleIdentifiersFilter(UniqueKey.SELECTED_COMPARISON_GROUPS).length;
+    @observable _filterComparisonGroups:StudyViewComparisonGroup[] = [];
+
+    public get filterComparisonGroups() {
+        return this._filterComparisonGroups;
+    }
+
+    @action public updateComparisonGroupsFilter() {
+        onMobxPromise(
+            this.comparisonGroups,
+            comparisonGroups=>{
+                this._filterComparisonGroups = getSelectedGroups(comparisonGroups, this);
+                this.updateChartSampleIdentifierFilter(
+                    UniqueKey.SELECTED_COMPARISON_GROUPS,
+                    getSampleIdentifiers(
+                        this._filterComparisonGroups
+                    )
+                );
+            }
+        )
     }
 
     @observable private _customCharts = observable.shallowMap<ChartMeta>();

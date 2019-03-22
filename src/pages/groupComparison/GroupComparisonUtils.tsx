@@ -117,6 +117,20 @@ export function caseCountsInParens(
     return text;
 }
 
+export function caseCounts(
+    numSamples:number,
+    numPatients:number
+) {
+    if (numSamples === numPatients) {
+        const plural = (numSamples !== 1);
+        return `${numSamples} sample${plural ? "s" : ""}/patient${plural ? "s" : ""}`;
+    } else {
+        const pluralSamples = (numSamples !== 1);
+        const pluralPatients = (numPatients !== 1);
+        return `${numSamples} sample${pluralSamples ? "s" : ""}/${numPatients} patient${pluralPatients ? "s" : ""}`;
+    }
+}
+
 export function getPatientIdentifiers(
     sampleIdentifiers:SampleIdentifier[],
     sampleSet:ComplexKeyMap<Sample>

@@ -5,6 +5,7 @@ import RightPanel from "./rightPanel/RightPanel";
 import StudySummary from "./studySummary/StudySummary";
 import UserSelections from "../UserSelections";
 import * as _ from 'lodash';
+import {getSelectedGroups} from "../../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 
 
 export interface IStudyPageHeaderProps {
@@ -37,7 +38,7 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
 
                 <UserSelections
                     filter={this.props.store.userSelections}
-                    numberOfSelectedSamplesInComparisonGroupSelection={this.props.store.numberOfSelectedSamplesInComparisonGroupSelection}
+                    comparisonGroupSelection={this.props.store.filterComparisonGroups}
                     numberOfSelectedSamplesInCustomSelection={this.props.store.numberOfSelectedSamplesInCustomSelection}
                     customChartsFilter={this.props.store.customChartFilterSet.toJS()}
                     getSelectedGene={this.props.store.getKnownHugoGeneSymbolByEntrezGeneId}
