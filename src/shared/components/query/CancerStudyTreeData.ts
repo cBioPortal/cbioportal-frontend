@@ -1,6 +1,6 @@
 import {CancerStudy, TypeOfCancer as CancerType} from "../../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
-import {PriorityStudies} from "config/IAppConfig";
+import {CategorizedConfigItems} from "config/IAppConfig";
 import {VirtualStudy} from "shared/model/VirtualStudy";
 
 export const CANCER_TYPE_ROOT = 'tissue';
@@ -50,7 +50,7 @@ export default class CancerStudyTreeData
 	map_cancerTypeId_cancerType = new Map<string, CancerType>();
 	map_studyId_cancerStudy = new Map<string, CancerStudy>();
 
-	constructor({cancerTypes = [], studies = [], priorityStudies = {}, virtualStudies=[]}: {cancerTypes: CancerType[], studies: CancerStudy[], priorityStudies?:PriorityStudies, virtualStudies?:VirtualStudy[]})
+	constructor({cancerTypes = [], studies = [], priorityStudies = {}, virtualStudies=[]}: {cancerTypes: CancerType[], studies: CancerStudy[], priorityStudies?:CategorizedConfigItems, virtualStudies?:VirtualStudy[]})
 	{
 		let nodes:CancerTreeNode[];
 		let node:CancerTreeNode;
