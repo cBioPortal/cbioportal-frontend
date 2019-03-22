@@ -130,11 +130,11 @@ export default class OverlapStackedBar extends React.Component<IOverlapStackedBa
         const legendData = _.reduce(this.sampleStackedBarData, (memo, group, alterationType) => {
             memo.push({
                 name: group[0].groupName,
-                symbol: { fill: group[0].fill }
+                symbol: { fill: group[0].fill, strokeOpacity:0, type:"square", size: 6 }
             })
 
             return memo;
-        }, [] as { name: string, symbol: { fill: string } }[])
+        }, [] as { name: string, symbol: { fill: string, strokeOpacity:number, type:string, size:number } }[])
         return legendData.reverse();
     }
 
