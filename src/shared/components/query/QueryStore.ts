@@ -386,7 +386,7 @@ export class QueryStore {
     @observable showGisticPopup = false;
     @observable showGenesetsHierarchyPopup = false;
     @observable showGenesetsVolcanoPopup = false;
-    @observable priorityStudies = ServerConfigHelpers.priority_studies(AppConfig.serverConfig.priority_studies);
+    @observable priorityStudies = ServerConfigHelpers.parseConfigFormat(AppConfig.serverConfig.priority_studies);
     @observable showSelectedStudiesOnly: boolean = false;
     @observable.shallow selectedCancerTypeIds: string[] = [];
     @observable clickAgainToDeselectSingle: boolean = true;
