@@ -247,7 +247,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                             </Observer>
                         </Collapse>
                         { !this.dataInputOpened && (
-                            <button className="btn btn-primary btn-lg" style={{paddingLeft:50, paddingRight:50, marginBottom:15}}
+                            <button className="btn btn-primary btn-lg oncoprinterModifyInput" style={{paddingLeft:50, paddingRight:50, marginBottom:15}}
                                     onClick={()=>{ this.dataInputOpened = true; }}
                             >
                                 Modify Input
