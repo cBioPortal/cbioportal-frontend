@@ -100,6 +100,7 @@ describe('StudyViewUtils', () => {
         it('when all samples are selected', () => {
             assert.isTrue(
                 getVirtualStudyDescription(
+                    '',
                     studies as any,
                     {} as any,
                     {} as any,
@@ -147,6 +148,7 @@ describe('StudyViewUtils', () => {
 
             assert.isTrue(
                 getVirtualStudyDescription(
+                    '',
                     studies as any,
                     filter,
                     {
@@ -162,6 +164,7 @@ describe('StudyViewUtils', () => {
         it('when username is not null', () => {
             assert.isTrue(
                 getVirtualStudyDescription(
+                    '',
                     studies as any,
                     {} as any,
                     {} as any,
@@ -170,12 +173,40 @@ describe('StudyViewUtils', () => {
                 ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)'));
             assert.isTrue(
                 getVirtualStudyDescription(
+                    '',
                     studies as any,
                     {} as any,
                     {} as any,
                     [],
                     'user1'
                 ).endsWith('by user1'));
+        });
+        it('when previousDescription is defined', () => {
+            let filter = {
+                clinicalDataEqualityFilters: [{
+                    'attributeId': 'attribute1',
+                    'clinicalDataType': "SAMPLE",
+                    'values': ['value1']
+                }]
+            } as StudyViewFilterWithSampleIdentifierFilters;
+
+            let genes = [{entrezGeneId: 1, hugoGeneSymbol: "GENE1"}, {
+                entrezGeneId: 2,
+                hugoGeneSymbol: "GENE2"
+            }] as Gene[];
+
+            assert.isTrue(
+                getVirtualStudyDescription(
+                    'test\nCreated on ...',
+                    studies as any,
+                    filter,
+                    {
+                        'SAMPLE_attribute1': 'attribute1 name',
+                        'PATIENT_attribute2': 'attribute2 name',
+                        'SAMPLE_attribute3': 'attribute3 name'
+                    },
+                    genes
+                ).startsWith('test\n\nCreated on'));
         });
     });
 
