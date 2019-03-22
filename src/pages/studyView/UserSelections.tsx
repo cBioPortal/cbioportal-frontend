@@ -5,18 +5,28 @@ import {computed} from 'mobx';
 import styles from "./styles.module.scss";
 import {ClinicalDataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ChartMeta, StudyViewFilterWithSampleIdentifierFilters, UniqueKey} from 'pages/studyView/StudyViewPageStore';
-import {getCNAColorByAlteration, intervalFiltersDisplayValue} from 'pages/studyView/StudyViewUtils';
+import {
+    getCNAColorByAlteration, getPatientIdentifiers,
+    getSelectedGroupNames,
+    intervalFiltersDisplayValue
+} from 'pages/studyView/StudyViewUtils';
 import {PillTag} from "../../shared/components/PillTag/PillTag";
 import {GroupLogic} from "./filters/groupLogic/GroupLogic";
 import classnames from 'classnames';
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {
+    caseCounts,
+    getNumPatients,
+    getNumSamples, getSampleIdentifiers,
+    StudyViewComparisonGroup
+} from "../groupComparison/GroupComparisonUtils";
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     customChartsFilter: {[key:string]:string[]};
     getSelectedGene: (entrezGeneId: number) => string|undefined;
     numberOfSelectedSamplesInCustomSelection: number;
-    numberOfSelectedSamplesInComparisonGroupSelection:number;
+    comparisonGroupSelection:StudyViewComparisonGroup[];
     attributesMetaSet: { [id: string]: ChartMeta };
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
@@ -69,13 +79,15 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
         }
 
         // Show the filter for the comparison group selection
-        if (this.props.numberOfSelectedSamplesInComparisonGroupSelection > 0) {
+        if (this.props.comparisonGroupSelection.length > 0) {
+            const numSamples = getSampleIdentifiers(this.props.comparisonGroupSelection).length;
+            const numPatients = getPatientIdentifiers(this.props.comparisonGroupSelection).length;
             components.push(<div className={styles.parentGroupLogic}>
                 <GroupLogic
                     components={[
-                        <span className={styles.filterClinicalAttrName}>Comparison Group Selection</span>,
+                        <span className={styles.filterClinicalAttrName}>{getSelectedGroupNames(this.props.comparisonGroupSelection)}</span>,
                         <PillTag
-                            content={`${this.props.numberOfSelectedSamplesInComparisonGroupSelection} sample${this.props.numberOfSelectedSamplesInComparisonGroupSelection> 1 ? 's' : ''}`}
+                            content={caseCounts(numSamples, numPatients)}
                             backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
                             onDelete={() => this.props.removeComparisonGroupSelectionFilter()}
                         />
