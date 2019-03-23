@@ -312,6 +312,8 @@ export type EvidenceQueryRes = {
 
         'evidences': Array < Evidence >
 
+        'exactMatchedAlteration': Alteration
+
         'gene': Gene
 
         'id': string
