@@ -116,7 +116,7 @@ describe('homepage', function() {
         );
     });
 
-    describe('select all/deselect all functionality in study selector',function(){
+    describe.skip('select all/deselect all functionality in study selector',function(){
 
         beforeEach(function(){
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
