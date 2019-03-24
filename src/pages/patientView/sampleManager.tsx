@@ -149,6 +149,12 @@ class SampleManager {
         return uniqueValues.length === 1 && uniqueValues[0];
     }
 
+    static getClinicalAttributeInSample(sample: ClinicalDataBySampleId, clinicalAttributeId: string) : ClinicalData | undefined {
+        return _.find(sample.clinicalData, (data) => {
+            return data.clinicalAttributeId === clinicalAttributeId;
+        })
+    }
+
     getComponentForSample(sampleId: string,
                           fillOpacity: number = 1,
                           extraTooltipText: string = '',
