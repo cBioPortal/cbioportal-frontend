@@ -2978,8 +2978,7 @@ export class ResultsViewPageStore {
             ],
             invoke: ()=>{
                 const dqf = this.molecularProfileIdToDataQueryFilter.result![q.molecularProfileId];
-                // it's possible that sampleIds is empty
-                if (dqf && dqf.sampleIds && dqf.sampleIds.length) {
+                if (dqf) {
                     return client.fetchAllMolecularDataInMolecularProfileUsingPOST({
                         molecularProfileId: q.molecularProfileId,
                         molecularDataFilter: {
