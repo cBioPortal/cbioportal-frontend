@@ -16,6 +16,7 @@ import { Gene } from "shared/api/generated/CBioPortalAPI";
 import AppConfig from "appConfig";
 import { ServerConfigHelpers } from "config/config";
 import sessionServiceClient from "shared/api/sessionServiceInstance";
+import { trackEvent } from "shared/lib/tracking";
 
 export const SHOW_MORE_SIZE: number = 20;
 const DEFAULT_PAGE_SIZE: number = 3;
@@ -214,6 +215,7 @@ export default class QuickSearch extends React.Component {
         if (newOption.type === OptionType.STUDY) {
             parameters = {id: newOption.studyId};
             route = "study";
+            this.trackClick("study", this.inputValue);
         } else if (newOption.type === OptionType.GENE) {
             const studyList = this.geneStudyQuery.isComplete && this.geneStudyQuery.result.query;
             parameters = {
@@ -222,9 +224,11 @@ export default class QuickSearch extends React.Component {
                 cancer_study_list: studyList,
             };
             route = "results/mutations";
+            this.trackClick("gene", this.inputValue);
         } else if (newOption.type === OptionType.PATIENT) {
             parameters = {studyId: newOption.studyId, caseId: newOption.patientId};
             route = "patient";
+            this.trackClick("patient", this.inputValue);
         } else if (newOption.type === OptionType.STUDY_COUNT) {
             this.studyPageMultiplier++;
         } else if (newOption.type === OptionType.GENE_COUNT) {
@@ -236,6 +240,10 @@ export default class QuickSearch extends React.Component {
         if (route) {
             getBrowserWindow().routingStore.updateRoute(parameters, route);
         }
+    }
+
+    private trackClick(action: string, label: string){
+        trackEvent({ category:"quickSearch", action: action, label:label });
     }
 
     @autobind
