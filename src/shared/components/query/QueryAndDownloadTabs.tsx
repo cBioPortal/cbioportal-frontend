@@ -23,7 +23,7 @@ const QUICK_SEARCH_LS_KEY = 'defaultHomePageTab';
 interface IQueryAndDownloadTabsProps
 {
 	onSubmit?:()=>void;
-	showQuickSearchTab?:boolean;
+	showQuickSearchTab:boolean;
     getQueryStore:()=>QueryStore;
     showAlerts?:boolean;
 }
@@ -85,7 +85,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 					<MSKTab id={"advanced"} linkText={"Query"} onTabDidMount={()=>this.setDefaultTab(undefined)}>
                         <QueryContainer onSubmit={this.props.onSubmit} store={this.store}/>
 					</MSKTab>
-					<MSKTab id={QUICK_SEARCH_TAB_ID} linkText={<span>Quick Search <strong className={"beta-text"}>Beta!</strong></span>}  onTabDidMount={()=>this.setDefaultTab(QUICK_SEARCH_TAB_ID)}>
+					<MSKTab id={QUICK_SEARCH_TAB_ID} linkText={<span>Quick Search <strong className={"beta-text"}>Beta!</strong></span>} hide={!this.props.showQuickSearchTab} onTabDidMount={()=>this.setDefaultTab(QUICK_SEARCH_TAB_ID)}>
                         <div>
 							<QuickSearch/>
                         </div>
