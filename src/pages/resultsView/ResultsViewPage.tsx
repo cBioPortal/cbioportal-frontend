@@ -85,7 +85,7 @@ function initStore() {
 
                         onMobxPromise(resultsViewPageStore.studyIds, ()=>{
                             try {
-                                trackQuery(resultsViewPageStore.studyIds.result!, oql, resultsViewPageStore.hugoGeneSymbols, resultsViewPageStore.virtualStudies.result!.length > 0);
+                                trackQuery(resultsViewPageStore.studyIds.result!, oql, resultsViewPageStore.hugoGeneSymbols, resultsViewPageStore.queriedVirtualStudies.result!.length > 0);
                             } catch {};
                         });
 
