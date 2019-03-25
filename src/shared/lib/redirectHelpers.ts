@@ -76,7 +76,7 @@ export function handleLinkOut() {
 
     const data = {
         case_set_id: 'all',
-        gene_list: currentQuery.q.replace(":MUT","").replace("+",","),
+        gene_list: currentQuery.q.replace("+",","),
         cancer_study_list:
             currentQuery.cancer_study_id ||
             // use same set of studies as quick search gene query if no
