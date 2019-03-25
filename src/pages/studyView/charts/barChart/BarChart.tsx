@@ -1,6 +1,6 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {VictoryAxis, VictoryBar, VictoryChart, VictorySelectionContainer} from 'victory';
+import {VictoryAxis, VictoryBar, VictoryChart, VictorySelectionContainer,VictoryTooltip} from 'victory';
 import {computed} from "mobx";
 import _ from "lodash";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
@@ -203,6 +203,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                     />
                     <VictoryBar
                         barRatio={this.barRatio}
+                        labelComponent={<VictoryTooltip/>}
                         style={{
                             data: {
                                 fill: (d: BarDatum) =>
