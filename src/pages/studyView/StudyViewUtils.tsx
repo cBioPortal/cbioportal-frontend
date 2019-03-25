@@ -526,7 +526,9 @@ export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
         return {
             x: x + xShift,
             y: dataBin.count,
-            dataBin
+            dataBin,
+            label:(dataBin.start === undefined || dataBin.end === undefined) ? dataBin.start === undefined ? (dataBin.start === undefined && dataBin.end === undefined) ? "No of Samples:"+dataBin.count + " Range:NotDefine": "No of Samples:"+dataBin.count+" "+ "and Range≤" + dataBin.end:"No of Samples:"+dataBin.count+" "+ "and Range≥" + dataBin.start :"No of Samples:"+dataBin.count+" " + "and Range:"+ dataBin.start+"-"+ dataBin.end  
+
         };
     });
 }
@@ -537,7 +539,9 @@ export function generateCategoricalData(categoryBins: DataBin[], startIndex: num
     return categoryBins.map((dataBin: DataBin, index: number) => ({
         x: startIndex + index + 1,
         y: dataBin.count,
-        dataBin
+        dataBin,
+        label:(dataBin.start === undefined || dataBin.end === undefined) ? dataBin.start === undefined ? (dataBin.start === undefined && dataBin.end === undefined) ? "No of Samples:"+dataBin.count + " Range:NotDefine": "No of Samples:"+dataBin.count+" "+ "and Range≤" + dataBin.end:"No of Samples:"+dataBin.count+" "+ "and Range≥" + dataBin.start :"No of Samples:"+dataBin.count+" " + "and Range:"+ dataBin.start+"-"+ dataBin.end  
+
     }));
 }
 
