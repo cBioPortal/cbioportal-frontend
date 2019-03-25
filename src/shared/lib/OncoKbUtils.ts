@@ -1,9 +1,8 @@
 import * as _ from 'lodash';
-import {
-    Citations, Evidence, EvidenceQueries, EvidenceQueryRes, IndicatorQueryResp, Query
-} from "shared/api/generated/OncoKbAPI";
+import {Evidence, EvidenceQueries, EvidenceQueryRes, IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IOncoKbData} from "shared/model/OncoKB";
+import {OncoKbTreatment} from "../components/annotation/oncokb/OncoKbCard";
 
 /**
  * @author Selcuk Onur Sumer
@@ -53,7 +52,7 @@ const RESISTANCE_LEVEL_SCORE:{[level:string]: number} = {
 export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2B', '2A', '1', '0'],
     resistance: ['R3', 'R2', 'R1'],
-    all: ['4', 'R3', '3B', '3A', 'R2', '2B', '2A', 'R1', '1', '0']
+    all: ['4', 'R3', '3B', '3A', 'R2', '2B', '2A', '1', 'R1', '0']
 };
 
 export enum AlterationTypes {
@@ -184,8 +183,52 @@ export function normalizeLevel(level:string):string|null
     }
 }
 
-export function oncogenicImageClassNames(oncogenic:string,
-                                         isVUS:boolean,
+export function oncogenicXPosition(highestSensitiveLevel: string | null) {
+    const map: { [id: string]: number } = {
+        '1': 1,
+        '2A': 2,
+        '2B': 3,
+        '3A': 4,
+        '3B': 5,
+        '4': 6
+    };
+
+    let levelIndex = highestSensitiveLevel === null ? 0 : (map[highestSensitiveLevel] || 0);
+    return -(8 + levelIndex * 30);
+}
+
+export function oncogenicYPosition(oncogenicity: string, isVUS: boolean, resistanceLevel: string | null) {
+    const oncogenicityMap: { [id: string]: number } = {
+        'Oncogenic': 0,
+        'Predicted Oncogenic': 0,
+        'Likely Oncogenic': 0,
+        'Neutral': 1,
+        'Likely Neutral': 1,
+        'Unknown': 2,
+        'Inconclusive': 2
+    };
+    const resistanceLevelMap: { [id: string]: number } = {
+        'R1': 1,
+        'R2': 2,
+        'R3': 3
+    };
+
+    let oncogenicityIndex = oncogenicityMap[oncogenicity];
+    if (oncogenicityIndex === undefined) {
+        oncogenicityIndex = 4;
+    }
+    if (oncogenicityIndex > 1 && isVUS) {
+        oncogenicityIndex = 3;
+    }
+
+    const defaultIndexForUnrecognizedResistanceLevel = 0;
+    let resistanceLevelIndex = resistanceLevel === null ? defaultIndexForUnrecognizedResistanceLevel
+        : (resistanceLevelMap[resistanceLevel] || defaultIndexForUnrecognizedResistanceLevel);
+    return -(7 + oncogenicityIndex * 120 + resistanceLevelIndex * 30);
+}
+
+export function oncogenicImageClassNames(oncogenic: string,
+                                         isVUS: boolean,
                                          highestSensitiveLevel:string,
                                          highestResistanceLevel:string):string[]
 {
@@ -412,7 +455,7 @@ export function generateOncogenicCitations(oncogenicRefs:any):number[]
 export function generateTreatments(evidenceTreatments:any)
 {
     var treatments: any = {};
-    var result: any[] = [];
+    var result: OncoKbTreatment[] = [];
 
     _.each(evidenceTreatments, function(content, type) {
         _.each(content, function(item, index) {
@@ -420,7 +463,7 @@ export function generateTreatments(evidenceTreatments:any)
             var _treatment = treatmentsToStr(item.content);
             var _tumorType = item.tumorType;
             var _alterations = item.alterations.map(function(alt:any) {
-                return alt.alteration;
+                return alt.name;
             }).join(',');
             if (!treatments.hasOwnProperty(_level)) {
                 treatments[_level] = {};
@@ -449,9 +492,7 @@ export function generateTreatments(evidenceTreatments:any)
         });
     });
 
-    _.each(_.keys(treatments).sort(function(a, b) {
-        return LEVELS.all.indexOf(a) > LEVELS.all.indexOf(b) ? -1 : 1;
-    }), function(level) {
+    _.each(_.keys(treatments).sort(levelComparator), function(level) {
         _.each(_.keys(treatments[level]).sort(), function(_alteration) {
             _.each(_.keys(treatments[level][_alteration]).sort(), function(_treatment) {
                 _.each(_.keys(treatments[level][_alteration][_treatment]).sort(), function(_tumorType) {
@@ -459,7 +500,7 @@ export function generateTreatments(evidenceTreatments:any)
                     result.push({
                         level: content.level,
                         variant: content.alterations.map(function(alteration:any) {
-                            return alteration.alteration;
+                            return alteration.name;
                         }),
                         treatment: _treatment,
                         pmids: content.articles.filter(function(article:any) {
@@ -486,6 +527,10 @@ export function generateTreatments(evidenceTreatments:any)
     return result;
 }
 
+export function levelComparator(a: string, b: string) {
+    return LEVELS.all.indexOf(a) > LEVELS.all.indexOf(b) ? -1 : 1;
+}
+
 function treatmentsToStr(data:any[]) {
     if (_.isArray(data)) {
         var treatments:any[] = [];
@@ -494,7 +539,7 @@ function treatmentsToStr(data:any[]) {
             treatments.push(drugToStr((treatment.drugs)));
         });
 
-        return treatments.join(', ');
+        return treatments.sort().join(', ');
     }
     else {
         return "";
@@ -508,7 +553,7 @@ function drugToStr(data:any) {
         drugs.push(drug.drugName);
     });
 
-    return drugs.join('+');
+    return drugs.sort().join(' + ');
 }
 
 function getLevel(level:string) {
