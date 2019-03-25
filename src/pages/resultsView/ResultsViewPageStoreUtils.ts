@@ -25,9 +25,6 @@ import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import _ from "lodash";
 import client from "shared/api/cbioportalClientInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
-import {
-    getVirtualStudies,
-} from "./ResultsViewPageHelpers";
 import MobxPromise, {MobxPromise_await} from "mobxpromise";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {remoteData} from "../../shared/api/remoteData";
@@ -241,7 +238,7 @@ export function annotateMolecularDatum(
     return Object.assign({oncoKbOncogenic: oncogenic, hugoGeneSymbol}, molecularDatum);
 }
 
-export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:CancerStudy},queriedIds:string[]):Promise<CancerStudy[]>{
+export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:CancerStudy},queriedIds:string[],queriedVirtualStudies:VirtualStudy[]):Promise<CancerStudy[]>{
     const queriedStudies:CancerStudy[] = [];
     let unknownIds:{[id:string]:boolean} = {};
     for(const id of queriedIds){
@@ -264,18 +261,16 @@ export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:C
     
         }).catch(() => {}); //this is for private instances. it throws error when the study is not found
 
-        await getVirtualStudies(Object.keys(unknownIds)).then((virtualStudies: VirtualStudy[]) => {
-            virtualStudies.forEach(virtualStudy=>{
-                // tslint:disable-next-line:no-object-literal-type-assertion
-                const cancerStudy = {
-                    allSampleCount: _.sumBy(virtualStudy.data.studies, study=>study.samples.length),
-                    studyId: virtualStudy.id,
-                    name: virtualStudy.data.name,
-                    description: virtualStudy.data.description,
-                    cancerTypeId: "My Virtual Studies"
-                } as CancerStudy;
-                queriedStudies.push(cancerStudy);
-            });
+        queriedVirtualStudies.filter((vs:VirtualStudy) => unknownIds[vs.id]).forEach(virtualStudy=>{
+            // tslint:disable-next-line:no-object-literal-type-assertion
+            const cancerStudy = {
+                allSampleCount: _.sumBy(virtualStudy.data.studies, study=>study.samples.length),
+                studyId: virtualStudy.id,
+                name: virtualStudy.data.name,
+                description: virtualStudy.data.description,
+                cancerTypeId: "My Virtual Studies"
+            } as CancerStudy;
+            queriedStudies.push(cancerStudy);
         });
     }
 
