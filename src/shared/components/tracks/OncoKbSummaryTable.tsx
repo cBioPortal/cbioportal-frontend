@@ -1,10 +1,10 @@
 import * as React from 'react';
 import ProteinChangeColumnFormatter from "shared/components/mutationTable/column/ProteinChangeColumnFormatter";
 import {Column, default as LazyMobXTable} from "shared/components/lazyMobXTable/LazyMobXTable";
-import OncoKbCard from "../annotation/OncoKbCard";
+import OncoKbCard, {LEVEL_ICON_STYLE} from "../annotation/oncokb/OncoKbCard";
 import TruncatedText from "../TruncatedText";
 
-import styles from "../annotation/styles/oncoKb.module.scss";
+import styles from "../annotation/styles/oncokb/level.module.scss";
 
 export interface IOncoKbSummaryTableProps
 {
@@ -66,7 +66,7 @@ export default class OncoKbSummaryTable extends React.Component<IOncoKbSummaryTa
                                     <div>
                                         <i
                                             className={`${styles["level-icon"]} ${styles[`level-${level.level}`]}`}
-                                            style={{...OncoKbCard.LEVEL_ICON_STYLE, verticalAlign: "bottom"}}
+                                            style={{...LEVEL_ICON_STYLE, verticalAlign: "bottom"}}
                                         />
                                         <span> : </span>
                                         <TruncatedText

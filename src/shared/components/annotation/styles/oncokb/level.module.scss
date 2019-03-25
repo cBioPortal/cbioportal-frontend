@@ -1,0 +1,58 @@
+.levels {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.levels-li {
+  line-height: 16px;
+  margin: 3px 0;
+  display: flex;
+  align-items: flex-start;
+}
+
+.level-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  line-height: 16px;
+  background-size: 200px;
+  margin: 0 3px;
+  display: block;
+}
+
+
+.level-1 {
+  background-position: -15px -21px;
+}
+
+.level-2A {
+  background-position: -40px -21px;
+}
+
+.level-2B {
+  background-position: -65px -21px;
+}
+
+.level-3A {
+  background-position: -90px -21px;
+}
+
+.level-3B {
+  background-position: -115px -21px;
+}
+
+.level-4 {
+  background-position: -140px -21px;
+}
+
+.level-R1 {
+  background-position: -15px -51px;
+}
+
+.level-R2 {
+  background-position: -40px -51px;
+}
+
+.level-R3 {
+  background-position: -65px -51px;
+}
