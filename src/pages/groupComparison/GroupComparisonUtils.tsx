@@ -7,13 +7,19 @@ import {
     SampleIdentifier
 } from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
-import {ClinicalDataIntervalFilterValue, ClinicalDataEnrichment, StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {
+    ClinicalDataIntervalFilterValue,
+    ClinicalDataEnrichment,
+    StudyViewFilter,
+    CopyNumberGeneFilterElement
+} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
 import {GroupData, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import * as React from "react";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 import ComplexKeyCounter from "../../shared/lib/complexKeyDataStructures/ComplexKeyCounter";
+import {GeneIdentifier} from "../studyView/StudyViewPageStore";
 
 export enum GroupComparisonTab {
     OVERLAP = "overlap",
@@ -329,12 +335,37 @@ export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
 export const SURVIVAL_TOO_MANY_GROUPS_MSG =
     "We can't show survival for more than 10 groups. Please deselect groups in the 'Active Groups' section.";
 
-export function getDefaultGroupName(filters:StudyViewFilter) {
-    return _.sortBy( // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
-        filters.clinicalDataEqualityFilters,
+export function getDefaultGroupName(
+    filters:StudyViewFilter,
+    entrezGeneIdToGene:{[entrez:number]:GeneIdentifier}
+) {
+    const equalityFilters = _.sortBy( // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
+        filters.clinicalDataEqualityFilters || [],
         filter=>filter.attributeId
-    ).map(filter=>filter.values.join("+")) // get each attributes selected values, joined by +
-    .join(", "); // comma separate each attributes values
+    ).map(filter=>filter.values.join("+")); // get each attributes selected values, joined by +
+
+    const mutatedGenes =
+        _.flattenDeep<number>((filters.mutatedGenes || []).map(filter=>filter.entrezGeneIds))
+            .map(entrezGeneId=>`${entrezGeneIdToGene[entrezGeneId].hugoGeneSymbol} mutant`);
+
+    const cnaGenes =
+        _.flattenDeep<CopyNumberGeneFilterElement>((filters.cnaGenes || []).map(filter=>filter.alterations))
+            .map(filterElt=>{
+                return `${entrezGeneIdToGene[filterElt.entrezGeneId].hugoGeneSymbol} ${filterElt.alteration === 2 ? "amp" : "del"}`;
+            });
+
+    const withData:string[] = [];
+    if (filters.withMutationData) {
+        withData.push("with mutation data");
+    }
+    if (filters.withCNAData) {
+        withData.push("with CNA data");
+    }
+
+
+    const allFilters = mutatedGenes.concat(cnaGenes).concat(equalityFilters).concat(withData);
+    
+    return allFilters.join(", "); // comma separate each attributes values
 }
 
 export function getTabId(pathname:string) {
