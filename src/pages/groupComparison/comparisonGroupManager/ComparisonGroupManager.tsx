@@ -56,7 +56,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     @action
     private showAddGroupPanel() {
         this.addGroupPanelOpen = true;
-        this._inputGroupName = getDefaultGroupName(this.props.store.filters);
+        this._inputGroupName = getDefaultGroupName(this.props.store.filters, this.props.store.entrezGeneIdToGene.result!);
     }
 
     @autobind
@@ -320,7 +320,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                 <button
                     className="btn btn-sm btn-primary"
                     onClick={this.showAddGroupPanel}
-                    disabled={!selectedSamples}
+                    disabled={!selectedSamples || !this.props.store.entrezGeneIdToGene.isComplete}
                     style={{width:"100%"}}
                 >+ Add{selectedSamples ? ` ${selectedSamples.length}` : ""} selected samples to a group
                 </button>

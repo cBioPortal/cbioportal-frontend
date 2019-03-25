@@ -2905,6 +2905,20 @@ export class StudyViewPageStore {
         onError: (error => {}),
         default: []
     });
+    
+    readonly entrezGeneIdToGene = remoteData({
+        await:()=>[this.mutatedGeneData, this.cnaGeneData],
+        invoke:()=>{
+            const ret:{[entrez:number]:GeneIdentifier} = {};
+            for (const d of this.mutatedGeneData.result!) {
+                ret[d.entrezGeneId] = d;
+            }
+            for (const d of this.cnaGeneData.result!) {
+                ret[d.entrezGeneId] = d;
+            }
+            return Promise.resolve(ret);
+        }
+    });
 
     readonly cnSegments = remoteData<CopyNumberSeg[]>({
         await: () => [
