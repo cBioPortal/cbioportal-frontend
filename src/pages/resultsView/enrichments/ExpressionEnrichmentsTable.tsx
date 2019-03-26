@@ -139,7 +139,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.LOG_RATIO] = {
             name: "Log Ratio",
             render: (d: ExpressionEnrichmentRow) => <span>{formatLogOddsRatio(d.logRatio)}</span>,
-            tooltip: <span>Log2 based ratio of (mean in altered / mean in unaltered)</span>,
+            tooltip: <span>Log2 based ratio of (mean in {this.props.group1Name} / mean in {this.props.group2Name})</span>,
             sortBy: (d: ExpressionEnrichmentRow) => Number(d.logRatio),
             download: (d: ExpressionEnrichmentRow) => formatLogOddsRatio(d.logRatio)
         };
