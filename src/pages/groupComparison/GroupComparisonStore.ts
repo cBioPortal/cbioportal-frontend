@@ -219,6 +219,22 @@ export default class GroupComparisonStore {
         this._selectedGroupIds.set(uid, !this.isGroupSelected(uid));
     }
 
+    @autobind
+    @action public selectAllGroups() {
+        const groups = this.availableGroups.result!; // assumed complete
+        for (const group of groups) {
+            this._selectedGroupIds.set(group.uid, true);
+        }
+    }
+
+    @autobind
+    @action public deselectAllGroups() {
+        const groups = this.availableGroups.result!; // assumed complete
+        for (const group of groups) {
+            this._selectedGroupIds.set(group.uid, false);
+        }
+    }
+
     public groupSelectionCanBeToggled(group:ComparisonGroup) {
         return (
             this.activeGroups.isComplete && // dont allow toggling until we know what the current active groups are
