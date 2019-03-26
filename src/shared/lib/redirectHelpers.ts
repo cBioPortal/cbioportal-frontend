@@ -81,11 +81,11 @@ export function handleLinkOut() {
             currentQuery.cancer_study_id ||
             // use same set of studies as quick search gene query if no
             // specific study is supplied
-            AppConfig.serverConfig.quick_search_gene_query_session_id ||
-            AppConfig.serverConfig.quick_search_gene_query_cancer_study_list
+            AppConfig.serverConfig.default_cross_cancer_study_session_id ||
+            AppConfig.serverConfig.default_cross_cancer_study_list
     };
 
-    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(data, "/results/mutations");
+    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(data, "/results/mutations", clear=true, replace=true);
 }
 
 export function handleStudyDO(){

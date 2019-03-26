@@ -53,7 +53,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_show_tweet_button:false,
     skin_show_tissue_image_tab:true,
     quick_search_show: false,
-    quick_search_gene_query_cancer_study_list:
+    default_cross_cancer_study_list:
         "laml_tcga_pan_can_atlas_2018,acc_tcga_pan_can_atlas_2018,blca_tcga_pan_can_atlas_2018," +
         "lgg_tcga_pan_can_atlas_2018,brca_tcga_pan_can_atlas_2018,cesc_tcga_pan_can_atlas_2018,chol_tcga_pan_can_atlas_2018," +
         "coadread_tcga_pan_can_atlas_2018,dlbc_tcga_pan_can_atlas_2018,esca_tcga_pan_can_atlas_2018,gbm_tcga_pan_can_atlas_2018," +
@@ -63,7 +63,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         "sarc_tcga_pan_can_atlas_2018,skcm_tcga_pan_can_atlas_2018,stad_tcga_pan_can_atlas_2018," +
         "tgct_tcga_pan_can_atlas_2018,thym_tcga_pan_can_atlas_2018,thca_tcga_pan_can_atlas_2018,ucs_tcga_pan_can_atlas_2018," +
         "ucec_tcga_pan_can_atlas_2018,uvm_tcga_pan_can_atlas_2018",
-    quick_search_gene_query_cancer_study_list_name: "TCGA PanCancer Atlas studies",
+    default_cross_cancer_study_list_name: "TCGA PanCancer Atlas studies",
     skin_title:"cBioPortal for Cancer Genomics",
 
     skin_blurb:`The cBioPortal for Cancer Genomics provides 
