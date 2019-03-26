@@ -152,12 +152,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         return (
             <DefaultTooltip
                 visible={this.showGroupsTooltip}
+                trigger={["click"]}
                 placement="bottomLeft"
                 destroyTooltipOnHide={true}
                 onPopupAlign={(tooltipEl: any)=>{
                     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
                     arrowEl.style.right = '10px';
                 }}
+                onVisibleChange={visible=>{ this.showGroupsTooltip = !!visible; }}
                 getTooltipContainer={()=>document.getElementById("comparisonGroupManagerContainer")!}
                 overlay={
                     <div style={{width: 300}}>
@@ -175,10 +177,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             >
                 <button className={classNames('btn btn-primary btn-xs', {active:this.showGroupsTooltip})}
                         data-test="groups-button"
-                        onClick={(e)=>{
-                            e.stopPropagation();
-                            this.showGroupsTooltip = !this.showGroupsTooltip;
-                        }}
                         aria-pressed={this.showGroupsTooltip}
                         style={{marginLeft: '10px'}}
                 >Groups {String.fromCharCode(9662)/*small solid down triangle*/}</button>
