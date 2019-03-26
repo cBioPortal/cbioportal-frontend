@@ -66,7 +66,7 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
                                                    group1Description={`samples in ${group1Name}.`}
                                                    group2Description={`samples in ${group2Name}.`}
                                                    selectedProfile={this.props.store.proteinEnrichmentProfile.result!}
-                                                   showMutexTendencyInTable={false}
+                                                   alteredVsUnalteredMode={false}
                     />
                 </div>
             );
