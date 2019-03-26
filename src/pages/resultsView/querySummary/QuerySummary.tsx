@@ -144,7 +144,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     @computed get queryForm(){
         return <div style={{marginTop:10}}>
             <QueryAndDownloadTabs onSubmit={this.onSubmit}
-                                  showQuickSearchTab={AppConfig.serverConfig.skin_quick_search_show}
+                                  showQuickSearchTab={AppConfig.serverConfig.quick_search_show}
                                   showAlerts={true}
                                   getQueryStore={()=>createQueryStore(getBrowserWindow().routingStore.query)}
             />
