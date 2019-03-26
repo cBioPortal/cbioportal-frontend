@@ -30,6 +30,7 @@ export interface IAlterationEnrichmentContainerProps {
     group2Name?:string;
     group1Description?:string;
     group2Description?:string;
+    alteredVsUnalteredMode?:boolean;
     headerName: string;
     selectedProfile:MolecularProfile;
     store?: ResultsViewPageStore;
@@ -50,7 +51,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         group2Name: "unaltered group",
         alterationType: "a mutation",
         showMutexTendencyInTable: true,
-        showCNAInTable: false
+        showCNAInTable: false,
+        alteredVsUnalteredMode: true
     };
 
     @computed get group1Description() {
@@ -170,6 +172,14 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return columns;
     }
 
+    @computed get volcanoPlotLabels() {
+        if (this.props.alteredVsUnalteredMode) {
+            return ["Mutual exclusivity", "Co-occurrence"];
+        } else {
+            return [this.props.group2Name!, this.props.group1Name!];
+        }
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
@@ -181,7 +191,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                 <div className={styles.LeftColumn}>
                     {this.chartType === ChartType.VOLCANO && (
                         <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
-                                          xAxisLeftLabel="Mutual exclusivity" xAxisRightLabel="Co-occurrence" xAxisDomain={15}
+                                          xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
                                           xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
                                           onSelectionCleared={this.onSelectionCleared}/>
                     )}
