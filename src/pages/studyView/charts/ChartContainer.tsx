@@ -13,7 +13,6 @@ import {
 } from "pages/studyView/StudyViewPageStore";
 import {DataBin} from "shared/api/generated/CBioPortalAPIInternal";
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
-import {svgToPdfPromise} from "shared/lib/svgToPdfDownload";
 import classnames from "classnames";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import MobxPromise from "mobxpromise";
@@ -128,7 +127,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             defaultDownload: {
                 SVG: () => Promise.resolve((new XMLSerializer()).serializeToString(this.toSVGDOMNode())),
                 PNG: () => Promise.resolve(this.toSVGDOMNode()),
-                PDF: () => svgToPdfPromise(this.toSVGDOMNode())
+                PDF: () => Promise.resolve(this.toSVGDOMNode())
             },
             onChangeChartType: (newChartType: ChartType) => {
                 this.mouseInChart = false;
