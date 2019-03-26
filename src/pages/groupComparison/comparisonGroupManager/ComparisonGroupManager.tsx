@@ -96,6 +96,16 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         this.props.store.toggleComparisonGroupMarkedForDeletion(group.uid);
     }
 
+    @autobind
+    private async renameGroup(newName:string, group:StudyViewComparisonGroup) {
+        const {name, ...rest} = group;
+        await comparisonClient.updateGroup(
+            group.uid,
+            { name: newName, ...rest}
+        );
+        this.props.store.notifyComparisonGroupsChange();
+    }
+
     private readonly groupsSection = MakeMobxView({
         await:()=>[
             this.props.store.comparisonGroups,
@@ -113,6 +123,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                                     store={this.props.store}
                                     markedForDeletion={this.props.store.isComparisonGroupMarkedForDeletion(group.uid)}
                                     restore={this.restoreGroup}
+                                    rename={this.renameGroup}
                                 />
                             ))
                         ) : (
