@@ -64,6 +64,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                                                    group2Name={group2Name}
                                                    group1Description={`in ${group1Name} that have the listed alteration in the listed gene.`}
                                                    group2Description={`in ${group2Name} that have the listed alteration in the listed gene.`}
+                                                   alteredVsUnalteredMode={false}
                                                    selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
                                                    headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
                                                    showMutexTendencyInTable={false}
