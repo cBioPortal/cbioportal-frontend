@@ -14,6 +14,7 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
+import classNames from "classnames";
 
 export interface IAlterationEnrichmentTableProps {
     columns?: AlterationEnrichmentTableColumnType[];
@@ -161,11 +162,9 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.TENDENCY] = {
             name: this.props.mutexTendency ? "Tendency" : "Enriched in",
-            render: (d: AlterationEnrichmentRow) => <div className={styles.Tendency}>
+            render: (d: AlterationEnrichmentRow) => <div className={classNames(styles.Tendency, {[styles.Significant]:(d.qValue < 0.05)})}>
                 {this.props.mutexTendency ? calculateAlterationTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.group1Name, this.props.group2Name)}
-                {d.qValue < 0.05 ? <Badge style={{
-                    backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
-                }}>Significant</Badge> : ""}</div>,
+                </div>,
             tooltip: 
                 <table>
                     <tr>
