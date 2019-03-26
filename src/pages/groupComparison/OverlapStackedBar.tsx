@@ -204,7 +204,7 @@ export default class OverlapStackedBar extends React.Component<IOverlapStackedBa
                                 data={data}
                                 key={i}
                                 labels={(d: any) => percentageRounder(d.cases.length / total) > 6 ? d.cases.length : ''}
-                                labelComponent={<VictoryLabel dy={30} />}
+                                labelComponent={<VictoryLabel dy={25} />}
                                 events={this.mouseEvents}
                                 x={(d:any) => title} //point x to a string instead of number
                                 y={(d:any) => d.cases.length}
