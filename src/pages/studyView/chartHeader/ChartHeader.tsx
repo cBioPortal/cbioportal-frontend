@@ -13,6 +13,7 @@ import {IChartContainerDownloadProps} from "../charts/ChartContainer";
 import {saveSvgAsPng} from "save-svg-as-png";
 import {ChartTypeEnum} from "../StudyViewConfig";
 import {getClinicalAttributeOverlay} from "../StudyViewUtils";
+import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 
 // there's some incompatiblity with rc-tooltip and study view layout
 // these adjustments force tooltips to open top right because tooltips
@@ -78,8 +79,10 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         const fileName = `${this.fileName}.${props.type.substring(0, 3).toLowerCase()}`;
                                         if (props.type === "PNG") {
                                             saveSvgAsPng(data, fileName, {backgroundColor:"#ffffff"});
-                                        } else if ((props.type === "PDF" || typeof data === "string") && data.length > 0) {
+                                        } else if (typeof data === "string" && data.length > 0) {
                                             fileDownload(data, fileName);
+                                        } else if (props.type === "PDF" && data) {
+                                            svgToPdfDownload(fileName, data)
                                         }
                                     }
                                     this.downloadPending[props.type] = false;
