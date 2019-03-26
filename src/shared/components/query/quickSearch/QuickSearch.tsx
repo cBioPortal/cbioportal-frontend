@@ -12,19 +12,13 @@ import * as moduleStyles from "./styles.module.scss";
 import {action, computed, observable, runInAction} from "mobx";
 import {remoteData} from "../../../api/remoteData";
 import Pluralize from 'pluralize';
+import { Gene } from "shared/api/generated/CBioPortalAPI";
+import AppConfig from "appConfig";
+import { ServerConfigHelpers } from "config/config";
+import sessionServiceClient from "shared/api/sessionServiceInstance";
 
 export const SHOW_MORE_SIZE: number = 20;
 const DEFAULT_PAGE_SIZE: number = 3;
-
-const ALL_TCGA_PANCANCER_STUDIES: string = "laml_tcga_pan_can_atlas_2018,acc_tcga_pan_can_atlas_2018,blca_tcga_pan_can_atlas_2018," + 
-    "lgg_tcga_pan_can_atlas_2018,brca_tcga_pan_can_atlas_2018,cesc_tcga_pan_can_atlas_2018,chol_tcga_pan_can_atlas_2018," + 
-    "coadread_tcga_pan_can_atlas_2018,dlbc_tcga_pan_can_atlas_2018,esca_tcga_pan_can_atlas_2018,gbm_tcga_pan_can_atlas_2018," + 
-    "hnsc_tcga_pan_can_atlas_2018,kich_tcga_pan_can_atlas_2018,kirc_tcga_pan_can_atlas_2018,kirp_tcga_pan_can_atlas_2018," + 
-    "lihc_tcga_pan_can_atlas_2018,luad_tcga_pan_can_atlas_2018,lusc_tcga_pan_can_atlas_2018,meso_tcga_pan_can_atlas_2018," + 
-    "ov_tcga_pan_can_atlas_2018,paad_tcga_pan_can_atlas_2018,pcpg_tcga_pan_can_atlas_2018,prad_tcga_pan_can_atlas_2018," + 
-    "sarc_tcga_pan_can_atlas_2018,skcm_tcga_pan_can_atlas_2018,stad_tcga_pan_can_atlas_2018," + 
-    "tgct_tcga_pan_can_atlas_2018,thym_tcga_pan_can_atlas_2018,thca_tcga_pan_can_atlas_2018,ucs_tcga_pan_can_atlas_2018," +
-    "ucec_tcga_pan_can_atlas_2018,uvm_tcga_pan_can_atlas_2018";
 
 type OptionData = {
     value: number;
@@ -32,8 +26,17 @@ type OptionData = {
     hugoGeneSymbol: string;
     cytoband: string;
     index: number;
-}
+};
 
+enum GeneStudyQueryType {
+    SESSION,
+    STUDY_LIST
+}
+type GeneStudyQuery = {
+    type: GeneStudyQueryType;
+    query: string;
+    name?: string;
+};
 
 @observer
 export default class QuickSearch extends React.Component {
@@ -84,76 +87,122 @@ export default class QuickSearch extends React.Component {
         }
     }
 
-    private options = remoteData<any[]>(()=>{
+    // tslint:disable-next-line:member-ordering
+    readonly geneStudyQueryVirtualStudy = remoteData(async () => {
+        const virtualStudyId = AppConfig.serverConfig.default_cross_cancer_study_session_id;
 
-        const input = this.inputValue;
-
-        if (input.length > 0) {
-            return Promise.all([
-                client.getAllStudiesUsingGETWithHttpInfo({keyword: input, pageSize: DEFAULT_PAGE_SIZE + (SHOW_MORE_SIZE * this.studyPageMultiplier)}),
-                client.getAllStudiesUsingGETWithHttpInfo({keyword: input, projection: "META"}),
-                client.getAllGenesUsingGETWithHttpInfo({keyword: input, pageSize: DEFAULT_PAGE_SIZE + (SHOW_MORE_SIZE * this.genePageMultiplier)}),
-                client.getAllGenesUsingGETWithHttpInfo({keyword: input, projection: "META"}),
-                client.getAllPatientsUsingGETWithHttpInfo({keyword: input, pageSize: DEFAULT_PAGE_SIZE + (SHOW_MORE_SIZE * this.patientPageMultiplier), projection: "DETAILED"}),
-                client.getAllPatientsUsingGETWithHttpInfo({keyword: input, projection: "META"}),
-                // we use sleep method because if the response is cached by superagent, react-select can't render the options for some reason
-                sleep(0)]).then(async (response: any) => {
-                let studyOptions: any = response[0].body.map(this.studyToOption);
-
-                let studyCount = {
-                    value: parseInt(response[1].headers["total-count"]) - studyOptions.length,
-                    type: OptionType.STUDY_COUNT
-                }
-                const geneOptions: any = response[2].body.map(this.geneToOption);
-                const geneCount = {
-                    value: parseInt(response[3].headers["total-count"]) - geneOptions.length,
-                    type: OptionType.GENE_COUNT
-                }
-                const patientOptions: any = response[4].body.map(this.patientToOption);
-                const patientCount = {
-                    value: parseInt(response[5].headers["total-count"]) - patientOptions.length,
-                    type: OptionType.PATIENT_COUNT
-                }
-
-                if (((geneOptions.length + patientOptions.length) < (2 * DEFAULT_PAGE_SIZE)) && studyCount.value > 0) {
-                    const spillover = (2 * DEFAULT_PAGE_SIZE) - (geneOptions.length + patientOptions.length);
-                    await client.getAllStudiesUsingGETWithHttpInfo({keyword: input,
-                        pageSize: spillover + DEFAULT_PAGE_SIZE + (SHOW_MORE_SIZE * this.studyPageMultiplier)})
-                        .then((response: any) => {
-                            studyOptions = response.body.map(this.studyToOption);
-                        });
-                    studyCount.value = studyCount.value - spillover;
-                }
-
-                let options = [];
-
-                let groupedOptions = [];
-
-                groupedOptions.push({ label:"Studies", options:studyOptions, groupData:studyCount, instruction:"Click on a study to open its summary" });
-                if (studyCount.value > 0) {
-                    studyOptions.push(studyCount);
-                    options.push(studyCount);
-                }
-
-                groupedOptions.push({ label:"Genes", options:geneOptions, groupData:geneCount, instruction:"Click on a gene to query it across all TCGA PanCancer Atlas studies" });
-                if (geneCount.value > 0) {
-                    geneOptions.push(geneCount);
-                    options.push(geneCount);
-                }
-
-                groupedOptions.push({ label:"Patients", options:patientOptions, groupData:patientCount, instruction:"Click on a patient to see a summary" });
-                if (patientCount.value > 0) {
-                    patientOptions.push(patientCount);
-                    options.push(patientCount);
-                }
-
-                return groupedOptions;
-            });
-
+        if (ServerConfigHelpers.sessionServiceIsEnabled() && virtualStudyId) {
+            try {
+                const study = await sessionServiceClient.getVirtualStudy(virtualStudyId);
+                return study;
+            } catch (ex) {
+                return null;
+            }
         } else {
-            return Promise.resolve([]);
+            return null;
         }
+    }, null);
 
+    // tslint:disable-next-line:member-ordering
+    private geneStudyQuery = remoteData<GeneStudyQuery>({
+        await: () => [
+            this.geneStudyQueryVirtualStudy
+        ],
+        invoke: ()=>{
+            if (this.geneStudyQueryVirtualStudy.result) {
+                return Promise.resolve({
+                    type: GeneStudyQueryType.SESSION,
+                    query: this.geneStudyQueryVirtualStudy.result.id,
+                    name: this.geneStudyQueryVirtualStudy.result.data.name,
+                });
+            } else {
+                return Promise.resolve({
+                    type: GeneStudyQueryType.STUDY_LIST,
+                    query: AppConfig.serverConfig.default_cross_cancer_study_list,
+                    name: AppConfig.serverConfig.default_cross_cancer_study_list_name,
+                });
+            }
+        }
+    });
+
+    // tslint:disable-next-line:member-ordering
+    private options = remoteData<any[]>({
+        await: () => [
+            this.geneStudyQuery
+        ],
+        invoke: () => {
+
+            const input = this.inputValue;
+            const geneStudyQuery = this.geneStudyQuery.result;
+
+            if (input.length > 0) {
+                return Promise.all([
+                    client.getAllStudiesUsingGETWithHttpInfo({keyword: input, pageSize: DEFAULT_PAGE_SIZE + (SHOW_MORE_SIZE * this.studyPageMultiplier)}),
+                    client.getAllStudiesUsingGETWithHttpInfo({keyword: input, projection: "META"}),
+                    client.getAllGenesUsingGETWithHttpInfo({keyword: input, pageSize: DEFAULT_PAGE_SIZE + (SHOW_MORE_SIZE * this.genePageMultiplier)}),
+                    client.getAllGenesUsingGETWithHttpInfo({keyword: input, projection: "META"}),
+                    client.getAllPatientsUsingGETWithHttpInfo({keyword: input, pageSize: DEFAULT_PAGE_SIZE + (SHOW_MORE_SIZE * this.patientPageMultiplier), projection: "DETAILED"}),
+                    client.getAllPatientsUsingGETWithHttpInfo({keyword: input, projection: "META"}),
+                    // we use sleep method because if the response is cached by superagent, react-select can't render the options for some reason
+                    sleep(0)]).then(async (response: any) => {
+                    let studyOptions: any = response[0].body.map(this.studyToOption);
+
+                    let studyCount = {
+                        value: parseInt(response[1].headers["total-count"]) - studyOptions.length,
+                        type: OptionType.STUDY_COUNT
+                    }
+                    const geneOptions: any = response[2].body.map(this.geneToOption);
+                    const geneCount = {
+                        value: parseInt(response[3].headers["total-count"]) - geneOptions.length,
+                        type: OptionType.GENE_COUNT
+                    }
+                    const patientOptions: any = response[4].body.map(this.patientToOption);
+                    const patientCount = {
+                        value: parseInt(response[5].headers["total-count"]) - patientOptions.length,
+                        type: OptionType.PATIENT_COUNT
+                    }
+
+                    if (((geneOptions.length + patientOptions.length) < (2 * DEFAULT_PAGE_SIZE)) && studyCount.value > 0) {
+                        const spillover = (2 * DEFAULT_PAGE_SIZE) - (geneOptions.length + patientOptions.length);
+                        await client.getAllStudiesUsingGETWithHttpInfo({keyword: input,
+                            pageSize: spillover + DEFAULT_PAGE_SIZE + (SHOW_MORE_SIZE * this.studyPageMultiplier)})
+                            .then((response: any) => {
+                                studyOptions = response.body.map(this.studyToOption);
+                            });
+                        studyCount.value = studyCount.value - spillover;
+                    }
+
+                    let options = [];
+
+                    let groupedOptions = [];
+
+                    groupedOptions.push({ label:"Studies", options:studyOptions, groupData:studyCount, instruction:"Click on a study to open its summary" });
+                    if (studyCount.value > 0) {
+                        studyOptions.push(studyCount);
+                        options.push(studyCount);
+                    }
+
+                    if (geneStudyQuery) {
+                        groupedOptions.push({ label:"Genes", options:geneOptions, groupData:geneCount, instruction:`Click on a gene to query it across ${geneStudyQuery.name}`});
+                        if (geneCount.value > 0) {
+                            geneOptions.push(geneCount);
+                            options.push(geneCount);
+                        }
+                    }
+
+                    groupedOptions.push({ label:"Patients", options:patientOptions, groupData:patientCount, instruction:"Click on a patient to see a summary" });
+                    if (patientCount.value > 0) {
+                        patientOptions.push(patientCount);
+                        options.push(patientCount);
+                    }
+
+                    return groupedOptions;
+                });
+
+            } else {
+                return Promise.resolve([]);
+            }
+        }
     });
 
     @autobind
@@ -166,7 +215,12 @@ export default class QuickSearch extends React.Component {
             parameters = {id: newOption.studyId};
             route = "study";
         } else if (newOption.type === OptionType.GENE) {
-            parameters ={case_set_id: 'all', gene_list: newOption.hugoGeneSymbol, cancer_study_list: ALL_TCGA_PANCANCER_STUDIES};
+            const studyList = this.geneStudyQuery.isComplete && this.geneStudyQuery.result.query;
+            parameters = {
+                case_set_id: 'all',
+                gene_list: newOption.hugoGeneSymbol,
+                cancer_study_list: studyList,
+            };
             route = "results/mutations";
         } else if (newOption.type === OptionType.PATIENT) {
             parameters = {studyId: newOption.studyId, caseId: newOption.patientId};
