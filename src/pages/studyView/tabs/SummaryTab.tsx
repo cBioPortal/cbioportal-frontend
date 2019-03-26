@@ -26,7 +26,7 @@ import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
-import {AnalysisGroup, ChartMeta, ChartType} from "../StudyViewUtils";
+import {ChartMeta, ChartType} from "../StudyViewUtils";
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -331,6 +331,34 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                             </ul>
                         </div>
                     </div>
+                }
+                {
+                    this.store.showSettingRestoreMsg &&
+                    <div>
+                        <div className="alert alert-info">
+                            <button type="button" className="close"
+                                    onClick={() => {
+                                        this.store.hideRestoreSettingsMsg = true;
+                                    }
+                                   }>&times;</button>
+                            You previously saved layout preferences have been applied. Undo?
+                            <button className='btn btn-primary btn-sm'
+                                    onClick={() => {
+                                        this.store.hideRestoreSettingsMsg = true;
+                                        this.store.undoUserSettings();
+                                    }}
+                                    style={{marginLeft: '10px'}}>Yes
+                            </button>
+
+                            <button className='btn btn-primary btn-sm'
+                                    onClick={() => {
+                                        this.store.hideRestoreSettingsMsg = true;
+                                    }}
+                                    style={{marginLeft: '10px'}}>No
+                            </button>
+                        </div>
+                    </div>
+
                 }
 
                 {!this.store.loadingInitialDataForSummaryTab &&
