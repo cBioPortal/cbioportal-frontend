@@ -67,7 +67,6 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                                                    alteredVsUnalteredMode={false}
                                                    selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
                                                    headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
-                                                   showMutexTendencyInTable={false}
                                                    showCNAInTable={true}
                     />
                 </div>
