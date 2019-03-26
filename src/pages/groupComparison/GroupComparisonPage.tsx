@@ -106,7 +106,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 this.store.showSurvivalTab
             ) {
                 return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.setTabId} className="primaryTabs mainTabs">
-                    <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlapping">
+                    <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
                         <Overlap store={this.store}/>
                     </MSKTab>
                     {
