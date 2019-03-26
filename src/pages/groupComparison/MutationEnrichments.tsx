@@ -64,6 +64,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                                                    group2Name={group2Name}
                                                    group1Description={`in ${group1Name} that have a mutation in the listed gene.`}
                                                    group2Description={`in ${group2Name} that have a mutation in the listed gene.`}
+                                                   alteredVsUnalteredMode={false}
                                                    selectedProfile={this.props.store.mutationEnrichmentProfile.result!}
                                                    headerName={this.props.store.mutationEnrichmentProfile.result!.name}
                                                    showMutexTendencyInTable={false}

@@ -8,7 +8,7 @@ import {
     SampleIdentifier,
     StudyViewFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
-import {CancerStudy, ClinicalAttribute, Gene, Sample} from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, ClinicalAttribute, Gene, PatientIdentifier, Sample} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
@@ -38,6 +38,8 @@ import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./Stud
 import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
 import MobxPromise from 'mobxpromise';
 import {getTextWidth} from "../../shared/lib/wrapText";
+import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
+import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 
 export const COLORS = [
     STUDY_VIEW_CONFIG.colors.theme.primary, STUDY_VIEW_CONFIG.colors.theme.secondary,
@@ -1377,4 +1379,28 @@ export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, n
         }
     }
     return getClinicalDataCountWithColorByClinicalDataCount(_.values(dataCountSet));
+}
+
+export function getSelectedGroupNames(
+    groups:Pick<StudyViewComparisonGroup, "name">[]
+) {
+    if (groups.length <= 2) {
+        return groups.map(group=>group.name).join(" and ");
+    } else {
+        return `${groups[0].name} and ${groups.length-1} other groups`;
+    }
+}
+
+export function getPatientIdentifiers(
+    groups:Pick<StudyViewComparisonGroup, "studies">[]
+) {
+    return _.uniqWith(
+        _.flattenDeep<PatientIdentifier>(
+            groups.map(group=>group.studies.map(study=>{
+                const studyId = study.id;
+                return study.patients.map(patientId=>({ studyId, patientId }));
+            }))
+        ),
+        (id1, id2)=>((id1.patientId === id2.patientId) && (id1.studyId === id2.studyId))
+    );
 }

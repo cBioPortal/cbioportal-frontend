@@ -95,7 +95,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                                 ticks: { size: 0 }
                             }} />
                         <VictoryLabel style={axisLabelStyles} text={"← " + this.props.xAxisLeftLabel} x={60} y={300}/>
-                        <VictoryLabel style={axisLabelStyles} text={this.props.xAxisRightLabel + " →"} x={200} y={300}/>
+                        <VictoryLabel style={axisLabelStyles} text={this.props.xAxisRightLabel + " →"} textAnchor="end" x={310} y={300}/>
                         <VictoryLabel style={axisLabelStyles} text="Significance →" x={320} y={210} angle={-90}/>
                         <VictoryScatter style={{ data: { fill: (d:any, active: any) => active ? "#FE9929" : 
                             d.qValue < 0.05 ? "#58ACFA" : "#D3D3D3", fillOpacity: 0.4 } }} 

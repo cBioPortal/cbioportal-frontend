@@ -56,7 +56,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     @action
     private showAddGroupPanel() {
         this.addGroupPanelOpen = true;
-        this._inputGroupName = getDefaultGroupName(this.props.store.filters);
+        this._inputGroupName = getDefaultGroupName(this.props.store.filters, this.props.store.entrezGeneIdToGene.result!);
     }
 
     @autobind
@@ -96,6 +96,16 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         this.props.store.toggleComparisonGroupMarkedForDeletion(group.uid);
     }
 
+    @autobind
+    private async renameGroup(newName:string, group:StudyViewComparisonGroup) {
+        const {name, ...rest} = group;
+        await comparisonClient.updateGroup(
+            group.uid,
+            { name: newName, ...rest}
+        );
+        this.props.store.notifyComparisonGroupsChange();
+    }
+
     private readonly groupsSection = MakeMobxView({
         await:()=>[
             this.props.store.comparisonGroups,
@@ -113,6 +123,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                                     store={this.props.store}
                                     markedForDeletion={this.props.store.isComparisonGroupMarkedForDeletion(group.uid)}
                                     restore={this.restoreGroup}
+                                    rename={this.renameGroup}
                                 />
                             ))
                         ) : (
@@ -155,12 +166,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                     style={{marginLeft:7}}
                     onClick={()=>{
                         this.props.store.clearAllFilters();
-                        this.props.store.updateChartSampleIdentifierFilter(
-                            UniqueKey.SELECTED_COMPARISON_GROUPS,
-                            getSampleIdentifiers(
-                                getSelectedGroups(this.props.store.comparisonGroups.result!, this.props.store)
-                            )
-                        );
+                        this.props.store.updateComparisonGroupsFilter();
                     }}
                 >Select</button>
             );
@@ -187,7 +193,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                             await sleepUntil(()=>!!(comparisonWindow as any).routingStore);
 
                             // save comparison session, and get id
-                            const groups = this.props.store.comparisonGroups.result!;
+                            const groups = getSelectedGroups(this.props.store.comparisonGroups.result!, this.props.store);
                             const {id} = await comparisonClient.addComparisonSession({groups});
 
                             // redirect window to correct URL
@@ -325,7 +331,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                 <button
                     className="btn btn-sm btn-primary"
                     onClick={this.showAddGroupPanel}
-                    disabled={!selectedSamples}
+                    disabled={!selectedSamples || !this.props.store.entrezGeneIdToGene.isComplete}
                     style={{width:"100%"}}
                 >+ Add{selectedSamples ? ` ${selectedSamples.length}` : ""} selected samples to a group
                 </button>

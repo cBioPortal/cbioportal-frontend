@@ -100,9 +100,9 @@ import {
     finalizeStudiesAttr,
     StudyViewComparisonGroup,
     getNumberAttributeGroupFilters,
-    getStringAttributeGroupFilters, sortDataIntoQuartiles
+    getStringAttributeGroupFilters, sortDataIntoQuartiles, getSampleIdentifiers
 } from "../groupComparison/GroupComparisonUtils";
-import {getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
+import {getSelectedGroups, getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import client from "../../shared/api/cbioportalClientInstance";
 import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
@@ -609,13 +609,20 @@ export class StudyViewPageStore {
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
-        const comparisonWindow = window.open(getComparisonLoadingUrl({
+        const comparisonWindow:any = window.open(getComparisonLoadingUrl({
             phase: LoadingPhase.DOWNLOADING_GROUPS,
             clinicalAttributeName: params.clinicalAttribute.displayName
         }), "_blank");
 
-        // wait until the new window has routingStore available
-        await sleepUntil(()=>!!(comparisonWindow as any).routingStore);
+        // wait until the new window has routingStore available, or its closed
+        await sleepUntil(()=>{
+            return comparisonWindow.closed || !!comparisonWindow.routingStore
+        });
+
+        if (comparisonWindow.closed) {
+            // cancel if the windows already closed
+            return;
+        }
 
         // save comparison session, and get id
         let sessionId:string;
@@ -627,7 +634,9 @@ export class StudyViewPageStore {
                         params.clinicalAttribute,
                         params.clinicalAttributeValues!,
                         (phase:LoadingPhase)=>{
-                            (comparisonWindow as any).routingStore.updateRoute({phase}, undefined, false);
+                            if (!comparisonWindow.closed) {
+                                comparisonWindow.routingStore.updateRoute({phase}, undefined, false);
+                            }
                         }
                     );
                 break;
@@ -636,14 +645,18 @@ export class StudyViewPageStore {
                     await this.createNumberAttributeComparisonSession(
                         params.clinicalAttribute,
                         (phase:LoadingPhase)=>{
-                            (comparisonWindow as any).routingStore.updateRoute({phase}, undefined, false);
+                            if (!comparisonWindow.closed) {
+                                comparisonWindow.routingStore.updateRoute({phase}, undefined, false);
+                            }
                         }
                     );
                 break;
         }
 
-        // redirect window to correct URL
-        redirectToComparisonPage(comparisonWindow!, { sessionId });
+        if (!comparisonWindow.closed) {
+            // redirect window to correct URL
+            redirectToComparisonPage(comparisonWindow!, { sessionId });
+        }
     }
     // < / comparison groups code>
 
@@ -879,8 +892,25 @@ export class StudyViewPageStore {
     public customChartFilterSet =  observable.map<string[]>();
 
     @observable numberOfSelectedSamplesInCustomSelection: number = 0;
-    @computed get numberOfSelectedSamplesInComparisonGroupSelection() {
-        return this.getChartSampleIdentifiersFilter(UniqueKey.SELECTED_COMPARISON_GROUPS).length;
+    @observable _filterComparisonGroups:StudyViewComparisonGroup[] = [];
+
+    public get filterComparisonGroups() {
+        return this._filterComparisonGroups;
+    }
+
+    @action public updateComparisonGroupsFilter() {
+        onMobxPromise(
+            this.comparisonGroups,
+            comparisonGroups=>{
+                this._filterComparisonGroups = getSelectedGroups(comparisonGroups, this);
+                this.updateChartSampleIdentifierFilter(
+                    UniqueKey.SELECTED_COMPARISON_GROUPS,
+                    getSampleIdentifiers(
+                        this._filterComparisonGroups
+                    )
+                );
+            }
+        )
     }
 
     @observable private _customCharts = observable.shallowMap<ChartMeta>();
@@ -2874,6 +2904,20 @@ export class StudyViewPageStore {
         },
         onError: (error => {}),
         default: []
+    });
+    
+    readonly entrezGeneIdToGene = remoteData({
+        await:()=>[this.mutatedGeneData, this.cnaGeneData],
+        invoke:()=>{
+            const ret:{[entrez:number]:GeneIdentifier} = {};
+            for (const d of this.mutatedGeneData.result!) {
+                ret[d.entrezGeneId] = d;
+            }
+            for (const d of this.cnaGeneData.result!) {
+                ret[d.entrezGeneId] = d;
+            }
+            return Promise.resolve(ret);
+        }
     });
 
     readonly cnSegments = remoteData<CopyNumberSeg[]>({
