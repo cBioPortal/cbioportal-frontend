@@ -89,7 +89,7 @@ export default class QuickSearch extends React.Component {
 
     // tslint:disable-next-line:member-ordering
     readonly geneStudyQueryVirtualStudy = remoteData(async () => {
-        const virtualStudyId = AppConfig.serverConfig.quick_search_gene_query_session_id;
+        const virtualStudyId = AppConfig.serverConfig.default_cross_cancer_study_session_id;
 
         if (ServerConfigHelpers.sessionServiceIsEnabled() && virtualStudyId) {
             try {
@@ -118,8 +118,8 @@ export default class QuickSearch extends React.Component {
             } else {
                 return Promise.resolve({
                     type: GeneStudyQueryType.STUDY_LIST,
-                    query: AppConfig.serverConfig.quick_search_gene_query_cancer_study_list,
-                    name: AppConfig.serverConfig.quick_search_gene_query_cancer_study_list_name,
+                    query: AppConfig.serverConfig.default_cross_cancer_study_list,
+                    name: AppConfig.serverConfig.default_cross_cancer_study_list_name,
                 });
             }
         }
