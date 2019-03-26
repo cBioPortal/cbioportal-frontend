@@ -17,6 +17,7 @@ import { getMobxPromiseGroupStatus } from "shared/lib/getMobxPromiseGroupStatus"
 import { scatterPlotSize } from "shared/components/plots/PlotUtils";
 import { ClinicalDataEnrichmentWithQ } from "./GroupComparisonUtils";
 import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCategoryBarPlot";
+import { STUDY_VIEW_CONFIG } from "pages/studyView/StudyViewConfig";
 
 export interface IClinicalDataProps {
     store: GroupComparisonStore
@@ -267,14 +268,14 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     }
 
     @computed get categoryToColor() {
-        return _.reduce(this.props.store.uidToGroup.result!,(acc, next, key)=>{
-            acc[key] = next.color
+        //add group colors and reserved category colors
+        return _.reduce(this.props.store.uidToGroup.result!, (acc, next) => {
+            acc[next.name] = next.color;
             return acc;
-        },{} as {[id:string]:string}); 
+        }, STUDY_VIEW_CONFIG.colors.reservedValue);
     }
 
-    @autobind
-    private plot() {
+    @computed get plot() {
         if (this.tableDataStore.allData.length === 0 || !this.highlightedRow) {
             return <span></span>;
         }
@@ -356,7 +357,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     private toolbar() {
         return (
             <div style={{ textAlign: "center", position: "relative" }}>
-                <div>
+                <div style={{float:'left'}}>
                     <label className="checkbox-inline">
                         <input
                             type="checkbox"
@@ -398,13 +399,11 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         }
         return (
             <div className="clearfix" style={{ display: "flex", marginTop: 6 }}>
-                <div style={{ width: "50%" }}>
+                <div style={{ width: "600px" }}>
                     <ClinicalDataEnrichmentsTable dataStore={this.tableDataStore} />
                 </div>
-                <div style={{ display: 'inline-block' }}>
-                    <Observer>
-                        {this.plot}
-                    </Observer>
+                <div className="inlineBlock">
+                    {this.plot}
                 </div>
             </div>
         )
