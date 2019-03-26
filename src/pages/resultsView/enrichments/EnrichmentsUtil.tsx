@@ -37,11 +37,20 @@ export function formatPercentage(count: number, percentage: number): string {
     return count + " (" + percentage.toFixed(2) + "%)";
 }
 
+function volcanoPlotYCoord(pValue:number) {
+    if (pValue === 0 || Math.log10(pValue) < -10) {
+        return 10;
+    } else {
+        return -Math.log10(pValue);
+    }
+}
+
 export function getAlterationScatterData(alterationEnrichments: AlterationEnrichmentRow[], queryGenes: string[]): any[] {
 
     return alterationEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((alterationEnrichment) => {
         return {
-            x: roundLogRatio(Number(alterationEnrichment.logRatio), 10), y: -Math.log10(alterationEnrichment.pValue),
+            x: roundLogRatio(Number(alterationEnrichment.logRatio), 10),
+            y: volcanoPlotYCoord(alterationEnrichment.pValue),
             hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
             pValue: alterationEnrichment.pValue,
             qValue: alterationEnrichment.qValue,
@@ -69,7 +78,7 @@ export function getExpressionScatterData(expressionEnrichments: ExpressionEnrich
     return expressionEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((expressionEnrichment) => {
         return {
             x: expressionEnrichment.logRatio,
-            y: -Math.log10(expressionEnrichment.pValue), 
+            y: volcanoPlotYCoord(expressionEnrichment.pValue),
             hugoGeneSymbol: expressionEnrichment.hugoGeneSymbol,
             entrezGeneId: expressionEnrichment.entrezGeneId,
             pValue: expressionEnrichment.pValue,
