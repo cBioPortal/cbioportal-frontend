@@ -38,17 +38,19 @@ import {PatientSurvival} from "shared/model/PatientSurvival";
 import request from "superagent";
 import {getPatientSurvivals} from "pages/resultsView/SurvivalStoreHelper";
 import {SURVIVAL_CHART_ATTRIBUTES} from "pages/resultsView/survival/SurvivalChart";
-import {COLORS} from "pages/studyView/StudyViewUtils";
+import {COLORS, pickClinicalDataColors} from "pages/studyView/StudyViewUtils";
 import {
     AlterationEnrichment,
     Group,
-    MolecularProfileCaseIdentifier
+    MolecularProfileCaseIdentifier,
+    ClinicalDataCount
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import {Session} from "../../shared/api/ComparisonGroupClient";
 import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {getStudiesAttr} from "./comparisonGroupManager/ComparisonGroupManagerUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
+import { STUDY_VIEW_CONFIG } from "pages/studyView/StudyViewConfig";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples",
@@ -109,15 +111,13 @@ export default class GroupComparisonStore {
 
             const ret:ComparisonGroup[] = [];
             const sampleSet = this.sampleSet.result!;
-            let colorIndex = 0;
+
+            let defaultGroupColors = pickClinicalDataColors(
+                _.map(this._session.result!.groups,group=>({value: group.name})) as any);
 
             this._session.result!.groups.forEach((groupData, index)=>{
                 // assign color to group if no color given
-                let color = groupData.color;
-                if (!color) {
-                    color = COLORS[colorIndex];
-                    colorIndex += 1;
-                }
+                let color = groupData.color || defaultGroupColors[groupData.name];
 
                 const { nonExistentSamples, studies} = finalizeStudiesAttr(groupData, sampleSet);
 
