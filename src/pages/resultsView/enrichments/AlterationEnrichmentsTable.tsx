@@ -120,18 +120,16 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP1] = {
-            name: `Samples with alteration in ${this.props.group1Name}`,
+            name: `In ${this.props.group1Name}`,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
             tooltip: <span>Number (percentage) of samples {this.props.group1Description}</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.alteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.alteredCount, d.alteredPercentage)
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP2] = {
-            name: `Samples with alteration in ${this.props.group2Name}`,
+            name: `In ${this.props.group2Name}`,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
             tooltip: <span>Number (percentage) of samples {this.props.group2Description}</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.unalteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.unalteredCount, d.unalteredPercentage)
