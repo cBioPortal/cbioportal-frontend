@@ -50,21 +50,24 @@ const COLUMNS = [
         render: (d: ClinicalDataEnrichmentWithQ) => <span style={{ whiteSpace: 'nowrap' }}>{toConditionalPrecision(d.score, 3, 0.01)}</span>,
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.score,
         download: (d: ClinicalDataEnrichmentWithQ) => toConditionalPrecision(d.score, 3, 0.01),
-        width: 100
+        width: 100,
+        tooltip:<span>Statistical Score, derived from Chi-Squared test or Kruskal-Wallis test</span>
     },
     {
         name: ClinicalDataEnrichmentTableColumnType.P_VALUE,
         render: (d: ClinicalDataEnrichmentWithQ) => <span style={{ whiteSpace: 'nowrap' }}>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.pValue,
         download: (d: ClinicalDataEnrichmentWithQ) => toConditionalPrecision(d.pValue, 3, 0.01),
-        width: 100
+        width: 100,
+        tooltip:<span>p-value of null Hypothesis, derived from Chi-Squared test or Kruskal-Wallis test</span>
     },
     {
         name: ClinicalDataEnrichmentTableColumnType.Q_VALUE,
         render: (d: ClinicalDataEnrichmentWithQ) => <span style={{ whiteSpace: 'nowrap' }}>{toConditionalPrecision(d.qValue, 3, 0.01)}</span>,
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.qValue,
         download: (d: ClinicalDataEnrichmentWithQ) => toConditionalPrecision(d.qValue, 3, 0.01),
-        width: 100
+        width: 100,
+        tooltip:<span>Derived from Benjamini-Hochberg FDR correction procedure.</span>
     }
 ];
 
