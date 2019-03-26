@@ -140,7 +140,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns[AlterationEnrichmentTableColumnType.LOG_RATIO] = {
             name: "Log Ratio",
             render: (d: AlterationEnrichmentRow) => <span>{formatLogOddsRatio(d.logRatio)}</span>,
-            tooltip: <span>Log2 based ratio of (pct in altered / pct in unaltered)</span>,
+            tooltip: <span>Log2 based ratio of (pct in {this.props.group1Name}/ pct in {this.props.group2Name})</span>,
             sortBy: (d: AlterationEnrichmentRow) => Number(d.logRatio),
             download: (d: AlterationEnrichmentRow) => formatLogOddsRatio(d.logRatio)
         };
