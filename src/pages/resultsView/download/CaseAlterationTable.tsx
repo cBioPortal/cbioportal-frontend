@@ -145,13 +145,28 @@ export function computeAlterationTypes(alterationData: ICaseAlteration[]): strin
     return types;
 }
 
+// export function getPseudoOqlSummaryByAlterationTypes(oqlData: {[oqlLine: string]: IOqlData}, oqlLine: string, alterationTypes: string[]) : PseudoOqlSummary {
+//     const alteratedPseudoOqlSummarys = _.chain(alterationTypes)
+//         .map(type => generatePseudoOqlSummary(oqlData, oqlLine, type))
+//         .filter((summary) => summary ? summary.summaryClass === styles.alterationSpan : false)
+//         .value();
+//     const alteratedPseudoOqlSummaryContent = _.map(alteratedPseudoOqlSummarys, (summary : PseudoOqlSummary)=>summary.summaryContent).join(",");
+//     return {summaryContent: alteratedPseudoOqlSummaryContent, summaryClass: styles.alterationSpan};
+// }
+
 export function getPseudoOqlSummaryByAlterationTypes(oqlData: {[oqlLine: string]: IOqlData}, oqlLine: string, alterationTypes: string[]) : PseudoOqlSummary {
-    const alteratedPseudoOqlSummarys = _.chain(alterationTypes)
-        .map(type => generatePseudoOqlSummary(oqlData, oqlLine, type))
-        .filter((summary) => summary ? summary.summaryClass === styles.alterationSpan : false)
-        .value();
-    const alteratedPseudoOqlSummaryContent = _.map(alteratedPseudoOqlSummarys, (summary : PseudoOqlSummary)=>summary.summaryContent).join(",");
-    return {summaryContent: alteratedPseudoOqlSummaryContent, summaryClass: styles.alterationSpan};
+    const pseudoOqlSummarys = _.map(alterationTypes, (type) => generatePseudoOqlSummary(oqlData, oqlLine, type)).filter((summary) => summary != undefined);
+    const alteredPseudoOqlSummarys = _.filter(pseudoOqlSummarys, (summary) => summary!.summaryClass === styles.alterationSpan);
+    const noAlterationPseudoOqlSummarys = _.filter(pseudoOqlSummarys, (summary) => summary!.summaryClass === styles.noAlterationSpan);
+    const notProfiledPseudoOqlSummarys = _.filter(pseudoOqlSummarys, (summary) => summary!.summaryClass === styles.notProfiledSpan);
+
+    const alteratedPseudoOqlSummaryContent = _.map(alteredPseudoOqlSummarys, (summary : PseudoOqlSummary)=>summary.summaryContent).join(",");
+    const notProfiledPseudoOqlSummarysContent = notProfiledPseudoOqlSummarys.length ? notProfiledPseudoOqlSummarys[0]!.summaryContent : undefined;
+    const noAlterationPseudoOqlSummarysContent = noAlterationPseudoOqlSummarys.length ? noAlterationPseudoOqlSummarys[0]!.summaryContent : undefined;
+    const alteratedPseudoOqlSummaryClass = alteratedPseudoOqlSummaryContent ? styles.alterationSpan : undefined;
+    const notProfiledPseudoOqlSummarysClass = notProfiledPseudoOqlSummarysContent ? styles.notProfiledSpan : undefined;
+    const noAlterationPseudoOqlSummarysClass = noAlterationPseudoOqlSummarysContent ? styles.noAlterationSpan : undefined;
+    return {summaryContent: alteratedPseudoOqlSummaryContent || notProfiledPseudoOqlSummarysContent || noAlterationPseudoOqlSummarysContent || "" , summaryClass: alteratedPseudoOqlSummaryClass || notProfiledPseudoOqlSummarysClass || noAlterationPseudoOqlSummarysClass};
 }
 
 class CaseAlterationTableComponent extends LazyMobXTable<ICaseAlteration> {}
@@ -198,14 +213,14 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
         ];
 
         const geneSet : {[x: string]: OQLLineFilterOutput<AnnotatedExtendedAlteration>} = {};
-        this.props.oqls.forEach(oql => {
+        _.forEach(_.cloneDeep(this.props.oqls), (oql => {
             if (oql.gene in geneSet) {
                 geneSet[oql.gene].oql_line += oql.oql_line;
             }
             else {
                 geneSet[oql.gene] = oql;
             }
-        });
+        }));
         
         _.forEach(geneSet, (oql) => {
             const alterationTypes = this.props.alterationTypes;
@@ -229,9 +244,10 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
 
         this.props.oqls.forEach(oql => {
             //add column for each gene alteration combination
-            const alterationTypes = oql.parsed_oql_line.alterations ? oql.parsed_oql_line.alterations.map((alteration) => {
-                return alteration.alteration_type.toUpperCase();
-            }) : [];
+            const alterationTypes = oql.parsed_oql_line.alterations ? 
+                _.uniq(_.map(oql.parsed_oql_line.alterations, (alteration) => {
+                    return alteration.alteration_type.toUpperCase();
+                })) : [];
             columns.push({
                 name: `${oql.oql_line}`,
                 tooltip: <span>{oql.oql_line}</span>,
