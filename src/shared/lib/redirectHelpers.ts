@@ -85,7 +85,7 @@ export function handleLinkOut() {
             AppConfig.serverConfig.default_cross_cancer_study_list
     };
 
-    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(data, "/results/mutations", clear=true, replace=true);
+    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(data, "/results/mutations", true, true);
 }
 
 export function handleStudyDO(){
