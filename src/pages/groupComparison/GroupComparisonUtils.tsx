@@ -76,7 +76,16 @@ export function getCombinations(groups: { uid: string, cases: string[] }[]) {
 export const OVERLAP_GROUP_COLOR = "#CCCCCC";
 
 export function getStackedBarData(groups:{ uid: string, cases:string[] }[], uidToGroup:{[uid:string]:ComparisonGroup}) {
-    const overlappingCases = _.intersection(...groups.map(group=>group.cases));
+    const counts = new ComplexKeyCounter();
+    for (const group of groups) {
+        for (const caseId of group.cases) {
+            counts.increment({ caseId });
+        }
+    }
+    const overlappingCases =
+        counts.entries()
+            .filter(e=>(e.value > 1))
+            .map(e=>e.key.caseId as string);
 
     const ret = groups.map(group=>[{
         groupName: uidToGroup[group.uid].name,
