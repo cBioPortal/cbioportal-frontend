@@ -25,6 +25,8 @@ export type IFixedHeaderTableProps<T> = {
     sortDirection?: SortDirection;
     width?: number;
     height?: number;
+    headerHeight? :number;
+    rowHeight? :number;
     showSelectSamples?: boolean;
     afterSelectingRows?: () => void;
     showControls?: boolean;
@@ -60,6 +62,8 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         autoFocusSearchAfterRendering: false,
         width: 398,
         height: 350,
+        headerHeight: 25,
+        rowHeight: 25,
         showSelectableNumber: false,
         sortBy: ''
     };
@@ -244,12 +248,12 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
-                {this.props.showControlsAtTop && this.getControls()}
+                {this.props.showControls && this.props.showControlsAtTop && this.getControls()}
                 <RVTable
                     width={this.props.width!}
                     height={this.props.height!}
-                    headerHeight={25}
-                    rowHeight={25}
+                    headerHeight={this.props.headerHeight!}
+                    rowHeight={this.props.rowHeight!}
                     rowCount={this._store.dataStore.sortedFilteredData.length}
                     rowGetter={this.rowGetter}
                     className={styles.studyViewTablesBody}
@@ -272,7 +276,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                         })
                     }
                 </RVTable>
-                {!this.props.showControlsAtTop && this.getControls()}
+                {this.props.showControls && !this.props.showControlsAtTop && this.getControls()}
             </div>
         );
     }
