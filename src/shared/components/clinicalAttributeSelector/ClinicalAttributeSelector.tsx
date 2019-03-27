@@ -71,25 +71,28 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         invoke: ()=>{
             const totalSampleCount = this.props.store.samples.result!.length;
             const clinicalAttributeIdToAvailableSampleCount = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
-            return Promise.resolve(_.reduce(this.sortedClinicalAttributes.result!, (options:{label:string, value:string}[], next:ExtendedClinicalAttribute)=>{
-                let sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
-                if (sampleCount === undefined && next.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix)) {
-                    // for 'Profiled In' tracks, we have data for all the samples - gene panel data
-                    // but these tracks have special, locally-constructed clinical attribute ids, and aren't placed in that map.
-                    // TODO: maybe they should be?
-                    sampleCount = totalSampleCount;
-                }
-                const newOption = {
-                    label: `${next.displayName} (${getPercentage(sampleCount/totalSampleCount, 0)})`,
-                    value: next.clinicalAttributeId,
-                    disabled: false
-                };
-                if (sampleCount === 0) {
-                    newOption.disabled = true;
-                }
-                options.push(newOption);
-                return options;
-            }, []));
+            return Promise.resolve(
+                _.uniqBy(this.sortedClinicalAttributes.result!, attr=>attr.clinicalAttributeId)
+                .reduce((options:{label:string, value:string}[], next:ExtendedClinicalAttribute)=>{
+                    let sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
+                    if (sampleCount === undefined && next.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix)) {
+                        // for 'Profiled In' tracks, we have data for all the samples - gene panel data
+                        // but these tracks have special, locally-constructed clinical attribute ids, and aren't placed in that map.
+                        // TODO: maybe they should be?
+                        sampleCount = totalSampleCount;
+                    }
+                    const newOption = {
+                        label: `${next.displayName} (${getPercentage(sampleCount/totalSampleCount, 0)})`,
+                        value: next.clinicalAttributeId,
+                        disabled: false
+                    };
+                    if (sampleCount === 0) {
+                        newOption.disabled = true;
+                    }
+                    options.push(newOption);
+                    return options;
+                }, [])
+            );
         }
     });
 
