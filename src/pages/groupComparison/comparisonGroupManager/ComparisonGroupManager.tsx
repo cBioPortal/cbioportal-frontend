@@ -4,7 +4,12 @@ import {observer} from "mobx-react";
 import {StudyViewPageStore, UniqueKey} from "../../studyView/StudyViewPageStore";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
-import {getDefaultGroupName, getSampleIdentifiers, StudyViewComparisonGroup} from "../GroupComparisonUtils";
+import {
+    DUPLICATE_GROUP_NAME_MSG,
+    getDefaultGroupName,
+    getSampleIdentifiers,
+    StudyViewComparisonGroup
+} from "../GroupComparisonUtils";
 import {getComparisonLoadingUrl, redirectToComparisonPage} from "../../../shared/api/urls";
 import styles from "../styles.module.scss";
 import ReactSelect from "react-select";
@@ -17,6 +22,7 @@ import ErrorMessage from "../../../shared/components/ErrorMessage";
 import GroupCheckbox from "./GroupCheckbox";
 import {sleepUntil} from "../../../shared/lib/TimeUtils";
 import {LoadingPhase} from "../GroupComparisonLoading";
+import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
 export interface IComparisonGroupManagerProps {
     store:StudyViewPageStore;
@@ -114,6 +120,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         render:()=>{
             if (this.props.store.comparisonGroups.result!.length > 0) {
                 // show this component if there are groups, and if filteredGroups is complete
+                const allGroupNames = this.props.store.comparisonGroups.result!.map(group=>group.name);
                 return (
                     <div className={styles.groupCheckboxes}>
                         {this.filteredGroups.result!.length > 0 ? (
@@ -124,6 +131,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                                     markedForDeletion={this.props.store.isComparisonGroupMarkedForDeletion(group.uid)}
                                     restore={this.restoreGroup}
                                     rename={this.renameGroup}
+                                    allGroupNames={allGroupNames}
                                 />
                             ))
                         ) : (
@@ -245,6 +253,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         const inputWidth = 235;
         const createOrAddButtonWidth = 58;
         const selectedSamples = this.props.store.selectedSamples.isComplete ? this.props.store.selectedSamples.result :  undefined;
+        const allGroupNames = this.props.store.comparisonGroups.isComplete ? this.props.store.comparisonGroups.result!.map(group=>group.name) : undefined;
         if (this.addGroupPanelOpen) {
             contents = [
                 <div style={{display:"flex", flexDirection:"row", justifyContent:"space-between", width:"100%", marginTop:3}}>
@@ -260,14 +269,32 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                 <div style={{width:"100%", marginTop:7}}>
                     <h6 style={{marginTop:5}}>Create new group:</h6>
                     <div style={{display:"flex", flexDirection:"row", justifyContent:"space-between", alignItems:"center", width:"100%"}}>
-                        <input
-                            className="form-control"
-                            style={{width:inputWidth}}
-                            type="text"
-                            placeholder="Enter a name for your new group.."
-                            value={this.inputGroupName}
-                            onChange={this.onChangeInputGroupName}
-                        />
+                        <DefaultTooltip
+                            visible={allGroupNames && (allGroupNames.indexOf(this.inputGroupName) > -1)}
+                            overlay={
+                                <div>
+                                    <i
+                                        className="fa fa-md fa-exclamation-triangle"
+                                        style={{
+                                            color: "#BB1700",
+                                            marginRight: 5
+                                        }}
+                                    />
+                                    <span>
+                                        {DUPLICATE_GROUP_NAME_MSG}
+                                    </span>
+                                </div>
+                            }
+                        >
+                            <input
+                                className="form-control"
+                                style={{width:inputWidth}}
+                                type="text"
+                                placeholder="Enter a name for your new group.."
+                                value={this.inputGroupName}
+                                onChange={this.onChangeInputGroupName}
+                            />
+                        </DefaultTooltip>
                         <button
                             className="btn btn-sm btn-primary"
                             style={{width:createOrAddButtonWidth}}
@@ -282,7 +309,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                                     this.cancelAddGroup();
                                 }
                             }}
-                            disabled={!selectedSamples || this.inputGroupName.length === 0}
+                            disabled={!selectedSamples || this.inputGroupName.length === 0 || !allGroupNames || (allGroupNames.indexOf(this.inputGroupName) > -1)}
                         >Create</button>
                     </div>
                 </div>
