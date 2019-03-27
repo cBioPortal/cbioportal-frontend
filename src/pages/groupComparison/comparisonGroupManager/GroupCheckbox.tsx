@@ -1,7 +1,7 @@
 import * as React from "react";
 import {observer} from "mobx-react";
 import {
-    caseCounts,
+    caseCounts, DUPLICATE_GROUP_NAME_MSG,
     getNumPatients,
     getNumSamples,
     MissingSamplesMessage,
@@ -14,6 +14,7 @@ import {computed, observable} from "mobx";
 import ErrorIcon from "../../../shared/components/ErrorIcon";
 import styles from "../styles.module.scss"
 import {SyntheticEvent} from "react";
+import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
 export interface IGroupCheckboxProps {
     group:StudyViewComparisonGroup;
@@ -21,6 +22,7 @@ export interface IGroupCheckboxProps {
     markedForDeletion:boolean;
     restore:(group:StudyViewComparisonGroup)=>void;
     rename:(newName:string, currentGroup:StudyViewComparisonGroup)=>void;
+    allGroupNames:string[];
 }
 
 @observer
@@ -74,6 +76,19 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
         return `${this.props.group.name} (${caseCounts(getNumSamples(this.props.group), getNumPatients(this.props.group))})`;
     }
 
+    @computed get editSubmitError() {
+        if (this.nameInput.length === 0) {
+            return { message: "Please enter a name."};
+        } else if (this.nameInput === this.props.group.name) {
+            // Non-null object signifies that submit should be disabled, but no message specified means no tooltip.
+            return {};
+        } else if (this.props.allGroupNames.indexOf(this.nameInput) > -1) {
+            return { message: DUPLICATE_GROUP_NAME_MSG};
+        } else {
+            return null;
+        }
+    }
+
     render() {
         const group = this.props.group;
         let checkboxAndLabel;
@@ -89,12 +104,30 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
                         onClick={this.onCheckboxClick}
                     />
                     { this.editingName ?
-                        <input
-                            type="text"
-                            value={this.nameInput}
-                            onChange={this.handleNameInputChange}
-                            style={{width:174}}
-                        /> :
+                        <DefaultTooltip
+                            visible={!!(this.editSubmitError && this.editSubmitError.message)}
+                            overlay={
+                                <div>
+                                    <i
+                                        className="fa fa-md fa-exclamation-triangle"
+                                        style={{
+                                            color: "#BB1700",
+                                            marginRight: 5
+                                        }}
+                                    />
+                                    <span>
+                                {this.editSubmitError && this.editSubmitError.message}
+                            </span>
+                                </div>
+                            }
+                        >
+                            <input
+                                type="text"
+                                value={this.nameInput}
+                                onChange={this.handleNameInputChange}
+                                style={{width:174}}
+                            />
+                        </DefaultTooltip>:
                         this.label
                     }
                 </label></div>
@@ -107,7 +140,7 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
                 <button
                     className="btn btn-xs btn-primary"
                     onClick={this.onEditSubmit}
-                    disabled={this.nameInput.length === 0}
+                    disabled={!!this.editSubmitError}
                     style={{marginRight:3}}
                 >
                     Save

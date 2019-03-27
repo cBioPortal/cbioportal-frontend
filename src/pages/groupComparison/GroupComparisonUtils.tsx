@@ -344,6 +344,8 @@ export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
 export const SURVIVAL_TOO_MANY_GROUPS_MSG =
     "We can't show survival for more than 10 groups. Please deselect groups in the 'Active Groups' section.";
 
+export const DUPLICATE_GROUP_NAME_MSG = "Another group already has this name.";
+
 export function getDefaultGroupName(
     filters:StudyViewFilter,
     entrezGeneIdToGene:{[entrez:number]:GeneIdentifier}
