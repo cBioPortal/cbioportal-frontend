@@ -14,6 +14,7 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
+import classNames from "classnames";
 
 export interface IAlterationEnrichmentTableProps {
     columns?: AlterationEnrichmentTableColumnType[];
@@ -120,18 +121,16 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP1] = {
-            name: `Samples with alteration in ${this.props.group1Name}`,
+            name: `In ${this.props.group1Name}`,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
             tooltip: <span>Number (percentage) of samples {this.props.group1Description}</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.alteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.alteredCount, d.alteredPercentage)
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP2] = {
-            name: `Samples with alteration in ${this.props.group2Name}`,
+            name: `In ${this.props.group2Name}`,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
             tooltip: <span>Number (percentage) of samples {this.props.group2Description}</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.unalteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.unalteredCount, d.unalteredPercentage)
@@ -140,7 +139,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns[AlterationEnrichmentTableColumnType.LOG_RATIO] = {
             name: "Log Ratio",
             render: (d: AlterationEnrichmentRow) => <span>{formatLogOddsRatio(d.logRatio)}</span>,
-            tooltip: <span>Log2 based ratio of (pct in altered / pct in unaltered)</span>,
+            tooltip: <span>Log2 based ratio of (pct in {this.props.group1Name}/ pct in {this.props.group2Name})</span>,
             sortBy: (d: AlterationEnrichmentRow) => Number(d.logRatio),
             download: (d: AlterationEnrichmentRow) => formatLogOddsRatio(d.logRatio)
         };
@@ -163,11 +162,9 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.TENDENCY] = {
             name: this.props.mutexTendency ? "Tendency" : "Enriched in",
-            render: (d: AlterationEnrichmentRow) => <div className={styles.Tendency}>
-                {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.group1Name, this.props.group2Name)}
-                {d.qValue < 0.05 ? <Badge style={{
-                    backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
-                }}>Significant</Badge> : ""}</div>,
+            render: (d: AlterationEnrichmentRow) => <div className={classNames(styles.Tendency, {[styles.Significant]:(d.qValue < 0.05)})}>
+                {this.props.mutexTendency ? calculateAlterationTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.group1Name, this.props.group2Name)}
+                </div>,
             tooltip: 
                 <table>
                     <tr>

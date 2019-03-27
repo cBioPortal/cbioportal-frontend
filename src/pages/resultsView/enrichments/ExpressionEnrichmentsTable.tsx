@@ -12,6 +12,7 @@ import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
+import classNames from "classnames";
 
 export interface IExpressionEnrichmentTableProps {
     columns?: ExpressionEnrichmentTableColumnType[];
@@ -139,7 +140,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.LOG_RATIO] = {
             name: "Log Ratio",
             render: (d: ExpressionEnrichmentRow) => <span>{formatLogOddsRatio(d.logRatio)}</span>,
-            tooltip: <span>Log2 based ratio of (mean in altered / mean in unaltered)</span>,
+            tooltip: <span>Log2 based ratio of (mean in {this.props.group1Name} / mean in {this.props.group2Name})</span>,
             sortBy: (d: ExpressionEnrichmentRow) => Number(d.logRatio),
             download: (d: ExpressionEnrichmentRow) => formatLogOddsRatio(d.logRatio)
         };
@@ -162,11 +163,9 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
 
         columns[ExpressionEnrichmentTableColumnType.TENDENCY] = {
             name: this.props.mutexTendency ? "Tendency" : "Enriched in",
-            render: (d: ExpressionEnrichmentRow) => <div className={styles.Tendency}>
+            render: (d: ExpressionEnrichmentRow) => <div className={classNames(styles.Tendency, {[styles.Significant]:(d.qValue < 0.05)})}>
                 {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.group1Name, this.props.group2Name)}
-                {d.qValue < 0.05 ? <Badge style={{
-                    backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
-                }}>Significant</Badge> : ""}</div>,
+                </div>,
             tooltip: 
                 <table>
                     <tr>

@@ -28,8 +28,8 @@ export interface IExpressionEnrichmentContainerProps {
     group2Name?:string;
     group1Description?:string;
     group2Description?:string;
+    alteredVsUnalteredMode?:boolean;
     store?: ResultsViewPageStore;
-    showMutexTendencyInTable?:boolean;
 }
 
 @observer
@@ -40,7 +40,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         group2Name: "unaltered group",
         group1Description: "samples that have alterations in the query gene(s).",
         group2Description: "samples that do not have alterations in the query gene(s).",
-        showMutexTendencyInTable: true
+        alteredVsUnalteredMode:true
     };
 
     @observable overExpressedFilter: boolean = true;
@@ -115,6 +115,30 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         }
     );
 
+    @computed get volcanoPlotLabels() {
+        if (this.props.alteredVsUnalteredMode) {
+            return ["Under-expressed", "Over-expressed"];
+        } else {
+            return [this.props.group2Name!, this.props.group1Name!];
+        }
+    }
+
+    @computed get group1CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Over-expressed";
+        } else {
+            return `Enriched in ${this.props.group1Name!}`;
+        }
+    }
+
+    @computed get group2CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Under-expressed";
+        } else {
+            return `Enriched in ${this.props.group2Name!}`;
+        }
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
@@ -134,8 +158,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         return (
             <div className={styles.Container}>
                 <div className={styles.LeftColumn}>
-                    <MiniScatterChart data={data} 
-                        xAxisLeftLabel="Under-expressed" xAxisRightLabel="Over-expressed" xAxisDomain={Math.ceil(Math.abs(maxData.x))} 
+                    <MiniScatterChart data={data}
+                        xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={Math.ceil(Math.abs(maxData.x))}
                         xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
                         onSelectionCleared={this.onSelectionCleared}/>
                     { this.props.store && <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez}
@@ -151,11 +175,11 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                     <div className={styles.Checkboxes}>
                         <Checkbox checked={this.overExpressedFilter}
                             onChange={this.toggleOverExpressedFilter}>
-                            Over-expressed
+                            {this.group1CheckboxLabel}
                         </Checkbox>
                         <Checkbox checked={this.underExpressedFilter}
                             onChange={this.toggleUnderExpressedFilter}>
-                            Under-expressed
+                            {this.group2CheckboxLabel}
                         </Checkbox>
                         <Checkbox checked={this.significanceFilter}
                             onChange={this.toggleSignificanceFilter}>
@@ -164,7 +188,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                     </div>
                     <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
                                                onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}
-                                               mutexTendency={this.props.showMutexTendencyInTable}
+                                               mutexTendency={this.props.alteredVsUnalteredMode}
                                                group1Description={this.props.group1Description!}
                                                group2Description={this.props.group2Description!}
                     />

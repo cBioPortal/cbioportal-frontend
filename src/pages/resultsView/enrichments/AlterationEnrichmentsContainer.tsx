@@ -35,7 +35,6 @@ export interface IAlterationEnrichmentContainerProps {
     selectedProfile:MolecularProfile;
     store?: ResultsViewPageStore;
     alterationType?: string;
-    showMutexTendencyInTable?:boolean;
     showCNAInTable?:boolean;
 }
 
@@ -50,7 +49,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         group1Name: "altered group",
         group2Name: "unaltered group",
         alterationType: "a mutation",
-        showMutexTendencyInTable: true,
         showCNAInTable: false,
         alteredVsUnalteredMode: true
     };
@@ -180,12 +178,28 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         }
     }
 
+    @computed get group1CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Co-occurrence";
+        } else {
+            return `Enriched in ${this.props.group1Name!}`;
+        }
+    }
+
+    @computed get group2CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Mutual exclusivity";
+        } else {
+            return `Enriched in ${this.props.group2Name!}`;
+        }
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
             return <div className={'alert alert-info'}>No data/result available</div>;
         }
-        
+
         return (
             <div className={styles.Container}>
                 <div className={styles.LeftColumn}>
@@ -223,11 +237,11 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                     <div className={styles.Checkboxes}>
                         <Checkbox checked={this.coOccurenceFilter}
                             onChange={this.toggleCoOccurenceFilter}>
-                            Co-occurrence
+                            {this.group1CheckboxLabel}
                         </Checkbox>
                         <Checkbox checked={this.mutualExclusivityFilter}
                             onChange={this.toggleMutualExclusivityFilter}>
-                            Mutual exclusivity
+                            {this.group2CheckboxLabel}
                         </Checkbox>
                         <Checkbox checked={this.significanceFilter}
                             onChange={this.toggleSignificanceFilter}>
@@ -239,7 +253,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                                                group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}
                                                group1Description={this.group1Description}
                                                group2Description={this.group2Description}
-                                               mutexTendency={this.props.showMutexTendencyInTable}
+                                               mutexTendency={this.props.alteredVsUnalteredMode}
                                                columns={this.columns}
                     />
                 </div>
