@@ -7,10 +7,10 @@ import _ from "lodash";
 import {ClinicalAttribute} from "../../api/generated/CBioPortalAPI";
 import {getPercentage} from "../../lib/FormatUtils";
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
-import ReactSelect from "react-select2";
 import autobind from "autobind-decorator";
 import {ExtendedClinicalAttribute} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import onMobxPromise from "../../lib/onMobxPromise";
+import CheckedSelect, {Option} from "../checkedSelect/CheckedSelect";
 
 export interface IClinicalAttributeSelectorProps {
     store:ResultsViewPageStore;
@@ -18,8 +18,6 @@ export interface IClinicalAttributeSelectorProps {
     onChange:(selectedAttributeIds:(string|SpecialAttribute)[])=>void;
     name?:string;
 }
-
-type Option = { label:string, value:string };
 
 @observer
 export default class ClinicalAttributeSelector extends React.Component<IClinicalAttributeSelectorProps, {}> {
@@ -113,16 +111,6 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         this.focused = true;
     }
 
-    @autobind private getOptionLabel(option:Option) {
-        let box = "";
-        if (option.value in this.valueMap) {
-            box = String.fromCodePoint(9745); // checked box
-        } else {
-            box = String.fromCodePoint(9744); // empty box
-        }
-        return `${box} ${option.label}`;
-    }
-
     @autobind private addAll() {
         onMobxPromise(
             this.options,
@@ -134,35 +122,8 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         this.onChange([]);
     }
 
-    @autobind private buttonsSection() {
-        return (
-            <div style={{
-                marginTop:-7,
-                paddingBottom:5,
-                display:"flex",
-                justifyContent:"center",
-                alignItems:"center",
-                borderBottom:"1px solid #ccc"
-            }}>
-                <button
-                    className="btn btn-sm btn-default"
-                    onClick={this.addAll}
-                    style={{marginRight:5}}
-                    disabled={this.options.peekStatus === "complete" && this.options.result!.length === this.value.length}
-                >
-                    {`Add all ${this.options.peekStatus === "complete" ? "("+this.options.result!.length+")" : ""}`}
-                </button>
-                <button
-                    className="btn btn-sm btn-default"
-                    disabled={this.value.length === 0}
-                    onClick={this.clear}
-                >Clear</button>
-            </div>
-        );
-    }
-
     render() {
-        let disabled:boolean, placeholder:string, options:any[];
+        let disabled:boolean, placeholder:string, options: Option[];
         if (this.focused) {
             // only load options once its been focused
             switch (this.options.status) {
@@ -191,67 +152,16 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
 
         return (
             <span onFocus={this.onFocus}>
-                <ReactSelect
-                    styles={{
-                        control: (provided:any)=>({
-                            ...provided,
-                            height:33.5,
-                            minHeight:33.5,
-                            border: "1px solid rgb(204,204,204)"
-                        }),
-                        menu: (provided:any)=>({
-                            ...provided,
-                            maxHeight: 400
-                        }),
-                        menuList: (provided:any)=>({
-                            ...provided,
-                            maxHeight:400
-                        }),
-                        placeholder:(provided:any)=>({
-                            ...provided,
-                            color: "#000000"
-                        }),
-                        dropdownIndicator:(provided:any)=>({
-                            ...provided,
-                            color:"#000000"
-                        }),
-                        option:(provided:any, state:any)=>{
-                            const ret:any = {
-                                ...provided,
-                                cursor:"pointer",
-                                color:"black"
-                            };
-                            if (state.isSelected && !state.isFocused) {
-                                ret.backgroundColor = state.theme.colors.primary25;
-                            }
-                            return ret;
-                        }
-                    }}
-                    theme={(theme:any)=>({
-                        ...theme,
-                        colors: {
-                            ...theme.colors,
-                            primary: theme.colors.primary50
-                        },
-                    })}
-                    components={{ GroupHeading: this.buttonsSection }}
+                <CheckedSelect
                     name={this.props.name}
-                    closeMenuOnSelect={false}
                     isDisabled={disabled}
-                    isClearable={false}
-                    isSearchable={true}
                     placeholder={placeholder}
-                    getOptionLabel={this.getOptionLabel}
-                    hideSelectedOptions={false}
                     onChange={this.onChange}
-                    options={[{
-                        label:"dummy label, this is only here to create group so we can add the buttons section as the group label component",
-                        options
-                    }]}
+                    options={options}
                     value={this.value}
-                    labelKey="label"
-                    isMulti={true}
-                    controlShouldRenderValue={false}
+                    onClearAll={this.clear}
+                    onAddAll={this.addAll}
+                    addAllLabel={`Add all ${this.options.peekStatus === "complete" ? "("+this.options.result!.length+")" : ""}`}
                 />
             </span>
         );

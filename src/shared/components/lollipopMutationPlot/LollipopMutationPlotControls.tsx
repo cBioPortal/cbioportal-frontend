@@ -6,7 +6,6 @@ import DownloadControls from "../downloadControls/DownloadControls";
 import TrackSelector, {TrackDataStatus, TrackVisibility} from "../tracks/TrackSelector";
 
 import styles from "./lollipopMutationPlot.module.scss";
-import "./lollipopMutationPlotControls.scss";
 
 interface ILollipopMutationPlotControlsProps
 {
