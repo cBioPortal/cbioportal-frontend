@@ -23,7 +23,7 @@ export enum ClinicalDataEnrichmentTableColumnType {
 const COLUMNS = [
     {
         name: ClinicalDataEnrichmentTableColumnType.CLINICAL_ATTRIBUTE_NAME,
-        render: (d: ClinicalDataEnrichmentWithQ) => <span style={{}}>{d.clinicalAttribute.displayName}</span>,
+        render: (d: ClinicalDataEnrichmentWithQ) => <span style={{fontWeight: (d.qValue < 0.05 ? "bold" : "normal")}}>{d.clinicalAttribute.displayName}</span>,
         filter: (d: ClinicalDataEnrichmentWithQ, f: string, filterStringUpper: string) => (d.clinicalAttribute.displayName.toUpperCase().indexOf(filterStringUpper) > -1),
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.clinicalAttribute.displayName,
         download: (d: ClinicalDataEnrichmentWithQ) => d.clinicalAttribute.displayName,
@@ -55,7 +55,7 @@ const COLUMNS = [
     },
     {
         name: ClinicalDataEnrichmentTableColumnType.P_VALUE,
-        render: (d: ClinicalDataEnrichmentWithQ) => <span style={{ whiteSpace: 'nowrap' }}>{toConditionalPrecisionWithMinimum(d.pValue, 3, 0.01, -10)}</span>,
+        render: (d: ClinicalDataEnrichmentWithQ) => <span style={{ whiteSpace: 'nowrap', fontWeight: (d.qValue < 0.05 ? "bold" : "normal") }}>{toConditionalPrecisionWithMinimum(d.pValue, 3, 0.01, -10)}</span>,
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.pValue,
         download: (d: ClinicalDataEnrichmentWithQ) => toConditionalPrecision(d.pValue, 3, 0.01),
         width: 100,
@@ -63,7 +63,7 @@ const COLUMNS = [
     },
     {
         name: ClinicalDataEnrichmentTableColumnType.Q_VALUE,
-        render: (d: ClinicalDataEnrichmentWithQ) => <span style={{ whiteSpace: 'nowrap' }}>{toConditionalPrecisionWithMinimum(d.qValue, 3, 0.01, -10)}</span>,
+        render: (d: ClinicalDataEnrichmentWithQ) => <span style={{ whiteSpace: 'nowrap', fontWeight: (d.qValue < 0.05 ? "bold" : "normal") }}>{toConditionalPrecisionWithMinimum(d.qValue, 3, 0.01, -10)}</span>,
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.qValue,
         download: (d: ClinicalDataEnrichmentWithQ) => toConditionalPrecision(d.qValue, 3, 0.01),
         width: 100,
