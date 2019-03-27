@@ -25,6 +25,7 @@ interface IQueryAndDownloadTabsProps
 {
 	onSubmit?:()=>void;
 	showQuickSearchTab:boolean;
+	showDownloadTab:boolean;
     getQueryStore:()=>QueryStore;
     showAlerts?:boolean;
 }
@@ -37,7 +38,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 	constructor(props:IQueryAndDownloadTabsProps){
 		super();
 
-		if (getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) === QUICK_SEARCH_TAB_ID) {
+		if (props.showQuickSearchTab && getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) === QUICK_SEARCH_TAB_ID) {
 			this.activeTabId = getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY);
 		}
 
@@ -59,8 +60,10 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 	@autobind
 	setDefaultTab(tabId:string|undefined){
 		// right now we only care if quick search or NOT
-		getBrowserWindow().localStorage.defaultHomePageTab =
-			(tabId === QUICK_SEARCH_TAB_ID) ? QUICK_SEARCH_TAB_ID : undefined;
+		if (this.props.showQuickSearchTab) {
+			getBrowserWindow().localStorage.defaultHomePageTab =
+				(tabId === QUICK_SEARCH_TAB_ID) ? QUICK_SEARCH_TAB_ID : undefined;
+		}
 	}
 
 	trackQuickSearch(){
@@ -96,7 +99,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 							<QuickSearch/>
                         </div>
 					</MSKTab>
-					<MSKTab id={DOWNLOAD} linkText={"Download"} onTabDidMount={()=>this.setDefaultTab(undefined)}>
+					<MSKTab id={DOWNLOAD} linkText={"Download"} hide={!this.props.showDownloadTab} onTabDidMount={()=>this.setDefaultTab(undefined)}>
                         <QueryContainer onSubmit={this.props.onSubmit} store={this.store}/>
 					</MSKTab>
 				</MSKTabs>
