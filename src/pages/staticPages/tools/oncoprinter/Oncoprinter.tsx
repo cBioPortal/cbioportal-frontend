@@ -171,9 +171,10 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             onClickDownload:(type:string)=>{
                 switch(type) {
                     case "pdf":
-                        if (!svgToPdfDownload("oncoprint.pdf", this.oncoprint.toSVG(true))) {
-                            alert("Oncoprint too big to download as PDF - please download as SVG.");
-                        }
+                        svgToPdfDownload("oncoprint.pdf", this.oncoprint.toSVG(false));
+                        // if (!pdfDownload("oncoprint.pdf", this.oncoprint.toSVG(true))) {
+                        //     alert("Oncoprint too big to download as PDF - please download as SVG.");
+                        // }
                         break;
                     case "png":
                         const img = this.oncoprint.toCanvas((canvas, truncated)=>{
