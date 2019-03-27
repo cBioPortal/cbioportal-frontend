@@ -3,9 +3,10 @@ import * as _ from "lodash";
 import { observer } from "mobx-react";
 import autobind from 'autobind-decorator';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
-import {toConditionalPrecision, toConditionalPrecisionWithMinimum} from 'shared/lib/NumberUtils';
+import {toConditionalPrecision} from 'shared/lib/NumberUtils';
 import { ClinicalDataEnrichmentStore } from './ClinicalData';
 import { ClinicalDataEnrichmentWithQ } from './GroupComparisonUtils';
+import {toConditionalPrecisionWithMinimum} from "../../shared/lib/FormatUtils";
 
 export interface IClinicalDataEnrichmentsTableProps {
     dataStore: ClinicalDataEnrichmentStore;
