@@ -89,6 +89,20 @@ export function roundLogRatio(logRatio: number, threshold: number): number {
         return Number(logRatio.toFixed(2));
     }
 }
+
+export function toConditionalPrecisionWithMinimum(
+    positiveNumber:number,
+    precision:number,
+    precisionThreshold:number,
+    minimumExponent:number
+){
+    if (positiveNumber === 0 || Math.log10(positiveNumber) < minimumExponent) {
+        return <span>10<sup>{minimumExponent}</sup></span>;
+    } else {
+        return toConditionalPrecision(positiveNumber, precision, precisionThreshold);
+    }
+}
+
 /* difference between this function and the previous one is it will display
 percentages less than 1% as <1%
 */
