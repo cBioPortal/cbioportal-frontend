@@ -97,7 +97,7 @@ export function toConditionalPrecisionWithMinimum(
     minimumExponent:number
 ){
     if (positiveNumber === 0 || Math.log10(positiveNumber) < minimumExponent) {
-        return <span>10<sup>{minimumExponent}</sup></span>;
+        return <span>&lt; 10<sup>{minimumExponent}</sup></span>;
     } else {
         return toConditionalPrecision(positiveNumber, precision, precisionThreshold);
     }
