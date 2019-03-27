@@ -5,7 +5,7 @@ import {
     IAnnotation, IAnnotationColumnProps, default as DefaultAnnotationColumnFormatter
 } from "shared/components/mutationTable/column/AnnotationColumnFormatter";
 import {IOncoKbData, IOncoKbDataWrapper} from "shared/model/OncoKB";
-import OncoKB from "shared/components/annotation/OncoKB";
+import OncoKB from "shared/components/annotation/oncokb/OncoKB";
 import Civic from "shared/components/annotation/Civic";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";

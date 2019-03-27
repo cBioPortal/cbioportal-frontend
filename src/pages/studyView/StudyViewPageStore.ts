@@ -65,13 +65,13 @@ import {
     getSamplesByExcludingFiltersOnChart,
     isFiltered,
     isLogScaleByDataBins,
-    isPreSelectedClinicalAttr,
     makePatientToClinicalAnalysisGroup,
     MutationCountVsCnaYBinsMin,
     NA_DATA,
     showOriginStudiesInSummaryDescription,
     submitToPage,
-    getClinicalDataCountWithColorByCategoryCounts, shouldShowChart
+    getClinicalDataCountWithColorByCategoryCounts, shouldShowChart,
+    clinicalAttributeComparator
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -2216,46 +2216,8 @@ export class StudyViewPageStore {
                 return attr;
             });
 
-            let sampleAttributeCount = 0;
-            let patientAttributeCount = 0;
-            let filterAttributes: ClinicalAttribute[] = []
-            // Todo: its a temporary logic to show NUMBER_OF_CHARTS_SHOWING charts initially
-            // this logic will be updated later
-            queriedAttributes.sort((a, b) => {
-                // Sort by priority first
-                let priorityDiff = Number(a.priority) - Number(b.priority);
+            let filterAttributes: ClinicalAttribute[] = queriedAttributes.sort(clinicalAttributeComparator).slice(0, 20);
 
-                if(priorityDiff != 0) {
-                    return -priorityDiff;
-                }
-
-                if (isPreSelectedClinicalAttr(a.clinicalAttributeId)) {
-                    if (isPreSelectedClinicalAttr(b.clinicalAttributeId)) {
-                        return 0;
-                    }
-                    return -1;
-                }
-                if (isPreSelectedClinicalAttr(b.clinicalAttributeId)) {
-                    return -1;
-                }
-                return 0;
-            }).forEach(attribute => {
-                const priority = Number(attribute.priority);
-                if(priority === 0) {
-                    return;
-                }
-                if (attribute.patientAttribute) {
-                    if (patientAttributeCount < STUDY_VIEW_CONFIG.thresholds.clinicalChartsPerGroup || priority > STUDY_VIEW_CONFIG.defaultPriority) {
-                        filterAttributes.push(attribute)
-                        patientAttributeCount++;
-                    }
-                } else {
-                    if (sampleAttributeCount < STUDY_VIEW_CONFIG.thresholds.clinicalChartsPerGroup || priority > STUDY_VIEW_CONFIG.defaultPriority) {
-                        filterAttributes.push(attribute)
-                        sampleAttributeCount++;
-                    }
-                }
-            });
             // Also check the initial filters, make sure all clinical attributes in initial filters will be added in default visible attributes
             let initialFilteredAttributeIds:string[] = [];
             if(this.initialFilters.clinicalDataEqualityFilters !== undefined){
