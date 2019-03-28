@@ -153,7 +153,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 return <span>No data.</span>;
             }
         },
-        renderPending:()=><LoadingIndicator isLoading={true} big={true}/>,
+        renderPending:()=><LoadingIndicator center={true} isLoading={true}  size={"big"} />,
         renderError:()=><ErrorMessage/>
     });
 

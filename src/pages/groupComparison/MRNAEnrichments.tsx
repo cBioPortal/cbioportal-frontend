@@ -5,7 +5,7 @@ import {MolecularProfile} from "../../shared/api/generated/CBioPortalAPI";
 import {MakeMobxView} from "../../shared/components/MobxView";
 import EnrichmentsDataSetDropdown from "../resultsView/enrichments/EnrichmentsDataSetDropdown";
 import AlterationEnrichmentContainer from "../resultsView/enrichments/AlterationEnrichmentsContainer";
-import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupComparisonStore from "./GroupComparisonStore";
 import ExpressionEnrichmentContainer from "../resultsView/enrichments/ExpressionEnrichmentsContainer";
@@ -43,7 +43,7 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
                 return this.enrichmentsUI.component;
             }
         },
-        renderPending:()=><Loader isLoading={true} size={"big"}/>,
+        renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
@@ -72,7 +72,7 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
                 </div>
             );
         },
-        renderPending:()=><Loader isLoading={true} size={"big"}/>,
+        renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
