@@ -2,7 +2,7 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import GroupComparisonStore from "./GroupComparisonStore";
 import {MolecularProfile} from "../../shared/api/generated/CBioPortalAPI";
-import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import EnrichmentsDataSetDropdown from "../resultsView/enrichments/EnrichmentsDataSetDropdown";
 import AlterationEnrichmentContainer from "../resultsView/enrichments/AlterationEnrichmentsContainer";
@@ -39,7 +39,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                 return this.enrichmentsUI.component;
             }
         },
-        renderPending:()=><Loader isLoading={true} size={"big"}/>,
+        renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
@@ -71,7 +71,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                 </div>
             );
         },
-        renderPending:()=><Loader isLoading={true} size={"big"}/>,
+        renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
