@@ -43,3 +43,4 @@ declare module 'react-mfb';
 declare module 'regression';
 declare module 'svg2pdf.js';
 declare module 'jspdf-yworks';
+declare module 'react-select2';
