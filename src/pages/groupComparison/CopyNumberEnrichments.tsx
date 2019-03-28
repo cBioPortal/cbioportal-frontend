@@ -6,7 +6,7 @@ import GroupComparisonStore from "./GroupComparisonStore";
 import autobind from "autobind-decorator";
 import {MolecularProfile} from "../../shared/api/generated/CBioPortalAPI";
 import {MakeMobxView} from "../../shared/components/MobxView";
-import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {ENRICHMENTS_NOT_2_GROUPS_MSG, getNumSamples} from "./GroupComparisonUtils";
 import {AlterationEnrichmentTableColumnType} from "../resultsView/enrichments/AlterationEnrichmentsTable";
@@ -39,7 +39,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                 return this.enrichmentsUI.component;
             }
         },
-        renderPending:()=><Loader isLoading={true} size={"big"}/>,
+        renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
@@ -72,7 +72,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                 </div>
             );
         },
-        renderPending:()=><Loader isLoading={true} size={"big"}/>,
+        renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 

@@ -35,7 +35,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                         flexDirection:"row",
                         alignItems:"center"
                     }}>
-                        <strong style={{marginRight:5}}>Active Groups: </strong>
+                        <strong style={{marginRight:5}}>Groups: </strong>
                         <div className={styles.groupButtons}>
                             {this.props.store.availableGroups.result!.map(group=>{
                                 const active = this.props.store.isGroupActive(group);
@@ -43,12 +43,12 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                                 const patientIdentifiers = getPatientIdentifiers(sampleIdentifiers, this.props.store.sampleSet.result!);
                                 return (
                                     <button
-                                        className={classNames('btn btn-xs', { "btn-primary":active, "btn-default":!active})}
+                                        className={classNames('btn btn-xs', 'btn-primary', { [styles.buttonUnselected]:!active})}
                                         onClick={()=>this.props.store.toggleGroupSelected(group.uid)}
                                         disabled={!this.props.store.groupSelectionCanBeToggled(group)}
                                     >
                                         {
-                                            active ? <i className={'fa fa-check'}></i> : null
+                                            active ?  <i className={'fa fa-check'}></i> : <i className={'fa fa-minus'}></i>
                                         }
                                         &nbsp;
                                         {`${group.name} ${
@@ -59,25 +59,20 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                                 );
                             })}
                         </div>
-                        <div className="btn-group" style={{marginLeft:5}}>
-                            <button
-                                className="btn btn-sm btn-default"
-                                disabled={!this.props.store.availableGroups.isComplete}
-                                onClick={this.props.store.selectAllGroups}
+                        <div className="btn-group" style={{marginLeft:15}}>
+                            <a onClick={this.props.store.selectAllGroups}
                             >Select all
-                            </button>
-                            <button
-                                className="btn btn-sm btn-default"
-                                disabled={!this.props.store.availableGroups.isComplete}
-                                onClick={this.props.store.deselectAllGroups}
+                            </a>
+                            &nbsp;|&nbsp;
+                            <a onClick={this.props.store.deselectAllGroups}
                             >Deselect all
-                            </button>
+                            </a>
                         </div>
                     </div>
                 )
             }
         },
-        renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
+        renderPending:()=><LoadingIndicator isLoading={true} size="big" center={true} />,
         renderError:()=><ErrorMessage/>,
         showLastRenderWhenPending:true
     });
