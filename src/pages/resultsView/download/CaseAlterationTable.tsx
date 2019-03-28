@@ -45,8 +45,20 @@ export interface ICaseAlterationTableProps {
 }
 
 export type PseudoOqlSummary = {
+    summaryCategory: SummaryCategory;
     summaryContent: string;
     summaryClass: any;
+}
+
+export enum SummaryCategory {
+    ALTERED = 'ALTERED',
+    NOT_PROFILED = 'NOT_PROFILED',
+    NO_ALTERATION = 'NO_ALTERATION'
+}
+
+export enum SummaryContent {
+    NOT_PROFILED = 'not profiled',
+    NO_ALTERATION = 'no alteration'
 }
 
 export function generateOqlValue(data: IOqlData, alterationType: string): PseudoOqlSummary | undefined
@@ -59,7 +71,7 @@ export function generateOqlValue(data: IOqlData, alterationType: string): Pseudo
     let pseudoOqlSummary: PseudoOqlSummary | undefined = undefined;
 
     if (data.alterationTypes.length === 0 || !data.alterationTypes.includes(alterationType)) {
-        pseudoOqlSummary = {summaryContent: "no alteration", summaryClass: styles.noAlterationSpan};
+        pseudoOqlSummary = {summaryCategory:SummaryCategory.NO_ALTERATION ,summaryContent: SummaryContent.NO_ALTERATION, summaryClass: styles.noAlterationSpan};
     }
     switch (alterationType) {
         case "MUT":
@@ -108,10 +120,10 @@ export function generateOqlValue(data: IOqlData, alterationType: string): Pseudo
     if (generator) {
         const alterationData = generator.getAlterationData(data);
         if (alterationData.length > 0) {
-            pseudoOqlSummary = {summaryContent: generator.getValues(alterationData).join(","), summaryClass: styles.alterationSpan};
+            pseudoOqlSummary = {summaryCategory:SummaryCategory.ALTERED, summaryContent: generator.getValues(alterationData).join(","), summaryClass: styles.alterationSpan};
         }
         if (generator.isNotProfiled(data)) {
-            pseudoOqlSummary = {summaryContent: "not profiled", summaryClass: styles.notProfiledSpan};
+            pseudoOqlSummary = {summaryCategory:SummaryCategory.NOT_PROFILED, summaryContent: `${SummaryContent.NOT_PROFILED} in ${alterationType}`, summaryClass: styles.notProfiledSpan};
         }
     }
 
@@ -133,40 +145,27 @@ export function generatePseudoOqlSummary(oqlData: {[oqlLine: string]: IOqlData},
     return undefined;
 }
 
-export function computeAlterationTypes(alterationData: ICaseAlteration[]): string[]
-{
-    const types = _.chain(alterationData)
-        .map((alteration) => _.values(alteration.oqlData))
-        .flatten()
-        .map((oqlDataValue) => oqlDataValue.alterationTypes)
-        .flatten()
-        .uniq()
-        .value();
-    return types;
-}
-
-// export function getPseudoOqlSummaryByAlterationTypes(oqlData: {[oqlLine: string]: IOqlData}, oqlLine: string, alterationTypes: string[]) : PseudoOqlSummary {
-//     const alteratedPseudoOqlSummarys = _.chain(alterationTypes)
-//         .map(type => generatePseudoOqlSummary(oqlData, oqlLine, type))
-//         .filter((summary) => summary ? summary.summaryClass === styles.alterationSpan : false)
-//         .value();
-//     const alteratedPseudoOqlSummaryContent = _.map(alteratedPseudoOqlSummarys, (summary : PseudoOqlSummary)=>summary.summaryContent).join(",");
-//     return {summaryContent: alteratedPseudoOqlSummaryContent, summaryClass: styles.alterationSpan};
-// }
-
 export function getPseudoOqlSummaryByAlterationTypes(oqlData: {[oqlLine: string]: IOqlData}, oqlLine: string, alterationTypes: string[]) : PseudoOqlSummary {
+    let summaryCategory, summaryContent, summaryClass;
     const pseudoOqlSummarys = _.map(alterationTypes, (type) => generatePseudoOqlSummary(oqlData, oqlLine, type)).filter((summary) => summary != undefined);
-    const alteredPseudoOqlSummarys = _.filter(pseudoOqlSummarys, (summary) => summary!.summaryClass === styles.alterationSpan);
-    const noAlterationPseudoOqlSummarys = _.filter(pseudoOqlSummarys, (summary) => summary!.summaryClass === styles.noAlterationSpan);
-    const notProfiledPseudoOqlSummarys = _.filter(pseudoOqlSummarys, (summary) => summary!.summaryClass === styles.notProfiledSpan);
+    const summaryGroupedByCategory = _.groupBy(pseudoOqlSummarys, (summary: PseudoOqlSummary) => summary.summaryCategory);
+    if (SummaryCategory.ALTERED in summaryGroupedByCategory) {
+        summaryCategory = SummaryCategory.ALTERED;
+        summaryContent = _.map(summaryGroupedByCategory[SummaryCategory.ALTERED], (summary : PseudoOqlSummary)=>summary.summaryContent).join(",");
+        summaryClass = (summaryGroupedByCategory[SummaryCategory.ALTERED][0] as PseudoOqlSummary).summaryClass;
+    }
+    else if (SummaryCategory.NOT_PROFILED in summaryGroupedByCategory) {
+        summaryCategory = SummaryCategory.NOT_PROFILED;
+        summaryContent = _.map(summaryGroupedByCategory[SummaryCategory.NOT_PROFILED], (summary : PseudoOqlSummary)=>summary.summaryContent).join(",");
+        summaryClass = (summaryGroupedByCategory[SummaryCategory.NOT_PROFILED][0] as PseudoOqlSummary).summaryClass;
+    }
+    else {
+        summaryCategory = SummaryCategory.NO_ALTERATION;
+        summaryContent = (summaryGroupedByCategory[SummaryCategory.NO_ALTERATION][0] as PseudoOqlSummary).summaryContent;
+        summaryClass = (summaryGroupedByCategory[SummaryCategory.NO_ALTERATION][0] as PseudoOqlSummary).summaryClass;
+    }
 
-    const alteratedPseudoOqlSummaryContent = _.map(alteredPseudoOqlSummarys, (summary : PseudoOqlSummary)=>summary.summaryContent).join(",");
-    const notProfiledPseudoOqlSummarysContent = notProfiledPseudoOqlSummarys.length ? notProfiledPseudoOqlSummarys[0]!.summaryContent : undefined;
-    const noAlterationPseudoOqlSummarysContent = noAlterationPseudoOqlSummarys.length ? noAlterationPseudoOqlSummarys[0]!.summaryContent : undefined;
-    const alteratedPseudoOqlSummaryClass = alteratedPseudoOqlSummaryContent ? styles.alterationSpan : undefined;
-    const notProfiledPseudoOqlSummarysClass = notProfiledPseudoOqlSummarysContent ? styles.notProfiledSpan : undefined;
-    const noAlterationPseudoOqlSummarysClass = noAlterationPseudoOqlSummarysContent ? styles.noAlterationSpan : undefined;
-    return {summaryContent: alteratedPseudoOqlSummaryContent || notProfiledPseudoOqlSummarysContent || noAlterationPseudoOqlSummarysContent || "" , summaryClass: alteratedPseudoOqlSummaryClass || notProfiledPseudoOqlSummarysClass || noAlterationPseudoOqlSummarysClass};
+    return {summaryCategory, summaryContent, summaryClass};
 }
 
 class CaseAlterationTableComponent extends LazyMobXTable<ICaseAlteration> {}
@@ -243,7 +242,7 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
         });
 
         this.props.oqls.forEach(oql => {
-            //add column for each gene alteration combination
+            //add column for each oql
             const alterationTypes = oql.parsed_oql_line.alterations ? 
                 _.uniq(_.map(oql.parsed_oql_line.alterations, (alteration) => {
                     return alteration.alteration_type.toUpperCase();
