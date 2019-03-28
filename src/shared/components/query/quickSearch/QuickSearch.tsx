@@ -46,10 +46,13 @@ export default class QuickSearch extends React.Component {
     @observable private studyPageMultiplier: number = 0;
     @observable private genePageMultiplier: number = 0;
     @observable private patientPageMultiplier: number = 0;
-
     @observable private inputValue:string = "";
-    @observable private menuIsOpen:boolean = false;
+    @observable private isFocusing = false;
     @observable private isLoading = false;
+
+    @computed get menuIsOpen() {
+        return this.isFocusing && this.inputValue.length > 0;
+    }
 
     @autobind
     private selectRef(select: any) {
@@ -247,9 +250,9 @@ export default class QuickSearch extends React.Component {
     }
 
     @autobind
+    @action
     private handleInputChange(inputValue:any, { action }: { action:any} ) {
         if (action !== 'set-value'){
-            this.menuIsOpen = inputValue.length > 0;
             // if user has changed search query then
             // we should return the results multipliers to zero
             if (inputValue != this.inputValue) {
@@ -262,6 +265,16 @@ export default class QuickSearch extends React.Component {
                 this.inputValue = inputValue;
             }
         }
+        // close the menu when lost focus
+        if (action === 'input-blur') {
+            this.isFocusing = false;
+        }
+    }
+
+    @autobind
+    @action
+    private onFocus() {
+        this.isFocusing = true;
     }
 
     @autobind
@@ -278,7 +291,7 @@ export default class QuickSearch extends React.Component {
     render() {
 
         return (
-            <div>
+            <div onFocusCapture={this.onFocus}>
                 <Select
                     options={this.options.result || []}
                     autoFocus={true}
@@ -291,6 +304,7 @@ export default class QuickSearch extends React.Component {
                     inputValue={this.inputValue}
                     isLoading={this.options.isPending}
                     placeholder={"e.g. Lung, EGFR, TCGA-OR-A5J2"}
+                    noOptionsMessage={() => "No results"}
                     blurInputOnSelect={false}
                     closeMenuOnSelect={false}
                     onSelectResetsInput={false}
