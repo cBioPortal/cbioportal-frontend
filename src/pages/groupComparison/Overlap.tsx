@@ -11,7 +11,12 @@ import DownloadControls from 'shared/components/downloadControls/DownloadControl
 import {MakeMobxView} from "../../shared/components/MobxView";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import {getCombinations, getSampleIdentifiers} from "./GroupComparisonUtils";
+import {
+    ENRICHMENTS_NOT_2_GROUPS_MSG,
+    getCombinations,
+    getSampleIdentifiers,
+    OVERLAP_NOT_ENOUGH_GROUPS_MSG
+} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 
 export interface IOverlapProps {
@@ -40,6 +45,27 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     componentDidUpdate() {
         this.plotExists = !!this.getSvg();
     }
+
+    readonly tabUI = MakeMobxView({
+        await:()=>{
+            if (this.props.store.activeGroups.isComplete &&
+                this.props.store.activeGroups.result.length < 2) {
+                // dont bother loading data for and computing overlap if not enough groups for it
+                return [this.props.store.activeGroups];
+            } else {
+                return [this.props.store.activeGroups, this.overlapUI];
+            }
+        },
+        render:()=>{
+            if (this.props.store.activeGroups.result!.length < 2) {
+                return <span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>;
+            } else {
+                return this.overlapUI.component;
+            }
+        },
+        renderPending:()=><Loader isLoading={true} centerRelativeToContainer={true} size={"big"}/>,
+        renderError:()=><ErrorMessage/>
+    });
 
     @autobind
     private getSvg() {
@@ -124,7 +150,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         renderError:()=><ErrorMessage/>
     });
 
-    readonly tabUI = MakeMobxView({
+    readonly overlapUI = MakeMobxView({
         await:()=>[this.plot],
         render:()=>(
             <div>
@@ -144,7 +170,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 </div>
             </div>
         ),
-        renderPending:()=><LoadingIndicator center={true} isLoading={true} size="big"/>,
+        renderPending:()=><LoadingIndicator isLoading={true} centerRelativeToContainer={true} size="big"/>,
         renderError:()=><ErrorMessage/>
     });
 
