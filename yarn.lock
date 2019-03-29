@@ -378,13 +378,6 @@
     "@types/history" "*"
     "@types/react" "*"
 
-"@types/react-select@^1.0.54":
-  version "1.0.57"
-  resolved "https://registry.yarnpkg.com/@types/react-select/-/react-select-1.0.57.tgz#13ddd443becc9b3d34640a19fd6f2f78fdd7a735"
-  integrity sha512-0Jzvjxp/eCoA7i8nXndeEpLTa+O5qK5fMK9E4ZOP6oe7om5Cw1YiVlPat16URmSbTH8GwALDAdN8aClg9K41ow==
-  dependencies:
-    "@types/react" "*"
-
 "@types/react-spinkit@^1.1.35":
   version "1.1.35"
   resolved "https://registry.yarnpkg.com/@types/react-spinkit/-/react-spinkit-1.1.35.tgz#c6e6428f76474710839c424b1e90c1b84f0425c5"
@@ -10109,6 +10102,11 @@ pluralize@^1.2.1:
   resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-1.2.1.tgz#d1a21483fd22bb41e58a12fa3421823140897c45"
   integrity sha1-0aIUg/0iu0HlihL6NCGCMUCJfEU=
 
+pluralize@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-7.0.0.tgz#298b89df8b93b0221dbf421ad2b1b1ea23fc6777"
+  integrity sha512-ARhBOdzS3e41FbkW/XWrTEtukqqLoK5+Z/4UeDaLuSW+39JPeFgs4gCGqsrJHVZX0fUrx//4OF0K1CUGwlIFow==
+
 point-cluster@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/point-cluster/-/point-cluster-1.0.2.tgz#553b1f8732a8c6ea7042a450447111c56c8ab683"
@@ -11294,14 +11292,6 @@ react-if@^2.1.0:
   resolved "https://registry.yarnpkg.com/react-if/-/react-if-2.2.1.tgz#b6a2a3a15d6f80fa4db43ed6d18ece6e9d12a11c"
   integrity sha512-5PCuxvkuvPNlaKZRlsCnaVdl8AsjSEhYuWDz3GQhaxGtM63G9LaHbCmWxfR5GfsOB6BjLInWr7B4a+PNa1SRMg==
 
-react-input-autosize@^1.1.3:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/react-input-autosize/-/react-input-autosize-1.1.4.tgz#cbc45072d4084ddc57806db8e3b34e644b8366ac"
-  integrity sha1-y8RQctQITdxXgG2447NOZEuDZqw=
-  dependencies:
-    create-react-class "^15.5.2"
-    prop-types "^15.5.8"
-
 react-input-autosize@^2.0.1, react-input-autosize@^2.1.2, react-input-autosize@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/react-input-autosize/-/react-input-autosize-2.2.1.tgz#ec428fa15b1592994fb5f9aa15bb1eb6baf420f8"
@@ -11449,17 +11439,7 @@ react-select-checked@^0.1.12:
     react-input-autosize "^2.2.1"
     react-transition-group "^2.2.1"
 
-react-select@^1.0.0-rc.5:
-  version "1.0.0-rc.5"
-  resolved "https://registry.yarnpkg.com/react-select/-/react-select-1.0.0-rc.5.tgz#9d316f252b1adc372ddb5cdf1f119c6b7cfdb5d6"
-  integrity sha1-nTFvJSsa3Dct21zfHxGca3z9tdY=
-  dependencies:
-    classnames "^2.2.4"
-    create-react-class "^15.5.2"
-    prop-types "^15.5.8"
-    react-input-autosize "^1.1.3"
-
-react-select@^1.2.1:
+react-select@^1.2.1, react-select@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/react-select/-/react-select-1.3.0.tgz#1828ad5bf7f3e42a835c7e2d8cb13b5c20714876"
   integrity sha512-g/QAU1HZrzSfxkwMAo/wzi6/ezdWye302RGZevsATec07hI/iSxcpB1hejFIp7V63DJ8mwuign6KmB3VjdlinQ==
