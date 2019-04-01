@@ -1000,6 +1000,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         dataSourceOptionsByType:{[type:string]:{value:string, label:string}[]}
     ) {
         const axisSelection = vertical ? this.vertSelection : this.horzSelection;
+        if (
+            (axisSelection.dataType === CLIN_ATTR_DATA_TYPE && !this.clinicalAttributeIdToClinicalAttribute.isComplete) ||
+            (axisSelection.dataType !== CLIN_ATTR_DATA_TYPE && axisSelection.dataType !== AlterationTypeConstants.MUTATION_EXTENDED &&
+                !this.props.store.molecularProfileIdToMolecularProfile.isComplete)
+        ) {
+            return <LoadingIndicator isLoading={true}/>;
+        }
+
         const dataTestWhichAxis = vertical ? "Vertical" : "Horizontal";
 
         let dataSourceLabel = "Profile";
@@ -1024,6 +1032,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 break;
         }
 
+        let dataSourceDescription:string = "";
+        if (dataSourceValue && axisSelection.dataType !== AlterationTypeConstants.MUTATION_EXTENDED) {
+            if (axisSelection.dataType === CLIN_ATTR_DATA_TYPE) {
+                dataSourceDescription = this.clinicalAttributeIdToClinicalAttribute.result![dataSourceValue].description;
+            } else {
+                dataSourceDescription = this.props.store.molecularProfileIdToMolecularProfile.result![dataSourceValue].description;
+            }
+        }
+
         return (
             <form>
                 <h4>{vertical ? "Vertical" : "Horizontal"} Axis</h4>
@@ -1041,7 +1058,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     </div>
                     <div className="form-group">
                         <label>{dataSourceLabel}</label>
-                        <div style={{display:"flex", flexDirection:"row"}}>
+                        <div style={{display:"flex", alignItems:"center"}}>
                             <ReactSelect
                                 className="data-source-id"
                                 name={`${vertical ? "v" : "h"}-profile-name-selector`}
@@ -1051,6 +1068,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 clearable={false}
                                 searchable={true}
                             />
+                            { dataSourceDescription && (
+                                <InfoIcon
+                                    tooltip={<span>{dataSourceDescription}</span>}
+                                    tooltipPlacement="right"
+                                    style={{marginLeft:7}}
+                                />
+                            )}
                         </div>
                     </div>
                     { logScalePossible(axisSelection) && (
@@ -1067,7 +1091,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     )}
                     {(axisSelection.dataType !== GENESET_DATA_TYPE) && (<div className="form-group" style={{opacity:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 0 : 1)}}>
                         <label>Gene</label>
-                        <div style={{display:"flex", flexDirection:"row"}}>
+                        <div style={{display:"flex"}}>
                             <ReactSelect
                                 name={`${vertical ? "v" : "h"}-gene-selector`}
                                 value={axisSelection.selectedGeneOption ? axisSelection.selectedGeneOption.value : undefined}
@@ -1082,7 +1106,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     </div>)}
                     {(axisSelection.dataType === GENESET_DATA_TYPE) && (<div className="form-group" style={{opacity:1}}>
                         <label>Gene Set</label>
-                        <div style={{display:"flex", flexDirection:"row"}}>
+                        <div style={{display:"flex"}}>
                             <ReactSelect
                                 name={`${vertical ? "v" : "h"}-geneset-selector`}
                                 value={axisSelection.selectedGenesetOption ? axisSelection.selectedGenesetOption.value : undefined}
@@ -1140,7 +1164,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     {showDiscreteVsDiscreteOption && (
                         <div className="form-group">
                             <label>Plot Type</label>
-                            <div style={{ display: "flex", flexDirection: "row" }}>
+                            <div style={{ display: "flex"}}>
                                 <ReactSelect
                                     name="discrete-vs-discrete-plot-type"
                                     value={this.discreteVsDiscretePlotType}
@@ -1568,7 +1592,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 <div className={'tabMessageContainer'}>
                     <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} />
                 </div>
-                <div className={"plotsTab"} style={{display:"flex", flexDirection:"row"}}>
+                <div className={"plotsTab"} style={{display:"flex"}}>
                     <div className="leftColumn">
                         { (this.dataTypeOptions.isComplete &&
                         this.dataTypeToDataSourceOptions.isComplete) ? (
