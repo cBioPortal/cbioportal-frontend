@@ -11,6 +11,8 @@ import {
     getAlterationRowData,
     getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getAlterationEnrichmentColumns, AlterationContainerType, getFilteredData
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
+import { ReferenceGenomeGene} from 'shared/api/generated/CBioPortalAPI';
+import {AlterationEnrichment} from "shared/api/generated/CBioPortalAPIInternal";
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
@@ -48,7 +50,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         alteredVsUnalteredMode: true
     };
 
-    @observable significanceFilter: boolean = false;
+    @observable significanceFilter = false;
     @observable.shallow checkedGenes: string[] = [];
     @observable.shallow selectedGenes: string[]|null;
     @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
@@ -56,7 +58,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     @observable.ref _enrichedGroups: string[] = this.props.groups.map(group=>group.name);
 
     @computed get isTwoGroupAnalysis(): boolean {
-        return this.props.groups.length == 2;
+        return this.props.groups.length === 2;
     }
 
     //used in 2 groups analysis
@@ -70,7 +72,15 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @computed get data(): AlterationEnrichmentRow[] {
+        if (this.props.data && this.props.data.length >0) {
+            this.props.data.forEach((a:AlterationEnrichment)=>{
+                if (this.props.store) {
+                    a.cytoband = this.props.store.hugoGeneSymbolToCytoband[a.hugoGeneSymbol];
+                }
+            });
+        }
         return getAlterationRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.props.groups);
+
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {

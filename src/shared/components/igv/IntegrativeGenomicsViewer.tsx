@@ -87,10 +87,11 @@ export default class IntegrativeGenomicsViewer extends React.Component<IGVProps,
             const modifiedTrackNames = getModifiedTrackNames(
                 this.lastRenderedTracks || [], nextProps.tracks || []);
 
+            const genomeChanged = this.props.genome !== nextProps.genome;
             const locusChanged = this.props.locus !== nextProps.locus;
             const searchUpdated = this.props.disableSearch !== nextProps.disableSearch;
 
-            shouldUpdate = modifiedTrackNames.length > 0 || locusChanged || searchUpdated;
+            shouldUpdate = genomeChanged || modifiedTrackNames.length > 0 || locusChanged || searchUpdated;
 
             if (shouldUpdate) {
                 // update the class reference, since we need the modified tracks names in the componentDidUpdate method

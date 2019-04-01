@@ -473,6 +473,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             enableCivic={AppConfig.serverConfig.show_civic}
                                             userEmailAddress={AppConfig.serverConfig.user_email_address}
                                             pubMedCache={patientViewPageStore.pubMedCache}
+                                            referenceGenes={patientViewPageStore.referenceGenes.result}
                                             data={patientViewPageStore.mergedDiscreteCNAData}
                                             copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
                                             mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}

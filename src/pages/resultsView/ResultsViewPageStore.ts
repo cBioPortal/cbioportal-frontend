@@ -24,7 +24,8 @@ import {
     SampleFilter,
     SampleIdentifier,
     SampleList,
-    SampleMolecularIdentifier
+    SampleMolecularIdentifier,
+    ReferenceGenomeGene
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {action, computed, observable, ObservableMap} from "mobx";
@@ -53,7 +54,8 @@ import {
     IDataQueryFilter,
     isMutationProfile,
     fetchVariantAnnotationsIndexedByGenomicLocation,
-    ONCOKB_DEFAULT
+    ONCOKB_DEFAULT,
+    fetchAllReferenceGenomeGenes, fetchReferenceGenomeGenes
 } from "shared/lib/StoreUtils"
 import {IHotspotIndex, indexHotspotsData} from "react-mutation-mapper";
 import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
@@ -166,6 +168,7 @@ import {Group} from "../../shared/api/ComparisonGroupClient";
 import {AppStore} from "../../AppStore";
 import {CLINICAL_TRACKS_URL_PARAM} from "../../shared/components/oncoprint/ResultsViewOncoprint";
 import {getNumSamples} from "../groupComparison/GroupComparisonUtils";
+import {DEFAULT_GENOME} from "shared/lib/IGVUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -729,7 +732,7 @@ export class ResultsViewPageStore {
             let clinicalAttributeCountFilter:ClinicalAttributeCountFilter;
             if (this.studies.result.length === 1) {
                 // try using sample list id
-                const studyId = this.studies.result[0].studyId;
+                const studyId = this.studies.result![0].studyId;
                 const dqf = this.studyToDataQueryFilter.result[studyId];
                 if (dqf.sampleListId) {
                     clinicalAttributeCountFilter = {
@@ -796,14 +799,15 @@ export class ResultsViewPageStore {
             this.samples
         ],
         invoke: () => {
-            if (this.genes.result) {
-                return Promise.resolve(_.reduce(_.uniq(this.genes.result.map(g => g.chromosome)), (map: { [chromosome: string]: MobxPromise<CopyNumberSeg[]> }, chromosome: string) => {
-                    map[chromosome] = remoteData<CopyNumberSeg[]> ({
-                        invoke: () => fetchCopyNumberSegmentsForSamples(this.samples.result, chromosome)
-                    });
-
-                    return map;
-                }, {}));
+            if (this.referenceGenes.result) {
+                const uniqueReferenceGeneChromosomes = _.uniq(this.referenceGenes.result.map(g => g.chromosome));
+                return Promise.resolve(uniqueReferenceGeneChromosomes.reduce(
+                    (map: { [chromosome: string]: MobxPromise<CopyNumberSeg[]> }, chromosome: string) => {
+                        map[chromosome] = remoteData<CopyNumberSeg[]> ({
+                            invoke: () => fetchCopyNumberSegmentsForSamples(this.samples.result, chromosome)
+                        });
+                        return map;
+                    },{}));
             } else {
                 return Promise.resolve({});
             }
@@ -1164,9 +1168,8 @@ export class ResultsViewPageStore {
             let genePanelData:GenePanelData[];
             if (sampleMolecularIdentifiers.length && this.genes.result!.length) {
                 genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
-                    genePanelMultipleStudyFilter:{
+                    sampleMolecularIdentifiers:
                         sampleMolecularIdentifiers
-                    }
                 });
             } else {
                 genePanelData = [];
@@ -2268,6 +2271,50 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly referenceGenes = remoteData<ReferenceGenomeGene[]>({
+        await: ()=>[
+            this.studies,
+            this.mutationEnrichmentData,
+            this.copyNumberAmpEnrichmentData,
+            this.genes
+        ],
+        invoke: async () => {
+            const queryGenes = this.genes.result!.map((g:Gene)=>g.hugoGeneSymbol.toUpperCase());
+            const mutGenes = this.mutationEnrichmentData.result!.map(
+                                    (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
+            const cnvGenes = this.copyNumberAmpEnrichmentData.result!.map(
+                                        (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
+            return fetchReferenceGenomeGenes(this.studies.result[0].referenceGenome,
+                                             this.hugoGeneSymbols.concat(queryGenes, mutGenes, cnvGenes));
+        }
+    });
+
+    @computed get hugoGeneSymbolToCytoband() {
+        // build reference gene map
+        const result:{[hugosymbol:string]:string} =
+            _.reduce(this.referenceGenes.result,
+                (map:{[hugosymbol:string]:string}, next:ReferenceGenomeGene)=>
+                { map[next.hugoGeneSymbol] = next.cytoband || '';return map;},
+                {});
+        return result;
+    }
+
+    @computed get hugoGeneSymbolToChromosome() {
+        // build reference gene map
+        const result:{[hugosymbol:string]:string} =
+            _.reduce(this.referenceGenes.result,
+                (map:{[hugosymbol:string]:string}, next:ReferenceGenomeGene)=>
+                { map[next.hugoGeneSymbol] = next.chromosome;return map;},
+                {});
+        return result;
+    }
+
+    @computed get referenceGenome() {
+        const study = this.studies.result?
+            this.studies.result[0]: undefined;
+        return study? study.referenceGenome: DEFAULT_GENOME;
+    }
+
     @computed get genesInvalid(){
         return this.genes.isError;
     }
@@ -2298,7 +2345,8 @@ export class ResultsViewPageStore {
             const res: GeneticEntity[] = [];
             for (const gene of this.genes.result!) {
                 res.push({geneticEntityName: gene.hugoGeneSymbol, geneticEntityType: GeneticEntityType.GENE,
-                    geneticEntityId: gene.entrezGeneId, cytoband: gene.cytoband, geneticEntityData: gene});
+                    geneticEntityId: gene.entrezGeneId, cytoband: this.hugoGeneSymbolToCytoband[gene.hugoGeneSymbol],
+                    geneticEntityData: gene});
             }
             for (const geneset of this.genesets.result!) {
                 res.push({geneticEntityName: geneset.name, geneticEntityType: GeneticEntityType.GENESET,
