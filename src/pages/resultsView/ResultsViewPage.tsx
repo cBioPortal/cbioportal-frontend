@@ -188,7 +188,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 id:ResultsViewTab.MUTUAL_EXCLUSIVITY,
                 getTab: () => {
                     return <MSKTab key={5} id={ResultsViewTab.MUTUAL_EXCLUSIVITY} linkText="Mutual Exclusivity">
-                        <MutualExclusivityTab store={store}/>
+                        <MutualExclusivityTab store={store} isSampleAlteredMap={store.isSampleAlteredMap}/>
                     </MSKTab>
                 },
                 hide:()=>{
