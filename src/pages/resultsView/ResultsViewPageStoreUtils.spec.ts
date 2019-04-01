@@ -128,7 +128,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             studyId: 'brca_tcga',
             gene: {
                 entrezGeneId, hugoGeneSymbol: `GENE${entrezGeneId}`,
-                "type": "protein-coding", "cytoband": "1p20.1"
+                "type": "protein-coding"
             }
         })) as NumericGeneMolecularData[];
 
@@ -1222,7 +1222,6 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(test,[]);
         });
 
-        
         it("when only physical studies are present", async ()=>{
             let test = await fetchQueriedStudies(physicalStudies,['physical_study_1', 'physical_study_2'], virtualStudies);
             assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'physical_study_2']);
@@ -2314,7 +2313,6 @@ describe('getSampleAlteredMap', () => {
     const studyToMolecularProfiles = {"chol_nus_2012": [{"molecularProfileId": "chol_nus_2012_mutations"} as MolecularProfile, {"molecularProfileId": "chol_nus_2012_cna"} as MolecularProfile]};
 
     it('should handle all profiled samples correctly', () => {
-        
         const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformation, molecularProfileIds, studyToMolecularProfiles);
         const expectedResult = {
             "RAS": [
@@ -2366,7 +2364,6 @@ describe('getSampleAlteredMap', () => {
     });
 
     it('should set undefined for the not profiled samples', () => {
-        
         const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, molecularProfileIds, studyToMolecularProfiles);
         const expectedResult = {
             "RAS": [
@@ -2416,7 +2413,6 @@ describe('getSampleAlteredMap', () => {
     });
 
     it('should search in all molecularProfile ids', () => {
-        
         const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, unprofiledMolecularProfileIds, studyToMolecularProfiles);
         const expectedResult = {
             "RAS": [
@@ -2470,7 +2466,7 @@ describe('getSingleGeneResultKey', () => {
         } as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
         const ret = getSingleGeneResultKey(arg0, arg1, arg2);
         const expectedResult = "KRAS"
-        
+
         assert.equal(ret, expectedResult, "get single gene result key(without alteration)");
 
     });
@@ -2504,7 +2500,7 @@ describe('getMultipleGeneResultKey', () => {
         } as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
         const ret = getMultipleGeneResultKey(arg0);
         const expectedResult = "RAS"
-        
+
         assert.equal(ret, expectedResult, "get gene group result key(with name)");
 
     });
@@ -2535,7 +2531,7 @@ describe('getMultipleGeneResultKey', () => {
         } as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
         const ret = getMultipleGeneResultKey(arg0);
         const expectedResult = "SMAD4 / RAN"
-        
+
         assert.equal(ret, expectedResult, "get gene group result key(without name)");
 
     });

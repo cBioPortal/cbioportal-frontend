@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { calculateExpressionTendency,
     formatPercentage, getAlterationScatterData, getExpressionScatterData,
-    getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData, 
+    getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData,
     getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels, getAlterationEnrichmentColumns, getEnrichmentBarPlotData, getGeneListOptions
 } from "./EnrichmentsUtil";
 import expect from 'expect';
@@ -42,7 +42,7 @@ const exampleAlterationEnrichments = [
         }],
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061
-    }, 
+    },
     {
         "entrezGeneId": 23066,
         "hugoGeneSymbol": "CAND2",
@@ -113,7 +113,7 @@ const exampleAlterationEnrichmentRowData = [
         "qValue": 0.9385345997286061,
         "value":undefined,
         "enrichedGroup":"altered group"
-    }, 
+    },
     {
         "checked": false,
         "disabled": false,
@@ -334,24 +334,24 @@ const exampleAlterations = [
 
 const exampleBoxPlotScatterData = [
     {
-        x: 1.922684807165747, 
-        y: 9.940678152790728, 
-        sampleId: "TCGA-OR-A5J1-01", 
-        studyId: "acc_tcga", 
+        x: 1.922684807165747,
+        y: 9.940678152790728,
+        sampleId: "TCGA-OR-A5J1-01",
+        studyId: "acc_tcga",
         alterations: ""
     },
     {
-        x: 2.0781361505168783, 
-        y: 8.34481740339671, 
-        sampleId: "TCGA-OR-A5J2-01", 
-        studyId: "acc_tcga", 
+        x: 2.0781361505168783,
+        y: 8.34481740339671,
+        sampleId: "TCGA-OR-A5J2-01",
+        studyId: "acc_tcga",
         alterations: ""
     },
     {
-        x: 1.8867908893279546, 
-        y: 9.660310790006957, 
-        sampleId: "TCGA-OR-A5J3-01", 
-        studyId: "acc_tcga", 
+        x: 1.8867908893279546,
+        y: 9.660310790006957,
+        sampleId: "TCGA-OR-A5J3-01",
+        studyId: "acc_tcga",
         alterations: ""
     }
 ]
@@ -360,12 +360,10 @@ const exampleMolecularData = [
     {
         entrezGeneId: 25979,
         gene: {
+            geneticEntityId: 9829,
             entrezGeneId: 25979,
             hugoGeneSymbol: "DHRS7B",
-            type: "protein-coding",
-            cytoband: "17p11.2",
-            length: 68604,
-            chromosome: "17"
+            type: "protein-coding"
         },
         molecularProfileId:"acc_tcga_rna_seq_v2_mrna",
         patientId:"TCGA-OR-A5J1",
@@ -378,12 +376,10 @@ const exampleMolecularData = [
     {
         entrezGeneId:25979,
         gene: {
+            geneticEntityId: 9829,
             entrezGeneId: 25979,
             hugoGeneSymbol: "DHRS7B",
-            type: "protein-coding",
-            cytoband: "17p11.2",
-            length: 68604,
-            chromosome: "17"
+            type: "protein-coding"
         },
         molecularProfileId:"acc_tcga_rna_seq_v2_mrna",
         patientId:"TCGA-OR-A5J2",
@@ -396,12 +392,10 @@ const exampleMolecularData = [
     {
         entrezGeneId:25979,
         gene: {
+            geneticEntityId: 9829,
             entrezGeneId: 25979,
             hugoGeneSymbol: "DHRS7B",
-            type: "protein-coding",
-            cytoband: "17p11.2",
-            length: 68604,
-            chromosome: "17"
+            type: "protein-coding"
         },
         molecularProfileId:"acc_tcga_rna_seq_v2_mrna",
         patientId:"TCGA-OR-A5J3",
@@ -475,9 +469,9 @@ describe("EnrichmentsUtil", () => {
 
         it("returns correct scatter data", () => {
             assert.deepEqual(getExpressionScatterData(exampleExpressionEnrichmentRowData, ["EGFR"]), [
-                {x: -0.7514352361955119, y: 8.713104055017682, hugoGeneSymbol: "DHRS7B", entrezGeneId: 25979, 
+                {x: -0.7514352361955119, y: 8.713104055017682, hugoGeneSymbol: "DHRS7B", entrezGeneId: 25979,
                     logRatio: -0.7514352361955119, pValue: 1.9359580614715825E-9, qValue: 0.000024032306741578182, hovered: false},
-                {x: 1.373692179998275, y: 8.431950829601448, hugoGeneSymbol: "PTPN3", entrezGeneId: 5774, 
+                {x: 1.373692179998275, y: 8.431950829601448, hugoGeneSymbol: "PTPN3", entrezGeneId: 5774,
                     logRatio: 1.373692179998275, pValue: 3.698700537372556E-9, qValue: 0.000024032306741578182, hovered: false},
                 {x: 2.652285592481328, y: 8.249349711250797, hugoGeneSymbol: "EPHB3", entrezGeneId: 2049,
                     logRatio: 2.652285592481328, pValue: 5.631839749745262E-9, qValue: 0.000024395252515979897, hovered: false}
@@ -603,8 +597,8 @@ describe("EnrichmentsUtil", () => {
 
     describe("#getDownloadContent()", () => {
         it("returns correct download content", () => {
-            assert.equal(getDownloadContent(exampleBoxPlotScatterData, "EGFR", "acc_tcga_rna_seq_v2_mrna"), "Sample ID\tEGFR, " + 
-            "acc_tcga_rna_seq_v2_mrna\tAlteration\nTCGA-OR-A5J1-01\t9.940678152790728\t\nTCGA-OR-A5J2-01\t8.34481740339671\t\n" + 
+            assert.equal(getDownloadContent(exampleBoxPlotScatterData, "EGFR", "acc_tcga_rna_seq_v2_mrna"), "Sample ID\tEGFR, " +
+            "acc_tcga_rna_seq_v2_mrna\tAlteration\nTCGA-OR-A5J1-01\t9.940678152790728\t\nTCGA-OR-A5J2-01\t8.34481740339671\t\n" +
             "TCGA-OR-A5J3-01\t9.660310790006957\t");
         });
     });
@@ -629,24 +623,24 @@ describe("EnrichmentsUtil", () => {
         it("returns correct boxplot model", () => {
             assert.deepEqual(getBoxPlotModels(exampleBoxPlotScatterData.concat([
                 {
-                    x: 1, 
-                    y: 5, 
-                    sampleId: "TCGA-OR-A5F1-01", 
-                    studyId: "acc_tcga", 
+                    x: 1,
+                    y: 5,
+                    sampleId: "TCGA-OR-A5F1-01",
+                    studyId: "acc_tcga",
                     alterations: ""
                 },
                 {
-                    x: 1, 
-                    y: 4, 
-                    sampleId: "TCGA-OR-A5O1-01", 
-                    studyId: "acc_tcga", 
+                    x: 1,
+                    y: 4,
+                    sampleId: "TCGA-OR-A5O1-01",
+                    studyId: "acc_tcga",
                     alterations: ""
                 },
                 {
-                    x: 1, 
-                    y: 7, 
-                    sampleId: "TCGA-OR-A5Q1-01", 
-                    studyId: "acc_tcga", 
+                    x: 1,
+                    y: 7,
+                    sampleId: "TCGA-OR-A5Q1-01",
+                    studyId: "acc_tcga",
                     alterations: ""
                 }
             ])), [
@@ -669,7 +663,7 @@ describe("EnrichmentsUtil", () => {
                         suspectedOutliers: []
                     },
                     x: 1
-                }, 
+                },
                 {
                     q1: 8.34481740339671,
                     q2: 9.660310790006957,
@@ -701,7 +695,7 @@ describe("EnrichmentsUtil", () => {
                 "VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh": [],
                 "VENHQS1PUi1BNUozLTAxOmFjY190Y2dh": []
             }
-            assert.deepEqual(getBoxPlotScatterData(exampleMolecularData, "acc_tcga_rna_seq_v2_mrna", sampleAlterations, []), 
+            assert.deepEqual(getBoxPlotScatterData(exampleMolecularData, "acc_tcga_rna_seq_v2_mrna", sampleAlterations, []),
                 exampleBoxPlotScatterData);
         });
     });
