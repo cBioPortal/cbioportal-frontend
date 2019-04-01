@@ -189,7 +189,9 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
     @autobind
     private getInputSection() {
         return (
-            <FormGroup>
+            <FormGroup
+                style={{ display:this.dataInputOpened ? undefined : "none" }}
+            >
                 <ControlLabel>Input genomic alteration data:<Button className="oncoprinterExampleData" style={{marginLeft:7}} bsStyle="primary" bsSize="small" onClick={this.populateExampleData}>Load example data</Button></ControlLabel>
                 <FormControl
                     className="oncoprinterDataInput"
@@ -238,14 +240,12 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                     <div className="cbioportal-frontend">
                         <h1 style={{display: "inline"}}>Oncoprinter</h1> generates Oncoprints from your own data.
                         <br/><br/>
-                        <Collapse isOpened={this.dataInputOpened} hasNestedCollapse={true}>
-                            <Observer>
-                                {this.getHelpSection}
-                            </Observer>
-                            <Observer>
-                                {this.getInputSection}
-                            </Observer>
-                        </Collapse>
+                        <Observer>
+                            {this.getHelpSection}
+                        </Observer>
+                        <Observer>
+                            {this.getInputSection}
+                        </Observer>
                         { !this.dataInputOpened && (
                             <button className="btn btn-primary btn-lg oncoprinterModifyInput" style={{paddingLeft:50, paddingRight:50, marginBottom:15}}
                                     onClick={()=>{ this.dataInputOpened = true; }}
