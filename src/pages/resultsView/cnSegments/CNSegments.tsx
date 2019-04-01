@@ -7,12 +7,12 @@ import {Nav, NavItem} from "react-bootstrap";
 
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {ResultsViewTab} from "../ResultsViewPageHelpers";
-import {CopyNumberSeg, Gene} from "shared/api/generated/CBioPortalAPI";
+import {CopyNumberSeg, Gene, ReferenceGenomeGene} from "shared/api/generated/CBioPortalAPI";
 import IntegrativeGenomicsViewer from "shared/components/igv/IntegrativeGenomicsViewer";
 import CNSegmentsDownloader from "shared/components/cnSegments/CNSegmentsDownloader";
 import WindowStore from "shared/components/window/WindowStore";
 import {
-    WHOLE_GENOME, calcSegmentTrackHeight, defaultSegmentTrackProps, generateSegmentFeatures
+    WHOLE_GENOME, DEFAULT_GENOME, calcSegmentTrackHeight, defaultSegmentTrackProps, generateSegmentFeatures
 } from "shared/lib/IGVUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {default as ProgressIndicator, IProgressIndicatorItem} from "shared/components/progressIndicator/ProgressIndicator";
@@ -52,10 +52,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
     }
 
     @computed get chromosome() {
-        const gene = this.props.store.genes.result ?
-            this.props.store.genes.result.find(g => g.hugoGeneSymbol === this.activeLocus) : undefined;
-
-        return gene ? gene.chromosome : undefined;
+        return this.props.store.hugoGeneSymbolToChromosome[this.activeLocus];
     }
 
     @computed get filename()
@@ -133,7 +130,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
                         Whole Genome
                     </NavItem>
                     {
-                        this.props.store.genes.result && this.props.store.genes.result.map((gene: Gene) => (
+                        this.props.store.genes.result && this.props.store.genes.result.map((gene:Gene) => (
                             <NavItem eventKey={gene.hugoGeneSymbol}>
                                 {gene.hugoGeneSymbol}
                             </NavItem>
@@ -149,6 +146,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
                                 features: this.features
                             }
                         ]}
+                        genome={this.props.store.referenceGenome}
                         locus={this.activeLocus}
                         onRenderingStart={this.onIgvRenderingStart}
                         onRenderingComplete={this.onIgvRenderingComplete}

@@ -210,14 +210,14 @@ export function updateMissingGeneInfo(mutations: Partial<Mutation>[],
 // TODO remove when done refactoring mutation mapper
 export function extractGenomicLocation(mutation: Mutation)
 {
-    if (mutation.gene && mutation.gene.chromosome &&
+    if (mutation.gene && mutation.chr &&
         mutation.startPosition &&
         mutation.endPosition &&
         mutation.referenceAllele &&
         mutation.variantAllele)
     {
         return {
-            chromosome: mutation.gene.chromosome.replace("chr", ""),
+            chromosome: mutation.chr.replace("chr", ""),
             start: mutation.startPosition,
             end: mutation.endPosition,
             referenceAllele: mutation.referenceAllele,
