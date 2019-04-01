@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
-import * as tracksHelper from './tracksHelper'
+import * as tracksHelper from './tracksHelper';
 import {CopyNumberSeg, Mutation, Sample} from 'shared/api/generated/CBioPortalAPI';
 import SampleManager from "../sampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
@@ -13,6 +13,8 @@ interface TracksPropTypes {
     samples:Sample[];
     width:number;
 }
+
+export const DEFAULT_CHROMOSOME="GRCh37";
 
 export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
@@ -30,7 +32,11 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         // --- end of raphael config ---
 
         // --- chromosome chart ---
-        var chmInfo = tracksHelper.getChmInfo();
+        let genomeBuild = DEFAULT_CHROMOSOME;
+        if (this.props.mutations) {
+            genomeBuild = this.props.mutations[0].ncbiBuild;
+        }
+        const chmInfo = tracksHelper.getChmInfo( genomeBuild);
         tracksHelper.plotChromosomes(paper,config,chmInfo);
         // --- end of chromosome chart ---
 

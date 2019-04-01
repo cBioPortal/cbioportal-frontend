@@ -18,8 +18,7 @@ export function emptyMutation(): Mutation
         fisValue: -1,
         functionalImpactScore: "",
         gene: {
-            chromosome: "",
-            cytoband: "",
+            geneticEntityId: -1,
             entrezGeneId: -1,
             hugoGeneSymbol: "",
             type: ""
@@ -54,6 +53,7 @@ export function emptyMutation(): Mutation
         driverFilterAnnotation: "",
         driverTiersFilter: "",
         driverTiersFilterAnnotation: "",
+        chr: ""
         /*wildType:false,
         sequenced:true*/
     };

@@ -14,7 +14,7 @@ import _ from "lodash";
 import { AlterationContainerType } from "pages/resultsView/enrichments/EnrichmentsUtil";
 
 export interface ICopyNumberEnrichmentsProps {
-    store: GroupComparisonStore
+    store: GroupComparisonStore;
 }
 
 @observer

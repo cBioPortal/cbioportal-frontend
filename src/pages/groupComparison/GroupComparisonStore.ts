@@ -21,6 +21,7 @@ import {
     ClinicalDataMultiStudyFilter,
     MolecularProfile,
     MolecularProfileFilter,
+    ReferenceGenomeGene,
     Sample,
     SampleFilter
 } from "../../shared/api/generated/CBioPortalAPI";
@@ -57,6 +58,7 @@ import {stringListToIndexSet} from "../../public-lib/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
+import {fetchAllReferenceGenomeGenes, fetchReferenceGenomeGenes} from "shared/lib/StoreUtils";
 
 export enum OverlapStrategy {
     INCLUDE = "Include",
@@ -385,6 +387,22 @@ export default class GroupComparisonStore {
     readonly _selectedGroups = remoteData({
         await:()=>[this._originalGroups],
         invoke:()=>Promise.resolve(this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid)))
+    });
+
+    readonly referenceGenes = remoteData<ReferenceGenomeGene[]>({
+        await: ()=>[
+            this.studies,
+            this.mutationEnrichmentData,
+            this.copyNumberData
+        ],
+        invoke: async () => {
+            const mutGenes = this.mutationEnrichmentData.result!.map(
+                (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
+            const cnvGenes = this.copyNumberData.result!.map(
+                (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
+            return fetchReferenceGenomeGenes(this.studies.result[0].referenceGenome,
+                mutGenes.concat(cnvGenes));
+        }
     });
 
     readonly samples = remoteData({

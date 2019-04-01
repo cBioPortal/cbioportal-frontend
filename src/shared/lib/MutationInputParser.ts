@@ -100,7 +100,7 @@ export function parseLine(line: string,
         const value = parseValue(key, values, indexMap);
 
         if (value) {
-            if (key === "chromosome" || key === "hugoGeneSymbol") {
+            if (key === "hugoGeneSymbol") {
                 mutation.gene = (mutation.gene || {}) as Gene;
                 mutation.gene[key] = value;
             }
