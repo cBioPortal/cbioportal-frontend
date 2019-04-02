@@ -1,7 +1,8 @@
 import * as React from 'react';
-import {SequenceSpec} from "./LollipopPlotNoTooltip";
 import {observer} from "mobx-react";
 import {observable} from "mobx";
+
+import SequenceSpec from "./model/SequenceSpec";
 
 interface ISequenceProps {
     x:number;
