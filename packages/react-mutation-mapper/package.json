@@ -1,0 +1,66 @@
+{
+  "name": "react-mutation-mapper",
+  "version": "0.1.0",
+  "description": "Generic Mutation Mapper",
+  "author": "cBioPortal",
+  "license": "GNU Affero General Public License v3.0",
+  "repository": "cBioPortal/react-mutation-mapper",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "jsnext:main": "dist/index.es.js",
+  "engines": {
+    "node": ">=8",
+    "npm": ">=5"
+  },
+  "scripts": {
+    "test": "cross-env CI=1 react-scripts-ts test --env=jsdom",
+    "test:watch": "react-scripts-ts test --env=jsdom",
+    "build": "rollup -c rollup.config.ts",
+    "start": "rollup -c rollup.config.ts -w",
+    "prepare": "yarn run build",
+    "predeploy": "cd example && yarn install && yarn run build",
+    "deploy": "gh-pages -d example/build"
+  },
+  "dependencies": {
+    "@types/jquery": "^3.3.29",
+    "@types/lodash": "^4.14.123",
+    "@types/react": "^16.8.10",
+    "cbioportal-frontend-core": "^0.1.0",
+    "jquery": "^3.3.1",
+    "lodash": "^4.17.11",
+    "mobx": "^5.9.4",
+    "mobx-react": "^5.4.3"
+  },
+  "peerDependencies": {
+    "prop-types": "^15.5.4",
+    "react": "^15.0.0 || ^16.0.0",
+    "react-dom": "^15.0.0 || ^16.0.0"
+  },
+  "devDependencies": {
+    "@svgr/rollup": "^2.4.1",
+    "@types/jest": "^23.1.5",
+    "@types/react-dom": "^16.0.5",
+    "@types/rollup-plugin-commonjs": "^9.2.0",
+    "@types/rollup-plugin-node-resolve": "^4.0.0",
+    "babel-core": "^6.26.3",
+    "babel-runtime": "^6.26.0",
+    "cross-env": "^5.2.0",
+    "gh-pages": "^1.2.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-scripts-ts": "^3.1.0",
+    "rollup": "^1.7.4",
+    "rollup-plugin-auto-external": "^2.0.0",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-commonjs": "^9.2.2",
+    "rollup-plugin-node-resolve": "^4.0.1",
+    "rollup-plugin-peer-deps-external": "^2.2.0",
+    "rollup-plugin-postcss": "^2.0.3",
+    "rollup-plugin-typescript2": "^0.20.1",
+    "rollup-plugin-url": "^2.2.0",
+    "typescript": "^3.4.1"
+  },
+  "files": [
+    "dist"
+  ]
+}
