@@ -60,27 +60,6 @@ export function parseConfigDisabledTabs(configDisabledTabsParam:string){
     });
 }
 
-export function getVirtualStudies(cancerStudyIds:string[]):Promise<VirtualStudy[]>{
-
-    const prom = new Promise<VirtualStudy[]>((resolve, reject)=>{
-        Promise.all([
-            sessionServiceClient.getUserVirtualStudies(),
-            client.getAllStudiesUsingGET({projection:"SUMMARY"})
-        ]).then(([userVirtualStudies, allCancerStudies])=>{
-            // return virtual studies from given cancer study ids
-            const missingFromCancerStudies = _.differenceWith(cancerStudyIds, allCancerStudies,(id:string, study:CancerStudy)=>id==study.studyId);
-            const virtualStudies = userVirtualStudies.filter(
-                (virtualStudy: VirtualStudy) => (missingFromCancerStudies.includes(virtualStudy.id))
-            );
-            resolve(virtualStudies);
-        }).catch(()=>{
-            resolve([]);
-;       });
-    });
-    return prom;
-
-}
-
 export function substitutePhysicalStudiesForVirtualStudies(cancerStudyIds:string[], virtualStudies:VirtualStudy[]){
 
     let physicalStudies:string[] = [];
