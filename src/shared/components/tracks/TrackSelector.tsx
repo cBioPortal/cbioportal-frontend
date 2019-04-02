@@ -1,9 +1,9 @@
 import * as React from "react";
 import {computed} from "mobx";
 import {observer} from "mobx-react";
-const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 import {loaderIcon} from "../annotation/StatusHelpers";
+import CheckedSelect, {Option} from "../checkedSelect/CheckedSelect";
 
 export type TrackVisibility = {[trackName: string]: 'visible' | 'hidden'};
 export type TrackDataStatus = {[trackName: string]: 'pending' | 'error' | 'complete' | 'empty'}
@@ -43,7 +43,7 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
             .map(id => ({value: id}));
     }
 
-    @computed get options() {
+    @computed get options(): Option[] {
         return [
             {
                 label: (
@@ -108,7 +108,6 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
                 onChange={this.onChange}
                 options={this.options}
                 value={this.selectedValues}
-                labelKey="label"
             />
         );
     }

@@ -971,9 +971,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public render() {
         return (
-            <div>
+            <div style={{ position:"relative" }}>
 
-                <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true} className="oncoprintLoadingIndicator">
+                <LoadingIndicator isLoading={this.isHidden} size={"big"} centerRelativeToContainer={true} className="oncoprintLoadingIndicator">
                     <div style={{marginTop:20}}>
                         <ProgressIndicator getItems={this.getProgressItems} show={this.isHidden} sequential={true}/>
                     </div>

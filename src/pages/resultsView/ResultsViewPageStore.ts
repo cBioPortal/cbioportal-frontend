@@ -128,7 +128,6 @@ import {fetchVariantAnnotationsIndexedByGenomicLocation} from "shared/lib/Mutati
 import {VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
 import {ServerConfigHelpers} from "../../config/config";
 import {
-    getVirtualStudies,
     populateSampleSpecificationsFromVirtualStudies, ResultsViewTab,
     substitutePhysicalStudiesForVirtualStudies
 } from "./ResultsViewPageHelpers";
@@ -141,6 +140,8 @@ import {ResultsViewQuery} from "./ResultsViewQuery";
 import {annotateAlterationTypes} from "../../shared/lib/oql/annotateAlterationTypes";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {ErrorMessages} from "../../shared/enums/ErrorEnums";
+import sessionServiceClient from "../../shared/api/sessionServiceInstance";
+import { VirtualStudy } from "shared/model/VirtualStudy";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -1415,7 +1416,7 @@ export class ResultsViewPageStore {
 
 
     readonly samplesSpecification = remoteData({
-        await: () => [this.virtualStudies],
+        await: () => [this.queriedVirtualStudies],
         invoke: async () => {
 
             // is this a sample list category query?
@@ -1423,8 +1424,8 @@ export class ResultsViewPageStore {
             // 1. looking up all sample lists in selected studies
             // 2. using those with matching category
             if (!this.rvQuery.sampleListCategory) {
-                if (this.virtualStudies.result!.length > 0){
-                    return populateSampleSpecificationsFromVirtualStudies(this.rvQuery.samplesSpecification, this.virtualStudies.result!);
+                if (this.queriedVirtualStudies.result!.length > 0){
+                    return populateSampleSpecificationsFromVirtualStudies(this.rvQuery.samplesSpecification, this.queriedVirtualStudies.result!);
                 } else {
                     return this.rvQuery.samplesSpecification;
                 }
@@ -1473,24 +1474,47 @@ export class ResultsViewPageStore {
         }
     }, {});
 
-    readonly virtualStudies = remoteData({
+    readonly allStudies = remoteData({
+        invoke: async()=>(await client.getAllStudiesUsingGET({projection: "SUMMARY"}))
+    }, []);
+
+    readonly queriedVirtualStudies = ServerConfigHelpers.sessionServiceIsEnabled() ? remoteData({
+        await: () => [
+            this.allStudies,
+        ],
         invoke: async ()=> {
-            return ServerConfigHelpers.sessionServiceIsEnabled() ? getVirtualStudies(this.rvQuery.cohortIdsList) : [];
+            const allCancerStudies = this.allStudies.result;
+            const cancerStudyIds = this.rvQuery.cohortIdsList;
+
+            const missingFromCancerStudies = _.differenceWith(cancerStudyIds, allCancerStudies,(id:string, study:CancerStudy)=>id===study.studyId);
+            let ret:VirtualStudy[] = [];
+
+            for (const missingId of missingFromCancerStudies) {
+                try {
+                    const vs = await sessionServiceClient.getVirtualStudy(missingId);
+                    ret = ret.concat(vs);
+                } catch (error) {
+                    // ignore missing studies
+                    continue;
+                }
+            }
+            return Promise.resolve(ret);
         },
         onError: () => {
             // fail silently when an error occurs with the virtual studies
         }
-    });
+        // just return empty array if session service is disabled
+    }) : remoteData({invoke: async() => ([])});
 
     readonly studyIds = remoteData({
         await:()=>[
-            this.virtualStudies
+            this.queriedVirtualStudies
         ],
         invoke: ()=>{
             let physicalStudies:string[];
-            if (this.virtualStudies.result!.length > 0) {
+            if (this.queriedVirtualStudies.result!.length > 0) {
                 // we want to replace virtual studies with their underlying physical studies
-                physicalStudies = substitutePhysicalStudiesForVirtualStudies(this.rvQuery.cohortIdsList, this.virtualStudies.result!);
+                physicalStudies = substitutePhysicalStudiesForVirtualStudies(this.rvQuery.cohortIdsList, this.queriedVirtualStudies.result!);
             } else {
                 physicalStudies = this.rvQuery.cohortIdsList.slice();
             }
@@ -1908,10 +1932,10 @@ export class ResultsViewPageStore {
     //this is only required to show study name and description on the results page
     //CancerStudy objects for all the cohortIds
     readonly queriedStudies = remoteData({
-        await: ()=>[this.studyIdToStudy],
+        await: ()=>[this.studyIdToStudy, this.queriedVirtualStudies],
 		invoke: async ()=>{
             if(!_.isEmpty(this.rvQuery.cohortIdsList)){
-                return fetchQueriedStudies(this.studyIdToStudy.result, this.rvQuery.cohortIdsList);
+                return fetchQueriedStudies(this.studyIdToStudy.result, this.rvQuery.cohortIdsList, this.queriedVirtualStudies.result? this.queriedVirtualStudies.result : []);
             } else {
                 return []
             }
