@@ -1,9 +1,13 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
-import {default as LollipopPlotNoTooltip, LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
 import {HitZoneConfig, defaultHitzoneConfig, initHitZoneFromConfig, DefaultTooltip} from "cbioportal-frontend-core";
-import {DataStore} from "./model/DataStore";
+
+import LollipopPlotNoTooltip from "./LollipopPlotNoTooltip";
+import DataStore from "./model/DataStore";
+import SequenceSpec from "./model/SequenceSpec";
+import LollipopSpec from "./model/LollipopSpec";
+import DomainSpec from "./model/DomainSpec";
 
 export type LollipopPlotProps = {
     sequence: SequenceSpec;

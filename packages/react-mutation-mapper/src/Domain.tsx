@@ -1,8 +1,9 @@
 import * as React from 'react';
 import $ from 'jquery';
-import {DomainSpec} from "./LollipopPlotNoTooltip";
 import {observer} from "mobx-react";
 import {computed, observable} from "mobx";
+
+import DomainSpec from "./model/DomainSpec";
 
 type DomainProps = {
     x:number;

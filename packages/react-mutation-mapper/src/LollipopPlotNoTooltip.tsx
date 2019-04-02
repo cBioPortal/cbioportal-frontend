@@ -4,38 +4,13 @@ import _ from "lodash";
 import Sequence from "./Sequence";
 import Lollipop from "./Lollipop";
 import Domain from "./Domain";
+import LollipopSpec from "./model/LollipopSpec";
+import DomainSpec from "./model/DomainSpec";
 import {SVGAxis, Tick, getComponentIndex, unhoverAllComponents} from 'cbioportal-frontend-core';
 import {observer} from "mobx-react";
 import {computed, action} from "mobx";
 import $ from "jquery";
 import {LollipopPlotProps} from "./LollipopPlot";
-
-
-export type LollipopSpec = {
-    codon:number;
-    count:number;
-    label?: {
-        text: string;
-        textAnchor?: string;
-        fontSize?: number;
-        fontFamily?: string;
-    };
-    color?:string;
-    tooltip?:JSX.Element;
-};
-
-export type DomainSpec = {
-    startCodon:number;
-    endCodon:number;
-    color:string;
-    label?:string;
-    labelColor?:string;
-    tooltip?:JSX.Element;
-};
-
-export type SequenceSpec = {
-    tooltip?:JSX.Element;
-}
 
 export type LollipopPlotNoTooltipProps = LollipopPlotProps & {
     setHitZone?:(
