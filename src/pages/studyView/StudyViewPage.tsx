@@ -162,13 +162,15 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 onVisibleChange={visible=>{ this.showGroupsTooltip = !!visible; }}
                 getTooltipContainer={()=>document.getElementById("comparisonGroupManagerContainer")!}
                 overlay={
-                    <div style={{width: 300}}>
+                    <div style={{width: 350}}>
                         {this.props.appStore.isLoggedIn ?
                             <ComparisonGroupManager store={this.store} /> :
                             (<span>
                                 Please log in to use the custom groups feature to save and compare sub-cohorts.
                                 <If condition={AppConfig.serverConfig.authenticationMethod === "social_auth"}>
-                                    <SocialAuthButton appStore={this.props.appStore}/>
+                                    <div className={"text-center"} style={{padding:20}}>
+                                        <SocialAuthButton appStore={this.props.appStore}/>
+                                    </div>
                                 </If>
                             </span>)
                         }
