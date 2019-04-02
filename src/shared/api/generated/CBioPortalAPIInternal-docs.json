@@ -16,10 +16,6 @@
   },
   "tags": [
     {
-      "name": "Clinical Data Enrichments",
-      "description": " "
-    },
-    {
       "name": "Co-Expressions",
       "description": " "
     },
@@ -283,43 +279,6 @@
         }
       }
     },
-    "/clinical-data-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Clinical Data Enrichments"
-        ],
-        "summary": "Fetch clinical data enrichments for the sample groups",
-        "operationId": "fetchClinicalEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "groupFilter",
-            "description": "List of altered and unaltered Sample/Patient IDs",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/GroupFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ClinicalDataEnrichment"
-              }
-            }
-          }
-        }
-      }
-    },
     "/cna-genes/fetch": {
       "post": {
         "tags": [
@@ -351,67 +310,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CopyNumberCountByGene"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/copy-number-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Copy Number Enrichments"
-        ],
-        "summary": "Fetch copy number enrichments in a molecular profile",
-        "operationId": "fetchCopyNumberEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "copyNumberEventType",
-            "in": "query",
-            "description": "Type of the copy number event",
-            "required": false,
-            "type": "string",
-            "default": "HOMDEL",
-            "enum": [
-              "HOMDEL",
-              "AMP"
-            ]
-          },
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "multipleStudiesEnrichmentFilter",
-            "description": "List of entities",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/MultipleStudiesEnrichmentFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -866,12 +764,12 @@
         }
       }
     },
-    "/molecular-profiles/co-expressions/fetch": {
+    "/molecular-profiles/{molecularProfileId}/co-expressions/fetch": {
       "post": {
         "tags": [
           "Co-Expressions"
         ],
-        "summary": "Calculates correlations between a genetic entity from a specific profile and another profile from the same study",
+        "summary": "Fetch co-expressions in a molecular profile",
         "operationId": "fetchCoExpressionsUsingPOST",
         "consumes": [
           "application/json"
@@ -881,27 +779,28 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileIdA",
-            "in": "query",
-            "description": "Molecular Profile ID from the Genetic Entity referenced in the co-expression filter e.g. acc_tcga_rna_seq_v2_mrna",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "molecularProfileIdB",
-            "in": "query",
-            "description": "Molecular Profile ID (can be the same as molecularProfileIdA) e.g. acc_tcga_rna_seq_v2_mrna",
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
             "required": true,
             "type": "string"
           },
           {
             "in": "body",
             "name": "coExpressionFilter",
-            "description": "List of Sample IDs/Sample List ID and Entrez Gene ID/Gene set ID",
+            "description": "List of Sample IDs/Sample List ID",
             "required": true,
             "schema": {
               "$ref": "#/definitions/CoExpressionFilter"
             }
+          },
+          {
+            "name": "entrezGeneId",
+            "in": "query",
+            "description": "Entrez Gene ID",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
           },
           {
             "name": "threshold",
@@ -920,6 +819,74 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CoExpression"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/molecular-profiles/{molecularProfileId}/copy-number-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Copy Number Enrichments"
+        ],
+        "summary": "Fetch copy number enrichments in a molecular profile",
+        "operationId": "fetchCopyNumberEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "copyNumberEventType",
+            "in": "query",
+            "description": "Type of the copy number event",
+            "required": false,
+            "type": "string",
+            "default": "HOMDEL",
+            "enum": [
+              "HOMDEL",
+              "AMP"
+            ]
+          },
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "enrichmentFilter",
+            "description": "List of altered and unaltered Sample/Patient IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EnrichmentFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -1031,6 +998,62 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/MrnaPercentile"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/molecular-profiles/{molecularProfileId}/mutation-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Mutation Enrichments"
+        ],
+        "summary": "Fetch mutation enrichments in a molecular profile",
+        "operationId": "fetchMutationEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "enrichmentFilter",
+            "description": "List of altered and unaltered Sample/Patient IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EnrichmentFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -1159,55 +1182,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/MutationCountByGene"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mutation-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Mutation Enrichments"
-        ],
-        "summary": "Fetch mutation enrichments in a molecular profile",
-        "operationId": "fetchMutationEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "multipleStudiesEnrichmentFilter",
-            "description": "List of entities",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/MultipleStudiesEnrichmentFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -1447,14 +1421,18 @@
     "AlterationEnrichment": {
       "type": "object",
       "required": [
+        "alteredCount",
         "entrezGeneId",
         "hugoGeneSymbol",
         "logRatio",
         "pValue",
-        "set1CountSummary",
-        "set2CountSummary"
+        "unalteredCount"
       ],
       "properties": {
+        "alteredCount": {
+          "type": "integer",
+          "format": "int32"
+        },
         "cytoband": {
           "type": "string"
         },
@@ -1471,47 +1449,12 @@
         "pValue": {
           "type": "number"
         },
-        "set1CountSummary": {
-          "$ref": "#/definitions/CountSummary"
-        },
-        "set2CountSummary": {
-          "$ref": "#/definitions/CountSummary"
+        "unalteredCount": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "title": "AlterationEnrichment"
-    },
-    "ClinicalAttribute": {
-      "type": "object",
-      "required": [
-        "clinicalAttributeId",
-        "displayName",
-        "patientAttribute",
-        "studyId"
-      ],
-      "properties": {
-        "clinicalAttributeId": {
-          "type": "string"
-        },
-        "datatype": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "displayName": {
-          "type": "string"
-        },
-        "patientAttribute": {
-          "type": "boolean"
-        },
-        "priority": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        }
-      },
-      "title": "ClinicalAttribute"
     },
     "ClinicalDataBinCountFilter": {
       "type": "object",
@@ -1612,30 +1555,6 @@
       },
       "title": "ClinicalDataCountItem"
     },
-    "ClinicalDataEnrichment": {
-      "type": "object",
-      "required": [
-        "clinicalAttribute",
-        "method",
-        "pValue",
-        "score"
-      ],
-      "properties": {
-        "clinicalAttribute": {
-          "$ref": "#/definitions/ClinicalAttribute"
-        },
-        "method": {
-          "type": "string"
-        },
-        "pValue": {
-          "type": "number"
-        },
-        "score": {
-          "type": "number"
-        }
-      },
-      "title": "ClinicalDataEnrichment"
-    },
     "ClinicalDataEqualityFilter": {
       "type": "object",
       "properties": {
@@ -1717,9 +1636,8 @@
       "type": "object",
       "required": [
         "cytoband",
-        "geneticEntityId",
-        "geneticEntityName",
-        "geneticEntityType",
+        "entrezGeneId",
+        "hugoGeneSymbol",
         "pValue",
         "spearmansCorrelation"
       ],
@@ -1727,18 +1645,12 @@
         "cytoband": {
           "type": "string"
         },
-        "geneticEntityId": {
-          "type": "string"
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
         },
-        "geneticEntityName": {
+        "hugoGeneSymbol": {
           "type": "string"
-        },
-        "geneticEntityType": {
-          "type": "string",
-          "enum": [
-            "GENE",
-            "GENESET"
-          ]
         },
         "pValue": {
           "type": "number"
@@ -1752,13 +1664,6 @@
     "CoExpressionFilter": {
       "type": "object",
       "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "genesetId": {
-          "type": "string"
-        },
         "sampleIds": {
           "type": "array",
           "items": {
@@ -1778,6 +1683,10 @@
           "type": "integer",
           "format": "int32"
         },
+        "countByEntity": {
+          "type": "integer",
+          "format": "int32"
+        },
         "cytoband": {
           "type": "string"
         },
@@ -1790,10 +1699,6 @@
         },
         "hugoGeneSymbol": {
           "type": "string"
-        },
-        "numberOfAlteredCases": {
-          "type": "integer",
-          "format": "int32"
         },
         "qValue": {
           "type": "number"
@@ -1854,24 +1759,6 @@
         }
       },
       "title": "CosmicMutation"
-    },
-    "CountSummary": {
-      "type": "object",
-      "required": [
-        "alteredCount",
-        "profiledCount"
-      ],
-      "properties": {
-        "alteredCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "profiledCount": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "title": "CountSummary"
     },
     "DataBin": {
       "type": "object",
@@ -2100,9 +1987,6 @@
         "value"
       ],
       "properties": {
-        "geneset": {
-          "$ref": "#/definitions/Geneset"
-        },
         "genesetId": {
           "type": "string"
         },
@@ -2113,9 +1997,6 @@
           "type": "string"
         },
         "sampleId": {
-          "type": "string"
-        },
-        "stableId": {
           "type": "string"
         },
         "studyId": {
@@ -2195,33 +2076,6 @@
       },
       "title": "GisticToGene"
     },
-    "Group": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "sampleIdentifiers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/SampleIdentifier"
-          }
-        }
-      },
-      "title": "Group"
-    },
-    "GroupFilter": {
-      "type": "object",
-      "properties": {
-        "groups": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Group"
-          }
-        }
-      },
-      "title": "GroupFilter"
-    },
     "Info": {
       "type": "object",
       "required": [
@@ -2277,22 +2131,6 @@
         }
       },
       "title": "Info"
-    },
-    "MolecularProfileCaseIdentifier": {
-      "type": "object",
-      "required": [
-        "caseId",
-        "molecularProfileId"
-      ],
-      "properties": {
-        "caseId": {
-          "type": "string"
-        },
-        "molecularProfileId": {
-          "type": "string"
-        }
-      },
-      "title": "MolecularProfileCaseIdentifier"
     },
     "MolecularProfileSampleCount": {
       "type": "object",
@@ -2363,28 +2201,6 @@
       },
       "title": "MrnaPercentile"
     },
-    "MultipleStudiesEnrichmentFilter": {
-      "type": "object",
-      "required": [
-        "molecularProfileCaseSet1",
-        "molecularProfileCaseSet2"
-      ],
-      "properties": {
-        "molecularProfileCaseSet1": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/MolecularProfileCaseIdentifier"
-          }
-        },
-        "molecularProfileCaseSet2": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/MolecularProfileCaseIdentifier"
-          }
-        }
-      },
-      "title": "MultipleStudiesEnrichmentFilter"
-    },
     "MutSig": {
       "type": "object",
       "required": [
@@ -2427,6 +2243,10 @@
     "MutationCountByGene": {
       "type": "object",
       "properties": {
+        "countByEntity": {
+          "type": "integer",
+          "format": "int32"
+        },
         "entrezGeneId": {
           "type": "integer",
           "format": "int32"
@@ -2436,10 +2256,6 @@
         },
         "hugoGeneSymbol": {
           "type": "string"
-        },
-        "numberOfAlteredCases": {
-          "type": "integer",
-          "format": "int32"
         },
         "qValue": {
           "type": "number"
