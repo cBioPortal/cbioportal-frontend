@@ -22,14 +22,13 @@
     "deploy": "gh-pages -d example/build"
   },
   "dependencies": {
-    "@types/jquery": "^3.3.29",
-    "@types/lodash": "^4.14.123",
-    "@types/react": "^16.8.10",
     "cbioportal-frontend-core": "^0.1.0",
     "jquery": "^3.3.1",
     "lodash": "^4.17.11",
     "mobx": "^5.9.4",
-    "mobx-react": "^5.4.3"
+    "mobx-react": "^5.4.3",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
   },
   "peerDependencies": {
     "prop-types": "^15.5.4",
@@ -39,15 +38,16 @@
   "devDependencies": {
     "@svgr/rollup": "^2.4.1",
     "@types/jest": "^23.1.5",
-    "@types/react-dom": "^16.0.5",
+    "@types/jquery": "^3.3.29",
+    "@types/lodash": "^4.14.123",
+    "@types/react": "^16.8.10",
+    "@types/react-dom": "^16.8.3",
     "@types/rollup-plugin-commonjs": "^9.2.0",
     "@types/rollup-plugin-node-resolve": "^4.0.0",
     "babel-core": "^6.26.3",
     "babel-runtime": "^6.26.0",
     "cross-env": "^5.2.0",
     "gh-pages": "^1.2.0",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
     "react-scripts-ts": "^3.1.0",
     "rollup": "^1.7.4",
     "rollup-plugin-auto-external": "^2.0.0",
