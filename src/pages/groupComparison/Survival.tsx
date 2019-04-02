@@ -7,7 +7,6 @@ import { remoteData } from 'shared/api/remoteData';
 import { COLORS } from 'pages/studyView/StudyViewUtils';
 import {MakeMobxView} from "../../shared/components/MobxView";
 import {ENRICHMENTS_NOT_2_GROUPS_MSG, SURVIVAL_TOO_MANY_GROUPS_MSG} from "./GroupComparisonUtils";
-import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 
 export interface ISurvivalProps {
@@ -53,7 +52,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 return this.survivalUI.component;
             }
         },
-        renderPending:()=><Loader isLoading={true} size={"big"}/>,
+        renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 
@@ -143,7 +142,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 </div>
             );
         },
-        renderPending:()=><Loader isLoading={true} size={"big"}/>,
+        renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 

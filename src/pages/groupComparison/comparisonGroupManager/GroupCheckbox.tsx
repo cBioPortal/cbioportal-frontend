@@ -16,12 +16,16 @@ import styles from "../styles.module.scss"
 import {SyntheticEvent} from "react";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
+
+
 export interface IGroupCheckboxProps {
     group:StudyViewComparisonGroup;
     store:StudyViewPageStore;
     markedForDeletion:boolean;
     restore:(group:StudyViewComparisonGroup)=>void;
     rename:(newName:string, currentGroup:StudyViewComparisonGroup)=>void;
+    delete:(group:StudyViewComparisonGroup)=>void;
+    addSelectedSamples:(group:StudyViewComparisonGroup)=>void;
     allGroupNames:string[];
 }
 
@@ -49,6 +53,16 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
     private onEditClick() {
         this._editingName = true;
         this.nameInput = this.props.group.name;
+    }
+
+    @autobind
+    private onDeleteClick() {
+        this.props.delete(this.props.group);
+    }
+
+    @autobind
+    private onAddSelectedSamplesClick() {
+        this.props.addSelectedSamples(this.props.group);
     }
 
     @autobind
@@ -154,6 +168,7 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
             ];
         } else if (!this.props.markedForDeletion) {
             editingRelatedIcons = [
+                <DefaultTooltip overlay={"Edit Name"}>
                 <span
                     onClick={this.onEditClick}
                 >
@@ -163,7 +178,30 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
                             cursor:"pointer"
                         }}
                     />
-                </span>
+                </span></DefaultTooltip>,
+                <DefaultTooltip overlay={"Delete Group"}>
+                <span
+                    onClick={this.onDeleteClick}
+                >
+                    <i
+                        className="fa fa-md fa-trash"
+                        style={{
+                            cursor:"pointer"
+                        }}
+                    />
+                </span></DefaultTooltip>,
+                <DefaultTooltip overlay={<span>{`Add currently selected samples (${getNumSamples(group)}) to `}<strong>{group.name}</strong></span>}>
+                    <span
+                        onClick={this.onAddSelectedSamplesClick}
+                    >
+                        <i
+                            className="fa fa-md fa-plus"
+                            style={{
+                                cursor:"pointer"
+                            }}
+                        />
+                    </span>
+                </DefaultTooltip>
             ];
         }
         
@@ -177,11 +215,11 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
                 }}
             >
                 {checkboxAndLabel}
-                <span>
+                <div className={styles.groupLineItemActionButtons}>
                     {editingRelatedIcons}
                     {this.props.group.nonExistentSamples.length > 0 && <ErrorIcon tooltip={<MissingSamplesMessage samples={this.props.group.nonExistentSamples}/>} />}
                     {this.props.markedForDeletion && (<button style={{marginLeft:10}} className="btn btn-xs btn-default" onClick={this.onRestoreClick}>Restore</button>)}
-                </span>
+                </div>
             </div>
         );
     }
