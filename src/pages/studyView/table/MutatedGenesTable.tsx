@@ -97,6 +97,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     @autobind
     @action
     updateCellMargin() {
+        try {
         if (this.props.promise.result!.length > 0) {
             this.cellMargin[ColumnKey.NUMBER_MUTATIONS] = correctMargin(
                 getFixedHeaderNumberCellMargin(
@@ -107,7 +108,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             this.cellMargin[ColumnKey.NUMBER] = correctMargin(
                 (this.columnsWidth[ColumnKey.NUMBER] - 10 - (
                         getFixedHeaderTableMaxLengthStringPixel(
-                            _.max(this.props.promise.result!.map(item => item.countByEntity))!.toLocaleString()
+                            _.max(this.props.promise.result!.map(item => item.numberOfAlteredCases))!.toLocaleString()
                         ) + 20)
                 ) / 2);
             this.cellMargin[ColumnKey.FREQ] = correctMargin(
@@ -116,6 +117,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                     getFrequencyStr(_.max(this.props.promise.result!.map(item => item.frequency))!)
                 )
             );
+        }
+        } catch (e) {
+            console.log(this.props.promise.result);
         }
     }
 
@@ -202,12 +206,12 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                         className: styles.autoMarginCheckbox
                     }}
                 >
-                    <span>{data.countByEntity.toLocaleString()}</span>
+                    <span>{data.numberOfAlteredCases.toLocaleString()}</span>
                 </LabeledCheckbox>,
-            sortBy: (data: MutationCountByGene) => data.countByEntity,
+            sortBy: (data: MutationCountByGene) => data.numberOfAlteredCases,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string) => {
-                return _.toString(data.countByEntity).includes(filterString);
+                return _.toString(data.numberOfAlteredCases).includes(filterString);
             },
             width: this.columnsWidth[ColumnKey.NUMBER]
         }, {

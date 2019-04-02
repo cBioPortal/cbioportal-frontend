@@ -15,8 +15,14 @@ const exampleAlterationEnrichments = [
         "entrezGeneId": 1956,
         "hugoGeneSymbol": "EGFR",
         "cytoband": "7p11.2",
-        "alteredCount": 3,
-        "unalteredCount": 0,
+        "set1CountSummary": {
+            alteredCount: 3,
+            profiledCount:4
+        },
+        "set2CountSummary": {
+            alteredCount: 0,
+            profiledCount: 84
+        },
         "logRatio": "Infinity",
         "pValue": 0.00003645111904935468,
         "qValue": 0.2521323904643863
@@ -25,8 +31,14 @@ const exampleAlterationEnrichments = [
         "entrezGeneId": 6468,
         "hugoGeneSymbol": "FBXW4",
         "cytoband": "10q24.32",
-        "alteredCount": 2,
-        "unalteredCount": 0,
+        "set1CountSummary": {
+            alteredCount: 2,
+            profiledCount: 4
+        },
+        "set2CountSummary": {
+            alteredCount: 0,
+            profiledCount: 84
+        },
         "logRatio": "Infinity",
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061
@@ -35,8 +47,14 @@ const exampleAlterationEnrichments = [
         "entrezGeneId": 23066,
         "hugoGeneSymbol": "CAND2",
         "cytoband": "3p25.2",
-        "alteredCount": 2,
-        "unalteredCount": 0,
+        "set1CountSummary": {
+            alteredCount: 2,
+            profiledCount: 4
+        },
+        "set2CountSummary": {
+            alteredCount: 0,
+            profiledCount: 84
+        },
         "logRatio": "Infinity",
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061
@@ -392,11 +410,11 @@ describe("EnrichmentsUtil", () => {
 
     describe("#getAlterationRowData()", () => {
         it("returns empty array for empty array", () => {
-            assert.deepEqual(getAlterationRowData([], 0, 0, []), []);
+            assert.deepEqual(getAlterationRowData([], []), []);
         });
 
         it("returns correct row data", () => {
-            assert.deepEqual(getAlterationRowData(exampleAlterationEnrichments, 4, 84, ["EGFR"]), exampleAlterationEnrichmentRowData);
+            assert.deepEqual(getAlterationRowData(exampleAlterationEnrichments, ["EGFR"]), exampleAlterationEnrichmentRowData);
         });
     });
 
