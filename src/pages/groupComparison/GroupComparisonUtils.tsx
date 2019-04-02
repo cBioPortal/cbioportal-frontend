@@ -346,6 +346,9 @@ export const SURVIVAL_TOO_MANY_GROUPS_MSG =
 
 export const DUPLICATE_GROUP_NAME_MSG = "Another group already has this name.";
 
+export const OVERLAP_NOT_ENOUGH_GROUPS_MSG =
+    "We can't show overlap for 1 group. Please select more groups from the 'Active Groups' section above.";
+
 export function getDefaultGroupName(
     filters:StudyViewFilter,
     entrezGeneIdToGene:{[entrez:number]:GeneIdentifier}
