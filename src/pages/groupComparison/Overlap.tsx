@@ -144,7 +144,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 </div>
             </div>
         ),
-        renderPending:()=><LoadingIndicator isLoading={true} size="big"/>,
+        renderPending:()=><LoadingIndicator center={true} isLoading={true} size="big"/>,
         renderError:()=><ErrorMessage/>
     });
 

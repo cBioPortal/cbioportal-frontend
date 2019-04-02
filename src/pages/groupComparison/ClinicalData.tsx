@@ -283,7 +283,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         const groupStatus = getMobxPromiseGroupStatus(...promises);
         switch (groupStatus) {
             case "pending":
-                return <LoadingIndicator isLoading={true} size={"big"} />;
+                return <LoadingIndicator center={true} isLoading={true} size={"big"} />;
             case "error":
                 return <span>Error loading plot data.</span>;
             default: {
@@ -319,7 +319,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                     } else if (this.boxPlotData.isError) {
                         return <span>Error loading plot data.</span>;
                     } else {
-                        return <LoadingIndicator isLoading={true} size={"big"} />;
+                        return <LoadingIndicator center={true}  isLoading={true} size={"big"} />;
                     }
                 } else {
                     plotElt = <MultipleCategoryBarPlot
@@ -395,7 +395,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
 
     public render() {
         if (this.props.store.clinicalDataEnrichments.isPending) {
-            return <LoadingIndicator isLoading={true} size={"big"} />;
+            return <LoadingIndicator center={true}  isLoading={true} size={"big"} />;
         }
         return (
             <div className="clearfix" style={{ display: "flex", marginTop: 6 }}>

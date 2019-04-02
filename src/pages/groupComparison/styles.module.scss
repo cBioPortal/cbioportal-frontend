@@ -29,11 +29,7 @@
     }
 
     .noGroupsMessage {
-        padding:15px;
-        height:103px;
-        display:flex;
-        justify-content:center;
-        align-items:center;
+
     }
 
     :global(input.form-control) {
@@ -47,13 +43,34 @@
         margin:2px !important;
     }
     display:inline-block;
-    max-width:500px;
-    border:1px solid $borderColor;
-    padding:5px;
-    background-color:#fff;
-    border-radius:$cornerBorderRadius;
+
+    .buttonUnselected {
+        filter: grayscale(1);
+    }
+
+    i {
+        width:15px;
+    }
+
 
 }
+
+
+
+
+.groupLineItemActionButtons {
+    > span {
+        margin-left:5px;
+        i {
+            color:$brand-primary;
+            &:hover {
+                color:darken($brand-primary,10%)
+            }
+        }
+    }
+}
+
+
 
 .headerControls {
     display:flex;
