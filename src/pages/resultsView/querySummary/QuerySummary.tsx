@@ -8,6 +8,7 @@ import './styles.scss';
 import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {action, computed, observable} from "mobx";
+import {QueryStore, CUSTOM_CASE_LIST_ID} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
 import autobind from "autobind-decorator";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
@@ -26,15 +27,18 @@ import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore, onToggleQueryFormVisiblity:(visible:boolean)=>void }, {}> {
 
     @autobind
+    @action
     private toggleQueryFormVisibility() {
-        this.props.onToggleQueryFormVisiblity(this._queryFormVisible);
-        this._queryFormVisible = !this._queryFormVisible;
+        this.props.onToggleQueryFormVisiblity(this.props.store.queryFormVisible);
+        // if clicked the query button in the download tab and want to close the query form, clear the selected sample ids
+        if (this.props.store.modifyQueryParams && this.props.store.queryFormVisible === true) {
+            this.props.store.modifyQueryParams = undefined;
+        }
+        this.props.store.queryFormVisible = !this.props.store.queryFormVisible;
     }
 
-    @observable _queryFormVisible: boolean = false;
-
     @computed get queryFormVisible(){
-        return this._queryFormVisible || this.isQueryOrGeneInvalid;
+        return this.props.store.queryFormVisible || this.isQueryOrGeneInvalid;
     }
 
     readonly singleStudyUI = MakeMobxView({
@@ -142,6 +146,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                                   showQuickSearchTab={false}
                                   showDownloadTab={false}
                                   showAlerts={true}
+                                  modifyQueryParams={this.props.store.modifyQueryParams}
                                   getQueryStore={()=>createQueryStore(getBrowserWindow().routingStore.query)}
             />
         </div>
