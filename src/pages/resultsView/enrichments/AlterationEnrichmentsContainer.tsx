@@ -49,7 +49,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
 
     @computed get data(): AlterationEnrichmentRow[] {
-        return getAlterationRowData(this.props.data, this.props.store.hugoGeneSymbols);
+        return getAlterationRowData(this.props.data, this.props.totalAlteredCount, this.props.totalUnalteredCount,
+            this.props.store.hugoGeneSymbols);
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {
@@ -61,10 +62,10 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
         const clickedAlterationEnrichment: AlterationEnrichment = _.find(this.props.data, ['hugoGeneSymbol', this.clickedGene])!;
 
-        return [this.props.totalAlteredCount - clickedAlterationEnrichment.set1CountSummary.alteredCount,
-            clickedAlterationEnrichment.set1CountSummary.alteredCount,
-            clickedAlterationEnrichment.set2CountSummary.alteredCount,
-            this.props.totalUnalteredCount - clickedAlterationEnrichment.set2CountSummary.alteredCount];
+        return [this.props.totalAlteredCount - clickedAlterationEnrichment.alteredCount,
+            clickedAlterationEnrichment.alteredCount, 
+            clickedAlterationEnrichment.unalteredCount, 
+            this.props.totalUnalteredCount - clickedAlterationEnrichment.unalteredCount];
     }
 
     @autobind
