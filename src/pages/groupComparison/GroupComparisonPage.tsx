@@ -208,8 +208,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                             }}
                             options={[
                                 { label: OverlapStrategy.INCLUDE, value: OverlapStrategy.INCLUDE},
-                                { label: OverlapStrategy.EXCLUDE, value: OverlapStrategy.EXCLUDE},
-                                { label: OverlapStrategy.GROUP, value: OverlapStrategy.GROUP }
+                                { label: OverlapStrategy.EXCLUDE, value: OverlapStrategy.EXCLUDE}
                             ]}
                             clearable={false}
                             searchable={false}
