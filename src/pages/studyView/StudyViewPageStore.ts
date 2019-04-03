@@ -481,7 +481,6 @@ export class StudyViewPageStore {
                                     description: "",
                                     studies,
                                     origin: this.studyIds,
-                                    studyViewFilter: getNumberAttributeGroupFilters(this.filters, clinicalAttribute, [value, value])
                                 };
                             });
                             break;
@@ -523,14 +522,13 @@ export class StudyViewPageStore {
                                     description: "",
                                     studies,
                                     origin: this.studyIds,
-                                    studyViewFilter: getNumberAttributeGroupFilters(this.filters, clinicalAttribute, range)
                                 };
                             });
                             break;
                     }
 
                     // create session and get id
-                    const {id} = await comparisonClient.addComparisonSession({ groups, clinicalAttribute });
+                    const {id} = await comparisonClient.addComparisonSession({ groups, clinicalAttribute, origin:this.studyIds });
                     return resolve(id);
                 }
             );
@@ -590,11 +588,10 @@ export class StudyViewPageStore {
                             studies: getStudiesAttr(sampleIdentifiers),
                             origin: this.studyIds,
                             color: lcValueToColor[lcValue].color,
-                            studyViewFilter: getStringAttributeGroupFilters(this.filters, clinicalAttribute, value)
                         };
                     });
                     // create session and get id
-                    const {id} = await comparisonClient.addComparisonSession({ groups, clinicalAttribute });
+                    const {id} = await comparisonClient.addComparisonSession({ groups, clinicalAttribute, origin: this.studyIds });
                     return resolve(id);
                 }
             );
