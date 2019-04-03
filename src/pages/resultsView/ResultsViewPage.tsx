@@ -85,7 +85,7 @@ function initStore() {
 
                         onMobxPromise(resultsViewPageStore.studyIds, ()=>{
                             try {
-                                trackQuery(resultsViewPageStore.studyIds.result!, oql, resultsViewPageStore.hugoGeneSymbols, resultsViewPageStore.virtualStudies.result!.length > 0);
+                                trackQuery(resultsViewPageStore.studyIds.result!, oql, resultsViewPageStore.hugoGeneSymbols, resultsViewPageStore.queriedVirtualStudies.result!.length > 0);
                             } catch {};
                         });
 
@@ -188,7 +188,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 id:ResultsViewTab.MUTUAL_EXCLUSIVITY,
                 getTab: () => {
                     return <MSKTab key={5} id={ResultsViewTab.MUTUAL_EXCLUSIVITY} linkText="Mutual Exclusivity">
-                        <MutualExclusivityTab store={store}/>
+                        <MutualExclusivityTab store={store} isSampleAlteredMap={store.isSampleAlteredMap}/>
                     </MSKTab>
                 },
                 hide:()=>{

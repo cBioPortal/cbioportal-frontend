@@ -108,7 +108,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.MEAN_IN_ALTERED] = {
             name: "μ in altered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInAlteredGroup.toFixed(2)}</span>,
-            tooltip: <span>Mean expression of the listed gene in samples that have alterations in the query gene(s).</span>,
+            tooltip: <span>Mean log2 expression of the listed gene in samples that have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInAlteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.meanExpressionInAlteredGroup.toFixed(2)
         };
@@ -116,7 +116,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.MEAN_IN_UNALTERED] = {
             name: "μ in unaltered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInUnalteredGroup.toFixed(2)}</span>,
-            tooltip: <span>Mean expression of the listed gene in samples that do not have alterations in the query gene(s).</span>,
+            tooltip: <span>Mean log2 expression of the listed gene in samples that do not have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInUnalteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.meanExpressionInUnalteredGroup.toFixed(2)
         };
@@ -124,7 +124,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_ALTERED] = {
             name: "σ in altered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInAlteredGroup.toFixed(2)}</span>,
-            tooltip: <span>Standard deviation of expression of the listed gene in samples that have alterations in the query gene(s).</span>,
+            tooltip: <span>Standard deviation of log2 expression of the listed gene in samples that have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInAlteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.standardDeviationInAlteredGroup.toFixed(2)
         };
@@ -132,7 +132,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_UNALTERED] = {
             name: "σ in unaltered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInUnalteredGroup.toFixed(2)}</span>,
-            tooltip: <span>Standard deviation of expression of the listed gene in samples that do not have alterations in the query gene(s).</span>,
+            tooltip: <span>Standard deviation of log2 expression of the listed gene in samples that do not have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInUnalteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.standardDeviationInUnalteredGroup.toFixed(2)
         };
@@ -140,7 +140,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.LOG_RATIO] = {
             name: "Log Ratio",
             render: (d: ExpressionEnrichmentRow) => <span>{formatLogOddsRatio(d.logRatio)}</span>,
-            tooltip: <span>Log2 based ratio of (mean in altered / mean in unaltered)</span>,
+            tooltip: <span>Log2 of ratio of (unlogged) mean in altered to (unlogged) mean in unaltered</span>,
             sortBy: (d: ExpressionEnrichmentRow) => Number(d.logRatio),
             download: (d: ExpressionEnrichmentRow) => formatLogOddsRatio(d.logRatio)
         };
