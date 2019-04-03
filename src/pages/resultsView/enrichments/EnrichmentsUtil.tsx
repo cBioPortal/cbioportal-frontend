@@ -71,7 +71,8 @@ export function getExpressionScatterData(expressionEnrichments: ExpressionEnrich
     });
 }
 
-export function getAlterationRowData(alterationEnrichments: AlterationEnrichmentWithQ[], queryGenes: string[]): AlterationEnrichmentRow[] {
+export function getAlterationRowData(alterationEnrichments: AlterationEnrichmentWithQ[], totalAltered: number,
+    totalUnaltered: number, queryGenes: string[]): AlterationEnrichmentRow[] {
 
     return alterationEnrichments.map(alterationEnrichment => {
         return {
@@ -80,10 +81,10 @@ export function getAlterationRowData(alterationEnrichments: AlterationEnrichment
             hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
             entrezGeneId: alterationEnrichment.entrezGeneId,
             cytoband: alterationEnrichment.cytoband, 
-            alteredCount: alterationEnrichment.set1CountSummary.alteredCount,
-            alteredPercentage: alterationEnrichment.set1CountSummary.alteredCount / alterationEnrichment.set1CountSummary.profiledCount * 100,
-            unalteredCount: alterationEnrichment.set2CountSummary.alteredCount,
-            unalteredPercentage: alterationEnrichment.set2CountSummary.alteredCount / alterationEnrichment.set2CountSummary.profiledCount * 100,
+            alteredCount: alterationEnrichment.alteredCount,
+            alteredPercentage: alterationEnrichment.alteredCount / totalAltered * 100,
+            unalteredCount: alterationEnrichment.unalteredCount,
+            unalteredPercentage: alterationEnrichment.unalteredCount / totalUnaltered * 100,
             logRatio: Number(alterationEnrichment.logRatio), 
             pValue: alterationEnrichment.pValue,
             qValue: alterationEnrichment.qValue
