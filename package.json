@@ -29,6 +29,7 @@
     "testTime": "start_time=`date +%s` && karma start karma.conf.js && echo run time is $(expr `date +%s` - $start_time) s",
     "test": "karma start karma.conf.js",
     "test:watch": "yarn run test -- --watch",
+    "test:debug": "yarn run test -- --browsers=Chrome_with_debugging --single-run=false",
     "lint": "tslint 'src/**/*.ts' 'src/**/*.tsx' --exclude 'src/shared/api/generated/**'",
     "lint-fix": "tslint --fix 'src/**/*.ts' 'src/**/*.tsx' --exclude 'src/shared/api/generated/**'",
     "eslint": "eslint src/** --ext .js --ext .jsx --cache",
