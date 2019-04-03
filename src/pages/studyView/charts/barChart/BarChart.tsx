@@ -39,7 +39,7 @@ function generateTheme() {
 
     return theme;
 }
-
+// some comment
 const VICTORY_THEME = generateTheme();
 const TILT_ANGLE = 50;
 
