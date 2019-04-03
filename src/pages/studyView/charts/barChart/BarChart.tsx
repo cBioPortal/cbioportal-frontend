@@ -17,7 +17,7 @@ import {
     needAdditionShiftForLogScaleBarChart
 } from "../../StudyViewUtils";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import {getTextWidth} from "../../../../shared/lib/wrapText";
+import {getTextDiagonal, getTextHeight, getTextWidth} from "../../../../shared/lib/wrapText";
 
 export interface IBarChartProps {
     data: DataBin[];
@@ -140,15 +140,20 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
     @computed
     get bottomPadding(): number {
         const MAX_PADDING = 30;
-        const padding = this.tilted ? _.max(this.tickFormat.map((tick: string | string[]) => {
+        const padding = _.max(this.tickFormat.map((tick: string | string[]) => { 
             let content;
             if (_.isArray(tick)) {
                 content = tick.join();
             } else {
                 content = tick;
             }
-            return getTextWidth(content, VICTORY_THEME.axis.style.tickLabels.fontFamily, `${VICTORY_THEME.axis.style.tickLabels.fontSize}px`);
-        })) * Math.sin(Math.PI * TILT_ANGLE / 180) + 5 : 20;
+            const fontFamily = VICTORY_THEME.axis.style.tickLabels.fontFamily;
+            const fontSize = `${VICTORY_THEME.axis.style.tickLabels.fontSize}px`;
+            const textHeight = getTextHeight(content, fontFamily, fontSize);
+            const textWidth = getTextWidth(content, fontFamily, fontSize);
+            const textDiagonal = getTextDiagonal(textHeight, textWidth);
+            return 10 + (this.tilted ? textDiagonal * Math.sin(Math.PI * TILT_ANGLE / 180)  : textHeight);  
+        }));
         return padding > MAX_PADDING ? MAX_PADDING : padding;
     }
 
@@ -170,15 +175,14 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         <VictorySelectionContainer
                             containerRef={(ref: any) => this.svgContainer = ref}
                             selectionDimension="x"
-                            onSelection={this.onSelection}
-                        />
+                            onSelection={this.onSelection} />
                     }
                     style={{
                         parent: {
                             width: this.props.width, height: this.props.height
                         }
                     }}
-                    height={this.props.height - 10 - this.bottomPadding}
+                    height={this.props.height - this.bottomPadding}
                     padding={{left: 40, right: 20, top: 10, bottom: this.bottomPadding}}
                     theme={VICTORY_THEME}
                 >
