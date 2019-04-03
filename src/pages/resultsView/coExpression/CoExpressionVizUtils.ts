@@ -1,6 +1,8 @@
 import {MolecularProfile, Mutation, NumericGeneMolecularData} from "../../../shared/api/generated/CBioPortalAPI";
+import {GenesetMolecularData} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
+import data from "pages/patientView/genomicOverview/mockData";
 
 
 const nonBreakingSpace = '\xa0';
@@ -33,16 +35,17 @@ function isProfiled(
 }
 
 export function computePlotData(
-    molecularData: NumericGeneMolecularData[],
+    molecularData: NumericGeneMolecularData[]|GenesetMolecularData[],
     mutationData: Mutation[],
-    xEntrezGeneId:number,
-    xHugoGeneSymbol:string,
-    yHugoGeneSymbol:string,
+    xGeneticEntityId:number|string,
+    yGeneticEntityId:number|string,
+    xGeneticEntityName:string,
+    yGeneticEntityName:string,
     coverageInformation:CoverageInformation,
     studyToMutationMolecularProfile:{[studyId:string]:MolecularProfile}
 ) {
-    const xData:{[uniqueSampleKey:string]:NumericGeneMolecularData} = {};
-    const yData:{[uniqueSampleKey:string]:NumericGeneMolecularData} = {};
+    const xData:{[uniqueSampleKey:string]:NumericGeneMolecularData|GenesetMolecularData} = {};
+    const yData:{[uniqueSampleKey:string]:NumericGeneMolecularData|GenesetMolecularData} = {};
     const xMutations:{[uniqueSampleKey:string]:Mutation[]} = {};
     const yMutations:{[uniqueSampleKey:string]:Mutation[]} = {};
     const sampleInfo:{[uniqueSampleKey:string]:{sampleId:string, studyId:string}} = {};
@@ -52,18 +55,29 @@ export function computePlotData(
             sampleInfo[datum.uniqueSampleKey] = datum;
         }
     };
-    for (const datum of mutationData) {
-        if (datum.proteinChange) {
-            const targetData = (datum.entrezGeneId === xEntrezGeneId ? xMutations : yMutations);
-            targetData[datum.uniqueSampleKey] = targetData[datum.uniqueSampleKey] || [];
-            targetData[datum.uniqueSampleKey].push(datum);
-            addSampleInfo(datum);
+    if (typeof xGeneticEntityId === 'number') {
+        for (const datum of mutationData) {
+            if (datum.proteinChange) {
+                const targetData = (datum.entrezGeneId === xGeneticEntityId ? xMutations : yMutations);
+                targetData[datum.uniqueSampleKey] = targetData[datum.uniqueSampleKey] || [];
+                targetData[datum.uniqueSampleKey].push(datum);
+                addSampleInfo(datum);
+            }
         }
     }
-    for (const datum of molecularData) {
-        const targetData = (datum.entrezGeneId === xEntrezGeneId ? xData : yData);
-        targetData[datum.uniqueSampleKey] = datum;
-        addSampleInfo(datum);
+
+    if (molecularData[0] && (molecularData[0] as NumericGeneMolecularData).entrezGeneId !== undefined) { //Check if molecularData contains gene or gene set data
+        for (const datum of molecularData) {
+            const targetData = ((datum as NumericGeneMolecularData).entrezGeneId === xGeneticEntityId ? xData : yData);
+            targetData[datum.uniqueSampleKey] = datum;
+            addSampleInfo(datum);
+        } 
+    } else {
+        for (const datum of molecularData) {
+            const targetData = ((datum as GenesetMolecularData).genesetId === xGeneticEntityId.toString() ? xData : yData);
+            targetData[datum.uniqueSampleKey] = datum;
+            addSampleInfo(datum);
+        }
     }
 
     const ret = [];
@@ -73,16 +87,20 @@ export function computePlotData(
         const yDatum = yData[uniqueSampleKey];
         if (xDatum && yDatum) {
             // only add data if data for both axes
-            const xVal = xDatum.value;
-            const yVal = yDatum.value;
+            const xVal = Number(xDatum.value);
+            const yVal = Number(yDatum.value);
             if (!isNaN(xVal) && !isNaN(yVal)) {
                 ret.push({
                     x: xVal,
                     y: yVal,
                     mutationsX: dispMut(xMutations[uniqueSampleKey] || []),
                     mutationsY: dispMut(yMutations[uniqueSampleKey] || []),
-                    profiledX: isProfiled(uniqueSampleKey, studyId, xHugoGeneSymbol, coverageInformation, studyToMutationMolecularProfile),
-                    profiledY: isProfiled(uniqueSampleKey, studyId, yHugoGeneSymbol, coverageInformation, studyToMutationMolecularProfile),
+                    profiledX: typeof xGeneticEntityId === 'number' ? 
+                        isProfiled(uniqueSampleKey, studyId, xGeneticEntityName, coverageInformation, studyToMutationMolecularProfile) :
+                        false,
+                    profiledY: typeof yGeneticEntityId === 'number' ?
+                        isProfiled(uniqueSampleKey, studyId, yGeneticEntityName, coverageInformation, studyToMutationMolecularProfile) :
+                        false,
                     studyId,
                     sampleId: sampleInfo[uniqueSampleKey].sampleId
                 });
