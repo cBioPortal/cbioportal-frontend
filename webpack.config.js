@@ -147,7 +147,7 @@ var config = {
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.(tsx|ts)?$/,
                 use: [
                     {
                         loader: "babel-loader"
@@ -366,7 +366,7 @@ if (isDev) {
 
 if (isDev || isTest) {
 
-    config.devtool = 'source-map';
+    config.devtool = 'inline-source-map';
 
     // in dev we don't want to load the twitter widget b/c it can block load of site
     config.resolve.alias['react-twitter-widgets'] = join(src, 'shared/Empty.tsx');
@@ -428,7 +428,7 @@ if (isDev || isTest) {
 } else {
 
 
-    config.devtool = 'source-map',
+    config.devtool = 'inline-source-map',
         config.output.publicPath = '/';
 
     // css modules for any scss matching test
@@ -483,13 +483,6 @@ if (isDev || isTest) {
             'process.env': {
                 'NODE_ENV': `"${process.env.NODE_ENV || 'production'}"`
             }
-        }),
-        new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false
-            },
-            sourceMap: true,
-            comments: false
         })
     );
 
