@@ -65,8 +65,8 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     public svgContainer = HTMLElement;
     private scrollPane: HTMLDivElement;
 
-    constructor(){
-        super();
+    constructor(props:CancerSummaryChartProps){
+        super(props);
         this.tickFormat = this.tickFormat.bind(this);
     }
 

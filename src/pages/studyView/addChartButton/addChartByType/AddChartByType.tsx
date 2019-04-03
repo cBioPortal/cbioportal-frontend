@@ -32,10 +32,6 @@ const NUM_ROWS_SHOWN = 15;
 @observer
 export default class AddChartByType extends React.Component<IAddChartByTypeProps, {}> {
 
-    constructor(props: IAddChartByTypeProps) {
-        super(props);
-    }
-
     @computed
     get options() {
         if (this.props.freqPromise.isComplete) {
@@ -106,8 +102,8 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     }
 
     @autobind
-    getCurrentSelectedRows() {
-        return _.filter(this.options, option => option.selected);
+    getCurrentSelectedRows():ChartOption[] {
+        return this.options.filter(option => option.selected);
     }
 
     @autobind
