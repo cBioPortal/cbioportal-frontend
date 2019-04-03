@@ -1,11 +1,11 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {computed, observable} from "mobx";
+import {computed, observable, action} from "mobx";
 import {observer} from 'mobx-react';
 import fileDownload from 'react-file-download';
-import {AnnotatedExtendedAlteration, ExtendedAlteration, ResultsViewPageStore} from "../ResultsViewPageStore";
+import {AnnotatedExtendedAlteration, ExtendedAlteration, ResultsViewPageStore, ModifyQueryParams} from "../ResultsViewPageStore";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
-import {OQLLineFilterOutput} from "shared/lib/oql/oqlfilter";
+import {OQLLineFilterOutput, unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
 import FeatureTitle from "shared/components/featureTitle/FeatureTitle";
 import {SimpleCopyDownloadControls} from "shared/components/copyDownloadControls/SimpleCopyDownloadControls";
 import {default as GeneAlterationTable, IGeneAlteration} from "./GeneAlterationTable";
@@ -24,10 +24,17 @@ import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWi
 import {remoteData} from "../../../public-lib/api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
-import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
+import {MolecularProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
+import { submitToPage } from 'pages/studyView/StudyViewUtils';
+import { parse, SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import sessionServiceClient from "shared/api//sessionServiceInstance";
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import { MakeMobxView } from 'shared/components/MobxView';
+import { CUSTOM_CASE_LIST_ID } from 'shared/components/query/QueryStore';
+import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -193,16 +200,16 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         invoke:()=>Promise.resolve(stringify2DArray(this.transposedCnaDownloadData.result!))
     });
 
-    readonly alteredSamples = remoteData<string[]>({
+    readonly alteredCaseAlterationData = remoteData<ICaseAlteration[]>({
         await:()=>[this.caseAlterationData],
         invoke:()=>Promise.resolve(this.caseAlterationData.result!
-            .filter(caseAlteration => caseAlteration.altered)
-            .map(caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`))
+            .filter(caseAlteration => caseAlteration.altered))
     });
 
-    readonly alteredSamplesText = remoteData<string>({
-        await: ()=>[this.alteredSamples],
-        invoke:()=>Promise.resolve(this.alteredSamples.result!.join("\n"))
+    readonly unalteredCaseAlterationData = remoteData<ICaseAlteration[]>({
+        await:()=>[this.caseAlterationData],
+        invoke:()=>Promise.resolve(this.caseAlterationData.result!
+            .filter(caseAlteration => !caseAlteration.altered))
     });
 
     readonly sampleMatrix = remoteData<string[][]>({
@@ -292,8 +299,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     readonly downloadableFilesTable = remoteData({
         await:()=>[
-            this.cnaData, this.mutationData, this.mrnaData, this.proteinData,
-            this.alteredSamplesDownloadControls, this.sampleMatrixDownloadControls
+            this.cnaData, this.mutationData, this.mrnaData, this.proteinData
         ],
         invoke:()=>Promise.resolve(
             <table className={ classNames("table", "table-striped", styles.downloadCopyTable) }>
@@ -302,8 +308,9 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                     {hasValidMutationData(this.mutationData.result!) && this.mutationDownloadControls()}
                     {hasValidData(this.mrnaData.result!) && this.mrnaExprDownloadControls()}
                     {hasValidData(this.proteinData.result!) && this.proteinExprDownloadControls()}
-                    {this.alteredSamplesDownloadControls.result!}
-                    {this.sampleMatrixDownloadControls.result!}
+                    {this.alteredSamplesDownloadControls.component}
+                    {this.unalteredSamplesDownloadControls.component}
+                    {this.sampleMatrixDownloadControls.component}
                 </tbody>
             </table>
         )
@@ -375,26 +382,91 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         );
     }
 
-    readonly alteredSamplesDownloadControls = remoteData({
-        await:()=>[this.alteredSamplesText],
-        invoke:()=>{
-            const handleDownload = () => this.alteredSamplesText.result!;
+    private copyDownloadQueryControlsRow(title:string,
+                                    handleDownload: () => string,
+                                    filename: string,
+                                    handleQuery: () => void,
+                                    virtualStudyParams: any)
+    {
+        return (
+            <tr>
+                <td>{title}</td>
+                <td>
+                    <SimpleCopyDownloadControls
+                        controlsStyle='QUERY'
+                        downloadData={handleDownload}
+                        downloadFilename={filename}
+                        handleQuery={handleQuery}
+                        virtualStudyParams={virtualStudyParams}
+                    />
+                </td>
+            </tr>
+        );
+    }
 
-            return Promise.resolve(this.copyDownloadControlsRow("Samples affected: Only samples with an alteration are included",
+    readonly alteredSamplesDownloadControls = MakeMobxView({
+        await: ()=>[this.alteredCaseAlterationData, this.props.store.virtualStudyParams],
+        render: () => {
+            const alteredSampleCaseIds = _.map(this.alteredCaseAlterationData.result!, caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`);
+            const handleDownload = () => alteredSampleCaseIds.join("\n");
+            const handleQuery = () => this.handleQueryButtonClick(alteredSampleCaseIds);
+            const alteredSamplesVirtualStudyParams = {
+                    "user": this.props.store.virtualStudyParams.result!.user,
+                    "name": this.props.store.virtualStudyParams.result!.name,
+                    "description": this.props.store.virtualStudyParams.result!.description,
+                    "studyWithSamples": this.props.store.virtualStudyParams.result!.studyWithSamples,
+                    "selectedSamples": _.filter(this.props.store.virtualStudyParams.result!.selectedSamples, ((sample: Sample) => alteredSampleCaseIds.includes(`${sample.studyId}:${sample.sampleId}`))),
+                    "filter": this.props.store.virtualStudyParams.result!.filter,
+                    "attributesMetaSet": this.props.store.virtualStudyParams.result!.attributesMetaSet
+                } as IVirtualStudyProps
+
+            return (this.copyDownloadQueryControlsRow("Altered samples: List of samples with alterations",
                                                 handleDownload,
-                                                "affected_samples.txt"));
-        }
+                                                "altered_samples.txt",
+                                                handleQuery,
+                                                alteredSamplesVirtualStudyParams));
+        },
+        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true}/>,
+        renderError: ()=> <ErrorMessage/>
     });
 
-    readonly sampleMatrixDownloadControls = remoteData({
+    readonly unalteredSamplesDownloadControls = MakeMobxView({
+        await:()=>[this.unalteredCaseAlterationData, this.props.store.virtualStudyParams],
+        render: () => {
+            const unalteredSampleCaseIds = _.map(this.unalteredCaseAlterationData.result!, caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`);
+            const handleDownload = () => unalteredSampleCaseIds.join("\n");
+            const handleQuery = () => this.handleQueryButtonClick(unalteredSampleCaseIds);
+            const unalteredSamplesVirtualStudyParams = {
+                "user": this.props.store.virtualStudyParams.result!.user,
+                "name": this.props.store.virtualStudyParams.result!.name,
+                "description": this.props.store.virtualStudyParams.result!.description,
+                "studyWithSamples": this.props.store.virtualStudyParams.result!.studyWithSamples,
+                "selectedSamples": _.filter(this.props.store.virtualStudyParams.result!.selectedSamples, ((sample: Sample) => unalteredSampleCaseIds.includes(`${sample.studyId}:${sample.sampleId}`))),
+                "filter": this.props.store.virtualStudyParams.result!.filter,
+                "attributesMetaSet": this.props.store.virtualStudyParams.result!.attributesMetaSet
+            } as IVirtualStudyProps
+
+            return (this.copyDownloadQueryControlsRow("Unaltered samples: List of samples without any alteration",
+                                                handleDownload,
+                                                "unaltered_samples.txt",
+                                                handleQuery,
+                                                unalteredSamplesVirtualStudyParams));
+        },
+        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true}/>,
+        renderError: ()=> <ErrorMessage/>
+    });
+
+    readonly sampleMatrixDownloadControls = MakeMobxView({
         await:()=>[this.sampleMatrixText],
-        invoke:()=>{
+        render: () => {
             const handleDownload = () => this.sampleMatrixText.result!;
 
-            return Promise.resolve(this.copyDownloadControlsRow("Sample matrix: 1 = Sample harbors alteration in one of the input genes",
+            return (this.copyDownloadControlsRow("Sample matrix: List of all samples where 1=altered and 0=unaltered",
                                                 handleDownload,
                                                 "sample_matrix.txt"));
-        }
+        },
+        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true}/>,
+        renderError: ()=> <ErrorMessage/>
     });
 
     private handleMutationDownload()
@@ -435,5 +507,38 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     private handleTransposedCnaDownload()
     {
         onMobxPromise(this.transposedCnaDataText, text=>fileDownload(text, "cna_transposed.txt"));
+    }
+
+    @action
+    private handleQueryButtonClick(querySampleIds: string[]) {
+        const modifyQueryParams: ModifyQueryParams = {
+            selectedSampleListId: CUSTOM_CASE_LIST_ID,
+            selectedSampleIds: querySampleIds,
+            caseIdsMode: "sample"
+        }
+        this.props.store.modifyQueryParams = modifyQueryParams;
+        this.props.store.queryFormVisible = true;
+    }
+
+    @action
+    private async handleVirtualStudyButtonClick(alterations: ICaseAlteration[]) {
+        let studies = _.reduce(_.groupBy(alterations, "studyId"), (acc: { id: string; samples: string[] }[], alteration, studyId) => {
+            acc.push({
+                id: studyId,
+                samples: alterations.map(alteration => alteration.sampleId)
+            })
+            return acc;
+        }, []);
+
+        let parameters = {
+            name: "visual study",
+            description: "visual study",
+            origin: studies.map(study => study.id),
+            studies: studies
+        }
+        const saveStudyResult = await sessionServiceClient.saveVirtualStudy(parameters, false);
+        if (saveStudyResult && saveStudyResult.id) {
+            window.open(buildCBioPortalPageUrl({pathname:'study', query: {id: saveStudyResult.id}}), "_blank");
+        }
     }
 }

@@ -3,13 +3,14 @@ import * as styles_any from './styles/styles.module.scss';
 import * as _ from 'lodash';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
-import {computed} from 'mobx';
+import {computed, action} from 'mobx';
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
 import {QueryStore, QueryStoreComponent, CUSTOM_CASE_LIST_ID, ALL_CASES_LIST_ID} from './QueryStore';
 import {getStudySummaryUrl} from '../../api/urls';
 import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import { getFilteredCustomCaseSets } from 'shared/components/query/CaseSetSelectorUtils';
+import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
 
 const styles = styles_any as {
 	CaseSetSelector: string,
@@ -28,8 +29,10 @@ export function filterCaseSetOptions(opt: ReactSelectOptionWithName, filter: str
 }
 
 @observer
-export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
+export default class CaseSetSelector extends QueryStoreComponent<{modifyQueryParams: ModifyQueryParams | undefined}, {}>
 {
+	private isQueryModified = false;
+
 	@computed get caseSetOptions() : ReactSelectOptionWithName[]
 	{
 		let ret = this.store.sampleLists.result.map(sampleList => {
@@ -73,6 +76,9 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 
 	render()
 	{
+		if (!this.isQueryModified && this.props.modifyQueryParams) {
+			this.modifyQuery();
+		}
 		if (!this.store.selectableSelectedStudyIds.length)
 			return null;
 		return (
@@ -117,6 +123,14 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 				</div>
 			</FlexRow>
 		);
+	}
+
+	@action 
+	private modifyQuery() {
+		this.store.selectedSampleListId = this.props.modifyQueryParams!.selectedSampleListId;
+		this.store.caseIds = this.props.modifyQueryParams!.selectedSampleIds.join("\n");
+		this.store.caseIdsMode = this.props.modifyQueryParams!.caseIdsMode;
+		this.isQueryModified = true;
 	}
 
 	CaseIdsModeRadio = observer(
