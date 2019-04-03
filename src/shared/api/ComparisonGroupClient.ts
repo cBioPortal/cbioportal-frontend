@@ -10,12 +10,20 @@ import {ClinicalAttribute} from "./generated/CBioPortalAPI";
 import PromisePlus from "../lib/PromisePlus";
 import {Omit} from "../lib/TypeScriptUtils";
 
-export type SessionGroupData = VirtualStudyData & {
+export type SessionGroupData = Omit<VirtualStudyData, "studyViewFilter"> & {
     color?:string; // for charts
 };
-export type Session = { id:string, groups:SessionGroupData[], clinicalAttribute?:ClinicalAttribute};
-export type Group = VirtualStudy;
-export type GroupData = VirtualStudyData;
+export type Session = {
+    id:string,
+    groups:SessionGroupData[],
+    origin:string[],
+    clinicalAttribute?:ClinicalAttribute
+};
+export type Group = {
+    id:string;
+    data:GroupData;
+};
+export type GroupData = Omit<VirtualStudyData, "studyViewFilter">;
 
 export default class ComparisonGroupClient {
 

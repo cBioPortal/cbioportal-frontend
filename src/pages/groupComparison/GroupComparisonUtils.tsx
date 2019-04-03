@@ -20,6 +20,7 @@ import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyM
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 import ComplexKeyCounter from "../../shared/lib/complexKeyDataStructures/ComplexKeyCounter";
 import {GeneIdentifier} from "../studyView/StudyViewPageStore";
+import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 
 export enum GroupComparisonTab {
     OVERLAP = "overlap",
@@ -38,6 +39,7 @@ export type ComparisonGroup = Omit<SessionGroupData, "studies"|"color"> & {
     uid:string; // unique in the session
     studies:{ id:string, samples: string[], patients:string[] }[]; // include patients, filter out nonexistent samples
     nonExistentSamples:SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
+    savedInSession:boolean;
 };
 
 export type StudyViewComparisonGroup = Omit<GroupData, "studies"|"color"> & {
@@ -484,4 +486,127 @@ export function sortDataIntoQuartiles<D>(
         quartileGroups[q] = quartileGroups[q].concat(dataWithValue);
     });
     return quartileGroups;
+}
+
+export function intersectSamples(
+    groupData1:SessionGroupData["studies"],
+    groupData2:SessionGroupData["studies"]
+) {
+    const studies1 = _.keyBy(groupData1, elt=>elt.id);
+    const studies2 = _.keyBy(groupData2, elt=>elt.id);
+    const intersection = _.mapValues(studies1, (elt, studyId)=>({
+        id: elt.id,
+        samples: _.intersection(
+            elt.samples,
+            studyId in studies2 ? studies2[studyId].samples : []
+        )
+    }));
+    return _.values(intersection).filter(elt=>elt.samples.length > 0);
+}
+
+export function excludeSamples(
+    excludeFrom:SessionGroupData["studies"],
+    exclude:SessionGroupData["studies"]
+) {
+    const studiesToExcludeFrom = _.keyBy(excludeFrom, elt=>elt.id);
+    const studiesToExclude = _.keyBy(exclude, elt=>elt.id);
+    const exclusion = _.mapValues(studiesToExcludeFrom, (elt, studyId)=>({
+        id: elt.id,
+        samples: studyId in studiesToExclude ?
+            _.difference(elt.samples, studiesToExclude[studyId].samples) :
+            elt.samples
+    }));
+    return _.values(exclusion).filter(elt=>elt.samples.length > 0);
+}
+
+export function unionSamples(
+    groupData1:SessionGroupData["studies"],
+    groupData2:SessionGroupData["studies"]
+):SessionGroupData["studies"] {
+    const studies1 = _.keyBy(groupData1, elt=>elt.id);
+    const studies2 = _.keyBy(groupData2, elt=>elt.id);
+    const studyIds = _.union(_.keys(studies1), _.keys(studies2));
+    return studyIds.map(studyId=>{
+        const elt1 = studies1[studyId];
+        const elt2 = studies2[studyId];
+        if (elt1 && elt2) {
+            return {
+                id: studyId,
+                samples: _.union(elt1.samples, elt2.samples)
+            };
+        } else if (elt1) {
+            return elt1;
+        } else {
+            return elt2;
+        }
+    });
+}
+
+export function intersectPatients(
+    groupData1:{id:string, patients:string[]}[],
+    groupData2:{id:string, patients:string[]}[]
+) {
+    const studies1 = _.keyBy(groupData1, elt=>elt.id);
+    const studies2 = _.keyBy(groupData2, elt=>elt.id);
+    const intersection = _.mapValues(studies1, (elt, studyId)=>({
+        id: elt.id,
+        patients: _.intersection(
+            elt.patients,
+            studyId in studies2 ? studies2[studyId].patients : []
+        )
+    }));
+    return _.values(intersection).filter(elt=>elt.patients.length > 0);
+}
+
+export function excludePatients(
+    excludeFrom:{id:string, patients:string[]}[],
+    exclude:{id:string, patients:string[]}[]
+) {
+    const studiesToExcludeFrom = _.keyBy(excludeFrom, elt=>elt.id);
+    const studiesToExclude = _.keyBy(exclude, elt=>elt.id);
+    const exclusion = _.mapValues(studiesToExcludeFrom, (elt, studyId)=>({
+        id: elt.id,
+        patients: studyId in studiesToExclude ?
+            _.difference(elt.patients, studiesToExclude[studyId].patients) :
+            elt.patients
+    }));
+    return _.values(exclusion).filter(elt=>elt.patients.length > 0);
+}
+
+export function unionPatients(
+    groupData1:{id:string, patients:string[]}[],
+    groupData2:{id:string, patients:string[]}[]
+) {
+    const studies1 = _.keyBy(groupData1, elt=>elt.id);
+    const studies2 = _.keyBy(groupData2, elt=>elt.id);
+    const studyIds = _.union(_.keys(studies1), _.keys(studies2));
+    return studyIds.map(studyId=>{
+        const elt1 = studies1[studyId];
+        const elt2 = studies2[studyId];
+        if (elt1 && elt2) {
+            return {
+                id: studyId,
+                patients: _.union(elt1.patients, elt2.patients)
+            };
+        } else if (elt1) {
+            return elt1;
+        } else {
+            return elt2;
+        }
+    });
+}
+
+export function convertPatientsStudiesAttrToSamples(
+    data:{id:string, patients:string[]}[],
+    patientToSamples:ComplexKeyGroupsMap<Sample>
+) {
+    return data.map(elt=>({
+        id: elt.id,
+        samples: _.flatten(
+            elt.patients.map(patientId=>{
+                return (patientToSamples.get({ patientId, studyId: elt.id}) || [])
+                    .map(s=>s.sampleId);
+            })
+        )
+    }));
 }
