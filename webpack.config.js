@@ -270,7 +270,11 @@ var config = {
                 enforce:"pre",
                 use: [{
                     loader: "source-map-loader",
-                }]
+                }],
+                exclude: [
+                    /node_modules\/igv\//g,
+                    /node_modules\/svg2pdf.js\//g
+                ]
             }
 
 
