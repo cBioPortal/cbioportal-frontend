@@ -4,6 +4,7 @@ import {observer} from "mobx-react";
 import FontAwesome from "react-fontawesome";
 import ReactSelect from 'react-select';
 import {GeneReplacement, QueryStoreComponent} from "./QueryStore";
+import AppConfig from "appConfig";
 
 const styles = styles_any as {
 	GeneSymbolValidator: string,
@@ -38,6 +39,16 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 
 		if (!this.store.oql.query.length)
 			return null;
+
+		if (this.store.isQueryLimitReached)
+			return (
+				<div className={styles.GeneSymbolValidator}>
+					<div className={styles.invalidBubble} title="Please limit your queries to 100 genes or fewer.">
+						<FontAwesome className={styles.icon} name='exclamation-circle'/>
+						<span>Queries are limited to 100 genes. Please <a style={{color: '#ccc'}} href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>let us know</a> your use case(s) if you need to query more than 100 genes.</span>
+					</div>
+				</div>
+			);
 
 		if (this.store.genes.isError)
 			return (
