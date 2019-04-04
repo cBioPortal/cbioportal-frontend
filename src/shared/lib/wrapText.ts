@@ -1,6 +1,14 @@
 import measureText from "measure-text";
 import _ from "lodash";
 
+export function getTextDiagonal(textHeight:number, textWidth:number) {
+    return Math.sqrt(Math.pow(textWidth, 2) + Math.pow(textHeight, 2));
+}
+
+export function getTextHeight(text:string, fontFamily:string, fontSize:string) {
+    return measureText({text, fontFamily, fontSize, lineHeight: 1}).height.value;
+}
+
 export function getTextWidth(text:string, fontFamily:string, fontSize:string) {
     return measureText({text, fontFamily, fontSize, lineHeight: 1}).width.value;
 }

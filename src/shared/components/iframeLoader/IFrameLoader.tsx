@@ -6,11 +6,7 @@ import {observable} from "mobx";
 import autobind from "autobind-decorator";
 
 @observer
-export default class IFrameLoader extends React.Component<{ url:string; iframeId?:string; height:Number }, {}> {
-
-    constructor(){
-        super();
-    }
+export default class IFrameLoader extends React.Component<{ url:string; iframeId?:string; height:number }, {}> {
 
     @observable iframeLoaded = false;
 
