@@ -76,8 +76,8 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
 
     chartTarget:HTMLElement;
 
-    constructor() {
-        super();
+    constructor(props:IDataSetsTableProps) {
+        super(props);
 
         this.state = {
             downloadable: []
@@ -180,7 +180,7 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                     sortBy: (column.hasOwnProperty('sortBy')) ? column.sortBy : ((data:any)=>(data[column.type])),
                                     render: column.hasOwnProperty('render') ? column.render : (data:any) => {
                                         const style = {};// {textAlign: 'center', width: '100%', display: 'block'}
-                                        return <span style={{style}}>{data[column.type] || 0}</span>;
+                                        return <span style={style}>{data[column.type] || 0}</span>;
                                     },
                                     download: column.hasOwnProperty('download') ? column.download : false,
                                     filter: column.filter || undefined
