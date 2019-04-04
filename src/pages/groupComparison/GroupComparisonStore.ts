@@ -440,10 +440,9 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
-        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.copyNumberEnrichmentProfile],
-        getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,
-        fetchData:()=>{
+    readonly copyNumberHomdelEnrichmentData = remoteData<AlterationEnrichment[]>({
+        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2, this.copyNumberEnrichmentProfile],
+        invoke:()=>{
             // assumes single study for now
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.copyNumberEnrichmentProfile.result) {
                 const molecularProfile = this.copyNumberEnrichmentProfile.result;
@@ -459,10 +458,9 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
-        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.copyNumberEnrichmentProfile],
-        getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,
-        fetchData:()=>{
+    readonly copyNumberAmpEnrichmentData = remoteData<AlterationEnrichment[]>({
+        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2, this.copyNumberEnrichmentProfile],
+        invoke:()=>{
             // assumes single study for now
             if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.copyNumberEnrichmentProfile.result) {
                 const molecularProfile = this.copyNumberEnrichmentProfile.result;
@@ -478,18 +476,19 @@ export default class GroupComparisonStore {
         }
     });
 
-    public readonly copyNumberData = remoteData<CopyNumberEnrichment[]>({
-        await:()=>[this.copyNumberAmpEnrichmentData, this.copyNumberHomdelEnrichmentData],
-        invoke:()=>{
-            return Promise.resolve(
-                this.copyNumberAmpEnrichmentData.result!.map(d=>{
-                    (d as CopyNumberEnrichment).value = 2;
-                    return d as CopyNumberEnrichment;
-                }).concat(this.copyNumberHomdelEnrichmentData.result!.map(d=>{
-                    (d as CopyNumberEnrichment).value = -2;
-                    return d as CopyNumberEnrichment;
-                }))
-            );
+    public readonly copyNumberData = makeEnrichmentDataPromise({
+        await:()=>[this.copyNumberHomdelEnrichmentData, this.copyNumberAmpEnrichmentData],
+        getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,
+        fetchData:()=>{
+            const ampData = this.copyNumberAmpEnrichmentData.result!.map(d=>{
+                (d as CopyNumberEnrichment).value = 2;
+                return d as CopyNumberEnrichment;
+            })
+            const homdelData = this.copyNumberHomdelEnrichmentData.result!.map(d=>{
+                (d as CopyNumberEnrichment).value = -2;
+                return d as CopyNumberEnrichment;
+            });
+            return Promise.resolve(ampData.concat(homdelData));
         }
     });
 
