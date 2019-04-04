@@ -18,10 +18,6 @@ var Clipboard = require('clipboard');
 @observer
 export class BookmarkModal extends React.Component<{ onHide: () => void, urlPromise:Promise<any> }, {}> {
 
-    constructor(){
-        super();
-    }
-
     @observable
     urlData:ShareUrls;
 

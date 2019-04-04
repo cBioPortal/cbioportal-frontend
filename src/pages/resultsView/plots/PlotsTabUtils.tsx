@@ -1092,6 +1092,11 @@ export function boxPlotTooltip(
     return generalScatterPlotTooltip(d, horizontal ? "value" : "category", horizontal ? "category" : "value");
 }
 
+export function logScalePossibleForProfile(profileId:string) {
+    return !(/zscore/i.test(profileId)) &&
+        /rna_seq/i.test(profileId);
+}
+
 export function logScalePossible(
     axisSelection: AxisMenuSelection
 ) {
@@ -1099,8 +1104,7 @@ export function logScalePossible(
         // molecular profile
         return !!(
             axisSelection.dataSourceId &&
-            !(/zscore/i.test(axisSelection.dataSourceId)) &&
-            /rna_seq/i.test(axisSelection.dataSourceId)
+            logScalePossibleForProfile(axisSelection.dataSourceId)
         );
     } else {
         // clinical attribute
