@@ -25,11 +25,15 @@ webpackConfig.module.rules.push({
 
 //this will be used by in test context to load corresponding spec files if there is a grep passed (or all if not)
 webpackConfig.plugins.push(new webpack.DefinePlugin({
-    'SPEC_REGEXP': ('grep' in argv) ? `/(global|(${argv.grep}[a-z]*))\.spec\./i` : '/\.spec\.(jsx|tsx|ts)$/'
+    'SPEC_REGEXP': ('grep' in argv) ? `/(global|(${argv.grep}[a-z]*))\.spec\./i` : '/\.spec\.(jsx?|tsx?)$/'
 }));
 
 webpackConfig.entry = "";
 
+if (argv.debug) {
+    console.log("argv: ",argv);
+    webpackConfig.devtool = "inline-source-map";
+}
 
 module.exports = function (config) {
     config.set({
