@@ -147,7 +147,7 @@ var config = {
     module: {
         rules: [
             {
-                test: /\.(tsx|ts)?$/,
+                test: /\.tsx?$/,
                 use: [
                     {
                         loader: "babel-loader"
@@ -366,7 +366,7 @@ if (isDev) {
 
 if (isDev || isTest) {
 
-    config.devtool = 'inline-source-map';
+    config.devtool = 'source-map';
 
     // in dev we don't want to load the twitter widget b/c it can block load of site
     config.resolve.alias['react-twitter-widgets'] = join(src, 'shared/Empty.tsx');
@@ -428,7 +428,7 @@ if (isDev || isTest) {
 } else {
 
 
-    config.devtool = 'inline-source-map',
+    config.devtool = 'source-map',
         config.output.publicPath = '/';
 
     // css modules for any scss matching test
