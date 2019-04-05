@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
-import {HitZoneConfig, defaultHitzoneConfig, initHitZoneFromConfig, DefaultTooltip} from "cbioportal-frontend-core";
+import {HitZoneConfig, defaultHitzoneConfig, initHitZoneFromConfig, DefaultTooltip} from "cbioportal-frontend-commons";
 
 import LollipopPlotNoTooltip from "./LollipopPlotNoTooltip";
 import DataStore from "./model/DataStore";
