@@ -6,7 +6,7 @@ import Lollipop from "./Lollipop";
 import Domain from "./Domain";
 import LollipopSpec from "./model/LollipopSpec";
 import DomainSpec from "./model/DomainSpec";
-import {SVGAxis, Tick, getComponentIndex, unhoverAllComponents} from 'cbioportal-frontend-core';
+import {SVGAxis, Tick, getComponentIndex, unhoverAllComponents} from 'cbioportal-frontend-commons';
 import {observer} from "mobx-react";
 import {computed, action} from "mobx";
 import $ from "jquery";
