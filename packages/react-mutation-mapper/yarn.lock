@@ -2347,14 +2347,14 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-cbioportal-frontend-core@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/cbioportal-frontend-core/-/cbioportal-frontend-core-0.1.0.tgz#1521fa2d7a87fe33fbbd7f903a85d7fed0b4f71d"
-  integrity sha512-mHH9Zld5LiY8IEPmqfuAkf16NSyE90oR3zmmFKbuZktqq8ku3hy2E7+VApkGVdW+d5HSOb8JRErBym0W6VCYgA==
+cbioportal-frontend-commons@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.1.tgz#ebab913a1ae0d1c154adb7e701aa65bc1259ee44"
+  integrity sha512-08UaNFvSwzF33mGzfvVyrxK+bQcaylzcU5MvGzQUAmwDo4WVu2OVRMwob9zmezyDlG84Sm556aG1KI+f/ZRuWg==
   dependencies:
     jquery "^3.2.1"
     rc-tooltip "3.7.3"
-    react "^16.6.3"
+    react "^16.8.4"
 
 center-align@^0.1.1:
   version "0.1.3"
@@ -8527,7 +8527,7 @@ react-scripts-ts@^3.1.0:
   optionalDependencies:
     fsevents "^1.1.3"
 
-react@^16.6.3, react@^16.8.6:
+react@^16.8.4, react@^16.8.6:
   version "16.8.6"
   resolved "https://registry.yarnpkg.com/react/-/react-16.8.6.tgz#ad6c3a9614fd3a4e9ef51117f54d888da01f2bbe"
   integrity sha512-pC0uMkhLaHm11ZSJULfOBqV4tIZkx87ZLvbbQYunNixAAvjnC+snJCg0XQXn9VIsttVsbZP/H/ewzgsd5fxKXw==
