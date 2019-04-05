@@ -1,3 +1,5 @@
+var ncp = require("copy-paste");
+
 function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
     browser.waitUntil(()=>{
@@ -125,6 +127,12 @@ function setInputText(selector, text){
     browser.setValue(selector, '\uE003'.repeat(browser.getValue(selector).length) + text);
 }
 
+function pasteToElement(elementSelector, text){
+    ncp.copy(text, function () {});
+    browser.setValue(elementSelector, ["Shift","Insert"]);
+}
+
+
 module.exports = {
     waitForOncoprint: waitForOncoprint,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
@@ -141,4 +149,7 @@ module.exports = {
     setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen,
     getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements,
     setInputText: setInputText,
+    pasteToElement: pasteToElement
 };
+
+
