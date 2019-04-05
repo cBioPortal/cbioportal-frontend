@@ -9,6 +9,11 @@ var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
+function waitForAndCheckPlotsTab() {
+    browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 10000);
+    var res = browser.checkElement('div[data-test="PlotsTabEntireDiv"]', { hide:['.qtip'] });
+    assertScreenShotMatch(res);
+}
 
 function runResultsTestSuite(prefix){
 
