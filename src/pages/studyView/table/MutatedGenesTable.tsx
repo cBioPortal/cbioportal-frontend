@@ -1,16 +1,16 @@
 import * as React from "react";
-import {GeneIdentifier, MutatedGenesData} from "pages/studyView/StudyViewPageStore";
-import {observer} from "mobx-react";
+import { GeneIdentifier, MutatedGenesData } from "pages/studyView/StudyViewPageStore";
+import { observer } from "mobx-react";
 import styles from "./tables.module.scss";
-import {MutationCountByGene} from "shared/api/generated/CBioPortalAPIInternal";
+import { MutationCountByGene } from "shared/api/generated/CBioPortalAPIInternal";
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import MobxPromise from "mobxpromise";
-import {If} from 'react-if';
+import { If } from 'react-if';
 import * as _ from 'lodash';
 import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import FixedHeaderTable from "./FixedHeaderTable";
-import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
+import { action, computed, IReactionDisposer, observable, reaction } from "mobx";
 import autobind from 'autobind-decorator';
 import {
     correctMargin,
@@ -20,8 +20,8 @@ import {
     getFrequencyStr,
     getQValue
 } from "../StudyViewUtils";
-import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
-import {DEFAULT_SORTING_COLUMN} from "../StudyViewConfig";
+import { SortDirection } from "../../../shared/components/lazyMobXTable/LazyMobXTable";
+import { DEFAULT_SORTING_COLUMN } from "../StudyViewConfig";
 
 export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutatedGenesData>;
@@ -62,19 +62,19 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         [ColumnKey.FREQ]: 0,
     };
 
-    private reactions:IReactionDisposer[] = [];
+    private reactions: IReactionDisposer[] = [];
 
     constructor(props: IMutatedGenesTablePros) {
         super(props);
         this.reactions.push(
             reaction(() => this.columnsWidth, () => {
                 this.updateCellMargin();
-            }, {fireImmediately: true})
+            }, { fireImmediately: true })
         );
         this.reactions.push(
             reaction(() => this.props.promise.result, () => {
                 this.updateCellMargin();
-            }, {fireImmediately: true})
+            }, { fireImmediately: true })
         );
     }
 
@@ -106,14 +106,14 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             );
             this.cellMargin[ColumnKey.NUMBER] = correctMargin(
                 (this.columnsWidth[ColumnKey.NUMBER] - 10 - (
-                        getFixedHeaderTableMaxLengthStringPixel(
-                            _.max(this.props.promise.result!.map(item => item.countByEntity))!.toLocaleString()
-                        ) + 20)
+                    getFixedHeaderTableMaxLengthStringPixel(
+                        _.max(this.props.promise.result!.map(item => item.countByEntity))!.toLocaleString()
+                    ) + 20)
                 ) / 2);
             this.cellMargin[ColumnKey.FREQ] = correctMargin(
                 getFixedHeaderNumberCellMargin(
                     this.columnsWidth[ColumnKey.FREQ],
-                    getFrequencyStr(_.max(this.props.promise.result!.map(item => item.frequency))!)
+                    getFrequencyStr(_.max(this.props.promise.result!.map(item => item.countByEntity / item.numberOfSamplesProfiled * 100))!)
                 )
             );
         }
@@ -128,7 +128,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 const addGeneOverlay = () =>
                     <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove from' : 'add to'} your query`}</span>;
                 const qvalOverlay = () =>
-                    <div><b>MutSig</b><br/><i>Q-value: </i><span>{getQValue(data.qValue)}</span></div>;
+                    <div><b>MutSig</b><br /><i>Q-value: </i><span>{getQValue(data.qValue)}</span></div>;
                 return (
                     <div className={styles.displayFlex}>
                         <DefaultTooltip
@@ -148,8 +148,8 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                                 overlay={qvalOverlay}
                                 destroyTooltipOnHide={true}
                             >
-                                    <span><img src={require("./images/mutsig.png")}
-                                               className={styles.mutSig}></img></span>
+                                <span><img src={require("./images/mutsig.png")}
+                                    className={styles.mutSig}></img></span>
                             </DefaultTooltip>
                         </If>
                     </div>
@@ -165,7 +165,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             name: ColumnKey.NUMBER_MUTATIONS,
             tooltip: (<span>Total number of mutations</span>),
             headerRender: () => {
-                return <div style={{marginLeft: this.cellMargin[ColumnKey.NUMBER_MUTATIONS]}}># Mut</div>
+                return <div style={{ marginLeft: this.cellMargin[ColumnKey.NUMBER_MUTATIONS] }}># Mut</div>
             },
             render: (data: MutationCountByGene) => <span
                 style={{
@@ -183,7 +183,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             name: ColumnKey.NUMBER,
             tooltip: (<span>Number of samples with one or more mutations</span>),
             headerRender: () => {
-                return <div style={{marginLeft: this.cellMargin[ColumnKey.NUMBER]}}>#</div>
+                return <div style={{ marginLeft: this.cellMargin[ColumnKey.NUMBER] }}>#</div>
             },
             render: (data: MutationCountByGene) =>
                 <LabeledCheckbox
@@ -214,18 +214,32 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             name: ColumnKey.FREQ,
             tooltip: (<span>Percentage of samples with one or more mutations</span>),
             headerRender: () => {
-                return <div style={{marginLeft: this.cellMargin[ColumnKey.FREQ]}}>Freq</div>
+                return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>
             },
-            render: (data: MutationCountByGene) => <span
-                style={{
-                    flexDirection: 'row-reverse',
-                    display: 'flex',
-                    marginRight: this.cellMargin[ColumnKey.FREQ]
-                }}>{getFrequencyStr(data.frequency)}</span>,
-            sortBy: (data: MutationCountByGene) => data.frequency,
+            render: (data: MutationCountByGene) => {
+                const addTotalProfiledOverlay = () =>
+                    <span>{`# of samples profiled for mutations in this gene: ${data.numberOfSamplesProfiled}`}</span>;
+                return (
+                    <div className={styles.displayFlex}>
+                        <DefaultTooltip
+                            placement="right"
+                            overlay={addTotalProfiledOverlay}
+                            destroyTooltipOnHide={true}
+                        >
+                            <span
+                                style={{
+                                    flexDirection: 'row-reverse',
+                                    display: 'flex',
+                                    marginRight: this.cellMargin[ColumnKey.FREQ]
+                                }}>{getFrequencyStr(data.countByEntity / data.numberOfSamplesProfiled * 100)}
+                            </span>
+                        </DefaultTooltip>
+                    </div>)
+            },
+            sortBy: (data: MutationCountByGene) => data.countByEntity / data.numberOfSamplesProfiled * 100,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string) => {
-                return _.toString(getFrequencyStr(data.frequency)).includes(filterString);
+                return _.toString(getFrequencyStr(data.countByEntity / data.numberOfSamplesProfiled * 100)).includes(filterString);
             },
             width: this.columnsWidth[ColumnKey.FREQ]
         }];

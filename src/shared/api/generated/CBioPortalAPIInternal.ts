@@ -114,9 +114,9 @@ export type CopyNumberCountByGene = {
 
         'entrezGeneId': number
 
-        'frequency': number
-
         'hugoGeneSymbol': string
+
+        'numberOfSamplesProfiled': number
 
         'qValue': number
 
@@ -364,9 +364,9 @@ export type MutationCountByGene = {
 
         'entrezGeneId': number
 
-        'frequency': number
-
         'hugoGeneSymbol': string
+
+        'numberOfSamplesProfiled': number
 
         'qValue': number
 
@@ -491,7 +491,7 @@ export type VariantCountIdentifier = {
  */
 export default class CBioPortalAPIInternal {
 
-    private domain: string = "";
+    private domain: string = "http://localhost:8080/cbioportal/api";
     private errorHandlers: CallbackHandler[] = [];
 
     constructor(domain ? : string) {
