@@ -36,7 +36,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 {
 
 	constructor(props:IQueryAndDownloadTabsProps){
-		super();
+		super(props);
 
 		if (props.showQuickSearchTab && getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) === QUICK_SEARCH_TAB_ID) {
 			this.activeTabId = getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY);

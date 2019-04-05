@@ -72,7 +72,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private studyViewQueryFilter:StudyViewURLQuery;
 
     constructor(props: IStudyViewPageProps) {
-        super();
+        super(props);
         this.store = new StudyViewPageStore();
 
         this.queryReaction = reaction(
