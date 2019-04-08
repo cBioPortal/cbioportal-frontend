@@ -197,6 +197,24 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         }
     }
 
+    @computed get submitNewGroupDisabled() {
+        const selectedSamples = this.props.store.selectedSamples.isComplete ? this.props.store.selectedSamples.result :  undefined;
+        const allGroupNames = this.props.store.comparisonGroups.isComplete ? this.props.store.comparisonGroups.result!.map(group=>group.name) : undefined;
+        return !selectedSamples || this.inputGroupName.length === 0 || !allGroupNames || allGroupNames.includes(this.inputGroupName);
+    }
+
+    @autobind
+    private async submitNewGroup() {
+        const selectedSamples = this.props.store.selectedSamples.isComplete ? this.props.store.selectedSamples.result :  undefined;
+            await comparisonClient.addGroup(getGroupParameters(
+                this.inputGroupName,
+                selectedSamples!,
+                this.props.store
+            ));
+            this.props.store.notifyComparisonGroupsChange();
+            this.cancelAddGroup();
+    }
+
     private get compareButton() {
         if (this.props.store.comparisonGroups.isComplete) {
             // only show if there are enough groups to possibly compare (i.e. 2)
@@ -271,7 +289,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                 <div style={{width:"100%", marginTop:7}}>
                     <div style={{display:"flex", flexDirection:"row", justifyContent:"space-between", alignItems:"center", width:"100%"}}>
                         <DefaultTooltip
-                            visible={allGroupNames && (allGroupNames.indexOf(this.inputGroupName) > -1)}
+                            visible={allGroupNames && allGroupNames.includes(this.inputGroupName)}
                             overlay={
                                 <div>
                                     <i
@@ -294,23 +312,20 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                                 placeholder="Enter a name for your new group"
                                 value={this.inputGroupName}
                                 onChange={this.onChangeInputGroupName}
+                                onKeyPress={
+                                    (event) => {
+                                        if(event.key == 'Enter' && !this.submitNewGroupDisabled){
+                                            this.submitNewGroup();
+                                        }
+                                    }
+                                }
                             />
                         </DefaultTooltip>
                         <button
                             className="btn btn-sm btn-primary"
                             style={{width:createOrAddButtonWidth}}
-                            onClick={async()=>{
-                                if (selectedSamples) {
-                                    await comparisonClient.addGroup(getGroupParameters(
-                                        this.inputGroupName,
-                                        selectedSamples,
-                                        this.props.store
-                                    ));
-                                    this.props.store.notifyComparisonGroupsChange();
-                                    this.cancelAddGroup();
-                                }
-                            }}
-                            disabled={!selectedSamples || this.inputGroupName.length === 0 || !allGroupNames || (allGroupNames.indexOf(this.inputGroupName) > -1)}
+                            onClick={this.submitNewGroup}
+                            disabled={this.submitNewGroupDisabled}
                         >Create</button>
                     </div>
                 </div>
