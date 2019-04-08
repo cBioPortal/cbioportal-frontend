@@ -25,6 +25,7 @@ var config = {
     specs: [
         process.env.SPEC_FILE_PATTERN || './specs/**/*.spec.js'  // './specs/**/screenshot.spec.js'
     ],
+
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
@@ -284,7 +285,7 @@ var config = {
     // }
 };
 
-const doBrowserstack = true;
+const doBrowserstack = false;
 
 if (doBrowserstack) {
     config.capabilities[0]['browserstack.local'] = true;
@@ -297,4 +298,10 @@ if (doBrowserstack) {
     config.key = "SsvxMVGa2fFVc5bWzswx";
 }
 
+// config.specs = [
+//     './specs/**/mutationMapperTool.spec.js'
+// ];
+
+
 exports.config  = config;
+
