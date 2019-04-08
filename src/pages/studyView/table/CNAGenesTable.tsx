@@ -113,7 +113,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 getFixedHeaderNumberCellMargin(
                     this.columnsWidth[ColumnKey.FREQ],
                     getFrequencyStr(
-                        _.max(this.props.promise.result!.map(item => item.frequency))!
+                        _.max(this.props.promise.result!.map(item => item.numberOfAlteredCases / item.numberOfSamplesProfiled * 100))!
                     )
                 )
             );
@@ -222,16 +222,30 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             headerRender: () => {
                 return <div style={{marginLeft: this.cellMargin[ColumnKey.FREQ]}}>Freq</div>
             },
-            render: (data: CopyNumberCountByGene) => <span
-                style={{
-                    flexDirection: 'row-reverse',
-                    display: 'flex',
-                    marginRight: this.cellMargin[ColumnKey.FREQ]
-                }}>{getFrequencyStr(data.frequency)}</span>,
-            sortBy: (data: CopyNumberCountByGene) => data.frequency,
+            render: (data: CopyNumberCountByGene) => {
+                const addTotalProfiledOverlay = () =>
+                    <span>{`# of samples profiled for CNA in this gene: ${data.numberOfSamplesProfiled}`}</span>;
+               return(
+                <div className={styles.displayFlex}>
+                    <DefaultTooltip
+                        placement="right"
+                        overlay={addTotalProfiledOverlay}
+                        destroyTooltipOnHide={true}
+                    >
+                        <span
+                            style={{
+                            flexDirection: 'row-reverse',
+                            display: 'flex',
+                            marginRight: this.cellMargin[ColumnKey.FREQ]
+                            }}>{getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100)}
+                        </span>
+                    </DefaultTooltip>
+                </div>)
+            },
+            sortBy: (data: CopyNumberCountByGene) => data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: CopyNumberCountByGene, filterString: string) => {
-                return _.toString(getFrequencyStr(data.frequency)).includes(filterString);
+                return _.toString(getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100)).includes(filterString);
             },
             width: 70
         }]

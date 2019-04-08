@@ -114,7 +114,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             this.cellMargin[ColumnKey.FREQ] = correctMargin(
                 getFixedHeaderNumberCellMargin(
                     this.columnsWidth[ColumnKey.FREQ],
-                    getFrequencyStr(_.max(this.props.promise.result!.map(item => item.frequency))!)
+                    getFrequencyStr(_.max(this.props.promise.result!.map(item => item.numberOfAlteredCases / item.numberOfSamplesProfiled * 100))!)
                 )
             );
         }
@@ -220,16 +220,30 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             headerRender: () => {
                 return <div style={{marginLeft: this.cellMargin[ColumnKey.FREQ]}}>Freq</div>
             },
-            render: (data: MutationCountByGene) => <span
-                style={{
-                    flexDirection: 'row-reverse',
-                    display: 'flex',
-                    marginRight: this.cellMargin[ColumnKey.FREQ]
-                }}>{getFrequencyStr(data.frequency)}</span>,
-            sortBy: (data: MutationCountByGene) => data.frequency,
+            render: (data: MutationCountByGene) => {
+                const addTotalProfiledOverlay = () =>
+                    <span>{`# of samples profiled for mutations in this gene: ${data.numberOfSamplesProfiled}`}</span>
+                return (
+                    <div className={styles.displayFlex}>
+                        <DefaultTooltip
+                            placement="right"
+                            overlay={addTotalProfiledOverlay}
+                            destroyTooltipOnHide={true}
+                        >
+                            <span
+                                style={{
+                                    flexDirection: 'row-reverse',
+                                    display: 'flex',
+                                    marginRight: this.cellMargin[ColumnKey.FREQ]
+                                }}>{getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100)}
+                            </span>
+                        </DefaultTooltip>
+                    </div>)
+            },
+            sortBy: (data: MutationCountByGene) => data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string) => {
-                return _.toString(getFrequencyStr(data.frequency)).includes(filterString);
+                return _.toString(getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled)).includes(filterString);
             },
             width: this.columnsWidth[ColumnKey.FREQ]
         }];
