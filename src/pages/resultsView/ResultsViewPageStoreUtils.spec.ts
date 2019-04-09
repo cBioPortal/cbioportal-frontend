@@ -1171,35 +1171,35 @@ describe("ResultsViewPageStoreUtils", ()=>{
         });
 
         it("when queried ids is empty", async ()=>{
-            let test = await fetchQueriedStudies({},[]);
+            let test = await fetchQueriedStudies({},[], []);
             assert.deepEqual(test,[]);
         });
 
         
         it("when only physical studies are present", async ()=>{
-            let test = await fetchQueriedStudies(physicalStudies,['physical_study_1', 'physical_study_2']);
+            let test = await fetchQueriedStudies(physicalStudies,['physical_study_1', 'physical_study_2'], virtualStudies);
             assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'physical_study_2']);
         });
 
         it("when only virtual studies are present", async ()=>{
-            let test = await fetchQueriedStudies({},['virtual_study_1', 'virtual_study_2']);
+            let test = await fetchQueriedStudies({},['virtual_study_1', 'virtual_study_2'], virtualStudies);
             assert.deepEqual(_.map(test,obj=>obj.studyId), ['virtual_study_1', 'virtual_study_2']);
         });
 
         it("when physical and virtual studies are present", async ()=>{
-            let test = await fetchQueriedStudies(physicalStudies, ['physical_study_1', 'virtual_study_2']);
+            let test = await fetchQueriedStudies(physicalStudies, ['physical_study_1', 'virtual_study_2'], virtualStudies);
             assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'virtual_study_2']);
         });
 
         it("when there only a subset of studies in studySampleMap compared to queriedIds", async ()=>{
-            let test = await fetchQueriedStudies({ 'physical_study_1': { studyId: 'physical_study_1'} as CancerStudy},['physical_study_1','physical_study_2']);
+            let test = await fetchQueriedStudies({ 'physical_study_1': { studyId: 'physical_study_1'} as CancerStudy},['physical_study_1','physical_study_2'], virtualStudies);
             assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'physical_study_2']);
         });
 
         //this case is not possible because id in these scenarios are first identified in QueryBuilder.java and
         //returned to query selector page
         it("when virtual study query having private study or unknow virtual study id", async ()=>{
-            let test = await fetchQueriedStudies({},['shared_study1']);
+            let test = await fetchQueriedStudies({},['shared_study1'], virtualStudies);
             // assume no studies returned
             assert.equal(test.length, 0);
         });

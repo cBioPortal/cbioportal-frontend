@@ -1,0 +1,31 @@
+.default-checked-select {
+  .Select-control {
+    height:33px;
+  }
+
+  .Select {
+    .Select-placeholder {
+      color: #000;
+    }
+
+    .Select-arrow {
+      border-color: #000 transparent transparent;
+    }
+
+    .Select-menu-outer {
+      max-height: 400px;
+    }
+
+    .Select-menu {
+      max-height: 398px; // needs to be 2 less than Select-menu-outer height to not hide border. Irrelevant
+                         // as long as & > div > div:nth-child(2) max-height is less
+      overflow:hidden;
+
+      & > div > div:nth-child(2) {
+        max-height:350px !important;
+        overflow-x:hidden !important;
+        overflow-y:scroll !important;
+      }
+    }
+  }
+}
