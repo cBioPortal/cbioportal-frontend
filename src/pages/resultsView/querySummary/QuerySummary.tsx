@@ -28,10 +28,6 @@ import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
 
-    constructor() {
-        super();
-    }
-
     @autobind
     private toggleQueryFormVisibility() {
         this._queryFormVisible = !this._queryFormVisible;
@@ -144,7 +140,8 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     @computed get queryForm(){
         return <div style={{marginTop:10}}>
             <QueryAndDownloadTabs onSubmit={this.onSubmit}
-                                  showQuickSearchTab={AppConfig.serverConfig.skin_show_quick_search}
+                                  showQuickSearchTab={false}
+                                  showDownloadTab={false}
                                   showAlerts={true}
                                   getQueryStore={()=>createQueryStore(getBrowserWindow().routingStore.query)}
             />
