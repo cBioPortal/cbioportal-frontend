@@ -293,13 +293,14 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     @computed get chartDomainPadding() {
         return {
             [this.countAxis]:this.countAxisDomainPadding,
-            [this.categoryAxis]:this.categoryAxisDomainPadding+this.additionalPadding
+            [this.categoryAxis]:this.categoryAxisDomainPadding + this.additionalPadding
         };
     }
 
     @computed get additionalPadding() {
         //if not stacked add padding to move the bars right
-        return this.props.stacked ? 0 : this.categoryCoord(this.data.length / 2);
+        //and add minorCategories count to fix padding issue when there are lot of categories
+        return this.props.stacked ? 0 : this.categoryCoord(this.data.length / 2) + this.data.length;
     }
 
     @computed get chartExtent() {
@@ -309,9 +310,12 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
             if (this.props.stacked) {
                 numBars = this.data[0].counts.length;
             } else {
-                numBars = _.sumBy(this.data, categoryPlotData => categoryPlotData.counts.length);
+                //majorCategories*minorCategories
+                numBars = this.data[0].counts.length * this.data.length;
+                //add space between majorCategories
+                miscPadding += this.categoryCoord(this.data[0].counts.length);
             }
-            return this.categoryCoord(numBars - 1) + 2 * (this.categoryAxisDomainPadding) + miscPadding + this.additionalPadding;
+            return this.categoryCoord(numBars - 1) + 2 * (this.categoryAxisDomainPadding) + miscPadding;
         } else {
             return miscPadding;
         }
@@ -326,11 +330,17 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     }
 
     @computed get barSeparation() {
-        return 0.2*this.barWidth;
+        return this.props.stacked ? 0.2 * this.barWidth : 0;
     }
 
     @computed get barWidth() {
-        return this.props.barWidth || 10;
+        let barWidth = this.props.barWidth || 10;
+        //for grouped bar chart, if number of minorCategories greater than 10 then reduce the width by half
+        if (this.props.stacked || this.data.length <= 10) {
+            return barWidth;
+        } else {
+            return barWidth / 2
+        }
     }
 
     @computed get labels() {
@@ -355,8 +365,26 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     }
 
     @computed get zeroCountOffset() {
+        let addOffset = false;
+        for (const d of this.data) {
+            for (const c of d.counts) {
+                if (c.count === 0) {
+                    addOffset = true;
+                    break;
+                }
+            }
+            if (addOffset) break;
+        }
         //add a small offset when its not a stacked bar to show empty bar
-        return this.props.stacked ? 0 : (0.03 * (this.maxMajorCount / NUM_AXIS_TICKS));
+        if (this.props.stacked) {
+            return 0;
+        } else {
+            return addOffset ? (0.01 * (this.maxMajorCount / NUM_AXIS_TICKS)) : 0;
+        }
+    }
+
+    @computed get axisStyle() {
+        return this.props.stacked ? {} : { axis: { stroke: "#b3b3b3" } };
     }
 
     @computed get horzAxis() {
@@ -369,7 +397,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         return (
             <VictoryAxis
                 orientation="bottom"
-                offsetY={50 + (this.props.horizontalBars ? 0 : this.zeroCountOffset)}
+                offsetY={50}
                 crossAxis={false}
                 label={label}
 
@@ -381,6 +409,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                                                   textAnchor={this.props.horizontalBars ? undefined : "start"}
                 />}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? 35 : this.biggestCategoryLabelSize + 24}/>}
+                style={this.axisStyle}
             />
         );
     }
@@ -393,7 +422,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         return (
             <VictoryAxis
                 orientation="left"
-                offsetX={50 + (this.props.horizontalBars ? this.zeroCountOffset : 0)}
+                offsetX={50}
                 crossAxis={false}
                 label={label}
                 dependentAxis={true}
@@ -401,6 +430,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 tickCount={this.props.horizontalBars ? undefined : NUM_AXIS_TICKS}
                 tickFormat={this.props.horizontalBars ? this.formatCategoryTick : this.formatNumericalTick}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? -1*this.biggestCategoryLabelSize - 24 : -40}/>}
+                style={this.axisStyle}
             />
         );
     }

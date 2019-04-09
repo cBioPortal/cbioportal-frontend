@@ -1,5 +1,4 @@
 import * as React from "react";
-import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import FadeInteraction from "../fadeInteraction/FadeInteraction";
 import {observer} from "mobx-react";
 import {action, computed, observable} from "mobx";
@@ -9,6 +8,7 @@ import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import classnames from "classnames";
 import styles from "./DownloadControls.module.scss";
 import {saveSvg, saveSvgAsPng} from "save-svg-as-png";
+import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 
 type ButtonSpec = { key:string, content:JSX.Element, onClick:()=>void, disabled?: boolean };
 

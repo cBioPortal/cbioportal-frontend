@@ -21,10 +21,6 @@ export interface IBarGraphProps {
 
 export default class BarGraph extends React.Component<IBarGraphProps, {}> {
 
-    constructor() {
-        super();
-    }
-
     chartTarget:HTMLCanvasElement;
 
     shouldComponentUpdate() {
