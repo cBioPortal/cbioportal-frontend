@@ -970,6 +970,7 @@ export class StudyViewPageStore {
         this._withMutationDataFilter = undefined;
         this._withCNADataFilter = undefined;
         this.numberOfSelectedSamplesInCustomSelection = 0;
+        this.removeComparisonGroupSelectionFilter();
     }
 
     @action
@@ -1443,6 +1444,7 @@ export class StudyViewPageStore {
     @action
     removeComparisonGroupSelectionFilter() {
         this._chartSampleIdentifiersFilterSet.delete(UniqueKey.SELECTED_COMPARISON_GROUPS);
+        this._filterComparisonGroups = [];
     }
 
     @autobind
