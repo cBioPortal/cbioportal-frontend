@@ -224,21 +224,19 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 const addTotalProfiledOverlay = () =>
                     <span>{`# of samples profiled for mutations in this gene: ${data.numberOfSamplesProfiled}`}</span>
                 return (
-                    <div className={styles.displayFlex}>
-                        <DefaultTooltip
-                            placement="right"
-                            overlay={addTotalProfiledOverlay}
-                            destroyTooltipOnHide={true}
-                        >
-                            <span
-                                style={{
-                                    flexDirection: 'row-reverse',
-                                    display: 'flex',
-                                    marginRight: this.cellMargin[ColumnKey.FREQ]
-                                }}>{getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100)}
-                            </span>
-                        </DefaultTooltip>
-                    </div>)
+                    <DefaultTooltip
+                        placement="right"
+                        overlay={addTotalProfiledOverlay}
+                        destroyTooltipOnHide={true}
+                    >
+                        <span
+                            style={{
+                                flexDirection: 'row-reverse',
+                                display: 'flex',
+                                marginRight: this.cellMargin[ColumnKey.FREQ]
+                            }}>{getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100)}
+                        </span>
+                    </DefaultTooltip>)
             },
             sortBy: (data: MutationCountByGene) => data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100,
             defaultSortDirection: 'desc' as 'desc',

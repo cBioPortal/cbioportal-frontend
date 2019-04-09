@@ -226,7 +226,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 const addTotalProfiledOverlay = () =>
                     <span>{`# of samples profiled for CNA in this gene: ${data.numberOfSamplesProfiled}`}</span>;
                return(
-                <div className={styles.displayFlex}>
                     <DefaultTooltip
                         placement="right"
                         overlay={addTotalProfiledOverlay}
@@ -240,7 +239,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                             }}>{getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100)}
                         </span>
                     </DefaultTooltip>
-                </div>)
+                )
             },
             sortBy: (data: CopyNumberCountByGene) => data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100,
             defaultSortDirection: 'desc' as 'desc',
