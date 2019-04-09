@@ -487,6 +487,13 @@ if (isDev || isTest) {
             'process.env': {
                 'NODE_ENV': `"${process.env.NODE_ENV || 'production'}"`
             }
+        }),
+        new webpack.optimize.UglifyJsPlugin({
+            compress: {
+                warnings: false
+            },
+            sourceMap: true,
+            comments: false
         })
     );
 
