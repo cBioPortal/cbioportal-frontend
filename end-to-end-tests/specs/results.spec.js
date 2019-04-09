@@ -159,7 +159,7 @@ describe('Results Page', function() {
             });
 
             it('shows tracks when the corresponding dropdown menu options selected', () => {
-                browser.click('.annotation-track-selector .Select-arrow');
+                browser.click('.annotation-track-selector');
 
                 // open Hotspots track
                 browser.elements('.//*[text()[contains(.,"Cancer Hotspots")]]').value[0].click();

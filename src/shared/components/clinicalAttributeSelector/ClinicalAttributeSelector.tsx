@@ -1,6 +1,5 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {MobxPromise} from "mobxpromise";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {computed, observable} from "mobx";
 import {remoteData} from "../../api/remoteData";
@@ -8,17 +7,15 @@ import _ from "lodash";
 import {ClinicalAttribute} from "../../api/generated/CBioPortalAPI";
 import {getPercentage} from "../../lib/FormatUtils";
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
-import {makeProfiledInClinicalAttributes} from "../oncoprint/ResultsViewOncoprintUtils";
-const CheckedSelect = require("react-select-checked").CheckedSelect;
-import ReactSelect from "react-select";
 import autobind from "autobind-decorator";
 import {ExtendedClinicalAttribute} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
+import onMobxPromise from "../../lib/onMobxPromise";
+import CheckedSelect, {Option} from "../checkedSelect/CheckedSelect";
 
 export interface IClinicalAttributeSelectorProps {
     store:ResultsViewPageStore;
     selectedClinicalAttributeIds:(string|SpecialAttribute)[];
     onChange:(selectedAttributeIds:(string|SpecialAttribute)[])=>void;
-    multiple?:boolean;
     name?:string;
 }
 
@@ -71,25 +68,28 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         invoke: ()=>{
             const totalSampleCount = this.props.store.samples.result!.length;
             const clinicalAttributeIdToAvailableSampleCount = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
-            return Promise.resolve(_.reduce(this.sortedClinicalAttributes.result!, (options:{label:string, value:string}[], next:ExtendedClinicalAttribute)=>{
-                let sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
-                if (sampleCount === undefined && next.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix)) {
-                    // for 'Profiled In' tracks, we have data for all the samples - gene panel data
-                    // but these tracks have special, locally-constructed clinical attribute ids, and aren't placed in that map.
-                    // TODO: maybe they should be?
-                    sampleCount = totalSampleCount;
-                }
-                const newOption = {
-                    label: `${next.displayName} (${getPercentage(sampleCount/totalSampleCount, 0)})`,
-                    value: next.clinicalAttributeId,
-                    disabled: false
-                };
-                if (sampleCount === 0) {
-                    newOption.disabled = true;
-                }
-                options.push(newOption);
-                return options;
-            }, []));
+            return Promise.resolve(
+                _.uniqBy(this.sortedClinicalAttributes.result!, attr=>attr.clinicalAttributeId)
+                .reduce((options:{label:string, value:string}[], next:ExtendedClinicalAttribute)=>{
+                    let sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
+                    if (sampleCount === undefined && next.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix)) {
+                        // for 'Profiled In' tracks, we have data for all the samples - gene panel data
+                        // but these tracks have special, locally-constructed clinical attribute ids, and aren't placed in that map.
+                        // TODO: maybe they should be?
+                        sampleCount = totalSampleCount;
+                    }
+                    const newOption = {
+                        label: `${next.displayName} (${getPercentage(sampleCount/totalSampleCount, 0)})`,
+                        value: next.clinicalAttributeId,
+                        disabled: false
+                    };
+                    if (sampleCount === 0) {
+                        newOption.disabled = true;
+                    }
+                    options.push(newOption);
+                    return options;
+                }, [])
+            );
         }
     });
 
@@ -97,17 +97,13 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         return this.props.selectedClinicalAttributeIds.map(x=>({value:x}));
     }
 
-    @computed get onChangeMultiple() {
-        return (values:{value:string|SpecialAttribute}[])=>{
-            this.props.onChange(values.map(o=>o.value));
-        };
+    @computed get valueMap() {
+        return _.keyBy(this.value, v=>v.value);
     }
 
-    @computed get onChangeSingle() {
-        return (option:any|null)=>{
-            if (option !== null) {
-                this.props.onChange([option.value]);
-            }
+    @computed get onChange() {
+        return (values:{value:string|SpecialAttribute}[])=>{
+            this.props.onChange(values.map(o=>o.value));
         };
     }
 
@@ -115,18 +111,30 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         this.focused = true;
     }
 
+    @autobind private addAll() {
+        onMobxPromise(
+            this.options,
+            options=>this.onChange(options)
+        );
+    }
+
+    @autobind private clear() {
+        this.onChange([]);
+    }
+
     render() {
-        let disabled:boolean, placeholder:string, options:any[];
+        let disabled:boolean, placeholder:string, options: Option[];
         if (this.focused) {
+            // only load options once its been focused
             switch (this.options.status) {
                 case "pending":
                     disabled = false;
-                    placeholder = "Downloading clinical tracks...";
+                    placeholder = "Downloading...";
                     options = [];
                     break;
                 case "error":
                     disabled = true;
-                    placeholder = "Error downloading clinical tracks.";
+                    placeholder = "Error";
                     options = [];
                     break;
                 default:
@@ -136,43 +144,25 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
                     options = this.options.result!;
             }
         } else {
-            // not loading yet - only load on click
+            // not loading yet - only load on focus
             disabled = false;
             placeholder = "Add clinical tracks";
             options = [];
         }
 
-        let selectElt:any = null;
-        if (this.props.multiple) {
-            selectElt = (
-                <CheckedSelect
-                    name={this.props.name}
-                    disabled={disabled}
-                    placeholder={placeholder}
-                    onChange={this.onChangeMultiple}
-                    options={options}
-                    value={this.value}
-                    labelKey="label"
-                />
-            );
-        } else {
-            selectElt = (
-                <ReactSelect
-                    name={this.props.name}
-                    disabled={disabled}
-                    placeholder={placeholder}
-                    onChange={this.onChangeSingle}
-                    options={options}
-                    clearable={false}
-                    searchable={true}
-                    value={this.value}
-                />
-            );
-        }
-
         return (
             <span onFocus={this.onFocus}>
-                {selectElt}
+                <CheckedSelect
+                    name={this.props.name}
+                    isDisabled={disabled}
+                    placeholder={placeholder}
+                    onChange={this.onChange}
+                    options={options}
+                    value={this.value}
+                    onClearAll={this.clear}
+                    onAddAll={this.addAll}
+                    addAllLabel={`Add all ${this.options.peekStatus === "complete" ? "("+this.options.result!.length+")" : ""}`}
+                />
             </span>
         );
     }

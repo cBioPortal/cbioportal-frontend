@@ -10,6 +10,7 @@ import QuickSearch from "./quickSearch/QuickSearch";
 import HomePageSummary from "./quickSearch/HomePageSummary";
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import autobind from "autobind-decorator";
+import { trackEvent } from 'shared/lib/tracking';
 
 const styles = styles_any as {
 	QueryAndDownloadTabs: string,
@@ -23,7 +24,8 @@ const QUICK_SEARCH_LS_KEY = 'defaultHomePageTab';
 interface IQueryAndDownloadTabsProps
 {
 	onSubmit?:()=>void;
-	showQuickSearchTab?:boolean;
+	showQuickSearchTab:boolean;
+	showDownloadTab:boolean;
     getQueryStore:()=>QueryStore;
     showAlerts?:boolean;
 }
@@ -34,9 +36,9 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 {
 
 	constructor(props:IQueryAndDownloadTabsProps){
-		super();
+		super(props);
 
-		if (getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) === QUICK_SEARCH_TAB_ID) {
+		if (props.showQuickSearchTab && getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) === QUICK_SEARCH_TAB_ID) {
 			this.activeTabId = getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY);
 		}
 
@@ -58,8 +60,15 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 	@autobind
 	setDefaultTab(tabId:string|undefined){
 		// right now we only care if quick search or NOT
-		getBrowserWindow().localStorage.defaultHomePageTab =
-			(tabId === QUICK_SEARCH_TAB_ID) ? QUICK_SEARCH_TAB_ID : undefined;
+		if (this.props.showQuickSearchTab) {
+			getBrowserWindow().localStorage.defaultHomePageTab =
+				(tabId === QUICK_SEARCH_TAB_ID) ? QUICK_SEARCH_TAB_ID : undefined;
+		}
+	}
+
+	trackQuickSearch(){
+		// track how many users are using this feature
+		trackEvent({ category:"quickSearch", action:"quickSearchLoad" });
 	}
 
 	@autobind
@@ -85,12 +94,12 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 					<MSKTab id={"advanced"} linkText={"Query"} onTabDidMount={()=>this.setDefaultTab(undefined)}>
                         <QueryContainer onSubmit={this.props.onSubmit} store={this.store}/>
 					</MSKTab>
-					<MSKTab id={QUICK_SEARCH_TAB_ID} linkText={<span>Quick Search <strong className={"beta-text"}>Beta!</strong></span>}  onTabDidMount={()=>this.setDefaultTab(QUICK_SEARCH_TAB_ID)}>
+					<MSKTab id={QUICK_SEARCH_TAB_ID} linkText={<span>Quick Search <strong className={"beta-text"}>Beta!</strong></span>} hide={!this.props.showQuickSearchTab} onTabDidMount={()=>{this.setDefaultTab(QUICK_SEARCH_TAB_ID); this.trackQuickSearch();}}>
                         <div>
 							<QuickSearch/>
                         </div>
 					</MSKTab>
-					<MSKTab id={DOWNLOAD} linkText={"Download"} onTabDidMount={()=>this.setDefaultTab(undefined)}>
+					<MSKTab id={DOWNLOAD} linkText={"Download"} hide={!this.props.showDownloadTab} onTabDidMount={()=>this.setDefaultTab(undefined)}>
                         <QueryContainer onSubmit={this.props.onSubmit} store={this.store}/>
 					</MSKTab>
 				</MSKTabs>

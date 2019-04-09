@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Redirect, IndexRoute } from 'react-router';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
-import {handleIndexDO, handleCaseDO, handleLegacySubmission, restoreRouteAfterRedirect, handleStudyDO} from './shared/lib/redirectHelpers';
+import {handleIndexDO, handleCaseDO, handleLegacySubmission, restoreRouteAfterRedirect, handleStudyDO, handleLinkOut} from './shared/lib/redirectHelpers';
 import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 
 /* HOW TO ADD A NEW ROUTE
@@ -34,12 +34,14 @@ import FAQ from 'bundle-loader?lazy!babel-loader!./pages/staticPages/faq/FAQ';
 import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
 import GroupComparisonPage from "bundle-loader?lazy!babel-loader!./pages/groupComparison/GroupComparisonPage";
 
+import AppConfig from "appConfig";
 
 import {getBasePath} from "shared/api/urls";
 import $ from "jquery";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import getBrowserWindow from "shared/lib/getBrowserWindow";
 import {seekUrlHash} from "shared/lib/seekUrlHash";
+import queryString from "query-string";
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
@@ -120,6 +122,9 @@ export const makeRoutes = (routing) => {
                 <Route path="/case.do" onEnter={handleCaseDO} component={getBlankPage()} />
                 <Route path="/index.do" onEnter={handleIndexDO} component={getBlankPage()} />
                 <Route path="/study.do" onEnter={handleStudyDO} component={getBlankPage()} />
+
+                <Route path="/ln" onEnter={handleLinkOut} component={getBlankPage()} />
+                <Route path="/link.do" onEnter={handleLinkOut} component={getBlankPage()} />
 
                 <Redirect from={"/mutation_mapper.jsp"} to={"/mutation_mapper"}/>
                 <Redirect from={"/data_sets.jsp"} to={"/datasets"}/>
