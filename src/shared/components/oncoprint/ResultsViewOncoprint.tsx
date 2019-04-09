@@ -55,7 +55,6 @@ export interface IGenesetExpansionRecord {
     correlationValue: number;
 }
 
-export const SAMPLE_MODE_URL_PARAM = "show_samples";
 export const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
 export const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
 
@@ -72,7 +71,9 @@ type HeatmapTrackGroupRecord = {
 /* tslint:disable: member-ordering */
 @observer
 export default class ResultsViewOncoprint extends React.Component<IResultsViewOncoprintProps, {}> {
-    @observable columnMode:"sample"|"patient" = "patient";
+    @computed get columnMode() {
+        return this.props.store.caseType;
+    }
     @observable sortMode:SortMode = {type:"data"};
 
     @observable distinguishGermlineMutations:boolean = true;
@@ -170,13 +171,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         this.urlParamsReaction = reaction(
             ()=>[
-                this.columnMode,
                 this.heatmapTrackGroupsUrlParam,
                 this.clinicalTracksUrlParam
             ],
             ()=>{
                 const newParams = Object.assign({}, getBrowserWindow().globalStores.routing.location.query);
-                newParams[SAMPLE_MODE_URL_PARAM] = (this.columnMode === "sample") + "";
                 if (!this.clinicalTracksUrlParam) {
                     delete newParams[CLINICAL_TRACKS_URL_PARAM];
                 } else {
@@ -579,9 +578,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @action private initFromUrlParams(paramsMap:any) {
-        if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
-            this.columnMode = (paramsMap[SAMPLE_MODE_URL_PARAM] && paramsMap[SAMPLE_MODE_URL_PARAM]==="true") ? "sample" : "patient";
-        }
         if (paramsMap[HEATMAP_TRACKS_URL_PARAM]) {
             const groups = paramsMap[HEATMAP_TRACKS_URL_PARAM].split(";").map((x:string)=>x.split(","));
             for (const group of groups) {
@@ -658,9 +654,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     private setColumnMode(type:"sample"|"patient") {
-        if (this.columnMode !== type) {
-            this.columnMode = type;
-        }
+        this.props.store.setCaseType(type);
     }
 
     readonly alteredKeys = remoteData({

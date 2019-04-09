@@ -54,3 +54,7 @@ export function unescapeTabDelimited(str: string): string
 {
     return str.replace(/\\t/g, "\t").replace(/\\n/g, "\n");
 }
+
+export function capitalize(str:string) {
+    return str[0].toUpperCase()+str.substring(1);
+}

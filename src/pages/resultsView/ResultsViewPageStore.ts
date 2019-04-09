@@ -110,7 +110,7 @@ import {
     groupDataByCase,
     initializeCustomDriverAnnotationSettings,
     isRNASeqProfile,
-    getSampleAlteredMap, makeEnrichmentDataPromise
+    getSampleAlteredMap, makeEnrichmentDataPromise, SAMPLE_MODE_URL_PARAM
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
@@ -141,6 +141,7 @@ import ErrorMessage from "../../shared/components/ErrorMessage";
 import {ErrorMessages} from "../../shared/enums/ErrorEnums";
 import sessionServiceClient from "../../shared/api/sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -394,6 +395,8 @@ export class ResultsViewPageStore {
         this.initDriverAnnotationSettings();
     }
 
+    @observable private _caseType:"sample"|"patient" = "patient";
+
     public queryReactionDisposer:any;
 
     public rvQuery:ResultsViewQuery = new ResultsViewQuery();
@@ -422,6 +425,25 @@ export class ResultsViewPageStore {
     @observable.ref public _selectedEnrichmentCopyNumberProfile: MolecularProfile;
     @observable.ref public _selectedEnrichmentMRNAProfile: MolecularProfile;
     @observable.ref public _selectedEnrichmentProteinProfile: MolecularProfile;
+
+    @action public setCaseType(t:"sample"|"patient") {
+        if (this._caseType !== t) {
+            this._caseType = t;
+
+            getBrowserWindow().globalStores.routing.updateRoute(
+                {
+                    [SAMPLE_MODE_URL_PARAM]:(this._caseType === "sample").toString()
+                },
+                undefined,
+                true,
+                true
+            );
+        }
+    }
+
+    @computed public get caseType() {
+        return this._caseType;
+    }
 
     @computed get selectedEnrichmentMutationProfile() {
         if (!this._selectedEnrichmentMutationProfile && this.mutationEnrichmentProfiles.isComplete &&
@@ -496,6 +518,13 @@ export class ResultsViewPageStore {
         const showSamples = shareURL.indexOf("&show");
         if (showSamples > -1) {
             this.sessionIdURL = shareURL.slice(0, showSamples);
+        }
+
+        const parsedUrl = url.parse((window as any).location.href, true);
+        if (SAMPLE_MODE_URL_PARAM in parsedUrl.query) {
+            this.setCaseType(
+                parsedUrl.query[SAMPLE_MODE_URL_PARAM] === "true" ? "sample" : "patient"
+            );
         }
     }
 
