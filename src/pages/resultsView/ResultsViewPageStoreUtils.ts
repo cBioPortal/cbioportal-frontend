@@ -31,6 +31,9 @@ import {remoteData} from "../../shared/api/remoteData";
 import {calculateQValues} from "../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {SpecialAttribute} from "../../shared/cache/ClinicalDataCache";
 
+
+export const SAMPLE_MODE_URL_PARAM = "show_samples";
+
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
     tiers: string[];
