@@ -77,9 +77,9 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
         };
     }
 
-    constructor()
+    constructor(props:OncoKbCardProps)
     {
-        super();
+        super(props);
 
         this.handleOncogenicityTabSelect = this.handleOncogenicityTabSelect.bind(this);
         this.handleMutationEffectTabSelect = this.handleMutationEffectTabSelect.bind(this);
