@@ -17,8 +17,8 @@ export function progressBar(confidence:string, determineColor:boolean) {
     return (
         <div className="progress" style={{position:"relative",width:100,marginBottom:0}}>
     <div data-test="progress-bar" className={`progress-bar ${progressBarClassName}`}
-    role="progressbar" aria-valuenow={`${confidencePerc}`}
-    aria-valuemin="0" aria-valuemax="100"
+    role="progressbar" aria-valuenow={confidencePerc}
+    aria-valuemin={0} aria-valuemax={100}
     style={Object.assign(progressBarStyle, {width:`${confidencePerc}%`})} />
     <div style={{position:"absolute",
         textShadow:"-1px 0 white, 0 1px white, 1px 0 white, 0 -1px white",

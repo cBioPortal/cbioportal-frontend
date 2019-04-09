@@ -1,7 +1,7 @@
 import * as React from "react";
 import {Modal} from "react-bootstrap";
 
-import {TableCellStatus, default as TableCellStatusIndicator} from "../TableCellStatus";
+import {TableCellStatus, default as TableCellStatusIndicator} from "../../TableCellStatus";
 
 interface IOncoKbFeedbackProps
 {

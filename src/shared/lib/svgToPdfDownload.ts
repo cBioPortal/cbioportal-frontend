@@ -1,6 +1,6 @@
-import fileDownload from 'react-file-download';
-import {default as request, Request} from "superagent";
-import {buildCBioPortalPageUrl} from "../api/urls";
+import svg2pdf from "svg2pdf.js";
+import {jsPDF} from "jspdf-yworks";
+import _ from "lodash";
 
 function base64ToArrayBuffer(base64:string) {
     const binaryString = window.atob(base64);
@@ -13,49 +13,56 @@ function base64ToArrayBuffer(base64:string) {
     return bytes;
 }
 
-export default function (filename:string, svg:Element, servletUrl?: string) {
-    const req = svgToPdfRequest(svg, servletUrl);
+export default function svgToPdfDownload(fileName: string, svg: any) {
+    const width = svg.scrollWidth || parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!), height = svg.scrollHeight || parseInt((svg.attributes.getNamedItem('height') as Attr).nodeValue!);
 
-    if (!req) {
-       return false;
+    // create a new jsPDF instance
+    let direction = 'l';
+    if (height > width) {
+        direction = 'p';
     }
 
-    req.end((err, res)=>{
-        if (!err && res.ok) {
-            fileDownload(base64ToArrayBuffer(res.text), filename);
-        }
+    const pdf = new jsPDF(direction, 'pt', [width, height]);
+
+    const font = require("shared/static-data/font.json");
+    pdf.addFileToVFS("FreeSans-normal.ttf", font.FreeSans);
+    pdf.addFont("FreeSans-normal.ttf", "FreeSans", "normal");
+
+    // render the svg element
+    svg2pdf(svg, pdf, {
+        xOffset: 0,
+        yOffset: 0,
+        scale: 1
     });
-
-    return true;
+    pdf.save(fileName);
 }
 
-export function svgToPdfRequest(svg:Element, servletUrl?: string): Request|undefined {
-    const svgelement = "<?xml version='1.0'?>"+replaceUnicodeChars((new XMLSerializer()).serializeToString(svg));
-    const two_megabyte_limit = 2000000;
-
-    if (svgelement.length > two_megabyte_limit) {
-        return undefined;
+export function svgToPdfData(svg: Element) : string{
+    const width = svg.scrollWidth || parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!), height = svg.scrollHeight || parseInt((svg.attributes.getNamedItem('height') as Attr).nodeValue!);
+    // create a new jsPDF instance
+    
+    let direction = 'l';
+    if (height > width) {
+        direction = 'p';
     }
 
-    const servletURL = servletUrl || buildCBioPortalPageUrl("svgtopdf.do");
-    const filetype = "pdf_data";
+    const pdf = new jsPDF(direction, 'pt', [width, height]);
 
-    return request.post(servletURL)
-        .type('form')
-        .send({filetype, svgelement});
+    // render the svg element
+    svg2pdf(svg, pdf, {
+        xOffset: 0,
+        yOffset: 0,
+        scale: 1
+    });
+    // return the svg data, we don't need the header
+    pdf.save("");
+    return pdf.output('dataurlstring');
 }
 
-export async function svgToPdfPromise(svg:Element, servletUrl?: string) {
-    const res = await svgToPdfRequest(svg, servletUrl);
+export async function svgToPdfPromise(svg:Element) {
+    const res = await svgToPdfData(svg);
 
-    if(res && res.ok) {
-        return base64ToArrayBuffer(res.text);
+    if(res) {
+        return "";
     }
-}
-
-// TODO add more characters if needed
-function replaceUnicodeChars(svg: string) {
-    return svg
-        .replace(/≤/g, "&lt;=")
-        .replace(/≥/g, "&gt;=");
 }

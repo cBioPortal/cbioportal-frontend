@@ -25,8 +25,8 @@ export default class DatasetPage extends React.Component<{}, {}> {
 
     private store:DatasetPageStore;
 
-    constructor() {
-        super();
+    constructor(props:any) {
+        super(props);
         this.store = new DatasetPageStore();
     }
 
