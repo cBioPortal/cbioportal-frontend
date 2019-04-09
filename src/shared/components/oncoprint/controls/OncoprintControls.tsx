@@ -413,12 +413,11 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         if (this.props.store && this.props.state.selectedClinicalAttributeIds &&
             this.props.handlers.onChangeSelectedClinicalTracks) {
             return (
-                <div className="clinical-track-selector">
+                <div className="clinical-track-selector" style={{position:"relative"}}>
                     <ClinicalAttributeSelector
                         store={this.props.store}
                         selectedClinicalAttributeIds={this.props.state.selectedClinicalAttributeIds}
                         onChange={this.props.handlers.onChangeSelectedClinicalTracks}
-                        multiple={true}
                     />
                 </div>
             );
@@ -996,7 +995,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     render() {
         return (
             <div className="oncoprint__controls">
-                <div style={{width:220}}>
+                <div style={{width:250, marginRight:5, marginTop:-0.5}}>
                     <Observer>
                         {this.getClinicalTracksMenu}
                     </Observer>

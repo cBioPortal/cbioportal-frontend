@@ -482,9 +482,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onClickDownload:(type:string)=>{
                 switch(type) {
                     case "pdf":
-                        if (!svgToPdfDownload("oncoprint.pdf", this.oncoprint.toSVG(true))) {
-                            alert("Oncoprint too big to download as PDF - please download as SVG.");
-                        }
+                        svgToPdfDownload("oncoprint.pdf", this.oncoprint.toSVG(false));
+                        // if (!pdfDownload("oncoprint.pdf", this.oncoprint.toSVG(true))) {
+                        //     alert("Oncoprint too big to download as PDF - please download as SVG.");
+                        // }
                         break;
                     case "png":
                         const img = this.oncoprint.toCanvas((canvas, truncated)=>{
@@ -970,9 +971,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public render() {
         return (
-            <div>
+            <div style={{ position:"relative" }}>
 
-                <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true} className="oncoprintLoadingIndicator">
+                <LoadingIndicator isLoading={this.isHidden} size={"big"} centerRelativeToContainer={true} className="oncoprintLoadingIndicator">
                     <div style={{marginTop:20}}>
                         <ProgressIndicator getItems={this.getProgressItems} show={this.isHidden} sequential={true}/>
                     </div>

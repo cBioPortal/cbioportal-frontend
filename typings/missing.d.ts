@@ -44,3 +44,5 @@ declare module 'regression';
 declare module 'react-select2';
 declare module 'react-select';
 declare module 'pluralize';
+declare module 'svg2pdf.js';
+declare module 'jspdf-yworks';
