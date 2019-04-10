@@ -142,6 +142,7 @@ import {ErrorMessages} from "../../shared/enums/ErrorEnums";
 import sessionServiceClient from "../../shared/api/sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import {isNotGermlineMutation} from "../../shared/lib/MutationUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -396,6 +397,7 @@ export class ResultsViewPageStore {
     }
 
     @observable private _caseType:"sample"|"patient" = "patient";
+    @observable private _showGermlineMutations:boolean = true;
 
     public queryReactionDisposer:any;
 
@@ -441,8 +443,18 @@ export class ResultsViewPageStore {
         }
     }
 
-    @computed public get caseType() {
+    public get caseType() {
         return this._caseType;
+    }
+
+    @action public setShowGermlineMutations(s:boolean) {
+        if (this._showGermlineMutations !== s) {
+            this._showGermlineMutations = s;
+        }
+    }
+
+    public get showGermlineMutations() {
+        return this._showGermlineMutations;
     }
 
     @computed get selectedEnrichmentMutationProfile() {
@@ -2233,7 +2245,12 @@ export class ResultsViewPageStore {
             this.entrezGeneIdToGene
         ],
         invoke:()=>{
-            return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.driverAnnotationSettings.ignoreUnknown));
+            let mutations = this.mutations.result!;
+            // do germline filtering if necessary
+            if (!this.showGermlineMutations) {
+                mutations = mutations.filter(isNotGermlineMutation);
+            }
+            return Promise.resolve(computePutativeDriverAnnotatedMutations(mutations, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.driverAnnotationSettings.ignoreUnknown));
         }
     });
 
@@ -2246,7 +2263,12 @@ export class ResultsViewPageStore {
                     this.entrezGeneIdToGene
                 ],
                 invoke: ()=>{
-                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.driverAnnotationSettings.ignoreUnknown));
+                    let mutations = this.mutationCache.get(q).result!;
+                    // do germline filtering if necessary
+                    if (!this.showGermlineMutations) {
+                        mutations = mutations.filter(isNotGermlineMutation);
+                    }
+                    return Promise.resolve(computePutativeDriverAnnotatedMutations(mutations, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.driverAnnotationSettings.ignoreUnknown));
                 }
             })
         );

@@ -77,7 +77,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable sortMode:SortMode = {type:"data"};
 
     @observable distinguishGermlineMutations:boolean = true;
-    @observable hideGermlineMutations:boolean = false;
     @observable distinguishMutationType:boolean = true;
     @observable sortByMutationType:boolean = true;
     @observable sortByDrivers:boolean = true;
@@ -262,8 +261,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get hidePutativePassengers() {
                 return self.props.store.driverAnnotationSettings.ignoreUnknown;
             },
-            get hideGermlineMutations() {
-                return self.hideGermlineMutations;
+            get showGermlineMutations() {
+                return self.props.store.showGermlineMutations;
             },
             get annotateCBioPortalInputValue() {
                 return self.props.store.driverAnnotationSettings.cbioportalCountThreshold + "";
@@ -447,8 +446,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectHidePutativePassengers:(s:boolean)=>{
                 this.props.store.driverAnnotationSettings.ignoreUnknown = s;
             },
-            onSelectHideGermlineMutations:(s:boolean)=>{
-                this.hideGermlineMutations = s;
+            onSelectShowGermlineMutations:(s:boolean)=>{
+                this.props.store.setShowGermlineMutations(s);
             },
             onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
             onClickSortAlphabetical:()=>{

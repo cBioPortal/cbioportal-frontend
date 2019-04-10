@@ -17,7 +17,7 @@ export interface IResultsPageSettingsProps {
 
 enum EVENT_KEY {
     hidePutativePassengers="0",
-    hideGermlineMutations="1"
+    showGermlineMutations="1"
 }
 
 @observer
@@ -41,7 +41,8 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
             case EVENT_KEY.hidePutativePassengers:
                 this.props.store.driverAnnotationSettings.ignoreUnknown = !this.props.store.driverAnnotationSettings.ignoreUnknown;
                 break;
-            case EVENT_KEY.hideGermlineMutations:
+            case EVENT_KEY.showGermlineMutations:
+                this.props.store.setShowGermlineMutations(!this.props.store.showGermlineMutations);
                 break;
         }
     }
@@ -100,15 +101,15 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                             disabled={!this.driverSettingsState.distinguishDrivers}
                         /> Show VUS (variants of unknown significance)
                     </label></div>
-                    {/*<div className="checkbox"><label>
+                    <div className="checkbox"><label>
                         <input
                             data-test="HideGermline"
                             type="checkbox"
-                            value={EVENT_KEY.hideGermlineMutations}
-                            checked={!this.props.state.hideGermlineMutations}
+                            value={EVENT_KEY.showGermlineMutations}
+                            checked={this.props.store.showGermlineMutations}
                             onClick={this.onInputClick}
                         /> Show germline mutations
-                    </label></div>*/}
+                    </label></div>
                 </div>
             </div>
         );

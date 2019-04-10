@@ -168,7 +168,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                                     placement="bottom"
                                     overlay={<ResultsPageSettings store={this.props.store} />}
                                 >
-                                    <button style={{marginLeft:5}} className="btn btn-primary">
+                                    <button data-test="GlobalSettingsButton" style={{marginLeft:5}} className="btn btn-primary">
                                         <i className="fa fa-sliders fa-lg"/>
                                     </button>
                                 </DefaultTooltip>

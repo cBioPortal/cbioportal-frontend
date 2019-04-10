@@ -332,7 +332,6 @@ interface IGeneticTrackAppState {
     sampleMode: boolean;
     samples: Pick<Sample, 'sampleId'|'studyId'|'uniqueSampleKey'>[];
     patients: Pick<Patient, 'patientId'|'studyId'|'uniquePatientKey'>[];
-    hideGermlineMutations:boolean;
     coverageInformation: CoverageInformation;
     sequencedSampleKeysByGene: any;
     sequencedPatientKeysByGene: any;
@@ -365,7 +364,6 @@ export function makeGeneticTrackWith({
     sampleMode,
     samples,
     patients,
-    hideGermlineMutations,
     coverageInformation,
     sequencedSampleKeysByGene,
     sequencedPatientKeysByGene,
@@ -384,8 +382,8 @@ export function makeGeneticTrackWith({
         );
         const dataByCase = caseData.cases;
         const data = (sampleMode
-            ? makeGeneticTrackData(dataByCase.samples, geneSymbolArray, samples as Sample[], coverageInformation, selectedMolecularProfiles, hideGermlineMutations)
-            : makeGeneticTrackData(dataByCase.patients, geneSymbolArray, patients as Patient[], coverageInformation, selectedMolecularProfiles, hideGermlineMutations)
+            ? makeGeneticTrackData(dataByCase.samples, geneSymbolArray, samples as Sample[], coverageInformation, selectedMolecularProfiles)
+            : makeGeneticTrackData(dataByCase.patients, geneSymbolArray, patients as Patient[], coverageInformation, selectedMolecularProfiles)
         );
         const alterationInfo = alterationInfoForOncoprintTrackData(
             sampleMode,
@@ -462,7 +460,6 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                 sampleMode,
                 samples: oncoprint.props.store.samples.result!,
                 patients: oncoprint.props.store.patients.result!,
-                hideGermlineMutations: oncoprint.hideGermlineMutations,
                 coverageInformation: oncoprint.props.store.coverageInformation.result!,
                 sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
                 sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene.result!,
