@@ -4,14 +4,20 @@ import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import ReactSelect from "react-select2";
 import {capitalize} from "../../../shared/lib/StringUtils";
 import autobind from "autobind-decorator";
-import ErrorIcon from "../../../shared/components/ErrorIcon";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
-import {getNCBIlink} from "../../../shared/api/urls";
-import EditableSpan from "../../../shared/components/editableSpan/EditableSpan";
-import AppConfig from "appConfig";
+import DriverAnnotationControls, {
+    IDriverAnnotationControlsHandlers,
+    IDriverAnnotationControlsState
+} from "./DriverAnnotationControls";
+import {IObservableObject} from "mobx";
+import {buildDriverAnnotationControlsHandlers, buildDriverAnnotationControlsState} from "./ResultsPageSettingsUtils";
 
 export interface IResultsPageSettingsProps {
     store:ResultsViewPageStore;
+}
+
+enum EVENT_KEY {
+    hidePutativePassengers="0",
+    hideGermlineMutations="1"
 }
 
 @observer
@@ -20,11 +26,30 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
         this.props.store.setCaseType(v.value);
     }
 
+    private driverSettingsState:IDriverAnnotationControlsState & IObservableObject;
+    private driverSettingsHandlers:IDriverAnnotationControlsHandlers;
+
+
+    constructor(props:IResultsPageSettingsProps) {
+        super(props);
+        this.driverSettingsState = buildDriverAnnotationControlsState(this);
+        this.driverSettingsHandlers = buildDriverAnnotationControlsHandlers(this, this.driverSettingsState);
+    }
+
+    @autobind private onInputClick(event:React.MouseEvent<HTMLInputElement>) {
+        switch ((event.target as HTMLInputElement).value) {
+            case EVENT_KEY.hidePutativePassengers:
+                this.props.store.driverAnnotationSettings.ignoreUnknown = !this.props.store.driverAnnotationSettings.ignoreUnknown;
+                break;
+            case EVENT_KEY.hideGermlineMutations:
+                break;
+        }
+    }
 
     render() {
         return (
-            <div style={{padding:5}}>
-                <h5>Settings</h5>
+            <div className="cbioportal-frontend" style={{padding:5}}>
+                <h4>Settings</h4>
                 <div
                     style={{
                         padding:5,
@@ -55,6 +80,35 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                             onChange={this.onChange}
                         />
                     </div>
+                </div>
+
+                <h5>Annotate Data</h5>
+                <DriverAnnotationControls
+                    state={this.driverSettingsState}
+                    handlers={this.driverSettingsHandlers}
+                />
+
+                <h5>Filter Data</h5>
+                <div style={{marginLeft:10}}>
+                    <div className="checkbox"><label>
+                        <input
+                            data-test="HideVUS"
+                            type="checkbox"
+                            value={EVENT_KEY.hidePutativePassengers}
+                            checked={!this.props.store.driverAnnotationSettings.ignoreUnknown}
+                            onClick={this.onInputClick}
+                            disabled={!this.driverSettingsState.distinguishDrivers}
+                        /> Show VUS (variants of unknown significance)
+                    </label></div>
+                    {/*<div className="checkbox"><label>
+                        <input
+                            data-test="HideGermline"
+                            type="checkbox"
+                            value={EVENT_KEY.hideGermlineMutations}
+                            checked={!this.props.state.hideGermlineMutations}
+                            onClick={this.onInputClick}
+                        /> Show germline mutations
+                    </label></div>*/}
                 </div>
             </div>
         );
