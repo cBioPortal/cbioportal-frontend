@@ -24,7 +24,7 @@ import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./Q
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
 import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
-import ResultsPageSettings from "../ResultsPageSettings";
+import ResultsPageSettings from "../settings/ResultsPageSettings";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {

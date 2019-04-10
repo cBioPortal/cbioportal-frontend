@@ -1,9 +1,14 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {ResultsViewPageStore} from "./ResultsViewPageStore";
+import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import ReactSelect from "react-select2";
-import {capitalize} from "../../shared/lib/StringUtils";
+import {capitalize} from "../../../shared/lib/StringUtils";
 import autobind from "autobind-decorator";
+import ErrorIcon from "../../../shared/components/ErrorIcon";
+import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import {getNCBIlink} from "../../../shared/api/urls";
+import EditableSpan from "../../../shared/components/editableSpan/EditableSpan";
+import AppConfig from "appConfig";
 
 export interface IResultsPageSettingsProps {
     store:ResultsViewPageStore;
@@ -14,6 +19,7 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
     @autobind private onChange(v:{ label:string, value:"sample"|"patient"}) {
         this.props.store.setCaseType(v.value);
     }
+
 
     render() {
         return (

@@ -434,7 +434,7 @@ export class ResultsViewPageStore {
                     [SAMPLE_MODE_URL_PARAM]:(this._caseType === "sample").toString()
                 },
                 undefined,
-                true,
+                false,
                 true
             );
         }
