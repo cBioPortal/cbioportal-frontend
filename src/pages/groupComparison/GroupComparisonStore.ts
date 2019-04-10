@@ -45,17 +45,19 @@ import {
     MolecularProfileCaseIdentifier,
     ClinicalDataCount
 } from "../../shared/api/generated/CBioPortalAPIInternal";
-import {Session} from "../../shared/api/ComparisonGroupClient";
+import {Session, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {getStudiesAttr} from "./comparisonGroupManager/ComparisonGroupManagerUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 import { STUDY_VIEW_CONFIG } from "pages/studyView/StudyViewConfig";
+import onMobxPromise from "../../shared/lib/onMobxPromise";
+import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
+import {GroupComparisonURLQuery} from "./GroupComparisonPage";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples",
     EXCLUDE = "Exclude overlapping samples",
-    GROUP = "Treat overlapping samples as a separate group"
 }
 
 export default class GroupComparisonStore {
@@ -63,9 +65,18 @@ export default class GroupComparisonStore {
     @observable private _currentTabId:GroupComparisonTab|undefined = undefined;
     @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.INCLUDE;
     @observable private sessionId:string;
+    private unsavedGroups = observable.shallowArray<SessionGroupData>([]);
 
     constructor(sessionId:string) {
         this.sessionId = sessionId;
+    }
+
+    public addUnsavedGroup(group:SessionGroupData) {
+        this.unsavedGroups.push(group);
+    }
+
+    public isGroupUnsaved(group:ComparisonGroup) {
+        return !group.savedInSession;
     }
 
     get currentTabId() {
@@ -94,6 +105,11 @@ export default class GroupComparisonStore {
         }
     });
 
+    readonly origin = remoteData({
+        await:()=>[this._session],
+        invoke:()=>Promise.resolve(this._session.result!.origin)
+    });
+
     @computed get sessionClinicalAttribute() {
         if (this._session.isComplete) {
             return this._session.result.clinicalAttribute;
@@ -102,7 +118,7 @@ export default class GroupComparisonStore {
         }
     }
 
-    readonly _remoteGroups = remoteData<ComparisonGroup[]>({
+    readonly _originalGroups = remoteData<ComparisonGroup[]>({
         await:()=>[this._session, this.sampleSet],
         invoke:()=>{
             // (1) ensure color
@@ -113,20 +129,32 @@ export default class GroupComparisonStore {
             const sampleSet = this.sampleSet.result!;
 
             let defaultGroupColors = pickClinicalDataColors(
-                _.map(this._session.result!.groups,group=>({value: group.name})) as any);
+                _.map(
+                    this._session.result!.groups.concat(this.unsavedGroups.slice()),
+                        group=>({value: group.name})
+                ) as any);
 
-            this._session.result!.groups.forEach((groupData, index)=>{
+            const finalizeGroup = (savedInSession:boolean, groupData:SessionGroupData, index:number)=>{
                 // assign color to group if no color given
                 let color = groupData.color || defaultGroupColors[groupData.name];
 
                 const { nonExistentSamples, studies} = finalizeStudiesAttr(groupData, sampleSet);
 
-                ret.push(Object.assign({}, groupData, {
+                return Object.assign({}, groupData, {
                     color,
                     studies,
                     nonExistentSamples,
-                    uid: index.toString()
-                }));
+                    uid: index.toString(),
+                    savedInSession
+                });
+            };
+
+            this._session.result!.groups.forEach((groupData, index)=>{
+                ret.push(finalizeGroup(true, groupData, index));
+            });
+
+            this.unsavedGroups.slice().forEach((groupData, index)=>{
+                ret.push(finalizeGroup(false, groupData, index+this._session.result!.groups.length));
             });
             return Promise.resolve(ret);
         }
@@ -139,10 +167,10 @@ export default class GroupComparisonStore {
         overlappingSamplesSet:ComplexKeySet,
         overlappingPatientsSet:ComplexKeySet
     }>({
-        await:()=>[this._remoteGroups],
+        await:()=>[this._originalGroups],
         invoke:()=>{
             // no overlap filter
-            const groups = this._remoteGroups.result!.filter(group=>this.isGroupSelected(group.uid));
+            const groups = this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid));
             const overlappingSamples = getOverlappingSamples(groups);
             const overlappingPatients = getOverlappingPatients(groups);
             const overlappingSamplesSet = new ComplexKeySet();
@@ -158,40 +186,20 @@ export default class GroupComparisonStore {
     });
 
     readonly availableGroups = remoteData<OverlapFilteredComparisonGroup[]>({
-        await:()=>[this._selectionInfo, this._remoteGroups],
+        await:()=>[this._selectionInfo, this._originalGroups],
         invoke:()=>{
             const selectionInfo = this._selectionInfo.result!;
             let ret:OverlapFilteredComparisonGroup[];
             switch (this.overlapStrategy) {
                 case OverlapStrategy.INCLUDE:
-                    ret = this._remoteGroups.result!.map(group=>Object.assign({}, group, {
+                    ret = this._originalGroups.result!.map(group=>Object.assign({}, group, {
                         hasOverlappingSamples: false,
                         hasOverlappingPatients: false
                     }));
                     break;
                 case OverlapStrategy.EXCLUDE:
-                    ret = getOverlapFilteredGroups(this._remoteGroups.result!, selectionInfo);
-                    break;
-                case OverlapStrategy.GROUP:
                 default:
-                    ret = getOverlapFilteredGroups(this._remoteGroups.result!, selectionInfo);
-                    if (selectionInfo.overlappingSamples.length > 0 || selectionInfo.overlappingPatients.length > 0) {
-                        ret.push({
-                            name: "Overlap in selection",
-                            description: "",
-                            studies: getStudiesAttr(
-                                selectionInfo.overlappingSamples,
-                                selectionInfo.overlappingPatients
-                            ),
-                            origin:[],
-                            studyViewFilter:{} as any,
-                            color:OVERLAP_GROUP_COLOR,
-                            uid:ret.map(g=>g.uid).join("")+"x", // guarantee unique id by joining all others together, and add something
-                            nonExistentSamples:[],
-                            hasOverlappingSamples:false,
-                            hasOverlappingPatients:false
-                        });
-                    }
+                    ret = getOverlapFilteredGroups(this._originalGroups.result!, selectionInfo);
                     break;
             }
             return Promise.resolve(ret);
@@ -233,6 +241,36 @@ export default class GroupComparisonStore {
         for (const group of groups) {
             this._selectedGroupIds.set(group.uid, false);
         }
+    }
+
+    @autobind
+    @action
+    public async saveAndGoToNewSession() {
+        if (!this._session.isComplete || this.unsavedGroups.length === 0) {
+            return;
+        }
+
+        // save unsavedGroups to new session, and go to it
+        const newSession = _.cloneDeep(this._session.result!);
+        newSession.groups.push(...this.unsavedGroups);
+
+        const {id } = await comparisonClient.addComparisonSession(newSession);
+        (window as any).routingStore.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
+    }
+
+    @autobind
+    @action public clearUnsavedGroups() {
+        onMobxPromise(
+            this.availableGroups,
+            availableGroups=>{
+                for (const group of availableGroups) {
+                    if (!group.savedInSession) {
+                        this._selectedGroupIds.delete(group.uid);
+                    }
+                }
+            }
+        )
+        this.unsavedGroups.clear();
     }
 
     public groupSelectionCanBeToggled(group:ComparisonGroup) {
@@ -594,6 +632,17 @@ export default class GroupComparisonStore {
                 sampleSet.set({ studyId: sample.studyId, sampleId: sample.sampleId}, sample);
             }
             return Promise.resolve(sampleSet);
+        }
+    });
+
+    public readonly patientToSamplesSet = remoteData({
+        await:()=>[this.samples],
+        invoke:()=>{
+            const ret = new ComplexKeyGroupsMap<Sample>();
+            for (const sample of this.samples.result!) {
+                ret.add({ studyId: sample.studyId, patientId: sample.patientId}, sample);
+            }
+            return Promise.resolve(ret);
         }
     });
 

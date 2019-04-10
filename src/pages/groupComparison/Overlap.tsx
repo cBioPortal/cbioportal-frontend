@@ -139,6 +139,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                             sampleGroups={this.sampleGroupsWithCases.result!}
                             patientGroups={this.patientGroupsWithCases.result!}
                             uidToGroup={this.props.store.uidToGroup.result!}
+                            store={this.props.store}
                         />)
                     break;
                 default:
