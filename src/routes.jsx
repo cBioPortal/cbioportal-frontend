@@ -125,6 +125,7 @@ export const makeRoutes = (routing) => {
                 <Redirect from={"/data_sets.jsp"} to={"/datasets"}/>
                 <Redirect from={"/oncoprinter.jsp"} to={"/oncoprinter"}/>
                 <Redirect from={"/onco_query_lang_desc.jsp"} to={"/oql"}/>
+                <Redirect from={"/tutorials.jsp"} to={"/tutorials"}/>
 
 
 
