@@ -339,6 +339,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        styleOpts={{
                                            width: getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth),
                                            height: getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight),
+                                           tooltipXOffset:10,
+                                           tooltipYOffset:-58,
                                            pValue: {
                                                x:getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)-10,
                                                y:30,
