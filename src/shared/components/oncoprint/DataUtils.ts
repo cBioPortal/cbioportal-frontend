@@ -178,8 +178,7 @@ export function makeGeneticTrackData(
     hugoGeneSymbols:string|string[],
     samples:Sample[],
     genePanelInformation:CoverageInformation,
-    selectedMolecularProfiles:MolecularProfile[],
-    hideGermlineMutations?:boolean
+    selectedMolecularProfiles:MolecularProfile[]
 ):GeneticTrackDatum[];
 
 export function makeGeneticTrackData(
@@ -187,8 +186,7 @@ export function makeGeneticTrackData(
     hugoGeneSymbols:string|string[],
     patients:Patient[],
     genePanelInformation:CoverageInformation,
-    selectedMolecularProfiles:MolecularProfile[],
-    hideGermlineMutations?:boolean
+    selectedMolecularProfiles:MolecularProfile[]
 ):GeneticTrackDatum[];
 
 export function makeGeneticTrackData(
@@ -196,8 +194,7 @@ export function makeGeneticTrackData(
     hugoGeneSymbols:string|string[],
     cases:Sample[]|Patient[],
     genePanelInformation:CoverageInformation,
-    selectedMolecularProfiles:MolecularProfile[],
-    hideGermlineMutations?:boolean
+    selectedMolecularProfiles:MolecularProfile[]
 ):GeneticTrackDatum[] {
     if (!cases.length) {
         return [];
@@ -229,10 +226,7 @@ export function makeGeneticTrackData(
             );
             newDatum.not_profiled_in = newDatum.not_profiled_in.concat(sampleSequencingInfo.notProfiledAllGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
 
-            let sampleData = caseAggregatedAlterationData[sample.uniqueSampleKey];
-            if (hideGermlineMutations) {
-                sampleData = sampleData.filter(isNotGermlineMutation);
-            }
+            const sampleData = caseAggregatedAlterationData[sample.uniqueSampleKey];
             ret.push(fillGeneticTrackDatum(
                 newDatum,
                 geneSymbolArray.join(' / '),
@@ -262,10 +256,7 @@ export function makeGeneticTrackData(
             );
             newDatum.not_profiled_in = newDatum.not_profiled_in.concat(patientSequencingInfo.notProfiledAllGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
 
-            let patientData = caseAggregatedAlterationData[patient.uniquePatientKey];
-            if (hideGermlineMutations) {
-                patientData = patientData.filter(isNotGermlineMutation);
-            }
+            const patientData = caseAggregatedAlterationData[patient.uniquePatientKey];
             ret.push(fillGeneticTrackDatum(
                 newDatum,
                 geneSymbolArray.join(' / '),

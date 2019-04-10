@@ -45,7 +45,7 @@ export interface IOncoprintControlsHandlers {
     onSelectAnnotateCOSMIC?:(annotate:boolean)=>void,
     onSelectHidePutativePassengers:(hide:boolean)=>void,
     onChangeAnnotateCBioPortalInputValue:(value:string)=>void,
-    onSelectHideGermlineMutations?:(hide:boolean)=>void,
+    onSelectShowGermlineMutations?:(hide:boolean)=>void,
     onChangeAnnotateCOSMICInputValue?:(value:string)=>void,
     onSelectCustomDriverAnnotationBinary?:(s:boolean)=>void;
     onSelectCustomDriverAnnotationTier?:(value:string, s:boolean)=>void;
@@ -92,7 +92,7 @@ export interface IOncoprintControlsState {
     annotateDriversCOSMIC?:boolean,
     hidePutativePassengers:boolean,
     annotateCBioPortalInputValue:string,
-    hideGermlineMutations?:boolean,
+    showGermlineMutations?:boolean,
     annotateCOSMICInputValue?:string,
 
     sortMode?:SortMode,
@@ -151,7 +151,7 @@ const EVENT_KEY = {
     annotateCBioPortalInput:"20",
     annotateCOSMICInput:"21",
     hidePutativePassengers:"22",
-    hideGermlineMutations: "22.1",
+    showGermlineMutations: "22.1",
     customDriverBinaryAnnotation:"23",
     customDriverTierAnnotation:"24",
     downloadPDF:"25",
@@ -304,9 +304,9 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 this.props.handlers.onSelectHidePutativePassengers &&
                 this.props.handlers.onSelectHidePutativePassengers(!this.props.state.hidePutativePassengers);
                 break;
-            case EVENT_KEY.hideGermlineMutations:
-                this.props.handlers.onSelectHideGermlineMutations &&
-                this.props.handlers.onSelectHideGermlineMutations(!this.props.state.hideGermlineMutations);
+            case EVENT_KEY.showGermlineMutations:
+                this.props.handlers.onSelectShowGermlineMutations &&
+                this.props.handlers.onSelectShowGermlineMutations(!this.props.state.showGermlineMutations);
                 break;
             case EVENT_KEY.customDriverBinaryAnnotation:
                 this.props.handlers.onSelectCustomDriverAnnotationBinary &&
@@ -634,8 +634,8 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                             <input
                                 data-test="HideGermline"
                                 type="checkbox"
-                                value={EVENT_KEY.hideGermlineMutations}
-                                checked={!this.props.state.hideGermlineMutations}
+                                value={EVENT_KEY.showGermlineMutations}
+                                checked={this.props.state.showGermlineMutations}
                                 onClick={this.onInputClick}
                             /> Show germline mutations
                         </label></div>
