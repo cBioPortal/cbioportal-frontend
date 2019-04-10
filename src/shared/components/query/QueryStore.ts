@@ -1366,6 +1366,10 @@ export class QueryStore {
         });
     }
 
+    @computed get isQueryLimitReached(): boolean {
+        return this.oql.query.length > AppConfig.serverConfig.query_gene_limit;
+    }
+
     @computed get submitError() {
         let haveMutInQuery = false;
         let haveCnaInQuery = false;
@@ -1457,6 +1461,9 @@ export class QueryStore {
             }
         }
 
+        if (this.isQueryLimitReached) {
+            return "Please limit your queries to 100 genes or fewer.";
+        }
 
         if (this.genes.result.suggestions.length)
             return "Please edit the gene symbols.";
