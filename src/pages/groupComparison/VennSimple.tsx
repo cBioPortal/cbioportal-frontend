@@ -7,8 +7,19 @@ import * as d3 from 'd3';
 import _ from "lodash";
 import LazyMemo from "../../shared/lib/LazyMemo";
 import MemoizedHandlerFactory from "../../shared/lib/MemoizedHandlerFactory";
+import measureText from "measure-text";
+import {SyntheticEvent} from "react";
+import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
+import * as ReactDOM from "react-dom";
+import {Popover} from "react-bootstrap";
+import classnames from "classnames";
+import styles from "../resultsView/survival/styles.module.scss";
+import {pluralize} from "../../shared/lib/StringUtils";
+import {blendColors, getExcludedIndexes, getTextColor, joinNames} from "./OverlapUtils";
+const VennJs = require("venn.js");
 
 export interface IVennSimpleProps {
+    uid:string;
     groups: {
         uid: string;
         cases: string[];
@@ -18,35 +29,12 @@ export interface IVennSimpleProps {
     width:number;
     height:number;
     uidToGroup: { [uid: string]: ComparisonGroup };
-    onClickRegion:(regionParams:{ intersectedUids:string[], excludedUids:string[] })=>void;
-    caseCountFilterName:string;
-}
-
-function blendColors(colors:string[]) {
-    // helper function for venn diagram drawing. In order to highlight set complements,
-    //  we draw things from the bottom up - the visual exclusion simulates the complement,
-    //  even though we don't explicitly draw the set complements in SVG. In order to make
-    //  this work, no element can have less than 1 opacity - it would show that the entire
-    //  set, not just the complement, is being highlighted and ruin the effect. Therefore...
-
-    // TL;DR: We use this function to blend colors between groups, for the intersection regions.
-
-    switch (colors.length) {
-        case 1:
-            // for 1 color, no blending necessary
-            return colors[0];
-        case 2:
-            // for 2 colors, easy linear blend in Lab space
-            return d3.interpolateLab(colors[0], colors[1])(0.5);
-        case 3:
-        default:
-            // for 3 colors, linear blend between the first two,
-            //  then linear blend between the first-two-blend, and the third.
-            return d3.interpolateLab(
-                d3.interpolateLab(colors[0], colors[1])(0.5),
-                colors[2]
-            )(0.5);
-    }
+    onChangeSelectedRegions:(selectedRegions:number[][])=>void;
+    selection:{
+        regions:number[][]; // we do it like this so that updating it doesn't update all props
+    };
+    emptyMaskName:string;
+    caseType:"sample"|"patient"
 }
 
 function regionMouseOver(e:any) {
@@ -57,79 +45,106 @@ function regionMouseOut(e:any) {
     e.target.setAttribute("fill", e.target.getAttribute("data-default-fill"));
 }
 
-function getExcludedIndexes(combination:number[], numGroupsTotal:number) {
-    // get all indexes not in the given combination
+function regionIsSelected(
+    regionComb:number[],
+    selectedRegions:number[][]
+) {
+    return selectedRegions.find(r=>_.isEqual(r, regionComb));
+}
 
-    const excl = [];
-    for (let i=0; i<numGroupsTotal; i++) {
-        if (!combination.includes(i)) {
-            excl.push(i);
-        }
+function toggleRegionSelected(
+    regionComb:number[],
+    selectedRegions:number[][]
+) {
+    const withoutComb = selectedRegions.filter(r=>!_.isEqual(r, regionComb));
+    if (withoutComb.length === selectedRegions.length) {
+        // combination currently not selected, so add it
+        return selectedRegions.concat([regionComb]);
+    } else {
+        // combination was selected, so return version without it
+        return withoutComb;
     }
-    return excl;
 }
 
 @observer
 export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
-    @observable.ref svg:SVGElement|null;
+    @observable.ref svg:SVGElement|null = null;
+    @observable.ref tooltipModel:{ combination:number[], numCases:number } | null = null;
+    @observable mousePosition = { x:0, y:0 };
+
     private regionClickHandlers = MemoizedHandlerFactory(
-        (params:{
-            combination:number[],
-            numGroupsTotal:number
-        }) => this.props.onClickRegion({
-            intersectedUids: params.combination.map(index=>this.props.groups[index].uid),
-            excludedUids:getExcludedIndexes(params.combination, params.numGroupsTotal).map(index=>this.props.groups[index].uid)
-        })
+        (e:any, params:{ combination:number[], }) => {
+            this.props.onChangeSelectedRegions(toggleRegionSelected(params.combination, this.props.selection.regions));
+        }
+    );
+
+    private regionHoverHandlers = MemoizedHandlerFactory(
+        (e:React.MouseEvent<any>, params:{ combination:number[], numCases:number}) => {
+            this.tooltipModel = params;
+            this.mousePosition.x = e.pageX;
+            this.mousePosition.y = e.pageY;
+        }
     );
 
     @autobind private svgRef(_svg:SVGElement|null) {
         this.svg = _svg;
     }
 
-    @computed get maxCircleRadius() {
-        return Math.min(this.props.width, this.props.height) / 4;
-    }
+    @computed get layoutParams() {
+        const data = this.regions.map(r=>({
+            size: r.numCasesIntersectionOnly,
+            sets: r.combination.map(i=>this.props.groups[i].uid),
+        }));
 
-    @computed get minCircleRadius() {
-        return this.maxCircleRadius - 30;
+        const padding = 20;
+
+        let solution = VennJs.venn(data, {lossFunction:VennJs.lossFunction});
+        solution = VennJs.normalizeSolution(solution, Math.PI/2, null);
+        const circles = VennJs.scaleSolution(solution, this.props.width, this.props.height, padding);
+        const textCenters = VennJs.computeTextCentres(circles, data);
+
+        return {
+            circles, textCenters
+        }
     }
 
     @computed get circleRadii() {
-        const maxVal = Math.max(...this.props.groups.map((g:IVennSimpleProps["groups"][0])=>g.cases.length));
-        const minVal = maxVal / 10;
-
-        const radius = (numCases:number)=>{
-            const x = Math.max(numCases, minVal);
-
-            // Linear scale where biggest group gets max circle radius, and anything smaller than
-            //  10% max group size gets min circle radius
-            return (1 - ((maxVal - x)/(maxVal - minVal))) * (this.maxCircleRadius - this.minCircleRadius) + this.minCircleRadius;
-        };
-
-        return this.props.groups.reduce((map, group)=>{
-            map[group.uid] = radius(group.cases.length);
-            return map;
-        }, {} as {[uid:string]:number});
-    }
-
-    @computed get angleIncrement() {
-        // divide the circle (2PI radians) into (# groups), in order
-        //  to arrange the group circles evenly spaced in a circle
-        return Math.PI*2 / this.props.groups.length;
+        return _.mapValues(this.layoutParams.circles, c=>c.radius);
     }
 
     @computed get circleCenters() {
-        // arrange the circles evenly spaced in a circle around the center of the svg
-        const svgCenter = { x: this.props.width / 2, y: this.props.height / 2 };
-        return this.props.groups.reduce((map, group, index)=>{
-            const distanceFromCenter = 0.7*this.circleRadii[group.uid];
-            // distance from center is less than the full radius, so that there are intersection regions
-            map[group.uid] = {
-                x: svgCenter.x + distanceFromCenter*Math.cos(this.angleIncrement*index),
-                y: svgCenter.y + distanceFromCenter*Math.sin(this.angleIncrement*index)
+        return _.mapValues(this.layoutParams.circles, c=>({ x:c.x, y: c.y }));
+    }
+
+    @computed get regions() {
+        let combinations:number[][]; // in painting order so that mouse interactions look right
+        switch (this.props.groups.length) {
+            case 2:
+                // all combinations of two groups
+                combinations = [[0], [1], [0,1]];
+                break;
+            case 3:
+            default:
+                // all combinations of three groups
+                combinations = [[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]];
+                break;
+        }
+
+        return combinations.map(combination=>{
+            // compute the cases in this region
+            let casesInRegion = _.intersection(...combination.map(index=>this.props.groups[index].cases));
+            const numCasesIntersectionOnly = casesInRegion.length;
+            for (const i of getExcludedIndexes(combination, this.props.groups.length)) {
+                _.pullAll(casesInRegion, this.props.groups[i].cases);
+            }
+            return {
+                combination,
+                numCasesIntersectionOnly,
+                numCases: casesInRegion.length,
+                // compute the fill based on the colors of the included groups
+                color: blendColors(combination.map(index=>this.props.uidToGroup[this.props.groups[index].uid].color))
             };
-            return map;
-        }, {} as {[uid:string]:{x:number, y:number}});
+        });
     }
 
     @computed get displayElements() {
@@ -146,48 +161,42 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
             </clipPath>
         ));
 
-        // each region corresponds to a combination of groups that it represents
-        let combinations:number[][]; // in painting order so that mouse interactions look right
-        switch (this.props.groups.length) {
-            case 2:
-                // all combinations of two groups
-                combinations = [[0], [1], [0,1]];
-                break;
-            case 3:
-            default:
-                // all combinations of three groups
-                combinations = [[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]];
-                break;
-        }
-        return _.flattenDeep<any>((clipPaths as any).concat(combinations.map(comb=>{
+        return _.flattenDeep<any>((clipPaths as any).concat(this.regions.map(region=>{
+
             // FOR EACH REGION: generate the filled area, and the "# cases" text for it
-            // Each region is specified by the combination of groups corresponding to it, which is our iteration param.
-
-            // compute the fill based on the colors of the included groups
-            const fill = blendColors(comb.map(index=>this.props.uidToGroup[this.props.groups[index].uid].color));
-
-            // compute the cases in this region
-            let casesInRegion = _.intersection(...comb.map(index=>this.props.groups[index].cases));
-            for (const i of getExcludedIndexes(comb, this.props.groups.length)) {
-                _.pullAll(casesInRegion, this.props.groups[i].cases);
-            }
+            // Each region is specified by the combination of groups corresponding to it
+            const comb = region.combination;
 
             // generate clipped hover area by iteratively nesting a rect in all the clip paths
             //  corresponding to groups in this area. This clips out, one by one, everything
             //  except for the intersection.
             let hoverArea:JSX.Element = (
-                <rect
-                    x="0"
-                    y="0"
-                    height={this.props.height}
-                    width={this.props.width}
-                    fill={casesInRegion.length === 0 ? "white" : fill}
-                    data-default-fill={fill}
-                    data-hover-fill={d3.hsl(fill).brighter(1).rgb()}
-                    onMouseOver={casesInRegion.length > 0 ? regionMouseOver : undefined}
-                    onMouseOut={casesInRegion.length > 0 ? regionMouseOut : undefined}
-                    onClick={this.regionClickHandlers({ combination: comb, numGroupsTotal: this.props.groups.length })}
-                />
+                <g>
+                    {region.numCases === 0 && (
+                        <rect
+                            x="0"
+                            y="0"
+                            height={this.props.height}
+                            width={this.props.width}
+                            fill="white"
+                        />
+                    )}
+                    <rect
+                        x="0"
+                        y="0"
+                        height={this.props.height}
+                        width={this.props.width}
+                        fill={region.color}
+                        style={{ cursor: region.numCases > 0 ? "pointer" : "default" }}
+                        data-default-fill={region.color}
+                        data-hover-fill={d3.hsl(region.color).brighter(1).rgb()}
+                        onMouseOver={region.numCases > 0 ? regionMouseOver : undefined}
+                        onMouseOut={region.numCases > 0 ? regionMouseOut : undefined}
+                        onMouseMove={this.regionHoverHandlers({combination:comb, numCases: region.numCases })}
+                        onClick={region.numCases > 0 ? this.regionClickHandlers({ combination: comb }) : undefined}
+                        mask={region.numCases === 0 ? `url(#emptyMask_${this.props.uid})` : undefined} // mask with diagonal lines if empty
+                    />
+                </g>
             );
             for (const index of comb) {
                 hoverArea = (
@@ -197,67 +206,136 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
                 );
             }
 
-            // compute location of the "# cases" text
-            let x:number, y:number;
-            if (comb.length === this.props.groups.length) {
-                // center intersection
-                x = this.props.width/2;
-                y = this.props.height/2;
-            } else if (comb.length === 1) {
-                // single group
-                const group = this.props.groups[comb[0]];
-                const angle = comb[0]*this.angleIncrement;
-                x = this.props.width/2 + 1.25*this.circleRadii[group.uid]*Math.cos(angle);
-                y = this.props.height/2 + 1.25*this.circleRadii[group.uid]*Math.sin(angle);
-            } else {
-                // two groups out of three
-                let angleMultiple;
-                if (comb[1] - comb[0] === 1) {
-                    angleMultiple = (comb[0] + comb[1]) / 2;
-                } else {
-                    // have to manually handle case of 0 and 2 because
-                    //  angles wrap at 2*PI making average mess up in this case
-                    angleMultiple = 2.5;
-                }
-                const angle = angleMultiple*this.angleIncrement;
-                const radius = 0.7*Math.min(
-                    this.circleRadii[this.props.groups[comb[0]].uid],
-                    this.circleRadii[this.props.groups[comb[1]].uid]
-                );
-                x = this.props.width/2 + radius*Math.cos(angle);
-                y = this.props.height/2 + radius*Math.sin(angle);
+            return [hoverArea];
+        })).concat(_.sortBy(this.regions.filter(r=>r.combination.length === 1), r=>-r.numCasesIntersectionOnly).map(r=>{
+            // draw the outlines of the circles
+            const uid = this.props.groups[r.combination[0]].uid;
+            return (
+                <circle
+                    cx={this.circleCenters[uid].x}
+                    cy={this.circleCenters[uid].y}
+                    r={this.circleRadii[uid]}
+                    fill="none"
+                    stroke={r.color}
+                    strokeWidth={2}
+                />
+            );
+        }))).concat(_.flattenDeep<any>(this.regions.map(region=>{
+            if (region.numCases === 0) {
+                return [];
+            }
+
+            const selected = regionIsSelected(region.combination, this.props.selection.regions);
+
+            const textContents = `${region.numCases.toString()}${selected ? " "+String.fromCharCode(10004) : ""}`;
+            // Add rect behind for ease of reading
+            const textSize = measureText({text:textContents, fontFamily:"Arial", fontSize:"14px", lineHeight: 1});
+            const padding = 4;
+            const textPosition = this.layoutParams.textCenters[region.combination.map(i=>this.props.groups[i].uid).join(",")];
+            let textBackground = null;
+            if (selected) {
+                textBackground = <rect
+                    x={textPosition.x - textSize.width.value / 2 - padding}
+                    y={textPosition.y - textSize.height.value / 2 - padding}
+                    width={textSize.width.value + 2*padding}
+                    height={textSize.height.value + 2*padding}
+                    fill={"yellow"}
+                    rx={3}
+                    ry={3}
+                    pointerEvents="none"
+                />;
             }
             return [
-                hoverArea,
+                textBackground,
                 <text
-                    x={x}
-                    y={y}
-                    fontWeight={casesInRegion.length > 0 ? "bold" : "normal"}
-                    filter={`url(#${this.props.caseCountFilterName})`}
+                    x={textPosition.x}
+                    y={textPosition.y}
+                    style={{ userSelect:"none", color:selected ? "black" : getTextColor(region.color)}}
+                    fontWeight={region.numCases > 0 ? "bold" : "normal"}
                     pointerEvents="none"
+                    textAnchor="middle"
+                    alignmentBaseline="middle"
                 >
-                    {casesInRegion.length}
+                    {textContents}
                 </text>
             ];
-        })).concat(this.props.groups.map(group=>(
-            // draw the outlines of the circles
-            <circle
-                cx={this.circleCenters[group.uid].x}
-                cy={this.circleCenters[group.uid].y}
-                r={this.circleRadii[group.uid]}
-                fill="none"
-                stroke="black"
-                strokeWidth={2}
-            />
-        ))));
+        })));
+    }
+
+    @autobind private resetSelection() {
+        this.props.onChangeSelectedRegions([]);
+    }
+
+    @autobind private resetTooltip() {
+        this.tooltipModel = null;
+    }
+
+    @computed get tooltipContent() {
+        if (!this.tooltipModel) {
+            return null;
+        }
+
+        const includedGroupUids = this.tooltipModel.combination.map(groupIndex=>this.props.groups[groupIndex].uid);
+        const excludedGroupUids = getExcludedIndexes(this.tooltipModel.combination, this.props.groups.length)
+                                    .map(groupIndex=>this.props.groups[groupIndex].uid);
+
+        const includedGroupNames = includedGroupUids.map(uid=>this.props.uidToGroup[uid].name);
+        const excludedGroupNames = excludedGroupUids.map(uid=>this.props.uidToGroup[uid].name);
+        return (
+            <div style={{width:300, whiteSpace:"normal"}}>
+                This area {this.tooltipModel.numCases === 0 ? "would contain" : "contains"} {this.props.caseType}s which are in {joinNames(includedGroupNames, "and")}
+                {(excludedGroupNames.length > 0) && <span>, but are not in {joinNames(excludedGroupNames, "or")}</span>}&nbsp;
+                ({this.tooltipModel.numCases} {pluralize(this.props.caseType, this.tooltipModel.numCases)}).
+                {(this.tooltipModel.numCases > 0) && [
+                    <br/>,
+                    <br/>,
+                    <strong>Click to select this region.</strong>
+                ]}
+            </div>
+        );
     }
 
     render() {
+
+        this.layoutParams;
         return (
             <g
                 transform={`translate(${this.props.x},${this.props.y})`}
+                onMouseOut={this.resetTooltip}
             >
+                <rect
+                    x="0"
+                    y="0"
+                    fill="white"
+                    fillOpacity={0}
+                    width={this.props.width}
+                    height={this.props.height}
+                    onMouseMove={this.resetTooltip}
+                    onClick={this.resetSelection}
+                />
+                <mask id={`emptyMask_${this.props.uid}`}>
+                    <rect
+                        x="0"
+                        y="0"
+                        width={this.props.width}
+                        height={this.props.height}
+                        fill={`url(#${this.props.emptyMaskName})`}
+                    />
+                </mask>
                 {this.displayElements}
+                {!!this.tooltipModel && (
+                    (ReactDOM as any).createPortal(
+                        <Popover
+                            arrowOffsetTop={17}
+                            className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)}
+                            positionLeft={this.mousePosition.x+15}
+                            positionTop={this.mousePosition.y-17}
+                        >
+                            {this.tooltipContent}
+                        </Popover>,
+                        document.body
+                    )
+                )}
             </g>
         );
     }

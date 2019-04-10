@@ -48,8 +48,7 @@ export function getGroupParameters(
         name,
         description: "",
         studies: getStudiesAttr(selectedSamples),
-        origin: store.studyIds,
-        studyViewFilter: store.filters as any
+        origin: store.studyIds
     };
 }
 

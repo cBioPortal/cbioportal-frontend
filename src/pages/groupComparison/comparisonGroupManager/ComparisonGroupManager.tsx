@@ -235,7 +235,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
 
                                 // save comparison session, and get id
                                 const groups = getSelectedGroups(this.props.store.comparisonGroups.result!, this.props.store);
-                                const {id} = await comparisonClient.addComparisonSession({groups});
+                                const {id} = await comparisonClient.addComparisonSession({groups, origin: this.props.store.studyIds});
 
                                 // redirect window to correct URL
                                 redirectToComparisonPage(comparisonWindow!, { sessionId: id });
