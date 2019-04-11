@@ -43,9 +43,9 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 		if (this.store.isQueryLimitReached)
 			return (
 				<div className={styles.GeneSymbolValidator}>
-					<div className={styles.invalidBubble} title="Please limit your queries to 100 genes or fewer.">
+					<div className="alert alert-warning queryInvalid" role="alert" title="Please limit your queries to 100 genes or fewer.">
 						<FontAwesome className={styles.icon} name='exclamation-circle'/>
-						<span>Queries are limited to 100 genes. Please <a style={{color: '#ccc'}} href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>let us know</a> your use case(s) if you need to query more than 100 genes.</span>
+						<span>Queries are limited to 100 genes. Please <a href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>let us know</a> your use case(s) if you need to query more than 100 genes.</span>
 					</div>
 				</div>
 			);
