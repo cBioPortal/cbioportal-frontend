@@ -45,22 +45,14 @@ export function blendColors(colors:string[]) {
 
     // TL;DR: We use this function to blend colors between groups, for the intersection regions.
 
-    switch (colors.length) {
-        case 1:
-            // for 1 color, no blending necessary
-            return colors[0];
-        case 2:
-            // for 2 colors, easy linear blend in Lab space
-            return d3.interpolateLab(colors[0], colors[1])(0.5);
-        case 3:
-        default:
-            // for 3 colors, linear blend between the first two,
-            //  then linear blend between the first-two-blend, and the third.
-            return d3.interpolateLab(
-                d3.interpolateLab(colors[0], colors[1])(0.5),
-                colors[2]
-            )(0.5);
+    if(colors.length == 1){
+        return colors[0]; 
     }
+    // blend between the first two, 
+    // then iteratively blend the next one with the previously blended color
+    return _.reduce(colors.slice(2), (blendedColor, nextColor) => {
+        return d3.interpolateLab(blendedColor, nextColor)(0.5);
+    }, d3.interpolateLab(colors[0], colors[1])(0.5));
 }
 
 export function toggleRegionSelected(
