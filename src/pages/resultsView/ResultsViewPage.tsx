@@ -412,24 +412,19 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         }
     }
 
-    @computed get isQueryValid() {
-        return this.resultsViewPageStore.hugoGeneSymbols.length <= AppConfig.serverConfig.query_gene_limit;
-    }
-
     @computed get pageContent(){
-        // if qeury invalid, return error page
-        if (!this.isQueryValid) {
-            return (
-                <div className="alert alert-warning queryInvalid" role="alert">
-                    <p>
-                        Queries are limited to 100 genes. Please <a href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>let us know</a> your use case(s) if you need to query more than 100 genes.
-                    </p>
-                </div>
-            );
-        }
-
         // if studies are complete but we don't have a tab id in route, we need to derive default
         return (<div>
+            {
+                // if qeury invalid(we only check gene length for now), return error page
+                (this.resultsViewPageStore.isQueryInvalid) && (
+                    <div className="alert alert-danger queryInvalid" style={{marginBottom: "15px"}} role="alert">
+                        <p>
+                            Queries are limited to 100 genes. Please <a href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>let us know</a> your use case(s) if you need to query more than 100 genes.
+                        </p>
+                    </div>
+                )
+            }
             {
                 (this.resultsViewPageStore.studies.isComplete) && (
                     <Helmet>
@@ -444,7 +439,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         </div>
 
                         {
-                            (!this.resultsViewPageStore.genesInvalid) && (
+                            // we don't show the result tabs if we don't have valid query
+                            (!this.resultsViewPageStore.genesInvalid && !this.resultsViewPageStore.isQueryInvalid) && (
                                 <MSKTabs key={this.resultsViewPageStore.rvQuery.hash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
                                          onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                                     {
