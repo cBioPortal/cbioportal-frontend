@@ -1,12 +1,8 @@
 import ResultsPageSettings from "./ResultsPageSettings";
 import {action, observable} from "mobx";
 import AppConfig from "appConfig";
-import svgToPdfDownload from "../../../shared/lib/svgToPdfDownload";
-import fileDownload from "react-file-download";
-import onMobxPromise from "../../../shared/lib/onMobxPromise";
-import {Sample} from "../../../shared/api/generated/CBioPortalAPI";
-import tabularDownload from "../../../shared/components/oncoprint/tabularDownload";
 import {IDriverAnnotationControlsState} from "./DriverAnnotationControls";
+import * as React from "react";
 
 export function buildDriverAnnotationControlsState(self:ResultsPageSettings) {
     return observable({
@@ -143,4 +139,12 @@ export function buildDriverAnnotationControlsHandlers(
         },
     };
     return handlers;
+}
+
+export function boldedTabList(tabs:string[]) {
+    return (
+        <span>
+            {tabs.map((tab, index)=><span><strong>{tab}</strong>{index < tabs.length - 1 ? ", " : ""}</span>)}
+        </span>
+    );
 }

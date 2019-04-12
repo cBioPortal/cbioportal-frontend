@@ -85,3 +85,15 @@
     opacity:1;
   }
 }
+
+#globalSettingsDropdown {
+  h5 {
+    display:inline-block;
+  }
+  i.fa-info-circle {
+    margin-left:5px;
+  }
+  hr {
+    border-top-color:#dddddd;
+  }
+}

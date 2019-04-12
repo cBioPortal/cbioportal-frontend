@@ -14,7 +14,7 @@ export default class InfoIcon extends React.Component<IInfoIconProps, {}> {
                overlay={this.props.tooltip}
                placement={this.props.tooltipPlacement || "right"}
            >
-               <div>
+               <div style={{display:"inline-block"}}>
                    <i
                        className="fa fa-info-circle"
                        style={Object.assign({}, {
