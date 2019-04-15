@@ -756,7 +756,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 
     private get countHeader() {
         return (
-            <span style={{float:"left", color:"black", fontSize: "16px", fontWeight: "bold"}}>
+            <span data-test="LazyMobXTable_CountHeader" style={{float:"left", color:"black", fontSize: "16px", fontWeight: "bold"}}>
                 {this.store.displayData.length} {this.store.itemsLabel} (page {this.store.page + 1} of {this.store.maxPage + 1})
             </span>
         );

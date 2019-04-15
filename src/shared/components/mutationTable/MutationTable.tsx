@@ -292,7 +292,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         };
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
-            name: "Ref Reads (N)",
+            name: "Ref Reads (Normal)",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "normalRefCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "normalRefCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.normalRefCount),
@@ -301,7 +301,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         };
 
         this._columns[MutationTableColumnType.VAR_READS_N] = {
-            name: "Variant Reads (N)",
+            name: "Variant Reads (Normal)",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "normalAltCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "normalAltCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.normalAltCount),
