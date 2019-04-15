@@ -35,6 +35,7 @@ import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 import GroupComparisonStore from "../groupComparison/GroupComparisonStore";
 import GroupComparisonPage from "../groupComparison/GroupComparisonPage";
+import ErrorScreen from "appShell/App/ErrorScreen";
 
 function initStore() {
 
@@ -412,7 +413,21 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         }
     }
 
+    @computed get isQueryValid() {
+        return this.resultsViewPageStore.hugoGeneSymbols.length <= AppConfig.serverConfig.query_gene_limit;
+    }
+
     @computed get pageContent(){
+        // if qeury invalid, return error page
+        if (!this.isQueryValid) {
+            return (
+                <div className="alert alert-warning queryInvalid" role="alert">
+                    <p>
+                        Queries are limited to 100 genes. Please <a href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>let us know</a> your use case(s) if you need to query more than 100 genes.
+                    </p>
+                </div>
+            );
+        }
 
         // if studies are complete but we don't have a tab id in route, we need to derive default
         return (<div>

@@ -78,6 +78,8 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         width: 900,
         height: 500,
         padding: {top: 20, bottom: 50, left: 60, right: 20},
+        tooltipXOffset:20,
+        tooltipYOffset:-47,
         axis: {
             x: {
                 axisLabel: {
@@ -482,7 +484,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         } else {
             return (
 
-                <div>
+                <div style={{position:"relative"}}>
                     { (this.props.legendLocation === LegendLocation.TOOLTIP) ? (
                         <DefaultTooltip
                             mouseLeaveDelay={.2}
@@ -493,9 +495,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         </DefaultTooltip>
                     ) : this.chart }
                     {this.tooltipModel &&
-                        <Popover arrowOffsetTop={56} className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)} positionLeft={this.tooltipModel.x + 10}
+                        <Popover arrowOffsetTop={56} className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)} positionLeft={this.tooltipModel.x + this.styleOpts.tooltipXOffset}
                                  { ...{container:this} }
-                            positionTop={this.tooltipModel.y - 47}
+                            positionTop={this.tooltipModel.y + this.styleOpts.tooltipYOffset}
                             onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                             <div>
                                 Patient ID: <a href={getPatientViewUrl(this.tooltipModel.datum.studyId, this.tooltipModel.datum.patientId)} target="_blank">{this.tooltipModel.datum.patientId}</a><br />
