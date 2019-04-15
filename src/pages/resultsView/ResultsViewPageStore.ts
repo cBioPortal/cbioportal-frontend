@@ -1594,7 +1594,7 @@ export class ResultsViewPageStore {
             // use oql filtering in mutations tab only if query contains mutation oql
             mutations = (this.oqlFilteredAlterations.result || []).filter(a=>isMutation(a));
         } else {
-            mutations = this.mutations.result || [];
+            mutations = this.putativeDriverAnnotatedMutations.result || [];
         }
         return _.groupBy(mutations,(mutation:Mutation)=>mutation.gene.hugoGeneSymbol);
     }
