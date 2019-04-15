@@ -107,5 +107,6 @@ export interface IServerConfig {
     "sessionServiceEnabled": boolean;
     "session_url_length_threshold":string;
     "mskWholeSlideViewerToken":string;
+    "query_gene_limit": number;
 
 }
