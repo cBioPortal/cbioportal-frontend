@@ -117,7 +117,8 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                             <Survival store={this.store}/>
                         </MSKTab>
                     }
-                    <MSKTab id={GroupComparisonTab.CLINICAL} linkText="Clinical">
+                    <MSKTab id={GroupComparisonTab.CLINICAL} linkText="Clinical"
+                        anchorClassName={this.store.clinicalTabGrey ? "greyedOut" : ""}>
                         <ClinicalData store={this.store}/>
                     </MSKTab>
                     {this.store.mutationEnrichmentProfiles.result!.length > 0 && (
