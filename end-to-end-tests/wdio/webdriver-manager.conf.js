@@ -1,3 +1,5 @@
+
+
 var path = require('path');
 var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
 var getScreenshotName = require('./getScreenshotName');
@@ -7,7 +9,7 @@ require.extensions['.txt'] = function (module, filename) {
     module.exports = fs.readFileSync(filename, 'utf8');
 };
 
-exports.config = {
+var config = {
     //
     // ==================
     // Specify Test Files
@@ -17,9 +19,13 @@ exports.config = {
     // NPM script (see https://docs.npmjs.com/cli/run-script) then the current working
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
+    // specs: [
+    //     './specs/**/results.logic.spec.js'
+    // ],
     specs: [
         process.env.SPEC_FILE_PATTERN || './specs/**/*.spec.js'  // './specs/**/screenshot.spec.js'
     ],
+
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
@@ -48,15 +54,16 @@ exports.config = {
     //
     capabilities: [{
 
-        browserName: 'chrome',
+        //browserName: 'chrome',
         chromeOptions: {
             args: ['--disable-composited-antialiasing','--allow-insecure-localhost']
-        }
+        },
 
-        // chromeOptions: {
-        //     args: ['--headless'],
-        //     binary: '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
-        // }
+        'os': 'OS X',
+        'os_version': 'High Sierra',
+        'browser': 'Chrome',
+        'browser_version': '74.0 beta',
+        'resolution': '1600x1200'
 
     }],
     //
@@ -120,9 +127,14 @@ exports.config = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
+
+
+
     services: [
-        'visual-regression',
+        'visual-regression'
     ],
+
+
     visualRegression: {
         compare: new VisualRegressionCompare.LocalCompare({
             referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
@@ -272,3 +284,24 @@ exports.config = {
     // onComplete: function(exitCode) {
     // }
 };
+
+const doBrowserstack = false;
+
+if (doBrowserstack) {
+    config.capabilities[0]['browserstack.local'] = true;
+
+    config.services =  ['visual-regression','browserstack'];
+
+    config.browserstackLocal = true;
+
+    config.user = "aaronlisman2";
+    config.key = "SsvxMVGa2fFVc5bWzswx";
+}
+
+// config.specs = [
+//     './specs/**/oncoprinter.screenshot.spec.js'
+// ];
+
+
+exports.config  = config;
+
