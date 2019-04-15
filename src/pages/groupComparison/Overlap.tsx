@@ -18,6 +18,7 @@ import {
     OVERLAP_NOT_ENOUGH_GROUPS_MSG
 } from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
+import UpSet from './UpSet';
 
 export interface IOverlapProps {
     store: GroupComparisonStore
@@ -26,7 +27,7 @@ export interface IOverlapProps {
 const SVG_ID = "comparison-tab-overlap-svg";
 
 enum PlotType {
-    StackedBar,
+    Upset,
     Venn
 }
 
@@ -74,7 +75,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     readonly plotType = remoteData({
         await:()=>[this.sampleGroups],
-        invoke:async()=>(this.sampleGroups.result!.length > 3 ? PlotType.StackedBar : PlotType.Venn)
+        invoke:async()=>(this.sampleGroups.result!.length > 3 ? PlotType.Upset : PlotType.Venn)
     });
 
     public readonly sampleGroupsWithCases = remoteData({
@@ -123,15 +124,17 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         render:()=>{
             let plotElt: any = null;
             switch (this.plotType.result!) {
-                case PlotType.StackedBar:
+                case PlotType.Upset: {
                     plotElt = (
-                        <OverlapStackedBar
+                        <UpSet
+                            groups={this.sampleGroupsWithCases.result!}
+                            title="Sample Sets Intersection"
                             svgId={SVG_ID}
-                            sampleGroups={this.sampleGroupsWithCases.result!}
-                            patientGroups={this.patientGroupsWithCases.result!}
                             uidToGroup={this.props.store.uidToGroup.result!}
+                            caseType="sample"
                         />)
                     break;
+                }
                 case PlotType.Venn:
                     plotElt = (
                         <Venn
