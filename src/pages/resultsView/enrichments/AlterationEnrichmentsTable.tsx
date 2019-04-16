@@ -2,10 +2,10 @@ import * as React from 'react';
 import * as _ from "lodash";
 import LazyMobXTable, { Column } from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import { observer } from "mobx-react";
-import { observable } from "mobx";
+import {computed, observable} from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
 import {
-    calculateAlterationTendency, formatPercentage
+    calculateAlterationTendency, calculateExpressionTendency, calculateGenericTendency, formatPercentage
 } from "./EnrichmentsUtil";
 import { formatLogOddsRatio, formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
@@ -14,27 +14,39 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
+import classNames from "classnames";
 
 export interface IAlterationEnrichmentTableProps {
     columns?: AlterationEnrichmentTableColumnType[];
+    group1Name:string;
+    group2Name:string;
+    group1Description:string;
+    group2Description:string;
     data: AlterationEnrichmentRow[];
     initialSortColumn?: string;
     alterationType: string;
     dataStore: EnrichmentsTableDataStore;
-    onCheckGene: (hugoGeneSymbol: string) => void;
-    onGeneNameClick: (hugoGeneSymbol: string) => void;
+    onCheckGene?: (hugoGeneSymbol: string) => void;
+    onGeneNameClick?: (hugoGeneSymbol: string) => void;
+    mutexTendency?:boolean;
 }
 
 export enum AlterationEnrichmentTableColumnType {
     GENE,
     CYTOBAND,
-    PERCENTAGE_IN_ALTERED,
-    PERCENTAGE_IN_UNALTERED,
+    ALTERATION,
+    PERCENTAGE_IN_GROUP1,
+    PERCENTAGE_IN_GROUP2,
     LOG_RATIO,
     P_VALUE,
     Q_VALUE,
     TENDENCY
 }
+
+const cnaToAlteration:{[cna:number]:string} = {
+    "2": "Amplification",
+    "-2": "Deep Deletion"
+};
 
 type AlterationEnrichmentTableColumn = Column<AlterationEnrichmentRow> & { order?: number, shouldExclude?: () => boolean };
 
@@ -44,48 +56,43 @@ export class AlterationEnrichmentTableComponent extends LazyMobXTable<Alteration
 @observer
 export default class AlterationEnrichmentTable extends React.Component<IAlterationEnrichmentTableProps, {}> {
 
-    @observable protected _columns: { [columnEnum: number]: AlterationEnrichmentTableColumn };
-
-    constructor(props: IAlterationEnrichmentTableProps) {
-        super(props);
-        this._columns = this.generateColumns();
-    }
-
     public static defaultProps = {
         columns: [
             AlterationEnrichmentTableColumnType.GENE,
             AlterationEnrichmentTableColumnType.CYTOBAND,
-            AlterationEnrichmentTableColumnType.PERCENTAGE_IN_ALTERED,
-            AlterationEnrichmentTableColumnType.PERCENTAGE_IN_UNALTERED,
+            AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP1,
+            AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP2,
             AlterationEnrichmentTableColumnType.LOG_RATIO,
             AlterationEnrichmentTableColumnType.P_VALUE,
             AlterationEnrichmentTableColumnType.Q_VALUE,
             AlterationEnrichmentTableColumnType.TENDENCY
         ],
-        initialSortColumn: "q-Value"
+        initialSortColumn: "q-Value",
+        mutexTendency:true
     };
 
     private checkboxChange(hugoGeneSymbol: string) {
         const row: AlterationEnrichmentRow = _.find(this.props.data, {hugoGeneSymbol})!;
         row.checked = !row.checked;
-        this._columns = this.generateColumns();
-        this.props.onCheckGene(hugoGeneSymbol);
+        this.props.onCheckGene!(hugoGeneSymbol);
     }
 
     @autobind
     private onRowClick(d: AlterationEnrichmentRow) {
-        this.props.onGeneNameClick(d.hugoGeneSymbol);
+        this.props.onGeneNameClick!(d.hugoGeneSymbol);
         this.props.dataStore.setHighlighted(d);
     }
 
-    protected generateColumns():{ [columnEnum: number]: AlterationEnrichmentTableColumn } {
+    @computed get columns():{ [columnEnum: number]: AlterationEnrichmentTableColumn } {
         const columns: { [columnEnum: number]: AlterationEnrichmentTableColumn } = {};
 
         columns[AlterationEnrichmentTableColumnType.GENE] = {
             name: "Gene",
-            render: (d: AlterationEnrichmentRow) => <div style={{ display: 'flex' }}><Checkbox checked={d.checked} 
-                disabled={d.disabled} key={d.hugoGeneSymbol} className={styles.Checkbox} 
-                onChange={() => this.checkboxChange(d.hugoGeneSymbol)} title={d.disabled ? "This is one of the query genes" : ""} />
+            render: (d: AlterationEnrichmentRow) => <div style={{ display: 'flex' }}>
+                {this.props.onCheckGene && (<Checkbox checked={d.checked}
+                    disabled={d.disabled} key={d.hugoGeneSymbol} className={styles.Checkbox}
+                    onChange={() => this.checkboxChange(d.hugoGeneSymbol)} title={d.disabled ? "This is one of the query genes" : ""} />
+                )}
                 <span className={styles.GeneName}><b>{d.hugoGeneSymbol}</b></span></div>,
             tooltip: <span>Gene</span>,
             filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
@@ -103,22 +110,28 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
             download: (d: AlterationEnrichmentRow) => d.cytoband
         };
 
-        columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_ALTERED] = {
-            name: "Samples with alteration in altered group",
+        columns[AlterationEnrichmentTableColumnType.ALTERATION] = {
+            name: "Alteration",
+            render: (d: AlterationEnrichmentRow) => <span>{cnaToAlteration[d.value!]}</span>,
+            tooltip: <span>Copy number alteration</span>,
+            filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
+                cnaToAlteration[d.value!].toUpperCase().includes(filterStringUpper),
+            sortBy: (d: AlterationEnrichmentRow) => cnaToAlteration[d.value!],
+            download: (d: AlterationEnrichmentRow) => cnaToAlteration[d.value!]
+        };
+
+        columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP1] = {
+            name: `In ${this.props.group1Name}`,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
-            tooltip: <span>Number (percentage) of samples that have alterations in the query gene(s) that also 
-                have {this.props.alterationType} in the listed gene.</span>,
+            tooltip: <span>Number (percentage) of samples {this.props.group1Description}</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.alteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.alteredCount, d.alteredPercentage)
         };
 
-        columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_UNALTERED] = {
-            name: "Samples with alteration in unaltered group",
+        columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP2] = {
+            name: `In ${this.props.group2Name}`,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
-            tooltip: <span>Number (percentage) of samples that do not have alterations in the query gene(s) that 
-                have {this.props.alterationType} in the listed gene.</span>,
+            tooltip: <span>Number (percentage) of samples {this.props.group2Description}</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.unalteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.unalteredCount, d.unalteredPercentage)
         };
@@ -126,7 +139,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns[AlterationEnrichmentTableColumnType.LOG_RATIO] = {
             name: "Log Ratio",
             render: (d: AlterationEnrichmentRow) => <span>{formatLogOddsRatio(d.logRatio)}</span>,
-            tooltip: <span>Log2 based ratio of (pct in altered / pct in unaltered)</span>,
+            tooltip: <span>Log2 based ratio of (pct in {this.props.group1Name}/ pct in {this.props.group2Name})</span>,
             sortBy: (d: AlterationEnrichmentRow) => Number(d.logRatio),
             download: (d: AlterationEnrichmentRow) => formatLogOddsRatio(d.logRatio)
         };
@@ -148,20 +161,19 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         };
 
         columns[AlterationEnrichmentTableColumnType.TENDENCY] = {
-            name: "Tendency",
-            render: (d: AlterationEnrichmentRow) => <div className={styles.Tendency}>{calculateAlterationTendency(Number(d.logRatio))}
-                {d.qValue < 0.05 ? <Badge style={{
-                    backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
-                }}>Significant</Badge> : ""}</div>,
+            name: this.props.mutexTendency ? "Tendency" : "Enriched in",
+            render: (d: AlterationEnrichmentRow) => <div className={classNames(styles.Tendency, {[styles.Significant]:(d.qValue < 0.05)})}>
+                {this.props.mutexTendency ? calculateAlterationTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.group1Name, this.props.group2Name)}
+                </div>,
             tooltip: 
                 <table>
                     <tr>
                         <td>Log ratio > 0</td>
-                        <td>: Enriched in altered group</td>
+                        <td>: Enriched in {this.props.group1Name}</td>
                     </tr>
                     <tr>
                         <td>Log ratio &lt;= 0</td>
-                        <td>: Enriched in unaltered group</td>
+                        <td>: Enriched in {this.props.group2Name}</td>
                     </tr>
                     <tr>
                         <td>q-Value &lt; 0.05</td>
@@ -178,11 +190,14 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
     }
 
     public render() {
-        const orderedColumns = _.sortBy(this._columns, (c: AlterationEnrichmentTableColumn) => c.order);
+        const orderedColumns = _.sortBy(
+            this.props.columns!.map(column=>this.columns[column]),
+            (c: AlterationEnrichmentTableColumn) => c.order
+        );
         return (
             <AlterationEnrichmentTableComponent initialItemsPerPage={20} paginationProps={{ itemsPerPageOptions: [20] }}
                 columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn} 
-                onRowClick={this.onRowClick} dataStore={this.props.dataStore}/>
+                onRowClick={this.props.onGeneNameClick ? this.onRowClick : undefined} dataStore={this.props.dataStore}/>
         );
     }
 }

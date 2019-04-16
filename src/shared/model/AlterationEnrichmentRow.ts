@@ -11,4 +11,5 @@ export interface AlterationEnrichmentRow {
     logRatio: number;
     pValue: number;
     qValue: number;
+    value?:number; // for copy number, used in group comparison
 }

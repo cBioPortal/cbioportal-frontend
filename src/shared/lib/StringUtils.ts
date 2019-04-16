@@ -54,3 +54,7 @@ export function unescapeTabDelimited(str: string): string
 {
     return str.replace(/\\t/g, "\t").replace(/\\n/g, "\n");
 }
+
+export function pluralize(base:string, num:number, pluralSuffix="s") {
+    return `${base}${num === 1 ? "" : pluralSuffix}`;
+}
