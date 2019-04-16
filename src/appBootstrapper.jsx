@@ -156,6 +156,10 @@ if (__DEBUG__ && module.hot) {
 
 $(document).ready(async () => {
 
+    // we show blank page if the window.name is "blank"
+    if (window.name === "blank") {
+        return;
+    }
     // we use rawServerConfig (written by JSP) if it is present
     // or fetch from config service if not
     // need to use jsonp, so use jquery
