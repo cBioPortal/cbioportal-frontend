@@ -605,6 +605,15 @@ export default class GroupComparisonStore {
         return (this.activeGroups.isComplete && this.activeGroups.result.length !== 2);
     }
 
+    @computed get clinicalTabGrey() {
+        // grey out if active groups is less than 2 or if overlapStrategy INCLUDE is selected
+        return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) || this.hasOverlappingSamplesInActiveGroups;
+    }
+
+    @computed get hasOverlappingSamplesInActiveGroups() {
+        return getOverlappingSamples(this.activeGroups.result!).length > 0;
+    }
+    
     @computed get copyNumberTabGrey() {
         // grey out unless two active groups
         return (this.activeGroups.isComplete && this.activeGroups.result.length !== 2);
@@ -774,7 +783,9 @@ export default class GroupComparisonStore {
     public readonly clinicalDataEnrichments = remoteData({
         await: () => [this.activeGroups],
         invoke: () => {
-            
+            if (this.clinicalTabGrey) {
+                return Promise.resolve([]);
+            }
             let groups: Group[] = _.map(this.activeGroups.result, group => {
                 const sampleIdentifiers = [];
                 for (const studySpec of group.studies) {

@@ -47,14 +47,6 @@ const COLUMNS = [
         width: 130
     },
     {
-        name: ClinicalDataEnrichmentTableColumnType.SCORE,
-        render: (d: ClinicalDataEnrichmentWithQ) => <span style={{ whiteSpace: 'nowrap' }}>{toConditionalPrecision(d.score, 3, 0.01)}</span>,
-        sortBy: (d: ClinicalDataEnrichmentWithQ) => d.score,
-        download: (d: ClinicalDataEnrichmentWithQ) => toConditionalPrecision(d.score, 3, 0.01),
-        width: 100,
-        tooltip:<span>Statistical Score, derived from Chi-Squared test or Kruskal-Wallis test</span>
-    },
-    {
         name: ClinicalDataEnrichmentTableColumnType.P_VALUE,
         render: (d: ClinicalDataEnrichmentWithQ) => <span style={{ whiteSpace: 'nowrap', fontWeight: (d.qValue < 0.05 ? "bold" : "normal") }}>{toConditionalPrecisionWithMinimum(d.pValue, 3, 0.01, -10)}</span>,
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.pValue,
@@ -90,7 +82,7 @@ export default class ClinicalDataEnrichmentsTable extends React.Component<IClini
                 dataStore={this.props.dataStore}
                 onRowClick={this.onRowClick}
                 paginationProps={{ itemsPerPageOptions: [20] }}
-                initialItemsPerPage={25}
+                initialItemsPerPage={20}
                 copyDownloadProps={{
                     showCopy: false
                 }}
