@@ -99,3 +99,8 @@ $selectHeightInner: $selectHeight - 2px;
         }
     }
 }
+
+iframe.mdacc-heatmap-iframe {
+    height: calc(100vh - 200px);
+    min-height: 700px;
+}
