@@ -1,7 +1,7 @@
 import * as React from "react";
 import { observer, Observer } from "mobx-react";
 import autobind from "autobind-decorator";
-import GroupComparisonStore from "./GroupComparisonStore";
+import GroupComparisonStore, { OverlapStrategy } from "./GroupComparisonStore";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { computed, observable, IReactionDisposer, autorun, action } from "mobx";
 import { SimpleGetterLazyMobXTableApplicationDataStore } from "shared/lib/ILazyMobXTableApplicationDataStore";
@@ -9,15 +9,17 @@ import ClinicalDataEnrichmentsTable from "./ClinicalDataEnrichmentsTable";
 import _ from "lodash";
 import { remoteData } from "shared/api/remoteData";
 import client from "shared/api/cbioportalClientInstance";
-import { IAxisData, IStringAxisData, PLOT_SIDELENGTH, makeBoxScatterPlotData, IBoxScatterPlotPoint, INumberAxisData, isNumberData, isStringData, boxPlotTooltip, mutationSummaryToAppearance, MutationSummary } from "pages/resultsView/plots/PlotsTabUtils";
+import { IAxisData, IStringAxisData, makeBoxScatterPlotData, IBoxScatterPlotPoint, INumberAxisData, isNumberData, isStringData, boxPlotTooltip, mutationSummaryToAppearance, MutationSummary } from "pages/resultsView/plots/PlotsTabUtils";
 import DownloadControls from "shared/components/downloadControls/DownloadControls";
 import ScrollBar from "shared/components/Scrollbar/ScrollBar";
 import BoxScatterPlot, { IBoxScatterPlotData } from "shared/components/plots/BoxScatterPlot";
 import { getMobxPromiseGroupStatus } from "shared/lib/getMobxPromiseGroupStatus";
 import { scatterPlotSize } from "shared/components/plots/PlotUtils";
-import { ClinicalDataEnrichmentWithQ } from "./GroupComparisonUtils";
+import { ClinicalDataEnrichmentWithQ, CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG, CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG } from "./GroupComparisonUtils";
 import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCategoryBarPlot";
 import { STUDY_VIEW_CONFIG } from "pages/studyView/StudyViewConfig";
+import ReactSelect from "react-select";
+import { MakeMobxView } from "shared/components/MobxView";
 
 export interface IClinicalDataProps {
     store: GroupComparisonStore
@@ -58,12 +60,62 @@ export class ClinicalDataEnrichmentStore extends SimpleGetterLazyMobXTableApplic
     }
 }
 
+export enum PlotType {
+    Bar = "Bar",
+    StackedBar = "StackedBar",
+    PercentageStackedBar = "PercentageStackedBar"
+}
+
+const plotTypeOptions = [
+    { value: PlotType.Bar, label: "Bar chart" },
+    { value: PlotType.StackedBar, label: "Stacked bar chart" },
+    { value: PlotType.PercentageStackedBar, label: "100% stacked bar chart" }
+]
+
 @observer
 export default class ClinicalData extends React.Component<IClinicalDataProps, {}> {
 
     @observable.ref highlightedRow: ClinicalDataEnrichmentWithQ | undefined;
 
     private scrollPane: HTMLDivElement;
+
+    readonly tabUI = MakeMobxView({
+        await: () => {
+            if (this.props.store.activeGroups.isComplete &&
+                this.props.store.activeGroups.result.length < 2) {
+                // dont bother loading data for and computing clinical tab if not enough groups for it
+                return [this.props.store.activeGroups];
+            } else {
+                return [this.props.store.activeGroups, this.overlapUI];
+            }
+        },
+        render: () => {
+            if (this.props.store.activeGroups.result!.length < 2) {
+                return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG}</span>;
+            } else if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE && this.props.store._selectionInfo.result!.overlappingSamples.length !== 0) {
+                return <span>{CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG}</span>;
+            } else {
+                return this.overlapUI.component;
+            }
+        },
+        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true} size={"big"} />
+    });
+
+    readonly overlapUI = MakeMobxView({
+        await: () => [this.props.store.clinicalDataEnrichmentsWithQValues],
+        render: () => {
+            return (<div className="clearfix" style={{ display: "flex", marginTop: 6 }}>
+                <div style={{ width: "600px" }}>
+                    <ClinicalDataEnrichmentsTable dataStore={this.tableDataStore} />
+                </div>
+                <div style={{ marginLeft: "10px" }} >
+                    {this.getUtilitiesMenu}
+                    {this.plot}
+                </div>
+            </div>)
+        },
+        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true} size="big" />
+    });
 
     @autobind
     private getScrollPane() {
@@ -90,6 +142,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
 
     @observable logScale = false;
     @observable swapAxes = false;
+    @observable horizontalBars = false;
 
     @autobind
     @action private onClickLogScale() {
@@ -101,6 +154,11 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         this.swapAxes = !this.swapAxes;
     }
 
+    @autobind
+    @action private onClickhorizontalBars() {
+        this.horizontalBars = !this.horizontalBars;
+    }
+
     private readonly clinicalDataPromise = remoteData({
         await: () => [this.props.store.patientKeyToSamples, this.props.store.activeGroups],
         invoke: async () => {
@@ -108,7 +166,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
             if (this.highlightedRow) {
                 let attribute = this.highlightedRow!.clinicalAttribute;
                 let patientKeyToSamples = this.props.store.patientKeyToSamples.result!;
-                
+
                 let sampleIdentifiers = _.flatMap(this.props.store.activeGroups.result, group => _.flatMap(group.studies, study => {
                     return study.samples.map(sample => ({
                         studyId: study.id,
@@ -173,8 +231,8 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                 const axisData_Data = axisData.data;
                 _.forEach(this.props.store.activeGroups.result!, group => {
                     group.studies.forEach(study => {
-                        study.samples.forEach(sampleId=>{
-                            const sample = sampleSet.get({studyId: study.id, sampleId});
+                        study.samples.forEach(sampleId => {
+                            const sample = sampleSet.get({ studyId: study.id, sampleId });
                             if (sample) {
                                 axisData_Data.push({
                                     uniqueSampleKey: sample.uniqueSampleKey,
@@ -215,7 +273,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         this.scrollPane = el;
     }
 
-    private readonly  boxPlotData = remoteData<{ horizontal: boolean, data: IBoxScatterPlotData<IBoxScatterPlotPoint>[] }>({
+    private readonly boxPlotData = remoteData<{ horizontal: boolean, data: IBoxScatterPlotData<IBoxScatterPlotPoint>[] }>({
         await: () => [
             this.horzAxisDataPromise,
             this.vertAxisDataPromise,
@@ -275,12 +333,77 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         }, STUDY_VIEW_CONFIG.colors.reservedValue);
     }
 
+    @observable plotType: PlotType = PlotType.PercentageStackedBar;
+
+    @autobind
+    @action
+    private onPlotTypeSelect(option: any) {
+        this.plotType = option.value
+    }
+
+    @computed private get getUtilitiesMenu() {
+        if (!this.highlightedRow) {
+            return <span></span>;
+        }
+        return (
+            <div style={{ marginBottom: "10px"}}>
+                <h4>Utilities</h4>
+                {!this.showLogScaleControls && (
+                    <div className="form-group">
+                        <label>Plot Type</label>
+                        <div style={{ width: 240 }}>
+                            <ReactSelect
+                                name="discrete-vs-discrete-plot-type"
+                                value={this.plotType}
+                                onChange={this.onPlotTypeSelect}
+                                options={plotTypeOptions}
+                                clearable={false}
+                                searchable={true}
+                            />
+                        </div>
+                    </div>
+                )}
+                <div>
+                    <label className="checkbox-inline">
+                        <input
+                            type="checkbox"
+                            checked={this.swapAxes}
+                            onClick={this.onClickSwapAxes}
+                        />Swap Axes
+                        </label>
+                    {!this.showLogScaleControls && (
+                        <label className="checkbox-inline">
+                            <input
+                                type="checkbox"
+                                name="horizontalBars"
+                                checked={this.horizontalBars}
+                                onClick={this.onClickhorizontalBars}
+                            />Horizontal Bars
+                        </label>
+                    )}
+                    {this.showLogScaleControls && (
+                        <label className="checkbox-inline">
+                            <input
+                                type="checkbox"
+                                checked={this.logScale}
+                                onClick={this.onClickLogScale}
+                            />Log Scale
+                        </label>
+                    )}
+                </div>
+            </div>
+        );
+
+    }
+
     @computed get plot() {
         if (this.tableDataStore.allData.length === 0 || !this.highlightedRow) {
             return <span></span>;
         }
         const promises = [this.horzAxisDataPromise, this.vertAxisDataPromise];
         const groupStatus = getMobxPromiseGroupStatus(...promises);
+        const isPercentage = this.plotType === PlotType.PercentageStackedBar;
+        const isStacked = isPercentage || this.plotType === PlotType.StackedBar;
         switch (groupStatus) {
             case "pending":
                 return <LoadingIndicator center={true} isLoading={true} size={"big"} />;
@@ -303,7 +426,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                                 axisLabelX={this.horzLabel}
                                 axisLabelY={this.vertLabel}
                                 data={this.boxPlotData.result.data}
-                                chartBase={550}
+                                chartBase={500}
                                 tooltip={this.boxPlotTooltip}
                                 horizontal={this.boxPlotData.result.horizontal}
                                 logScale={this.logScale}
@@ -319,7 +442,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                     } else if (this.boxPlotData.isError) {
                         return <span>Error loading plot data.</span>;
                     } else {
-                        return <LoadingIndicator center={true}  isLoading={true} size={"big"} />;
+                        return <LoadingIndicator center={true} isLoading={true} size={"big"} />;
                     }
                 } else {
                     plotElt = <MultipleCategoryBarPlot
@@ -331,15 +454,19 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                         categoryToColor={this.categoryToColor}
                         barWidth={20}
                         domainPadding={50}
-                        chartBase={PLOT_SIDELENGTH}
+                        chartBase={500}
                         axisLabelX={this.horzLabel}
                         axisLabelY={this.vertLabel}
                         legendLocationWidthThreshold={550}
+                        ticksCount={6}
+                        horizontalBars={this.horizontalBars}
+                        percentage={isPercentage}
+                        stacked={isStacked}
                     />
                 }
 
                 return (
-                    <div data-test="ClinicalTabPlotDiv" style={{ marginLeft: "10px" }} className="borderedChart posRelative">
+                    <div data-test="ClinicalTabPlotDiv" className="borderedChart posRelative">
                         <ScrollBar style={{ position: 'relative', top: -5 }} getScrollEl={this.getScrollPane} />
                         <Observer>
                             {this.toolbar}
@@ -357,27 +484,6 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     private toolbar() {
         return (
             <div style={{ textAlign: "center", position: "relative" }}>
-                <div style={{float:'left'}}>
-                    <label className="checkbox-inline">
-                        <input
-                            type="checkbox"
-                            checked={this.swapAxes}
-                            onClick={this.onClickSwapAxes}
-                        />Swap Axes
-                    </label>
-
-                    {
-                        this.showLogScaleControls &&
-                        <label className="checkbox-inline">
-                            <input
-                                type="checkbox"
-                                checked={this.logScale}
-                                onClick={this.onClickLogScale}
-                            />Log Scale
-                        </label>
-                    }
-                </div>
-
                 <DownloadControls
                     getSvg={this.getSvg}
                     filename={SVG_ID}
@@ -389,22 +495,14 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         );
     }
 
-    componentWillUnmount(){
+    componentWillUnmount() {
         this.tableDataStore.destroy();
     }
 
     public render() {
-        if (this.props.store.clinicalDataEnrichments.isPending) {
-            return <LoadingIndicator center={true}  isLoading={true} size={"big"} />;
-        }
         return (
-            <div className="clearfix" style={{ display: "flex", marginTop: 6 }}>
-                <div style={{ width: "600px" }}>
-                    <ClinicalDataEnrichmentsTable dataStore={this.tableDataStore} />
-                </div>
-                <div className="inlineBlock">
-                    {this.plot}
-                </div>
+            <div className="inlineBlock">
+                {this.tabUI.component}
             </div>
         )
     }

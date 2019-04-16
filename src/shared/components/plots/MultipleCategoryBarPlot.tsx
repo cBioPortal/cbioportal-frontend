@@ -31,6 +31,7 @@ export interface IMultipleCategoryBarPlotProps {
     legendLocationWidthThreshold?: number;
     percentage?:boolean;
     stacked?:boolean;
+    ticksCount?:number
 }
 
 export interface IMultipleCategoryBarPlotData {
@@ -364,6 +365,10 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         return tickFormatNumeral(t, ticks);
     }
 
+    @computed get numberOfTicks(){
+        return this.props.ticksCount !== undefined ? this.props.ticksCount : NUM_AXIS_TICKS;
+    }
+
     @computed get zeroCountOffset() {
         let addOffset = false;
         for (const d of this.data) {
@@ -379,7 +384,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         if (this.props.stacked) {
             return 0;
         } else {
-            return addOffset ? (0.01 * (this.maxMajorCount / NUM_AXIS_TICKS)) : 0;
+            return addOffset ? (0.01 * (this.maxMajorCount / this.numberOfTicks)) : 0;
         }
     }
 
@@ -402,7 +407,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 label={label}
 
                 tickValues={this.props.horizontalBars ? undefined: this.categoryTickValues}
-                tickCount={this.props.horizontalBars ? NUM_AXIS_TICKS: undefined }
+                tickCount={this.props.horizontalBars ? this.numberOfTicks: undefined }
                 tickFormat={this.props.horizontalBars ? this.formatNumericalTick : this.formatCategoryTick}
                 tickLabelComponent={<VictoryLabel angle={this.props.horizontalBars ? undefined : CATEGORY_LABEL_HORZ_ANGLE}
                                                   verticalAnchor={this.props.horizontalBars ? undefined : "start"}
@@ -427,7 +432,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 label={label}
                 dependentAxis={true}
                 tickValues={this.props.horizontalBars ? this.categoryTickValues : undefined}
-                tickCount={this.props.horizontalBars ? undefined : NUM_AXIS_TICKS}
+                tickCount={this.props.horizontalBars ? undefined : this.numberOfTicks}
                 tickFormat={this.props.horizontalBars ? this.formatCategoryTick : this.formatNumericalTick}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? -1*this.biggestCategoryLabelSize - 24 : -40}/>}
                 style={this.axisStyle}
