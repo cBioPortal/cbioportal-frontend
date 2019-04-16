@@ -144,11 +144,11 @@ export type CopyNumberCountByGene = {
 
         'entrezGeneId': number
 
-        'frequency': number
-
         'hugoGeneSymbol': string
 
         'numberOfAlteredCases': number
+
+        'numberOfSamplesProfiled': number
 
         'qValue': number
 
@@ -426,11 +426,11 @@ export type MutSig = {
 export type MutationCountByGene = {
     'entrezGeneId': number
 
-        'frequency': number
-
         'hugoGeneSymbol': string
 
         'numberOfAlteredCases': number
+
+        'numberOfSamplesProfiled': number
 
         'qValue': number
 
