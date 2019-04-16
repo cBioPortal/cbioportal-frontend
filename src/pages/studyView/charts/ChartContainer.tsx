@@ -11,7 +11,7 @@ import {
     ClinicalDataCountWithColor,
     StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
-import {DataBin} from "shared/api/generated/CBioPortalAPIInternal";
+import {DataBin, StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import classnames from "classnames";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
@@ -30,11 +30,12 @@ import {
     mutationCountVsCnaTooltip,
     MutationCountVsCnaYBinsMin
 } from "../StudyViewUtils";
-import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
+import {ClinicalAttribute, ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import {getComparisonUrl} from "../../../shared/api/urls";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -47,11 +48,14 @@ export interface IChartContainerDownloadProps {
     initDownload?: () => Promise<string>;
 }
 
+const COMPARISON_CHART_TYPES:ChartType[] = [ChartTypeEnum.PIE_CHART, ChartTypeEnum.TABLE, ChartTypeEnum.BAR_CHART];
+
 export interface IChartContainerProps {
     chartMeta: ChartMeta;
     title: string;
     promise: MobxPromise<any>;
     filters: any;
+    studyViewFilters:StudyViewFilter;
     onValueSelection?: any;
     onDataBinSelection?: any;
     download?: IChartContainerDownloadProps[];
@@ -65,6 +69,11 @@ export interface IChartContainerProps {
     onGeneSelect?:any;
     isNewlyAdded: (uniqueKey: string) => boolean;
 
+    openComparisonPage:(params:{
+        type:ChartType,
+        clinicalAttribute:ClinicalAttribute,
+        clinicalAttributeValues?:{ value:string, color:string }[]
+    })=>void;
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
     patientKeysWithNAInSelectedClinicalData?:MobxPromise<string[]>; // patients which have NA values for filtered clinical attributes
@@ -176,6 +185,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         if (this.analysisGroupsPossible) {
             controls.showAnalysisGroupsIcon = true;
         }
+        if (this.comparisonPagePossible) {
+            controls.showComparisonPageIcon = true;
+        }
         return {
             ...controls,
             showResetIcon: this.props.filters && this.props.filters.length > 0
@@ -205,10 +217,46 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     }
 
+    @computed
+    get comparisonPagePossible() {
+        return !!this.props.chartMeta.clinicalAttribute &&
+            this.props.promise.isComplete &&
+            this.props.promise.result!.length > 1 &&
+            (COMPARISON_CHART_TYPES.indexOf(this.props.chartMeta.chartType) > -1);
+    }
+
     @autobind
     @action
     toggleSurvivalHideNAPatients() {
         this.naPatientsHiddenInSurvival = !this.naPatientsHiddenInSurvival;
+    }
+
+    @autobind
+    @action
+    openComparisonPage() {
+        if (this.comparisonPagePossible) {
+            switch (this.props.chartMeta.chartType) {
+                case ChartTypeEnum.PIE_CHART:
+                case ChartTypeEnum.TABLE:
+                    this.props.openComparisonPage({
+                        type:this.props.chartMeta.chartType,
+                        clinicalAttribute: this.props.chartMeta.clinicalAttribute!,
+                        clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]).map(d=>{
+                            return {
+                                value: d.value,
+                                color: d.color
+                            }
+                        }),
+                    });
+                    break;
+                case ChartTypeEnum.BAR_CHART:
+                    this.props.openComparisonPage({
+                        type:ChartTypeEnum.BAR_CHART,
+                        clinicalAttribute: this.props.chartMeta.clinicalAttribute!
+                    });
+                    break;
+            }
+        }
     }
 
     @computed get survivalChartData() {
@@ -317,7 +365,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return ()=>(
                         <SurvivalChart ref={this.handlers.ref}
                                        patientSurvivals={data.patientSurvivals}
-                                       patientToAnalysisGroup={data.patientToAnalysisGroup}
+                                       patientToAnalysisGroups={data.patientToAnalysisGroups}
                                        analysisGroups={data.analysisGroups}
                                        analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
                                        naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
@@ -454,6 +502,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     changeChartType={this.changeChartType}
                     download={this.downloadTypes}
                     setAnalysisGroups={this.setAnalysisGroups}
+                    openComparisonPage={this.openComparisonPage}
                 />
                 <div style={{display: 'flex', flexGrow: 1, margin: 'auto', alignItems: 'center'}}>
                     {(this.props.promise.isPending) && (

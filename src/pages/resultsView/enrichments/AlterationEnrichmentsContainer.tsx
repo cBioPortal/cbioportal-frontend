@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import { observer } from "mobx-react";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import { observable, computed } from 'mobx';
-import AlterationEnrichmentTable from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
+import AlterationEnrichmentTable, {AlterationEnrichmentTableColumnType} from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
 import { AlterationEnrichment } from 'shared/api/generated/CBioPortalAPIInternal';
 import styles from "./styles.module.scss";
 import {
@@ -24,12 +24,18 @@ import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
-    totalAlteredCount: number;
-    totalUnalteredCount: number;
+    totalGroup1Count: number;
+    totalGroup2Count: number;
+    group1Name?:string;
+    group2Name?:string;
+    group1Description?:string;
+    group2Description?:string;
+    alteredVsUnalteredMode?:boolean;
     headerName: string;
     selectedProfile:MolecularProfile;
-    store: ResultsViewPageStore;
-    alterationType: string;
+    store?: ResultsViewPageStore;
+    alterationType?: string;
+    showCNAInTable?:boolean;
 }
 
 enum ChartType {
@@ -38,6 +44,24 @@ enum ChartType {
 
 @observer
 export default class AlterationEnrichmentContainer extends React.Component<IAlterationEnrichmentContainerProps, {}> {
+
+    static defaultProps:Partial<IAlterationEnrichmentContainerProps> = {
+        group1Name: "altered group",
+        group2Name: "unaltered group",
+        alterationType: "a mutation",
+        showCNAInTable: false,
+        alteredVsUnalteredMode: true
+    };
+
+    @computed get group1Description() {
+        return this.props.group1Description ||
+            `that have alterations in the query gene(s) that also have ${this.props.alterationType!} in the listed gene.`;
+    }
+
+    @computed get group2Description() {
+        return this.props.group2Description ||
+            `that do not have alterations in the query gene(s) that have ${this.props.alterationType!} in the listed gene.`;
+    }
 
     @observable chartType:ChartType = ChartType.VOLCANO;
     @observable mutualExclusivityFilter: boolean = true;
@@ -49,7 +73,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
 
     @computed get data(): AlterationEnrichmentRow[] {
-        return getAlterationRowData(this.props.data, this.props.store.hugoGeneSymbols);
+        return getAlterationRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {
@@ -61,10 +85,10 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
         const clickedAlterationEnrichment: AlterationEnrichment = _.find(this.props.data, ['hugoGeneSymbol', this.clickedGene])!;
 
-        return [this.props.totalAlteredCount - clickedAlterationEnrichment.set1CountSummary.alteredCount,
+        return [this.props.totalGroup1Count - clickedAlterationEnrichment.set1CountSummary.alteredCount,
             clickedAlterationEnrichment.set1CountSummary.alteredCount,
             clickedAlterationEnrichment.set2CountSummary.alteredCount,
-            this.props.totalUnalteredCount - clickedAlterationEnrichment.set2CountSummary.alteredCount];
+            this.props.totalGroup2Count - clickedAlterationEnrichment.set2CountSummary.alteredCount];
     }
 
     @autobind
@@ -129,25 +153,66 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         }
     );
 
+    @computed get columns() {
+        const columns = [];
+        columns.push(AlterationEnrichmentTableColumnType.GENE,
+            AlterationEnrichmentTableColumnType.CYTOBAND);
+        if (this.props.showCNAInTable) {
+            columns.push(AlterationEnrichmentTableColumnType.ALTERATION);
+        }
+        columns.push(AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP1,
+        AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP2,
+        AlterationEnrichmentTableColumnType.LOG_RATIO,
+        AlterationEnrichmentTableColumnType.P_VALUE,
+        AlterationEnrichmentTableColumnType.Q_VALUE,
+        AlterationEnrichmentTableColumnType.TENDENCY);
+
+        return columns;
+    }
+
+    @computed get volcanoPlotLabels() {
+        if (this.props.alteredVsUnalteredMode) {
+            return ["Mutual exclusivity", "Co-occurrence"];
+        } else {
+            return [this.props.group2Name!, this.props.group1Name!];
+        }
+    }
+
+    @computed get group1CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Co-occurrence";
+        } else {
+            return `Enriched in ${this.props.group1Name!}`;
+        }
+    }
+
+    @computed get group2CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Mutual exclusivity";
+        } else {
+            return `Enriched in ${this.props.group2Name!}`;
+        }
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
             return <div className={'alert alert-info'}>No data/result available</div>;
         }
-        
+
         return (
             <div className={styles.Container}>
                 <div className={styles.LeftColumn}>
                     {this.chartType === ChartType.VOLCANO && (
                         <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
-                            xAxisLeftLabel="Mutual exclusivity" xAxisRightLabel="Co-occurrence" xAxisDomain={15}
-                            xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
-                            onSelectionCleared={this.onSelectionCleared}/>
+                                          xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
+                                          xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
+                                          onSelectionCleared={this.onSelectionCleared}/>
                     )}
                     {this.chartType === ChartType.FREQUENCY && (
                         <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
-                                                   xGroupName={"Altered Tumors"} yGroupName={"Unaltered Tumors"} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
-                                                   onSelectionCleared={this.onSelectionCleared}/>
+                                                   xGroupName={this.props.group1Name!} yGroupName={this.props.group2Name!} onGeneNameClick={this.onGeneNameClick}
+                                                   onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared}/>
                     )}
                     <button
                         className="btn btn-sm btn-default"
@@ -160,31 +225,37 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                     >
                         {this.chartType === ChartType.VOLCANO ? "Show Frequency Plot" : "Show Volcano Plot"}
                     </button>
-                    <MiniBarChart totalAlteredCount={this.props.totalAlteredCount} totalUnalteredCount={this.props.totalUnalteredCount}
-                        selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />
+                    {this.props.store && <MiniBarChart totalAlteredCount={this.props.totalGroup1Count} totalUnalteredCount={this.props.totalGroup2Count}
+                                                       selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />}
                 </div>
                 <div className={styles.TableContainer}>
                     <div>
                         <h3>{this.props.headerName}</h3>
-                        <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />
+                        {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
                         <Checkbox checked={this.coOccurenceFilter}
                             onChange={this.toggleCoOccurenceFilter}>
-                            Co-occurrence
+                            {this.group1CheckboxLabel}
                         </Checkbox>
                         <Checkbox checked={this.mutualExclusivityFilter}
                             onChange={this.toggleMutualExclusivityFilter}>
-                            Mutual exclusivity
+                            {this.group2CheckboxLabel}
                         </Checkbox>
                         <Checkbox checked={this.significanceFilter}
                             onChange={this.toggleSignificanceFilter}>
                             Significant only
                         </Checkbox>
                     </div>
-                    <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene}
-                        onGeneNameClick={this.onGeneNameClick} alterationType={this.props.alterationType} dataStore={this.dataStore}/>
+                    <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
+                                               onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} alterationType={this.props.alterationType!} dataStore={this.dataStore}
+                                               group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}
+                                               group1Description={this.group1Description}
+                                               group2Description={this.group2Description}
+                                               mutexTendency={this.props.alteredVsUnalteredMode}
+                                               columns={this.columns}
+                    />
                 </div>
             </div>
         );

@@ -36,6 +36,11 @@ import {AppStore} from "../../AppStore";
 import ActionButtons from "./studyPageHeader/ActionButtons";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import {GACustomFieldsEnum, trackEvent} from "../../shared/lib/tracking";
+import ComparisonGroupManager from "../groupComparison/comparisonGroupManager/ComparisonGroupManager";
+import classNames from "classnames";
+import AppConfig from "appConfig";
+import SocialAuthButton from "../../shared/components/SocialAuthButton";
+import {ServerConfigHelpers} from "../../config/config";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -68,6 +73,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private enableAddChartInTabs = [StudyViewPageTabKeyEnum.SUMMARY, StudyViewPageTabKeyEnum.CLINICAL_DATA];
     private queryReaction:IReactionDisposer;
     @observable showCustomSelectTooltip = false;
+    @observable showGroupsTooltip = false;
     private inCustomSelectTooltip = false;
     private studyViewQueryFilter:StudyViewURLQuery;
 
@@ -141,14 +147,59 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         }
     }
 
+    @computed
+    get groupsButton() {
+        return (
+            <DefaultTooltip
+                visible={this.showGroupsTooltip}
+                trigger={["click"]}
+                placement="bottomLeft"
+                destroyTooltipOnHide={true}
+                onPopupAlign={(tooltipEl: any)=>{
+                    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
+                    arrowEl.style.right = '10px';
+                }}
+                onVisibleChange={visible=>{ this.showGroupsTooltip = !!visible; }}
+                getTooltipContainer={()=>document.getElementById("comparisonGroupManagerContainer")!}
+                overlay={
+                    <div style={{width: 350}}>
+                        {this.props.appStore.isLoggedIn ?
+                            <ComparisonGroupManager store={this.store} /> :
+                            (<span>
+                                Please log in to use the custom groups feature to save and compare sub-cohorts.
+                                <If condition={AppConfig.serverConfig.authenticationMethod === "social_auth"}>
+                                    <div className={"text-center"} style={{padding:20}}>
+                                        <SocialAuthButton appStore={this.props.appStore}/>
+                                    </div>
+                                </If>
+                            </span>)
+                        }
+                    </div>
+                }
+            >
+                <button className={classNames('btn btn-primary btn-xs', {active:this.showGroupsTooltip})}
+                        data-test="groups-button"
+                        aria-pressed={this.showGroupsTooltip}
+                        style={{marginLeft: '10px'}}
+                >Groups {String.fromCharCode(9662)/*small solid down triangle*/}</button>
+            </DefaultTooltip>
+        );
+    }
+
     content() {
 
         return (
-            <div className="studyView" onClick={this.showCustomSelectTooltip ? ()=>{
-                if(!this.inCustomSelectTooltip) {
+            <div className="studyView" onClick={()=>{
+                if(this.showCustomSelectTooltip && !this.inCustomSelectTooltip) {
                     this.showCustomSelectTooltip = false;
                 }
-            } : undefined}>
+            }}>
+                {this.store.unknownQueriedIds.isComplete &&
+                this.store.unknownQueriedIds.result.length > 0 && (
+                    <Alert bsStyle="danger">
+                        <span>Unknown/Unauthorized studies {this.store.unknownQueriedIds.result.join(', ')}</span>
+                    </Alert>
+                )}
                 <LoadingIndicator size={"big"}
                                   isLoading={(this.store.queriedSampleIdentifiers.isPending || this.store.invalidSampleIds.isPending)}
                                   center={true}/>
@@ -215,50 +266,52 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                             }
                                         }
                                     </Observer>
-                                    {(this.enableAddChartInTabs.includes(this.store.currentTab))
-                                    && (
-                                        <div style={{display: 'flex'}}>
-
-                                            <DefaultTooltip
-                                                visible={this.showCustomSelectTooltip}
-                                                placement={"bottomLeft"}
-                                                destroyTooltipOnHide={true}
-                                                overlay={() => (
-                                                    <div style={{width: '300px'}}
-                                                         onMouseEnter={()=>this.inCustomSelectTooltip=true}
-                                                         onMouseLeave={()=>this.inCustomSelectTooltip=false}
-                                                    >
-                                                        <CustomCaseSelection
-                                                            allSamples={this.store.samples.result}
-                                                            selectedSamples={this.store.selectedSamples.result}
-                                                            submitButtonText={"Select"}
-                                                            disableGrouping={true}
-                                                            queriedStudies={this.store.queriedPhysicalStudyIds.result}
-                                                            onSubmit={(chart: NewChart) => {
-                                                                this.showCustomSelectTooltip = false;
-                                                                this.store.updateCustomSelect(chart);
+                                    <div id="comparisonGroupManagerContainer" style={{display: 'flex', position:"relative"}}>
+                                        {(this.enableAddChartInTabs.includes(this.store.currentTab))
+                                        && (<span>
+                                                <DefaultTooltip
+                                                    visible={this.showCustomSelectTooltip}
+                                                    placement={"bottomLeft"}
+                                                    destroyTooltipOnHide={true}
+                                                    overlay={() => (
+                                                        <div style={{width: '300px'}}
+                                                             onMouseEnter={()=>this.inCustomSelectTooltip=true}
+                                                             onMouseLeave={()=>this.inCustomSelectTooltip=false}
+                                                        >
+                                                            <CustomCaseSelection
+                                                                allSamples={this.store.samples.result}
+                                                                selectedSamples={this.store.selectedSamples.result}
+                                                                submitButtonText={"Select"}
+                                                                disableGrouping={true}
+                                                                queriedStudies={this.store.queriedPhysicalStudyIds.result}
+                                                                onSubmit={(chart: NewChart) => {
+                                                                    this.showCustomSelectTooltip = false;
+                                                                    this.store.updateCustomSelect(chart);
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                >
+                                                    <button className={classNames('btn btn-primary btn-sm', {"active":this.showCustomSelectTooltip})}
+                                                            data-test='custom-selection-button'
+                                                            onClick={(evt:any) => {
+                                                                evt.stopPropagation();
+                                                                this.showCustomSelectTooltip = !this.showCustomSelectTooltip;
                                                             }}
-                                                        />
-                                                    </div>
-                                                )}
-                                            >
-                                                <button className='btn btn-primary btn-sm'
-                                                        data-test='custom-selection-button'
-                                                        onClick={() => {
-                                                            this.showCustomSelectTooltip = true;
-                                                        }}
-                                                        style={{marginLeft: '10px'}}>Custom Selection
-                                                </button>
-                                            </DefaultTooltip>
-                                            <AddChartButton
-                                                buttonText={this.addChartButtonText}
-                                                store={this.store}
-                                                currentTab={this.store.currentTab}
-                                                addChartOverlayClassName='studyViewAddChartOverlay'
-                                                disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
-                                            />
-                                        </div>
-                                    )}
+                                                            style={{marginLeft: '10px'}}>Custom Selection
+                                                    </button>
+                                                </DefaultTooltip>
+                                                <AddChartButton
+                                                    buttonText={this.addChartButtonText}
+                                                    store={this.store}
+                                                    currentTab={this.store.currentTab}
+                                                    addChartOverlayClassName='studyViewAddChartOverlay'
+                                                    disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
+                                                />
+                                            </span>
+                                        )}
+                                        {ServerConfigHelpers.sessionServiceIsEnabled() && this.groupsButton}
+                                    </div>
                                 </div>
                             </div>
                         </div>

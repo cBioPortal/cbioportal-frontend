@@ -18,8 +18,10 @@ export function makeSurvivalChartData(
         });
     }
 
+    let patientToAnalysisGroups = _.mapValues(patientToAnalysisGroup, group => [group])
+
     return {
-        patientToAnalysisGroup, patientSurvivals, analysisGroups
+        patientToAnalysisGroups, patientSurvivals, analysisGroups
     };
 }
 

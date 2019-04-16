@@ -21,6 +21,7 @@ import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultToo
 import {ChartTypeEnum, ChartTypeNameEnum} from "../StudyViewConfig";
 import InfoBanner from "../infoBanner/InfoBanner";
 import {GAEvent, serializeEvent, trackEvent} from "../../../shared/lib/tracking";
+import classNames from "classnames";
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore,
@@ -266,11 +267,18 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
 @observer
 export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
+    @observable open = false;
+
+    @autobind
+    private onClick(evt:any) {
+        evt.stopPropagation();
+        this.open = !this.open;
+    }
 
     render() {
         return (
             <DefaultTooltip
-                trigger={["click"]}
+                visible={this.open}
                 placement={"bottomRight"}
                 destroyTooltipOnHide={true}
                 overlay={() => <AddChartTabs store={this.props.store}
@@ -281,10 +289,12 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                                              disableCustomTab={this.props.disableCustomTab}/>}
                 overlayClassName={this.props.addChartOverlayClassName}
             >
-                <button className='btn btn-primary btn-sm'
+                <button className={classNames('btn btn-primary btn-sm', {"active":this.open})}
                         style={{marginLeft: '10px'}}
                         data-event={serializeEvent({ category:"studyPage", action:"addChartMenuOpen", label:this.props.store.studyIds.join(",")})}
-                        data-test="add-charts-button">{this.props.buttonText}</button>
+                        data-test="add-charts-button"
+                        onClick={this.onClick}
+                >{this.props.buttonText}</button>
             </DefaultTooltip>
         )
     }

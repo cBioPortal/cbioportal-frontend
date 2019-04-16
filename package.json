@@ -233,6 +233,7 @@
     "underscore": "^1.8.3",
     "url": "^0.11.0",
     "url-loader": "^1.1.2",
+    "venn.js": "^0.2.20",
     "victory": "30.0.0",
     "webpack": "^3.10.0",
     "webpack-fail-plugin": "^1.0.5",
