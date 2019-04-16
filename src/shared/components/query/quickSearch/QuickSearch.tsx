@@ -226,7 +226,7 @@ export default class QuickSearch extends React.Component {
                 gene_list: newOption.hugoGeneSymbol,
                 cancer_study_list: studyList,
             };
-            route = "results/mutations";
+            route = "results/cancerTypesSummary";
             this.trackClick("gene", this.inputValue);
         } else if (newOption.type === OptionType.PATIENT) {
             parameters = {studyId: newOption.studyId, caseId: newOption.patientId};
