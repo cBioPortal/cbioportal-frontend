@@ -351,6 +351,12 @@ export const DUPLICATE_GROUP_NAME_MSG = "Another group already has this name.";
 export const OVERLAP_NOT_ENOUGH_GROUPS_MSG =
     "We can't show overlap for 1 group. Please select more groups from the 'Active Groups' section above.";
 
+export const CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG =
+    "We can't show clinical plots for 1 group. Please select more groups from the 'Active Groups' section above.";
+
+export const CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG =
+    "We can only show clinical plots when groups have overlapping samples. Please exclude them by changing dropdown option to 'Exclude overlapping samples'";
+
 export function getDefaultGroupName(
     filters:StudyViewFilter,
     entrezGeneIdToGene:{[entrez:number]:GeneIdentifier}
