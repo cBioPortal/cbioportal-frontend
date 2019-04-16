@@ -75,7 +75,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
                             className='borderedChart'
                             patientSurvivals = {this.overallPatientSurvivalData.result.patientSurvivals}
                             analysisGroups={analysisGroups}
-                            patientToAnalysisGroup={this.overallPatientSurvivalData.result.patientToAnalysisGroup}
+                            patientToAnalysisGroups={this.overallPatientSurvivalData.result.patientToAnalysisGroups}
                             title={this.overallSurvivalTitleText}
                             xAxisLabel="Months Survival"
                             yAxisLabel="Overall Survival"
@@ -103,7 +103,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
                             className='borderedChart'
                             patientSurvivals = {this.diseaseFreePatientSurvivalData.result.patientSurvivals}
                             analysisGroups={analysisGroups}
-                            patientToAnalysisGroup={this.diseaseFreePatientSurvivalData.result.patientToAnalysisGroup}
+                            patientToAnalysisGroups={this.diseaseFreePatientSurvivalData.result.patientToAnalysisGroups}
                             title={this.diseaseFreeSurvivalTitleText}
                             xAxisLabel="Months Disease/Progression-free"
                             yAxisLabel="Disease/Progression-free Survival"

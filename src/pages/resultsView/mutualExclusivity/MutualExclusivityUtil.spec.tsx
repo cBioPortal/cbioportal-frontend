@@ -395,8 +395,8 @@ describe("MutualExclusivityUtil", () => {
             assert.equal(cells.at(6).html(), "<td><span>&gt;3</span></td>");
             assert.equal(cells.at(7).html(), "<td><span>0.004</span></td>");
             assert.equal(cells.at(8).html(), "<td><b><span>0.024</span></b></td>");
-            assert.equal(cells.at(9).html().replace(/<!--[^>]*-->/g, ""), "<td><div class=\"styles-module__Tendency__2Y46X\">" + 
-                "Co-occurrence<span class=\"badge\" style=\"background-color: rgb(88, 172, 250);\">Significant</span></div></td>");
+            assert.equal(cells.at(9).html().replace(/<!--[^>]*-->/g, ""), "<td><div class=\"styles-module__Tendency__2Y46X styles-module__Significant__34YnP\">" +
+                "Co-occurrence</div></td>");
             assert.equal(cells.at(19).html().replace(/<!--[^>]*-->/g, ""), "<td><div class=\"styles-module__Tendency__2Y46X\">Co-occurrence</div></td>");
         });
     });

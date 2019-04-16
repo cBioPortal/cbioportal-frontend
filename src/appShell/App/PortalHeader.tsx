@@ -7,6 +7,7 @@ import {openSocialAuthWindow} from "../../shared/lib/openSocialAuthWindow";
 import {AppStore} from "../../AppStore";
 import {observer} from "mobx-react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
+import SocialAuthButton from "../../shared/components/SocialAuthButton";
 
 @observer
 export default class PortalHeader extends React.Component<{ appStore:AppStore }, {}> {
@@ -124,7 +125,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                         </Then>
                         <Else>
                             <If condition={AppConfig.serverConfig.authenticationMethod === "social_auth"}>
-                                <div className="identity"><button className="btn btn-default" onClick={()=>openSocialAuthWindow(this.props.appStore)}>Login</button></div>
+                                <SocialAuthButton appStore={this.props.appStore}/>
                             </If>
                         </Else>
                     </If>

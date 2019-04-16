@@ -33,6 +33,8 @@ import {bind} from "bind-decorator";
 import {updateResultsViewQuery} from "./ResultsViewQuery";
 import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
+import GroupComparisonStore from "../groupComparison/GroupComparisonStore";
+import GroupComparisonPage from "../groupComparison/GroupComparisonPage";
 import ErrorScreen from "appShell/App/ErrorScreen";
 
 function initStore() {
@@ -359,7 +361,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     </MSKTab>
                 }
             }
-
         ];
 
         let filteredTabs = tabMap.filter(this.evaluateTabInclusion).map((tab)=>tab.getTab());

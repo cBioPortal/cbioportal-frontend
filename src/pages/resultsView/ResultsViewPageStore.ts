@@ -111,7 +111,7 @@ import {
     groupDataByCase,
     initializeCustomDriverAnnotationSettings,
     isRNASeqProfile,
-    getSampleAlteredMap, makeEnrichmentDataPromise
+    getSampleAlteredMap, makeEnrichmentDataPromise, fetchPatients
 } from "./ResultsViewPageStoreUtils";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 import {
@@ -140,6 +140,12 @@ import {ResultsViewQuery} from "./ResultsViewQuery";
 import {annotateAlterationTypes} from "../../shared/lib/oql/annotateAlterationTypes";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {ErrorMessages} from "../../shared/enums/ErrorEnums";
+import {
+    pickCopyNumberEnrichmentProfiles,
+    pickMRNAEnrichmentProfiles,
+    pickMutationEnrichmentProfiles, pickProteinEnrichmentProfiles
+} from "./enrichments/EnrichmentsUtil";
+import { SURVIVAL_CHART_ATTRIBUTES } from "./survival/SurvivalChart";
 import sessionServiceClient from "../../shared/api/sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
 
@@ -1729,7 +1735,7 @@ export class ResultsViewPageStore {
         ],
         invoke:async()=>{
             const count =
-                await this.getClinicalDataCount("PATIENT", this.studies.result!, this.patients.result, ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"]);
+                await this.getClinicalDataCount("PATIENT", this.studies.result!, this.patients.result, SURVIVAL_CHART_ATTRIBUTES);
             return count > 0;
         }
     });
@@ -1739,7 +1745,7 @@ export class ResultsViewPageStore {
             this.studies,
             this.patients
         ],
-        invoke: () => this.getClinicalData("PATIENT", this.studies.result!, this.patients.result, ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"])
+        invoke: () => this.getClinicalData("PATIENT", this.studies.result!, this.patients.result, SURVIVAL_CHART_ATTRIBUTES)
     }, []);
 
     readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<{[key: string]: ClinicalData[]}>({
@@ -1877,22 +1883,7 @@ export class ResultsViewPageStore {
         await: ()=>[
             this.samples
         ],
-        invoke: ()=>{
-            let patientKeyToPatientIdentifier:{[uniquePatientKey:string]:PatientIdentifier} = {};
-            for (const sample of this.samples.result) {
-                patientKeyToPatientIdentifier[sample.uniquePatientKey] = {
-                    patientId: sample.patientId,
-                    studyId: sample.studyId
-                };
-            }
-            const patientFilter = {
-                uniquePatientKeys: _.uniq(this.samples.result.map((sample:Sample)=>sample.uniquePatientKey))
-            } as PatientFilter;
-
-            return client.fetchPatientsUsingPOST({
-                patientFilter
-            });
-        },
+        invoke: ()=>fetchPatients(this.samples.result!),
         default: []
     });
 
@@ -2695,10 +2686,7 @@ export class ResultsViewPageStore {
         await: () => [
             this.molecularProfilesInStudies,
         ],
-        invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) =>
-                profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED);
-        },
+        invoke: async () => pickMutationEnrichmentProfiles(this.molecularProfilesInStudies.result!)
     });
 
     readonly mutationEnrichmentData = makeEnrichmentDataPromise({
@@ -2728,10 +2716,7 @@ export class ResultsViewPageStore {
         await: () => [
             this.molecularProfilesInStudies,
         ],
-        invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) =>
-                profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === "DISCRETE");
-        },
+        invoke: async () => pickCopyNumberEnrichmentProfiles(this.molecularProfilesInStudies.result!)
     });
 
     readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
@@ -2777,12 +2762,7 @@ export class ResultsViewPageStore {
 
     readonly mRNAEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await:()=>[this.molecularProfilesInStudies],
-        invoke:()=>{
-            const mrnaProfiles = this.molecularProfilesInStudies.result!.filter(p=>{
-                return p.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION
-            });
-            return Promise.resolve(filterAndSortProfiles(mrnaProfiles));
-        },
+        invoke:()=>Promise.resolve(pickMRNAEnrichmentProfiles(this.molecularProfilesInStudies.result!))
     });
 
     readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
@@ -2806,12 +2786,7 @@ export class ResultsViewPageStore {
 
     readonly proteinEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await:()=>[this.molecularProfilesInStudies],
-        invoke:()=>{
-            const protProfiles = this.molecularProfilesInStudies.result!.filter(p=>{
-                return p.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL;
-            });
-            return Promise.resolve(filterAndSortProfiles(protProfiles));
-        },
+        invoke:()=>Promise.resolve(pickProteinEnrichmentProfiles(this.molecularProfilesInStudies.result!))
     });
 
     readonly proteinEnrichmentData = makeEnrichmentDataPromise({

@@ -131,10 +131,12 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
     renderAttributeChart = (chartMeta: ChartMeta) => {
         const props:Partial<IChartContainerProps> = {
             chartMeta: chartMeta,
+            openComparisonPage: this.store.openComparisonPage,
             title: chartMeta.displayName,
             filters: [],
             onDeleteChart: this.handlers.onDeleteChart,
             isNewlyAdded: this.handlers.isNewlyAdded,
+            studyViewFilters: this.store.filters,
             analysisGroupsPossible:this.store.analysisGroupsPossible,
             setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grps:ReadonlyArray<AnalysisGroup>)=>{
                 this.store.updateAnalysisGroupsSettings(attribute, grps);

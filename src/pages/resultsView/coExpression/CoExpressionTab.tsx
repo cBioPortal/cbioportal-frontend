@@ -23,7 +23,7 @@ export interface ICoExpressionTabProps {
     store:ResultsViewPageStore;
 }
 
-export class CoExpressionCache extends MobxPromiseCache<{profileX: MolecularProfile, 
+export class CoExpressionCache extends MobxPromiseCache<{profileX: MolecularProfile,
     profileY: MolecularProfile, geneticEntityId: string,
     geneticEntityType: GeneticEntityType, allData:boolean}, CoExpression[]> {}
 
@@ -168,16 +168,16 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         ],
         invoke: () => {
             return Promise.resolve(getProfileOptions(
-                this.props.store.coexpressionTabMolecularProfiles.result!, 
+                this.props.store.coexpressionTabMolecularProfiles.result!,
                 this.props.store.molecularProfileIdToProfiledSampleCount.result!
                 ));
         }
     })
 
-    /** 
+    /**
      * We need a different "dataQueryFilter" from the rest of the functions in ResultsViewPageStore,
      * so this function is building a new object based on the dataQueryFilter obtained from
-     * this.props.store.studyToDataQueryFilter.result. 
+     * this.props.store.studyToDataQueryFilter.result.
      */
     private createDataQueryFilterForCoExpression(studyToDataQueryFilter: IDataQueryFilter, geneticEntityId: string, geneticEntityType: string) {
         let dataQueryFilter: {'entrezGeneId'?: number; 'genesetId'?: string; 'sampleIds'?: string[]; 'sampleListId'?: string}|undefined = undefined;
@@ -226,7 +226,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             this.isSelectedGeneticEntityAGeneSet.isComplete) {
             return (
                 <div>
-                    <div 
+                    <div
                         style= {{
                              float: "left",
                              width: "100%",
@@ -310,7 +310,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                         );
                     }
                 }
-                
+
             }
 
             return (
