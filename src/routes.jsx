@@ -18,6 +18,7 @@ import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 import PatientViewPage from 'bundle-loader?lazy!babel-loader!./pages/patientView/PatientViewPage';
 import ResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ResultsViewPage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
+import GroupComparisonLoading from "./pages/groupComparison/GroupComparisonLoading";
 import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/staticPages/datasetView/DatasetPage';
 import Homepage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
@@ -31,6 +32,7 @@ import AboutUs from 'bundle-loader?lazy!babel-loader!./pages/staticPages/aboutus
 import News from 'bundle-loader?lazy!babel-loader!./pages/staticPages/news/News';
 import FAQ from 'bundle-loader?lazy!babel-loader!./pages/staticPages/faq/FAQ';
 import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
+import GroupComparisonPage from "bundle-loader?lazy!babel-loader!./pages/groupComparison/GroupComparisonPage";
 
 import AppConfig from "appConfig";
 
@@ -93,11 +95,14 @@ export const makeRoutes = (routing) => {
                 <IndexRoute onEnter={()=>{$(document).scrollTop(0);}} getComponent={lazyLoadComponent(Homepage,preloadImportantComponents)}/>
                 <Route path="/restore" onEnter={()=>{$(document).scrollTop(0)}} component={restoreRoute}/>
 
+                <Route path="/loading/comparison" onEnter={()=>{$(document).scrollTop(0)}} component={GroupComparisonLoading} />
                 <Route path="/results/legacy_submission" onEnter={handleLegacySubmission} component={getBlankPage()} />
 
                 <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
                 <Route path="/patient(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
                 <Route path="/study" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
+                <Route path="/comparison(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(GroupComparisonPage)}/>
+                <Route path="/comparison(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(GroupComparisonPage)}/>
 
                 <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
                 <Route path="/oncoprinter" getComponent={lazyLoadComponent(OncoprinterTool)} />

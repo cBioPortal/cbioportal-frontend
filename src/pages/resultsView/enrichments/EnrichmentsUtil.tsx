@@ -4,15 +4,18 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import { tsvFormat } from 'd3-dsv';
 import { BoxPlotModel, calculateBoxPlotModel } from 'shared/lib/boxPlotUtils';
-import { NumericGeneMolecularData } from 'shared/api/generated/CBioPortalAPI';
+import {MolecularProfile, NumericGeneMolecularData} from 'shared/api/generated/CBioPortalAPI';
 import seedrandom from 'seedrandom';
 import { roundLogRatio } from 'shared/lib/FormatUtils';
+import * as _ from "lodash";
+import {AlterationTypeConstants} from "../ResultsViewPageStore";
+import {filterAndSortProfiles} from "../coExpression/CoExpressionTabUtils";
 import {IMiniFrequencyScatterChartData} from "./MiniFrequencyScatterChart";
 
 const LOG_VALUE = "LOG-VALUE";
 const LOG2_VALUE = "LOG2-VALUE";
 
-export type AlterationEnrichmentWithQ = AlterationEnrichment & { qValue:number };
+export type AlterationEnrichmentWithQ = AlterationEnrichment & { qValue:number, value?:number /* used for copy number in group comparison */ };
 export type ExpressionEnrichmentWithQ = ExpressionEnrichment & { qValue:number };
 
 export function calculateAlterationTendency(logOddsRatio: number): string {
@@ -23,16 +26,31 @@ export function calculateExpressionTendency(logOddsRatio: number): string {
     return logOddsRatio > 0 ? "Over-expressed" : "Under-expressed";
 }
 
+export function calculateGenericTendency(
+    logOddsRatio:number, alteredGroupName:string, unalteredGroupName:string
+) {
+    return logOddsRatio > 0 ? alteredGroupName : unalteredGroupName;
+}
+
 export function formatPercentage(count: number, percentage: number): string {
 
     return count + " (" + percentage.toFixed(2) + "%)";
+}
+
+function volcanoPlotYCoord(pValue:number) {
+    if (pValue === 0 || Math.log10(pValue) < -10) {
+        return 10;
+    } else {
+        return -Math.log10(pValue);
+    }
 }
 
 export function getAlterationScatterData(alterationEnrichments: AlterationEnrichmentRow[], queryGenes: string[]): any[] {
 
     return alterationEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((alterationEnrichment) => {
         return {
-            x: roundLogRatio(Number(alterationEnrichment.logRatio), 10), y: -Math.log10(alterationEnrichment.pValue),
+            x: roundLogRatio(Number(alterationEnrichment.logRatio), 10),
+            y: volcanoPlotYCoord(alterationEnrichment.pValue),
             hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
             pValue: alterationEnrichment.pValue,
             qValue: alterationEnrichment.qValue,
@@ -60,7 +78,7 @@ export function getExpressionScatterData(expressionEnrichments: ExpressionEnrich
     return expressionEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((expressionEnrichment) => {
         return {
             x: expressionEnrichment.logRatio,
-            y: -Math.log10(expressionEnrichment.pValue), 
+            y: volcanoPlotYCoord(expressionEnrichment.pValue),
             hugoGeneSymbol: expressionEnrichment.hugoGeneSymbol,
             entrezGeneId: expressionEnrichment.entrezGeneId,
             pValue: expressionEnrichment.pValue,
@@ -86,7 +104,8 @@ export function getAlterationRowData(alterationEnrichments: AlterationEnrichment
             unalteredPercentage: alterationEnrichment.set2CountSummary.alteredCount / alterationEnrichment.set2CountSummary.profiledCount * 100,
             logRatio: Number(alterationEnrichment.logRatio), 
             pValue: alterationEnrichment.pValue,
-            qValue: alterationEnrichment.qValue
+            qValue: alterationEnrichment.qValue,
+            value: alterationEnrichment.value
         };
     });
 }
@@ -242,4 +261,28 @@ export function getBoxPlotScatterData(molecularData: NumericGeneMolecularData[],
         }
     }
     return scatterData;
+}
+
+export function pickMutationEnrichmentProfiles(profiles:MolecularProfile[]) {
+    return _.filter(profiles, (profile: MolecularProfile) =>
+        profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED);
+}
+
+export function pickCopyNumberEnrichmentProfiles(profiles:MolecularProfile[]) {
+    return _.filter(profiles, (profile: MolecularProfile) =>
+        profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === "DISCRETE");
+}
+
+export function pickMRNAEnrichmentProfiles(profiles:MolecularProfile[]) {
+    const mrnaProfiles = profiles.filter(p=>{
+        return p.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION
+    });
+    return filterAndSortProfiles(mrnaProfiles);
+}
+
+export function pickProteinEnrichmentProfiles(profiles:MolecularProfile[]) {
+    const protProfiles = profiles.filter(p=>{
+        return p.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL;
+    });
+    return filterAndSortProfiles(protProfiles);
 }

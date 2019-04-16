@@ -34,6 +34,7 @@ export interface IChartHeaderProps {
     changeChartType  : (chartType: ChartType) => void;
     download?        : IChartContainerDownloadProps[];
     setAnalysisGroups  : () => void;
+    openComparisonPage : () => void;
 }
 
 export interface ChartControls {
@@ -41,6 +42,7 @@ export interface ChartControls {
     showTableIcon?      : boolean;
     showPieIcon?        : boolean;
     showAnalysisGroupsIcon?   : boolean;
+    showComparisonPageIcon?   : boolean;
     showLogScaleToggle? : boolean;
     logScaleChecked?    : boolean;
 }
@@ -197,6 +199,17 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 <i className={classnames("fa", "fa-pie-chart", styles.item, styles.clickable)}
                                    aria-hidden="true"
                                    onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}></i>
+                            </DefaultTooltip>
+                        </If>
+                        <If condition={this.props.chartControls && this.props.chartControls.showComparisonPageIcon}>
+                            <DefaultTooltip
+                                placement={tooltipPosition}
+                                align={tooltipAlign}
+                                overlay={<span>Compare samples in these groups.</span>}
+                            >
+                                <i className={classnames("fa", "fa-balance-scale", styles.item, styles.clickable)}
+                                   aria-hidden="true"
+                                   onClick={this.props.openComparisonPage}></i>
                             </DefaultTooltip>
                         </If>
                         <If condition={this.props.chartControls && !!this.props.chartControls.showAnalysisGroupsIcon}>

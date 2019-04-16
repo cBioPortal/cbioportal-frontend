@@ -37,15 +37,15 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                                                     selectedValue={this.props.store.selectedEnrichmentCopyNumberProfile.molecularProfileId}
                                                     molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}/>
                         <AlterationEnrichmentContainer data={this.props.store.copyNumberHomdelEnrichmentData.result!}
-                                                       totalAlteredCount={this.props.store.alteredSampleKeys.result!.length}
-                                                       totalUnalteredCount={this.props.store.unalteredSampleKeys.result!.length}
+                                                       totalGroup1Count={this.props.store.alteredSampleKeys.result!.length}
+                                                       totalGroup2Count={this.props.store.unalteredSampleKeys.result!.length}
                                                        selectedProfile={this.props.store.selectedEnrichmentCopyNumberProfile}
                                                        headerName={"Deep Deletion - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
                                                        store={this.props.store} alterationType="a deep deletion"/>
                         <hr />
                         <AlterationEnrichmentContainer data={this.props.store.copyNumberAmpEnrichmentData.result!}
-                                                       totalAlteredCount={this.props.store.alteredSampleKeys.result!.length}
-                                                       totalUnalteredCount={this.props.store.unalteredSampleKeys.result!.length}
+                                                       totalGroup1Count={this.props.store.alteredSampleKeys.result!.length}
+                                                       totalGroup2Count={this.props.store.unalteredSampleKeys.result!.length}
                                                        selectedProfile={this.props.store.selectedEnrichmentCopyNumberProfile}
                                                        headerName={"Amplification - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
                                                        store={this.props.store} alterationType="an amplification"/>

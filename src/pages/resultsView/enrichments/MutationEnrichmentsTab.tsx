@@ -34,11 +34,11 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
                         selectedValue={this.props.store.selectedEnrichmentMutationProfile.molecularProfileId}
                         molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}/>
                     <AlterationEnrichmentContainer data={this.props.store.mutationEnrichmentData.result!}
-                        totalAlteredCount={this.props.store.alteredSampleKeys.result!.length}
-                        totalUnalteredCount={this.props.store.unalteredSampleKeys.result!.length}
-                        selectedProfile={this.props.store.selectedEnrichmentMutationProfile}
-                        headerName={this.props.store.selectedEnrichmentMutationProfile.name}
-                        store={this.props.store} alterationType="a mutation"/>
+                                                   totalGroup1Count={this.props.store.alteredSampleKeys.result!.length}
+                                                   totalGroup2Count={this.props.store.unalteredSampleKeys.result!.length}
+                                                   selectedProfile={this.props.store.selectedEnrichmentMutationProfile}
+                                                   headerName={this.props.store.selectedEnrichmentMutationProfile.name}
+                                                   store={this.props.store} alterationType="a mutation"/>
                 </div>
             );
         }
