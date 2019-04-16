@@ -177,8 +177,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     </MSKTab>
                                     <MSKTab key={2} id={StudyViewPageTabKeyEnum.HEATMAPS} linkText={StudyViewPageTabDescriptions.HEATMAPS}
                                             hide={this.store.MDACCHeatmapStudyMeta.result.length === 0}>
-                                        <IFrameLoader height={700}
-                                                      url={`//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
+                                        <IFrameLoader className="mdacc-heatmap-iframe"
+                                                      url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
                                     </MSKTab>
                                     <MSKTab
                                         key={3}
