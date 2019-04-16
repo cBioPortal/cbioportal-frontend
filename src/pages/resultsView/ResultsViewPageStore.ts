@@ -2160,6 +2160,10 @@ export class ResultsViewPageStore {
         return this.genes.isError;
     }
 
+    @computed get isQueryInvalid() {
+        return this.hugoGeneSymbols.length > AppConfig.serverConfig.query_gene_limit;
+    }
+
     readonly genesets = remoteData<Geneset[]>({
         invoke: () => {
             if (this.rvQuery.genesetIds && this.rvQuery.genesetIds.length > 0) {
