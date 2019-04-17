@@ -33,7 +33,6 @@ export interface IVennSimpleProps {
     selection:{
         regions:number[][]; // we do it like this so that updating it doesn't update all props
     };
-    emptyMaskName:string;
     caseType:"sample"|"patient"
 }
 
@@ -152,7 +151,7 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
 
         // compute the clip paths corresponding to each group circle
         const clipPaths = this.props.groups.map((group, index)=>(
-            <clipPath id={`circle_${index}`}>
+            <clipPath id={`${this.props.uid}_circle_${index}`}>
                 <circle
                     cx={this.circleCenters[group.uid].x}
                     cy={this.circleCenters[group.uid].y}
@@ -194,13 +193,12 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
                         onMouseOut={region.numCases > 0 ? regionMouseOut : undefined}
                         onMouseMove={this.regionHoverHandlers({combination:comb, numCases: region.numCases })}
                         onClick={region.numCases > 0 ? this.regionClickHandlers({ combination: comb }) : undefined}
-                        mask={region.numCases === 0 ? `url(#emptyMask_${this.props.uid})` : undefined} // mask with diagonal lines if empty
                     />
                 </g>
             );
             for (const index of comb) {
                 hoverArea = (
-                    <g clipPath={`url(#circle_${index})`}>
+                    <g clipPath={`url(#${this.props.uid}_circle_${index})`}>
                         {hoverArea}
                     </g>
                 );
@@ -313,15 +311,6 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
                     onMouseMove={this.resetTooltip}
                     onClick={this.resetSelection}
                 />
-                <mask id={`emptyMask_${this.props.uid}`}>
-                    <rect
-                        x="0"
-                        y="0"
-                        width={this.props.width}
-                        height={this.props.height}
-                        fill={`url(#${this.props.emptyMaskName})`}
-                    />
-                </mask>
                 {this.displayElements}
                 {!!this.tooltipModel && (
                     (ReactDOM as any).createPortal(
