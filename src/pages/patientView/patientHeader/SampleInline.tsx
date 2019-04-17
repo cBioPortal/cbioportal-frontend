@@ -1,10 +1,10 @@
-import * as React from "react";
-import {If, Else, Then} from 'react-if';
-import {SampleLabelHTML} from "shared/components/sampleLabel/SampleLabel";
-import {ClinicalDataBySampleId} from "shared/api/api-types-extended";
-import ClinicalInformationPatientTable from "../clinicalInformation/ClinicalInformationPatientTable";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
-import {placeArrowBottomLeft} from "shared/components/defaultTooltip/DefaultTooltip";
+import * as React from 'react';
+import { If, Else, Then } from 'react-if';
+import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
+import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
+import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import { placeArrowBottomLeft } from 'shared/components/defaultTooltip/DefaultTooltip';
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
@@ -13,49 +13,45 @@ interface ISampleInlineProps {
     fillOpacity: number;
     tooltipEnabled?: boolean;
     extraTooltipText?: string;
-    additionalContent?: JSX.Element|null;
+    additionalContent?: JSX.Element | null;
 }
 
-export default class SampleInline extends React.Component<ISampleInlineProps, {}> {
-
+export default class SampleInline extends React.Component<
+    ISampleInlineProps,
+    {}
+> {
     public static defaultProps = {
-        tooltipEnabled: true
+        tooltipEnabled: true,
     };
 
     public render() {
         return (
             <If condition={this.props.tooltipEnabled === true}>
-                <Then>
-                    {this.contentWithTooltip()}
-                </Then>
-                <Else>
-                    {this.mainContent()}
-                </Else>
+                <Then>{this.contentWithTooltip()}</Then>
+                <Else>{this.mainContent()}</Else>
             </If>
         );
     }
 
-    public sampleLabelHTML()
-    {
-        const {sampleNumber, sampleColor, fillOpacity} = this.props;
+    public sampleLabelHTML() {
+        const { sampleNumber, sampleColor, fillOpacity } = this.props;
 
         return (
             <SampleLabelHTML
                 fillOpacity={fillOpacity}
                 color={sampleColor}
-                label={(sampleNumber).toString()}
+                label={sampleNumber.toString()}
             />
         );
     }
 
-    public tooltipContent()
-    {
-        const {sample, extraTooltipText} = this.props;
+    public tooltipContent() {
+        const { sample, extraTooltipText } = this.props;
 
         return (
-            <div style={{ maxHeight:400, maxWidth:600, overflow:'auto' }}>
+            <div style={{ maxHeight: 400, maxWidth: 600, overflow: 'auto' }}>
                 <h5 style={{ marginBottom: 1 }}>
-                    <svg height="12" width="12" style={{ marginRight: 5}}>
+                    <svg height="12" width="12" style={{ marginRight: 5 }}>
                         {this.sampleLabelHTML()}
                     </svg>
                     {sample.id}
@@ -71,9 +67,8 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
         );
     }
 
-    public mainContent()
-    {
-        const {additionalContent} = this.props;
+    public mainContent() {
+        const { additionalContent } = this.props;
 
         let content = (
             <svg height="12" width="12">
@@ -93,11 +88,10 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
         return content;
     }
 
-    public contentWithTooltip()
-    {
+    public contentWithTooltip() {
         return (
             <DefaultTooltip
-                placement='bottomLeft'
+                placement="bottomLeft"
                 trigger={['hover', 'focus']}
                 overlay={this.tooltipContent()}
                 arrowContent={<div className="rc-tooltip-arrow-inner" />}

@@ -1,15 +1,11 @@
-export function longestCommonStartingSubstring(str1:string, str2:string) {
+export function longestCommonStartingSubstring(str1: string, str2: string) {
     // from https://github.com/cBioPortal/mutation-mapper/blob/master/src/js/util/cbio-util.js
     let i = 0;
 
-    while (i < str1.length && i < str2.length)
-    {
-        if (str1[i] === str2[i])
-        {
+    while (i < str1.length && i < str2.length) {
+        if (str1[i] === str2[i]) {
             i++;
-        }
-        else
-        {
+        } else {
             break;
         }
     }
@@ -17,22 +13,29 @@ export function longestCommonStartingSubstring(str1:string, str2:string) {
     return str1.substring(0, i);
 }
 
-export function stringListToSet(alos:ReadonlyArray<string>):{[s:string]:boolean} {
-    return stringListToMap(alos, ()=>true);
+export function stringListToSet(
+    alos: ReadonlyArray<string>
+): { [s: string]: boolean } {
+    return stringListToMap(alos, () => true);
 }
 
-export function stringListToIndexSet(alos:ReadonlyArray<string>):{[s:string]:number} {
-    return stringListToMap(alos, (s:string, i:number)=>i);
+export function stringListToIndexSet(
+    alos: ReadonlyArray<string>
+): { [s: string]: number } {
+    return stringListToMap(alos, (s: string, i: number) => i);
 }
 
 export function stringListToMap<T>(
-    alos:ReadonlyArray<string>,
-    mapFn:(s:string, index:number, array:ReadonlyArray<string>)=>T
-):{[s:string]:T} {
-    return alos.reduce((map:{[s:string]:T}, next:string, index:number)=>{
-        map[next] = mapFn(next, index, alos);
-        return map;
-    }, {});
+    alos: ReadonlyArray<string>,
+    mapFn: (s: string, index: number, array: ReadonlyArray<string>) => T
+): { [s: string]: T } {
+    return alos.reduce(
+        (map: { [s: string]: T }, next: string, index: number) => {
+            map[next] = mapFn(next, index, alos);
+            return map;
+        },
+        {}
+    );
 }
 
 /**
@@ -40,8 +43,7 @@ export function stringListToMap<T>(
  *
  * @param {string} str  input string wrapped with single or double quotes
  */
-export function unquote(str: string): string
-{
+export function unquote(str: string): string {
     return str.replace(/(^")|(^')|("$)|('$)/g, '');
 }
 
@@ -50,7 +52,6 @@ export function unquote(str: string): string
  *
  * @param {string} str  input string with "\\t" and "\\n" substrings
  */
-export function unescapeTabDelimited(str: string): string
-{
-    return str.replace(/\\t/g, "\t").replace(/\\n/g, "\n");
+export function unescapeTabDelimited(str: string): string {
+    return str.replace(/\\t/g, '\t').replace(/\\n/g, '\n');
 }

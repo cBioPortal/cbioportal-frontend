@@ -32,7 +32,8 @@
     "lint": "tslint 'src/**/*.ts' 'src/**/*.tsx' --exclude 'src/shared/api/generated/**'",
     "lint-fix": "tslint --fix 'src/**/*.ts' 'src/**/*.tsx' --exclude 'src/shared/api/generated/**'",
     "eslint": "eslint src/** --ext .js --ext .jsx --cache",
-    "syncmock": "node src/test/fetchMockData.js --diff"
+    "syncmock": "node src/test/fetchMockData.js --diff",
+    "prettier": "prettier --config ./.prettierrc.js --write './src/**/*.ts*'"
   },
   "engines": {
     "node": "8.12.0",

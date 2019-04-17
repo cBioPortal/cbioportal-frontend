@@ -1,14 +1,27 @@
-import * as React from "react";
-import {Observer, observer} from "mobx-react";
-import {action, computed, IObservableObject, IReactionDisposer, observable, ObservableMap, reaction} from "mobx";
-import {remoteData} from "../../api/remoteData";
-import Oncoprint, {GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
+import * as React from 'react';
+import { Observer, observer } from 'mobx-react';
+import {
+    action,
+    computed,
+    IObservableObject,
+    IReactionDisposer,
+    observable,
+    ObservableMap,
+    reaction,
+} from 'mobx';
+import { remoteData } from '../../api/remoteData';
+import Oncoprint, { GENETIC_TRACK_GROUP_INDEX } from './Oncoprint';
 import OncoprintControls, {
     IOncoprintControlsHandlers,
-    IOncoprintControlsState
-} from "shared/components/oncoprint/controls/OncoprintControls";
-import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
-import {ClinicalAttribute, Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
+    IOncoprintControlsState,
+} from 'shared/components/oncoprint/controls/OncoprintControls';
+import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
+import {
+    ClinicalAttribute,
+    Gene,
+    MolecularProfile,
+    Sample,
+} from '../../api/generated/CBioPortalAPI';
 import {
     getAlteredUids,
     getUnalteredUids,
@@ -16,37 +29,44 @@ import {
     makeGenesetHeatmapExpansionsMobxPromise,
     makeGenesetHeatmapTracksMobxPromise,
     makeGeneticTracksMobxPromise,
-    makeHeatmapTracksMobxPromise
-} from "./OncoprintUtils";
-import _ from "lodash";
-import onMobxPromise from "shared/lib/onMobxPromise";
-import AppConfig from "appConfig";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import OncoprintJS, {TrackId} from "oncoprintjs";
+    makeHeatmapTracksMobxPromise,
+} from './OncoprintUtils';
+import _ from 'lodash';
+import onMobxPromise from 'shared/lib/onMobxPromise';
+import AppConfig from 'appConfig';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import OncoprintJS, { TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
-import svgToPdfDownload from "shared/lib/svgToPdfDownload";
-import tabularDownload from "./tabularDownload";
+import svgToPdfDownload from 'shared/lib/svgToPdfDownload';
+import tabularDownload from './tabularDownload';
 import classNames from 'classnames';
-import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
-import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/ClinicalDataCache";
-import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
-import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
-import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
-import autobind from "autobind-decorator";
-import getBrowserWindow from "../../lib/getBrowserWindow";
-import MobxPromise from "mobxpromise";
+import FadeInteraction from 'shared/components/fadeInteraction/FadeInteraction';
+import {
+    clinicalAttributeIsLocallyComputed,
+    SpecialAttribute,
+} from '../../cache/ClinicalDataCache';
+import OqlStatusBanner from '../oqlStatusBanner/OqlStatusBanner';
+import { getAnnotatingProgressMessage } from './ResultsViewOncoprintUtils';
+import ProgressIndicator, {
+    IProgressIndicatorItem,
+} from '../progressIndicator/ProgressIndicator';
+import autobind from 'autobind-decorator';
+import getBrowserWindow from '../../lib/getBrowserWindow';
+import MobxPromise from 'mobxpromise';
 
 interface IResultsViewOncoprintProps {
     divId: string;
-    store:ResultsViewPageStore;
-    routing:any;
-    addOnBecomeVisibleListener?:(callback:()=>void)=>void;
+    store: ResultsViewPageStore;
+    routing: any;
+    addOnBecomeVisibleListener?: (callback: () => void) => void;
 }
 
-export type SortMode = (
-    {type:"data"|"alphabetical"|"caseList", clusteredHeatmapProfile?:undefined} |
-    {type:"heatmap", clusteredHeatmapProfile:string}
-);
+export type SortMode =
+    | {
+          type: 'data' | 'alphabetical' | 'caseList';
+          clusteredHeatmapProfile?: undefined;
+      }
+    | { type: 'heatmap'; clusteredHeatmapProfile: string };
 
 export interface IGenesetExpansionRecord {
     entrezGeneId: number;
@@ -55,139 +75,191 @@ export interface IGenesetExpansionRecord {
     correlationValue: number;
 }
 
-export const SAMPLE_MODE_URL_PARAM = "show_samples";
-export const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
-export const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
+export const SAMPLE_MODE_URL_PARAM = 'show_samples';
+export const CLINICAL_TRACKS_URL_PARAM = 'clinicallist';
+export const HEATMAP_TRACKS_URL_PARAM = 'heatmap_track_groups';
 
-const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
+const CLINICAL_TRACK_KEY_PREFIX = 'CLINICALTRACK_';
 
 type HeatmapTrackGroupRecord = {
-    trackGroupIndex:number,
-    genes:ObservableMap<boolean>,
-    molecularProfileId:string
+    trackGroupIndex: number;
+    genes: ObservableMap<boolean>;
+    molecularProfileId: string;
 };
 
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
 @observer
-export default class ResultsViewOncoprint extends React.Component<IResultsViewOncoprintProps, {}> {
-    @observable columnMode:"sample"|"patient" = "patient";
-    @observable sortMode:SortMode = {type:"data"};
+export default class ResultsViewOncoprint extends React.Component<
+    IResultsViewOncoprintProps,
+    {}
+> {
+    @observable columnMode: 'sample' | 'patient' = 'patient';
+    @observable sortMode: SortMode = { type: 'data' };
 
-    @observable distinguishGermlineMutations:boolean = true;
-    @observable hideGermlineMutations:boolean = false;
-    @observable distinguishMutationType:boolean = true;
-    @observable sortByMutationType:boolean = true;
-    @observable sortByDrivers:boolean = true;
+    @observable distinguishGermlineMutations: boolean = true;
+    @observable hideGermlineMutations: boolean = false;
+    @observable distinguishMutationType: boolean = true;
+    @observable sortByMutationType: boolean = true;
+    @observable sortByDrivers: boolean = true;
 
-    @observable showUnalteredColumns:boolean = true;
-    @observable showWhitespaceBetweenColumns:boolean = true;
-    @observable showClinicalTrackLegends:boolean = true;
+    @observable showUnalteredColumns: boolean = true;
+    @observable showWhitespaceBetweenColumns: boolean = true;
+    @observable showClinicalTrackLegends: boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
     @observable showOqlInLabels = false;
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
-        return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
+        return (
+            this.showClinicalTrackLegends &&
+            this._onlyShowClinicalLegendForAlteredCases
+        );
     }
 
-    @observable showMinimap:boolean = false;
+    @observable showMinimap: boolean = false;
 
-    @observable selectedHeatmapProfile = "";
-    @observable heatmapGeneInputValue = "";
+    @observable selectedHeatmapProfile = '';
+    @observable heatmapGeneInputValue = '';
 
-    @observable horzZoom:number = 0.5;
+    @observable horzZoom: number = 0.5;
 
-    @observable mouseInsideBounds:boolean = false;
+    @observable mouseInsideBounds: boolean = false;
 
     @observable renderingComplete = false;
 
-    private heatmapGeneInputValueUpdater:IReactionDisposer;
+    private heatmapGeneInputValueUpdater: IReactionDisposer;
 
     public selectedClinicalAttributeIds = observable.shallowMap<boolean>();
     public expansionsByGeneticTrackKey = observable.map<number[]>();
-    public expansionsByGenesetHeatmapTrackKey =
-        observable.map<IGenesetExpansionRecord[]>();
-    public molecularProfileIdToHeatmapTracks =
-        observable.map<HeatmapTrackGroupRecord>();
+    public expansionsByGenesetHeatmapTrackKey = observable.map<
+        IGenesetExpansionRecord[]
+    >();
+    public molecularProfileIdToHeatmapTracks = observable.map<
+        HeatmapTrackGroupRecord
+    >();
 
-    public controlsHandlers:IOncoprintControlsHandlers;
-    private controlsState:IOncoprintControlsState & IObservableObject;
+    public controlsHandlers: IOncoprintControlsHandlers;
+    private controlsState: IOncoprintControlsState & IObservableObject;
 
-    @observable.ref private oncoprint:OncoprintJS<any>;
+    @observable.ref private oncoprint: OncoprintJS<any>;
 
-    private urlParamsReaction:IReactionDisposer;
+    private urlParamsReaction: IReactionDisposer;
 
-    constructor(props:IResultsViewOncoprintProps) {
+    constructor(props: IResultsViewOncoprintProps) {
         super(props);
 
         this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
-        this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
+        this.initFromUrlParams(
+            getBrowserWindow().globalStores.routing.location.query
+        );
 
-        onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
+        onMobxPromise(props.store.studyIds, (studyIds: string[]) => {
             if (studyIds.length > 1) {
-                this.selectedClinicalAttributeIds.set(SpecialAttribute.StudyOfOrigin, true);
+                this.selectedClinicalAttributeIds.set(
+                    SpecialAttribute.StudyOfOrigin,
+                    true
+                );
             }
         });
-        onMobxPromise([props.store.samples, props.store.patients], (samples:any[], patients:any[])=>{
-            if (samples.length !== patients.length) {
-                this.selectedClinicalAttributeIds.set(SpecialAttribute.NumSamplesPerPatient, true);
+        onMobxPromise(
+            [props.store.samples, props.store.patients],
+            (samples: any[], patients: any[]) => {
+                if (samples.length !== patients.length) {
+                    this.selectedClinicalAttributeIds.set(
+                        SpecialAttribute.NumSamplesPerPatient,
+                        true
+                    );
+                }
             }
-        })
+        );
 
-        onMobxPromise(props.store.clinicalAttributes_profiledIn, (result:any[])=>{
-            for (const attr of result) {
-                this.selectedClinicalAttributeIds.set(attr.clinicalAttributeId, true);
+        onMobxPromise(
+            props.store.clinicalAttributes_profiledIn,
+            (result: any[]) => {
+                for (const attr of result) {
+                    this.selectedClinicalAttributeIds.set(
+                        attr.clinicalAttributeId,
+                        true
+                    );
+                }
             }
-        });
-        
+        );
+
         const self = this;
 
-        this.onChangeSelectedClinicalTracks = this.onChangeSelectedClinicalTracks.bind(this);
+        this.onChangeSelectedClinicalTracks = this.onChangeSelectedClinicalTracks.bind(
+            this
+        );
         this.onDeleteClinicalTrack = this.onDeleteClinicalTrack.bind(this);
         this.onMinimapClose = this.onMinimapClose.bind(this);
         this.oncoprintRef = this.oncoprintRef.bind(this);
         this.toggleColumnMode = this.toggleColumnMode.bind(this);
-        this.onTrackSortDirectionChange = this.onTrackSortDirectionChange.bind(this);
+        this.onTrackSortDirectionChange = this.onTrackSortDirectionChange.bind(
+            this
+        );
         this.onSuppressRendering = this.onSuppressRendering.bind(this);
         this.onReleaseRendering = this.onReleaseRendering.bind(this);
 
-        onMobxPromise(this.props.store.heatmapMolecularProfiles, (profiles:MolecularProfile[])=>{
-            // select first initially
-            if (profiles.length) {
-                this.selectedHeatmapProfile = profiles[0].molecularProfileId;
+        onMobxPromise(
+            this.props.store.heatmapMolecularProfiles,
+            (profiles: MolecularProfile[]) => {
+                // select first initially
+                if (profiles.length) {
+                    this.selectedHeatmapProfile =
+                        profiles[0].molecularProfileId;
+                }
             }
-        });
+        );
 
-        this.heatmapGeneInputValueUpdater = onMobxPromise(this.props.store.genes, (genes:Gene[])=>{
-            this.heatmapGeneInputValue = genes.map(g=>g.hugoGeneSymbol).join(" ");
-        }, Number.POSITIVE_INFINITY);
+        this.heatmapGeneInputValueUpdater = onMobxPromise(
+            this.props.store.genes,
+            (genes: Gene[]) => {
+                this.heatmapGeneInputValue = genes
+                    .map(g => g.hugoGeneSymbol)
+                    .join(' ');
+            },
+            Number.POSITIVE_INFINITY
+        );
 
         this.onMouseEnter = this.onMouseEnter.bind(this);
         this.onMouseLeave = this.onMouseLeave.bind(this);
 
         this.urlParamsReaction = reaction(
-            ()=>[
+            () => [
                 this.columnMode,
                 this.heatmapTrackGroupsUrlParam,
-                this.clinicalTracksUrlParam
+                this.clinicalTracksUrlParam,
             ],
-            ()=>{
-                const newParams = Object.assign({}, getBrowserWindow().globalStores.routing.location.query);
-                newParams[SAMPLE_MODE_URL_PARAM] = (this.columnMode === "sample") + "";
+            () => {
+                const newParams = Object.assign(
+                    {},
+                    getBrowserWindow().globalStores.routing.location.query
+                );
+                newParams[SAMPLE_MODE_URL_PARAM] =
+                    (this.columnMode === 'sample') + '';
                 if (!this.clinicalTracksUrlParam) {
                     delete newParams[CLINICAL_TRACKS_URL_PARAM];
                 } else {
-                    newParams[CLINICAL_TRACKS_URL_PARAM] = this.clinicalTracksUrlParam;
+                    newParams[
+                        CLINICAL_TRACKS_URL_PARAM
+                    ] = this.clinicalTracksUrlParam;
                 }
                 if (!this.heatmapTrackGroupsUrlParam) {
                     delete newParams[HEATMAP_TRACKS_URL_PARAM];
                 } else {
-                    newParams[HEATMAP_TRACKS_URL_PARAM] = this.heatmapTrackGroupsUrlParam;
+                    newParams[
+                        HEATMAP_TRACKS_URL_PARAM
+                    ] = this.heatmapTrackGroupsUrlParam;
                 }
-                getBrowserWindow().globalStores.routing.updateRoute(newParams, undefined, true, true);
+                getBrowserWindow().globalStores.routing.updateRoute(
+                    newParams,
+                    undefined,
+                    true,
+                    true
+                );
             }
         );
 
@@ -206,7 +278,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get showWhitespaceBetweenColumns() {
                 return self.showWhitespaceBetweenColumns;
             },
-            get showClinicalTrackLegends(){
+            get showClinicalTrackLegends() {
                 return self.showClinicalTrackLegends;
             },
             get onlyShowClinicalLegendForAlteredCases() {
@@ -225,7 +297,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.sortByMutationType;
             },
             get sortByCaseListDisabled() {
-                return !self.props.store.givenSampleOrder.isComplete || !self.props.store.givenSampleOrder.result.length;
+                return (
+                    !self.props.store.givenSampleOrder.isComplete ||
+                    !self.props.store.givenSampleOrder.result.length
+                );
             },
             get distinguishMutationType() {
                 return self.distinguishMutationType;
@@ -255,7 +330,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.didHotspotFailInOncoprint;
             },
             get annotateDriversCBioPortal() {
-                return self.props.store.driverAnnotationSettings.cbioportalCount;
+                return self.props.store.driverAnnotationSettings
+                    .cbioportalCount;
             },
             get annotateDriversCOSMIC() {
                 return self.props.store.driverAnnotationSettings.cosmicCount;
@@ -267,10 +343,16 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.hideGermlineMutations;
             },
             get annotateCBioPortalInputValue() {
-                return self.props.store.driverAnnotationSettings.cbioportalCountThreshold + "";
+                return (
+                    self.props.store.driverAnnotationSettings
+                        .cbioportalCountThreshold + ''
+                );
             },
             get annotateCOSMICInputValue() {
-                return self.props.store.driverAnnotationSettings.cosmicCountThreshold + "";
+                return (
+                    self.props.store.driverAnnotationSettings
+                        .cosmicCountThreshold + ''
+                );
             },
             get sortMode() {
                 return self.sortMode;
@@ -284,46 +366,62 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get selectedHeatmapProfile() {
                 return self.selectedHeatmapProfile;
             },
-            get heatmapIsDynamicallyQueried () {
+            get heatmapIsDynamicallyQueried() {
                 return self.heatmapIsDynamicallyQueried;
             },
             get clusterHeatmapButtonActive() {
                 return self.isClusteredByCurrentSelectedHeatmapProfile;
             },
             get hideClusterHeatmapButton() {
-                const genesetHeatmapProfile: string | undefined = (
+                const genesetHeatmapProfile: string | undefined =
                     self.props.store.genesetMolecularProfile.result &&
                     self.props.store.genesetMolecularProfile.result.value &&
-                    self.props.store.genesetMolecularProfile.result.value.molecularProfileId
-                );
+                    self.props.store.genesetMolecularProfile.result.value
+                        .molecularProfileId;
                 return !(
-                    self.molecularProfileIdToHeatmapTracks.get(self.selectedHeatmapProfile) ||
-                    self.selectedHeatmapProfile === genesetHeatmapProfile
+                    self.molecularProfileIdToHeatmapTracks.get(
+                        self.selectedHeatmapProfile
+                    ) || self.selectedHeatmapProfile === genesetHeatmapProfile
                 );
             },
             get heatmapGeneInputValue() {
                 return self.heatmapGeneInputValue;
             },
             get customDriverAnnotationBinaryMenuLabel() {
-                const label = AppConfig.serverConfig.binary_custom_driver_annotation_menu_label;
-                const customDriverReport = self.props.store.customDriverAnnotationReport.result;
-                if (label && customDriverReport && customDriverReport.hasBinary) {
+                const label =
+                    AppConfig.serverConfig
+                        .binary_custom_driver_annotation_menu_label;
+                const customDriverReport =
+                    self.props.store.customDriverAnnotationReport.result;
+                if (
+                    label &&
+                    customDriverReport &&
+                    customDriverReport.hasBinary
+                ) {
                     return label;
                 } else {
                     return undefined;
                 }
             },
             get customDriverAnnotationTiersMenuLabel() {
-                const label = AppConfig.serverConfig.oncoprint_custom_driver_annotation_tiers_menu_label;
-                const customDriverReport = self.props.store.customDriverAnnotationReport.result;
-                if (label && customDriverReport && customDriverReport.tiers.length) {
+                const label =
+                    AppConfig.serverConfig
+                        .oncoprint_custom_driver_annotation_tiers_menu_label;
+                const customDriverReport =
+                    self.props.store.customDriverAnnotationReport.result;
+                if (
+                    label &&
+                    customDriverReport &&
+                    customDriverReport.tiers.length
+                ) {
                     return label;
                 } else {
                     return undefined;
                 }
             },
             get customDriverAnnotationTiers() {
-                const customDriverReport = self.props.store.customDriverAnnotationReport.result;
+                const customDriverReport =
+                    self.props.store.customDriverAnnotationReport.result;
                 if (customDriverReport && customDriverReport.tiers.length) {
                     return customDriverReport.tiers;
                 } else {
@@ -353,11 +451,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return this.props.store.driverAnnotationSettings.driversAnnotated;
     }
 
-    onMouseEnter(){
+    onMouseEnter() {
         this.mouseInsideBounds = true;
     }
 
-    onMouseLeave(){
+    onMouseLeave() {
         this.mouseInsideBounds = false;
     }
 
@@ -366,161 +464,256 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @action
-    public selectHeatmapProfile(index:number) {
-        onMobxPromise(this.props.store.heatmapMolecularProfiles, (profiles:MolecularProfile[])=>{
-            this.selectedHeatmapProfile = this.props.store.heatmapMolecularProfiles.result![index].molecularProfileId;
-        });
+    public selectHeatmapProfile(index: number) {
+        onMobxPromise(
+            this.props.store.heatmapMolecularProfiles,
+            (profiles: MolecularProfile[]) => {
+                this.selectedHeatmapProfile = this.props.store.heatmapMolecularProfiles.result![
+                    index
+                ].molecularProfileId;
+            }
+        );
     }
 
     @action
-    public setAnnotateCBioPortalInputValue(value:string) {
-        this.controlsHandlers.onChangeAnnotateCBioPortalInputValue && this.controlsHandlers.onChangeAnnotateCBioPortalInputValue(value);
+    public setAnnotateCBioPortalInputValue(value: string) {
+        this.controlsHandlers.onChangeAnnotateCBioPortalInputValue &&
+            this.controlsHandlers.onChangeAnnotateCBioPortalInputValue(value);
     }
 
     @action
-    public setAnnotateCOSMICInputValue(value:string) {
-        this.controlsHandlers.onChangeAnnotateCOSMICInputValue && this.controlsHandlers.onChangeAnnotateCOSMICInputValue(value);
+    public setAnnotateCOSMICInputValue(value: string) {
+        this.controlsHandlers.onChangeAnnotateCOSMICInputValue &&
+            this.controlsHandlers.onChangeAnnotateCOSMICInputValue(value);
     }
 
     private buildControlsHandlers() {
         return {
-            onSelectColumnType:(type:"sample"|"patient")=>{this.setColumnMode(type);},
-            onSelectShowUnalteredColumns:(show:boolean)=>{this.showUnalteredColumns = show;},
-            onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
-            onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show; },
-            onSelectOnlyShowClinicalLegendForAlteredCases:(show:boolean)=>{this._onlyShowClinicalLegendForAlteredCases = show; },
-            onSelectShowOqlInLabels:(show:boolean)=>{this.showOqlInLabels = show;},
-            onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
-            onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
-            onSelectDistinguishDrivers:action((s:boolean)=>{
+            onSelectColumnType: (type: 'sample' | 'patient') => {
+                this.setColumnMode(type);
+            },
+            onSelectShowUnalteredColumns: (show: boolean) => {
+                this.showUnalteredColumns = show;
+            },
+            onSelectShowWhitespaceBetweenColumns: (show: boolean) => {
+                this.showWhitespaceBetweenColumns = show;
+            },
+            onSelectShowClinicalTrackLegends: (show: boolean) => {
+                this.showClinicalTrackLegends = show;
+            },
+            onSelectOnlyShowClinicalLegendForAlteredCases: (show: boolean) => {
+                this._onlyShowClinicalLegendForAlteredCases = show;
+            },
+            onSelectShowOqlInLabels: (show: boolean) => {
+                this.showOqlInLabels = show;
+            },
+            onSelectShowMinimap: (show: boolean) => {
+                this.showMinimap = show;
+            },
+            onSelectDistinguishMutationType: (s: boolean) => {
+                this.distinguishMutationType = s;
+            },
+            onSelectDistinguishDrivers: action((s: boolean) => {
                 if (!s) {
                     this.props.store.driverAnnotationSettings.oncoKb = false;
                     this.props.store.driverAnnotationSettings.hotspots = false;
                     this.props.store.driverAnnotationSettings.cbioportalCount = false;
                     this.props.store.driverAnnotationSettings.cosmicCount = false;
                     this.props.store.driverAnnotationSettings.driverFilter = false;
-                    this.props.store.driverAnnotationSettings.driverTiers.forEach((value, key)=>{
-                        this.props.store.driverAnnotationSettings.driverTiers.set(key, false);
-                    });
+                    this.props.store.driverAnnotationSettings.driverTiers.forEach(
+                        (value, key) => {
+                            this.props.store.driverAnnotationSettings.driverTiers.set(
+                                key,
+                                false
+                            );
+                        }
+                    );
                     this.props.store.driverAnnotationSettings.ignoreUnknown = false;
                 } else {
-                    if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
+                    if (
+                        !this.controlsState.annotateDriversOncoKbDisabled &&
+                        !this.controlsState.annotateDriversOncoKbError
+                    )
                         this.props.store.driverAnnotationSettings.oncoKb = true;
 
-                    if (!this.controlsState.annotateDriversHotspotsDisabled && !this.controlsState.annotateDriversHotspotsError)
+                    if (
+                        !this.controlsState.annotateDriversHotspotsDisabled &&
+                        !this.controlsState.annotateDriversHotspotsError
+                    )
                         this.props.store.driverAnnotationSettings.hotspots = true;
 
                     this.props.store.driverAnnotationSettings.cbioportalCount = true;
                     this.props.store.driverAnnotationSettings.cosmicCount = true;
                     this.props.store.driverAnnotationSettings.driverFilter = true;
-                    this.props.store.driverAnnotationSettings.driverTiers.forEach((value, key)=>{
-                        this.props.store.driverAnnotationSettings.driverTiers.set(key, true);
-                    });
+                    this.props.store.driverAnnotationSettings.driverTiers.forEach(
+                        (value, key) => {
+                            this.props.store.driverAnnotationSettings.driverTiers.set(
+                                key,
+                                true
+                            );
+                        }
+                    );
                 }
             }),
-            onSelectDistinguishGermlineMutations:(s:boolean)=>{this.distinguishGermlineMutations = s; },
-            onSelectAnnotateOncoKb:action((s:boolean)=>{
+            onSelectDistinguishGermlineMutations: (s: boolean) => {
+                this.distinguishGermlineMutations = s;
+            },
+            onSelectAnnotateOncoKb: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.oncoKb = s;
             }),
-            onSelectAnnotateHotspots:action((s:boolean)=>{
+            onSelectAnnotateHotspots: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.hotspots = s;
             }),
-            onSelectAnnotateCBioPortal:action((s:boolean)=>{
+            onSelectAnnotateCBioPortal: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.cbioportalCount = s;
             }),
-            onSelectAnnotateCOSMIC:action((s:boolean)=>{
+            onSelectAnnotateCOSMIC: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.cosmicCount = s;
             }),
-            onChangeAnnotateCBioPortalInputValue:action((s:string)=>{
-                this.props.store.driverAnnotationSettings.cbioportalCountThreshold = parseInt(s, 10);
-                this.controlsHandlers.onSelectAnnotateCBioPortal && this.controlsHandlers.onSelectAnnotateCBioPortal(true);
+            onChangeAnnotateCBioPortalInputValue: action((s: string) => {
+                this.props.store.driverAnnotationSettings.cbioportalCountThreshold = parseInt(
+                    s,
+                    10
+                );
+                this.controlsHandlers.onSelectAnnotateCBioPortal &&
+                    this.controlsHandlers.onSelectAnnotateCBioPortal(true);
             }),
-            onChangeAnnotateCOSMICInputValue:action((s:string)=>{
-                this.props.store.driverAnnotationSettings.cosmicCountThreshold = parseInt(s, 10);
-                this.controlsHandlers.onSelectAnnotateCOSMIC && this.controlsHandlers.onSelectAnnotateCOSMIC(true);
+            onChangeAnnotateCOSMICInputValue: action((s: string) => {
+                this.props.store.driverAnnotationSettings.cosmicCountThreshold = parseInt(
+                    s,
+                    10
+                );
+                this.controlsHandlers.onSelectAnnotateCOSMIC &&
+                    this.controlsHandlers.onSelectAnnotateCOSMIC(true);
             }),
-            onSelectCustomDriverAnnotationBinary:action((s:boolean)=>{
+            onSelectCustomDriverAnnotationBinary: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.driverFilter = s;
             }),
-            onSelectCustomDriverAnnotationTier:action((value:string, checked:boolean)=>{
-                this.props.store.driverAnnotationSettings.driverTiers.set(value, checked);
-            }),
-            onSelectHidePutativePassengers:(s:boolean)=>{
+            onSelectCustomDriverAnnotationTier: action(
+                (value: string, checked: boolean) => {
+                    this.props.store.driverAnnotationSettings.driverTiers.set(
+                        value,
+                        checked
+                    );
+                }
+            ),
+            onSelectHidePutativePassengers: (s: boolean) => {
                 this.props.store.driverAnnotationSettings.ignoreUnknown = s;
             },
-            onSelectHideGermlineMutations:(s:boolean)=>{
+            onSelectHideGermlineMutations: (s: boolean) => {
                 this.hideGermlineMutations = s;
             },
-            onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
-            onClickSortAlphabetical:()=>{
-                this.sortMode = {type:"alphabetical"};
+            onSelectSortByMutationType: (s: boolean) => {
+                this.sortByMutationType = s;
             },
-            onClickSortCaseListOrder:()=>{
-                this.sortMode = {type:"caseList"};
+            onClickSortAlphabetical: () => {
+                this.sortMode = { type: 'alphabetical' };
             },
-            onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
-            onClickSortByData:()=>{this.sortMode={type:"data"};},
+            onClickSortCaseListOrder: () => {
+                this.sortMode = { type: 'caseList' };
+            },
+            onSelectSortByDrivers: (sort: boolean) => {
+                this.sortByDrivers = sort;
+            },
+            onClickSortByData: () => {
+                this.sortMode = { type: 'data' };
+            },
             onChangeSelectedClinicalTracks: this.onChangeSelectedClinicalTracks,
-            onChangeHeatmapGeneInputValue:action((s:string)=>{
+            onChangeHeatmapGeneInputValue: action((s: string) => {
                 this.heatmapGeneInputValue = s;
                 this.heatmapGeneInputValueUpdater(); // stop updating heatmap input if user has typed
             }),
-            onSelectHeatmapProfile:(id:string)=>{this.selectedHeatmapProfile = id;},
-            onClickAddGenesToHeatmap:()=>{
-                this.addHeatmapTracks(this.selectedHeatmapProfile, this.heatmapGeneInputValue.toUpperCase().trim().split(/\s+/));
+            onSelectHeatmapProfile: (id: string) => {
+                this.selectedHeatmapProfile = id;
             },
-            onClickRemoveHeatmap:action(() => {
+            onClickAddGenesToHeatmap: () => {
+                this.addHeatmapTracks(
+                    this.selectedHeatmapProfile,
+                    this.heatmapGeneInputValue
+                        .toUpperCase()
+                        .trim()
+                        .split(/\s+/)
+                );
+            },
+            onClickRemoveHeatmap: action(() => {
                 this.molecularProfileIdToHeatmapTracks.clear();
             }),
-            onClickClusterHeatmap:()=>{
+            onClickClusterHeatmap: () => {
                 if (this.isClusteredByCurrentSelectedHeatmapProfile) {
                     this.sortByData();
                 } else {
-                    this.sortMode = {type: "heatmap", clusteredHeatmapProfile: this.selectedHeatmapProfile};
+                    this.sortMode = {
+                        type: 'heatmap',
+                        clusteredHeatmapProfile: this.selectedHeatmapProfile,
+                    };
                 }
             },
-            onClickDownload:(type:string)=>{
-                switch(type) {
-                    case "pdf":
-                        svgToPdfDownload("oncoprint.pdf", this.oncoprint.toSVG(false));
+            onClickDownload: (type: string) => {
+                switch (type) {
+                    case 'pdf':
+                        svgToPdfDownload(
+                            'oncoprint.pdf',
+                            this.oncoprint.toSVG(false)
+                        );
                         // if (!pdfDownload("oncoprint.pdf", this.oncoprint.toSVG(true))) {
                         //     alert("Oncoprint too big to download as PDF - please download as SVG.");
                         // }
                         break;
-                    case "png":
-                        const img = this.oncoprint.toCanvas((canvas, truncated)=>{
-                            canvas.toBlob(blob=>{
-                                if (truncated) {
-                                    alert(
-                                        `Oncoprint too large - PNG truncated to ${canvas.getAttribute("width")}x${canvas.getAttribute("height")}`
-                                    );
-                                }
-                                fileDownload(
-                                    blob,
-                                    "oncoprint.png"
-                                );
-                            });
-                        }, 2);
-                        break;
-                    case "svg":
-                        fileDownload(
-                            (new XMLSerializer).serializeToString(this.oncoprint.toSVG(false)),
-                            "oncoprint.svg"
+                    case 'png':
+                        const img = this.oncoprint.toCanvas(
+                            (canvas, truncated) => {
+                                canvas.toBlob(blob => {
+                                    if (truncated) {
+                                        alert(
+                                            `Oncoprint too large - PNG truncated to ${canvas.getAttribute(
+                                                'width'
+                                            )}x${canvas.getAttribute('height')}`
+                                        );
+                                    }
+                                    fileDownload(blob, 'oncoprint.png');
+                                });
+                            },
+                            2
                         );
                         break;
-                    case "order":
-                        const capitalizedColumnMode = this.columnMode[0].toUpperCase() + this.columnMode.slice(1);
+                    case 'svg':
+                        fileDownload(
+                            new XMLSerializer().serializeToString(
+                                this.oncoprint.toSVG(false)
+                            ),
+                            'oncoprint.svg'
+                        );
+                        break;
+                    case 'order':
+                        const capitalizedColumnMode =
+                            this.columnMode[0].toUpperCase() +
+                            this.columnMode.slice(1);
                         onMobxPromise(
-                            [this.props.store.sampleKeyToSample,
-                                this.props.store.patientKeyToPatient],
-                            (sampleKeyToSample:{[sampleKey:string]:Sample}, patientKeyToPatient: any)=>{
+                            [
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
+                            ],
+                            (
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any
+                            ) => {
                                 let file = `${capitalizedColumnMode} order in the Oncoprint is:\n`;
-                                const keyToCase = (this.columnMode === "sample" ? sampleKeyToSample : patientKeyToPatient);
-                                const caseIds = this.oncoprint.getIdOrder().map(
-                                    this.columnMode === "sample" ?
-                                        ((id:string)=>(sampleKeyToSample[id].sampleId)) :
-                                        ((id:string)=>(patientKeyToPatient[id].patientId))
-                                );
+                                const keyToCase =
+                                    this.columnMode === 'sample'
+                                        ? sampleKeyToSample
+                                        : patientKeyToPatient;
+                                const caseIds = this.oncoprint
+                                    .getIdOrder()
+                                    .map(
+                                        this.columnMode === 'sample'
+                                            ? (id: string) =>
+                                                  sampleKeyToSample[id].sampleId
+                                            : (id: string) =>
+                                                  patientKeyToPatient[id]
+                                                      .patientId
+                                    );
                                 for (const caseId of caseIds) {
                                     file += `${caseId}\n`;
                                 }
@@ -531,36 +724,46 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                             }
                         );
                         break;
-                    case "tabular":
+                    case 'tabular':
                         onMobxPromise(
-                            [this.props.store.sampleKeyToSample,
-                                this.props.store.patientKeyToPatient],
-                            (sampleKeyToSample:{[sampleKey:string]:Sample}, patientKeyToPatient: any)=>{
+                            [
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
+                            ],
+                            (
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any
+                            ) => {
                                 tabularDownload(
                                     this.geneticTracks.result,
                                     this.clinicalTracks.result,
                                     this.heatmapTracks.result,
                                     this.oncoprint.getIdOrder(),
-                                    (this.columnMode === "sample" ?
-                                        ((key:string)=>(sampleKeyToSample[key].sampleId)) :
-                                        ((key:string)=>(patientKeyToPatient[key].patientId))),
+                                    this.columnMode === 'sample'
+                                        ? (key: string) =>
+                                              sampleKeyToSample[key].sampleId
+                                        : (key: string) =>
+                                              patientKeyToPatient[key]
+                                                  .patientId,
                                     this.columnMode,
                                     this.distinguishDrivers
-                                )
+                                );
                             }
                         );
                         break;
                 }
             },
-            onSetHorzZoom:(z:number)=>{
+            onSetHorzZoom: (z: number) => {
                 this.oncoprint.setHorzZoom(z);
             },
-            onClickZoomIn:()=>{
-                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom()/0.7);
+            onClickZoomIn: () => {
+                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() / 0.7);
             },
-            onClickZoomOut:()=>{
-                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom()*0.7);
-            }
+            onClickZoomOut: () => {
+                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() * 0.7);
+            },
         };
     }
 
@@ -571,109 +774,138 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
      * heatmaps are queried from the query page.
      */
     @computed get heatmapIsDynamicallyQueried(): boolean {
-        const profileMap = this.props.store.molecularProfileIdToMolecularProfile.result;
+        const profileMap = this.props.store.molecularProfileIdToMolecularProfile
+            .result;
         return (
             profileMap.hasOwnProperty(this.selectedHeatmapProfile) &&
-            profileMap[this.selectedHeatmapProfile].molecularAlterationType !== 'GENESET_SCORE'
+            profileMap[this.selectedHeatmapProfile].molecularAlterationType !==
+                'GENESET_SCORE'
         );
     }
 
-    @action private initFromUrlParams(paramsMap:any) {
+    @action private initFromUrlParams(paramsMap: any) {
         if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
-            this.columnMode = (paramsMap[SAMPLE_MODE_URL_PARAM] && paramsMap[SAMPLE_MODE_URL_PARAM]==="true") ? "sample" : "patient";
+            this.columnMode =
+                paramsMap[SAMPLE_MODE_URL_PARAM] &&
+                paramsMap[SAMPLE_MODE_URL_PARAM] === 'true'
+                    ? 'sample'
+                    : 'patient';
         }
         if (paramsMap[HEATMAP_TRACKS_URL_PARAM]) {
-            const groups = paramsMap[HEATMAP_TRACKS_URL_PARAM].split(";").map((x:string)=>x.split(","));
+            const groups = paramsMap[HEATMAP_TRACKS_URL_PARAM].split(';').map(
+                (x: string) => x.split(',')
+            );
             for (const group of groups) {
                 this.addHeatmapTracks(group[0], group.slice(1));
             }
         }
         if (paramsMap[CLINICAL_TRACKS_URL_PARAM]) {
-            const attrIds = paramsMap[CLINICAL_TRACKS_URL_PARAM].split(",");
-            attrIds.map((attrId:string)=>this.selectedClinicalAttributeIds.set(attrId, true));
+            const attrIds = paramsMap[CLINICAL_TRACKS_URL_PARAM].split(',');
+            attrIds.map((attrId: string) =>
+                this.selectedClinicalAttributeIds.set(attrId, true)
+            );
         }
     }
 
     @action public sortByData() {
-        this.sortMode = {type:"data"};
+        this.sortMode = { type: 'data' };
     }
 
     @computed get isClusteredByCurrentSelectedHeatmapProfile() {
-        return (this.sortMode.type === "heatmap" && (this.selectedHeatmapProfile === this.sortMode.clusteredHeatmapProfile));
+        return (
+            this.sortMode.type === 'heatmap' &&
+            this.selectedHeatmapProfile ===
+                this.sortMode.clusteredHeatmapProfile
+        );
     }
 
     @computed get clinicalTracksUrlParam() {
-        return this.selectedClinicalAttributeIds.keys().join(",");
+        return this.selectedClinicalAttributeIds.keys().join(',');
     }
 
     @computed get heatmapTrackGroupsUrlParam() {
-        return _.sortBy(this.molecularProfileIdToHeatmapTracks.values(), (x:HeatmapTrackGroupRecord)=>x.trackGroupIndex)
-            .filter((x:HeatmapTrackGroupRecord)=>!!x.genes.size)
-            .map((x:HeatmapTrackGroupRecord)=>`${x.molecularProfileId},${x.genes.keys().join(",")}`)
-            .join(";");
+        return _.sortBy(
+            this.molecularProfileIdToHeatmapTracks.values(),
+            (x: HeatmapTrackGroupRecord) => x.trackGroupIndex
+        )
+            .filter((x: HeatmapTrackGroupRecord) => !!x.genes.size)
+            .map(
+                (x: HeatmapTrackGroupRecord) =>
+                    `${x.molecularProfileId},${x.genes.keys().join(',')}`
+            )
+            .join(';');
     }
 
-    private addHeatmapTracks(molecularProfileId:string, genes:string[]) {
-        let trackGroup = this.molecularProfileIdToHeatmapTracks.get(molecularProfileId);
+    private addHeatmapTracks(molecularProfileId: string, genes: string[]) {
+        let trackGroup = this.molecularProfileIdToHeatmapTracks.get(
+            molecularProfileId
+        );
         if (!trackGroup) {
             let newTrackGroupIndex = 2;
             for (const group of this.molecularProfileIdToHeatmapTracks.values()) {
-                newTrackGroupIndex = Math.max(newTrackGroupIndex, group.trackGroupIndex + 1);
+                newTrackGroupIndex = Math.max(
+                    newTrackGroupIndex,
+                    group.trackGroupIndex + 1
+                );
             }
             trackGroup = observable({
                 trackGroupIndex: newTrackGroupIndex,
                 molecularProfileId,
-                genes: observable.shallowMap<boolean>({})
+                genes: observable.shallowMap<boolean>({}),
             });
         }
         for (const gene of genes) {
             trackGroup!.genes.set(gene, true);
         }
-        this.molecularProfileIdToHeatmapTracks.set(molecularProfileId, trackGroup);
+        this.molecularProfileIdToHeatmapTracks.set(
+            molecularProfileId,
+            trackGroup
+        );
     }
 
     private toggleColumnMode() {
-        if (this.columnMode === "sample") {
-            this.controlsHandlers.onSelectColumnType && this.controlsHandlers.onSelectColumnType("patient");
+        if (this.columnMode === 'sample') {
+            this.controlsHandlers.onSelectColumnType &&
+                this.controlsHandlers.onSelectColumnType('patient');
         } else {
-            this.controlsHandlers.onSelectColumnType && this.controlsHandlers.onSelectColumnType("sample");
+            this.controlsHandlers.onSelectColumnType &&
+                this.controlsHandlers.onSelectColumnType('sample');
         }
     }
 
-    private oncoprintRef(oncoprint:OncoprintJS<any>) {
+    private oncoprintRef(oncoprint: OncoprintJS<any>) {
         this.oncoprint = oncoprint;
         if (this.props.addOnBecomeVisibleListener) {
-            this.props.addOnBecomeVisibleListener(
-                ()=>this.oncoprint.triggerPendingResizeAndOrganize(this.onReleaseRendering)
+            this.props.addOnBecomeVisibleListener(() =>
+                this.oncoprint.triggerPendingResizeAndOrganize(
+                    this.onReleaseRendering
+                )
             );
         }
 
-        this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
+        this.oncoprint.onHorzZoom(z => (this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
-        onMobxPromise(this.alteredKeys,
-            (alteredUids:string[])=>{
-                this.oncoprint.setHorzZoomToFit(alteredUids);
-            });
-
+        onMobxPromise(this.alteredKeys, (alteredUids: string[]) => {
+            this.oncoprint.setHorzZoomToFit(alteredUids);
+        });
     }
 
-    private setColumnMode(type:"sample"|"patient") {
+    private setColumnMode(type: 'sample' | 'patient') {
         if (this.columnMode !== type) {
             this.columnMode = type;
         }
     }
 
     readonly alteredKeys = remoteData({
-        await:()=>[this.geneticTracks],
-        invoke:async()=>getAlteredUids(this.geneticTracks.result!),
-        default: []
+        await: () => [this.geneticTracks],
+        invoke: async () => getAlteredUids(this.geneticTracks.result!),
+        default: [],
     });
 
     private readonly unalteredKeys = remoteData({
-        await:()=>[this.geneticTracks],
-        invoke:async()=>getUnalteredUids(this.geneticTracks.result!)
+        await: () => [this.geneticTracks],
+        invoke: async () => getUnalteredUids(this.geneticTracks.result!),
     });
-
 
     @action private onMinimapClose() {
         this.showMinimap = false;
@@ -687,29 +919,35 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.renderingComplete = true;
     }
 
-    public clinicalTrackKeyToAttributeId(clinicalTrackKey:string) {
+    public clinicalTrackKeyToAttributeId(clinicalTrackKey: string) {
         return clinicalTrackKey.substr(CLINICAL_TRACK_KEY_PREFIX.length);
     }
 
-    public clinicalAttributeIdToTrackKey(clinicalAttributeId:string|SpecialAttribute) {
+    public clinicalAttributeIdToTrackKey(
+        clinicalAttributeId: string | SpecialAttribute
+    ) {
         return `${CLINICAL_TRACK_KEY_PREFIX}${clinicalAttributeId}`;
     }
 
-    @action private onChangeSelectedClinicalTracks(clinicalAttributeIds:(string|SpecialAttribute)[]) {
+    @action private onChangeSelectedClinicalTracks(
+        clinicalAttributeIds: (string | SpecialAttribute)[]
+    ) {
         this.selectedClinicalAttributeIds.clear();
         for (const clinicalAttributeId of clinicalAttributeIds) {
             this.selectedClinicalAttributeIds.set(clinicalAttributeId, true);
         }
     }
 
-    private onDeleteClinicalTrack(clinicalTrackKey:string) {
+    private onDeleteClinicalTrack(clinicalTrackKey: string) {
         // ignore tracks being deleted due to rendering process reasons
         if (!this.isHidden) {
-            this.selectedClinicalAttributeIds.delete(this.clinicalTrackKeyToAttributeId(clinicalTrackKey));
+            this.selectedClinicalAttributeIds.delete(
+                this.clinicalTrackKeyToAttributeId(clinicalTrackKey)
+            );
         }
     }
 
-    private onTrackSortDirectionChange(trackId:TrackId, dir:number) {
+    private onTrackSortDirectionChange(trackId: TrackId, dir: number) {
         // called when a clinical or heatmap track is sorted a-Z or Z-a, selected from within oncoprintjs UI
         if (dir === 1 || dir === -1) {
             this.sortByData();
@@ -717,13 +955,25 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @computed get sortOrder() {
-        if (this.sortMode.type === "alphabetical") {
-            return this.columnMode === "sample" ? this.alphabeticalSampleOrder : this.alphabeticalPatientOrder;
-        } else if (this.sortMode.type === "caseList") {
-            if (this.columnMode === "sample" && this.props.store.givenSampleOrder.isComplete) {
-                return this.props.store.givenSampleOrder.result.map(x=>x.uniqueSampleKey);
-            } else if (this.columnMode === "patient" && this.props.store.givenSampleOrder.isComplete) {
-                return this.props.store.givenSampleOrder.result.map(x=>x.uniquePatientKey);
+        if (this.sortMode.type === 'alphabetical') {
+            return this.columnMode === 'sample'
+                ? this.alphabeticalSampleOrder
+                : this.alphabeticalPatientOrder;
+        } else if (this.sortMode.type === 'caseList') {
+            if (
+                this.columnMode === 'sample' &&
+                this.props.store.givenSampleOrder.isComplete
+            ) {
+                return this.props.store.givenSampleOrder.result.map(
+                    x => x.uniqueSampleKey
+                );
+            } else if (
+                this.columnMode === 'patient' &&
+                this.props.store.givenSampleOrder.isComplete
+            ) {
+                return this.props.store.givenSampleOrder.result.map(
+                    x => x.uniquePatientKey
+                );
             } else {
                 return undefined;
             }
@@ -734,72 +984,95 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @computed get alphabeticalSampleOrder() {
         if (this.props.store.samples.isComplete) {
-            return _.sortBy(this.props.store.samples.result!, sample=>sample.sampleId).map(sample=>sample.uniqueSampleKey);
+            return _.sortBy(
+                this.props.store.samples.result!,
+                sample => sample.sampleId
+            ).map(sample => sample.uniqueSampleKey);
         } else {
             return undefined;
         }
-    };
+    }
 
     @computed get alphabeticalPatientOrder() {
         if (this.props.store.patients.isComplete) {
-            return _.sortBy(this.props.store.patients.result!, patient=>patient.patientId).map(patient=>patient.uniquePatientKey);
+            return _.sortBy(
+                this.props.store.patients.result!,
+                patient => patient.patientId
+            ).map(patient => patient.uniquePatientKey);
         } else {
             return undefined;
         }
-    };
+    }
 
     readonly sampleGeneticTracks = makeGeneticTracksMobxPromise(this, true);
     readonly patientGeneticTracks = makeGeneticTracksMobxPromise(this, false);
     @computed get geneticTracks() {
-        return (this.columnMode === "sample" ? this.sampleGeneticTracks : this.patientGeneticTracks);
+        return this.columnMode === 'sample'
+            ? this.sampleGeneticTracks
+            : this.patientGeneticTracks;
     }
 
     readonly sampleClinicalTracks = makeClinicalTracksMobxPromise(this, true);
     readonly patientClinicalTracks = makeClinicalTracksMobxPromise(this, false);
     @computed get clinicalTracks() {
-        return (this.columnMode === "sample" ? this.sampleClinicalTracks : this.patientClinicalTracks);
+        return this.columnMode === 'sample'
+            ? this.sampleClinicalTracks
+            : this.patientClinicalTracks;
     }
 
     readonly sampleHeatmapTracks = makeHeatmapTracksMobxPromise(this, true);
     readonly patientHeatmapTracks = makeHeatmapTracksMobxPromise(this, false);
     @computed get heatmapTracks() {
-        return (this.columnMode === "sample" ? this.sampleHeatmapTracks : this.patientHeatmapTracks);
+        return this.columnMode === 'sample'
+            ? this.sampleHeatmapTracks
+            : this.patientHeatmapTracks;
     }
 
     @computed get genesetHeatmapTrackGroup(): number {
-        return 1 + Math.max(
-            GENETIC_TRACK_GROUP_INDEX,
-            // observe the heatmap tracks to render in the very next group
-            ...(this.heatmapTracks.result.map(hmTrack => hmTrack.trackGroupIndex))
+        return (
+            1 +
+            Math.max(
+                GENETIC_TRACK_GROUP_INDEX,
+                // observe the heatmap tracks to render in the very next group
+                ...this.heatmapTracks.result.map(
+                    hmTrack => hmTrack.trackGroupIndex
+                )
+            )
         );
     }
 
     readonly sampleGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(
-            this, true,
-            makeGenesetHeatmapExpansionsMobxPromise(this, true)
+        this,
+        true,
+        makeGenesetHeatmapExpansionsMobxPromise(this, true)
     );
     readonly patientGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(
-            this, false,
-            makeGenesetHeatmapExpansionsMobxPromise(this, false)
+        this,
+        false,
+        makeGenesetHeatmapExpansionsMobxPromise(this, false)
     );
     @computed get genesetHeatmapTracks() {
-        return (this.columnMode === "sample" ? this.sampleGenesetHeatmapTracks : this.patientGenesetHeatmapTracks);
+        return this.columnMode === 'sample'
+            ? this.sampleGenesetHeatmapTracks
+            : this.patientGenesetHeatmapTracks;
     }
 
-
     @computed get clusterHeatmapTrackGroupIndex() {
-        if (this.sortMode.type === "heatmap") {
-            const clusteredHeatmapProfile: string = this.sortMode.clusteredHeatmapProfile;
-            const genesetHeatmapProfile: string | undefined = (
+        if (this.sortMode.type === 'heatmap') {
+            const clusteredHeatmapProfile: string = this.sortMode
+                .clusteredHeatmapProfile;
+            const genesetHeatmapProfile: string | undefined =
                 this.props.store.genesetMolecularProfile.result &&
                 this.props.store.genesetMolecularProfile.result.value &&
-                this.props.store.genesetMolecularProfile.result.value.molecularProfileId
-            );
+                this.props.store.genesetMolecularProfile.result.value
+                    .molecularProfileId;
             if (clusteredHeatmapProfile === genesetHeatmapProfile) {
                 return this.genesetHeatmapTrackGroup;
             } else {
-                const heatmapGroup = this.molecularProfileIdToHeatmapTracks.get(clusteredHeatmapProfile);
-                return (heatmapGroup && heatmapGroup.trackGroupIndex);
+                const heatmapGroup = this.molecularProfileIdToHeatmapTracks.get(
+                    clusteredHeatmapProfile
+                );
+                return heatmapGroup && heatmapGroup.trackGroupIndex;
             }
         }
         return undefined;
@@ -807,10 +1080,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @computed get sortConfig() {
         return {
-            sortByMutationType:this.sortByMutationType,
-            sortByDrivers:this.sortByDrivers,
+            sortByMutationType: this.sortByMutationType,
+            sortByDrivers: this.sortByDrivers,
             order: this.sortOrder,
-            clusterHeatmapTrackGroupIndex: this.clusterHeatmapTrackGroupIndex
+            clusterHeatmapTrackGroupIndex: this.clusterHeatmapTrackGroupIndex,
         };
     }
 
@@ -851,10 +1124,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }*/
 
     @computed get isLoading() {
-        return this.clinicalTracks.isPending
-            || this.geneticTracks.isPending
-            || this.genesetHeatmapTracks.isPending
-            || this.heatmapTracks.isPending;
+        return (
+            this.clinicalTracks.isPending ||
+            this.geneticTracks.isPending ||
+            this.genesetHeatmapTracks.isPending ||
+            this.heatmapTracks.isPending
+        );
     }
 
     @computed get isHidden() {
@@ -866,18 +1141,21 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @computed get loadingIndicatorMessage() {
-        if (this.isLoading)
-            return "Downloading Oncoprint data...";
+        if (this.isLoading) return 'Downloading Oncoprint data...';
         else if (!this.renderingComplete)
-            return "Data downloaded. Rendering Oncoprint..";
+            return 'Data downloaded. Rendering Oncoprint..';
         // Otherwise, isHidden is false, so no message shown at all..
         // Putting this here just for Typescript
-        return "";
+        return '';
     }
 
     @computed get alterationTypesInQuery() {
         if (this.props.store.selectedMolecularProfiles.isComplete) {
-            return _.uniq(this.props.store.selectedMolecularProfiles.result.map(x=>x.molecularAlterationType));
+            return _.uniq(
+                this.props.store.selectedMolecularProfiles.result.map(
+                    x => x.molecularAlterationType
+                )
+            );
         } else {
             return [];
         }
@@ -885,85 +1163,103 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @autobind
     private getControls() {
-        if (this.oncoprint && !this.oncoprint.webgl_unavailable)  {
-            return (<FadeInteraction showByDefault={true} show={true}>
-                <OncoprintControls
-                    handlers={this.controlsHandlers}
-                    state={this.controlsState}
-                    store={this.props.store}
-                />
-            </FadeInteraction>);
+        if (this.oncoprint && !this.oncoprint.webgl_unavailable) {
+            return (
+                <FadeInteraction showByDefault={true} show={true}>
+                    <OncoprintControls
+                        handlers={this.controlsHandlers}
+                        state={this.controlsState}
+                        store={this.props.store}
+                    />
+                </FadeInteraction>
+            );
         } else {
-            return <span/>;
+            return <span />;
         }
     }
 
     private loadingGeneticDataDuringCurrentLoad = false;
     private loadingClinicalDataDuringCurrentLoad = false;
     @autobind
-    private getProgressItems(elapsedSecs:number):IProgressIndicatorItem[] {
+    private getProgressItems(elapsedSecs: number): IProgressIndicatorItem[] {
         if (elapsedSecs === 0) {
             this.loadingGeneticDataDuringCurrentLoad = false;
             this.loadingClinicalDataDuringCurrentLoad = false;
         }
 
-        const areNonLocalClinicalAttributesSelected =
-            _.some(this.selectedClinicalAttributeIds.keys(),
-                clinicalAttributeId=>!clinicalAttributeIsLocallyComputed({clinicalAttributeId})
-            );
+        const areNonLocalClinicalAttributesSelected = _.some(
+            this.selectedClinicalAttributeIds.keys(),
+            clinicalAttributeId =>
+                !clinicalAttributeIsLocallyComputed({ clinicalAttributeId })
+        );
 
         if (this.geneticTracks.isPending) {
             this.loadingGeneticDataDuringCurrentLoad = true;
         }
-        if (areNonLocalClinicalAttributesSelected && this.clinicalTracks.isPending) {
+        if (
+            areNonLocalClinicalAttributesSelected &&
+            this.clinicalTracks.isPending
+        ) {
             this.loadingClinicalDataDuringCurrentLoad = true;
         }
 
-        const ret:IProgressIndicatorItem[] = [];
+        const ret: IProgressIndicatorItem[] = [];
 
-        let queryingLabel:string;
-        if (this.props.store.genes.isComplete && this.props.store.samples.isComplete) {
+        let queryingLabel: string;
+        if (
+            this.props.store.genes.isComplete &&
+            this.props.store.samples.isComplete
+        ) {
             const numGenes = this.props.store.genes.result!.length;
             const numSamples = this.props.store.samples.result!.length;
             queryingLabel = `Querying ${numGenes} genes in ${numSamples} samples`;
         } else {
-            queryingLabel = "Querying ... genes in ... samples";
+            queryingLabel = 'Querying ... genes in ... samples';
         }
 
-        let waitingLabel:string = "";
+        let waitingLabel: string = '';
         if (elapsedSecs > 2) {
-            waitingLabel = " - this can take several seconds";
+            waitingLabel = ' - this can take several seconds';
         }
 
         ret.push({
             label: `${queryingLabel}${waitingLabel}`,
             promises: [], // empty promises means insta-complete
             hideIcon: true, // dont show any icon, this is just a message
-            style:{ fontWeight:"bold" }
+            style: { fontWeight: 'bold' },
         });
 
         const dataLoadingNames = [];
         if (this.loadingGeneticDataDuringCurrentLoad) {
-            dataLoadingNames.push("genetic");
+            dataLoadingNames.push('genetic');
         }
         if (this.loadingClinicalDataDuringCurrentLoad) {
-            dataLoadingNames.push("clinical");
+            dataLoadingNames.push('clinical');
         }
 
         ret.push({
-            label: `Loading ${dataLoadingNames.join(" and ")} data`,
-            promises: [this.props.store.molecularData, this.props.store.mutations, ...(areNonLocalClinicalAttributesSelected ? [this.clinicalTracks] : [])]
+            label: `Loading ${dataLoadingNames.join(' and ')} data`,
+            promises: [
+                this.props.store.molecularData,
+                this.props.store.mutations,
+                ...(areNonLocalClinicalAttributesSelected
+                    ? [this.clinicalTracks]
+                    : []),
+            ],
         });
 
         const usingOncokb = this.props.store.driverAnnotationSettings.oncoKb;
         const usingHotspot = this.props.store.driverAnnotationSettings.hotspots;
         ret.push({
             label: getAnnotatingProgressMessage(usingOncokb, usingHotspot),
-            promises:[this.props.store.annotatedMolecularData, this.props.store.putativeDriverAnnotatedMutations]
+            promises: [
+                this.props.store.annotatedMolecularData,
+                this.props.store.putativeDriverAnnotatedMutations,
+            ],
         });
 
         ret.push({
-            label: "Rendering"
+            label: 'Rendering',
         });
 
         return ret as IProgressIndicatorItem[];
@@ -971,33 +1267,48 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public render() {
         return (
-            <div style={{ position:"relative" }}>
-
-                <LoadingIndicator isLoading={this.isHidden} size={"big"} centerRelativeToContainer={true} className="oncoprintLoadingIndicator">
-                    <div style={{marginTop:20}}>
-                        <ProgressIndicator getItems={this.getProgressItems} show={this.isHidden} sequential={true}/>
+            <div style={{ position: 'relative' }}>
+                <LoadingIndicator
+                    isLoading={this.isHidden}
+                    size={'big'}
+                    centerRelativeToContainer={true}
+                    className="oncoprintLoadingIndicator"
+                >
+                    <div style={{ marginTop: 20 }}>
+                        <ProgressIndicator
+                            getItems={this.getProgressItems}
+                            show={this.isHidden}
+                            sequential={true}
+                        />
                     </div>
                 </LoadingIndicator>
 
-                <div className={"tabMessageContainer"}>
-                    <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                <div className={'tabMessageContainer'}>
+                    <OqlStatusBanner
+                        className="oncoprint-oql-status-banner"
+                        store={this.props.store}
+                        tabReflectsOql={true}
+                    />
                 </div>
 
-                <div className={classNames('oncoprintContainer', { fadeIn: !this.isHidden })}
-                     onMouseEnter={this.onMouseEnter}
-                     onMouseLeave={this.onMouseLeave}
+                <div
+                    className={classNames('oncoprintContainer', {
+                        fadeIn: !this.isHidden,
+                    })}
+                    onMouseEnter={this.onMouseEnter}
+                    onMouseLeave={this.onMouseLeave}
                 >
-                    <Observer>
-                        {this.getControls}
-                    </Observer>
+                    <Observer>{this.getControls}</Observer>
 
-                    <div style={{position:"relative", marginTop:15}} >
+                    <div style={{ position: 'relative', marginTop: 15 }}>
                         <div>
                             <Oncoprint
                                 oncoprintRef={this.oncoprintRef}
                                 clinicalTracks={this.clinicalTracks.result}
                                 geneticTracks={this.geneticTracks.result}
-                                genesetHeatmapTracks={this.genesetHeatmapTracks.result}
+                                genesetHeatmapTracks={
+                                    this.genesetHeatmapTracks.result
+                                }
                                 heatmapTracks={this.heatmapTracks.result}
                                 divId={this.props.divId}
                                 width={1050}
@@ -1005,23 +1316,43 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
                                 onReleaseRendering={this.onReleaseRendering}
-                                hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
-                                molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
-                                alterationTypesInQuery={this.alterationTypesInQuery}
+                                hiddenIds={
+                                    !this.showUnalteredColumns
+                                        ? this.unalteredKeys.result
+                                        : undefined
+                                }
+                                molecularProfileIdToMolecularProfile={
+                                    this.props.store
+                                        .molecularProfileIdToMolecularProfile
+                                        .result
+                                }
+                                alterationTypesInQuery={
+                                    this.alterationTypesInQuery
+                                }
                                 showSublabels={this.showOqlInLabels}
-
                                 horzZoomToFitIds={this.alteredKeys.result}
-                                distinguishMutationType={this.distinguishMutationType}
+                                distinguishMutationType={
+                                    this.distinguishMutationType
+                                }
                                 distinguishDrivers={this.distinguishDrivers}
-                                distinguishGermlineMutations={this.distinguishGermlineMutations}
+                                distinguishGermlineMutations={
+                                    this.distinguishGermlineMutations
+                                }
                                 sortConfig={this.sortConfig}
-                                showClinicalTrackLegends={this.showClinicalTrackLegends}
-                                showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
+                                showClinicalTrackLegends={
+                                    this.showClinicalTrackLegends
+                                }
+                                showWhitespaceBetweenColumns={
+                                    this.showWhitespaceBetweenColumns
+                                }
                                 showMinimap={this.showMinimap}
-
                                 onMinimapClose={this.onMinimapClose}
-                                onDeleteClinicalTrack={this.onDeleteClinicalTrack}
-                                onTrackSortDirectionChange={this.onTrackSortDirectionChange}
+                                onDeleteClinicalTrack={
+                                    this.onDeleteClinicalTrack
+                                }
+                                onTrackSortDirectionChange={
+                                    this.onTrackSortDirectionChange
+                                }
                             />
                         </div>
                     </div>

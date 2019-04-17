@@ -1,4 +1,4 @@
 export interface BookmarkLinks {
-  longUrl:string;
-  shortenedUrl:string|undefined;
-};
+    longUrl: string;
+    shortenedUrl: string | undefined;
+}

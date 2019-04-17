@@ -5,17 +5,9 @@ import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
 
 describe('CancerHotspots', () => {
+    before(() => {});
 
-    before(() => {
+    it('what does it do?', () => {});
 
-    });
-
-    it('what does it do?', () => {
-
-    });
-
-    after(() => {
-
-    });
-
+    after(() => {});
 });

@@ -1,9 +1,15 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { observer } from "mobx-react";
+import { observer } from 'mobx-react';
 import classnames from 'classnames';
-import styles from "./styles.module.scss";
-import { observable, computed, action, reaction, IReactionDisposer } from 'mobx';
+import styles from './styles.module.scss';
+import {
+    observable,
+    computed,
+    action,
+    reaction,
+    IReactionDisposer,
+} from 'mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery, SyntaxError } from 'shared/lib/oql/oql-parser';
 import { parseOQLQuery } from 'shared/lib/oql/oqlfilter';
@@ -11,7 +17,7 @@ import { remoteData } from 'shared/api/remoteData';
 import { debounceAsync } from 'mobxpromise';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
 import memoize from 'memoize-weak-decorator';
-import client from "shared/api/cbioportalClientInstance";
+import client from 'shared/api/cbioportalClientInstance';
 import { getFocusOutText } from './GeneSelectionBoxUtils';
 import GeneSymbolValidator from './GeneSymbolValidator';
 import { bind } from '../../../../node_modules/bind-decorator';
@@ -22,25 +28,27 @@ export interface IGeneSelectionBoxProps {
     location?: GeneBoxType;
     callback?: (
         oql: {
-            query: SingleGeneQuery[],
-            error?: { start: number, end: number, message: string }
-        }, genes: {
+            query: SingleGeneQuery[];
+            error?: { start: number; end: number; message: string };
+        },
+        genes: {
             found: Gene[];
             suggestions: GeneReplacement[];
         },
         queryStr: string,
-        status: "pending" | "error" | "complete") => void;
+        status: 'pending' | 'error' | 'complete'
+    ) => void;
 }
 
 export enum DisplayStatus {
     UNFOCUSED,
     SHOULD_FOCUS,
-    FOCUSED
+    FOCUSED,
 }
 export enum GeneBoxType {
     DEFAULT,
     STUDY_VIEW_PAGE,
-    ONCOPRINT_HEATMAP
+    ONCOPRINT_HEATMAP,
 }
 
 function isInteger(str: string) {
@@ -48,26 +56,42 @@ function isInteger(str: string) {
 }
 
 @observer
-export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxProps, {}> {
+export default class GeneSelectionBox extends React.Component<
+    IGeneSelectionBoxProps,
+    {}
+> {
     private geneStatusReaction: IReactionDisposer;
 
     @observable private geneQuery = '';
-    @observable private geneQueryErrorDisplayStatus: DisplayStatus = DisplayStatus.UNFOCUSED;
+    @observable private geneQueryErrorDisplayStatus: DisplayStatus =
+        DisplayStatus.UNFOCUSED;
     @observable private isFocused = false;
 
     constructor(props: IGeneSelectionBoxProps) {
         super(props);
         this.geneQuery = this.props.inputGeneQuery || '';
-        this.geneStatusReaction = reaction(() => this.genes.status, status => {
-            this.props.callback && this.props.callback(this.oql, this.genes.result, this.geneQuery, status);
-        });
+        this.geneStatusReaction = reaction(
+            () => this.genes.status,
+            status => {
+                this.props.callback &&
+                    this.props.callback(
+                        this.oql,
+                        this.genes.result,
+                        this.geneQuery,
+                        status
+                    );
+            }
+        );
     }
 
     componentDidMount() {
         reaction(
             () => this.props.inputGeneQuery,
             inputGeneQuery => {
-                if ((inputGeneQuery || '').toUpperCase() !== this.geneQuery.toUpperCase())
+                if (
+                    (inputGeneQuery || '').toUpperCase() !==
+                    this.geneQuery.toUpperCase()
+                )
                     this.geneQuery = (inputGeneQuery || '').trim();
             },
             { fireImmediately: true }
@@ -79,19 +103,25 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
     }
 
     @bind
-    @action private updateGeneQuery(value: string) {
+    @action
+    private updateGeneQuery(value: string) {
         // clear error when gene query is modified
         this.geneQueryErrorDisplayStatus = DisplayStatus.UNFOCUSED;
         this.geneQuery = value;
     }
 
     @computed private get hasErrors() {
-        return !_.isUndefined(this.oql.error) ||
-            this.genes.result.suggestions.length > 0;
+        return (
+            !_.isUndefined(this.oql.error) ||
+            this.genes.result.suggestions.length > 0
+        );
     }
 
     @computed private get textAreaRef() {
-        if (this.props.geneQueryErrorDisplayStatus === DisplayStatus.SHOULD_FOCUS)
+        if (
+            this.props.geneQueryErrorDisplayStatus ===
+            DisplayStatus.SHOULD_FOCUS
+        )
             return (textArea: HTMLTextAreaElement) => {
                 let { error } = this.oql;
                 if (textArea && error) {
@@ -103,34 +133,38 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
     }
 
     @computed get oql(): {
-        query: SingleGeneQuery[],
-        error?: { start: number, end: number, message: string }
+        query: SingleGeneQuery[];
+        error?: { start: number; end: number; message: string };
     } {
         try {
             return {
-                query: this.geneQuery ? parseOQLQuery(this.geneQuery.trim().toUpperCase()) : [],
-                error: undefined
+                query: this.geneQuery
+                    ? parseOQLQuery(this.geneQuery.trim().toUpperCase())
+                    : [],
+                error: undefined,
             };
-        }
-        catch (error) {
+        } catch (error) {
             if (error.name !== 'SyntaxError')
                 return {
                     query: [],
-                    error: { start: 0, end: 0, message: `Unexpected ${error}` }
+                    error: { start: 0, end: 0, message: `Unexpected ${error}` },
                 };
 
-            let {location:{start:{offset}}} = error as SyntaxError;
+            let {
+                location: {
+                    start: { offset },
+                },
+            } = error as SyntaxError;
             let near, start, end;
             if (offset === this.geneQuery.length)
                 [near, start, end] = ['after', offset - 1, offset];
             else if (offset === 0)
                 [near, start, end] = ['before', offset, offset + 1];
-            else
-                [near, start, end] = ['at', offset, offset + 1];
+            else [near, start, end] = ['at', offset, offset + 1];
             let message = `OQL syntax error ${near} selected character; please fix and submit again.`;
             return {
                 query: [],
-                error: { start, end, message }
+                error: { start, end, message },
             };
         }
     }
@@ -143,23 +177,36 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
     private async getGeneSuggestions(alias: string): Promise<GeneReplacement> {
         return {
             alias,
-            genes: await client.getAllGenesUsingGET({ alias })
+            genes: await client.getAllGenesUsingGET({ alias }),
         };
     }
 
     private invokeGenesLater = debounceAsync(
-        async (geneIds: string[]): Promise<{ found: Gene[], suggestions: GeneReplacement[] }> => {
+        async (
+            geneIds: string[]
+        ): Promise<{ found: Gene[]; suggestions: GeneReplacement[] }> => {
             let [entrezIds, hugoIds] = _.partition(_.uniq(geneIds), isInteger);
 
             let getEntrezResults = async () => {
                 let found: Gene[];
                 if (entrezIds.length)
-                    found = await client.fetchGenesUsingPOST({ geneIdType: "ENTREZ_GENE_ID", geneIds: entrezIds });
-                else
-                    found = [];
-                let missingIds = _.difference(entrezIds, found.map(gene => gene.entrezGeneId + ''));
-                let removals = missingIds.map(entrezId => ({ alias: entrezId, genes: [] }));
-                let replacements = found.map(gene => ({ alias: gene.entrezGeneId + '', genes: [gene] }));
+                    found = await client.fetchGenesUsingPOST({
+                        geneIdType: 'ENTREZ_GENE_ID',
+                        geneIds: entrezIds,
+                    });
+                else found = [];
+                let missingIds = _.difference(
+                    entrezIds,
+                    found.map(gene => gene.entrezGeneId + '')
+                );
+                let removals = missingIds.map(entrezId => ({
+                    alias: entrezId,
+                    genes: [],
+                }));
+                let replacements = found.map(gene => ({
+                    alias: gene.entrezGeneId + '',
+                    genes: [gene],
+                }));
                 let suggestions = [...removals, ...replacements];
                 return { found, suggestions };
             };
@@ -167,18 +214,31 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
             let getHugoResults = async () => {
                 let found: Gene[];
                 if (hugoIds.length)
-                    found = await client.fetchGenesUsingPOST({ geneIdType: "HUGO_GENE_SYMBOL", geneIds: hugoIds });
-                else
-                    found = [];
-                let missingIds = _.difference(hugoIds, found.map(gene => gene.hugoGeneSymbol));
-                let suggestions = await Promise.all(missingIds.map(alias => this.getGeneSuggestions(alias)));
+                    found = await client.fetchGenesUsingPOST({
+                        geneIdType: 'HUGO_GENE_SYMBOL',
+                        geneIds: hugoIds,
+                    });
+                else found = [];
+                let missingIds = _.difference(
+                    hugoIds,
+                    found.map(gene => gene.hugoGeneSymbol)
+                );
+                let suggestions = await Promise.all(
+                    missingIds.map(alias => this.getGeneSuggestions(alias))
+                );
                 return { found, suggestions };
             };
 
-            let [entrezResults, hugoResults] = await Promise.all([getEntrezResults(), getHugoResults()]);
+            let [entrezResults, hugoResults] = await Promise.all([
+                getEntrezResults(),
+                getHugoResults(),
+            ]);
             return {
                 found: [...entrezResults.found, ...hugoResults.found],
-                suggestions: [...entrezResults.suggestions, ...hugoResults.suggestions]
+                suggestions: [
+                    ...entrezResults.suggestions,
+                    ...hugoResults.suggestions,
+                ],
             };
         },
         500
@@ -186,13 +246,14 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
 
     private readonly genes = remoteData({
         invoke: () => this.invokeGenesLater(this.geneIds),
-        default: { found: [], suggestions: [] }
+        default: { found: [], suggestions: [] },
     });
 
     @computed private get placeHolder() {
-        return (this.props.location === GeneBoxType.STUDY_VIEW_PAGE && !this.isFocused) ?
-            'query genes - click to expand' :
-            'Enter HUGO Gene Symbols or Gene Aliases';
+        return this.props.location === GeneBoxType.STUDY_VIEW_PAGE &&
+            !this.isFocused
+            ? 'query genes - click to expand'
+            : 'Enter HUGO Gene Symbols or Gene Aliases';
     }
 
     @computed get focusOutValue() {
@@ -216,12 +277,18 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
                 classNames.push(styles.default);
                 break;
         }
-        this.geneQuery ? classNames.push(styles.notEmpty) : classNames.push(styles.empty);
+        this.geneQuery
+            ? classNames.push(styles.notEmpty)
+            : classNames.push(styles.empty);
         return classNames;
     }
 
     @computed private get showValidationBox() {
-        return this.props.location !== GeneBoxType.STUDY_VIEW_PAGE || this.hasErrors || this.isFocused;
+        return (
+            this.props.location !== GeneBoxType.STUDY_VIEW_PAGE ||
+            this.hasErrors ||
+            this.isFocused
+        );
     }
 
     render() {
@@ -229,29 +296,40 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
             <div className={styles.genesSelection}>
                 <textarea
                     ref={this.textAreaRef}
-                    onFocus={() => this.isFocused = true}
-                    onBlur={() => this.isFocused = false}
+                    onFocus={() => (this.isFocused = true)}
+                    onBlur={() => (this.isFocused = false)}
                     className={classnames(...this.textAreaClasses)}
                     rows={5}
                     cols={80}
                     placeholder={'Click gene symbols below or enter here'}
                     title="Click gene symbols below or enter here"
-                    value={this.showValidationBox ? this.geneQuery : this.focusOutValue}
-                    onChange={event => this.updateGeneQuery(event.currentTarget.value)}
-                    data-test='geneSet'
+                    value={
+                        this.showValidationBox
+                            ? this.geneQuery
+                            : this.focusOutValue
+                    }
+                    onChange={event =>
+                        this.updateGeneQuery(event.currentTarget.value)
+                    }
+                    data-test="geneSet"
                 />
 
                 <GeneSymbolValidator
                     oql={this.oql}
-                    geneQueryErrorDisplayStatus={this.geneQueryErrorDisplayStatus}
+                    geneQueryErrorDisplayStatus={
+                        this.geneQueryErrorDisplayStatus
+                    }
                     geneQuery={this.geneQuery}
                     genes={this.genes}
                     updateGeneQuery={this.updateGeneQuery}
-                    hideSuccessMessage={this.props.location === GeneBoxType.STUDY_VIEW_PAGE}
-                    hideValidatingMessage={this.props.location === GeneBoxType.STUDY_VIEW_PAGE}
+                    hideSuccessMessage={
+                        this.props.location === GeneBoxType.STUDY_VIEW_PAGE
+                    }
+                    hideValidatingMessage={
+                        this.props.location === GeneBoxType.STUDY_VIEW_PAGE
+                    }
                 />
-
             </div>
-        )
+        );
     }
 }

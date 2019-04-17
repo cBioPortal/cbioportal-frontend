@@ -1,9 +1,9 @@
-import * as React from "react";
-import * as _ from "lodash";
-import ReactSelect from "react-select2";
-import autobind from "autobind-decorator";
-import {computed} from "mobx";
-import {observer} from "mobx-react";
+import * as React from 'react';
+import * as _ from 'lodash';
+import ReactSelect from 'react-select2';
+import autobind from 'autobind-decorator';
+import { computed } from 'mobx';
+import { observer } from 'mobx-react';
 
 import './checkedSelect.scss';
 
@@ -15,8 +15,8 @@ export type Option = {
 
 type CheckedSelectProps = {
     name?: string;
-    onChange: (values: {value: string}[]) => void;
-    value: {value: string}[];
+    onChange: (values: { value: string }[]) => void;
+    value: { value: string }[];
     options: Option[];
     placeholder?: string | JSX.Element;
     isClearable?: boolean;
@@ -28,12 +28,14 @@ type CheckedSelectProps = {
 };
 
 @observer
-export default class CheckedSelect extends React.Component<CheckedSelectProps, {}>
-{
+export default class CheckedSelect extends React.Component<
+    CheckedSelectProps,
+    {}
+> {
     public static defaultProps: Partial<CheckedSelectProps> = {
         isClearable: false,
         isDisabled: false,
-        isAddAllDisabled: false
+        isAddAllDisabled: false,
     };
 
     @computed
@@ -45,8 +47,7 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
     get addAllLabel() {
         if (this.props.addAllLabel) {
             return this.props.addAllLabel;
-        }
-        else {
+        } else {
             return `Add all (${this.props.options.length})`;
         }
     }
@@ -62,9 +63,8 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
     }
 
     @autobind
-    private getOptionLabel(option: Option): JSX.Element
-    {
-        let box = "";
+    private getOptionLabel(option: Option): JSX.Element {
+        let box = '';
 
         if (option.value in this.valueMap) {
             box = String.fromCodePoint(9745); // checked box
@@ -72,24 +72,30 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
             box = String.fromCodePoint(9744); // empty box
         }
 
-        return <span>{box} {option.label}</span>;
+        return (
+            <span>
+                {box} {option.label}
+            </span>
+        );
     }
 
     @autobind
     private buttonsSection() {
         return (
-            <div style={{
-                marginTop:-7,
-                paddingBottom:5,
-                display:"flex",
-                justifyContent:"center",
-                alignItems:"center",
-                borderBottom:"1px solid #ccc"
-            }}>
+            <div
+                style={{
+                    marginTop: -7,
+                    paddingBottom: 5,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderBottom: '1px solid #ccc',
+                }}
+            >
                 <button
                     className="btn btn-sm btn-default"
                     onClick={this.props.onAddAll || this.defaultOnAddAll}
-                    style={{marginRight:5}}
+                    style={{ marginRight: 5 }}
                     disabled={this.props.isAddAllDisabled}
                 >
                     {this.addAllLabel}
@@ -110,45 +116,46 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
             <div className="default-checked-select">
                 <ReactSelect
                     styles={{
-                        control: (provided:any)=>({
+                        control: (provided: any) => ({
                             ...provided,
-                            height:33.5,
-                            minHeight:33.5,
-                            border: "1px solid rgb(204,204,204)"
+                            height: 33.5,
+                            minHeight: 33.5,
+                            border: '1px solid rgb(204,204,204)',
                         }),
-                        menu: (provided:any)=>({
+                        menu: (provided: any) => ({
                             ...provided,
-                            maxHeight: 400
+                            maxHeight: 400,
                         }),
-                        menuList: (provided:any)=>({
+                        menuList: (provided: any) => ({
                             ...provided,
-                            maxHeight:400
+                            maxHeight: 400,
                         }),
-                        placeholder:(provided:any)=>({
+                        placeholder: (provided: any) => ({
                             ...provided,
-                            color: "#000000"
+                            color: '#000000',
                         }),
-                        dropdownIndicator:(provided:any)=>({
+                        dropdownIndicator: (provided: any) => ({
                             ...provided,
-                            color:"#000000"
+                            color: '#000000',
                         }),
-                        option:(provided:any, state:any)=>{
-                            const ret:any = {
+                        option: (provided: any, state: any) => {
+                            const ret: any = {
                                 ...provided,
-                                cursor:"pointer",
-                                color:"black"
+                                cursor: 'pointer',
+                                color: 'black',
                             };
                             if (state.isSelected && !state.isFocused) {
-                                ret.backgroundColor = state.theme.colors.primary25;
+                                ret.backgroundColor =
+                                    state.theme.colors.primary25;
                             }
                             return ret;
-                        }
+                        },
                     }}
-                    theme={(theme:any)=>({
+                    theme={(theme: any) => ({
                         ...theme,
                         colors: {
                             ...theme.colors,
-                            primary: theme.colors.primary50
+                            primary: theme.colors.primary50,
                         },
                     })}
                     components={{ GroupHeading: this.buttonsSection }}
@@ -161,10 +168,13 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                     controlShouldRenderValue={false}
                     placeholder={this.props.placeholder}
                     onChange={this.props.onChange}
-                    options={[{
-                        label:"dummy label, this is only here to create group so we can add the buttons section as the group label component",
-                        options: this.props.options
-                    }]}
+                    options={[
+                        {
+                            label:
+                                'dummy label, this is only here to create group so we can add the buttons section as the group label component',
+                            options: this.props.options,
+                        },
+                    ]}
                     getOptionLabel={this.getOptionLabel}
                     value={this.props.value}
                     labelKey="label"

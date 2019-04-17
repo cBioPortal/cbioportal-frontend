@@ -1,11 +1,15 @@
 import * as React from 'react';
-import RefComponent from "./RefComponent";
-import {ICache} from "../../../lib/SimpleCache";
+import RefComponent from './RefComponent';
+import { ICache } from '../../../lib/SimpleCache';
 
-export default class SummaryWithRefs extends React.Component<{ content: string | undefined, type: 'tooltip' | 'linkout', pmidData: ICache<any> }> {
+export default class SummaryWithRefs extends React.Component<{
+    content: string | undefined;
+    type: 'tooltip' | 'linkout';
+    pmidData: ICache<any>;
+}> {
     render() {
         if (!this.props.content) {
-            return <span></span>;
+            return <span />;
         }
 
         const content: Array<JSX.Element> = [];
@@ -23,7 +27,13 @@ export default class SummaryWithRefs extends React.Component<{ content: string |
         parts.forEach((part: string) => {
             // if delimiter convert to a JSX component
             if (part.match(regex)) {
-                content.push(<RefComponent pmidData={this.props.pmidData} componentType={this.props.type} content={part}/>)
+                content.push(
+                    <RefComponent
+                        pmidData={this.props.pmidData}
+                        componentType={this.props.type}
+                        content={part}
+                    />
+                );
             } else {
                 content.push(<span>{part}</span>);
             }

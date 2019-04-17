@@ -1,17 +1,19 @@
-import * as React from "react";
-import {computed} from "mobx";
-import {observer} from "mobx-react";
+import * as React from 'react';
+import { computed } from 'mobx';
+import { observer } from 'mobx-react';
 
-import {loaderIcon} from "../annotation/StatusHelpers";
-import CheckedSelect, {Option} from "../checkedSelect/CheckedSelect";
+import { loaderIcon } from '../annotation/StatusHelpers';
+import CheckedSelect, { Option } from '../checkedSelect/CheckedSelect';
 
-export type TrackVisibility = {[trackName: string]: 'visible' | 'hidden'};
-export type TrackDataStatus = {[trackName: string]: 'pending' | 'error' | 'complete' | 'empty'}
+export type TrackVisibility = { [trackName: string]: 'visible' | 'hidden' };
+export type TrackDataStatus = {
+    [trackName: string]: 'pending' | 'error' | 'complete' | 'empty';
+};
 
 export enum TrackNames {
-    PDB = "PDB",
-    CancerHotspots = "CANCER_HOTSPOTS",
-    OncoKB = "ONCO_KB"
+    PDB = 'PDB',
+    CancerHotspots = 'CANCER_HOTSPOTS',
+    OncoKB = 'ONCO_KB',
 }
 
 interface ITrackSelectorProps {
@@ -23,16 +25,17 @@ interface ITrackSelectorProps {
 }
 
 @observer
-export default class TrackSelector extends React.Component<ITrackSelectorProps, {}>
-{
-
-    public static defaultProps:Partial<ITrackSelectorProps> = {
-        name: "mutationMapperTrackSelector",
-        placeholder: "Add annotation tracks"
+export default class TrackSelector extends React.Component<
+    ITrackSelectorProps,
+    {}
+> {
+    public static defaultProps: Partial<ITrackSelectorProps> = {
+        name: 'mutationMapperTrackSelector',
+        placeholder: 'Add annotation tracks',
     };
 
     @computed get onChange() {
-        return (values: {value:string}[]) => {
+        return (values: { value: string }[]) => {
             this.props.onChange(values.map(o => o.value));
         };
     }
@@ -40,7 +43,7 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
     @computed get selectedValues() {
         return Object.keys(this.props.trackVisibility)
             .filter(id => this.props.trackVisibility[id] === 'visible')
-            .map(id => ({value: id}));
+            .map(id => ({ value: id }));
     }
 
     @computed get options(): Option[] {
@@ -49,10 +52,11 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
                 label: (
                     <span>
                         Cancer Hotspots
-                        {this.isPending(TrackNames.CancerHotspots) && this.loaderIcon()}
+                        {this.isPending(TrackNames.CancerHotspots) &&
+                            this.loaderIcon()}
                     </span>
                 ),
-                value: TrackNames.CancerHotspots
+                value: TrackNames.CancerHotspots,
             },
             {
                 label: (
@@ -61,7 +65,7 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
                         {this.isPending(TrackNames.OncoKB) && this.loaderIcon()}
                     </span>
                 ),
-                value: TrackNames.OncoKB
+                value: TrackNames.OncoKB,
             },
             {
                 label: (
@@ -71,26 +75,31 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
                     </span>
                 ),
                 value: TrackNames.PDB,
-                disabled: this.isDisabled(TrackNames.PDB)
-            }
+                disabled: this.isDisabled(TrackNames.PDB),
+            },
         ];
     }
 
     private isPending(trackName: string) {
-        return this.props.trackDataStatus && this.props.trackDataStatus[trackName] === 'pending';
+        return (
+            this.props.trackDataStatus &&
+            this.props.trackDataStatus[trackName] === 'pending'
+        );
     }
 
     private isDisabled(trackName: string) {
-        return this.props.trackDataStatus && this.props.trackDataStatus[trackName] !== 'complete';
+        return (
+            this.props.trackDataStatus &&
+            this.props.trackDataStatus[trackName] !== 'complete'
+        );
     }
 
-    private loaderIcon()
-    {
+    private loaderIcon() {
         return (
             <span
                 style={{
-                    display: "inline-block",
-                    verticalAlign: "bottom",
+                    display: 'inline-block',
+                    verticalAlign: 'bottom',
                     marginLeft: 5,
                 }}
             >
@@ -99,8 +108,7 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
         );
     }
 
-    public render()
-    {
+    public render() {
         return (
             <CheckedSelect
                 name={this.props.name}

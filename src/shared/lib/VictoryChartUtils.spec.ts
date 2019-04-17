@@ -1,9 +1,7 @@
-import {assert} from 'chai';
-import {adjustedLongestLabelLength} from "./VictoryChartUtils";
+import { assert } from 'chai';
+import { adjustedLongestLabelLength } from './VictoryChartUtils';
 
 describe('VictoryChartUtils functions', () => {
-
-
     it('adjustedLongestLabelLength', () => {
         assert.equal(adjustedLongestLabelLength(['Test']), 5);
         assert.equal(adjustedLongestLabelLength(['Test', 'Tes']), 5);

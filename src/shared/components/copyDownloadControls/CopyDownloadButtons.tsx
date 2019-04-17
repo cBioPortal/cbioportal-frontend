@@ -1,35 +1,35 @@
 import * as React from 'react';
-import {If} from 'react-if';
-import {Button, ButtonGroup} from 'react-bootstrap';
+import { If } from 'react-if';
+import { Button, ButtonGroup } from 'react-bootstrap';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
-import {ICopyDownloadInputsProps} from "./ICopyDownloadControls";
+import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
-    copyButtonRef?: (el: HTMLButtonElement|null) => void;
+    copyButtonRef?: (el: HTMLButtonElement | null) => void;
 }
 
-export class CopyDownloadButtons extends React.Component<ICopyDownloadButtonsProps, {}>
-{
+export class CopyDownloadButtons extends React.Component<
+    ICopyDownloadButtonsProps,
+    {}
+> {
     public static defaultProps = {
-        className: "",
-        copyLabel: "",
-        downloadLabel: "",
+        className: '',
+        copyLabel: '',
+        downloadLabel: '',
         showCopy: true,
         showDownload: true,
-        showCopyMessage: false
+        showCopyMessage: false,
     };
 
-    get baseTooltipProps()
-    {
+    get baseTooltipProps() {
         return {
-            placement: "top",
+            placement: 'top',
             mouseLeaveDelay: 0,
-            mouseEnterDelay: 0.5
+            mouseEnterDelay: 0.5,
         };
     }
 
-    copyButton()
-    {
+    copyButton() {
         const button = (
             <button
                 ref={this.props.copyButtonRef}
@@ -38,7 +38,7 @@ export class CopyDownloadButtons extends React.Component<ICopyDownloadButtonsPro
                 id="copyButton"
                 onClick={this.props.handleCopy}
             >
-                {this.props.copyLabel} <i className='fa fa-clipboard'/>
+                {this.props.copyLabel} <i className="fa fa-clipboard" />
             </button>
         );
 
@@ -61,15 +61,15 @@ export class CopyDownloadButtons extends React.Component<ICopyDownloadButtonsPro
         );
     }
 
-    downloadButton()
-    {
+    downloadButton() {
         return (
             <DefaultTooltip
                 overlay={<span>Download TSV</span>}
                 {...this.baseTooltipProps}
             >
                 <Button className="btn-sm" onClick={this.props.handleDownload}>
-                    {this.props.downloadLabel} <i className='fa fa-cloud-download'/>
+                    {this.props.downloadLabel}{' '}
+                    <i className="fa fa-cloud-download" />
                 </Button>
             </DefaultTooltip>
         );
@@ -79,9 +79,7 @@ export class CopyDownloadButtons extends React.Component<ICopyDownloadButtonsPro
         return (
             <span className={this.props.className}>
                 <ButtonGroup className={this.props.className}>
-                    <If condition={this.props.showCopy}>
-                        {this.copyButton()}
-                    </If>
+                    <If condition={this.props.showCopy}>{this.copyButton()}</If>
                     <If condition={this.props.showDownload}>
                         {this.downloadButton()}
                     </If>
