@@ -10,8 +10,6 @@ import CreateGroupFromOverlap from "./CreateGroupFromOverlap";
 import GroupComparisonStore from "./GroupComparisonStore";
 import autobind from "autobind-decorator";
 import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
-import * as d3 from "d3";
-import VennDiagram from "./VennDiagram";
 
 export interface IVennProps {
     svgId?: string;
