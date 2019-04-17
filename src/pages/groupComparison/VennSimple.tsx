@@ -13,6 +13,8 @@ import classnames from "classnames";
 import styles from "../resultsView/survival/styles.module.scss";
 import {pluralize} from "../../shared/lib/StringUtils";
 import {blendColors, getExcludedIndexes, getTextColor, joinNames} from "./OverlapUtils";
+import {computeVennJsSizes} from "./VennUtils";
+
 const VennJs = require("venn.js");
 
 export interface IVennSimpleProps {
@@ -88,7 +90,7 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
 
     @computed get layoutParams() {
         const data = this.regions.map(r=>({
-            size: r.numCasesIntersectionOnly,
+            size: r.vennJsSize,
             sets: r.combination.map(i=>this.props.groups[i].uid),
         }));
 
@@ -126,21 +128,21 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
                 break;
         }
 
-        return combinations.map(combination=>{
+        return computeVennJsSizes(combinations.map(combination=>{
             // compute the cases in this region
             let casesInRegion = _.intersection(...combination.map(index=>this.props.groups[index].cases));
-            const numCasesIntersectionOnly = casesInRegion.length;
+            const intersectionSize = casesInRegion.length;
             for (const i of getExcludedIndexes(combination, this.props.groups.length)) {
                 _.pullAll(casesInRegion, this.props.groups[i].cases);
             }
             return {
                 combination,
-                numCasesIntersectionOnly,
+                intersectionSize,
                 numCases: casesInRegion.length,
                 // compute the fill based on the colors of the included groups
                 color: blendColors(combination.map(index=>this.props.uidToGroup[this.props.groups[index].uid].color))
             };
-        });
+        }));
     }
 
     @computed get displayElements() {
@@ -202,7 +204,7 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
             }
 
             return [hoverArea];
-        })).concat(_.sortBy(this.regions.filter(r=>r.combination.length === 1), r=>-r.numCasesIntersectionOnly).map(r=>{
+        })).concat(_.sortBy(this.regions.filter(r=>r.combination.length === 1), r=>-r.vennJsSize).map(r=>{
             // draw the outlines of the circles
             const uid = this.props.groups[r.combination[0]].uid;
             return (
