@@ -1,8 +1,8 @@
 export default function invertIncreasingFunction(
-    func:(x:number)=>number,
+    func: (x: number) => number,
     y: number,
-    xRange:[number,number],
-    iterations:number = 20
+    xRange: [number, number],
+    iterations: number = 20
 ) {
     // tries to approximate the value x, within xRange, such that func(x) = targetOutput, assuming func is monotonic increasing
     let xMin = xRange[0];

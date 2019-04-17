@@ -1,25 +1,27 @@
 import * as React from 'react';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {VAFPlot, IVAFPlotProps, MutationFrequenciesBySample} from './VAFPlot';
-import Tooltip, {RCTooltip} from "rc-tooltip";
+import { VAFPlot, IVAFPlotProps, MutationFrequenciesBySample } from './VAFPlot';
+import Tooltip, { RCTooltip } from 'rc-tooltip';
 
 export type IThumbnailExpandVAFPlotProps = {
     data: MutationFrequenciesBySample;
-    order?: { [s:string]:number };
-    colors?: { [s: string]:string };
-    labels?: { [s:string]:string };
+    order?: { [s: string]: number };
+    colors?: { [s: string]: string };
+    labels?: { [s: string]: string };
     overlayPlacement?: RCTooltip.Placement;
     cssClass?: string;
 };
 
-export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFPlotProps, {}> {
-
+export class ThumbnailExpandVAFPlot extends React.Component<
+    IThumbnailExpandVAFPlotProps,
+    {}
+> {
     public static defaultProps = {
         order: {},
         colors: {},
         labels: {},
-        overlayPlacement: "left",
+        overlayPlacement: 'left',
     };
 
     shouldComponentUpdate() {
@@ -35,7 +37,7 @@ export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFP
             nolegend: true,
             width: 64,
             height: 64,
-            label_font_size: "6.5px",
+            label_font_size: '6.5px',
             xticks: 0,
             yticks: 0,
             margin_bottom: 15,
@@ -55,14 +57,12 @@ export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFP
             <DefaultTooltip
                 placement={this.props.overlayPlacement}
                 trigger={['hover', 'focus']}
-                overlay={<VAFPlot {...expandedProps}/>}
-                arrowContent={<div className="rc-tooltip-arrow-inner"/>}
+                overlay={<VAFPlot {...expandedProps} />}
+                arrowContent={<div className="rc-tooltip-arrow-inner" />}
                 destroyTooltipOnHide={false}
             >
-                <div className={ this.props.cssClass || '' }>
-                    <VAFPlot
-                            {...thumbnailProps}
-                    />
+                <div className={this.props.cssClass || ''}>
+                    <VAFPlot {...thumbnailProps} />
                 </div>
             </DefaultTooltip>
         );

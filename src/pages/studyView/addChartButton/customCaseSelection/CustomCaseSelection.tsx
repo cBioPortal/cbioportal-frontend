@@ -1,22 +1,27 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {Sample} from 'shared/api/generated/CBioPortalAPIInternal';
-import {observer} from "mobx-react";
-import styles from "./styles.module.scss";
-import {action, computed, observable} from 'mobx';
-import {ButtonGroup, Modal, Radio} from 'react-bootstrap';
-import {ClinicalDataType, ClinicalDataTypeEnum, NewChart} from "../../StudyViewPageStore";
-import ErrorBox from "../../../../shared/components/errorBox/ErrorBox";
-import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
+import { Sample } from 'shared/api/generated/CBioPortalAPIInternal';
+import { observer } from 'mobx-react';
+import styles from './styles.module.scss';
+import { action, computed, observable } from 'mobx';
+import { ButtonGroup, Modal, Radio } from 'react-bootstrap';
 import {
-    DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, ErrorCodeEnum,
+    ClinicalDataType,
+    ClinicalDataTypeEnum,
+    NewChart,
+} from '../../StudyViewPageStore';
+import ErrorBox from '../../../../shared/components/errorBox/ErrorBox';
+import { STUDY_VIEW_CONFIG } from '../../StudyViewConfig';
+import {
+    DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
+    ErrorCodeEnum,
     parseContent,
     ParseResult,
-    ValidationResult
-} from "./CustomCaseSelectionUtils";
+    ValidationResult,
+} from './CustomCaseSelectionUtils';
 import autobind from 'autobind-decorator';
-import Collapse from "react-collapse";
-import {serializeEvent} from "../../../../shared/lib/tracking";
+import Collapse from 'react-collapse';
+import { serializeEvent } from '../../../../shared/lib/tracking';
 
 export interface ICustomCaseSelectionProps {
     allSamples: Sample[];
@@ -26,18 +31,21 @@ export interface ICustomCaseSelectionProps {
     queriedStudies: string[];
     disableGrouping?: boolean;
     getDefaultChartName?: () => string;
-    isChartNameValid?: (chartName: string) => boolean
+    isChartNameValid?: (chartName: string) => boolean;
 }
 
-const GroupByOptions: { value: ClinicalDataType, label: string; }[] = [
-    {value: ClinicalDataTypeEnum.SAMPLE, label: 'By sample ID'},
-    {value: ClinicalDataTypeEnum.PATIENT, label: 'By patient ID'}
+const GroupByOptions: { value: ClinicalDataType; label: string }[] = [
+    { value: ClinicalDataTypeEnum.SAMPLE, label: 'By sample ID' },
+    { value: ClinicalDataTypeEnum.PATIENT, label: 'By patient ID' },
 ];
 
 @observer
-export default class CustomCaseSelection extends React.Component<ICustomCaseSelectionProps, {}> {
+export default class CustomCaseSelection extends React.Component<
+    ICustomCaseSelectionProps,
+    {}
+> {
     private validateContent: boolean = false;
-    private chartNameValidation: ValidationResult = {warning: [], error: []};
+    private chartNameValidation: ValidationResult = { warning: [], error: [] };
     @observable dataFormatCollapsed: boolean = true;
     @observable chartName: string;
     @observable showCaseIds: boolean = false;
@@ -46,12 +54,15 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @observable validContent: string = '';
 
     public static defaultProps = {
-        disableGrouping: false
+        disableGrouping: false,
     };
 
     @computed
     get sampleSet(): { [id: string]: Sample } {
-        return _.keyBy(this.props.selectedSamples, s => `${s.studyId}:${s.sampleId}`)
+        return _.keyBy(
+            this.props.selectedSamples,
+            s => `${s.studyId}:${s.sampleId}`
+        );
     }
 
     @computed
@@ -61,27 +72,49 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @computed
     get result(): ParseResult {
-        return parseContent(this.validContent, this.validateContent, this.props.queriedStudies, this.caseIdsMode, this.props.allSamples, this.isSingleStudy);
+        return parseContent(
+            this.validContent,
+            this.validateContent,
+            this.props.queriedStudies,
+            this.caseIdsMode,
+            this.props.allSamples,
+            this.isSingleStudy
+        );
     }
 
     @computed
     get newChartInfo(): NewChart {
         return {
-            name: this.chartName ? this.chartName : this.props.getDefaultChartName ? this.props.getDefaultChartName() : '',
-            groups: this.result.validationResult.error.length === 0 ? this.result.groups : []
-        }
+            name: this.chartName
+                ? this.chartName
+                : this.props.getDefaultChartName
+                ? this.props.getDefaultChartName()
+                : '',
+            groups:
+                this.result.validationResult.error.length === 0
+                    ? this.result.groups
+                    : [],
+        };
     }
 
     @autobind
     @action
     onClick() {
         let cases = this.props.selectedSamples.map(sample => {
-            return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
+            return `${sample.studyId}:${
+                this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE
+                    ? sample.sampleId
+                    : sample.patientId
+            }${
+                this.props.disableGrouping
+                    ? ''
+                    : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
+            }`;
         });
         if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
             cases = _.uniq(cases);
         }
-        this.content = cases.join("\n")
+        this.content = cases.join('\n');
         this.validateContent = false;
         this.validContent = this.content;
     }
@@ -92,25 +125,29 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
         this.validContent = newContent;
         this.validateContent = true;
     }
-    
+
     @autobind
     @action
     onChartNameChange(event: any) {
         this.chartName = event.currentTarget.value;
-        const validChartName = this.props.isChartNameValid ? this.props.isChartNameValid(this.chartName) : true;
+        const validChartName = this.props.isChartNameValid
+            ? this.props.isChartNameValid(this.chartName)
+            : true;
         if (!validChartName) {
             this.chartNameValidation = {
-                error: [{
-                    code: ErrorCodeEnum.INVALID,
-                    message: new Error('Chart name exists.')
-                }],
-                warning: []
-            }
+                error: [
+                    {
+                        code: ErrorCodeEnum.INVALID,
+                        message: new Error('Chart name exists.'),
+                    },
+                ],
+                warning: [],
+            };
         } else {
             this.chartNameValidation = {
                 error: [],
-                warning: []
-            }
+                warning: [],
+            };
         }
     }
 
@@ -128,95 +165,142 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @computed
     get addChartButtonDisabled() {
-        return this.result.validationResult.error.length > 0 || this.newChartInfo.groups.length === 0 || this.chartNameValidation.error.length > 0;
+        return (
+            this.result.validationResult.error.length > 0 ||
+            this.newChartInfo.groups.length === 0 ||
+            this.chartNameValidation.error.length > 0
+        );
     }
 
     @computed
     get dataFormatContent() {
-        return <span>Each row can have two columns separated by space or tab:
-                <br/>1) study_id:{this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? 'sample_id ' : 'patient_id '}
-            and<br/>2) group_name of your choice<br/>group_name is optional if there is only one group.</span>;
+        return (
+            <span>
+                Each row can have two columns separated by space or tab:
+                <br />
+                1) study_id:
+                {this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE
+                    ? 'sample_id '
+                    : 'patient_id '}
+                and
+                <br />
+                2) group_name of your choice
+                <br />
+                group_name is optional if there is only one group.
+            </span>
+        );
     }
 
     public mainContent() {
         return (
             <div className={styles.body}>
                 <ButtonGroup>
-                    {
-                        GroupByOptions.map((option, i) => {
-                            return <Radio
+                    {GroupByOptions.map((option, i) => {
+                        return (
+                            <Radio
                                 checked={option.value === this.caseIdsMode}
-                                onChange={(e) => {
-                                    this.caseIdsMode = $(e.target).attr("data-value") as any;
+                                onChange={e => {
+                                    this.caseIdsMode = $(e.target).attr(
+                                        'data-value'
+                                    ) as any;
                                     this.validateContent = true;
                                 }}
                                 inline
                                 data-value={option.value}
-                            >{option.label}</Radio>
-                        })
-                    }
+                            >
+                                {option.label}
+                            </Radio>
+                        );
+                    })}
                 </ButtonGroup>
 
-
                 <span>
-                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                        <span
-                            className={styles.fillIds}
-                            onClick={this.onClick}>
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <span className={styles.fillIds} onClick={this.onClick}>
                             Use currently selected samples/patients
                         </span>
 
-                        <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
+                        <div
+                            className="collapsible-header"
+                            onClick={this.handleDataFormatToggle}
+                        >
                             <a>Data Format</a>
-                            <span style={{paddingLeft: 4, cursor: 'pointer'}}>
-                            {this.dataFormatCollapsed ?
-                                <i className="fa fa-chevron-down"/> :
-                                <i className="fa fa-chevron-up"/>
-                            }
-                        </span>
+                            <span style={{ paddingLeft: 4, cursor: 'pointer' }}>
+                                {this.dataFormatCollapsed ? (
+                                    <i className="fa fa-chevron-down" />
+                                ) : (
+                                    <i className="fa fa-chevron-up" />
+                                )}
+                            </span>
                         </div>
                     </div>
                     <Collapse isOpened={!this.dataFormatCollapsed}>
-                        <div style={{marginTop: '5px'}}>{this.dataFormatContent}</div>
+                        <div style={{ marginTop: '5px' }}>
+                            {this.dataFormatContent}
+                        </div>
                     </Collapse>
                 </span>
 
                 <textarea
                     value={this.content}
-                    onChange={(event) => {
+                    onChange={event => {
                         this.content = event.currentTarget.value;
                         _.delay(() => {
                             this.onChange(this.content);
                         }, 500);
                     }}
-                    data-test='CustomCaseSetInput'
+                    data-test="CustomCaseSetInput"
                 />
-                {
-                    this.result.validationResult.error.concat(this.chartNameValidation.error).map(message => {
-                        return <ErrorBox className={styles.error} error={message.message}/>
-                    })
-                }
-                {
-                    this.result.validationResult.warning.concat(this.chartNameValidation.warning).map(message => {
-                        return <ErrorBox style={{backgroundColor: STUDY_VIEW_CONFIG.colors.theme.tertiary}}
-                                         error={message.message}/>
-                    })
-                }
+                {this.result.validationResult.error
+                    .concat(this.chartNameValidation.error)
+                    .map(message => {
+                        return (
+                            <ErrorBox
+                                className={styles.error}
+                                error={message.message}
+                            />
+                        );
+                    })}
+                {this.result.validationResult.warning
+                    .concat(this.chartNameValidation.warning)
+                    .map(message => {
+                        return (
+                            <ErrorBox
+                                style={{
+                                    backgroundColor:
+                                        STUDY_VIEW_CONFIG.colors.theme.tertiary,
+                                }}
+                                error={message.message}
+                            />
+                        );
+                    })}
 
                 <div className={styles.operations}>
                     {!this.props.disableGrouping && (
-                        <input placeholder={"Chart name (optional)"}
-                               style={{width: '200px'}}
-                               type="text"
-                               onInput={this.onChartNameChange}
-                               className='form-control input-sm'/>
+                        <input
+                            placeholder={'Chart name (optional)'}
+                            style={{ width: '200px' }}
+                            type="text"
+                            onInput={this.onChartNameChange}
+                            className="form-control input-sm"
+                        />
                     )}
                     <button
                         disabled={this.addChartButtonDisabled}
                         className="btn btn-primary btn-sm"
-                        data-test='CustomCaseSetSubmitButton'
-                        data-event={serializeEvent({ category:'studyPage', action:'customCaseSetSelection', label:this.props.queriedStudies.join(",")})}
-                        onClick={this.onAddChart}>
+                        data-test="CustomCaseSetSubmitButton"
+                        data-event={serializeEvent({
+                            category: 'studyPage',
+                            action: 'customCaseSetSelection',
+                            label: this.props.queriedStudies.join(','),
+                        })}
+                        onClick={this.onAddChart}
+                    >
                         {this.props.submitButtonText}
                     </button>
                 </div>
@@ -225,8 +309,6 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     }
 
     render() {
-        return (
-            this.mainContent()
-        )
+        return this.mainContent();
     }
 }

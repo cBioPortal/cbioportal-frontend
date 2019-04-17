@@ -1,20 +1,21 @@
-import * as React from "react";
-import {assert} from 'chai';
+import * as React from 'react';
+import { assert } from 'chai';
 import { mount, shallow } from 'enzyme';
-import ExpressionWrapper, {ExpressionWrapperProps} from './ExpressionWrapper';
-import {NumericGeneMolecularData} from "../../../shared/api/generated/CBioPortalAPI";
+import ExpressionWrapper, { ExpressionWrapperProps } from './ExpressionWrapper';
+import { NumericGeneMolecularData } from '../../../shared/api/generated/CBioPortalAPI';
 
 const expressionTestData: ExpressionWrapperProps = require('json-loader!./expressionTestData.json');
 
-describe('Expression Wrapper',()=>{
-
+describe('Expression Wrapper', () => {
     let wrapper: any;
     let instance: ExpressionWrapper;
 
-    beforeEach(()=>{
-        wrapper = shallow(<ExpressionWrapper
-            {...expressionTestData as ExpressionWrapperProps}
-        />);
+    beforeEach(() => {
+        wrapper = shallow(
+            <ExpressionWrapper
+                {...expressionTestData as ExpressionWrapperProps}
+            />
+        );
         instance = wrapper.instance() as ExpressionWrapper;
     });
 
@@ -28,5 +29,4 @@ describe('Expression Wrapper',()=>{
         assert.equal(instance.sortedData[2][0].studyId,  'laml_tcga', 'sort according to median values');
 
     });*/
-
 });

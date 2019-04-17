@@ -1,4 +1,4 @@
-import sessionServiceAPI from "./sessionServiceAPI";
+import sessionServiceAPI from './sessionServiceAPI';
 
 const client = new sessionServiceAPI();
 

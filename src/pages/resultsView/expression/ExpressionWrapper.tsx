@@ -1,108 +1,154 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {observer, Observer} from "mobx-react";
+import { observer, Observer } from 'mobx-react';
 import './styles.scss';
 import {
-    CancerStudy, Gene, NumericGeneMolecularData, Mutation, MolecularProfile
-} from "../../../shared/api/generated/CBioPortalAPI";
-import {action, computed, observable} from "mobx";
-import getCanonicalMutationType from "../../../shared/lib/getCanonicalMutationType";
+    CancerStudy,
+    Gene,
+    NumericGeneMolecularData,
+    Mutation,
+    MolecularProfile,
+} from '../../../shared/api/generated/CBioPortalAPI';
+import { action, computed, observable } from 'mobx';
+import getCanonicalMutationType from '../../../shared/lib/getCanonicalMutationType';
 import {
-    calculateJitter, ExpressionStyle, ExpressionStyleSheet, expressionTooltip, getExpressionStyle,
-    getMolecularDataBuckets, prioritizeMutations
-} from "./expressionHelpers";
-import {Modal} from "react-bootstrap";
-import autobind from "autobind-decorator";
+    calculateJitter,
+    ExpressionStyle,
+    ExpressionStyleSheet,
+    expressionTooltip,
+    getExpressionStyle,
+    getMolecularDataBuckets,
+    prioritizeMutations,
+} from './expressionHelpers';
+import { Modal } from 'react-bootstrap';
+import autobind from 'autobind-decorator';
 import {
-    VictoryBoxPlot, VictoryChart, VictoryAxis, Point,
-    VictoryLabel, VictoryContainer, VictoryTooltip, VictoryScatter, VictoryLegend
+    VictoryBoxPlot,
+    VictoryChart,
+    VictoryAxis,
+    Point,
+    VictoryLabel,
+    VictoryContainer,
+    VictoryTooltip,
+    VictoryScatter,
+    VictoryLegend,
 } from 'victory';
-import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
-import {BOX_STYLES, BoxPlotModel, calculateBoxPlotModel, VictoryBoxPlotModel} from "../../../shared/lib/boxPlotUtils";
-import {ITooltipModel} from "../../../shared/model/ITooltipModel";
-import ChartContainer from "../../../shared/components/ChartContainer/ChartContainer";
-import {If, Then, Else} from 'react-if';
+import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
+import {
+    BOX_STYLES,
+    BoxPlotModel,
+    calculateBoxPlotModel,
+    VictoryBoxPlotModel,
+} from '../../../shared/lib/boxPlotUtils';
+import { ITooltipModel } from '../../../shared/model/ITooltipModel';
+import ChartContainer from '../../../shared/components/ChartContainer/ChartContainer';
+import { If, Then, Else } from 'react-if';
 import jStat from 'jStat';
 import numeral from 'numeral';
 import classNames from 'classnames';
-import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
-import {CoverageInformation, isPanCanStudy, isTCGAProvStudy} from "../ResultsViewPageStoreUtils";
-import {sleep} from "../../../shared/lib/TimeUtils";
+import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
+import {
+    CoverageInformation,
+    isPanCanStudy,
+    isTCGAProvStudy,
+} from '../ResultsViewPageStoreUtils';
+import { sleep } from '../../../shared/lib/TimeUtils';
 import {
     CNA_STROKE_WIDTH,
-    getCnaQueries, IBoxScatterPlotPoint, INumberAxisData, IScatterPlotData, IScatterPlotSampleData, IStringAxisData,
-    makeBoxScatterPlotData, makeScatterPlotPointAppearance,
-    mutationRenderPriority, MutationSummary, mutationSummaryToAppearance, scatterPlotLegendData,
-    scatterPlotTooltip, boxPlotTooltip, scatterPlotZIndexSortBy
-} from "../plots/PlotsTabUtils";
-import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
-import {getSampleViewUrl} from "../../../shared/api/urls";
-import {AnnotatedMutation, ResultsViewPageStore} from "../ResultsViewPageStore";
-import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
-import {remoteData} from "../../../shared/api/remoteData";
-import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
-import {MobxPromise} from "mobxpromise";
-import {stringListToSet} from "../../../shared/lib/StringUtils";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
-import {ViewType} from "../plots/PlotsTab";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
-import {maxPage} from "../../../shared/components/lazyMobXTable/utils";
-import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
+    getCnaQueries,
+    IBoxScatterPlotPoint,
+    INumberAxisData,
+    IScatterPlotData,
+    IScatterPlotSampleData,
+    IStringAxisData,
+    makeBoxScatterPlotData,
+    makeScatterPlotPointAppearance,
+    mutationRenderPriority,
+    MutationSummary,
+    mutationSummaryToAppearance,
+    scatterPlotLegendData,
+    scatterPlotTooltip,
+    boxPlotTooltip,
+    scatterPlotZIndexSortBy,
+} from '../plots/PlotsTabUtils';
+import { getOncoprintMutationType } from '../../../shared/components/oncoprint/DataUtils';
+import { getSampleViewUrl } from '../../../shared/api/urls';
+import {
+    AnnotatedMutation,
+    ResultsViewPageStore,
+} from '../ResultsViewPageStore';
+import OqlStatusBanner from '../../../shared/components/oqlStatusBanner/OqlStatusBanner';
+import { remoteData } from '../../../shared/api/remoteData';
+import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
+import { MobxPromise } from 'mobxpromise';
+import { stringListToSet } from '../../../shared/lib/StringUtils';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import BoxScatterPlot from '../../../shared/components/plots/BoxScatterPlot';
+import { ViewType } from '../plots/PlotsTab';
+import DownloadControls from '../../../shared/components/downloadControls/DownloadControls';
+import { maxPage } from '../../../shared/components/lazyMobXTable/utils';
+import { scatterPlotSize } from '../../../shared/components/plots/PlotUtils';
 
 export interface ExpressionWrapperProps {
-    store:ResultsViewPageStore;
-    expressionProfiles:MobxPromise<MolecularProfile[]>;
-    numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>;
+    store: ResultsViewPageStore;
+    expressionProfiles: MobxPromise<MolecularProfile[]>;
+    numericGeneMolecularDataCache: MobxPromiseCache<
+        { entrezGeneId: number; molecularProfileId: string },
+        NumericGeneMolecularData[]
+    >;
     studyMap: { [studyId: string]: CancerStudy };
     genes: Gene[];
     mutations: AnnotatedMutation[];
     onRNASeqVersionChange: (version: number) => void;
     RNASeqVersion: number;
-    coverageInformation: CoverageInformation
+    coverageInformation: CoverageInformation;
 }
 
 class ExpressionTabBoxPlot extends BoxScatterPlot<IBoxScatterPlotPoint> {}
 
 const SYMBOL_SIZE = 3;
 
-const EXPRESSION_CAP = .01;
+const EXPRESSION_CAP = 0.01;
 
 const LOGGING_FUNCTION = Math.log2;
 
-const SVG_ID = "expression-tab-plot-svg";
+const SVG_ID = 'expression-tab-plot-svg';
 
-export type ScatterPoint = { x: number, y: NumericGeneMolecularData };
+export type ScatterPoint = { x: number; y: NumericGeneMolecularData };
 
-type SortOptions = "alphabetic" | "median";
+type SortOptions = 'alphabetic' | 'median';
 
 type ExpressionTooltipModel = {
     studyName: string;
-    studyId:string;
-    mutationType:string | null;
-    proteinChange:string | null;
+    studyId: string;
+    mutationType: string | null;
+    proteinChange: string | null;
     sampleId: string;
-    expression: number,
-    style: ExpressionStyle
+    expression: number;
+    style: ExpressionStyle;
 };
 
 @observer
-export default class ExpressionWrapper extends React.Component<ExpressionWrapperProps, {}> {
-
+export default class ExpressionWrapper extends React.Component<
+    ExpressionWrapperProps,
+    {}
+> {
     constructor(props: ExpressionWrapperProps) {
         super(props);
         this.selectedGene = props.genes[0];
         (window as any).box = this;
     }
 
-    componentWillMount(){
+    componentWillMount() {
         // initialize selected study state. study is on except if it does not have any data (doesn't appear in data collection)
-        this.selectedStudyIds = _.mapValues(this.props.studyMap,(study)=>true);
+        this.selectedStudyIds = _.mapValues(this.props.studyMap, study => true);
     }
 
     svgContainer: SVGElement;
 
-    @observable.ref tooltipModel: ITooltipModel<ExpressionTooltipModel> | null = null;
+    @observable.ref tooltipModel: ITooltipModel<
+        ExpressionTooltipModel
+    > | null = null;
 
     @observable.ref selectedGene: Gene;
 
@@ -118,7 +164,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @observable logScale = true;
 
-    @observable sortBy: SortOptions = "alphabetic";
+    @observable sortBy: SortOptions = 'alphabetic';
 
     @observable isTooltipHovered = false;
 
@@ -128,98 +174,134 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     tooltipCounter: number = 0;
 
     @computed get selectedStudies() {
-        return _.filter(this.props.studyMap,(study)=>this.selectedStudyIds[study.studyId] === true);
+        return _.filter(
+            this.props.studyMap,
+            study => this.selectedStudyIds[study.studyId] === true
+        );
     }
 
-    @computed get widthThreshold(){
-        return (this.selectedStudies.length > 7);
+    @computed get widthThreshold() {
+        return this.selectedStudies.length > 7;
     }
 
-    @computed get boxWidth(){
+    @computed get boxWidth() {
         const maxWidth = 80; // width with 1 box
         const minWidth = 18; // width with 33 boxes - value of 18 is calibrated to fit all 33 tcga pan-can atlas studies
 
         // solving linear equation for maxWidth at 1 and minWidth at 33
-        const m = (minWidth - maxWidth)/32;
+        const m = (minWidth - maxWidth) / 32;
         const b = maxWidth - m;
 
         return Math.max(m * this.selectedStudies.length + b, minWidth);
     }
 
     readonly sampleStudyData = remoteData<IStringAxisData>({
-        await:()=>[this.props.store.samples],
-        invoke: ()=>{
+        await: () => [this.props.store.samples],
+        invoke: () => {
             // data representing the horizontal axis - which sample is in which study
-            return Promise.resolve(
-                {
-                    data: this.props.store.samples.result!.reduce((_data, sample)=>{
+            return Promise.resolve({
+                data: this.props.store.samples.result!.reduce(
+                    (_data, sample) => {
                         // filter out data for unselected studies
                         if (this.selectedStudyIds[sample.studyId]) {
                             _data.push({
                                 uniqueSampleKey: sample.uniqueSampleKey,
-                                value: this.props.studyMap[sample.studyId].shortName
+                                value: this.props.studyMap[sample.studyId]
+                                    .shortName,
                             });
                         }
                         return _data;
-                    }, [] as IStringAxisData["data"]),
-                    datatype: "string"
-                }
-            );
-        }
+                    },
+                    [] as IStringAxisData['data']
+                ),
+                datatype: 'string',
+            });
+        },
     });
 
     readonly expressionData = remoteData<NumericGeneMolecularData[]>({
-        await:()=>this.props.numericGeneMolecularDataCache.await([this.props.expressionProfiles],
-            profiles=>profiles.map((p:MolecularProfile)=>({ entrezGeneId: this.selectedGene.entrezGeneId, molecularProfileId: p.molecularProfileId }))
-        ),
-        invoke:()=>{
+        await: () =>
+            this.props.numericGeneMolecularDataCache.await(
+                [this.props.expressionProfiles],
+                profiles =>
+                    profiles.map((p: MolecularProfile) => ({
+                        entrezGeneId: this.selectedGene.entrezGeneId,
+                        molecularProfileId: p.molecularProfileId,
+                    }))
+            ),
+        invoke: () => {
             // TODO: this cache is leading to some ugly code
-            return Promise.resolve(_.flatten(this.props.numericGeneMolecularDataCache.getAll(
-                this.props.expressionProfiles.result!.map(p=>({ entrezGeneId: this.selectedGene.entrezGeneId, molecularProfileId: p.molecularProfileId }))
-            ).map(promise=>promise.result!)) as NumericGeneMolecularData[]);
-        }
+            return Promise.resolve(_.flatten(
+                this.props.numericGeneMolecularDataCache
+                    .getAll(
+                        this.props.expressionProfiles.result!.map(p => ({
+                            entrezGeneId: this.selectedGene.entrezGeneId,
+                            molecularProfileId: p.molecularProfileId,
+                        }))
+                    )
+                    .map(promise => promise.result!)
+            ) as NumericGeneMolecularData[]);
+        },
     });
 
-    readonly studiesWithExpressionData = remoteData<{[studyId:string]:boolean}>({
-        await:()=>[this.expressionData],
-        invoke:()=>{
-            const studyIds = _.chain<NumericGeneMolecularData[]>(this.expressionData.result!)
-                    .map(d=>d.studyId)
-                    .uniq()
-                    .value();
+    readonly studiesWithExpressionData = remoteData<{
+        [studyId: string]: boolean;
+    }>({
+        await: () => [this.expressionData],
+        invoke: () => {
+            const studyIds = _.chain<NumericGeneMolecularData[]>(
+                this.expressionData.result!
+            )
+                .map(d => d.studyId)
+                .uniq()
+                .value();
             return Promise.resolve(stringListToSet(studyIds));
-        }
+        },
     });
 
     readonly mutationDataExists = remoteData({
-        await: ()=>[this.props.store.studyToMutationMolecularProfile],
-        invoke: ()=>{
-            return Promise.resolve(!!_.values(this.props.store.studyToMutationMolecularProfile).length);
-        }
+        await: () => [this.props.store.studyToMutationMolecularProfile],
+        invoke: () => {
+            return Promise.resolve(
+                !!_.values(this.props.store.studyToMutationMolecularProfile)
+                    .length
+            );
+        },
     });
 
     readonly cnaDataExists = remoteData({
-        await: ()=>[this.props.store.studyToMolecularProfileDiscrete],
-        invoke: ()=>{
-            return Promise.resolve(!!_.values(this.props.store.studyToMolecularProfileDiscrete).length);
-        }
+        await: () => [this.props.store.studyToMolecularProfileDiscrete],
+        invoke: () => {
+            return Promise.resolve(
+                !!_.values(this.props.store.studyToMolecularProfileDiscrete)
+                    .length
+            );
+        },
     });
 
     readonly cnaData = remoteData({
-        await:()=>{
+        await: () => {
             if (this.cnaDataShown && this.selectedGene !== undefined) {
-                return [this.props.store.annotatedCnaCache.get({ entrezGeneId: this.selectedGene.entrezGeneId })];
+                return [
+                    this.props.store.annotatedCnaCache.get({
+                        entrezGeneId: this.selectedGene.entrezGeneId,
+                    }),
+                ];
             } else {
                 return [];
             }
         },
-        invoke:()=>{
+        invoke: () => {
             if (this.cnaDataShown && this.selectedGene !== undefined) {
-                return Promise.resolve(this.props.store.annotatedCnaCache.get({ entrezGeneId: this.selectedGene.entrezGeneId }).result!);
+                return Promise.resolve(
+                    this.props.store.annotatedCnaCache.get({
+                        entrezGeneId: this.selectedGene.entrezGeneId,
+                    }).result!
+                );
             } else {
                 return Promise.resolve([]);
             }
-        }
+        },
     });
 
     @computed get mutationDataShown() {
@@ -231,39 +313,55 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     readonly _unsortedBoxPlotData = remoteData({
-        await:()=>[
+        await: () => [
             this.sampleStudyData,
             this.expressionData,
             this.props.store.sampleKeyToSample,
             this.props.store.studyToMutationMolecularProfile,
             this.props.store.studyToMolecularProfileDiscrete,
-            this.cnaData
+            this.cnaData,
         ],
-        invoke:()=>{
-            return Promise.resolve(makeBoxScatterPlotData(
-                this.sampleStudyData.result!,
-                {
-                    data: this.expressionData.result!,
-                    datatype: "number",
-                    hugoGeneSymbol: this.selectedGene.hugoGeneSymbol
-                } as INumberAxisData,
-                this.props.store.sampleKeyToSample.result!,
-                this.props.coverageInformation.samples,
-                this.mutationDataExists.result ? {
-                    molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
-                    data: this.props.mutations.filter(m=>m.entrezGeneId === this.selectedGene.entrezGeneId)
-                } : undefined,
-                this.cnaDataShown ? {
-                    molecularProfileIds: _.values(this.props.store.studyToMolecularProfileDiscrete.result!).map(p=>p.molecularProfileId),
-                    data: this.cnaData.result!
-                }: undefined
-            ));
-        }
+        invoke: () => {
+            return Promise.resolve(
+                makeBoxScatterPlotData(
+                    this.sampleStudyData.result!,
+                    {
+                        data: this.expressionData.result!,
+                        datatype: 'number',
+                        hugoGeneSymbol: this.selectedGene.hugoGeneSymbol,
+                    } as INumberAxisData,
+                    this.props.store.sampleKeyToSample.result!,
+                    this.props.coverageInformation.samples,
+                    this.mutationDataExists.result
+                        ? {
+                              molecularProfileIds: _.values(
+                                  this.props.store
+                                      .studyToMutationMolecularProfile.result!
+                              ).map(p => p.molecularProfileId),
+                              data: this.props.mutations.filter(
+                                  m =>
+                                      m.entrezGeneId ===
+                                      this.selectedGene.entrezGeneId
+                              ),
+                          }
+                        : undefined,
+                    this.cnaDataShown
+                        ? {
+                              molecularProfileIds: _.values(
+                                  this.props.store
+                                      .studyToMolecularProfileDiscrete.result!
+                              ).map(p => p.molecularProfileId),
+                              data: this.cnaData.result!,
+                          }
+                        : undefined
+                )
+            );
+        },
     });
 
     readonly boxPlotData = remoteData({
-        await:()=>[this._unsortedBoxPlotData],
-        invoke:()=>{
+        await: () => [this._unsortedBoxPlotData],
+        invoke: () => {
             /*// sort data order within boxes, for rendering order (z-index)
             const sortedData = this._unsortedBoxPlotData.result!.map(labelAndData=>({
                 label: labelAndData.label,
@@ -272,29 +370,38 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             const sortedData = this._unsortedBoxPlotData.result!;
 
             // sort box order
-            if (this.sortBy === "alphabetic") {
-                return Promise.resolve(_.sortBy<any>(sortedData, d=>d.label));
+            if (this.sortBy === 'alphabetic') {
+                return Promise.resolve(_.sortBy<any>(sortedData, d => d.label));
             } else {
-                return Promise.resolve(_.sortBy<any>(sortedData, d=>{
-                    //Note: we have to use slice to convert Seamless immutable array to real array, otherwise jStat chokes
-                    return jStat.median(Array.prototype.slice.apply((d.data.map((v:any)=>(v.value as number)))));
-                }));
+                return Promise.resolve(
+                    _.sortBy<any>(sortedData, d => {
+                        //Note: we have to use slice to convert Seamless immutable array to real array, otherwise jStat chokes
+                        return jStat.median(
+                            Array.prototype.slice.apply(
+                                d.data.map((v: any) => v.value as number)
+                            )
+                        );
+                    })
+                );
             }
-        }
+        },
     });
 
-    @computed get studyTypeCounts(){
+    @computed get studyTypeCounts() {
         const allStudies = _.values(this.props.studyMap);
         return {
-            provisional:allStudies.filter((study)=>isTCGAProvStudy(study.studyId)),
-            panCancer:allStudies.filter((study)=>isPanCanStudy(study.studyId))
-        }
+            provisional: allStudies.filter(study =>
+                isTCGAProvStudy(study.studyId)
+            ),
+            panCancer: allStudies.filter(study => isPanCanStudy(study.studyId)),
+        };
     }
 
     @autobind
     handleStudySelection(event: React.SyntheticEvent<HTMLInputElement>) {
         // toggle state of it
-        this.selectedStudyIds[event.currentTarget.value] = !this.selectedStudyIds[event.currentTarget.value];
+        this.selectedStudyIds[event.currentTarget.value] = !this
+            .selectedStudyIds[event.currentTarget.value];
     }
 
     @autobind
@@ -308,101 +415,168 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @autobind
-    handleSelectAllStudies(){
+    handleSelectAllStudies() {
         if (this.studiesWithExpressionData.isComplete) {
-            this.applyStudyFilter((study)=>{
+            this.applyStudyFilter(study => {
                 return study.studyId in this.studiesWithExpressionData.result!;
             });
         }
     }
 
     @autobind
-    handleDeselectAllStudies(){
-        this.applyStudyFilter((study)=>{
+    handleDeselectAllStudies() {
+        this.applyStudyFilter(study => {
             return false;
         });
     }
 
-    @computed get hasUnselectedStudies(){
+    @computed get hasUnselectedStudies() {
         if (this.studiesWithExpressionData.isComplete) {
-            return undefined !== _.find(this.props.studyMap,(study)=>{
-                const hasData = study.studyId in this.studiesWithExpressionData.result!;
-                const isSelected = this.selectedStudies.includes(study);
-                return hasData && !isSelected;
-            });
+            return (
+                undefined !==
+                _.find(this.props.studyMap, study => {
+                    const hasData =
+                        study.studyId in this.studiesWithExpressionData.result!;
+                    const isSelected = this.selectedStudies.includes(study);
+                    return hasData && !isSelected;
+                })
+            );
         } else {
             return false;
         }
     }
 
     @computed
-    get alphabetizedStudies(){
-        return _.chain(this.props.studyMap).values().sortBy(
-            (study:CancerStudy)=>study.name
-        ).value();
+    get alphabetizedStudies() {
+        return _.chain(this.props.studyMap)
+            .values()
+            .sortBy((study: CancerStudy) => study.name)
+            .value();
     }
 
     @computed
     get studySelectionModal() {
-
-        return (<Modal data-test="ExpressionStudyModal" show={true} onHide={() => {
-            this.studySelectorModalVisible = false
-        }} className="cbioportal-frontend">
-            <Modal.Header closeButton>
-                <Modal.Title>Select Studies</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <div>
+        return (
+            <Modal
+                data-test="ExpressionStudyModal"
+                show={true}
+                onHide={() => {
+                    this.studySelectorModalVisible = false;
+                }}
+                className="cbioportal-frontend"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Select Studies</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
                     <div>
-                        <a data-test="ExpressionStudySelectAll" className={classNames({hidden:!this.hasUnselectedStudies})} onClick={this.handleSelectAllStudies}>Select all</a>
-                        <span className={classNames({hidden:!this.hasUnselectedStudies || this.selectedStudies.length === 0})}>&nbsp;|&nbsp;</span>
-                        <a data-test="ExpressionStudyUnselectAll" className={classNames({hidden:this.selectedStudies.length === 0})} onClick={this.handleDeselectAllStudies}>Deselect all</a>
+                        <div>
+                            <a
+                                data-test="ExpressionStudySelectAll"
+                                className={classNames({
+                                    hidden: !this.hasUnselectedStudies,
+                                })}
+                                onClick={this.handleSelectAllStudies}
+                            >
+                                Select all
+                            </a>
+                            <span
+                                className={classNames({
+                                    hidden:
+                                        !this.hasUnselectedStudies ||
+                                        this.selectedStudies.length === 0,
+                                })}
+                            >
+                                &nbsp;|&nbsp;
+                            </span>
+                            <a
+                                data-test="ExpressionStudyUnselectAll"
+                                className={classNames({
+                                    hidden: this.selectedStudies.length === 0,
+                                })}
+                                onClick={this.handleDeselectAllStudies}
+                            >
+                                Deselect all
+                            </a>
+                        </div>
+                        {_.map(
+                            this.alphabetizedStudies,
+                            (study: CancerStudy) => {
+                                const hasData =
+                                    study.studyId in
+                                    (this.studiesWithExpressionData.result ||
+                                        {});
+                                return (
+                                    <div
+                                        className={classNames('checkbox', {
+                                            disabled: !hasData,
+                                        })}
+                                    >
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={
+                                                    hasData &&
+                                                    this.selectedStudyIds[
+                                                        study.studyId
+                                                    ] === true
+                                                }
+                                                value={study.studyId}
+                                                disabled={!hasData}
+                                                onChange={
+                                                    !hasData
+                                                        ? () => {}
+                                                        : this
+                                                              .handleStudySelection
+                                                }
+                                            />
+                                            {study.name}
+                                            {!hasData && (
+                                                <span
+                                                    className="badge badge-info small"
+                                                    style={{ marginLeft: 5 }}
+                                                >
+                                                    {'No Expr. Data'}
+                                                </span>
+                                            )}
+                                        </label>
+                                    </div>
+                                );
+                            }
+                        )}
                     </div>
-                    {
-                        _.map(this.alphabetizedStudies, (study: CancerStudy) => {
-                            const hasData = (study.studyId in (this.studiesWithExpressionData.result || {}));
-                            return (
-                                <div className={classNames('checkbox',{ disabled:!hasData })}>
-                                    <label>
-                                        <input type="checkbox"
-                                               checked={hasData && this.selectedStudyIds[study.studyId] === true}
-                                               value={study.studyId}
-                                               disabled={!hasData}
-                                               onChange={(!hasData)? ()=>{} : this.handleStudySelection}/>
-                                        {study.name}
-                                        { (!hasData) && (<span className="badge badge-info small" style={{marginLeft:5}}>{"No Expr. Data"}</span>) }
-                                    </label>
-                                </div>
-                            )
-                        })
-                    }
-                </div>
-            </Modal.Body>
-        </Modal>)
-
+                </Modal.Body>
+            </Modal>
+        );
     }
 
     @autobind
     public applyStudyFilter(test: (study: CancerStudy) => boolean) {
-        this.selectedStudyIds = _.mapValues(this.props.studyMap, (study: CancerStudy, studyId: string) => {
-            return test(study);
-        });
+        this.selectedStudyIds = _.mapValues(
+            this.props.studyMap,
+            (study: CancerStudy, studyId: string) => {
+                return test(study);
+            }
+        );
     }
 
     @autobind
-    public handleTabClick(id: string, datum:Gene) {
+    public handleTabClick(id: string, datum: Gene) {
         this.selectedGene = datum;
     }
 
     @computed
     get yAxisLabel() {
         const log = this.logScale ? ' (log2)' : '';
-        return `${this.selectedGene.hugoGeneSymbol} Expression --- RNA Seq V${this.props.RNASeqVersion}${log}`;
+        return `${this.selectedGene.hugoGeneSymbol} Expression --- RNA Seq V${
+            this.props.RNASeqVersion
+        }${log}`;
     }
 
     @computed get fill() {
         if (this.showCna || this.showMutations) {
-            return (d:IScatterPlotSampleData)=>this.scatterPlotAppearance(d).fill!;
+            return (d: IScatterPlotSampleData) =>
+                this.scatterPlotAppearance(d).fill!;
         } else {
             return mutationSummaryToAppearance[MutationSummary.Neither].fill;
         }
@@ -426,17 +600,22 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @autobind
-    private strokeOpacity(d:IScatterPlotSampleData) {
+    private strokeOpacity(d: IScatterPlotSampleData) {
         return this.scatterPlotAppearance(d).strokeOpacity;
     }
 
     @autobind
-    private stroke(d:IScatterPlotSampleData) {
+    private stroke(d: IScatterPlotSampleData) {
         return this.scatterPlotAppearance(d).stroke;
     }
 
     @computed get scatterPlotAppearance() {
-        return makeScatterPlotPointAppearance(this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.driverAnnotationSettings.driversAnnotated);
+        return makeScatterPlotPointAppearance(
+            this.viewType,
+            this.mutationDataExists,
+            this.cnaDataExists,
+            this.props.store.driverAnnotationSettings.driversAnnotated
+        );
     }
 
     @computed get viewType() {
@@ -451,16 +630,19 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         }
     }
 
-    private boxCalculationFilter(d:IBoxScatterPlotPoint) {
+    private boxCalculationFilter(d: IBoxScatterPlotPoint) {
         // filter out zero values from box calculation
         return d.value !== 0;
     }
 
     @autobind
-    private tooltip(d:IBoxScatterPlotPoint) {
+    private tooltip(d: IBoxScatterPlotPoint) {
         let content;
         if (this.props.store.studyIdToStudy.isComplete) {
-            content = expressionTooltip(d, this.props.store.studyIdToStudy.result!);
+            content = expressionTooltip(
+                d,
+                this.props.store.studyIdToStudy.result!
+            );
         } else {
             content = <span>Loading...</span>;
         }
@@ -468,9 +650,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get zIndexSortBy() {
-        return scatterPlotZIndexSortBy<IScatterPlotSampleData>(
-            this.viewType
-        );
+        return scatterPlotZIndexSortBy<IScatterPlotSampleData>(this.viewType);
     }
 
     @autobind
@@ -502,15 +682,20 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         strokeWidth={this.strokeWidth}
                         useLogSpaceTicks={true}
                         legendData={scatterPlotLegendData(
-                            _.flatten(this.boxPlotData.result.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.driverAnnotationSettings.driversAnnotated
+                            _.flatten(this.boxPlotData.result.map(d => d.data)),
+                            this.viewType,
+                            this.mutationDataExists,
+                            this.cnaDataExists,
+                            this.props.store.driverAnnotationSettings
+                                .driversAnnotated
                         )}
                         legendLocationWidthThreshold={900}
                         boxCalculationFilter={this.boxCalculationFilter}
-                />
+                    />
                 </ChartContainer>
             );
         } else {
-            return <span></span>
+            return <span />;
         }
     }
 
@@ -521,132 +706,221 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed get exportFileName() {
         // TODO: more specific?
-        return "Expression";
+        return 'Expression';
     }
 
     render() {
         return (
             <div data-test="expressionTabDiv">
-                <div className={"tabMessageContainer"}>
-                    <OqlStatusBanner className="expression-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:-1, marginBottom:12}}/>
+                <div className={'tabMessageContainer'}>
+                    <OqlStatusBanner
+                        className="expression-oql-status-banner"
+                        store={this.props.store}
+                        tabReflectsOql={false}
+                        style={{ marginTop: -1, marginBottom: 12 }}
+                    />
                 </div>
-                { (this.studySelectorModalVisible) && this.studySelectionModal }
-                <div style={{marginBottom:15}}>
-
-                    <MSKTabs onTabClick={this.handleTabClick}
-                             arrowStyle={{'line-height': .8}}
-                             enablePagination={false}
-                             unmountOnHide={true}
-                             tabButtonStyle="pills"
-                             activeTabId={"summaryTab" + this.selectedGene.hugoGeneSymbol}
-                             className="pillTabs">
-                        {
-                            this.props.genes.map((gene:Gene)=> {
-                               return <MSKTab key={gene.hugoGeneSymbol} datum={gene} id={"summaryTab" + gene.hugoGeneSymbol}
-                                        linkText={gene.hugoGeneSymbol}/>
-                            })
+                {this.studySelectorModalVisible && this.studySelectionModal}
+                <div style={{ marginBottom: 15 }}>
+                    <MSKTabs
+                        onTabClick={this.handleTabClick}
+                        arrowStyle={{ 'line-height': 0.8 }}
+                        enablePagination={false}
+                        unmountOnHide={true}
+                        tabButtonStyle="pills"
+                        activeTabId={
+                            'summaryTab' + this.selectedGene.hugoGeneSymbol
                         }
+                        className="pillTabs"
+                    >
+                        {this.props.genes.map((gene: Gene) => {
+                            return (
+                                <MSKTab
+                                    key={gene.hugoGeneSymbol}
+                                    datum={gene}
+                                    id={'summaryTab' + gene.hugoGeneSymbol}
+                                    linkText={gene.hugoGeneSymbol}
+                                />
+                            );
+                        })}
                     </MSKTabs>
 
-                    <form className="form-inline expression-controls" style={{marginBottom:10}}>
-
+                    <form
+                        className="form-inline expression-controls"
+                        style={{ marginBottom: 10 }}
+                    >
                         <div className="form-group">
                             <h5>Profile:</h5>
-                            <select className="form-control input-sm" value={this.props.RNASeqVersion}
-                                    onChange={this.handleRNASeqVersionChange} title="Select profile">
+                            <select
+                                className="form-control input-sm"
+                                value={this.props.RNASeqVersion}
+                                onChange={this.handleRNASeqVersionChange}
+                                title="Select profile"
+                            >
                                 <option value={2}>RNA Seq V2</option>
                                 <option value={1}>RNA Seq</option>
                             </select>
                         </div>
 
-                        {(this.boxPlotData.isComplete && this.boxPlotData.result.length > 1) && (
-                            <div className="form-group">
-                                <h5>Sort By:</h5>
+                        {this.boxPlotData.isComplete &&
+                            this.boxPlotData.result.length > 1 && (
+                                <div className="form-group">
+                                    <h5>Sort By:</h5>
 
-                                <select className="form-control input-sm" value={this.sortBy}
-                                        onChange={this.handleSortByChange} title="Select profile">
-                                    <option value={"alphabetic"}>Cancer Study</option>
-                                    <option value={"median"}>Median</option>
-                                </select>
-                            </div>
-                        )}
+                                    <select
+                                        className="form-control input-sm"
+                                        value={this.sortBy}
+                                        onChange={this.handleSortByChange}
+                                        title="Select profile"
+                                    >
+                                        <option value={'alphabetic'}>
+                                            Cancer Study
+                                        </option>
+                                        <option value={'median'}>Median</option>
+                                    </select>
+                                </div>
+                            )}
 
                         <div className="form-group">
                             <label className="checkbox-inline">
-                                <input type="checkbox" checked={this.logScale}
-                                       onChange={()=>this.logScale = !this.logScale} title="Log scale"/>
+                                <input
+                                    type="checkbox"
+                                    checked={this.logScale}
+                                    onChange={() =>
+                                        (this.logScale = !this.logScale)
+                                    }
+                                    title="Log scale"
+                                />
                                 Log scale
                             </label>
-                            { this.mutationDataExists.result && <label className="checkbox-inline">
-                                <input type="checkbox" checked={this.showMutations}
-                                       onChange={() => this.showMutations = !this.showMutations}
-                                       title="Show mutations *"/>
-                                Show mutations *
-                            </label>}
-                            { this.cnaDataExists.result && <label className="checkbox-inline">
-                                <input type="checkbox" checked={this.showCna}
-                                       onChange={() => this.showCna = !this.showCna}
-                                       title="Show copy number alterations"/>
-                                Show copy number alterations
-                            </label>}
+                            {this.mutationDataExists.result && (
+                                <label className="checkbox-inline">
+                                    <input
+                                        type="checkbox"
+                                        checked={this.showMutations}
+                                        onChange={() =>
+                                            (this.showMutations = !this
+                                                .showMutations)
+                                        }
+                                        title="Show mutations *"
+                                    />
+                                    Show mutations *
+                                </label>
+                            )}
+                            {this.cnaDataExists.result && (
+                                <label className="checkbox-inline">
+                                    <input
+                                        type="checkbox"
+                                        checked={this.showCna}
+                                        onChange={() =>
+                                            (this.showCna = !this.showCna)
+                                        }
+                                        title="Show copy number alterations"
+                                    />
+                                    Show copy number alterations
+                                </label>
+                            )}
                         </div>
-
                     </form>
 
-                    { this.studiesWithExpressionData.isComplete && <div>
-                        <label>Select studies:</label>&nbsp;
-                        <If condition={this.studyTypeCounts.provisional.length > 0}>
-                            <button className="btn btn-default btn-xs" style={{marginRight:5}}
-                                    onClick={() => this.applyStudyFilter((study: CancerStudy) => isTCGAProvStudy(study.studyId))}>
-                                 TCGA Provisional ({this.studyTypeCounts.provisional.length})
+                    {this.studiesWithExpressionData.isComplete && (
+                        <div>
+                            <label>Select studies:</label>&nbsp;
+                            <If
+                                condition={
+                                    this.studyTypeCounts.provisional.length > 0
+                                }
+                            >
+                                <button
+                                    className="btn btn-default btn-xs"
+                                    style={{ marginRight: 5 }}
+                                    onClick={() =>
+                                        this.applyStudyFilter(
+                                            (study: CancerStudy) =>
+                                                isTCGAProvStudy(study.studyId)
+                                        )
+                                    }
+                                >
+                                    TCGA Provisional (
+                                    {this.studyTypeCounts.provisional.length})
+                                </button>
+                            </If>
+                            <If
+                                condition={
+                                    this.studyTypeCounts.panCancer.length > 0
+                                }
+                            >
+                                <button
+                                    className="btn btn-default btn-xs"
+                                    style={{ marginRight: 5 }}
+                                    onClick={() =>
+                                        this.applyStudyFilter(
+                                            (study: CancerStudy) =>
+                                                isPanCanStudy(study.studyId)
+                                        )
+                                    }
+                                >
+                                    TCGA Pan-Can Atlas (
+                                    {this.studyTypeCounts.panCancer.length})
+                                </button>
+                            </If>
+                            <button
+                                data-test="ExpressionStudyModalButton"
+                                className="btn btn-default btn-xs"
+                                onClick={() =>
+                                    (this.studySelectorModalVisible = !this
+                                        .studySelectorModalVisible)
+                                }
+                            >
+                                Custom list
                             </button>
-                        </If>
-                        <If condition={this.studyTypeCounts.panCancer.length > 0}>
-                            <button className="btn btn-default btn-xs" style={{marginRight:5}}
-                                    onClick={() => this.applyStudyFilter((study: CancerStudy) => isPanCanStudy(study.studyId))}>
-                                TCGA Pan-Can Atlas ({this.studyTypeCounts.panCancer.length})
-                            </button>
-                        </If>
-                        <button data-test="ExpressionStudyModalButton"className="btn btn-default btn-xs"
-                                onClick={() => this.studySelectorModalVisible = !this.studySelectorModalVisible}>Custom list</button>
-
-                    </div>}
-                    { this.studiesWithExpressionData.isPending && <LoadingIndicator isLoading={true} />}
+                        </div>
+                    )}
+                    {this.studiesWithExpressionData.isPending && (
+                        <LoadingIndicator isLoading={true} />
+                    )}
 
                     <div className="collapse">
-                        <div className="well"></div>
+                        <div className="well" />
                     </div>
                 </div>
 
-                { this.boxPlotData.isComplete && <If condition={this.selectedStudies.length > 0}>
-                    <Then>
-                        <If condition={_.size(this.boxPlotData.result!) > 0}>
-                            <Then>
-                                <div className="posRelative">
-                                    <Observer>
-                                        {this.getChart}
-                                    </Observer>
-                                    {this.mutationDataExists.result && (
-                                        <div style={{marginTop:20}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
-                                    )}
-                                </div>
-                            </Then>
-                            <Else>
-                                <div className="alert alert-info">
-                                    No expression data for this query.
-                                </div>
-                            </Else>
-                        </If>
-                    </Then>
-                    <Else>
-                        <div className="alert alert-info">
-                            No studies selected.
-                        </div>
-                    </Else>
-                </If>}
-                { this.boxPlotData.isPending && <LoadingIndicator isLoading={true} />}
+                {this.boxPlotData.isComplete && (
+                    <If condition={this.selectedStudies.length > 0}>
+                        <Then>
+                            <If
+                                condition={_.size(this.boxPlotData.result!) > 0}
+                            >
+                                <Then>
+                                    <div className="posRelative">
+                                        <Observer>{this.getChart}</Observer>
+                                        {this.mutationDataExists.result && (
+                                            <div style={{ marginTop: 20 }}>
+                                                * Driver annotation settings are
+                                                located in the Mutation Color
+                                                menu of the Oncoprint.
+                                            </div>
+                                        )}
+                                    </div>
+                                </Then>
+                                <Else>
+                                    <div className="alert alert-info">
+                                        No expression data for this query.
+                                    </div>
+                                </Else>
+                            </If>
+                        </Then>
+                        <Else>
+                            <div className="alert alert-info">
+                                No studies selected.
+                            </div>
+                        </Else>
+                    </If>
+                )}
+                {this.boxPlotData.isPending && (
+                    <LoadingIndicator isLoading={true} />
+                )}
             </div>
         );
     }
-
 }

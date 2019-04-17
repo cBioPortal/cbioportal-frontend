@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
     VictoryAxis,
     VictoryChart,
@@ -7,79 +7,84 @@ import {
     VictoryLegend,
     VictoryScatter,
     VictoryTheme,
-    VictoryTooltip
-} from "victory";
-import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {action, computed, observable} from "mobx";
-import {observer, Observer} from "mobx-react";
-import {MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
-import {AlterationTypeConstants} from "../ResultsViewPageStore";
-import {getSampleViewUrl} from "../../../shared/api/urls";
-import "./styles.scss";
-import {bind} from "bind-decorator";
-import ScatterPlot from "../../../shared/components/plots/ScatterPlot";
+    VictoryTooltip,
+} from 'victory';
+import { CoExpression } from '../../../shared/api/generated/CBioPortalAPIInternal';
+import { action, computed, observable } from 'mobx';
+import { observer, Observer } from 'mobx-react';
+import { MolecularProfile } from '../../../shared/api/generated/CBioPortalAPI';
+import { AlterationTypeConstants } from '../ResultsViewPageStore';
+import { getSampleViewUrl } from '../../../shared/api/urls';
+import './styles.scss';
+import { bind } from 'bind-decorator';
+import ScatterPlot from '../../../shared/components/plots/ScatterPlot';
 import Timer = NodeJS.Timer;
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
-import {axisLabel, isNotProfiled} from "./CoExpressionPlotUtils";
-import _ from "lodash";
-import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
+import DownloadControls from '../../../shared/components/downloadControls/DownloadControls';
+import { axisLabel, isNotProfiled } from './CoExpressionPlotUtils';
+import _ from 'lodash';
+import { scatterPlotSize } from '../../../shared/components/plots/PlotUtils';
 
-type GeneId = { hugoGeneSymbol:string, entrezGeneId: number, cytoband:string};
-
-export interface ICoExpressionPlotProps {
-    xAxisGene:GeneId;
-    yAxisGene:GeneId;
-    data:CoExpressionPlotData[];
-    coExpression:CoExpression;
-    molecularProfile:MolecularProfile;
-
-    height:number;
-    width:number;
-
-    showLogScaleControls?:boolean;
-    showMutationControls?:boolean;
-    showMutations?:boolean;
-    logScale?:boolean;
-    showRegressionLine:boolean;
-    handlers:{
-        onClickShowMutations?:()=>void,
-        onClickLogScale?:()=>void,
-        onClickShowRegressionLine:()=>void
-    }
-}
-
-
-export type CoExpressionPlotData = {
-    x:number,
-    y:number,
-    mutationsX:string,
-    mutationsY:string,
-    profiledX:boolean,
-    profiledY:boolean,
-    studyId:string,
-    sampleId:string
+type GeneId = {
+    hugoGeneSymbol: string;
+    entrezGeneId: number;
+    cytoband: string;
 };
 
-class CoExpressionScatterPlot extends ScatterPlot<CoExpressionPlotData>{}
+export interface ICoExpressionPlotProps {
+    xAxisGene: GeneId;
+    yAxisGene: GeneId;
+    data: CoExpressionPlotData[];
+    coExpression: CoExpression;
+    molecularProfile: MolecularProfile;
 
-const NO_MUT_STROKE = "#0174df";
-const NO_MUT_FILL = "#58acfa";
-const X_MUT_STROKE = "#886A08";
-const X_MUT_FILL = "#DBA901";
-const Y_MUT_STROKE = "#F7819F";
-const Y_MUT_FILL = "#F5A9F2";
-const BOTH_MUT_STROKE = "#B40404";
-const BOTH_MUT_FILL = "#FF0000";
-const NOT_PROFILED_STROKE = "#d3d3d3";
-const NOT_PROFILED_FILL = "#ffffff";
+    height: number;
+    width: number;
 
-function noop() {};
+    showLogScaleControls?: boolean;
+    showMutationControls?: boolean;
+    showMutations?: boolean;
+    logScale?: boolean;
+    showRegressionLine: boolean;
+    handlers: {
+        onClickShowMutations?: () => void;
+        onClickLogScale?: () => void;
+        onClickShowRegressionLine: () => void;
+    };
+}
 
-const SVG_ID = "coexpression-plot-svg";
+export type CoExpressionPlotData = {
+    x: number;
+    y: number;
+    mutationsX: string;
+    mutationsY: string;
+    profiledX: boolean;
+    profiledY: boolean;
+    studyId: string;
+    sampleId: string;
+};
+
+class CoExpressionScatterPlot extends ScatterPlot<CoExpressionPlotData> {}
+
+const NO_MUT_STROKE = '#0174df';
+const NO_MUT_FILL = '#58acfa';
+const X_MUT_STROKE = '#886A08';
+const X_MUT_FILL = '#DBA901';
+const Y_MUT_STROKE = '#F7819F';
+const Y_MUT_FILL = '#F5A9F2';
+const BOTH_MUT_STROKE = '#B40404';
+const BOTH_MUT_FILL = '#FF0000';
+const NOT_PROFILED_STROKE = '#d3d3d3';
+const NOT_PROFILED_FILL = '#ffffff';
+
+function noop() {}
+
+const SVG_ID = 'coexpression-plot-svg';
 
 @observer
-export default class CoExpressionPlot extends React.Component<ICoExpressionPlotProps, {}> {
-
+export default class CoExpressionPlot extends React.Component<
+    ICoExpressionPlotProps,
+    {}
+> {
     @bind
     private getSvg() {
         return document.getElementById(SVG_ID) as SVGElement | null;
@@ -87,7 +92,12 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
 
     @computed get stroke() {
         if (this.props.showMutations) {
-            return (d:{mutationsX:string, mutationsY:string, profiledX:boolean, profiledY:boolean})=>{
+            return (d: {
+                mutationsX: string;
+                mutationsY: string;
+                profiledX: boolean;
+                profiledY: boolean;
+            }) => {
                 if (isNotProfiled(d)) {
                     return NOT_PROFILED_STROKE;
                 } else if (d.mutationsX && d.mutationsY) {
@@ -107,7 +117,12 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
 
     @computed get fill() {
         if (this.props.showMutations) {
-            return (d:{mutationsX:string, mutationsY:string, profiledX:boolean, profiledY:boolean})=>{
+            return (d: {
+                mutationsX: string;
+                mutationsY: string;
+                profiledX: boolean;
+                profiledY: boolean;
+            }) => {
                 if (isNotProfiled(d)) {
                     return NOT_PROFILED_FILL;
                 } else if (d.mutationsX && d.mutationsY) {
@@ -152,32 +167,35 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
         const ret = [];
         if (hasX) {
             ret.push({
-                name: [this.props.xAxisGene.hugoGeneSymbol, "mutated"],
-                symbol: { fill: X_MUT_FILL, stroke: X_MUT_STROKE }
+                name: [this.props.xAxisGene.hugoGeneSymbol, 'mutated'],
+                symbol: { fill: X_MUT_FILL, stroke: X_MUT_STROKE },
             });
         }
         if (hasY) {
             ret.push({
-                name: [this.props.yAxisGene.hugoGeneSymbol, "mutated"],
-                symbol: { fill: Y_MUT_FILL, stroke: Y_MUT_STROKE }
+                name: [this.props.yAxisGene.hugoGeneSymbol, 'mutated'],
+                symbol: { fill: Y_MUT_FILL, stroke: Y_MUT_STROKE },
             });
         }
         if (hasBoth) {
             ret.push({
                 name: `Both mutated`,
-                symbol: { fill: BOTH_MUT_FILL, stroke: BOTH_MUT_STROKE }
+                symbol: { fill: BOTH_MUT_FILL, stroke: BOTH_MUT_STROKE },
             });
         }
         if (hasNone) {
             ret.push({
                 name: `Neither mutated`,
-                symbol: { fill: NO_MUT_FILL, stroke: NO_MUT_STROKE }
+                symbol: { fill: NO_MUT_FILL, stroke: NO_MUT_STROKE },
             });
         }
         if (hasNotProfiled) {
             ret.push({
-                name: "Not profiled for mutations",
-                symbol: { fill: NOT_PROFILED_FILL, stroke: NOT_PROFILED_STROKE }
+                name: 'Not profiled for mutations',
+                symbol: {
+                    fill: NOT_PROFILED_FILL,
+                    stroke: NOT_PROFILED_STROKE,
+                },
             });
         }
         return ret;
@@ -186,7 +204,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     @computed get data() {
         // sort in order to set z index in plot
         // order: both mutated, one mutated, neither mutated, not profiled
-        return _.sortBy(this.props.data, d=>{
+        return _.sortBy(this.props.data, d => {
             if (d.mutationsX && d.mutationsY) {
                 return 3;
             } else if (d.mutationsX || d.mutationsY) {
@@ -200,7 +218,9 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     }
 
     private get title() {
-        return `${this.props.molecularProfile.name}: ${this.props.xAxisGene.hugoGeneSymbol} vs. ${this.props.yAxisGene.hugoGeneSymbol}`;
+        return `${this.props.molecularProfile.name}: ${
+            this.props.xAxisGene.hugoGeneSymbol
+        } vs. ${this.props.yAxisGene.hugoGeneSymbol}`;
     }
 
     @computed get axisLabelX() {
@@ -243,38 +263,56 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     @bind
     private toolbar() {
         return (
-            <div style={{textAlign:"center", position:"relative"}}>
-                <div style={{display:"inline-block"}}>
+            <div style={{ textAlign: 'center', position: 'relative' }}>
+                <div style={{ display: 'inline-block' }}>
                     {this.props.showMutationControls && (
-                        <div className="checkbox coexpression-plot-toolbar-elt"><label>
-                            <input
-                                type="checkbox"
-                                checked={this.props.showMutations}
-                                onClick={this.props.handlers.onClickShowMutations || noop}
-                                data-test="ShowMutations"
-                            />Show Mutations
-                        </label></div>
+                        <div className="checkbox coexpression-plot-toolbar-elt">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={this.props.showMutations}
+                                    onClick={
+                                        this.props.handlers
+                                            .onClickShowMutations || noop
+                                    }
+                                    data-test="ShowMutations"
+                                />
+                                Show Mutations
+                            </label>
+                        </div>
                     )}
                     {this.props.showLogScaleControls && (
                         <div className="coexpression-plot-toolbar-elt">
-                            <div className="checkbox coexpression-plot-toolbar-elt"><label>
-                                <input
-                                    type="checkbox"
-                                    checked={this.props.logScale}
-                                    onClick={this.props.handlers.onClickLogScale || noop}
-                                    data-test="logScale"
-                                />Log Scale
-                            </label></div>
+                            <div className="checkbox coexpression-plot-toolbar-elt">
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={this.props.logScale}
+                                        onClick={
+                                            this.props.handlers
+                                                .onClickLogScale || noop
+                                        }
+                                        data-test="logScale"
+                                    />
+                                    Log Scale
+                                </label>
+                            </div>
                         </div>
                     )}
-                    <div className="checkbox coexpression-plot-toolbar-elt"><label>
-                        <input
-                            type="checkbox"
-                            checked={this.props.showRegressionLine}
-                            onClick={this.props.handlers.onClickShowRegressionLine}
-                            data-test="ShowRegressionLine"
-                        />Show Regression Line
-                    </label></div>
+                    <div className="checkbox coexpression-plot-toolbar-elt">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={this.props.showRegressionLine}
+                                onClick={
+                                    this.props.handlers
+                                        .onClickShowRegressionLine
+                                }
+                                data-test="ShowRegressionLine"
+                            />
+                            Show Regression Line
+                        </label>
+                    </div>
                 </div>
 
                 <DownloadControls
@@ -282,15 +320,14 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                     filename="coexpression"
                     dontFade={true}
                     collapse={true}
-                    style={{position:"absolute", top:0, right:0}}
+                    style={{ position: 'absolute', top: 0, right: 0 }}
                 />
-
             </div>
         );
     }
 
     @bind
-    private tooltip(d:CoExpressionPlotData) {
+    private tooltip(d: CoExpressionPlotData) {
         return (
             <div>
                 <div>
@@ -314,7 +351,8 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 {d.mutationsX && (
                     <div>
                         <span>
-                            {this.props.xAxisGene.hugoGeneSymbol} Mutation:&nbsp;
+                            {this.props.xAxisGene.hugoGeneSymbol}{' '}
+                            Mutation:&nbsp;
                             <b>{d.mutationsX}</b>
                         </span>
                     </div>
@@ -322,7 +360,8 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 {d.mutationsY && (
                     <div>
                         <span>
-                            {this.props.yAxisGene.hugoGeneSymbol} Mutation:&nbsp;
+                            {this.props.yAxisGene.hugoGeneSymbol}{' '}
+                            Mutation:&nbsp;
                             <b>{d.mutationsY}</b>
                         </span>
                     </div>
@@ -333,13 +372,12 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
 
     render() {
         return (
-            <div className="borderedChart inlineBlock" data-test="CoExpressionPlot">
-                <Observer>
-                    {this.toolbar}
-                </Observer>
-                <Observer>
-                    {this.plot}
-                </Observer>
+            <div
+                className="borderedChart inlineBlock"
+                data-test="CoExpressionPlot"
+            >
+                <Observer>{this.toolbar}</Observer>
+                <Observer>{this.plot}</Observer>
             </div>
         );
     }

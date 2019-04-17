@@ -3,13 +3,13 @@ import {
     ClinicalDataTypeEnum,
     CustomChartIdentifier,
     CustomGroup,
-    NewChart
-} from "../../StudyViewPageStore";
+    NewChart,
+} from '../../StudyViewPageStore';
 import * as _ from 'lodash';
-import {Sample} from "../../../../shared/api/generated/CBioPortalAPI";
+import { Sample } from '../../../../shared/api/generated/CBioPortalAPI';
 
 type Code =
-    'MULTI_NAME'
+    | 'MULTI_NAME'
     | 'NO_GROUP_NAME'
     | 'OVERLAP'
     | 'POTENTIAL_OVERLAP'
@@ -30,24 +30,24 @@ export enum ErrorCodeEnum {
     TOO_MANY_INVALID_CASE_ID = 'TOO_MANY_INVALID_CASE_ID',
     STUDY_NOT_SELECTED = 'STUDY_NOT_SELECTED',
     INPUT_ERROR = 'INPUT_ERROR',
-};
+}
 
 export enum WarningCodeEnum {
     OVERLAP = 'OVERLAP',
     POTENTIAL_OVERLAP = 'POTENTIAL_OVERLAP',
     NO_CHART_NAME = 'NO_CHART_NAME',
     NO_GROUP_NAME = 'NO_GROUP_NAME',
-};
+}
 
 export type ValidationMessage = {
-    code: Code,
-    message: Error
+    code: Code;
+    message: Error;
 };
 
 export type ParseResult = {
-    groups: CustomGroup[],
-    validationResult: ValidationResult
-}
+    groups: CustomGroup[];
+    validationResult: ValidationResult;
+};
 
 export enum LineTypeEnum {
     GROUP_NAME = 'GROUP_NAME',
@@ -56,21 +56,21 @@ export enum LineTypeEnum {
 }
 
 export type InputLine = {
-    line: string,
-    studyId?: string,
-    caseId: string,
-    groupName?: string
-}
+    line: string;
+    studyId?: string;
+    caseId: string;
+    groupName?: string;
+};
 
 export type ValidationResult = {
-    error: ValidationMessage[],
-    warning: ValidationMessage[],
-}
+    error: ValidationMessage[];
+    warning: ValidationMessage[];
+};
 
 export function getLine(line: string): InputLine {
     let parsedResult: InputLine = {
         line: line,
-        caseId: ''
+        caseId: '',
     };
 
     const content = line.split(':');
@@ -88,33 +88,53 @@ export function getLine(line: string): InputLine {
 }
 
 export function getLines(content: string): InputLine[] {
-    return _.reduce(content.trim().split(/\n|\r/g), (acc, line) => {
-        line = line.trim();
-        if (line) {
-            acc.push(getLine(line));
-        }
-        return acc;
-    }, [] as InputLine[])
+    return _.reduce(
+        content.trim().split(/\n|\r/g),
+        (acc, line) => {
+            line = line.trim();
+            if (line) {
+                acc.push(getLine(line));
+            }
+            return acc;
+        },
+        [] as InputLine[]
+    );
 }
 
 function getUniqueCaseId(studyId: string, caseId: string) {
     return `${studyId}:${caseId}`;
 }
 
-export function validateLines(lines: InputLine[], caseType: ClinicalDataType, allSamples: Sample[], isSingleStudy: boolean, selectedStudies: string[]): ValidationResult {
+export function validateLines(
+    lines: InputLine[],
+    caseType: ClinicalDataType,
+    allSamples: Sample[],
+    isSingleStudy: boolean,
+    selectedStudies: string[]
+): ValidationResult {
     let errorMessages: ValidationMessage[] = [];
     let warningMessages: ValidationMessage[] = [];
-    const groupNameDefault='_TEST_';
+    const groupNameDefault = '_TEST_';
 
     const TOO_MANY = 10;
 
     // Find out the invalid cases
     let invalidCases: string[] = [];
 
-    const validPair: { [key: string]: boolean } = _.reduce(allSamples, (acc, sample) => {
-        acc[`${sample.studyId}:${caseType === ClinicalDataTypeEnum.PATIENT ? sample.patientId : sample.sampleId}`] = true;
-        return acc;
-    }, {} as { [key: string]: boolean });
+    const validPair: { [key: string]: boolean } = _.reduce(
+        allSamples,
+        (acc, sample) => {
+            acc[
+                `${sample.studyId}:${
+                    caseType === ClinicalDataTypeEnum.PATIENT
+                        ? sample.patientId
+                        : sample.sampleId
+                }`
+            ] = true;
+            return acc;
+        },
+        {} as { [key: string]: boolean }
+    );
 
     let occurrence: { [key: string]: number } = {};
 
@@ -124,14 +144,20 @@ export function validateLines(lines: InputLine[], caseType: ClinicalDataType, al
             if (!isSingleStudy) {
                 errorMessages.push({
                     code: ErrorCodeEnum.INVALID_CASE_ID,
-                    message: new Error(`No study specified for ${caseType} id: ${line.caseId}, and more than one study selected for query.`)
+                    message: new Error(
+                        `No study specified for ${caseType} id: ${
+                            line.caseId
+                        }, and more than one study selected for query.`
+                    ),
                 });
             } else {
                 _case = getUniqueCaseId(selectedStudies[0], line.caseId);
                 if (validPair[_case] === undefined) {
                     errorMessages.push({
                         code: ErrorCodeEnum.INVALID_CASE_ID,
-                        message: new Error(`The case id: ${line.caseId} is invalid.`)
+                        message: new Error(
+                            `The case id: ${line.caseId} is invalid.`
+                        ),
                     });
                 } else {
                     if (occurrence[_case] === undefined) {
@@ -144,7 +170,7 @@ export function validateLines(lines: InputLine[], caseType: ClinicalDataType, al
             if (!_.includes(selectedStudies, line.studyId)) {
                 errorMessages.push({
                     code: ErrorCodeEnum.STUDY_NOT_SELECTED,
-                    message: new Error(`Study ${line.caseId} is not selected.`)
+                    message: new Error(`Study ${line.caseId} is not selected.`),
                 });
             } else {
                 _case = `${line.studyId}:${line.caseId}`;
@@ -164,38 +190,68 @@ export function validateLines(lines: InputLine[], caseType: ClinicalDataType, al
     });
 
     // Find duplication cases
-    const dups = _.reduce(occurrence, (acc, count, caseId) => {
-        if (count > 1) {
-            acc.push(caseId);
-        }
-        return acc;
-    }, [] as string[]);
+    const dups = _.reduce(
+        occurrence,
+        (acc, count, caseId) => {
+            if (count > 1) {
+                acc.push(caseId);
+            }
+            return acc;
+        },
+        [] as string[]
+    );
     if (dups.length > 0) {
         // when dups exist, we need to figure out the damage
-        const groupDistribution = _.reduce(lines, (acc, line) => {
-            let groupName = line.groupName ? line.groupName : groupNameDefault;
-            if (acc[groupName] === undefined) {
-                acc[groupName] = [];
-            }
-            acc[groupName].push(getUniqueCaseId(line.studyId ? line.studyId : '', line.caseId));
-            return acc;
-        }, {} as { [groupName: string]: string[] });
+        const groupDistribution = _.reduce(
+            lines,
+            (acc, line) => {
+                let groupName = line.groupName
+                    ? line.groupName
+                    : groupNameDefault;
+                if (acc[groupName] === undefined) {
+                    acc[groupName] = [];
+                }
+                acc[groupName].push(
+                    getUniqueCaseId(
+                        line.studyId ? line.studyId : '',
+                        line.caseId
+                    )
+                );
+                return acc;
+            },
+            {} as { [groupName: string]: string[] }
+        );
 
-        const dupCount = _.reduce(groupDistribution, (acc, group) => {
-            acc += group.length - _.uniq(group).length;
-            return acc;
-        }, 0);
+        const dupCount = _.reduce(
+            groupDistribution,
+            (acc, group) => {
+                acc += group.length - _.uniq(group).length;
+                return acc;
+            },
+            0
+        );
 
         // when the dupCount is not the same as dups length, means that the case is in different groups, that should be ok.
-        if (_.keys(groupDistribution).length === 1 || dupCount === dups.length) {
+        if (
+            _.keys(groupDistribution).length === 1 ||
+            dupCount === dups.length
+        ) {
             warningMessages.push({
                 code: WarningCodeEnum.OVERLAP,
-                message: new Error(`${dups.length} duplicate case${dups.length === 1 ? '' : 's'} will be removed.`)
+                message: new Error(
+                    `${dups.length} duplicate case${
+                        dups.length === 1 ? '' : 's'
+                    } will be removed.`
+                ),
             });
         } else if (dupCount !== dups.length) {
             warningMessages.push({
                 code: WarningCodeEnum.POTENTIAL_OVERLAP,
-                message: new Error(`${dups.join(', ')} exist${(dups.length - dupCount) > 1 ? '' : 's'} in different groups.`)
+                message: new Error(
+                    `${dups.join(', ')} exist${
+                        dups.length - dupCount > 1 ? '' : 's'
+                    } in different groups.`
+                ),
             });
         }
     }
@@ -203,27 +259,37 @@ export function validateLines(lines: InputLine[], caseType: ClinicalDataType, al
     if (invalidCases.length >= TOO_MANY) {
         errorMessages.push({
             code: ErrorCodeEnum.TOO_MANY_INVALID_CASE_ID,
-            message: new Error(`Too many invalid cases. Such as ${invalidCases.slice(0, 3).join(', ')}`)
+            message: new Error(
+                `Too many invalid cases. Such as ${invalidCases
+                    .slice(0, 3)
+                    .join(', ')}`
+            ),
         });
     } else if (invalidCases.length > 0) {
         errorMessages.push({
             code: ErrorCodeEnum.INVALID_CASE_ID,
-            message: new Error(`Invalid case${
-                invalidCases.length > 1 ? 's' : ''
-                } for the selected cancer study: ${
-                invalidCases.join(', ')
-                }`)
+            message: new Error(
+                `Invalid case${
+                    invalidCases.length > 1 ? 's' : ''
+                } for the selected cancer study: ${invalidCases.join(', ')}`
+            ),
         });
     }
 
     return {
         error: errorMessages,
-        warning: warningMessages
-    }
+        warning: warningMessages,
+    };
 }
 
 // the lines should already be validated
-export function getGroups(lines: InputLine[], singleStudyId: string, caseType: ClinicalDataType, allSamples: Sample[], hasGroupName: boolean): CustomGroup[] {
+export function getGroups(
+    lines: InputLine[],
+    singleStudyId: string,
+    caseType: ClinicalDataType,
+    allSamples: Sample[],
+    hasGroupName: boolean
+): CustomGroup[] {
     const sampleMap: { [id: string]: Sample } = {};
     const patientMap: { [id: string]: Sample[] } = {};
     const isPatientId = caseType === ClinicalDataTypeEnum.PATIENT;
@@ -238,63 +304,108 @@ export function getGroups(lines: InputLine[], singleStudyId: string, caseType: C
         patientMap[patientKey].push(sample);
     });
 
-    let groups = _.values(_.reduce(lines, (acc, line) => {
-        const groupName = line.groupName || (hasGroupName ? DEFAULT_GROUP_NAME_WITH_USER_INPUT : DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT);
-        if (acc[groupName] == undefined) {
-            acc[groupName] = {
-                name: groupName,
-                cases: []
-            }
-        }
+    let groups = _.values(
+        _.reduce(
+            lines,
+            (acc, line) => {
+                const groupName =
+                    line.groupName ||
+                    (hasGroupName
+                        ? DEFAULT_GROUP_NAME_WITH_USER_INPUT
+                        : DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT);
+                if (acc[groupName] == undefined) {
+                    acc[groupName] = {
+                        name: groupName,
+                        cases: [],
+                    };
+                }
 
-        const caseId = line.studyId === undefined ? `${singleStudyId}:${line.caseId}` : `${line.studyId}:${line.caseId}`;
-        const maps = isPatientId ? patientMap[caseId] : [sampleMap[caseId]];
-        const matches = maps === undefined ? [] : parseCase(isPatientId, maps);
-        acc[groupName].cases.push(...matches);
-        return acc;
-    }, {} as { [key: string]: CustomGroup }));
+                const caseId =
+                    line.studyId === undefined
+                        ? `${singleStudyId}:${line.caseId}`
+                        : `${line.studyId}:${line.caseId}`;
+                const maps = isPatientId
+                    ? patientMap[caseId]
+                    : [sampleMap[caseId]];
+                const matches =
+                    maps === undefined ? [] : parseCase(isPatientId, maps);
+                acc[groupName].cases.push(...matches);
+                return acc;
+            },
+            {} as { [key: string]: CustomGroup }
+        )
+    );
 
-    return groups.map(group=>{
-        group.cases = _.uniqBy(group.cases, item => `${item.studyId}:${item.sampleId}`);
+    return groups.map(group => {
+        group.cases = _.uniqBy(
+            group.cases,
+            item => `${item.studyId}:${item.sampleId}`
+        );
         return group;
     });
 }
 
-export function parseContent(content: string, needToValidate: boolean = false, selectedStudies: string[], caseType: ClinicalDataType, allSamples: Sample[], isSingleStudy: boolean): ParseResult {
+export function parseContent(
+    content: string,
+    needToValidate: boolean = false,
+    selectedStudies: string[],
+    caseType: ClinicalDataType,
+    allSamples: Sample[],
+    isSingleStudy: boolean
+): ParseResult {
     let validationResult: ValidationResult = {
         error: [],
-        warning: []
+        warning: [],
     };
     let lines: InputLine[] = getLines(content);
     if (lines.length > 0) {
         if (needToValidate) {
-            const result = validateLines(lines, caseType, allSamples, isSingleStudy, selectedStudies);
+            const result = validateLines(
+                lines,
+                caseType,
+                allSamples,
+                isSingleStudy,
+                selectedStudies
+            );
             validationResult.warning.push(...result.warning);
             validationResult.error.push(...result.error);
         }
     }
 
-    const hasGroupName = _.find(lines, (line => line.groupName !== undefined && line.groupName !== '')) !== undefined;
+    const hasGroupName =
+        _.find(
+            lines,
+            line => line.groupName !== undefined && line.groupName !== ''
+        ) !== undefined;
     if (validationResult.error.length > 0) {
         return {
             groups: [],
-            validationResult: validationResult
+            validationResult: validationResult,
         };
     } else {
         return {
-            groups: getGroups(lines, selectedStudies[0], caseType, allSamples, hasGroupName),
-            validationResult: validationResult
+            groups: getGroups(
+                lines,
+                selectedStudies[0],
+                caseType,
+                allSamples,
+                hasGroupName
+            ),
+            validationResult: validationResult,
         };
     }
 }
 
-export function parseCase(isPatientId: boolean, mappedSamples: Sample[]): CustomChartIdentifier[] {
+export function parseCase(
+    isPatientId: boolean,
+    mappedSamples: Sample[]
+): CustomChartIdentifier[] {
     return mappedSamples.map(sample => {
         return {
             studyId: sample.studyId,
             patientAttribute: isPatientId,
             sampleId: sample.sampleId,
-            patientId: sample.patientId
-        }
+            patientId: sample.patientId,
+        };
     });
 }

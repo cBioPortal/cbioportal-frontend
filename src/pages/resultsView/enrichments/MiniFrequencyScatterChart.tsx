@@ -1,27 +1,36 @@
-import * as React from "react";
-import {observer} from "mobx-react";
-import {action, computed, observable} from "mobx";
-import autobind from "autobind-decorator";
-import {VictoryAxis, VictoryChart, VictoryLabel, VictoryScatter, VictorySelectionContainer, VictoryLine} from "victory";
-import CBIOPORTAL_VICTORY_THEME, {axisLabelStyles} from "../../../shared/theme/cBioPoralTheme";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
-import {Popover} from "react-bootstrap";
-import {formatLogOddsRatio} from "../../../shared/lib/FormatUtils";
-import {toConditionalPrecision} from "../../../shared/lib/NumberUtils";
+import * as React from 'react';
+import { observer } from 'mobx-react';
+import { action, computed, observable } from 'mobx';
+import autobind from 'autobind-decorator';
+import {
+    VictoryAxis,
+    VictoryChart,
+    VictoryLabel,
+    VictoryScatter,
+    VictorySelectionContainer,
+    VictoryLine,
+} from 'victory';
+import CBIOPORTAL_VICTORY_THEME, {
+    axisLabelStyles,
+} from '../../../shared/theme/cBioPoralTheme';
+import DownloadControls from '../../../shared/components/downloadControls/DownloadControls';
+import { Popover } from 'react-bootstrap';
+import { formatLogOddsRatio } from '../../../shared/lib/FormatUtils';
+import { toConditionalPrecision } from '../../../shared/lib/NumberUtils';
 
 export interface IMiniFrequencyScatterChartData {
-    x:number;
-    y:number;
-    pValue:number;
-    qValue:number;
-    hugoGeneSymbol:string;
-    logRatio:number;
+    x: number;
+    y: number;
+    pValue: number;
+    qValue: number;
+    hugoGeneSymbol: string;
+    logRatio: number;
 }
 
 export interface IMiniFrequencyScatterChartProps {
     data: IMiniFrequencyScatterChartData[]; // x means percent in x group, y means percent in y group
-    xGroupName:string;
-    yGroupName:string;
+    xGroupName: string;
+    yGroupName: string;
     onGeneNameClick: (hugoGeneSymbol: string, entrezGeneId: number) => void;
     onSelection: (hugoGeneSymbols: string[]) => void;
     onSelectionCleared: () => void;
@@ -30,23 +39,34 @@ export interface IMiniFrequencyScatterChartProps {
 const MAX_DOT_SIZE = 10;
 
 @observer
-export default class MiniFrequencyScatterChart extends React.Component<IMiniFrequencyScatterChartProps, {}> {
-
+export default class MiniFrequencyScatterChart extends React.Component<
+    IMiniFrequencyScatterChartProps,
+    {}
+> {
     @observable tooltipModel: any;
     @observable private svgContainer: any;
 
     @autobind
-    @action private svgRef(svgContainer:SVGElement|null) {
-        this.svgContainer = (svgContainer && svgContainer.children) ? svgContainer.children[0] : null;
+    @action
+    private svgRef(svgContainer: SVGElement | null) {
+        this.svgContainer =
+            svgContainer && svgContainer.children
+                ? svgContainer.children[0]
+                : null;
     }
 
     private handleSelection(points: any, bounds: any, props: any) {
-        this.props.onSelection(points[0].data.map((d:any) => d.hugoGeneSymbol));
+        this.props.onSelection(
+            points[0].data.map((d: any) => d.hugoGeneSymbol)
+        );
     }
 
     private handleSelectionCleared(props: any) {
         if (this.tooltipModel) {
-            this.props.onGeneNameClick(this.tooltipModel.datum.hugoGeneSymbol, this.tooltipModel.datum.entrezGeneId);
+            this.props.onGeneNameClick(
+                this.tooltipModel.datum.hugoGeneSymbol,
+                this.tooltipModel.datum.entrezGeneId
+            );
         }
         this.props.onSelectionCleared();
     }
@@ -113,79 +133,110 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                     return this.handleSelection(points, bounds, props);
                 }}
                 responsive={false}
-                onSelectionCleared={(props:any) => this.handleSelectionCleared(props)}
+                onSelectionCleared={(props: any) =>
+                    this.handleSelectionCleared(props)
+                }
             />
         );
     }
 
     public render() {
-
-        const events = [{
-            target: "data",
-            eventHandlers: {
-                onMouseOver: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props: any) => {
-                                this.tooltipModel = props;
-                                return {
-                                    datum: Object.assign({}, props.datum, {hovered: true})
-                                };
-                            }
-                        }
-                    ];
+        const events = [
+            {
+                target: 'data',
+                eventHandlers: {
+                    onMouseOver: () => {
+                        return [
+                            {
+                                target: 'data',
+                                mutation: (props: any) => {
+                                    this.tooltipModel = props;
+                                    return {
+                                        datum: Object.assign({}, props.datum, {
+                                            hovered: true,
+                                        }),
+                                    };
+                                },
+                            },
+                        ];
+                    },
+                    onMouseOut: () => {
+                        return [
+                            {
+                                target: 'data',
+                                mutation: (props: any) => {
+                                    this.tooltipModel = null;
+                                    return {
+                                        datum: Object.assign({}, props.datum, {
+                                            hovered: false,
+                                        }),
+                                    };
+                                },
+                            },
+                        ];
+                    },
                 },
-                onMouseOut: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props: any) => {
-                                this.tooltipModel = null;
-                                return {
-                                    datum: Object.assign({}, props.datum, {hovered: false})
-                                };
-                            }
-                        }
-                    ];
-                }
-            }
-        }];
+            },
+        ];
 
         return (
             <div className="posRelative">
-                <div className="borderedChart inlineBlock" style={{position:"relative"}}>
-                    <VictoryChart containerComponent={this.containerComponent} theme={CBIOPORTAL_VICTORY_THEME}
-                                  domainPadding={20} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}>
-                        <VictoryAxis tickValues={[0,25,50,75]} domain={[0,this.plotDomainMax]}
-                                     label={this.xLabel}
-                                     style={{
-                                        tickLabels: { padding: 5 }, axisLabel: { padding: 20 },
-                                        ticks: { size: 0 }
-                                     }}
+                <div
+                    className="borderedChart inlineBlock"
+                    style={{ position: 'relative' }}
+                >
+                    <VictoryChart
+                        containerComponent={this.containerComponent}
+                        theme={CBIOPORTAL_VICTORY_THEME}
+                        domainPadding={20}
+                        height={350}
+                        width={350}
+                        padding={{ top: 40, bottom: 60, left: 60, right: 40 }}
+                    >
+                        <VictoryAxis
+                            tickValues={[0, 25, 50, 75]}
+                            domain={[0, this.plotDomainMax]}
+                            label={this.xLabel}
+                            style={{
+                                tickLabels: { padding: 5 },
+                                axisLabel: { padding: 20 },
+                                ticks: { size: 0 },
+                            }}
                         />
-                        <VictoryAxis tickValues={[0,25,50,75]} domain={[0,this.plotDomainMax]}
-                                     dependentAxis={true}
-                                     label={this.yLabel}
-                                     style={{
-                                         tickLabels: { padding: 5 }, axisLabel: { padding: 20 },
-                                         ticks: { size: 0 }
-                                     }}
+                        <VictoryAxis
+                            tickValues={[0, 25, 50, 75]}
+                            domain={[0, this.plotDomainMax]}
+                            dependentAxis={true}
+                            label={this.yLabel}
+                            style={{
+                                tickLabels: { padding: 5 },
+                                axisLabel: { padding: 20 },
+                                ticks: { size: 0 },
+                            }}
                         />
                         <VictoryLine
                             style={{
                                 data: {
-                                    stroke: "#cccccc", strokeWidth: 1, strokeDasharray:"10,5"
-                                }
+                                    stroke: '#cccccc',
+                                    strokeWidth: 1,
+                                    strokeDasharray: '10,5',
+                                },
                             }}
-                            data={[{x:0, y:0},{x:this.plotDomainMax, y:this.plotDomainMax}]}
+                            data={[
+                                { x: 0, y: 0 },
+                                {
+                                    x: this.plotDomainMax,
+                                    y: this.plotDomainMax,
+                                },
+                            ]}
                         />
                         <VictoryScatter
                             style={{
                                 data: {
-                                    fill: (d:any, active: any) => (active ? "#FE9929" : "#D3D3D3"),
-                                    fillOpacity: 0.4
-                                }
+                                    fill: (d: any, active: any) =>
+                                        active ? '#FE9929' : '#D3D3D3',
+                                    fillOpacity: 0.4,
+                                },
                             }}
                             data={this.splitData.insignificant}
                             symbol="circle"
@@ -195,9 +246,10 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                         <VictoryScatter
                             style={{
                                 data: {
-                                    fill: (d:any, active: any) => (active ? "#FE9929" : "#58ACFA"),
-                                    fillOpacity: 0.6
-                                }
+                                    fill: (d: any, active: any) =>
+                                        active ? '#FE9929' : '#58ACFA',
+                                    fillOpacity: 0.6,
+                                },
                             }}
                             data={this.splitData.significant}
                             symbol="circle"
@@ -210,20 +262,44 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                         filename="enrichments-frequency-scatter"
                         dontFade={true}
                         collapse={true}
-                        style={{position:"absolute", top:10, right:10, zIndex:0}}
+                        style={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            zIndex: 0,
+                        }}
                     />
                 </div>
-                {this.tooltipModel &&
-                    <Popover className={"cbioTooltip"} positionLeft={this.tooltipModel.x + 15}
-                             positionTop={this.tooltipModel.y - 44}>
-                        Gene: {this.tooltipModel.datum.hugoGeneSymbol}<br/>
-                        Log Ratio: {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}<br/>
-                        Alteration Frequency in {this.props.xGroupName}: {this.tooltipModel.datum.x.toFixed()}%<br/>
-                        Alteration Frequency in {this.props.yGroupName}: {this.tooltipModel.datum.y.toFixed()}%<br/>
-                        p-Value: {toConditionalPrecision(this.tooltipModel.datum.pValue, 3, 0.01)}<br/>
-                        q-Value: {toConditionalPrecision(this.tooltipModel.datum.qValue, 3, 0.01)}
+                {this.tooltipModel && (
+                    <Popover
+                        className={'cbioTooltip'}
+                        positionLeft={this.tooltipModel.x + 15}
+                        positionTop={this.tooltipModel.y - 44}
+                    >
+                        Gene: {this.tooltipModel.datum.hugoGeneSymbol}
+                        <br />
+                        Log Ratio:{' '}
+                        {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}
+                        <br />
+                        Alteration Frequency in {this.props.xGroupName}:{' '}
+                        {this.tooltipModel.datum.x.toFixed()}%<br />
+                        Alteration Frequency in {this.props.yGroupName}:{' '}
+                        {this.tooltipModel.datum.y.toFixed()}%<br />
+                        p-Value:{' '}
+                        {toConditionalPrecision(
+                            this.tooltipModel.datum.pValue,
+                            3,
+                            0.01
+                        )}
+                        <br />
+                        q-Value:{' '}
+                        {toConditionalPrecision(
+                            this.tooltipModel.datum.qValue,
+                            3,
+                            0.01
+                        )}
                     </Popover>
-                }
+                )}
             </div>
         );
     }

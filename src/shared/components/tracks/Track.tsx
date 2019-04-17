@@ -1,21 +1,28 @@
-import * as React from "react";
-import $ from "jquery";
-import {observer} from "mobx-react";
-import {SyntheticEvent} from "react";
-import {action, computed, observable} from "mobx";
-import autobind from "autobind-decorator";
-import classnames from "classnames";
+import * as React from 'react';
+import $ from 'jquery';
+import { observer } from 'mobx-react';
+import { SyntheticEvent } from 'react';
+import { action, computed, observable } from 'mobx';
+import autobind from 'autobind-decorator';
+import classnames from 'classnames';
 
-import {defaultHitzoneConfig, HitZoneConfig, initHitZoneFromConfig} from "../HitZone";
-import TrackCircle, {TrackItemSpec} from "./TrackCircle";
-import {unhoverAllComponents, getComponentIndex} from "shared/lib/SvgComponentUtils";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import MutationMapperDataStore from "shared/components/mutationMapper/MutationMapperDataStore";
+import {
+    defaultHitzoneConfig,
+    HitZoneConfig,
+    initHitZoneFromConfig,
+} from '../HitZone';
+import TrackCircle, { TrackItemSpec } from './TrackCircle';
+import {
+    unhoverAllComponents,
+    getComponentIndex,
+} from 'shared/lib/SvgComponentUtils';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import MutationMapperDataStore from 'shared/components/mutationMapper/MutationMapperDataStore';
 
-import styles from "./trackStyles.module.scss";
+import styles from './trackStyles.module.scss';
 
-const DEFAULT_ID_CLASS_PREFIX = "track-circle-";
+const DEFAULT_ID_CLASS_PREFIX = 'track-circle-';
 
 export type TrackProps = {
     dataStore: MutationMapperDataStore;
@@ -24,34 +31,40 @@ export type TrackProps = {
     trackItems: TrackItemSpec[];
     trackTitle?: JSX.Element;
     xOffset?: number;
-    dataHighlightFilter?: (d: Mutation[]) => boolean
-    dataSelectFilter?: (d: Mutation[]) => boolean
+    dataHighlightFilter?: (d: Mutation[]) => boolean;
+    dataSelectFilter?: (d: Mutation[]) => boolean;
     idClassPrefix?: string;
 };
 
 @observer
-export default class Track extends React.Component<TrackProps, {}>
-{
+export default class Track extends React.Component<TrackProps, {}> {
     @observable private hitZoneConfig: HitZoneConfig = defaultHitzoneConfig();
     @observable private shiftPressed = false;
 
-    private circles: {[index:string]: TrackCircle};
+    private circles: { [index: string]: TrackCircle };
 
     constructor(props: TrackProps) {
         super(props);
     }
 
     @autobind
-    setHitZone(hitRect:{x:number, y:number, width:number, height:number},
-               content?:JSX.Element,
-               onMouseOver?:()=>void,
-               onClick?:()=>void,
-               onMouseOut?:()=>void,
-               cursor: string = "pointer",
-               tooltipPlacement: string = "top")
-    {
+    setHitZone(
+        hitRect: { x: number; y: number; width: number; height: number },
+        content?: JSX.Element,
+        onMouseOver?: () => void,
+        onClick?: () => void,
+        onMouseOut?: () => void,
+        cursor: string = 'pointer',
+        tooltipPlacement: string = 'top'
+    ) {
         this.hitZoneConfig = {
-            hitRect, content, onMouseOver, onClick, onMouseOut, cursor, tooltipPlacement
+            hitRect,
+            content,
+            onMouseOver,
+            onClick,
+            onMouseOut,
+            cursor,
+            tooltipPlacement,
         };
     }
 
@@ -97,7 +110,9 @@ export default class Track extends React.Component<TrackProps, {}>
         this.props.dataStore.setPositionSelected(codon, !isSelected);
 
         if (this.props.dataSelectFilter) {
-            this.props.dataStore.setDataSelectFilter(this.props.dataSelectFilter);
+            this.props.dataStore.setDataSelectFilter(
+                this.props.dataSelectFilter
+            );
         }
     }
 
@@ -109,7 +124,7 @@ export default class Track extends React.Component<TrackProps, {}>
     }
 
     @autobind
-    onKeyUp (e: JQueryKeyEventObject) {
+    onKeyUp(e: JQueryKeyEventObject) {
         if (e.which === 16) {
             this.shiftPressed = false;
         }
@@ -121,38 +136,45 @@ export default class Track extends React.Component<TrackProps, {}>
         this.unhoverAllComponents();
 
         const target = e.target as SVGElement;
-        const className = target.getAttribute("class") || "";
+        const className = target.getAttribute('class') || '';
         const componentIndex: number | null = this.getComponentIndex(className);
 
-        if (componentIndex !== null)
-        {
+        if (componentIndex !== null) {
             const circleComponent = this.circles[componentIndex];
 
-            if (circleComponent)
-            {
+            if (circleComponent) {
                 this.setHitZone(
                     circleComponent.hitRectangle,
                     circleComponent.props.spec.tooltip,
                     action(() => {
                         if (this.props.dataHighlightFilter) {
-                            this.props.dataStore.setDataHighlightFilter(this.props.dataHighlightFilter);
+                            this.props.dataStore.setDataHighlightFilter(
+                                this.props.dataHighlightFilter
+                            );
                         }
-                        this.props.dataStore.setPositionHighlighted(circleComponent.props.spec.codon, true);
+                        this.props.dataStore.setPositionHighlighted(
+                            circleComponent.props.spec.codon,
+                            true
+                        );
                         circleComponent.isHovered = true;
                     }),
-                    action(() => this.onTrackCircleClick(circleComponent.props.spec.codon)),
+                    action(() =>
+                        this.onTrackCircleClick(
+                            circleComponent.props.spec.codon
+                        )
+                    ),
                     () => undefined,
-                    "pointer",
-                    "bottom"
+                    'pointer',
+                    'bottom'
                 );
             }
         }
     }
 
     @autobind
-    onSVGMouseLeave(e:SyntheticEvent<any>) {
+    onSVGMouseLeave(e: SyntheticEvent<any>) {
         const target = e.target as Element;
-        if (target.tagName.toLowerCase() === "svg") {
+        if (target.tagName.toLowerCase() === 'svg') {
             this.onMouseLeave();
         }
     }
@@ -175,12 +197,16 @@ export default class Track extends React.Component<TrackProps, {}>
                     key={spec.codon}
                     hitZoneClassName={`${this.props.idClassPrefix}${index}`}
                     hitZoneXOffset={this.props.xOffset}
-                    x={(this.props.width / this.props.proteinLength) * spec.codon}
+                    x={
+                        (this.props.width / this.props.proteinLength) *
+                        spec.codon
+                    }
                     y={this.svgHeight / 2}
                     radius={
                         this.props.dataStore.isPositionSelected(spec.codon) ||
-                        this.props.dataStore.isPositionHighlighted(spec.codon) ?
-                            5 : 2.8
+                        this.props.dataStore.isPositionHighlighted(spec.codon)
+                            ? 5
+                            : 2.8
                     }
                     hoverRadius={5}
                     spec={spec}
@@ -194,8 +220,11 @@ export default class Track extends React.Component<TrackProps, {}>
         this.props.dataStore.clearHighlightedPositions();
     }
 
-    private getComponentIndex(classes:string): number|null {
-        return getComponentIndex(classes, this.props.idClassPrefix || DEFAULT_ID_CLASS_PREFIX);
+    private getComponentIndex(classes: string): number | null {
+        return getComponentIndex(
+            classes,
+            this.props.idClassPrefix || DEFAULT_ID_CLASS_PREFIX
+        );
     }
 
     @computed private get tooltipVisible() {
@@ -207,7 +236,7 @@ export default class Track extends React.Component<TrackProps, {}>
     }
 
     get tooltipVisibleProps() {
-        const tooltipVisibleProps:any = {};
+        const tooltipVisibleProps: any = {};
 
         if (!this.tooltipVisible) {
             tooltipVisibleProps.visible = false;
@@ -218,15 +247,14 @@ export default class Track extends React.Component<TrackProps, {}>
 
     public componentDidMount() {
         // Make it so that if you hold down shift, you can select more than one item at once
-        $(document).on("keydown",this.onKeyDown);
-        $(document).on("keyup", this.onKeyUp);
+        $(document).on('keydown', this.onKeyDown);
+        $(document).on('keyup', this.onKeyUp);
     }
 
-    public render()
-    {
+    public render() {
         return (
-            <div style={{position: "relative"}}>
-                <span className={classnames(styles.trackTitle, "small")}>
+            <div style={{ position: 'relative' }}>
+                <span className={classnames(styles.trackTitle, 'small')}>
                     {this.props.trackTitle}
                 </span>
                 <span>
@@ -238,14 +266,15 @@ export default class Track extends React.Component<TrackProps, {}>
                         {this.hitZone}
                     </DefaultTooltip>
                     <span
-                        style={{marginLeft: this.props.xOffset}}
+                        style={{ marginLeft: this.props.xOffset }}
                         onMouseOver={this.onMouseOver}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             width={this.props.width}
-                             height={this.svgHeight}
-                             className="track-svgnode"
-                             onMouseLeave={this.onSVGMouseLeave}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width={this.props.width}
+                            height={this.svgHeight}
+                            className="track-svgnode"
+                            onMouseLeave={this.onSVGMouseLeave}
                         >
                             <rect
                                 fill="#FFFFFF"

@@ -2,39 +2,42 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import $ from 'jquery';
-import {If, Then, Else} from 'react-if';
+import { If, Then, Else } from 'react-if';
 import Tracks from './Tracks';
-import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
-import {Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
-import SampleManager from "../sampleManager";
-import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
-import {MutationFrequenciesBySample} from "../vafPlot/VAFPlot";
+import { ThumbnailExpandVAFPlot } from '../vafPlot/ThumbnailExpandVAFPlot';
+import { Mutation, Sample } from '../../../shared/api/generated/CBioPortalAPI';
+import SampleManager from '../sampleManager';
+import { ClinicalDataBySampleId } from '../../../shared/api/api-types-extended';
+import { MutationFrequenciesBySample } from '../vafPlot/VAFPlot';
 
 interface IGenomicOverviewProps {
     mergedMutations: Mutation[][];
     cnaSegments: any;
-    samples:Sample[];
-    sampleOrder: {[s:string]:number};
-    sampleLabels: {[s:string]:string};
-    sampleColors: {[s:string]:string};
+    samples: Sample[];
+    sampleOrder: { [s: string]: number };
+    sampleLabels: { [s: string]: string };
+    sampleColors: { [s: string]: string };
     sampleManager: SampleManager;
     containerWidth: number;
 }
 
-export default class GenomicOverview extends React.Component<IGenomicOverviewProps, { frequencies:MutationFrequenciesBySample }> {
-
-    shouldComponentUpdate(nextProps:IGenomicOverviewProps){
+export default class GenomicOverview extends React.Component<
+    IGenomicOverviewProps,
+    { frequencies: MutationFrequenciesBySample }
+> {
+    shouldComponentUpdate(nextProps: IGenomicOverviewProps) {
         // only rerender to resize
         return nextProps.containerWidth !== this.props.containerWidth;
     }
 
-    constructor(props:IGenomicOverviewProps) {
+    constructor(props: IGenomicOverviewProps) {
         super(props);
-        const frequencies = this.computeMutationFrequencyBySample(props.mergedMutations);
+        const frequencies = this.computeMutationFrequencyBySample(
+            props.mergedMutations
+        );
         this.state = {
-            frequencies
+            frequencies,
         };
-
     }
 
     /*componentDidMount(){
@@ -45,22 +48,25 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
     }*/
 
-
     public render() {
-
-        const labels = _.reduce(this.props.sampleManager.samples, (result: any, sample: ClinicalDataBySampleId, i: number)=>{
-            result[sample.id] = i + 1;
-            return result;
-        }, {});
+        const labels = _.reduce(
+            this.props.sampleManager.samples,
+            (result: any, sample: ClinicalDataBySampleId, i: number) => {
+                result[sample.id] = i + 1;
+                return result;
+            },
+            {}
+        );
 
         return (
-            <div style={{ display:'flex' }}>
-                <Tracks mutations={_.flatten(this.props.mergedMutations)}
-                        key={Math.random() /* Force remounting on every render */}
-                        sampleManager={this.props.sampleManager}
-                        width={this.getTracksWidth()}
-                        cnaSegments={this.props.cnaSegments}
-                        samples={this.props.samples}
+            <div style={{ display: 'flex' }}>
+                <Tracks
+                    mutations={_.flatten(this.props.mergedMutations)}
+                    key={Math.random() /* Force remounting on every render */}
+                    sampleManager={this.props.sampleManager}
+                    width={this.getTracksWidth()}
+                    cnaSegments={this.props.cnaSegments}
+                    samples={this.props.samples}
                 />
                 <If condition={this.shouldShowVAFPlot()}>
                     <ThumbnailExpandVAFPlot
@@ -76,14 +82,14 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
         );
     }
 
-    private shouldShowVAFPlot():boolean {
+    private shouldShowVAFPlot(): boolean {
         return this.props.mergedMutations.length > 0 && this.isFrequencyExist();
     }
 
-    private isFrequencyExist():boolean {
-        for (const frequencyId of Object.keys(this.state.frequencies)){
-            if (this.state.frequencies.hasOwnProperty(frequencyId)){
-                for (const frequency of this.state.frequencies[frequencyId]){
+    private isFrequencyExist(): boolean {
+        for (const frequencyId of Object.keys(this.state.frequencies)) {
+            if (this.state.frequencies.hasOwnProperty(frequencyId)) {
+                for (const frequency of this.state.frequencies[frequencyId]) {
                     return !isNaN(frequency);
                 }
             }
@@ -91,19 +97,28 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
         return false;
     }
 
-    private getTracksWidth():number {
-        return this.props.containerWidth - (this.shouldShowVAFPlot() ? 140 : 40);
+    private getTracksWidth(): number {
+        return (
+            this.props.containerWidth - (this.shouldShowVAFPlot() ? 140 : 40)
+        );
     }
 
-    private computeMutationFrequencyBySample(mergedMutations:Mutation[][]):MutationFrequenciesBySample {
-        const ret:MutationFrequenciesBySample = {};
+    private computeMutationFrequencyBySample(
+        mergedMutations: Mutation[][]
+    ): MutationFrequenciesBySample {
+        const ret: MutationFrequenciesBySample = {};
         let sampleId;
         let freq;
         for (const mutations of mergedMutations) {
             for (const mutation of mutations) {
-                if (mutation.tumorAltCount >= 0 && mutation.tumorRefCount >= 0) {
+                if (
+                    mutation.tumorAltCount >= 0 &&
+                    mutation.tumorRefCount >= 0
+                ) {
                     sampleId = mutation.sampleId;
-                    freq = mutation.tumorAltCount / (mutation.tumorRefCount + mutation.tumorAltCount);
+                    freq =
+                        mutation.tumorAltCount /
+                        (mutation.tumorRefCount + mutation.tumorAltCount);
                     ret[sampleId] = ret[sampleId] || [];
                     ret[sampleId].push(freq);
                 }
@@ -112,11 +127,10 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
         for (const sampleId of Object.keys(this.props.sampleOrder)) {
             ret[sampleId] = ret[sampleId] || [];
             const shouldAdd = mergedMutations.length - ret[sampleId].length;
-            for (let i=0; i<shouldAdd; i++) {
+            for (let i = 0; i < shouldAdd; i++) {
                 ret[sampleId].push(NaN);
             }
         }
         return ret;
     }
-
 }

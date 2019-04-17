@@ -1,55 +1,84 @@
 import * as React from 'react';
-import {observer} from "mobx-react";
-import {observable, computed} from "mobx";
-import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
-import {default as LollipopPlotNoTooltip, LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
-import {HitZoneConfig, defaultHitzoneConfig, initHitZoneFromConfig} from "../HitZone";
-import MutationMapperDataStore from "shared/components/mutationMapper/MutationMapperDataStore";
+import { observer } from 'mobx-react';
+import { observable, computed } from 'mobx';
+import DefaultTooltip from '../defaultTooltip/DefaultTooltip';
+import {
+    default as LollipopPlotNoTooltip,
+    LollipopSpec,
+    DomainSpec,
+    SequenceSpec,
+} from './LollipopPlotNoTooltip';
+import {
+    HitZoneConfig,
+    defaultHitzoneConfig,
+    initHitZoneFromConfig,
+} from '../HitZone';
+import MutationMapperDataStore from 'shared/components/mutationMapper/MutationMapperDataStore';
 
 export type LollipopPlotProps = {
-    sequence:SequenceSpec;
-    lollipops:LollipopSpec[];
-    domains:DomainSpec[];
-    vizWidth:number;
-    vizHeight:number;
-    xMax:number;
-    yMax?:number;
-    hugoGeneSymbol:string;
-    dataStore:MutationMapperDataStore;
-    onXAxisOffset?:(offset:number)=>void;
+    sequence: SequenceSpec;
+    lollipops: LollipopSpec[];
+    domains: DomainSpec[];
+    vizWidth: number;
+    vizHeight: number;
+    xMax: number;
+    yMax?: number;
+    hugoGeneSymbol: string;
+    dataStore: MutationMapperDataStore;
+    onXAxisOffset?: (offset: number) => void;
 };
 
 @observer
-export default class LollipopPlot extends React.Component<LollipopPlotProps, {}> {
+export default class LollipopPlot extends React.Component<
+    LollipopPlotProps,
+    {}
+> {
     @observable private hitZoneConfig: HitZoneConfig = defaultHitzoneConfig();
 
-    private plot:LollipopPlotNoTooltip;
-    private handlers:any;
+    private plot: LollipopPlotNoTooltip;
+    private handlers: any;
 
-    constructor(props:LollipopPlotProps) {
+    constructor(props: LollipopPlotProps) {
         super(props);
 
         this.handlers = {
-            ref: (plot:LollipopPlotNoTooltip)=>{ this.plot = plot; },
-            setHitZone:(hitRect:{x:number, y:number, width:number, height:number},
-                        content?:JSX.Element,
-                        onMouseOver?:()=>void,
-                        onClick?:()=>void,
-                        onMouseOut?:()=>void,
-                        cursor: string = "pointer",
-                        tooltipPlacement: string = "top") => {
+            ref: (plot: LollipopPlotNoTooltip) => {
+                this.plot = plot;
+            },
+            setHitZone: (
+                hitRect: {
+                    x: number;
+                    y: number;
+                    width: number;
+                    height: number;
+                },
+                content?: JSX.Element,
+                onMouseOver?: () => void,
+                onClick?: () => void,
+                onMouseOut?: () => void,
+                cursor: string = 'pointer',
+                tooltipPlacement: string = 'top'
+            ) => {
                 this.hitZoneConfig = {
-                    hitRect, content, onMouseOver, onClick, onMouseOut, cursor, tooltipPlacement
+                    hitRect,
+                    content,
+                    onMouseOver,
+                    onClick,
+                    onMouseOut,
+                    cursor,
+                    tooltipPlacement,
                 };
             },
-            getOverlay:()=>this.hitZoneConfig.content,
-            getOverlayPlacement:()=>this.hitZoneConfig.tooltipPlacement,
-            onMouseLeave:()=>{
-                this.hitZoneConfig.onMouseOut && this.hitZoneConfig.onMouseOut();
+            getOverlay: () => this.hitZoneConfig.content,
+            getOverlayPlacement: () => this.hitZoneConfig.tooltipPlacement,
+            onMouseLeave: () => {
+                this.hitZoneConfig.onMouseOut &&
+                    this.hitZoneConfig.onMouseOut();
             },
-            onBackgroundMouseMove:()=>{
-                this.hitZoneConfig.onMouseOut && this.hitZoneConfig.onMouseOut();
-            }
+            onBackgroundMouseMove: () => {
+                this.hitZoneConfig.onMouseOut &&
+                    this.hitZoneConfig.onMouseOut();
+            },
         };
     }
 
@@ -61,22 +90,25 @@ export default class LollipopPlot extends React.Component<LollipopPlotProps, {}>
         return initHitZoneFromConfig(this.hitZoneConfig);
     }
 
-    public toSVGDOMNode():Element {
+    public toSVGDOMNode(): Element {
         if (this.plot) {
             // Clone node
             return this.plot.toSVGDOMNode();
         } else {
-            return document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            return document.createElementNS(
+                'http://www.w3.org/2000/svg',
+                'svg'
+            );
         }
     }
 
     render() {
-        const tooltipVisibleProps:any = {};
+        const tooltipVisibleProps: any = {};
         if (!this.tooltipVisible) {
             tooltipVisibleProps.visible = false;
         }
         return (
-            <div style={{position:"relative"}} data-test="LollipopPlot">
+            <div style={{ position: 'relative' }} data-test="LollipopPlot">
                 <DefaultTooltip
                     placement={this.handlers.getOverlayPlacement()}
                     overlay={this.handlers.getOverlay}

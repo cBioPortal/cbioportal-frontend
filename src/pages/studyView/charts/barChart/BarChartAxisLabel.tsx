@@ -1,29 +1,31 @@
-import * as React from "react";
+import * as React from 'react';
 import { VictoryLabel, Helpers } from 'victory';
 
 export class BarChartAxisLabel extends VictoryLabel {
-
     // Contents mostly copied from https://github.com/FormidableLabs/victory-core/blob/master/src/victory-label/victory-label.js
     // The original renderElements function is designed to create multi-line labels.
     // This one is designed to create labels with superscript.
     renderElements(props: any, content: string[]) {
         const { datum, active, inline, className, title, desc, events } = props;
         const style = this.getStyles(props);
-        const lineHeight = this.getHeight(props, "lineHeight");
-        const textAnchor = props.textAnchor ?
-            Helpers.evaluateProp(props.textAnchor, datum, active) : "start";
+        const lineHeight = this.getHeight(props, 'lineHeight');
+        const textAnchor = props.textAnchor
+            ? Helpers.evaluateProp(props.textAnchor, datum, active)
+            : 'start';
         const dx = props.dx ? Helpers.evaluateProp(props.dx, datum, active) : 0;
         const dy = this.getDy(props, style, content, lineHeight);
         const transform = this.getTransform(props, style);
-        const x = props.x !== undefined ? props.x : this.getPosition(props, "x");
-        const y = props.y !== undefined ? props.y : this.getPosition(props, "y");
+        const x =
+            props.x !== undefined ? props.x : this.getPosition(props, 'x');
+        const y =
+            props.y !== undefined ? props.y : this.getPosition(props, 'y');
 
         const tspanProps = {
             x: !inline ? props.x : undefined,
             dx,
             textAnchor: style[0].textAnchor || textAnchor,
             style: style[0],
-            key: style[0].textAnchor || textAnchor
+            key: style[0].textAnchor || textAnchor,
         };
 
         let tspan = [];
@@ -34,14 +36,14 @@ export class BarChartAxisLabel extends VictoryLabel {
         if (content.length > 1) {
             tspan.push(<tspan {...tspanProps}>{content[0]}</tspan>);
             tspan.push(
-                        <tspan
-                            dy={-style[0].fontSize/2}
-                            style={{...style[0], fontSize: style[0].fontSize * 0.7}}
-                        >
-                            {content[1]}
-                        </tspan>);
-        }
-        else {
+                <tspan
+                    dy={-style[0].fontSize / 2}
+                    style={{ ...style[0], fontSize: style[0].fontSize * 0.7 }}
+                >
+                    {content[1]}
+                </tspan>
+            );
+        } else {
             tspan.push(<tspan {...tspanProps}>{content[0]}</tspan>);
         }
 
