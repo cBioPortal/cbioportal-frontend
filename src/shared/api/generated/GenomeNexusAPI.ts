@@ -435,6 +435,100 @@ export type MyVariantInfo = {
 
         'version': number
 
+        'gnomadExome': Gnomad
+
+        'gnomadGenome': Gnomad
+
+};
+export type Gnomad = {
+    'alleleCount': AlleleCount
+
+        'alleleNumber': AlleleNumber
+
+        'alleleFrequency': AlleleFrequency
+
+        'homozygotes': Homozygotes
+
+};
+export type AlleleCount = {
+    'ac': number
+
+        'ac_afr': number
+
+        'ac_amr': number
+
+        'ac_asj': number
+
+        'ac_eas': number
+
+        'ac_fin': number
+
+        'ac_nfe': number
+
+        'ac_oth': number
+
+        'ac_sas': number
+
+};
+export type AlleleNumber = {
+    'an': number
+
+        'an_afr': number
+
+        'an_amr': number
+
+        'an_asj': number
+
+        'an_eas': number
+
+        'an_fin': number
+
+        'an_nfe': number
+
+        'an_oth': number
+
+        'an_sas': number
+
+};
+export type AlleleFrequency = {
+    'af': number
+
+        'af_afr': number
+
+        'af_amr': number
+
+        'af_asj': number
+
+        'af_eas': number
+
+        'af_fin': number
+
+        'af_nfe': number
+
+        'af_oth': number
+
+        'af_sas': number
+
+};
+export type Homozygotes = {
+    'hom': number
+
+        'hom_afr': number
+
+        'hom_amr': number
+
+        'hom_asj': number
+
+        'hom_eas': number
+
+        'hom_fin': number
+
+        'hom_nfe': number
+
+        'hom_oth': number
+
+        'hom_sas': number
+
 };
 export type MyVariantInfoAnnotation = {
     'annotation': MyVariantInfo
