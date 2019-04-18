@@ -47,6 +47,7 @@ import MobxPromise from "mobxpromise";
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
 import HgvscColumnFormatter from "./column/HgvscColumnFormatter";
 import {CancerGene} from "shared/api/generated/OncoKbAPI";
+import GnomadColumnFormatter from "./column/GnomadColumnFormatter";
 
 export interface IMutationTableProps {
     studyIdToStudy?: {[studyId:string]:CancerStudy};
@@ -121,7 +122,8 @@ export enum MutationTableColumnType {
     CANCER_TYPE,
     NUM_MUTATIONS,
     EXON,
-    HGVSC
+    HGVSC,
+    GNOMAD
 }
 
 type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=>boolean};
@@ -531,6 +533,16 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             sortBy: (d:Mutation[]) => HgvscColumnFormatter.getSortValue(d, this.props.genomeNexusCache as GenomeNexusCache),
             visible: false,
             align: "right"
+        };
+        
+        this._columns[MutationTableColumnType.GNOMAD] = {
+            name: "GNOMAD",
+            render: (d:Mutation[])=>GnomadColumnFormatter.renderFunction(d, this.props.genomeNexusCache as GenomeNexusCache),
+            sortBy: (d:Mutation[])=>GnomadColumnFormatter.getSortValue(d, this.props.genomeNexusCache as GenomeNexusCache),
+            download: (d:Mutation[])=>GnomadColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
+            tooltip: (<span>Gnomad data</span>),
+            defaultSortDirection: "desc",
+            align:"right"
         };
     }
 
