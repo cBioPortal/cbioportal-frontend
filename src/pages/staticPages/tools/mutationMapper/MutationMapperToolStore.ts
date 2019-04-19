@@ -7,10 +7,10 @@ import AppConfig from "appConfig";
 import {remoteData} from "shared/api/remoteData";
 import {ClinicalData, Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {
-    fetchGenes, fetchMyCancerGenomeData, fetchOncoKbAnnotatedGenes, fetchOncoKbData,
+    fetchGenes, fetchMyCancerGenomeData, fetchOncoKbData,
     ONCOKB_DEFAULT,
     fetchCanonicalEnsemblGeneIds,
-    getCanonicalTranscriptsByHugoSymbol
+    getCanonicalTranscriptsByHugoSymbol, fetchOncoKbCancerGenes
 } from "shared/lib/StoreUtils";
 import {annotateMutations, resolveDefaultsForMissingValues, fetchVariantAnnotationsIndexedByGenomicLocation} from "shared/lib/MutationAnnotator";
 import {getClinicalData, getGeneList, mutationInputToMutation, MutationInput} from "shared/lib/MutationInputParser";
@@ -25,6 +25,7 @@ import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
+import {CancerGene} from "shared/api/generated/OncoKbAPI";
 
 export default class MutationMapperToolStore
 {
@@ -65,10 +66,29 @@ export default class MutationMapperToolStore
         invoke: () => Promise.resolve(getGeneList(this.annotatedMutations))
     }, []);
 
+    readonly oncoKbCancerGenes = remoteData({
+        invoke: () => {
+            if (AppConfig.serverConfig.show_oncokb) {
+                return fetchOncoKbCancerGenes();
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    }, []);
+
     readonly oncoKbAnnotatedGenes = remoteData({
-        invoke:()=>fetchOncoKbAnnotatedGenes(),
-        onError: (err: Error) => {
-            // fail silently, leave the error handling responsibility to the data consumer
+        await: () => [this.oncoKbCancerGenes],
+        invoke: () => {
+            if (AppConfig.serverConfig.show_oncokb) {
+                return Promise.resolve(_.reduce(this.oncoKbCancerGenes.result, (map: { [entrezGeneId: number]: boolean }, next: CancerGene) => {
+                    if (next.oncokbAnnotated) {
+                        map[next.entrezGeneId] = true;
+                    }
+                    return map;
+                }, {}));
+            } else {
+                return Promise.resolve({});
+            }
         }
     }, {});
 
@@ -175,7 +195,7 @@ export default class MutationMapperToolStore
                         getMutations,
                         this.indexedHotspotData,
                         this.indexedVariantAnnotations,
-                        this.oncoKbAnnotatedGenes.result || {},
+                        this.oncoKbCancerGenes,
                         this.oncoKbData,
                         this.uniqueSampleKeyToTumorType.result || {},
                     );
