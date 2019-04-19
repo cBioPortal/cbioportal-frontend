@@ -29,8 +29,9 @@ export interface IOncoKbProps {
     evidenceCache?: OncoKbEvidenceCache;
     evidenceQuery?: Query;
     pubMedCache?: OncokbPubMedCache;
+    isCancerGene:boolean;
     geneNotExist:boolean;
-    hugoGeneSymbol?:string;
+    hugoGeneSymbol:string;
     userEmailAddress?:string;
 }
 
@@ -59,17 +60,12 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
 
     public static sortValue(indicator?: IndicatorQueryResp|undefined|null): number[]
     {
-        if (!indicator) {
-            return [];
+        const values: number[] = [0, 0, 0];
+        if (indicator) {
+            values[0] = calcOncogenicScore(indicator.oncogenic);
+            values[1] = calcSensitivityLevelScore(indicator.highestSensitiveLevel);
+            values[2] = calcResistanceLevelScore(indicator.highestResistanceLevel);
         }
-
-        const values:number[] = [];
-
-        values[0] = calcOncogenicScore(indicator.oncogenic, indicator.vus);
-        values[1] = calcSensitivityLevelScore(indicator.highestSensitiveLevel);
-        values[2] = calcResistanceLevelScore(indicator.highestResistanceLevel);
-        values[3] = indicator.geneExist ? 1 : 0;
-
         return values;
     }
 
@@ -208,7 +204,9 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
     {
         return (
             <OncoKbTooltip
+                hugoSymbol={this.props.hugoGeneSymbol}
                 geneNotExist={this.props.geneNotExist}
+                isCancerGene={this.props.isCancerGene}
                 indicator={this.props.indicator || undefined}
                 evidenceCache={this.props.evidenceCache}
                 evidenceQuery={this.props.evidenceQuery}
