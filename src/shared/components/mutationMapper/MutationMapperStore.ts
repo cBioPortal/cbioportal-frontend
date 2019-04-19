@@ -4,7 +4,7 @@ import MobxPromise, {cached, labelMobxPromises} from "mobxpromise";
 
 import {Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
-import {IOncoKbDataWrapper} from "shared/model/OncoKB";
+import {IOncoKbCancerGenesWrapper, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import ResidueMappingCache from "shared/cache/ResidueMappingCache";
 import {remoteData} from "shared/api/remoteData";
 import {
@@ -54,7 +54,7 @@ export default class MutationMapperStore
         // TODO: we could merge indexedVariantAnnotations and indexedHotspotData
         public indexedHotspotData:MobxPromise<IHotspotIndex|undefined>,
         public indexedVariantAnnotations:MobxPromise<{[genomicLocation: string]: VariantAnnotation}|undefined>,
-        public oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
+        public oncoKbCancerGenes:IOncoKbCancerGenesWrapper,
         public oncoKbData:IOncoKbDataWrapper,
         public uniqueSampleKeyToTumorType:{[uniqueSampleKey:string]:string},
     )

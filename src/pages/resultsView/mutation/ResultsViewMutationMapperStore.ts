@@ -3,7 +3,7 @@ import {
 } from "shared/api/generated/CBioPortalAPI";
 import {remoteData} from "shared/api/remoteData";
 import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
-import {IOncoKbDataWrapper} from "shared/model/OncoKB";
+import {IOncoKbCancerGenesWrapper, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {ICivicGene, ICivicVariant} from "shared/model/Civic";
 import {
@@ -24,7 +24,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
                 protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
                 public gene:Gene,
                 public samples:MobxPromise<SampleIdentifier[]>,
-                public oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
+                public oncoKbCancerGenes:IOncoKbCancerGenesWrapper,
                 // getMutationDataCache needs to be a getter for the following reason:
                 // when the input parameters to the mutationDataCache change, the cache
                 // is recomputed. Mobx needs to respond to this. But if we pass the mutationDataCache
@@ -54,7 +54,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             getMutations,
             indexedHotspotData,
             indexedVariantAnnotations,
-            oncoKbAnnotatedGenes,
+            oncoKbCancerGenes,
             oncoKbData,
             uniqueSampleKeyToTumorType
         );
