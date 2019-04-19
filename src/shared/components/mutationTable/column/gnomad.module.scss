@@ -1,7 +1,10 @@
 .gnomad-table {
-    max-width: 450px;
+    max-width: 470px;
     display: block;
+    td:first-child{
+        white-space: nowrap;
+    }
     tr:last-child {
       font-weight: bold;
     }
-  }
+}
