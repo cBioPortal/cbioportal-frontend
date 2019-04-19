@@ -1,17 +1,21 @@
 import * as React from "react";
 import * as _ from "lodash";
-import {CNAGenesData, CopyNumberAlterationIdentifier} from "pages/studyView/StudyViewPageStore";
-import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
-import {observer} from "mobx-react";
+import { CNAGenesData, CopyNumberAlterationIdentifier } from "pages/studyView/StudyViewPageStore";
+import { action, computed, IReactionDisposer, observable, reaction } from "mobx";
+import { observer } from "mobx-react";
 import styles from "./tables.module.scss";
-import {CopyNumberCountByGene, CopyNumberGeneFilterElement} from "shared/api/generated/CBioPortalAPIInternal";
+import {
+    CopyNumberCountByGene,
+    CopyNumberGeneFilterElement,
+    GenePanelToGene
+} from "shared/api/generated/CBioPortalAPIInternal";
 import MobxPromise from "mobxpromise";
-import {If} from 'react-if';
-import classnames from 'classnames';
+import { If } from "react-if";
+import classnames from "classnames";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
-import autobind from 'autobind-decorator';
+import autobind from "autobind-decorator";
 import {
     correctColumnWidth,
     correctMargin,
@@ -22,13 +26,13 @@ import {
     getFrequencyStr,
     getQValue
 } from "../StudyViewUtils";
-import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
-import {DEFAULT_SORTING_COLUMN} from "../StudyViewConfig";
+import { SortDirection } from "../../../shared/components/lazyMobXTable/LazyMobXTable";
+import { DEFAULT_SORTING_COLUMN } from "../StudyViewConfig";
+import { GenePanelModal, GenePanelList } from "./GenePanelModal";
 
-
-export type  CNAGenesTableUserSelectionWithIndex = CopyNumberAlterationIdentifier & {
+export type CNAGenesTableUserSelectionWithIndex = CopyNumberAlterationIdentifier & {
     rowIndex: number;
-}
+};
 
 export interface ICNAGenesTablePros {
     promise: MobxPromise<CNAGenesData>;
@@ -38,18 +42,17 @@ export interface ICNAGenesTablePros {
     onUserSelection: (selection: CopyNumberAlterationIdentifier[]) => void;
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
-    selectedGenes: string[]
+    selectedGenes: string[];
 }
 
-class CNAGenesTableComponent extends FixedHeaderTable<CopyNumberCountByGene> {
-}
+class CNAGenesTableComponent extends FixedHeaderTable<CopyNumberCountByGene> {}
 
 enum ColumnKey {
-    GENE = 'Gene',
-    CYTOBAND = 'Cytoband',
-    CNA = 'CNA',
-    NUMBER = '#',
-    FREQ = 'Freq'
+    GENE = "Gene",
+    CYTOBAND = "Cytoband",
+    CNA = "CNA",
+    NUMBER = "#",
+    FREQ = "Freq"
 }
 
 @observer
@@ -62,23 +65,40 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         [ColumnKey.CYTOBAND]: 0,
         [ColumnKey.CNA]: 0,
         [ColumnKey.NUMBER]: 0,
-        [ColumnKey.FREQ]: 0,
+        [ColumnKey.FREQ]: 0
+    };
+    @observable private modalSettings: {
+        modalOpen: boolean;
+        modalPanelName: string;
+        modalPanelGenes: GenePanelToGene[];
+    } = {
+        modalOpen: false,
+        modalPanelName: "",
+        modalPanelGenes: []
     };
 
-    private reactions:IReactionDisposer[] = [];
+    private reactions: IReactionDisposer[] = [];
 
     constructor(props: ICNAGenesTablePros) {
         super(props);
 
         this.reactions.push(
-            reaction(() => this.columnsWidth, () => {
-                this.updateCellMargin();
-            }, {fireImmediately: true})
+            reaction(
+                () => this.columnsWidth,
+                () => {
+                    this.updateCellMargin();
+                },
+                { fireImmediately: true }
+            )
         );
         this.reactions.push(
-            reaction(() => this.props.promise.result, () => {
-                this.updateCellMargin();
-            }, {fireImmediately: true})
+            reaction(
+                () => this.props.promise.result,
+                () => {
+                    this.updateCellMargin();
+                },
+                { fireImmediately: true }
+            )
         );
     }
 
@@ -88,6 +108,23 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         }
     }
 
+    @autobind
+    @action
+    toggleModal(panelName: string, genes: GenePanelToGene[]) {
+        this.modalSettings.modalOpen = !this.modalSettings.modalOpen;
+        if (!this.modalSettings.modalOpen) {
+            return;
+        }
+        this.modalSettings.modalPanelName = panelName;
+        this.modalSettings.modalPanelGenes = genes;
+    }
+
+    @autobind
+    @action
+    closeModal() {
+        this.modalSettings.modalOpen = !this.modalSettings.modalOpen;
+    }
+
     @computed
     get columnsWidth() {
         return {
@@ -95,7 +132,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             [ColumnKey.CYTOBAND]: correctColumnWidth(this.props.width * 0.25),
             [ColumnKey.CNA]: correctColumnWidth(this.props.width * 0.14),
             [ColumnKey.NUMBER]: correctColumnWidth(this.props.width * 0.18),
-            [ColumnKey.FREQ]: correctColumnWidth(this.props.width * 0.18),
+            [ColumnKey.FREQ]: correctColumnWidth(this.props.width * 0.18)
         };
     }
 
@@ -104,16 +141,26 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     updateCellMargin() {
         if (this.props.promise.result!.length > 0) {
             this.cellMargin[ColumnKey.NUMBER] = correctMargin(
-                (this.columnsWidth[ColumnKey.NUMBER] - 10 - (
-                    getFixedHeaderTableMaxLengthStringPixel(
-                        _.max(this.props.promise.result!.map(item => item.numberOfAlteredCases))!.toLocaleString()
-                    ) + 20
-                )) / 2);
+                (this.columnsWidth[ColumnKey.NUMBER] -
+                    10 -
+                    (getFixedHeaderTableMaxLengthStringPixel(
+                        _.max(
+                            this.props.promise.result!.map(item => item.numberOfAlteredCases)
+                        )!.toLocaleString()
+                    ) +
+                        20)) /
+                    2
+            );
             this.cellMargin[ColumnKey.FREQ] = correctMargin(
                 getFixedHeaderNumberCellMargin(
                     this.columnsWidth[ColumnKey.FREQ],
                     getFrequencyStr(
-                        _.max(this.props.promise.result!.map(item => item.numberOfAlteredCases / item.numberOfSamplesProfiled * 100))!
+                        _.max(
+                            this.props.promise.result!.map(
+                                item =>
+                                    (item.numberOfAlteredCases / item.numberOfSamplesProfiled) * 100
+                            )
+                        )!
                     )
                 )
             );
@@ -122,139 +169,219 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
 
     @computed
     get tableColumns() {
-        return [{
-            name: ColumnKey.GENE,
-            tooltip: (<span>Gene</span>),
-            render: (data: CopyNumberCountByGene) => {
-                const addGeneOverlay = () =>
-                    <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove from' : 'add to'} your query`}</span>;
-                const qvalOverlay = () =>
-                    <div><b>Gistic</b><br/><i>Q-value: </i><span>{getQValue(data.qValue)}</span></div>;
-                return (
-                    <div className={classnames(styles.displayFlex)}>
-                        <DefaultTooltip
-                            placement="left"
-                            overlay={addGeneOverlay}
-                            destroyTooltipOnHide={true}
-                        >
-                            <span
-                                className={classnames(styles.geneSymbol, styles.ellipsisText, _.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? styles.selected : undefined, _.isUndefined(data.qValue) ? undefined : styles.shortenText)}
-                                onClick={() => this.props.onGeneSelect(data.hugoGeneSymbol)}>
-                                {data.hugoGeneSymbol}
-                            </span>
-                        </DefaultTooltip>
-                        <If condition={!_.isUndefined(data.qValue)}>
+        return [
+            {
+                name: ColumnKey.GENE,
+                tooltip: <span>Gene</span>,
+                render: (data: CopyNumberCountByGene) => {
+                    const addGeneOverlay = () => (
+                        <span>{`Click ${data.hugoGeneSymbol} to ${
+                            _.includes(this.props.selectedGenes, data.hugoGeneSymbol)
+                                ? "remove from"
+                                : "add to"
+                        } your query`}</span>
+                    );
+                    const qvalOverlay = () => (
+                        <div>
+                            <b>Gistic</b>
+                            <br />
+                            <i>Q-value: </i>
+                            <span>{getQValue(data.qValue)}</span>
+                        </div>
+                    );
+                    return (
+                        <div className={classnames(styles.displayFlex)}>
                             <DefaultTooltip
-                                placement="right"
-                                overlay={qvalOverlay}
+                                placement="left"
+                                overlay={addGeneOverlay}
                                 destroyTooltipOnHide={true}
                             >
-                                    <span><img src={require("./images/gistic.png")}
-                                               className={styles.gistic}></img></span>
+                                <span
+                                    className={classnames(
+                                        styles.geneSymbol,
+                                        styles.ellipsisText,
+                                        _.includes(this.props.selectedGenes, data.hugoGeneSymbol)
+                                            ? styles.selected
+                                            : undefined,
+                                        _.isUndefined(data.qValue) ? undefined : styles.shortenText
+                                    )}
+                                    onClick={() => this.props.onGeneSelect(data.hugoGeneSymbol)}
+                                >
+                                    {data.hugoGeneSymbol}
+                                </span>
                             </DefaultTooltip>
-                        </If>
-                    </div>
-                )
+                            <If condition={!_.isUndefined(data.qValue)}>
+                                <DefaultTooltip
+                                    placement="right"
+                                    overlay={qvalOverlay}
+                                    destroyTooltipOnHide={true}
+                                >
+                                    <span>
+                                        <img
+                                            src={require("./images/gistic.png")}
+                                            className={styles.gistic}
+                                        />
+                                    </span>
+                                </DefaultTooltip>
+                            </If>
+                        </div>
+                    );
+                },
+                sortBy: (data: CopyNumberCountByGene) => data.hugoGeneSymbol,
+                defaultSortDirection: "asc" as "asc",
+                filter: (
+                    data: CopyNumberCountByGene,
+                    filterString: string,
+                    filterStringUpper: string
+                ) => {
+                    return data.hugoGeneSymbol.toUpperCase().includes(filterStringUpper);
+                },
+                width: 90
             },
-            sortBy: (data: CopyNumberCountByGene) => data.hugoGeneSymbol,
-            defaultSortDirection: 'asc' as 'asc',
-            filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
-                return data.hugoGeneSymbol.toUpperCase().includes(filterStringUpper);
+            {
+                name: ColumnKey.CYTOBAND,
+                tooltip: <span>Cytoband</span>,
+                render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>,
+                sortBy: (data: CopyNumberCountByGene) => data.cytoband,
+                defaultSortDirection: "asc" as "asc",
+                filter: (
+                    data: CopyNumberCountByGene,
+                    filterString: string,
+                    filterStringUpper: string
+                ) => {
+                    return _.isUndefined(data.cytoband)
+                        ? false
+                        : data.cytoband.toUpperCase().includes(filterStringUpper);
+                },
+                width: 105
             },
-            width: 90
-        }, {
-            name: ColumnKey.CYTOBAND,
-            tooltip: (<span>Cytoband</span>),
-            render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>,
-            sortBy: (data: CopyNumberCountByGene) => data.cytoband,
-            defaultSortDirection: 'asc' as 'asc',
-            filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
-                return _.isUndefined(data.cytoband) ? false : data.cytoband.toUpperCase().includes(filterStringUpper);
-            },
-            width: 105
-        }, {
-            name: ColumnKey.CNA,
-            tooltip: (<span>Copy number alteration, only amplifications and deep deletions are shown</span>),
-            render: (data: CopyNumberCountByGene) =>
-                <span style={{color: getCNAColorByAlteration(data.alteration), fontWeight: 'bold'}}>
-                    {getCNAByAlteration(data.alteration)}
-                </span>,
-            sortBy: (data: CopyNumberCountByGene) => data.alteration,
-            defaultSortDirection: 'asc' as 'asc',
-            filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
-                return getCNAByAlteration(data.alteration).includes(filterStringUpper);
-            },
-            width: 60
-        }, {
-            name: ColumnKey.NUMBER,
-            tooltip: (<span>Number of samples with the listed copy number alteration</span>),
-            headerRender: () => {
-                return <div style={{marginLeft: this.cellMargin[ColumnKey.NUMBER]}}>#</div>
-            },
-            render: (data: CopyNumberCountByGene) =>
-                <LabeledCheckbox
-                    checked={this.isChecked(data.entrezGeneId, data.alteration)}
-                    disabled={this.isDisabled(data.entrezGeneId, data.alteration)}
-                    onChange={event => this.togglePreSelectRow(data.entrezGeneId, data.alteration)}
-                    labelProps={{
-                        style: {
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            marginLeft: this.cellMargin[ColumnKey.NUMBER],
-                            marginRight: this.cellMargin[ColumnKey.NUMBER]
-                        }
-                    }}
-                    inputProps={{
-                        className: styles.autoMarginCheckbox
-                    }}
-                >
-                    {data.numberOfAlteredCases.toLocaleString()}
-                </LabeledCheckbox>,
-            sortBy: (data: CopyNumberCountByGene) => data.numberOfAlteredCases,
-            defaultSortDirection: 'desc' as 'desc',
-            filter: (data: CopyNumberCountByGene, filterString: string) => {
-                return _.toString(data.numberOfAlteredCases).includes(filterString);
-            },
-            width: 75
-        }, {
-            name: ColumnKey.FREQ,
-            tooltip: (<span>Percentage of samples with the listed copy number alteration</span>),
-            headerRender: () => {
-                return <div style={{marginLeft: this.cellMargin[ColumnKey.FREQ]}}>Freq</div>
-            },
-            render: (data: CopyNumberCountByGene) => {
-                const addTotalProfiledOverlay = () =>
-                    <span>{`# of samples profiled for CNA in this gene: ${data.numberOfSamplesProfiled}`}</span>;
-               return(
-                    <DefaultTooltip
-                        placement="right"
-                        overlay={addTotalProfiledOverlay}
-                        destroyTooltipOnHide={true}
+            {
+                name: ColumnKey.CNA,
+                tooltip: (
+                    <span>
+                        Copy number alteration, only amplifications and deep deletions are shown
+                    </span>
+                ),
+                render: (data: CopyNumberCountByGene) => (
+                    <span
+                        style={{
+                            color: getCNAColorByAlteration(data.alteration),
+                            fontWeight: "bold"
+                        }}
                     >
-                        <span
-                            style={{
-                            flexDirection: 'row-reverse',
-                            display: 'flex',
-                            marginRight: this.cellMargin[ColumnKey.FREQ]
-                            }}>{getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100)}
+                        {getCNAByAlteration(data.alteration)}
+                    </span>
+                ),
+                sortBy: (data: CopyNumberCountByGene) => data.alteration,
+                defaultSortDirection: "asc" as "asc",
+                filter: (
+                    data: CopyNumberCountByGene,
+                    filterString: string,
+                    filterStringUpper: string
+                ) => {
+                    return getCNAByAlteration(data.alteration).includes(filterStringUpper);
+                },
+                width: 60
+            },
+            {
+                name: ColumnKey.NUMBER,
+                tooltip: <span>Number of samples with the listed copy number alteration</span>,
+                headerRender: () => {
+                    return <div style={{ marginLeft: this.cellMargin[ColumnKey.NUMBER] }}>#</div>;
+                },
+                render: (data: CopyNumberCountByGene) => (
+                    <LabeledCheckbox
+                        checked={this.isChecked(data.entrezGeneId, data.alteration)}
+                        disabled={this.isDisabled(data.entrezGeneId, data.alteration)}
+                        onChange={event =>
+                            this.togglePreSelectRow(data.entrezGeneId, data.alteration)
+                        }
+                        labelProps={{
+                            style: {
+                                display: "flex",
+                                justifyContent: "space-between",
+                                marginLeft: this.cellMargin[ColumnKey.NUMBER],
+                                marginRight: this.cellMargin[ColumnKey.NUMBER]
+                            }
+                        }}
+                        inputProps={{
+                            className: styles.autoMarginCheckbox
+                        }}
+                    >
+                        {data.numberOfAlteredCases.toLocaleString()}
+                    </LabeledCheckbox>
+                ),
+                sortBy: (data: CopyNumberCountByGene) => data.numberOfAlteredCases,
+                defaultSortDirection: "desc" as "desc",
+                filter: (data: CopyNumberCountByGene, filterString: string) => {
+                    return _.toString(data.numberOfAlteredCases).includes(filterString);
+                },
+                width: 75
+            },
+            {
+                name: ColumnKey.FREQ,
+                tooltip: <span>Percentage of samples with the listed copy number alteration</span>,
+                headerRender: () => {
+                    return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
+                },
+                render: (data: CopyNumberCountByGene) => {
+                    const addTotalProfiledOverlay = () => (
+                        <span>
+                            # of samples profiled for mutations in this gene:{" "}
+                            {data.numberOfSamplesProfiled.toLocaleString()}
+                            <GenePanelList
+                                genePanels={data.matchingGenePanels}
+                                toggleModal={this.toggleModal}
+                            />
                         </span>
-                    </DefaultTooltip>
-                )
-            },
-            sortBy: (data: CopyNumberCountByGene) => data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100,
-            defaultSortDirection: 'desc' as 'desc',
-            filter: (data: CopyNumberCountByGene, filterString: string) => {
-                return _.toString(getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled * 100)).includes(filterString);
-            },
-            width: 70
-        }]
-    };
+                    );
+                    return (
+                        <DefaultTooltip
+                            placement="right"
+                            overlay={addTotalProfiledOverlay}
+                            destroyTooltipOnHide={true}
+                        >
+                            <span>
+                                {getFrequencyStr(
+                                    (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100
+                                )}
+                            </span>
+                        </DefaultTooltip>
+                    );
+                },
+                sortBy: (data: CopyNumberCountByGene) =>
+                    (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100,
+                defaultSortDirection: "desc" as "desc",
+                filter: (data: CopyNumberCountByGene, filterString: string) => {
+                    return _.toString(
+                        getFrequencyStr(
+                            (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100
+                        )
+                    ).includes(filterString);
+                },
+                width: 70
+            }
+        ];
+    }
 
     @autobind
     isChecked(entrezGeneId: number, alteration: number) {
-        let record = _.find(this.preSelectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration);
+        const record = _.find(
+            this.preSelectedRows,
+            (row: CNAGenesTableUserSelectionWithIndex) =>
+                row.entrezGeneId === entrezGeneId && row.alteration === alteration
+        );
         if (_.isUndefined(record)) {
-            return this.selectedRows.length > 0 && !_.isUndefined(_.find(this.selectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration));
+            return (
+                this.selectedRows.length > 0 &&
+                !_.isUndefined(
+                    _.find(
+                        this.selectedRows,
+                        (row: CNAGenesTableUserSelectionWithIndex) =>
+                            row.entrezGeneId === entrezGeneId && row.alteration === alteration
+                    )
+                )
+            );
         } else {
             return true;
         }
@@ -262,23 +389,37 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
 
     @autobind
     isDisabled(entrezGeneId: number, alteration: number) {
-        return !_.isUndefined(_.find(this.selectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration));
+        return !_.isUndefined(
+            _.find(
+                this.selectedRows,
+                (row: CNAGenesTableUserSelectionWithIndex) =>
+                    row.entrezGeneId === entrezGeneId && row.alteration === alteration
+            )
+        );
     }
 
     @autobind
     @action
     togglePreSelectRow(entrezGeneId: number, alteration: number) {
-        let record: CNAGenesTableUserSelectionWithIndex | undefined = _.find(this.preSelectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration);
+        const record: CNAGenesTableUserSelectionWithIndex | undefined = _.find(
+            this.preSelectedRows,
+            (row: CNAGenesTableUserSelectionWithIndex) =>
+                row.entrezGeneId === entrezGeneId && row.alteration === alteration
+        );
         if (_.isUndefined(record)) {
             let dataIndex = -1;
             // definitely there is a match
-            let datum: CopyNumberCountByGene | undefined = _.find(this.props.promise.result, (row: CopyNumberCountByGene, index: number) => {
-                let exist = row.entrezGeneId === entrezGeneId && row.alteration === alteration;
-                if (exist) {
-                    dataIndex = index;
+            const datum: CopyNumberCountByGene | undefined = _.find(
+                this.props.promise.result,
+                (row: CopyNumberCountByGene, index: number) => {
+                    const exist =
+                        row.entrezGeneId === entrezGeneId && row.alteration === alteration;
+                    if (exist) {
+                        dataIndex = index;
+                    }
+                    return exist;
                 }
-                return exist;
-            });
+            );
 
             if (!_.isUndefined(datum)) {
                 this.preSelectedRows.push({
@@ -286,23 +427,25 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     entrezGeneId: datum.entrezGeneId,
                     alteration: datum.alteration,
                     hugoGeneSymbol: datum.hugoGeneSymbol
-                })
+                });
             }
         } else {
-            this.preSelectedRows = _.xorBy(this.preSelectedRows, [record], 'rowIndex');
+            this.preSelectedRows = _.xorBy(this.preSelectedRows, [record], "rowIndex");
         }
     }
 
     @autobind
     @action
     afterSelectingRows() {
-        this.props.onUserSelection(this.preSelectedRows.map(row => {
-            return {
-                entrezGeneId: row.entrezGeneId,
-                alteration: row.alteration,
-                hugoGeneSymbol: row.hugoGeneSymbol
-            };
-        }));
+        this.props.onUserSelection(
+            this.preSelectedRows.map(row => {
+                return {
+                    entrezGeneId: row.entrezGeneId,
+                    alteration: row.alteration,
+                    hugoGeneSymbol: row.hugoGeneSymbol
+                };
+            })
+        );
         this.preSelectedRows = [];
     }
 
@@ -311,25 +454,40 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         if (this.props.filters.length === 0) {
             return [];
         } else {
-            return _.reduce(this.props.promise.result, (acc: CNAGenesTableUserSelectionWithIndex[], row: CopyNumberCountByGene, index: number) => {
-                if (_.some(this.props.filters, {entrezGeneId: row.entrezGeneId, alteration: row.alteration})) {
-                    acc.push({
-                        rowIndex: index,
-                        entrezGeneId: row.entrezGeneId,
-                        alteration: row.alteration,
-                        hugoGeneSymbol: row.hugoGeneSymbol
-                    });
-                }
-                return acc;
-            }, []);
+            return _.reduce(
+                this.props.promise.result,
+                (
+                    acc: CNAGenesTableUserSelectionWithIndex[],
+                    row: CopyNumberCountByGene,
+                    index: number
+                ) => {
+                    if (
+                        _.some(this.props.filters, {
+                            entrezGeneId: row.entrezGeneId,
+                            alteration: row.alteration
+                        })
+                    ) {
+                        acc.push({
+                            rowIndex: index,
+                            entrezGeneId: row.entrezGeneId,
+                            alteration: row.alteration,
+                            hugoGeneSymbol: row.hugoGeneSymbol
+                        });
+                    }
+                    return acc;
+                },
+                []
+            );
         }
     }
 
     @autobind
     isSelectedRow(data: CopyNumberCountByGene) {
-        return !_.isUndefined(_.find(_.union(this.selectedRows, this.preSelectedRows), function (row) {
-            return row.entrezGeneId === data.entrezGeneId && row.alteration === data.alteration;
-        }));
+        return !_.isUndefined(
+            _.find(_.union(this.selectedRows, this.preSelectedRows), function(row) {
+                return row.entrezGeneId === data.entrezGeneId && row.alteration === data.alteration;
+            })
+        );
     }
 
     @autobind
@@ -341,19 +499,26 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
 
     public render() {
         return (
-            <CNAGenesTableComponent
-                width={this.props.width}
-                height={this.props.height}
-                data={this.props.promise.result || []}
-                columns={this.tableColumns}
-                showSelectSamples={true && this.preSelectedRows.length > 0}
-                afterSelectingRows={this.afterSelectingRows}
-                isSelectedRow={this.isSelectedRow}
-                sortBy={this.sortBy}
-                sortDirection={this.sortDirection}
-                afterSorting={this.afterSorting}
-            />
+            <div>
+                <CNAGenesTableComponent
+                    width={this.props.width}
+                    height={this.props.height}
+                    data={this.props.promise.result || []}
+                    columns={this.tableColumns}
+                    showSelectSamples={true && this.preSelectedRows.length > 0}
+                    afterSelectingRows={this.afterSelectingRows}
+                    isSelectedRow={this.isSelectedRow}
+                    sortBy={this.sortBy}
+                    sortDirection={this.sortDirection}
+                    afterSorting={this.afterSorting}
+                />
+                <GenePanelModal
+                    show={this.modalSettings.modalOpen}
+                    genes={this.modalSettings.modalPanelGenes}
+                    panelName={this.modalSettings.modalPanelName}
+                    hide={this.closeModal}
+                />
+            </div>
         );
     }
 }
-
