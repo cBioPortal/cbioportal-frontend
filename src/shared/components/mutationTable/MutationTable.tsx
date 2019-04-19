@@ -27,7 +27,7 @@ import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import ExonColumnFormatter from "./column/ExonColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {IHotspotDataWrapper} from "shared/model/CancerHotspots";
-import {IOncoKbDataWrapper} from "shared/model/OncoKB";
+import {IOncoKbCancerGenesWrapper, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {ICivicVariantDataWrapper, ICivicGeneDataWrapper} from "shared/model/Civic";
 import {IMutSigData} from "shared/model/MutSig";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
@@ -46,6 +46,7 @@ import {IColumnVisibilityControlsProps} from "../columnVisibilityControls/Column
 import MobxPromise from "mobxpromise";
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
 import HgvscColumnFormatter from "./column/HgvscColumnFormatter";
+import {CancerGene} from "shared/api/generated/OncoKbAPI";
 
 export interface IMutationTableProps {
     studyIdToStudy?: {[studyId:string]:CancerStudy};
@@ -53,6 +54,7 @@ export interface IMutationTableProps {
     molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile};
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
+    oncoKbCancerGenes?:IOncoKbCancerGenesWrapper;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:VariantCountCache;
     pubMedCache?:PubMedCache;
@@ -69,7 +71,6 @@ export interface IMutationTableProps {
     indexedVariantAnnotations?: MobxPromise<{ [genomicLocation: string]: VariantAnnotation; } | undefined>;
     cosmicData?:ICosmicData;
     oncoKbData?: IOncoKbDataWrapper;
-    oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
     civicGenes?: ICivicGeneDataWrapper;
     civicVariants?: ICivicVariantDataWrapper;
     mrnaExprRankMolecularProfileId?:string;
@@ -459,7 +460,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 myCancerGenomeData: this.props.myCancerGenomeData,
                 oncoKbData: this.props.oncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
-                oncoKbAnnotatedGenes: this.props.oncoKbAnnotatedGenes,
+                oncoKbCancerGenes: this.props.oncoKbCancerGenes,
                 pubMedCache: this.props.pubMedCache,
                 civicGenes: this.props.civicGenes,
                 civicVariants: this.props.civicVariants,
@@ -472,7 +473,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             })),
             download:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.download(d,
-                    this.props.oncoKbAnnotatedGenes,
+                    this.props.oncoKbCancerGenes,
                     this.props.hotspotData,
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData,
@@ -481,7 +482,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             },
             sortBy:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.oncoKbAnnotatedGenes,
+                    this.props.oncoKbCancerGenes,
                     this.props.hotspotData,
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData,
