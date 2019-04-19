@@ -6,7 +6,7 @@ import {IServerConfig} from "../../config/IAppConfig";
 
 export function openSocialAuthWindow(appStore:AppStore) {
 
-    var _window = getBrowserWindow().open(buildCBioPortalPageUrl('login.jsp'), '', 'width=1000, height=800')!;
+    var _window = getBrowserWindow().open(buildCBioPortalPageUrl('login.jsp'), 'blank', 'width=1000, height=800')!;
     var interval = setInterval(function() {
         try {
             if (_window.closed) {
