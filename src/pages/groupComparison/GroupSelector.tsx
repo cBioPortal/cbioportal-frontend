@@ -32,7 +32,6 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                 return (
                     <div style={{
                         display:"flex",
-                        flexDirection:"row",
                         alignItems:"center"
                     }}>
                         <strong style={{marginRight:5}}>Groups: </strong>
@@ -84,7 +83,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                                 );
                             })}
                         </div>
-                        <div className="btn-group" style={{marginLeft:15}}>
+                        <div style={{marginLeft:15, display:'flex', whiteSpace:'nowrap'}} >
                             <a onClick={this.props.store.selectAllGroups}
                             >Select all
                             </a>
