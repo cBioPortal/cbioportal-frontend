@@ -1,12 +1,7 @@
 import * as React from 'react';
-import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
-import ProteinChangeColumnFormatter from "../mutationTable/column/ProteinChangeColumnFormatter";
 import { GnomadData } from '../mutationTable/column/GnomadColumnFormatter';
 import {Column, default as LazyMobXTable} from "../lazyMobXTable/LazyMobXTable";
-import { ColocatedVariant } from 'shared/api/generated/GenomeNexusAPI';
-
-// TODO interface ICosmicTableProps extends IMSKTableProps<CosmicMutation>
-// To avoid duplication, it would be nice here to have an extendable interface for LazyMobXTableProps
+import { toFixedWithThreshold } from 'shared/lib/FormatUtils';
 export interface IGnomadFrequencyTableProps
 {
     data: GnomadData[];
@@ -51,7 +46,7 @@ export default class GnomadFrequencyTable extends React.Component<IGnomadFrequen
             {
                 name: "Allele Frequency",
                 order: 5.00,
-                render: (d:GnomadData) => (<span>{d.alleleFrequency}</span>),
+                render: (d:GnomadData) => (<span>{toFixedWithThreshold(d.alleleFrequency,4)}</span>),
                 sortBy: (d:GnomadData) => d.alleleFrequency
             }
         ],
