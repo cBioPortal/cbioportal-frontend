@@ -58,7 +58,7 @@ function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
             }
         }
         return ret;
-    }, 2000);
+    }, 10000);
 }
 
 function getNthOncoprintTrackOptionsElements(n) {
