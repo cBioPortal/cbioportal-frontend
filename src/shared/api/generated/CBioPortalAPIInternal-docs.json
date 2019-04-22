@@ -14,7 +14,7 @@
             "url": "https://github.com/cBioPortal/cbioportal/blob/master/LICENSE"
         }
     },
-    "host": "localhost:8080",
+    "host": "",
     "basePath": "/cbioportal/api",
     "tags": [
         {
@@ -1790,6 +1790,12 @@
                 "hugoGeneSymbol": {
                     "type": "string"
                 },
+                "matchingGenePanels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GenePanel"
+                    }
+                },
                 "numberOfAlteredCases": {
                     "type": "integer",
                     "format": "int32"
@@ -1996,6 +2002,44 @@
                 }
             },
             "title": "ExpressionEnrichment"
+        },
+        "GenePanel": {
+            "type": "object",
+            "required": [
+                "genePanelId"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "genePanelId": {
+                    "type": "string"
+                },
+                "genes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GenePanelToGene"
+                    }
+                }
+            },
+            "title": "GenePanel"
+        },
+        "GenePanelToGene": {
+            "type": "object",
+            "required": [
+                "entrezGeneId",
+                "hugoGeneSymbol"
+            ],
+            "properties": {
+                "entrezGeneId": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "hugoGeneSymbol": {
+                    "type": "string"
+                }
+            },
+            "title": "GenePanelToGene"
         },
         "Geneset": {
             "type": "object",
@@ -2436,6 +2480,12 @@
                 },
                 "hugoGeneSymbol": {
                     "type": "string"
+                },
+                "matchingGenePanels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GenePanel"
+                    }
                 },
                 "numberOfAlteredCases": {
                     "type": "integer",
