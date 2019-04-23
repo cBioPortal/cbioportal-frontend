@@ -4,8 +4,6 @@
 
 .plotsTab {
 
-  margin-top:$standardMargin;
-
   .leftColumn {
     width:304px;
 
@@ -27,39 +25,47 @@
       }
     }*/
 
-    > div > div {
-      padding:10px;
+    .swapAxes {
+      text-align: center;
+      padding:0;
     }
 
     .axisBlock {
       background:#eee;
       border-radius:4px;
-      padding-bottom: 0;
-    }
-    .tab-title {
-      font-size: 14px;
-    }
-    
+      padding:10px;
+
+      form {
+        display:flex;
+      }
+
+      h4 {
+        writing-mode: vertical-lr;
+        padding:0 !important;
+        margin:0 !important;
+        width:23px;
+        text-align:center;
+      }
+
+
     .label-text {
-      font-size: 13px;
       color: #333333;
       margin-bottom: 5px;
       padding: 0px;
     }
-    
+
     .form-group-bspace {
       margin-bottom: 5px;
     }
-    
+
     .PlotsTab {
       width: 120%;
     }
-    
+
     .color-samples{
       right: 10px;
       bottom: 0;
       position: absolute;
-    }  
-  } 
+    }
+  }
 }
-

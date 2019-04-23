@@ -1135,9 +1135,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             return <span></span>;
         }
         return (
-            <div>
-                <hr/>
-                <h4>Utilities</h4>
+            <div style={{marginTop:10}}>
                 <div>
                     {showSearchOptions && (<div>
                         <div className="form-group">
@@ -1219,8 +1217,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         {this.getHorizontalAxisMenu}
                     </Observer>
                 </div>
-                <div style={{ textAlign:'center'}}>
-                    <button className="btn btn-default" data-test="swapHorzVertButton" onClick={this.swapHorzVertSelections}><i className="fa fa-arrow-up"></i> Swap Axes <i className="fa fa-arrow-down"></i></button>
+                <div className={"swapAxes"}>
+                    <button className="btn btn-link btn-xs" data-test="swapHorzVertButton" onClick={this.swapHorzVertSelections}><i className="fa fa-arrow-up"></i> Swap Axes <i className="fa fa-arrow-down"></i></button>
                 </div>
                 <div className="axisBlock">
                     <Observer>
