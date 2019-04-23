@@ -22,12 +22,18 @@ const ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON = "[data-test='CustomCaseSetSubmi
 const ADD_CHART_CUSTOM_GROUPS_TEXTAREA = "[data-test='CustomCaseSetInput']";
 const STUDY_SUMMARY_RAW_DATA_DOWNLOAD="[data-test='studySummaryRawDataDownloadIcon']";
 
+const RETRIES = 5;
+
 describe('study laml_tcga tests', () => {
     before(() => {
         const url = `${CBIOPORTAL_URL}/study?id=laml_tcga`;
         goToUrlAndSetLocalStorage(url);
     });
-    it('study view laml_tcga', () => {
+    it('study view laml_tcga', function() {
+        // allow retrying to fix flaky test, we should fix the test properly before
+        // moving out of "need fixing" category
+        this.retries(RETRIES);
+
         browser.waitForVisible("[data-test='summary-tab-content']", 10000);
         waitForNetworkQuiet();
         // screenshot seems to occasionally fail because of tooltip showing up
@@ -37,17 +43,22 @@ describe('study laml_tcga tests', () => {
 });
 
 describe('check the filters are working properly', ()=>{
-    before(() => {
+
+    before(function() {
+        // allow retrying to fix flaky tests, we should fix the test properly before
+        // moving out of "need fixing" category
+        this.retries(RETRIES);
+
         const url = `${CBIOPORTAL_URL}/study?id=laml_tcga&filters={%22clinicalDataEqualityFilters%22:[{%22attributeId%22:%22SEX%22,%22clinicalDataType%22:%22PATIENT%22,%22values%22:[%22Female%22]}],%22clinicalDataIntervalFilters%22:[{%22attributeId%22:%22AGE%22,%22clinicalDataType%22:%22PATIENT%22,%22values%22:[{%22start%22:25,%22end%22:30},{%22start%22:30,%22end%22:35},{%22start%22:35,%22end%22:40},{%22start%22:40,%22end%22:45},{%22start%22:45,%22end%22:50},{%22start%22:50,%22end%22:55},{%22start%22:55,%22end%22:60},{%22start%22:60,%22end%22:65},{%22start%22:65,%22end%22:70},{%22start%22:70,%22end%22:75},{%22start%22:75,%22end%22:80}]}],%22mutatedGenes%22:[{%22entrezGeneIds%22:[2322,4869]}],%22cnaGenes%22:[{%22alterations%22:[{%22alteration%22:-2,%22entrezGeneId%22:60412},{%22alteration%22:2,%22entrezGeneId%22:84435}]}]}`;
         goToUrlAndSetLocalStorage(url);
-        waitForNetworkQuiet();
+        waitForNetworkQuiet(60000);
     });
-    it('filter study from url', ()=>{
+    it('filter study from url', function() {
         const res = browser.checkElement('#mainColumn');
         assertScreenShotMatch(res);
     });
 
-    it('removing filters are working properly', ()=>{
+    it('removing filters are working properly', function() {
         // Remove pie chart filter
         browser.elements("[data-test='pill-tag-delete']").value[0].click();
         waitForStudyViewSelectedInfo();
@@ -79,12 +90,16 @@ describe('check the filters are working properly', ()=>{
     });
 });
 
-describe('study view msk_impact_2017 study tests', () => {
+describe('study view msk_impact_2017 study tests', function() {
     before(() => {
         const url = `${CBIOPORTAL_URL}/study?id=msk_impact_2017`;
         goToUrlAndSetLocalStorage(url);
     });
-    it('the study should show proper number of samples/patients', () => {
+    it('the study should show proper number of samples/patients', function() {
+        // allow retrying to fix flaky tests, we should fix the test properly before
+        // moving out of "need fixing" category
+        this.retries(RETRIES);
+
         waitForNetworkQuiet(20000);
         waitForStudyViewSelectedInfo();
         assert(getTextFromElement(SELECTED_PATIENTS) === '10,336');
@@ -93,8 +108,13 @@ describe('study view msk_impact_2017 study tests', () => {
 });
 
 
-describe('check the simple filter(filterAttributeId, filterValues) is working properly', ()=>{
-    it('filter study from url using simple filter', ()=>{
+describe('check the simple filter(filterAttributeId, filterValues) is working properly', function() {
+
+    it('filter study from url using simple filter', function() {
+        // allow retrying to fix flaky tests, we should fix the test properly before
+        // moving out of "need fixing" category
+        this.retries(RETRIES);
+
         const url = `${CBIOPORTAL_URL}/study?id=lgg_tcga&filterAttributeId=ONCOTREE_CODE&filterValues=OAST`;
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet();
