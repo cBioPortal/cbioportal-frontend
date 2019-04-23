@@ -1,12 +1,12 @@
 var assert = require('assert');
 var expect = require('chai').expect;
-var waitForOncoprint = require('./specUtils').waitForOncoprint;
-var setOncoprintMutationsMenuOpen = require('./specUtils').setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('./specUtils').waitForNetworkQuiet;
-var sessionServiceIsEnabled = require('./specUtils').sessionServiceIsEnabled;
-var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
-var pasteToElement = require('./specUtils').pasteToElement;
+var waitForOncoprint = require('./../specUtils').waitForOncoprint;
+var setOncoprintMutationsMenuOpen = require('./../specUtils').setOncoprintMutationsMenuOpen;
+var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
+var waitForNetworkQuiet = require('./../specUtils').waitForNetworkQuiet;
+var sessionServiceIsEnabled = require('./../specUtils').sessionServiceIsEnabled;
+var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
+var pasteToElement = require('./../specUtils').pasteToElement;
 
 const TIMEOUT = 6000;
 

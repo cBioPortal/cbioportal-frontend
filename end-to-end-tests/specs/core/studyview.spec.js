@@ -1,14 +1,14 @@
 const assert = require('assert');
 const expect = require('chai').expect;
-const waitForOncoprint = require('./specUtils').waitForOncoprint;
-const goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
-const waitForNetworkQuiet = require('./specUtils').waitForNetworkQuiet;
-const assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
-const toStudyViewSummaryTab = require('./specUtils').toStudyViewSummaryTab;
-const toStudyViewClinicalDataTab = require('./specUtils').toStudyViewClinicalDataTab;
-const getNumberOfStudyViewCharts = require('./specUtils').getNumberOfStudyViewCharts;
-const getTextFromElement = require('./specUtils').getTextFromElement;
-const waitForStudyViewSelectedInfo = require('./specUtils').waitForStudyViewSelectedInfo;
+const waitForOncoprint = require('./../specUtils').waitForOncoprint;
+const goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
+const waitForNetworkQuiet = require('./../specUtils').waitForNetworkQuiet;
+const assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
+const toStudyViewSummaryTab = require('./../specUtils').toStudyViewSummaryTab;
+const toStudyViewClinicalDataTab = require('./../specUtils').toStudyViewClinicalDataTab;
+const getNumberOfStudyViewCharts = require('./../specUtils').getNumberOfStudyViewCharts;
+const getTextFromElement = require('./../specUtils').getTextFromElement;
+const waitForStudyViewSelectedInfo = require('./../specUtils').waitForStudyViewSelectedInfo;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 const CUSTOM_SELECTION_BUTTON = "[data-test='custom-selection-button']";
