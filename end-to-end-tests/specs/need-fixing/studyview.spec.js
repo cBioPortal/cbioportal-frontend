@@ -34,7 +34,7 @@ describe('study laml_tcga tests', () => {
         const res = browser.checkElement('#mainColumn');
         assertScreenShotMatch(res);
     });
-}
+});
 
 describe('check the filters are working properly', ()=>{
     before(() => {
