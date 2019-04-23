@@ -42,7 +42,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                                 },
                                 queryStr: string) {
         this.geneValidationHasIssue = queryStr==='' || !_.isUndefined(oql.error) || genes.suggestions.length !== 0;
-        this.props.store.updateSelectedGenes(oql.query);
+        this.props.store.updateSelectedGenes(oql.query, queryStr);
     }
 
     @computed

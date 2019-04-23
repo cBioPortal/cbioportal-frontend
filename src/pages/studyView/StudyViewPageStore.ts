@@ -355,8 +355,6 @@ export class StudyViewPageStore {
 
     @observable private geneQueries: SingleGeneQuery[] = [];
 
-    @observable private queriedGeneSet = observable.map<boolean>();
-
     private geneMapCache:{[entrezGeneId:number]:string} = {};
 
     @observable private chartsDimension: { [uniqueKey: string]: ChartDimension } = {};
@@ -570,17 +568,16 @@ export class StudyViewPageStore {
         //only update geneQueryStr whenever a table gene is clicked.
         this.geneQueries = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
         this.geneQueryStr = this.geneQueries.map(query=>unparseOQLQueryLine(query)).join(' ');
-        this.queriedGeneSet.set(hugoGeneSymbol,!this.queriedGeneSet.get(hugoGeneSymbol));
     }
 
     @computed get selectedGenes(): string[] {
-        return this.queriedGeneSet.keys().filter(gene=>!!this.queriedGeneSet.get(gene));
+        return this.geneQueries.map(singleGeneQuery=>singleGeneQuery.gene);
     }
 
     @autobind
-    @action updateSelectedGenes(query: SingleGeneQuery[]) {
+    @action updateSelectedGenes(query: SingleGeneQuery[], queryStr: string) {
         this.geneQueries = query;
-        this.queriedGeneSet = new ObservableMap(stringListToSet(query.map(gene => gene.gene)))
+        this.geneQueryStr = queryStr;
     }
 
     @autobind
