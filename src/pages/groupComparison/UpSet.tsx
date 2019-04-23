@@ -13,6 +13,10 @@ import ScatterPlotTooltip from 'shared/components/plots/ScatterPlotTooltip';
 import { joinNames, blendColors } from './OverlapUtils';
 import { pluralize } from 'shared/lib/StringUtils';
 import { getPlotDomain } from './UpSetUtils';
+import * as ReactDOM from "react-dom";
+import {Popover} from "react-bootstrap";
+import classnames from "classnames";
+import styles from "../resultsView/survival/styles.module.scss";
 
 export interface IUpSetrProps {
     groups: {
@@ -36,8 +40,8 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
 
     private container: HTMLDivElement;
     @observable.ref private tooltipModel: any | null = null;
-    @observable pointHovered: boolean = false;
     private mouseEvents: any = this.makeMouseEvents();
+    @observable mousePosition = { x:0, y:0 };
 
     @autobind
     private containerRef(container: HTMLDivElement) {
@@ -57,14 +61,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                             target: "data",
                             mutation: (props: any) => {
                                 this.tooltipModel = props;
-                                this.pointHovered = true;
-
-                                if (disappearTimeout !== null) {
-                                    clearTimeout(disappearTimeout);
-                                    disappearTimeout = null;
-                                }
-
-                                return { active: true };
+                                return null;
                             }
                         }
                     ];
@@ -74,15 +71,8 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                         {
                             target: "data",
                             mutation: () => {
-                                if (disappearTimeout !== null) {
-                                    clearTimeout(disappearTimeout);
-                                }
-
-                                disappearTimeout = setTimeout(() => {
-                                    this.pointHovered = false;
-                                }, disappearDelayMs);
-
-                                return { active: false };
+                                this.tooltipModel = null;
+                                return null;
                             }
                         }
                     ];
@@ -317,29 +307,12 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
         );
     }
 
-    @computed private get getTooltip() {
-        if (this.tooltipModel && this.container) {
-            const countAxisOffset = (this.tooltipModel.y + this.tooltipModel.y0) / 2;
-            const categoryAxisOffset = this.tooltipModel.x;
-            return (
-                <ScatterPlotTooltip
-                    placement={"right"}
-                    container={this.container}
-                    targetHovered={this.pointHovered}
-                    targetCoords={{
-                        x: categoryAxisOffset + this.leftPadding,
-                        y: countAxisOffset + this.topPadding
-                    }}
-                    overlay={this.tooltip(this.tooltipModel.datum)}
-                    arrowOffsetTop={20}
-                />
-            );
-        } else {
-            return <span></span>;
-        }
+    @autobind private onMouseMove(e:React.MouseEvent<any>) {
+        this.mousePosition.x = e.pageX;
+        this.mousePosition.y = e.pageY;
     }
 
-    @computed private get getChart() {
+    @autobind private getChart() {
         if (this.groupCombinationSets.length > 0) {
             return (
                 <div
@@ -357,6 +330,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                         width={this.svgWidth}
                         role="img"
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
+                        onMouseMove={this.onMouseMove}
                     >
                         <g>
                             {this.title}
@@ -480,8 +454,22 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
     render() {
         return (
             <div>
-                {this.getChart}
-                {this.getTooltip}
+                <Observer>
+                    {this.getChart}
+                </Observer>
+                {!!this.tooltipModel && (
+                    (ReactDOM as any).createPortal(
+                        <Popover
+                            arrowOffsetTop={17}
+                            className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)}
+                            positionLeft={this.mousePosition.x+8}
+                            positionTop={this.mousePosition.y-17}
+                        >
+                            {this.tooltip(this.tooltipModel.datum)}
+                        </Popover>,
+                        document.body
+                    )
+                )}
             </div>
         );
     }

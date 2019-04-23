@@ -10,8 +10,6 @@ import CreateGroupFromOverlap from "./CreateGroupFromOverlap";
 import GroupComparisonStore from "./GroupComparisonStore";
 import autobind from "autobind-decorator";
 import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
-import * as d3 from "d3";
-import VennDiagram from "./VennDiagram";
 
 export interface IVennProps {
     svgId?: string;
@@ -136,12 +134,6 @@ export default class Venn extends React.Component<IVennProps, {}> {
                     role="img"
                     viewBox={`0 0 ${this.chartWidth} ${this.chartHeight}`}
                 >
-                    <defs>
-                        <pattern id="hatch" patternUnits="userSpaceOnUse" width="4" height="4">
-                            <path d="M2,0 L2,4 M0,2 L4,2"
-                                  style={{stroke:"white", strokeWidth:1, strokeOpacity:0.1}} />
-                        </pattern>
-                    </defs>
                     <VictoryLabel
                         style={{
                             fontWeight: "bold",
@@ -161,7 +153,6 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         uidToGroup={this.props.uidToGroup}
                         width={VENN_PLOT_WIDTH}
                         height={VENN_PLOT_HEIGHT}
-                        emptyMaskName="hatch"
                         selection={this.sampleSelection}
                         onChangeSelectedRegions={this.changeSelectedSampleRegions}
                         caseType="sample"
@@ -188,7 +179,6 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         uidToGroup={this.props.uidToGroup}
                         width={VENN_PLOT_WIDTH}
                         height={VENN_PLOT_HEIGHT}
-                        emptyMaskName="hatch"
                         selection={this.patientSelection}
                         onChangeSelectedRegions={this.changeSelectedPatientRegions}
                         caseType="patient"
