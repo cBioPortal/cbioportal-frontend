@@ -11,7 +11,7 @@ function waitForGenomeNexusAnnotation() {
     browser.pause(5000);// wait for annotation
 }
 
-describe.skip('Mutation Mapper Tool', function() {
+describe('Mutation Mapper Tool', function() {
     before(function(){
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
     });
