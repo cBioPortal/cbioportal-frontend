@@ -31,7 +31,7 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",60000);
 
             const mutationsT790M = browser.getText('.//*[text()[contains(.,"T790M")]]')
             assert.equal(mutationsT790M.length, 2, "there should be two samples with a T790M mutation");
@@ -47,7 +47,7 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",60000);
 
             // check total number of mutations (this gets Showing 1-25 of 85
             // Mutations)
@@ -77,7 +77,7 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",60000);
 
             // wait for transcript to be listed
             browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
@@ -99,7 +99,7 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",60000);
             // it should have 124 egfr mutations
             browser.waitForText('.//*[text()[contains(.,"124 Mutations")]]');
 
@@ -136,7 +136,7 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",60000);
             // it should have 122 egfr mutations
             browser.waitForText('.//*[text()[contains(.,"122 Mutations")]]');
 
@@ -173,7 +173,7 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",30000);
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",60000);
 
             const mutationsT790M = browser.getText('.//*[text()[contains(.,"T790M")]]')
             assert.equal(mutationsT790M.length, 2, "there should be two samples with a T790M mutation");
