@@ -8,6 +8,7 @@ defaults: &defaults
     # specify the version you desire here
     - image: circleci/node:8.12.0-browsers
 
+save_e2e_artifacts: &save_e2e_artifacts
 version: 2
 jobs:
   install:
@@ -115,10 +116,65 @@ jobs:
             sleep 1s && \
             cd end-to-end-tests && \
             yarn run test-webdriver-manager
+          when: always
           environment:
             JUNIT_REPORT_PATH: ./junit/
             FRONTEND_TEST_USE_LOCAL_DIST: true
+            SPEC_FILE_PATTERN: ./specs/core/**/*.spec.js
+      - run:
+          name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
+          command: 'for f in end-to-end-tests/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
+      -  store_artifacts:
+          path: /tmp/repo/end-to-end-tests/screenshots
+          destination: /screenshots
+      -  store_artifacts:
+          path: /tmp/repo/end-to-end-tests/image-compare
+          destination: /image-compare
+      -  store_artifacts:
+          path: /tmp/repo/end-to-end-tests/errorShots
+          destination: /errorShots
+      - store_test_results:
+          path: /tmp/repo/end-to-end-tests/junit
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-tests/junit
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-tests/imageCompare.html
+          destination: /imageCompare.html
+
+  end_to_end_tests_genome_nexus:
+    <<: *defaults
+    steps:
+      - run:
+          name: "Install yarn at specific version"
+          command:
+            sudo npm install --global yarn@1.13.0
+      - attach_workspace:
+          at: /tmp/
+      - run:
+          name: "Spin up frontend over ssl if necessary and run end to end tests"
+          command: |
+            yarn serveDist & \
+            cd end-to-end-tests && \
+            yarn install --frozen-lockfile && \
+            ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.42' && \
+            ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '2.42' & \
+            ./scripts/env_vars.sh && \
+            eval "$(./scripts/env_vars.sh)" && \
+            curl $CBIOPORTAL_URL > /dev/null && \
+            sleep 5s && \
+            curl $CBIOPORTAL_URL > /dev/null && \
+            sleep 5s && \
+            curl $CBIOPORTAL_URL > /dev/null && \
+            sleep 20s && \
+            (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
+            sleep 1s && \
+            cd end-to-end-tests && \
+            yarn run test-webdriver-manager
           when: always
+          environment:
+            JUNIT_REPORT_PATH: ./junit/
+            FRONTEND_TEST_USE_LOCAL_DIST: true
+            SPEC_FILE_PATTERN: ./specs/genome-nexus/**/*.spec.js
       - run:
           name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
           command: 'for f in end-to-end-tests/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
