@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { GnomadData } from '../mutationTable/column/GnomadColumnFormatter';
+import { GnomadData, frequencyOutput} from '../mutationTable/column/GnomadColumnFormatter';
 import {Column, default as LazyMobXTable} from "../lazyMobXTable/LazyMobXTable";
-import { toFixedWithThreshold } from 'shared/lib/FormatUtils';
 export interface IGnomadFrequencyTableProps
 {
     data: GnomadData[];
@@ -46,7 +45,7 @@ export default class GnomadFrequencyTable extends React.Component<IGnomadFrequen
             {
                 name: "Allele Frequency",
                 order: 5.00,
-                render: (d:GnomadData) => (<span>{toFixedWithThreshold(d.alleleFrequency,4)}</span>),
+                render: (d:GnomadData) => (frequencyOutput(d.alleleFrequency)),
                 sortBy: (d:GnomadData) => d.alleleFrequency
             }
         ],

@@ -56,6 +56,16 @@ export enum ColumnName {
         alleleFrequency = 'af'
 }
 
+export function frequencyOutput(frequency: number) {
+    // Alignment in gnomad table
+    // Align first digit (align 0 with 0.00** with first 0)
+    if (frequency === 0) {
+        return <span style = {{float:"right",marginRight:30}}> 0 </span>
+    }
+    else {
+        return <span>{toFixedWithThreshold(frequency,4)}</span>;
+    }
+}
 export default class GnomadColumnFormatter {
 
     public static renderFunction(data: Mutation[],
@@ -89,7 +99,7 @@ export default class GnomadColumnFormatter {
 
             const gnomadData = GnomadColumnFormatter.getData(genomeNexusCacheData.data.my_variant_info);
 
-            let display: string = "";
+            let display: JSX.Element;
             let overlay: (() => JSX.Element) | null = null;
             let content: JSX.Element;
             let result : {[key:string]: GnomadData} = {};
@@ -132,8 +142,13 @@ export default class GnomadColumnFormatter {
                 }
 
                 // The column will show the frequency in total
-                display = toFixedWithThreshold(result["Total"].alleleFrequency, 4);
-         
+                // Align the 0 with 0.00**
+                if (result["Total"].alleleFrequency === 0) {
+                    display = <span style = {{float:"right",marginRight:35}}> 0 </span>
+                }
+                else {
+                    display = <span>{toFixedWithThreshold(result["Total"].alleleFrequency,4)}</span>;
+                }       
                 
                 overlay = () => (
                     <span className={styles["gnomad-table"]}>
@@ -143,9 +158,9 @@ export default class GnomadColumnFormatter {
                 );
             }
 
-            // if there is no gnomad data, show empty in the column
+            // if there is no gnomad data, the column would be empty
             else {
-                display = "";
+                display = <span></span>;
             }
 
             content = (
