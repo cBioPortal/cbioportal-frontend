@@ -347,11 +347,10 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         }
         return (
             <div style={{ marginBottom: "10px"}}>
-                <h4>Utilities</h4>
                 {!this.showLogScaleControls && (
-                    <div className="form-group">
+                    <div className="form-group" style={{display:"flex", alignItems:"center"}}>
                         <label>Plot Type</label>
-                        <div style={{ width: 240 }}>
+                        <div style={{ width: 240, marginLeft:5 }}>
                             <ReactSelect
                                 name="discrete-vs-discrete-plot-type"
                                 value={this.plotType}
