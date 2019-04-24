@@ -25,7 +25,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
     private get routingStore(){
         return getBrowserWindow().routingStore;
-    } 
+    }
 
     private get appStore(){
         return getBrowserWindow().globalStores.appStore;
