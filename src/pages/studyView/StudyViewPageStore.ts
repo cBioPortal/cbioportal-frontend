@@ -2168,7 +2168,7 @@ export class StudyViewPageStore {
 
         // This is also the proper place to initialize the special charts visibility
         _.each(this.specialChartKeysInCustomCharts, key => {
-            this.showAsPieChart(key, 2);
+            this.showAsPieChart(key, key === UniqueKey.CANCER_STUDIES ? this.cancerStudiesData.result.length : 2);
         });
     }
     private getTableDimensionByNumberOfRecords(records: number) {
