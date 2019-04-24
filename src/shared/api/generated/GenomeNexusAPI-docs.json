@@ -26,6 +26,10 @@
       "description": "Annotation Controller"
     },
     {
+      "name": "ptm-controller",
+      "description": "PTM Controller"
+    },
+    {
       "name": "pfam-controller",
       "description": "PFAM Controller"
     },
@@ -891,6 +895,76 @@
             "description": "OK",
             "schema": {
               "$ref": "#/definitions/PfamDomain"
+            }
+          }
+        }
+      }
+    },
+    "/ptm/experimental": {
+      "get": {
+        "tags": [
+          "ptm-controller"
+        ],
+        "summary": "Retrieves PTM entries by Ensembl Transcript ID",
+        "operationId": "fetchPostTranslationalModificationsGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "ensemblTranscriptId",
+            "in": "query",
+            "description": "Ensembl Transcript ID. For example ENST00000646891",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PostTranslationalModification"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ptm-controller"
+        ],
+        "summary": "Retrieves PTM entries by Ensembl Transcript IDs",
+        "operationId": "fetchPostTransactionalModificationsByPtmFilterPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "ptmFilter",
+            "description": "List of Ensembl transcript IDs. For example [\"ENST00000420316\", \"ENST00000646891\", \"ENST00000371953\"]",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PtmFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PostTranslationalModification"
+              }
             }
           }
         }
@@ -1797,6 +1871,68 @@
         }
       }
     },
+    "PostTranslationalModification": {
+      "type": "object",
+      "properties": {
+        "ensemblTranscriptIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "position": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pubmedIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sequence": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "uniprotAccession": {
+          "type": "string"
+        },
+        "uniprotEntry": {
+          "type": "string"
+        }
+      }
+    },
+    "PtmAnnotation": {
+      "type": "object",
+      "properties": {
+        "annotation": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/PostTranslationalModification"
+            }
+          }
+        },
+        "license": {
+          "type": "string"
+        }
+      }
+    },
+    "PtmFilter": {
+      "type": "object",
+      "properties": {
+        "transcriptIds": {
+          "type": "array",
+          "description": "List of Ensembl transcript IDs. For example [\"ENST00000361390\", \"ENST00000361453\", \"ENST00000361624\"]",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "Snpeff": {
       "type": "object",
       "properties": {
@@ -2041,6 +2177,10 @@
         "my_variant_info": {
           "description": "My Variant Info Annotation",
           "$ref": "#/definitions/MyVariantInfoAnnotation"
+        },
+        "ptms": {
+          "description": "Post Transactional Modifications",
+          "$ref": "#/definitions/PtmAnnotation"
         },
         "seq_region_name": {
           "type": "string",

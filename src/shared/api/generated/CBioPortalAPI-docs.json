@@ -6,7 +6,7 @@
     "title": "cBioPortal web API [Beta]",
     "contact": {
       "name": "cBioPortal",
-      "url": "http://www.cbioportal.org",
+      "url": "https://www.cbioportal.org",
       "email": "cbioportal@googlegroups.com"
     },
     "license": {
@@ -16,63 +16,63 @@
   },
   "tags": [
     {
-      "name": "Cancer Types",
+      "name": "A. Cancer Types",
       "description": " "
     },
     {
-      "name": "Clinical Attributes",
+      "name": "B. Studies",
       "description": " "
     },
     {
-      "name": "Clinical Data",
+      "name": "C. Patients",
       "description": " "
     },
     {
-      "name": "Clinical Events",
+      "name": "D. Samples",
       "description": " "
     },
     {
-      "name": "Copy Number Segments",
+      "name": "E. Sample Lists",
       "description": " "
     },
     {
-      "name": "Discrete Copy Number Alterations",
+      "name": "F. Clinical Attributes",
       "description": " "
     },
     {
-      "name": "Gene Panels",
+      "name": "G. Clinical Data",
       "description": " "
     },
     {
-      "name": "Genes",
+      "name": "H. Clinical Events",
       "description": " "
     },
     {
-      "name": "Molecular Data",
+      "name": "I. Molecular Data",
       "description": " "
     },
     {
-      "name": "Molecular Profiles",
+      "name": "J. Molecular Profiles",
       "description": " "
     },
     {
-      "name": "Mutations",
+      "name": "K. Mutations",
       "description": " "
     },
     {
-      "name": "Patients",
+      "name": "L. Discrete Copy Number Alterations",
       "description": " "
     },
     {
-      "name": "Sample Lists",
+      "name": "M. Copy Number Segments",
       "description": " "
     },
     {
-      "name": "Samples",
+      "name": "N. Genes",
       "description": " "
     },
     {
-      "name": "Studies",
+      "name": "O. Gene Panels",
       "description": " "
     }
   ],
@@ -84,7 +84,7 @@
     "/cancer-types": {
       "get": {
         "tags": [
-          "Cancer Types"
+          "A. Cancer Types"
         ],
         "summary": "Get all cancer types",
         "operationId": "getAllCancerTypesUsingGET",
@@ -174,7 +174,7 @@
     "/cancer-types/{cancerTypeId}": {
       "get": {
         "tags": [
-          "Cancer Types"
+          "A. Cancer Types"
         ],
         "summary": "Get a cancer type",
         "operationId": "getCancerTypeUsingGET",
@@ -203,7 +203,7 @@
     "/clinical-attributes": {
       "get": {
         "tags": [
-          "Clinical Attributes"
+          "F. Clinical Attributes"
         ],
         "summary": "Get all clinical attributes",
         "operationId": "getAllClinicalAttributesUsingGET",
@@ -294,7 +294,7 @@
     "/clinical-attributes/counts/fetch": {
       "post": {
         "tags": [
-          "Clinical Attributes"
+          "F. Clinical Attributes"
         ],
         "summary": "Get counts for clinical attributes according to their data availability for selected samples/patients",
         "operationId": "getClinicalAttributeCountsUsingPOST",
@@ -331,7 +331,7 @@
     "/clinical-attributes/fetch": {
       "post": {
         "tags": [
-          "Clinical Attributes"
+          "F. Clinical Attributes"
         ],
         "summary": "Fetch clinical attributes",
         "operationId": "fetchClinicalAttributesUsingPOST",
@@ -385,7 +385,7 @@
     "/clinical-data/fetch": {
       "post": {
         "tags": [
-          "Clinical Data"
+          "G. Clinical Data"
         ],
         "summary": "Fetch clinical data by patient IDs or sample IDs (all studies)",
         "operationId": "fetchClinicalDataUsingPOST",
@@ -448,7 +448,7 @@
     "/copy-number-segments/fetch": {
       "post": {
         "tags": [
-          "Copy Number Segments"
+          "M. Copy Number Segments"
         ],
         "summary": "Fetch copy number segments by sample ID",
         "operationId": "fetchCopyNumberSegmentsUsingPOST",
@@ -509,7 +509,7 @@
     "/gene-panel-data/fetch": {
       "post": {
         "tags": [
-          "Gene Panels"
+          "O. Gene Panels"
         ],
         "summary": "Fetch gene panel data",
         "operationId": "fetchGenePanelDataInMultipleMolecularProfilesUsingPOST",
@@ -546,7 +546,7 @@
     "/gene-panels": {
       "get": {
         "tags": [
-          "Gene Panels"
+          "O. Gene Panels"
         ],
         "summary": "Get all gene panels",
         "operationId": "getAllGenePanelsUsingGET",
@@ -632,7 +632,7 @@
     "/gene-panels/fetch": {
       "post": {
         "tags": [
-          "Gene Panels"
+          "O. Gene Panels"
         ],
         "summary": "Get gene panel",
         "operationId": "fetchGenePanelsUsingPOST",
@@ -686,7 +686,7 @@
     "/gene-panels/{genePanelId}": {
       "get": {
         "tags": [
-          "Gene Panels"
+          "O. Gene Panels"
         ],
         "summary": "Get gene panel",
         "operationId": "getGenePanelUsingGET",
@@ -715,7 +715,7 @@
     "/genes": {
       "get": {
         "tags": [
-          "Genes"
+          "N. Genes"
         ],
         "summary": "Get all genes",
         "operationId": "getAllGenesUsingGET",
@@ -818,7 +818,7 @@
     "/genes/fetch": {
       "post": {
         "tags": [
-          "Genes"
+          "N. Genes"
         ],
         "summary": "Fetch genes by ID",
         "operationId": "fetchGenesUsingPOST",
@@ -884,7 +884,7 @@
     "/genes/{geneId}": {
       "get": {
         "tags": [
-          "Genes"
+          "N. Genes"
         ],
         "summary": "Get a gene",
         "operationId": "getGeneUsingGET",
@@ -913,7 +913,7 @@
     "/genes/{geneId}/aliases": {
       "get": {
         "tags": [
-          "Genes"
+          "N. Genes"
         ],
         "summary": "Get aliases of a gene",
         "operationId": "getAliasesOfGeneUsingGET",
@@ -945,7 +945,7 @@
     "/molecular-data/fetch": {
       "post": {
         "tags": [
-          "Molecular Data"
+          "I. Molecular Data"
         ],
         "summary": "Fetch molecular data",
         "operationId": "fetchMolecularDataInMultipleMolecularProfilesUsingPOST",
@@ -996,7 +996,7 @@
     "/molecular-profiles": {
       "get": {
         "tags": [
-          "Molecular Profiles"
+          "J. Molecular Profiles"
         ],
         "summary": "Get all molecular profiles",
         "operationId": "getAllMolecularProfilesUsingGET",
@@ -1086,7 +1086,7 @@
     "/molecular-profiles/fetch": {
       "post": {
         "tags": [
-          "Molecular Profiles"
+          "J. Molecular Profiles"
         ],
         "summary": "Fetch molecular profiles",
         "operationId": "fetchMolecularProfilesUsingPOST",
@@ -1137,7 +1137,7 @@
     "/molecular-profiles/{molecularProfileId}": {
       "get": {
         "tags": [
-          "Molecular Profiles"
+          "J. Molecular Profiles"
         ],
         "summary": "Get molecular profile",
         "operationId": "getMolecularProfileUsingGET",
@@ -1166,7 +1166,7 @@
     "/molecular-profiles/{molecularProfileId}/discrete-copy-number": {
       "get": {
         "tags": [
-          "Discrete Copy Number Alterations"
+          "L. Discrete Copy Number Alterations"
         ],
         "summary": "Get discrete copy number alterations in a molecular profile",
         "operationId": "getDiscreteCopyNumbersInMolecularProfileUsingGET",
@@ -1236,7 +1236,7 @@
     "/molecular-profiles/{molecularProfileId}/discrete-copy-number-counts/fetch": {
       "post": {
         "tags": [
-          "Discrete Copy Number Alterations"
+          "L. Discrete Copy Number Alterations"
         ],
         "summary": "Get counts of specific genes and alterations within a CNA molecular profile",
         "operationId": "fetchCopyNumberCountsUsingPOST",
@@ -1283,7 +1283,7 @@
     "/molecular-profiles/{molecularProfileId}/discrete-copy-number/fetch": {
       "post": {
         "tags": [
-          "Discrete Copy Number Alterations"
+          "L. Discrete Copy Number Alterations"
         ],
         "summary": "Fetch discrete copy number alterations in a molecular profile by sample ID",
         "operationId": "fetchDiscreteCopyNumbersInMolecularProfileUsingPOST",
@@ -1358,7 +1358,7 @@
     "/molecular-profiles/{molecularProfileId}/gene-panel-data/fetch": {
       "post": {
         "tags": [
-          "Gene Panels"
+          "O. Gene Panels"
         ],
         "summary": "Get gene panel data",
         "operationId": "getGenePanelDataUsingPOST",
@@ -1402,7 +1402,7 @@
     "/molecular-profiles/{molecularProfileId}/molecular-data": {
       "get": {
         "tags": [
-          "Molecular Data"
+          "I. Molecular Data"
         ],
         "summary": "Get all molecular data in a molecular profile",
         "operationId": "getAllMolecularDataInMolecularProfileUsingGET",
@@ -1463,7 +1463,7 @@
     "/molecular-profiles/{molecularProfileId}/molecular-data/fetch": {
       "post": {
         "tags": [
-          "Molecular Data"
+          "I. Molecular Data"
         ],
         "summary": "Fetch molecular data in a molecular profile",
         "operationId": "fetchAllMolecularDataInMolecularProfileUsingPOST",
@@ -1521,7 +1521,7 @@
     "/molecular-profiles/{molecularProfileId}/mutations": {
       "get": {
         "tags": [
-          "Mutations"
+          "K. Mutations"
         ],
         "summary": "Get mutations in a molecular profile by Sample List ID",
         "operationId": "getMutationsInMolecularProfileBySampleListIdUsingGET",
@@ -1648,7 +1648,7 @@
     "/molecular-profiles/{molecularProfileId}/mutations/fetch": {
       "post": {
         "tags": [
-          "Mutations"
+          "K. Mutations"
         ],
         "summary": "Fetch mutations in a molecular profile",
         "operationId": "fetchMutationsInMolecularProfileUsingPOST",
@@ -1772,7 +1772,7 @@
     "/mutation-counts-by-position/fetch": {
       "post": {
         "tags": [
-          "Mutations"
+          "K. Mutations"
         ],
         "summary": "Fetch mutation counts in all studies by gene and position",
         "operationId": "fetchMutationCountsByPositionUsingPOST",
@@ -1812,7 +1812,7 @@
     "/mutations/fetch": {
       "post": {
         "tags": [
-          "Mutations"
+          "K. Mutations"
         ],
         "summary": "Fetch mutations in multiple molecular profiles by sample IDs",
         "operationId": "fetchMutationsInMultipleMolecularProfilesUsingPOST",
@@ -1929,7 +1929,7 @@
     "/patients": {
       "get": {
         "tags": [
-          "Patients"
+          "C. Patients"
         ],
         "summary": "Get all patients",
         "operationId": "getAllPatientsUsingGET",
@@ -2021,7 +2021,7 @@
     "/patients/fetch": {
       "post": {
         "tags": [
-          "Patients"
+          "C. Patients"
         ],
         "summary": "fetchPatients",
         "operationId": "fetchPatientsUsingPOST",
@@ -2072,7 +2072,7 @@
     "/sample-lists": {
       "get": {
         "tags": [
-          "Sample Lists"
+          "E. Sample Lists"
         ],
         "summary": "Get all sample lists",
         "operationId": "getAllSampleListsUsingGET",
@@ -2161,7 +2161,7 @@
     "/sample-lists/fetch": {
       "post": {
         "tags": [
-          "Sample Lists"
+          "E. Sample Lists"
         ],
         "summary": "Fetch sample lists by ID",
         "operationId": "fetchSampleListsUsingPOST",
@@ -2215,7 +2215,7 @@
     "/sample-lists/{sampleListId}": {
       "get": {
         "tags": [
-          "Sample Lists"
+          "E. Sample Lists"
         ],
         "summary": "Get sample list",
         "operationId": "getSampleListUsingGET",
@@ -2244,7 +2244,7 @@
     "/sample-lists/{sampleListId}/sample-ids": {
       "get": {
         "tags": [
-          "Sample Lists"
+          "E. Sample Lists"
         ],
         "summary": "Get all sample IDs in a sample list",
         "operationId": "getAllSampleIdsInSampleListUsingGET",
@@ -2276,7 +2276,7 @@
     "/samples/fetch": {
       "post": {
         "tags": [
-          "Samples"
+          "D. Samples"
         ],
         "summary": "Fetch samples by ID",
         "operationId": "fetchSamplesUsingPOST",
@@ -2327,7 +2327,7 @@
     "/studies": {
       "get": {
         "tags": [
-          "Studies"
+          "B. Studies"
         ],
         "summary": "Get all studies",
         "operationId": "getAllStudiesUsingGET",
@@ -2429,7 +2429,7 @@
     "/studies/fetch": {
       "post": {
         "tags": [
-          "Studies"
+          "B. Studies"
         ],
         "summary": "Fetch studies by IDs",
         "operationId": "fetchStudiesUsingPOST",
@@ -2483,7 +2483,7 @@
     "/studies/tags/fetch": {
       "post": {
         "tags": [
-          "Studies"
+          "B. Studies"
         ],
         "summary": "Get the study tags by IDs",
         "operationId": "getTagsForMultipleStudiesUsingPOST",
@@ -2523,7 +2523,7 @@
     "/studies/{studyId}": {
       "get": {
         "tags": [
-          "Studies"
+          "B. Studies"
         ],
         "summary": "Get a study",
         "operationId": "getStudyUsingGET",
@@ -2552,7 +2552,7 @@
     "/studies/{studyId}/clinical-attributes": {
       "get": {
         "tags": [
-          "Clinical Attributes"
+          "F. Clinical Attributes"
         ],
         "summary": "Get all clinical attributes in the specified study",
         "operationId": "getAllClinicalAttributesInStudyUsingGET",
@@ -2650,7 +2650,7 @@
     "/studies/{studyId}/clinical-attributes/{clinicalAttributeId}": {
       "get": {
         "tags": [
-          "Clinical Attributes"
+          "F. Clinical Attributes"
         ],
         "summary": "Get specified clinical attribute",
         "operationId": "getClinicalAttributeInStudyUsingGET",
@@ -2686,7 +2686,7 @@
     "/studies/{studyId}/clinical-data": {
       "get": {
         "tags": [
-          "Clinical Data"
+          "G. Clinical Data"
         ],
         "summary": "Get all clinical data in a study",
         "operationId": "getAllClinicalDataInStudyUsingGET",
@@ -2798,7 +2798,7 @@
     "/studies/{studyId}/clinical-data/fetch": {
       "post": {
         "tags": [
-          "Clinical Data"
+          "G. Clinical Data"
         ],
         "summary": "Fetch clinical data by patient IDs or sample IDs (specific study)",
         "operationId": "fetchAllClinicalDataInStudyUsingPOST",
@@ -2865,10 +2865,104 @@
         }
       }
     },
+    "/studies/{studyId}/clinical-events": {
+      "get": {
+        "tags": [
+          "H. Clinical Events"
+        ],
+        "summary": "Get all clinical events in a study",
+        "operationId": "getAllClinicalEventsInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. lgg_ucsf_2014",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "eventType",
+              "startNumberOfDaysSinceDiagnosis",
+              "endNumberOfDaysSinceDiagnosis"
+            ]
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalEvent"
+              }
+            }
+          }
+        }
+      }
+    },
     "/studies/{studyId}/molecular-profiles": {
       "get": {
         "tags": [
-          "Molecular Profiles"
+          "J. Molecular Profiles"
         ],
         "summary": "Get all molecular profiles in a study",
         "operationId": "getAllMolecularProfilesInStudyUsingGET",
@@ -2965,7 +3059,7 @@
     "/studies/{studyId}/patients": {
       "get": {
         "tags": [
-          "Patients"
+          "C. Patients"
         ],
         "summary": "Get all patients in a study",
         "operationId": "getAllPatientsInStudyUsingGET",
@@ -3057,7 +3151,7 @@
     "/studies/{studyId}/patients/{patientId}": {
       "get": {
         "tags": [
-          "Patients"
+          "C. Patients"
         ],
         "summary": "Get a patient in a study",
         "operationId": "getPatientInStudyUsingGET",
@@ -3093,7 +3187,7 @@
     "/studies/{studyId}/patients/{patientId}/clinical-data": {
       "get": {
         "tags": [
-          "Clinical Data"
+          "G. Clinical Data"
         ],
         "summary": "Get all clinical data of a patient in a study",
         "operationId": "getAllClinicalDataOfPatientInStudyUsingGET",
@@ -3200,7 +3294,7 @@
     "/studies/{studyId}/patients/{patientId}/clinical-events": {
       "get": {
         "tags": [
-          "Clinical Events"
+          "H. Clinical Events"
         ],
         "summary": "Get all clinical events of a patient in a study",
         "operationId": "getAllClinicalEventsOfPatientInStudyUsingGET",
@@ -3301,7 +3395,7 @@
     "/studies/{studyId}/patients/{patientId}/samples": {
       "get": {
         "tags": [
-          "Samples"
+          "D. Samples"
         ],
         "summary": "Get all samples of a patient in a study",
         "operationId": "getAllSamplesOfPatientInStudyUsingGET",
@@ -3401,7 +3495,7 @@
     "/studies/{studyId}/sample-lists": {
       "get": {
         "tags": [
-          "Sample Lists"
+          "E. Sample Lists"
         ],
         "summary": "Get all sample lists in a study",
         "operationId": "getAllSampleListsInStudyUsingGET",
@@ -3497,7 +3591,7 @@
     "/studies/{studyId}/samples": {
       "get": {
         "tags": [
-          "Samples"
+          "D. Samples"
         ],
         "summary": "Get all samples in a study",
         "operationId": "getAllSamplesInStudyUsingGET",
@@ -3590,7 +3684,7 @@
     "/studies/{studyId}/samples/{sampleId}": {
       "get": {
         "tags": [
-          "Samples"
+          "D. Samples"
         ],
         "summary": "Get a sample in a study",
         "operationId": "getSampleInStudyUsingGET",
@@ -3626,7 +3720,7 @@
     "/studies/{studyId}/samples/{sampleId}/clinical-data": {
       "get": {
         "tags": [
-          "Clinical Data"
+          "G. Clinical Data"
         ],
         "summary": "Get all clinical data of a sample in a study",
         "operationId": "getAllClinicalDataOfSampleInStudyUsingGET",
@@ -3733,7 +3827,7 @@
     "/studies/{studyId}/samples/{sampleId}/copy-number-segments": {
       "get": {
         "tags": [
-          "Copy Number Segments"
+          "M. Copy Number Segments"
         ],
         "summary": "Get copy number segments in a sample in a study",
         "operationId": "getCopyNumberSegmentsInSampleInStudyUsingGET",
@@ -3843,7 +3937,7 @@
     "/studies/{studyId}/tags": {
       "get": {
         "tags": [
-          "Studies"
+          "B. Studies"
         ],
         "summary": "Get the tags of a study",
         "operationId": "getTagsUsingGET",
