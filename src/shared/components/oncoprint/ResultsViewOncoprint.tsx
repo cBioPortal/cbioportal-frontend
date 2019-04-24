@@ -305,7 +305,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.heatmapGeneInputValue;
             },
             get customDriverAnnotationBinaryMenuLabel() {
-                const label = AppConfig.serverConfig.binary_custom_driver_annotation_menu_label;
+                const label = AppConfig.serverConfig.oncoprint_custom_driver_annotation_binary_menu_label;
                 const customDriverReport = self.props.store.customDriverAnnotationReport.result;
                 if (label && customDriverReport && customDriverReport.hasBinary) {
                     return label;
@@ -331,7 +331,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 }
             },
             get annotateCustomDriverBinary() {
-                return self.props.store.driverAnnotationSettings.driverFilter;
+                return self.props.store.driverAnnotationSettings.customBinary;
             },
             get selectedCustomDriverAnnotationTiers() {
                 return self.props.store.driverAnnotationSettings.driverTiers;
@@ -398,7 +398,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     this.props.store.driverAnnotationSettings.hotspots = false;
                     this.props.store.driverAnnotationSettings.cbioportalCount = false;
                     this.props.store.driverAnnotationSettings.cosmicCount = false;
-                    this.props.store.driverAnnotationSettings.driverFilter = false;
+                    this.props.store.driverAnnotationSettings.customBinary = false;
                     this.props.store.driverAnnotationSettings.driverTiers.forEach((value, key)=>{
                         this.props.store.driverAnnotationSettings.driverTiers.set(key, false);
                     });
@@ -412,7 +412,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                     this.props.store.driverAnnotationSettings.cbioportalCount = true;
                     this.props.store.driverAnnotationSettings.cosmicCount = true;
-                    this.props.store.driverAnnotationSettings.driverFilter = true;
+                    this.props.store.driverAnnotationSettings.customBinary = true;
                     this.props.store.driverAnnotationSettings.driverTiers.forEach((value, key)=>{
                         this.props.store.driverAnnotationSettings.driverTiers.set(key, true);
                     });
@@ -440,7 +440,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.controlsHandlers.onSelectAnnotateCOSMIC && this.controlsHandlers.onSelectAnnotateCOSMIC(true);
             }),
             onSelectCustomDriverAnnotationBinary:action((s:boolean)=>{
-                this.props.store.driverAnnotationSettings.driverFilter = s;
+                this.props.store.driverAnnotationSettings.customBinary = s;
             }),
             onSelectCustomDriverAnnotationTier:action((value:string, checked:boolean)=>{
                 this.props.store.driverAnnotationSettings.driverTiers.set(value, checked);

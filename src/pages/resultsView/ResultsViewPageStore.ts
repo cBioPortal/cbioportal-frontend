@@ -345,7 +345,8 @@ export type DriverAnnotationSettings = {
     cbioportalCountThreshold:number;
     cosmicCount:boolean;
     cosmicCountThreshold:number;
-    driverFilter:boolean;
+    customBinary:boolean;
+    customTiersDefault: boolean;
     driverTiers:ObservableMap<boolean>;
     hotspots:boolean;
     oncoKb:boolean;
@@ -372,9 +373,9 @@ export class ResultsViewPageStore {
             cbioportalCountThreshold: 0,
             cosmicCount: false,
             cosmicCountThreshold: 0,
-            driverFilter: false,
             driverTiers: observable.map<boolean>(),
 
+            _customBinary: undefined,
             _hotspots:false,
             _oncoKb:false,
             _ignoreUnknown: false,
@@ -402,12 +403,20 @@ export class ResultsViewPageStore {
                     this.hotspots ||
                     this.cbioportalCount ||
                     this.cosmicCount ||
-                    this.driverFilter ||
+                    this.customBinary ||
                     this.driverTiers.entries().reduce((oneSelected:boolean, nextEntry:[string, boolean])=>{
                         return oneSelected || nextEntry[1];
                     }, false);
 
                 return anySelected;
+            },
+
+            get customBinary() {
+                return this._customBinary === undefined ? AppConfig.serverConfig.oncoprint_custom_driver_annotation_binary_default : this._customBinary;
+            },
+
+            get customTiersDefault() {
+                return AppConfig.serverConfig.oncoprint_custom_driver_annotation_tiers_default;
             }
         });
 
@@ -500,11 +509,9 @@ export class ResultsViewPageStore {
         this.driverAnnotationSettings.cbioportalCountThreshold = 10;
         this.driverAnnotationSettings.cosmicCount = false;
         this.driverAnnotationSettings.cosmicCountThreshold = 10;
-        this.driverAnnotationSettings.driverFilter = !!AppConfig.serverConfig.oncoprint_custom_driver_annotation_default;
         this.driverAnnotationSettings.driverTiers = observable.map<boolean>();
-
-        this.driverAnnotationSettings.hotspots = !AppConfig.serverConfig.oncoprint_oncokb_hotspots_default;
-        (this.driverAnnotationSettings as any)._oncoKb = !AppConfig.serverConfig.oncoprint_oncokb_hotspots_default;
+        (this.driverAnnotationSettings as any)._oncoKb = !!AppConfig.serverConfig.oncoprint_oncokb_default;
+        this.driverAnnotationSettings.hotspots = !!AppConfig.serverConfig.oncoprint_hotspots_default;
         (this.driverAnnotationSettings as any)._ignoreUnknown = !!AppConfig.serverConfig.oncoprint_hide_vus_default;
     }
 
@@ -2220,8 +2227,9 @@ export class ResultsViewPageStore {
             initializeCustomDriverAnnotationSettings(
                 result!,
                 this.driverAnnotationSettings,
-                !(_.isEmpty(AppConfig.serverConfig.oncoprint_custom_driver_annotation_tiers_menu_label)),
-                AppConfig.serverConfig.oncoprint_oncokb_hotspots_default === "custom"
+                this.driverAnnotationSettings.customTiersDefault,
+                this.driverAnnotationSettings.oncoKb,
+                this.driverAnnotationSettings.hotspots
             );
         }
     });
@@ -2365,7 +2373,7 @@ export class ResultsViewPageStore {
                     this.getCosmicCount.result!(mutation) >= this.driverAnnotationSettings.cosmicCountThreshold);
 
                 const customDriverBinary:boolean =
-                    (this.driverAnnotationSettings.driverFilter &&
+                    (this.driverAnnotationSettings.customBinary &&
                         mutation.driverFilter === "Putative_Driver") || false;
 
                 const customDriverTier:string|undefined =
