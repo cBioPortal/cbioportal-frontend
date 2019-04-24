@@ -28,13 +28,11 @@ let config = {
         library: '[name]_lib',
     },
 
-    devtool : 'source-map',
-
     plugins: [
 
     ],
 
-    devtool : 'source-map'
+    devtool : ''
 };
 
 config.plugins = [
