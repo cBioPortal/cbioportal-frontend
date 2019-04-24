@@ -1112,17 +1112,18 @@ var MutationDetailsTableFormatter = (function()
 	{
 		var text = "NA";
 		var total = alt + ref;
-		var style = "";
-		var tipStyle = "";
 
-		if (frequency)
-		{
-			style = "mutation_table_allele_freq";
-			text = frequency.toFixed(2);
-			tipStyle = tipClass;
-		}
-
-		return {text: text, total: total, style: style, tipClass: tipStyle};
+		if (frequency) {
+			if (frequency>=0.01)
+			{
+				text = frequency.toFixed(2);
+			}
+			else
+			{
+				text = frequency.toFixed(4);
+			}
+		}	
+		return {text: text, total: total, style: "mutation_table_allele_freq", tipStyle: tipClass};
 	}
 
 	function getPdbMatchLink(mutation)
