@@ -355,9 +355,9 @@ export const CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG =
     "We can't show clinical plots for 1 group. Please select more groups from the 'Active Groups' section above.";
 
 export const CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG =
-    "We can only show clinical plots when groups have overlapping samples. Please exclude them by changing dropdown option to 'Exclude overlapping samples and patients'";
+    "We can only show clinical plots when groups don't have overlapping samples. Please exclude them by changing dropdown option to 'Exclude overlapping samples and patients'";
 
-export const EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG = 
+export const EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG =
     "We exclude overlapping samples and patients by default to display this tab";
 
 export function getDefaultGroupName(
