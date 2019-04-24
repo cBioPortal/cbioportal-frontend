@@ -366,6 +366,33 @@ export type PfamDomainRange = {
         'pfamDomainEnd': number
 
 };
+export type PostTranslationalModification = {
+    'ensemblTranscriptIds': Array < string >
+
+        'position': number
+
+        'pubmedIds': Array < string >
+
+        'sequence': string
+
+        'type': string
+
+        'uniprotAccession': string
+
+        'uniprotEntry': string
+
+};
+export type PtmAnnotation = {
+    'annotation': Array < Array < PostTranslationalModification >
+        >
+
+        'license': string
+
+};
+export type PtmFilter = {
+    'transcriptIds': Array < string >
+
+};
 export type Snpeff = {
     'license': string
 
@@ -470,6 +497,8 @@ export type VariantAnnotation = {
         'mutation_assessor': MutationAssessorAnnotation
 
         'my_variant_info': MyVariantInfoAnnotation
+
+        'ptms': PtmAnnotation
 
         'seq_region_name': string
 
@@ -2305,6 +2334,158 @@ export default class GenomeNexusAPI {
             return response.body;
         });
     };
+    fetchPostTranslationalModificationsGETURL(parameters: {
+        'ensemblTranscriptId' ? : string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ptm/experimental';
+        if (parameters['ensemblTranscriptId'] !== undefined) {
+            queryParameters['ensemblTranscriptId'] = parameters['ensemblTranscriptId'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves PTM entries by Ensembl Transcript ID
+     * @method
+     * @name GenomeNexusAPI#fetchPostTranslationalModificationsGET
+     * @param {string} ensemblTranscriptId - Ensembl Transcript ID. For example ENST00000646891
+     */
+    fetchPostTranslationalModificationsGETWithHttpInfo(parameters: {
+        'ensemblTranscriptId' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/ptm/experimental';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['ensemblTranscriptId'] !== undefined) {
+                queryParameters['ensemblTranscriptId'] = parameters['ensemblTranscriptId'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves PTM entries by Ensembl Transcript ID
+     * @method
+     * @name GenomeNexusAPI#fetchPostTranslationalModificationsGET
+     * @param {string} ensemblTranscriptId - Ensembl Transcript ID. For example ENST00000646891
+     */
+    fetchPostTranslationalModificationsGET(parameters: {
+            'ensemblTranscriptId' ? : string,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < PostTranslationalModification >
+        > {
+            return this.fetchPostTranslationalModificationsGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchPostTransactionalModificationsByPtmFilterPOSTURL(parameters: {
+        'ptmFilter': PtmFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ptm/experimental';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves PTM entries by Ensembl Transcript IDs
+     * @method
+     * @name GenomeNexusAPI#fetchPostTransactionalModificationsByPtmFilterPOST
+     * @param {} ptmFilter - List of Ensembl transcript IDs. For example ["ENST00000420316", "ENST00000646891", "ENST00000371953"]
+     */
+    fetchPostTransactionalModificationsByPtmFilterPOSTWithHttpInfo(parameters: {
+        'ptmFilter': PtmFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/ptm/experimental';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['ptmFilter'] !== undefined) {
+                body = parameters['ptmFilter'];
+            }
+
+            if (parameters['ptmFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: ptmFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves PTM entries by Ensembl Transcript IDs
+     * @method
+     * @name GenomeNexusAPI#fetchPostTransactionalModificationsByPtmFilterPOST
+     * @param {} ptmFilter - List of Ensembl transcript IDs. For example ["ENST00000420316", "ENST00000646891", "ENST00000371953"]
+     */
+    fetchPostTransactionalModificationsByPtmFilterPOST(parameters: {
+            'ptmFilter': PtmFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < PostTranslationalModification >
+        > {
+            return this.fetchPostTransactionalModificationsByPtmFilterPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchVersionGETURL(parameters: {
         $queryParameters ? : any
     }): string {

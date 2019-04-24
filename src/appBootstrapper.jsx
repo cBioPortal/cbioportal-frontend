@@ -10,8 +10,8 @@ import {
     initializeAPIClients,
     initializeAppStore,
     initializeConfiguration,
-    setServerConfig,
-    setConfigDefaults
+    setConfigDefaults,
+    setServerConfig
 } from './config/config';
 
 import './shared/lib/ajaxQuiet';
@@ -23,11 +23,12 @@ import { getHost, buildCBioPortalPageUrl } from './shared/api/urls';
 import AppConfig from "appConfig";
 import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
-import {initializeTracking} from "shared/lib/tracking";
+import { initializeTracking } from "shared/lib/tracking";
 import superagentCache from 'superagent-cache';
 import getBrowserWindow from "shared/lib/getBrowserWindow";
 import {AppStore} from "./AppStore";
 import {handleLongUrls} from "shared/lib/handleLongUrls";
+import "shared/polyfill/canvasToBlob";
 
 superagentCache(superagent);
 
@@ -155,6 +156,10 @@ if (__DEBUG__ && module.hot) {
 
 $(document).ready(async () => {
 
+    // we show blank page if the window.name is "blank"
+    if (window.name === "blank") {
+        return;
+    }
     // we use rawServerConfig (written by JSP) if it is present
     // or fetch from config service if not
     // need to use jsonp, so use jquery
