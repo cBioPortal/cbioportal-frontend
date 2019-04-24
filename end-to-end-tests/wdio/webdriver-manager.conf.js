@@ -96,7 +96,7 @@ var config = {
     baseUrl: 'http://localhost',
     //
     // Default timeout for all waitFor* commands.
-    waitforTimeout: 10000,
+    waitforTimeout: 20000,
     //
     // Default timeout in milliseconds for request
     // if Selenium Grid doesn't send response
@@ -294,8 +294,8 @@ if (doBrowserstack) {
 
     config.browserstackLocal = true;
 
-    config.user = "aaronlisman2";
-    config.key = "SsvxMVGa2fFVc5bWzswx";
+    config.user = process.env.BROWSERSTACK_USER;
+    config.key = process.env.BROWSERSTACK_KEY;
 }
 
 // config.specs = [
