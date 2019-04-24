@@ -33,9 +33,6 @@ import {bind} from "bind-decorator";
 import {updateResultsViewQuery} from "./ResultsViewQuery";
 import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
-import GroupComparisonStore from "../groupComparison/GroupComparisonStore";
-import GroupComparisonPage from "../groupComparison/GroupComparisonPage";
-import ErrorScreen from "appShell/App/ErrorScreen";
 
 function initStore() {
 
