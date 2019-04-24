@@ -1,13 +1,13 @@
-var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
+var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
 var assert = require('assert');
-var waitForOncoprint = require('./specUtils').waitForOncoprint;
-var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
-var getNthOncoprintTrackOptionsElements = require('./specUtils').getNthOncoprintTrackOptionsElements;
-var getTextInOncoprintLegend = require('./specUtils').getTextInOncoprintLegend;
-var setOncoprintMutationsMenuOpen = require('./specUtils').setOncoprintMutationsMenuOpen;
-var useExternalFrontend = require('./specUtils').useExternalFrontend;
-var waitForNumberOfStudyCheckboxes = require('./specUtils').waitForNumberOfStudyCheckboxes;
-var setInputText = require('./specUtils').setInputText;
+var waitForOncoprint = require('./../specUtils').waitForOncoprint;
+var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
+var getNthOncoprintTrackOptionsElements = require('./../specUtils').getNthOncoprintTrackOptionsElements;
+var getTextInOncoprintLegend = require('./../specUtils').getTextInOncoprintLegend;
+var setOncoprintMutationsMenuOpen = require('./../specUtils').setOncoprintMutationsMenuOpen;
+var useExternalFrontend = require('./../specUtils').useExternalFrontend;
+var waitForNumberOfStudyCheckboxes = require('./../specUtils').waitForNumberOfStudyCheckboxes;
+var setInputText = require('./../specUtils').setInputText;
 
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
