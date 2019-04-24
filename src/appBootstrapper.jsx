@@ -20,7 +20,6 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import * as superagent from 'superagent';
 import { getHost, buildCBioPortalPageUrl } from './shared/api/urls';
-import { buildCBioPortalPageUrl } from './shared/api/urls';
 import AppConfig from "appConfig";
 import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
