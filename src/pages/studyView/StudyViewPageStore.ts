@@ -2055,6 +2055,10 @@ export class StudyViewPageStore {
                 } else {
                     chartMeta.dimension = STUDY_VIEW_CONFIG.layout.dimensions[chartMeta.chartType] || {w: 1, h: 1};
                 }
+                const chartType = this.chartsType.get(chartUniqueKey);
+                if (chartType !== undefined) {
+                    chartMeta.chartType = chartType;
+                }
                 acc.push(chartMeta);
             }
             return acc;
