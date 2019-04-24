@@ -1,12 +1,12 @@
 var assert = require('assert');
 var expect = require('chai').expect;
-var waitForOncoprint = require('./specUtils').waitForOncoprint;
-var getTextInOncoprintLegend = require('./specUtils').getTextInOncoprintLegend;
-var setOncoprintMutationsMenuOpen = require('./specUtils').setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
-var useExternalFrontend = require('./specUtils').useExternalFrontend;
-var waitForNumberOfStudyCheckboxes = require('./specUtils').waitForNumberOfStudyCheckboxes;
-var setInputText = require('./specUtils').setInputText;
+var waitForOncoprint = require('./../specUtils').waitForOncoprint;
+var getTextInOncoprintLegend = require('./../specUtils').getTextInOncoprintLegend;
+var setOncoprintMutationsMenuOpen = require('./../specUtils').setOncoprintMutationsMenuOpen;
+var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
+var useExternalFrontend = require('./../specUtils').useExternalFrontend;
+var waitForNumberOfStudyCheckboxes = require('./../specUtils').waitForNumberOfStudyCheckboxes;
+var setInputText = require('./../specUtils').setInputText;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
