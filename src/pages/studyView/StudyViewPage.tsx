@@ -159,7 +159,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     this.store.displayedStudies.isComplete && (
                         <div>
                             <StudyPageHeader
-                                userEmail={this.props.appStore.userName}
                                 store={this.store}
                             />
 
