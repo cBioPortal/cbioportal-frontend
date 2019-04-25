@@ -98,7 +98,7 @@ export const makeRoutes = (routing) => {
                 <Route path="/loading/comparison" onEnter={()=>{$(document).scrollTop(0)}} component={GroupComparisonLoading} />
                 <Route path="/results/legacy_submission" onEnter={handleLegacySubmission} component={getBlankPage()} />
 
-                <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
+                <Route path="/results(/:tab)" onEnter={()=>{}} getComponent={lazyLoadComponent(ResultsViewPage)} />
                 <Route path="/patient(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
                 <Route path="/study" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
                 <Route path="/comparison(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(GroupComparisonPage)}/>
