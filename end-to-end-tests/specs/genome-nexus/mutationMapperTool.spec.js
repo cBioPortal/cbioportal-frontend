@@ -1,9 +1,9 @@
 
-var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
+var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
 
 var assert = require('assert');
 var expect = require('chai').expect;
-var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -11,7 +11,7 @@ function waitForGenomeNexusAnnotation() {
     browser.pause(5000);// wait for annotation
 }
 
-describe.skip('Mutation Mapper Tool', function() {
+describe('Mutation Mapper Tool', function() {
     before(function(){
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
     });
@@ -31,7 +31,7 @@ describe.skip('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",60000);
 
             const mutationsT790M = browser.getText('.//*[text()[contains(.,"T790M")]]')
             assert.equal(mutationsT790M.length, 2, "there should be two samples with a T790M mutation");
@@ -47,7 +47,7 @@ describe.skip('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",60000);
 
             // check total number of mutations (this gets Showing 1-25 of 85
             // Mutations)
@@ -77,7 +77,7 @@ describe.skip('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",60000);
 
             // wait for transcript to be listed
             browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
@@ -99,7 +99,7 @@ describe.skip('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",60000);
             // it should have 124 egfr mutations
             browser.waitForText('.//*[text()[contains(.,"124 Mutations")]]');
 
@@ -136,7 +136,7 @@ describe.skip('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",60000);
             // it should have 122 egfr mutations
             browser.waitForText('.//*[text()[contains(.,"122 Mutations")]]');
 
@@ -173,7 +173,7 @@ describe.skip('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",30000);
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",60000);
 
             const mutationsT790M = browser.getText('.//*[text()[contains(.,"T790M")]]')
             assert.equal(mutationsT790M.length, 2, "there should be two samples with a T790M mutation");

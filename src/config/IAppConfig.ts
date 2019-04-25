@@ -29,11 +29,13 @@ export interface IServerConfig {
     "app_version": string|null;   // default: "1.0"
     "authenticationMethod": string | undefined;
     "bitly_access_token": string|null;
-    "binary_custom_driver_annotation_menu_label": string|null; // default:
+    "oncoprint_custom_driver_annotation_binary_menu_label": string|null; // default:
     "disabled_tabs": string|null;
     "custom_tabs": any[];
-    "oncoprint_custom_driver_annotation_default": boolean;
-    "oncoprint_oncokb_hotspots_default": string | undefined;
+    "oncoprint_custom_driver_annotation_binary_default": boolean;
+    "oncoprint_custom_driver_annotation_tiers_default": boolean;
+    "oncoprint_oncokb_default": boolean;
+    "oncoprint_hotspots_default": boolean;
     "genomenexus_url": string|null;
     "mygene_info_url": string|null;
     "g2s_url": string|null;

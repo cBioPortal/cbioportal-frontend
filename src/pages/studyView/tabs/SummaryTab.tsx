@@ -322,6 +322,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
 
     render() {
         const numberOfMutationProfiledSamples : number | undefined = this.props.store.molecularProfileSampleCounts.isComplete ? this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples : undefined;
+        const numberOfCNAProfiledSamples : number | undefined = this.props.store.molecularProfileSampleCounts.isComplete ? this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples : undefined;
         return (
             <div>
 
@@ -356,7 +357,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                                         onChange={this.props.store.toggleWithCNADataFilter}
                                         disabled={this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples === undefined}
                                     >
-                                        {numberOfMutationProfiledSamples === undefined ? '0 samples' : numberOfMutationProfiledSamples.toLocaleString() + (numberOfMutationProfiledSamples === 1 ? " sample" : " samples")} with CNA data
+                                        {numberOfCNAProfiledSamples === undefined ? '0 samples' : numberOfCNAProfiledSamples.toLocaleString() + (numberOfCNAProfiledSamples === 1 ? " sample" : " samples")} with CNA data
                                     </LabeledCheckbox>
                                 )}
                             </div>

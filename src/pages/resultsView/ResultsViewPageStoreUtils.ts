@@ -81,17 +81,20 @@ export const initializeCustomDriverAnnotationSettings = action((
     report:CustomDriverAnnotationReport,
     mutationAnnotationSettings:any,
     enableCustomTiers:boolean,
-    enableOncoKbAndHotspotsIfNoCustomAnnotations:boolean
+    enableOncoKb:boolean,
+    enableHotspots:boolean
 )=>{
     // initialize keys with all available tiers
     for (const tier of report.tiers) {
         mutationAnnotationSettings.driverTiers.set(tier, enableCustomTiers);
     }
 
-    if (enableOncoKbAndHotspotsIfNoCustomAnnotations && !report.hasBinary && !report.tiers.length) {
-        // enable hotspots and oncokb if there are no custom annotations
-        mutationAnnotationSettings.hotspots = true;
+    if (enableOncoKb) {
         mutationAnnotationSettings.oncoKb = true;
+    }
+
+    if (enableHotspots) {
+        mutationAnnotationSettings.hotspots = true;
     }
 });
 

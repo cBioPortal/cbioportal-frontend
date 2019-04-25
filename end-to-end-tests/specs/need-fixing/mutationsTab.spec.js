@@ -1,7 +1,7 @@
 var assert = require('assert');
-var waitForOncoprint = require('./specUtils').waitForOncoprint;
-var setOncoprintMutationsMenuOpen = require('./specUtils').setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
+var waitForOncoprint = require('./../specUtils').waitForOncoprint;
+var setOncoprintMutationsMenuOpen = require('./../specUtils').setOncoprintMutationsMenuOpen;
+var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -11,9 +11,9 @@ describe("mutations tab", function() {
         waitForOncoprint(10000);
         setOncoprintMutationsMenuOpen(true);
         browser.click('input[data-test="HideVUS"]');
-        browser.waitForExist('a.tabAnchor_mutations', 10000);
+        browser.waitForExist('a.tabAnchor_mutations');
         browser.click('a.tabAnchor_mutations');
-        browser.waitForVisible('[data-test="LazyMobXTable_CountHeader"]', 10000);
+        browser.waitForVisible('[data-test="LazyMobXTable_CountHeader"]');
         assert(browser.getHTML('[data-test="LazyMobXTable_CountHeader"]', false).indexOf("0 Mutations") > -1);
     });
 });
