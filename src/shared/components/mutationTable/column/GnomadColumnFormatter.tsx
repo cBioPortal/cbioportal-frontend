@@ -73,7 +73,7 @@ export default class GnomadColumnFormatter {
         const genomeNexusCacheData = GnomadColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
         return (
             <div>
-                <span>{GnomadColumnFormatter.getGnomadDataViz(genomeNexusCacheData)}</span>
+                <span data-test='gnomad-column' data-test2={data[0].sampleId}>{GnomadColumnFormatter.getGnomadDataViz(genomeNexusCacheData)}</span>
             </div>
         );
     }
@@ -151,7 +151,7 @@ export default class GnomadColumnFormatter {
                 }       
                 
                 overlay = () => (
-                    <span className={styles["gnomad-table"]}>
+                    <span className={styles["gnomad-table"]} data-test='gnomad-table'>
                         <GnomadFrequencyTable data={Object.values(result)}/>
                     </span>
                     
