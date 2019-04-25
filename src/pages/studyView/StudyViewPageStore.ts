@@ -2055,6 +2055,10 @@ export class StudyViewPageStore {
                 } else {
                     chartMeta.dimension = STUDY_VIEW_CONFIG.layout.dimensions[chartMeta.chartType] || {w: 1, h: 1};
                 }
+                const chartType = this.chartsType.get(chartUniqueKey);
+                if (chartType !== undefined) {
+                    chartMeta.chartType = chartType;
+                }
                 acc.push(chartMeta);
             }
             return acc;
@@ -2164,7 +2168,7 @@ export class StudyViewPageStore {
 
         // This is also the proper place to initialize the special charts visibility
         _.each(this.specialChartKeysInCustomCharts, key => {
-            this.showAsPieChart(key, 2);
+            this.showAsPieChart(key, key === UniqueKey.CANCER_STUDIES ? this.cancerStudiesData.result.length : 2);
         });
     }
     private getTableDimensionByNumberOfRecords(records: number) {
