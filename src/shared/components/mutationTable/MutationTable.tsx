@@ -542,6 +542,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             download: (d:Mutation[])=>GnomadColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
             tooltip: (<span>Gnomad data</span>),
             defaultSortDirection: "desc",
+            visible: false,
             align:"right"
         };
     }
