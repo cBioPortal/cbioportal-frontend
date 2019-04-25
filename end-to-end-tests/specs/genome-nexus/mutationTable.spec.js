@@ -1,10 +1,10 @@
 
-var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
+var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
 
 var assert = require('assert');
 var expect = require('chai').expect;
-var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('./specUtils').waitForNetworkQuiet;
+var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
+var waitForNetworkQuiet = require('./../specUtils').waitForNetworkQuiet;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
