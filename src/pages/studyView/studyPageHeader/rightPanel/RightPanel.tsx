@@ -16,8 +16,7 @@ import shareUIstyles from '../../../resultsView/querySummary/shareUI.module.scss
 import {serializeEvent} from "../../../../shared/lib/tracking";
 
 export interface IRightPanelProps {
-    store: StudyViewPageStore,
-    user?: string
+    store: StudyViewPageStore
 }
 
 export type GeneReplacement = { alias: string, genes: Gene[] };
@@ -25,39 +24,10 @@ export type GeneReplacement = { alias: string, genes: Gene[] };
 @observer
 export default class RightPanel extends React.Component<IRightPanelProps, {}> {
 
-    @observable private isCustomCaseBoxOpen = false;
     @observable private _isQueryButtonDisabled = false;
 
     @observable downloadingData = false;
     @observable showDownloadErrorMessage = false;
-
-    @observable private showMoreDescription = false;
-
-    @autobind
-    private handleDownload() {
-        this.downloadingData = true;
-        this.showDownloadErrorMessage = false;
-        this.props.store.getDownloadDataPromise().then(text => {
-            this.downloadingData = false;
-            fileDownload(text, this.props.store.clinicalDataDownloadFilename);
-        }).catch(() => {
-            this.downloadingData = false;
-            this.showDownloadErrorMessage = true;
-        });
-    }
-
-    @autobind
-    private openCases() {
-        if (!_.isEmpty(this.props.store.selectedPatients)) {
-            const firstPatient = this.props.store.selectedPatients[0];
-
-            let navCaseIds = _.map(this.props.store.selectedPatients, patient => {
-                return {patientId: patient.patientId, studyId: patient.studyId}
-            });
-
-            window.open(getPatientViewUrl(firstPatient.studyId, firstPatient.patientId, navCaseIds));
-        }
-    }
 
     @autobind
     @action
@@ -76,25 +46,6 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
             this.props.store.updateSelectedGenes(oql.query, genes.found);
         }
     }
-
-    @computed
-    get virtualStudyButtonTooltip() {
-        //default value of userEmailAddress is anonymousUser. see my-index.ejs
-        return (
-            (_.isUndefined(this.props.user) ||
-                _.isEmpty(this.props.user) ||
-                _.isEqual(this.props.user.toLowerCase(), 'anonymoususer')
-            ) ? '' : 'Save/') + 'Share Virtual Study';
-    }
-
-    @computed
-    get downloadButtonTooltip() {
-        if (this.showDownloadErrorMessage) {
-            return "An error occurred while downloading the data. Please try again.";
-        }
-        return 'Download clinical data for the selected cases';
-    }
-
 
     render() {
         return (
