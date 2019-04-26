@@ -455,11 +455,11 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                         vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
                         categoryToColor={this.categoryToColor}
                         barWidth={20}
-                        domainPadding={50}
+                        domainPadding={20}
                         chartBase={500}
                         axisLabelX={this.horzLabel}
                         axisLabelY={this.vertLabel}
-                        legendLocationWidthThreshold={550}
+                        legendLocationWidthThreshold={450}
                         ticksCount={6}
                         horizontalBars={this.horizontalBars}
                         percentage={isPercentage}
