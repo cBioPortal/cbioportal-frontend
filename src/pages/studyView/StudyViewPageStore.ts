@@ -90,6 +90,8 @@ import {getMDAndersonHeatmapStudyMetaUrl, getStudyDownloadListUrl} from "../../s
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import request from 'superagent';
 import {trackStudyViewFilterEvent} from "../../shared/lib/tracking";
+import queryStudyAnalytics from '../../shared/api/queryStudyAnalytics';
+import AppConfig from "appConfig";
 
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
@@ -3318,4 +3320,7 @@ export class StudyViewPageStore {
         default: []
     });
 
+    readonly studyGoogleAnalytics = remoteData({
+        invoke: () => queryStudyAnalytics(this.studyIds, AppConfig.serverConfig.analytics_report_url || ""),
+    });
 }
