@@ -192,7 +192,7 @@ describe('result page tabs, loading from session id', function(){
 
         var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(10000);
+        waitForOncoprint(15000);
     });
 
     runResultsTestSuite('session');
