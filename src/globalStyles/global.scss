@@ -15,6 +15,17 @@ button:active, button:focus, div:focus, div:active {
   outline: none !important;
 }
 
+
+
+.form-group {
+  margin-bottom:5px;
+
+  label {
+    font-size:12px;
+    margin-bottom:2px;
+  }
+}
+
 .posRelative {
   position:relative;
 }
