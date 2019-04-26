@@ -6,10 +6,8 @@ import styles from "./styles.module.scss";
 import {action, computed, observable} from 'mobx';
 import {ButtonGroup, Modal, Radio} from 'react-bootstrap';
 import {ClinicalDataType, ClinicalDataTypeEnum, NewChart} from "../../StudyViewPageStore";
-import ErrorBox from "../../../../shared/components/errorBox/ErrorBox";
-import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import {
-    DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, ErrorCodeEnum,
+    DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, CodeEnum,
     parseContent,
     ParseResult,
     ValidationResult
@@ -101,7 +99,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
         if (!validChartName) {
             this.chartNameValidation = {
                 error: [{
-                    code: ErrorCodeEnum.INVALID,
+                    code: CodeEnum.INVALID,
                     message: new Error('Chart name exists.')
                 }],
                 warning: []
@@ -182,6 +180,8 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                 </span>
 
                 <textarea
+                    className="form-control"
+                    rows={5}
                     value={this.content}
                     onChange={(event) => {
                         this.content = event.currentTarget.value;
@@ -191,17 +191,6 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                     }}
                     data-test='CustomCaseSetInput'
                 />
-                {
-                    this.result.validationResult.error.concat(this.chartNameValidation.error).map(message => {
-                        return <ErrorBox className={styles.error} error={message.message}/>
-                    })
-                }
-                {
-                    this.result.validationResult.warning.concat(this.chartNameValidation.warning).map(message => {
-                        return <ErrorBox style={{backgroundColor: STUDY_VIEW_CONFIG.colors.theme.tertiary}}
-                                         error={message.message}/>
-                    })
-                }
 
                 <div className={styles.operations}>
                     {!this.props.disableGrouping && (
@@ -220,6 +209,16 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                         {this.props.submitButtonText}
                     </button>
                 </div>
+                {
+                    this.result.validationResult.error.concat(this.chartNameValidation.error).map(error => {
+                        return <div className="alert alert-danger" role="alert" style={{marginTop: '10px', marginBottom: '0'}}>{error.message.message}</div>
+                    })
+                }
+                {
+                    this.result.validationResult.warning.concat(this.chartNameValidation.warning).map(warning => {
+                        return <div className="alert alert-warning" role="alert"  style={{marginTop: '10px', marginBottom: '0'}}>{warning.message.message}</div>
+                    })
+                }
             </div>
         );
     }
