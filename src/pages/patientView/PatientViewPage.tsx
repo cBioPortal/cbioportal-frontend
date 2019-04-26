@@ -436,7 +436,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                 hotspotData={patientViewPageStore.indexedHotspotData}
                                                 cosmicData={patientViewPageStore.cosmicData.result}
                                                 oncoKbData={patientViewPageStore.oncoKbData}
-                                                oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
+                                                oncoKbCancerGenes={patientViewPageStore.oncoKbCancerGenes}
                                                 civicGenes={patientViewPageStore.civicGenes}
                                                 civicVariants={patientViewPageStore.civicVariants}
                                                 userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
@@ -467,7 +467,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
                                             cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
                                             oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
-                                            oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
+                                            oncoKbCancerGenes={patientViewPageStore.oncoKbCancerGenes}
                                             enableOncoKb={AppConfig.serverConfig.show_oncokb}
                                             enableCivic={AppConfig.serverConfig.show_civic}
                                             userEmailAddress={AppConfig.serverConfig.user_email_address}
