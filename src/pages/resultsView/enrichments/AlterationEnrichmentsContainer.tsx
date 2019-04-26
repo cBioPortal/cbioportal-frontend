@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from "lodash";
 import { observer } from "mobx-react";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
-import { observable, computed } from 'mobx';
+import {observable, computed, action} from 'mobx';
 import AlterationEnrichmentTable, {AlterationEnrichmentTableColumnType} from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
 import { AlterationEnrichment } from 'shared/api/generated/CBioPortalAPIInternal';
 import styles from "./styles.module.scss";
@@ -69,7 +69,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     @observable significanceFilter: boolean = false;
     @observable.shallow checkedGenes: string[] = [];
     @observable clickedGene: string;
-    @observable selectedGenes: string[]|null;
+    @observable.ref selectedGenes: string[]|null;
     @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
 
     @computed get data(): AlterationEnrichmentRow[] {
@@ -132,12 +132,12 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @autobind
-    private onSelection(hugoGeneSymbols: string[]) {
+    @action private onSelection(hugoGeneSymbols: string[]) {
         this.selectedGenes = hugoGeneSymbols;
     }
 
     @autobind
-    private onSelectionCleared() {
+    @action private onSelectionCleared() {
         this.selectedGenes = null;
     }
 
@@ -194,6 +194,10 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         }
     }
 
+    @computed get selectedGenesSet() {
+        return _.keyBy(this.selectedGenes || []);
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
@@ -206,13 +210,15 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                     {this.chartType === ChartType.VOLCANO && (
                         <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
                                           xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
-                                          xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
+                                          xAxisTickValues={[-10, 0, 10]}
+                                          selectedGenesSet={this.selectedGenesSet}
+                                          onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
                                           onSelectionCleared={this.onSelectionCleared}/>
                     )}
                     {this.chartType === ChartType.FREQUENCY && (
                         <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
                                                    xGroupName={this.props.group1Name!} yGroupName={this.props.group2Name!} onGeneNameClick={this.onGeneNameClick}
-                                                   onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared}/>
+                                                   selectedGenesSet={this.selectedGenesSet} onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared}/>
                     )}
                     <button
                         className="btn btn-sm btn-default"
