@@ -990,9 +990,7 @@ export class StudyViewPageStore {
         if (isSelected) {
             trackStudyViewFilterEvent("withMutationQuickFilter", this);
             this.customChartFilterSet.set(UniqueKey.WITH_MUTATION_DATA, [Datalabel.YES]);
-            this._chartSampleIdentifiersFilterSet.set(UniqueKey.WITH_MUTATION_DATA, []);
         } else {
-            this._chartSampleIdentifiersFilterSet.delete(UniqueKey.WITH_MUTATION_DATA);
             this.customChartFilterSet.delete(UniqueKey.WITH_MUTATION_DATA);
         }
     }
@@ -1005,10 +1003,8 @@ export class StudyViewPageStore {
         if (isSelected) {
             trackStudyViewFilterEvent("withCNADataQuickFilter", this);
             this.customChartFilterSet.set(UniqueKey.WITH_CNA_DATA, [Datalabel.YES]);
-            this._chartSampleIdentifiersFilterSet.set(UniqueKey.WITH_CNA_DATA, []);
         } else {
             this._chartSampleIdentifiersFilterSet.delete(UniqueKey.WITH_CNA_DATA);
-            this.customChartFilterSet.delete(UniqueKey.WITH_CNA_DATA);
         }
     }
 
@@ -1534,14 +1530,14 @@ export class StudyViewPageStore {
             filters.mutationCountVsCNASelection = this._mutationCountVsCNAFilter;
         }
 
-        let _sampleIdentifiers:SampleIdentifier[] =
-            _.chain(this._chartSampleIdentifiersFilterSet.values()) // for some reason its a lot faster with _.chain than just using _.intersectionWith
-                .intersectionWith(
-                ((a:SampleIdentifier, b:SampleIdentifier)=>{
-                            return a.sampleId === b.sampleId &&
-                                a.studyId === b.studyId;
-                        }) as any
-            ).value()[0];
+        let sampleIdentifiersFilterSets = this._chartSampleIdentifiersFilterSet.values()
+
+        // nested array need to be spread for _.intersectionWith
+        let _sampleIdentifiers: SampleIdentifier[] = _.intersectionWith(...sampleIdentifiersFilterSets,
+            ((a: SampleIdentifier, b: SampleIdentifier) => {
+                return a.sampleId === b.sampleId &&
+                    a.studyId === b.studyId;
+            }) as any);
 
         if(_sampleIdentifiers && _sampleIdentifiers.length>0) {
             filters.sampleIdentifiers = _sampleIdentifiers;
@@ -2411,6 +2407,10 @@ export class StudyViewPageStore {
                 } else {
                     chartMeta.dimension = STUDY_VIEW_CONFIG.layout.dimensions[chartMeta.chartType] || {w: 1, h: 1};
                 }
+                const chartType = this.chartsType.get(chartUniqueKey);
+                if (chartType !== undefined) {
+                    chartMeta.chartType = chartType;
+                }
                 acc.push(chartMeta);
             }
             return acc;
@@ -2520,7 +2520,7 @@ export class StudyViewPageStore {
 
         // This is also the proper place to initialize the special charts visibility
         _.each(this.specialChartKeysInCustomCharts, key => {
-            this.showAsPieChart(key, 2);
+            this.showAsPieChart(key, key === UniqueKey.CANCER_STUDIES ? this.cancerStudiesData.result.length : 2);
         });
     }
     private getTableDimensionByNumberOfRecords(records: number) {
@@ -3524,10 +3524,10 @@ export class StudyViewPageStore {
     @action
     setCustomChartFilters(chartMeta: ChartMeta, values: string[]) {
         if (values.length > 0) {
-            let filteredSampleIdentifiers: SampleIdentifier[] = [];
             switch (chartMeta.uniqueKey) {
                 case UniqueKey.CANCER_STUDIES: {
-                    filteredSampleIdentifiers = filteredSampleIdentifiers.concat(getFilteredSampleIdentifiers(this.samples.result.filter(sample => values.includes(sample.studyId))));
+                    let filteredSampleIdentifiers = getFilteredSampleIdentifiers(this.samples.result.filter(sample => values.includes(sample.studyId)));
+                    this._chartSampleIdentifiersFilterSet.set(chartMeta.uniqueKey, filteredSampleIdentifiers);
                     break;
                 }
                 case UniqueKey.WITH_MUTATION_DATA: {
@@ -3556,8 +3556,8 @@ export class StudyViewPageStore {
                     }
                     break;
                 }
-                default:
-                    filteredSampleIdentifiers = _.reduce(this._customChartsSelectedCases.get(chartMeta.uniqueKey), (acc, next) => {
+                default: {
+                    let filteredSampleIdentifiers = _.reduce(this._customChartsSelectedCases.get(chartMeta.uniqueKey), (acc, next) => {
                         if(values.includes(next.value)) {
                             acc.push({
                                 studyId: next.studyId,
@@ -3566,9 +3566,10 @@ export class StudyViewPageStore {
                         }
                         return acc;
                     }, [] as SampleIdentifier[]);
+                    this._chartSampleIdentifiersFilterSet.set(chartMeta.uniqueKey, filteredSampleIdentifiers);
+                }
             }
             this.customChartFilterSet.set(chartMeta.uniqueKey, values);
-            this._chartSampleIdentifiersFilterSet.set(chartMeta.uniqueKey, filteredSampleIdentifiers);
         }
         else {
             if(UniqueKey.WITH_MUTATION_DATA === chartMeta.uniqueKey) {
