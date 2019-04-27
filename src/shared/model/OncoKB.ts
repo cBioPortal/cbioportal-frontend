@@ -1,4 +1,4 @@
-import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
+import {CancerGene, IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 
 export interface IEvidence {
     id: string;
@@ -32,4 +32,9 @@ export interface IOncoKbData {
 export interface IOncoKbDataWrapper {
     status: "pending" | "error" | "complete";
     result?: IOncoKbData|Error;
+}
+
+export interface IOncoKbCancerGenesWrapper {
+    status: "pending" | "error" | "complete";
+    result?: CancerGene[] | Error;
 }

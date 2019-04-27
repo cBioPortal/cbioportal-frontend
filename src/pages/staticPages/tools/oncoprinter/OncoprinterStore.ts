@@ -17,12 +17,13 @@ import {
 } from "./OncoprinterUtils";
 import {remoteData} from "../../../../shared/api/remoteData";
 import {IOncoKbData} from "../../../../shared/model/OncoKB";
-import {fetchOncoKbAnnotatedGenesSuppressErrors, ONCOKB_DEFAULT} from "../../../../shared/lib/StoreUtils";
+import {fetchOncoKbCancerGenes, ONCOKB_DEFAULT} from "../../../../shared/lib/StoreUtils";
 import client from "../../../../shared/api/cbioportalClientInstance";
 import _ from "lodash";
 import {countMutations, mutationCountByPositionKey} from "../../../resultsView/mutationCountHelpers";
 import {Mutation, MutationCountByPosition} from "../../../../shared/api/generated/CBioPortalAPI";
 import {SampleAlteredMap} from "../../../resultsView/ResultsViewPageStoreUtils";
+import {CancerGene} from "shared/api/generated/OncoKbAPI";
 
 export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "ignoreUnknown" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
 
@@ -166,10 +167,26 @@ export default class OncoprinterStore {
         }
     });
 
-    readonly oncoKbAnnotatedGenes = remoteData({
+    readonly oncoKbCancerGenes = remoteData({
         invoke: () => {
             if (AppConfig.serverConfig.show_oncokb) {
-                return fetchOncoKbAnnotatedGenesSuppressErrors();
+                return fetchOncoKbCancerGenes();
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    }, []);
+
+    readonly oncoKbAnnotatedGenes = remoteData({
+        await: () => [this.oncoKbCancerGenes],
+        invoke: () => {
+            if (AppConfig.serverConfig.show_oncokb) {
+                return Promise.resolve(_.reduce(this.oncoKbCancerGenes.result, (map: { [entrezGeneId: number]: boolean }, next: CancerGene) => {
+                    if (next.oncokbAnnotated) {
+                        map[next.entrezGeneId] = true;
+                    }
+                    return map;
+                }, {}));
             } else {
                 return Promise.resolve({});
             }
