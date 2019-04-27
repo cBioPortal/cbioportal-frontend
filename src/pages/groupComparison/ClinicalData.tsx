@@ -15,7 +15,7 @@ import ScrollBar from "shared/components/Scrollbar/ScrollBar";
 import BoxScatterPlot, { IBoxScatterPlotData } from "shared/components/plots/BoxScatterPlot";
 import { getMobxPromiseGroupStatus } from "shared/lib/getMobxPromiseGroupStatus";
 import { scatterPlotSize } from "shared/components/plots/PlotUtils";
-import { ClinicalDataEnrichmentWithQ, CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG, CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG } from "./GroupComparisonUtils";
+import { ClinicalDataEnrichmentWithQ, CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG, CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG, EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG } from "./GroupComparisonUtils";
 import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCategoryBarPlot";
 import { STUDY_VIEW_CONFIG } from "pages/studyView/StudyViewConfig";
 import ReactSelect from "react-select";
@@ -81,21 +81,24 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
 
     readonly tabUI = MakeMobxView({
         await: () => {
-            if (this.props.store.activeGroups.isComplete &&
-                this.props.store.activeGroups.result.length < 2) {
+            if (this.props.store.filteredAvailableGroups.isComplete &&
+                this.props.store.filteredAvailableGroups.result.length < 2) {
                 // dont bother loading data for and computing clinical tab if not enough groups for it
-                return [this.props.store.activeGroups];
+                return [this.props.store.filteredAvailableGroups];
             } else {
-                return [this.props.store.activeGroups, this.overlapUI];
+                return [this.props.store.filteredAvailableGroups, this.overlapUI];
             }
         },
         render: () => {
-            if (this.props.store.activeGroups.result!.length < 2) {
+            if (this.props.store.filteredAvailableGroups.result!.length < 2) {
                 return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG}</span>;
-            } else if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE && this.props.store._selectionInfo.result!.overlappingSamples.length !== 0) {
-                return <span>{CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG}</span>;
             } else {
-                return this.overlapUI.component;
+                let content: any = [];
+                if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE && (this.props.store._selectionInfo.result!.overlappingSamples.length !== 0 || this.props.store._selectionInfo.result!.overlappingPatients.length !== 0)) {
+                    content.push(<div className={'alert alert-info'}>{EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG}</div>);
+                }
+                content.push(this.overlapUI.component)
+                return content;
             }
         },
         renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true} size={"big"} />
@@ -160,21 +163,21 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     }
 
     private readonly clinicalDataPromise = remoteData({
-        await: () => [this.props.store.patientKeyToSamples, this.props.store.activeGroups],
+        await: () => [this.props.store.patientKeyToSamples, this.props.store.filteredAvailableGroups],
         invoke: async () => {
             const axisData: IAxisData = { data: [], datatype: 'string' };
             if (this.highlightedRow) {
                 let attribute = this.highlightedRow!.clinicalAttribute;
                 let patientKeyToSamples = this.props.store.patientKeyToSamples.result!;
 
-                let sampleIdentifiers = _.flatMap(this.props.store.activeGroups.result, group => _.flatMap(group.studies, study => {
+                let sampleIdentifiers = _.flatMap(this.props.store.filteredAvailableGroups.result, group => _.flatMap(group.studies, study => {
                     return study.samples.map(sample => ({
                         studyId: study.id,
                         entityId: sample
                     }));
                 }));
 
-                let patientidentifiers = _.flatMap(this.props.store.activeGroups.result, group => _.flatMap(group.studies, study => {
+                let patientidentifiers = _.flatMap(this.props.store.filteredAvailableGroups.result, group => _.flatMap(group.studies, study => {
                     return study.patients.map(patient => ({
                         studyId: study.id,
                         entityId: patient
@@ -223,13 +226,13 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     });
 
     private readonly groupSampleDataPromise = remoteData({
-        await: () => [this.props.store.activeGroups, this.props.store.sampleSet],
+        await: () => [this.props.store.filteredAvailableGroups, this.props.store.sampleSet],
         invoke: async () => {
             const axisData: IAxisData = { data: [], datatype: "string" };
             if (this.highlightedRow) {
                 let sampleSet = this.props.store.sampleSet.result!;
                 const axisData_Data = axisData.data;
-                _.forEach(this.props.store.activeGroups.result!, group => {
+                _.forEach(this.props.store.filteredAvailableGroups.result!, group => {
                     group.studies.forEach(study => {
                         study.samples.forEach(sampleId => {
                             const sample = sampleSet.get({ studyId: study.id, sampleId });
@@ -452,11 +455,11 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                         vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
                         categoryToColor={this.categoryToColor}
                         barWidth={20}
-                        domainPadding={50}
+                        domainPadding={20}
                         chartBase={500}
                         axisLabelX={this.horzLabel}
                         axisLabelY={this.vertLabel}
-                        legendLocationWidthThreshold={550}
+                        legendLocationWidthThreshold={450}
                         ticksCount={6}
                         horizontalBars={this.horizontalBars}
                         percentage={isPercentage}
