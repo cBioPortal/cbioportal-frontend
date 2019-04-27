@@ -9,7 +9,6 @@ import {getSelectedGroups} from "../../groupComparison/comparisonGroupManager/Co
 
 
 export interface IStudyPageHeaderProps {
-    userEmail: string | undefined,
     store: StudyViewPageStore,
 }
 
@@ -32,7 +31,6 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
                     showOriginStudiesInSummaryDescription={this.props.store.showOriginStudiesInSummaryDescription}
                 />
                 <RightPanel
-                    user={this.props.userEmail}
                     store={this.props.store}/>
                 </div>
 

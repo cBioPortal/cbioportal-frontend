@@ -2,11 +2,11 @@ import * as React from 'react';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { observer } from "mobx-react";
-import GroupComparisonStore from './GroupComparisonStore';
+import GroupComparisonStore, { OverlapStrategy } from './GroupComparisonStore';
 import { remoteData } from 'shared/api/remoteData';
 import { COLORS } from 'pages/studyView/StudyViewUtils';
 import {MakeMobxView} from "../../shared/components/MobxView";
-import {ENRICHMENTS_NOT_2_GROUPS_MSG, SURVIVAL_TOO_MANY_GROUPS_MSG} from "./GroupComparisonUtils";
+import {ENRICHMENTS_NOT_2_GROUPS_MSG, SURVIVAL_TOO_MANY_GROUPS_MSG, EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG} from "./GroupComparisonUtils";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 
 export interface ISurvivalProps {
@@ -21,11 +21,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     public readonly analysisGroups = remoteData({
         await: () => [
-            this.props.store.activeGroups
+            this.props.store.filteredActiveGroups
         ],
         invoke: () => {
             let colorIndex = 0;
-            return Promise.resolve(this.props.store.activeGroups.result!.map((group)=>({
+            return Promise.resolve(this.props.store.filteredActiveGroups.result!.map((group)=>({
                 name: group.name,
                 color: group.color,
                 value: group.uid,
@@ -37,19 +37,24 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     readonly tabUI = MakeMobxView({
         await:()=>{
-            if (this.props.store.activeGroups.isComplete &&
-                this.props.store.activeGroups.result.length > 10) {
+            if (this.props.store.filteredActiveGroups.isComplete &&
+                this.props.store.filteredActiveGroups.result.length > 10) {
                 // dont bother loading data for and computing UI if its not valid situation for it
-                return [this.props.store.activeGroups];
+                return [this.props.store.filteredActiveGroups];
             } else {
-                return [this.props.store.activeGroups, this.survivalUI];
+                return [this.props.store.filteredActiveGroups, this.survivalUI];
             }
         },
         render:()=>{
-            if (this.props.store.activeGroups.result!.length > 10) {
+            if (this.props.store.filteredActiveGroups.result!.length > 10) {
                 return <span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>;
             } else {
-                return this.survivalUI.component;
+                let content: any = [];
+                if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE && (this.props.store._selectionInfo.result!.overlappingSamples.length !== 0 || this.props.store._selectionInfo.result!.overlappingPatients.length !== 0)) {
+                    content.push(<div className={'alert alert-info'}>{EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG}</div>);
+                }
+                content.push(this.survivalUI.component)
+                return content;
             }
         },
         renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
