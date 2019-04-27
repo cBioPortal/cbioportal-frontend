@@ -16,6 +16,8 @@ export interface IOncoKbTooltipProps {
     pubMedCache?: OncokbPubMedCache;
     handleFeedbackOpen?: () => void;
     onLoadComplete?: () => void;
+    hugoSymbol: string;
+    isCancerGene:boolean;
     geneNotExist:boolean;
 }
 
@@ -64,7 +66,9 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
         if (this.props.geneNotExist) {
             tooltipContent = (
                 <OncoKbCard
-                    geneNotExist={true}
+                    gene={this.props.hugoSymbol}
+                    geneNotExist={this.props.geneNotExist}
+                    isCancerGene={this.props.isCancerGene}
                     pmidData={{}}
                     handleFeedbackOpen={this.props.handleFeedbackOpen}
                 />
@@ -83,6 +87,7 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
             tooltipContent = (
                 <OncoKbCard
                     geneNotExist={this.props.geneNotExist}
+                    isCancerGene={this.props.isCancerGene}
                     title={`${this.props.indicator.query.hugoSymbol} ${this.props.indicator.query.alteration} in ${this.props.indicator.query.tumorType}`}
                     gene={this.props.indicator.geneExist ? this.props.indicator.query.hugoSymbol : ''}
                     variant={this.props.indicator.query.alteration ? this.props.indicator.query.alteration : ''}

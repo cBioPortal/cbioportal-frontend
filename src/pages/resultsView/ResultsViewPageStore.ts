@@ -43,8 +43,7 @@ import {
     fetchCopyNumberSegmentsForSamples,
     fetchGenes,
     fetchGermlineConsentedSamples,
-    fetchMyCancerGenomeData,
-    fetchOncoKbAnnotatedGenesSuppressErrors,
+    fetchMyCancerGenomeData, fetchOncoKbCancerGenes,
     fetchOncoKbData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     generateDataQueryFilter,
@@ -92,7 +91,7 @@ import {
     GenesetMolecularData
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
-import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
+import {CancerGene, IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
 import memoize from "memoize-weak-decorator";
 import request from "superagent";
@@ -1613,7 +1612,7 @@ export class ResultsViewPageStore {
     }
 
     readonly mutationMapperStores = remoteData<{ [hugoGeneSymbol: string]: ResultsViewMutationMapperStore }>({
-        await: () => [this.genes, this.oncoKbAnnotatedGenes, this.uniqueSampleKeyToTumorType, this.mutations],
+        await: () => [this.genes, this.oncoKbCancerGenes, this.uniqueSampleKeyToTumorType, this.mutations],
         invoke: () => {
             if (this.genes.result) {
                 // we have to use _.reduce, otherwise this.genes.result (Immutable, due to remoteData) will return
@@ -1624,7 +1623,7 @@ export class ResultsViewPageStore {
                         {},
                         gene,
                         this.samples,
-                        this.oncoKbAnnotatedGenes.result || {},
+                        this.oncoKbCancerGenes,
                         () => (this.mutationsByGene[gene.hugoGeneSymbol] || []),
                         () => (this.mutationCountCache),
                         () => (this.genomeNexusCache),
@@ -1652,10 +1651,26 @@ export class ResultsViewPageStore {
         return this.mutationMapperStores.result[hugoGeneSymbol];
     }
 
-    readonly oncoKbAnnotatedGenes = remoteData({
+    readonly oncoKbCancerGenes = remoteData({
         invoke: () => {
             if (AppConfig.serverConfig.show_oncokb) {
-                return fetchOncoKbAnnotatedGenesSuppressErrors();
+                return fetchOncoKbCancerGenes();
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    }, []);
+
+    readonly oncoKbAnnotatedGenes = remoteData({
+        await: () => [this.oncoKbCancerGenes],
+        invoke: () => {
+            if (AppConfig.serverConfig.show_oncokb) {
+                return Promise.resolve(_.reduce(this.oncoKbCancerGenes.result, (map: { [entrezGeneId: number]: boolean }, next: CancerGene) => {
+                    if (next.oncokbAnnotated) {
+                        map[next.entrezGeneId] = true;
+                    }
+                    return map;
+                }, {}));
             } else {
                 return Promise.resolve({});
             }

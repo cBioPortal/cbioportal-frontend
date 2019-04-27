@@ -68,7 +68,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
         return (
             <ResultsViewMutationTable
                 uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
-                oncoKbAnnotatedGenes={this.props.store.oncoKbAnnotatedGenes}
+                oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
                 discreteCNACache={this.props.discreteCNACache}
                 studyIdToStudy={this.props.store.studyIdToStudy.result}
                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
