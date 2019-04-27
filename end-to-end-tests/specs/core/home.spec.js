@@ -265,7 +265,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumor Samples with sequencing and CNA data (88)"), 5000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation and CNA data (88)"), 5000);
     });
     it('selects the right default case sets in a single->select all filtered->single study selection flow', ()=>{
         // Select Ampullary Carcinoma
@@ -317,7 +317,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumor Samples with sequencing and CNA data (88)"), 5000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation and CNA data (88)"), 5000);
     });
 });
 
