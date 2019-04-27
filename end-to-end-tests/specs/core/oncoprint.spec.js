@@ -9,13 +9,13 @@ var useExternalFrontend = require('./../specUtils').useExternalFrontend;
 var waitForNumberOfStudyCheckboxes = require('./../specUtils').waitForNumberOfStudyCheckboxes;
 var setInputText = require('./../specUtils').setInputText;
 
-
+const ONCOPRINT_TIMEOUT = 60000;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
 describe.skip("merged tracks", ()=>{
     it("oncoprint loads and expands a merged track", ()=>{
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=coadread_tcga&case_set_id=coadread_tcga_cnaseq&data_priority=0&gene_list=%255B%2522RAS%2522%2520KRAS%2520NRAS%2520HRAS%255D&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_mutations&tab_index=tab_visualize`);
-        waitForOncoprint(20000);
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
 
         var trackOptionsElts = getNthOncoprintTrackOptionsElements(1);
         // open menu
@@ -23,7 +23,7 @@ describe.skip("merged tracks", ()=>{
         browser.waitForVisible(trackOptionsElts.dropdown_selector, 1000);
         // click expand
         browser.click(trackOptionsElts.dropdown_selector + " li:nth-child(3)");
-        waitForOncoprint(20000);
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
 
         var res = browser.checkElement('.oncoprintContainer', { hide:['.oncoprint__controls']}); // just hide the controls bc for some reason they keep showing up transparent in this test only
         assertScreenShotMatch(res);
@@ -39,7 +39,7 @@ describe('oncoprint', function() {
         it("should start in patient mode if URL parameter show_samples=false or not specified", ()=>{
             // not specified
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic');
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             const patient_id_order = "VENHQS1PUi1BNUpZOmFjY190Y2dh,VENHQS1PUi1BNUo0OmFjY190Y2dh,VENHQS1PUi1BNUpCOmFjY190Y2dh,VENHQS1PUi1BNUoxOmFjY190Y2dh,VENHQS1PUi1BNUoyOmFjY190Y2dh,VENHQS1PUi1BNUozOmFjY190Y2dh,VENHQS1PUi1BNUo1OmFjY190Y2dh,VENHQS1PUi1BNUo2OmFjY190Y2dh,VENHQS1PUi1BNUo3OmFjY190Y2dh,VENHQS1PUi1BNUo4OmFjY190Y2dh,VENHQS1PUi1BNUo5OmFjY190Y2dh,VENHQS1PUi1BNUpBOmFjY190Y2dh,VENHQS1PUi1BNUpDOmFjY190Y2dh,VENHQS1PUi1BNUpEOmFjY190Y2dh,VENHQS1PUi1BNUpFOmFjY190Y2dh,VENHQS1PUi1BNUpGOmFjY190Y2dh,VENHQS1PUi1BNUpHOmFjY190Y2dh,VENHQS1PUi1BNUpIOmFjY190Y2dh,VENHQS1PUi1BNUpJOmFjY190Y2dh,VENHQS1PUi1BNUpKOmFjY190Y2dh,VENHQS1PUi1BNUpLOmFjY190Y2dh,VENHQS1PUi1BNUpMOmFjY190Y2dh,VENHQS1PUi1BNUpNOmFjY190Y2dh,VENHQS1PUi1BNUpPOmFjY190Y2dh,VENHQS1PUi1BNUpQOmFjY190Y2dh,VENHQS1PUi1BNUpROmFjY190Y2dh,VENHQS1PUi1BNUpSOmFjY190Y2dh,VENHQS1PUi1BNUpTOmFjY190Y2dh,VENHQS1PUi1BNUpUOmFjY190Y2dh,VENHQS1PUi1BNUpVOmFjY190Y2dh,VENHQS1PUi1BNUpWOmFjY190Y2dh,VENHQS1PUi1BNUpXOmFjY190Y2dh,VENHQS1PUi1BNUpYOmFjY190Y2dh,VENHQS1PUi1BNUpaOmFjY190Y2dh,VENHQS1PUi1BNUswOmFjY190Y2dh,VENHQS1PUi1BNUsxOmFjY190Y2dh,VENHQS1PUi1BNUsyOmFjY190Y2dh,VENHQS1PUi1BNUszOmFjY190Y2dh,VENHQS1PUi1BNUs0OmFjY190Y2dh,VENHQS1PUi1BNUs1OmFjY190Y2dh,VENHQS1PUi1BNUs2OmFjY190Y2dh,VENHQS1PUi1BNUs4OmFjY190Y2dh,VENHQS1PUi1BNUs5OmFjY190Y2dh,VENHQS1PUi1BNUtCOmFjY190Y2dh,VENHQS1PUi1BNUtPOmFjY190Y2dh,VENHQS1PUi1BNUtQOmFjY190Y2dh,VENHQS1PUi1BNUtROmFjY190Y2dh,VENHQS1PUi1BNUtTOmFjY190Y2dh,VENHQS1PUi1BNUtUOmFjY190Y2dh,VENHQS1PUi1BNUtVOmFjY190Y2dh,VENHQS1PUi1BNUtWOmFjY190Y2dh,VENHQS1PUi1BNUtXOmFjY190Y2dh,VENHQS1PUi1BNUtYOmFjY190Y2dh,VENHQS1PUi1BNUtZOmFjY190Y2dh,VENHQS1PUi1BNUtaOmFjY190Y2dh,VENHQS1PUi1BNUwxOmFjY190Y2dh,VENHQS1PUi1BNUwyOmFjY190Y2dh,VENHQS1PUi1BNUwzOmFjY190Y2dh,VENHQS1PUi1BNUw0OmFjY190Y2dh,VENHQS1PUi1BNUw1OmFjY190Y2dh,VENHQS1PUi1BNUw2OmFjY190Y2dh,VENHQS1PUi1BNUw4OmFjY190Y2dh,VENHQS1PUi1BNUw5OmFjY190Y2dh,VENHQS1PUi1BNUxBOmFjY190Y2dh,VENHQS1PUi1BNUxCOmFjY190Y2dh,VENHQS1PUi1BNUxDOmFjY190Y2dh,VENHQS1PUi1BNUxEOmFjY190Y2dh,VENHQS1PUi1BNUxFOmFjY190Y2dh,VENHQS1PUi1BNUxGOmFjY190Y2dh,VENHQS1PUi1BNUxHOmFjY190Y2dh,VENHQS1PUi1BNUxIOmFjY190Y2dh,VENHQS1PUi1BNUxJOmFjY190Y2dh,VENHQS1PUi1BNUxKOmFjY190Y2dh,VENHQS1PUi1BNUxLOmFjY190Y2dh,VENHQS1PUi1BNUxMOmFjY190Y2dh,VENHQS1PUi1BNUxOOmFjY190Y2dh,VENHQS1PUi1BNUxPOmFjY190Y2dh,VENHQS1PUi1BNUxQOmFjY190Y2dh,VENHQS1PUi1BNUxSOmFjY190Y2dh,VENHQS1PUi1BNUxTOmFjY190Y2dh,VENHQS1PUi1BNUxUOmFjY190Y2dh,VENHQS1PVS1BNVBJOmFjY190Y2dh,VENHQS1QNi1BNU9IOmFjY190Y2dh,VENHQS1QQS1BNVlHOmFjY190Y2dh,VENHQS1QSy1BNUg5OmFjY190Y2dh,VENHQS1QSy1BNUhBOmFjY190Y2dh,VENHQS1QSy1BNUhCOmFjY190Y2dh,VENHQS1QSy1BNUhDOmFjY190Y2dh";
             assert.equal(
@@ -51,7 +51,7 @@ describe('oncoprint', function() {
             // = false
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&show_samples=false&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic');
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -62,7 +62,7 @@ describe('oncoprint', function() {
 
         it("should start in sample mode if URL paramter show_samples=true", ()=>{
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic');
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -73,7 +73,7 @@ describe('oncoprint', function() {
 
         it("should start successfully if a specified clinical track doesnt exist", ()=>{
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&clinicallist=asodifjpaosidjfa');
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -90,7 +90,7 @@ describe('oncoprint', function() {
 
         it("should start successfully if a specified clinical track doesnt exist, but others do", ()=>{
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&clinicallist=CANCER_TYPE,asodifjpaosidjfa,CANCER_TYPE_DETAILED,FRACTION_GENOME_ALTERED,aposdijfpoai,MUTATION_COUNT');
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -131,7 +131,7 @@ describe('oncoprint', function() {
 
             it("should be active (pressed) if, and only if, the oncoprint is clustered by the profile selected in the dropdown", ()=>{
                 browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=blca_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=blca_tcga_pub_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=blca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=blca_tcga_pub_gistic&show_samples=false&heatmap_track_groups=blca_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bblca_tcga_pub_rppa_Zscores%2CKRAS%2CNRAS%2CBRAF');
-                waitForOncoprint(10000);
+                waitForOncoprint(ONCOPRINT_TIMEOUT);
 
                 // open heatmap menu
                 $(heatmapButtonSelector).click();
@@ -177,7 +177,7 @@ describe('oncoprint', function() {
 
         before(()=>{
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_cna_seq&gene_list=FBXW7&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations');
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             mutationColorMenuButton = "#mutationColorDropdown";
             mutationColorMenuDropdown = "div.oncoprint__controls__mutation_color_menu";
@@ -199,7 +199,7 @@ describe('oncoprint', function() {
             // set threshold 1
             browser.execute(function() { resultsViewOncoprint.setAnnotateCBioPortalInputValue("1"); });
             browser.pause(100); // give time to take effect
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             let legendText = getTextInOncoprintLegend();
             assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cbio count annotates inframe mutations");
             assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cbio count annotates missense mutations");
@@ -214,7 +214,7 @@ describe('oncoprint', function() {
             // set threshold 1
             browser.execute(function() { resultsViewOncoprint.setAnnotateCOSMICInputValue("1"); });
             browser.pause(100); // give time to take effect
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cosmic count annotates inframe mutations");
             assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cosmic count annotates missense mutations");
@@ -225,7 +225,7 @@ describe('oncoprint', function() {
     describe("other mutation", ()=>{
         it("should have Other mutations in oncoprint", ()=>{
             browser.url(CBIOPORTAL_URL+'/results?Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=prad_fhcrc_cnaseq&gene_list=YEATS2&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_fhcrc_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_fhcrc_cna&cancer_study_list=prad_fhcrc');
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             const legendText = getTextInOncoprintLegend();
             assert(legendText.indexOf("Other Mutation") > -1);
@@ -254,7 +254,7 @@ describe('oncoprint', function() {
             browser.waitForEnabled('[data-test="queryButton"]', 30000);
             browser.click('[data-test="queryButton"]');
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             // All patient/samples with germline mutation should be displayed first
             // ====================================================================
@@ -272,7 +272,7 @@ describe('oncoprint', function() {
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             // check if samples are sorted
             assert.equal(
@@ -282,7 +282,7 @@ describe('oncoprint', function() {
         });
         it('should hide germline mutations correctly', ()=>{
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=ov_tcga_pub&case_set_id=ov_tcga_pub_cna_seq&data_priority=0&gene_list=BRCA1&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&tab_index=tab_visualize`);
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             let oncoprintDivText = browser.getText("#oncoprintDiv");
             let legendText = getTextInOncoprintLegend();
             assert(legendText.indexOf("Germline Mutation") > -1, "by default, there are germline mutations");
@@ -292,7 +292,7 @@ describe('oncoprint', function() {
             const hideGermlineButton = 'input[data-test="HideGermline"]';
             browser.waitForVisible(hideGermlineButton, 1000);
             browser.click(hideGermlineButton);
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText("#oncoprintDiv");
             assert(legendText.indexOf("Germline Mutation") === -1, "now, there are no germline mutations");
@@ -301,7 +301,7 @@ describe('oncoprint', function() {
             setOncoprintMutationsMenuOpen(true);
             browser.waitForVisible(hideGermlineButton, 1000);
             browser.click(hideGermlineButton);
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText("#oncoprintDiv");
             assert(legendText.indexOf("Germline Mutation") > -1, "germline mutations are back now");
@@ -309,7 +309,7 @@ describe('oncoprint', function() {
         });
         it('should not color by germline mutations, if that setting is chosen', ()=>{
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=ov_tcga_pub&case_set_id=ov_tcga_pub_cna_seq&data_priority=0&gene_list=BRCA1&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&tab_index=tab_visualize`);
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             let legendText = getTextInOncoprintLegend();
             let oncoprintDivText = browser.getText("#oncoprintDiv");
             assert(legendText.indexOf("Germline Mutation") > -1, "by default, there are germline mutations");
@@ -319,7 +319,7 @@ describe('oncoprint', function() {
             const colorByGermline = 'input[data-test="ColorByGermline"]';
             browser.waitForVisible(colorByGermline, 1000);
             browser.click(colorByGermline);
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText("#oncoprintDiv");
             assert(legendText.indexOf("Germline Mutation") === -1, "now, there are no germline mutations");
@@ -328,7 +328,7 @@ describe('oncoprint', function() {
             setOncoprintMutationsMenuOpen(true);
             browser.waitForVisible(colorByGermline, 1000);
             browser.click(colorByGermline);
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText("#oncoprintDiv");
             assert(legendText.indexOf("Germline Mutation") > -1, "germline mutations are back now");
@@ -356,7 +356,7 @@ describe('oncoprint', function() {
 
             function doCustomCaseOrderTest() {
                 // now we're on results page
-                waitForOncoprint(10000);
+                waitForOncoprint(ONCOPRINT_TIMEOUT);
                 // open sort menu
                 browser.click('#sortDropdown');
                 browser.waitForVisible('[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]');
@@ -372,7 +372,7 @@ describe('oncoprint', function() {
                 $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
                 $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
                 $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
-                waitForOncoprint(10000);
+                waitForOncoprint(ONCOPRINT_TIMEOUT);
 
                 assert.equal(
                     browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -463,7 +463,7 @@ describe('oncoprint', function() {
             browser.waitForEnabled('[data-test="queryButton"]', 30000);
             browser.click('[data-test="queryButton"]');
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -475,7 +475,7 @@ describe('oncoprint', function() {
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -507,7 +507,7 @@ describe('oncoprint', function() {
             browser.waitForEnabled('[data-test="queryButton"]', 30000);
             browser.click('[data-test="queryButton"]');
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -519,7 +519,7 @@ describe('oncoprint', function() {
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -532,7 +532,7 @@ describe('oncoprint', function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%20MDM2%20MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4');
             $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             // first get rid of the Profiled track
             var profiledElements = getNthTrackOptionsElements(5);
@@ -551,7 +551,7 @@ describe('oncoprint', function() {
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -562,7 +562,7 @@ describe('oncoprint', function() {
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForVisible(10000);
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
 
             var overallSurvivalElements = getNthTrackOptionsElements(4);
@@ -614,7 +614,7 @@ describe('oncoprint', function() {
             }
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -682,7 +682,7 @@ describe('oncoprint', function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true');
             $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             // first get rid of the Profiled track
             var profiledElements = getNthTrackOptionsElements(5);
@@ -754,7 +754,7 @@ describe('oncoprint', function() {
             $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForExist(10000);
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -767,7 +767,7 @@ describe('oncoprint', function() {
         const checkboxSelector = '.oncoprintContainer .oncoprint__controls input[type="checkbox"][data-test="onlyShowClinicalLegendsForAltered"]';
         it("only shows legend items for cases which are altered", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=coadread_tcga_pub%3ATCGA-AA-A00D-01%2Bcoadread_tcga_pub%3ATCGA-A6-2677-01&gene_list=BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&show_samples=false&clinicallist=SEX`);
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             let legendText = getTextInOncoprintLegend();
             assert(legendText.indexOf("Male") > -1, "a patient is male");
             assert(legendText.indexOf("Female") > -1, "a patient is female");
@@ -794,7 +794,7 @@ describe('oncoprint', function() {
         });
         it("does not show a legend when no altered cases", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=coadread_tcga_pub%3ATCGA-A6-2677-01&gene_list=BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&show_samples=false&clinicallist=SEX`);
-            waitForOncoprint(10000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             let legendText = getTextInOncoprintLegend();
             assert(legendText.indexOf("Sex") > -1, "Sex legend is shown (in patient mode)");
             assert(legendText.indexOf("Female") > -1, "Female item is shown (in patient mode)");
