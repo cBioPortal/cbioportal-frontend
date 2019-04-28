@@ -25,7 +25,7 @@ import {
 import {
     getCivicVariants, getCivicGenes
 } from "shared/lib/CivicUtils";
-import {Query, default as OncoKbAPI, Gene as OncoKbGene} from "shared/api/generated/OncoKbAPI";
+import {Query, default as OncoKbAPI, Gene as OncoKbGene, CancerGene} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
 import {keywordToCosmic, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
@@ -548,23 +548,9 @@ export function fetchMutationalSignatureMetaData(): IMutationalSignatureMeta[]{
     return require('../../../resources/mutsigmetadata.json');
 }
 
-export async function fetchOncoKbAnnotatedGenes(client: OncoKbAPI = oncokbClient): Promise<{[entrezGeneId:number]:boolean}>
+export async function fetchOncoKbCancerGenes(client: OncoKbAPI = oncokbClient): Promise<CancerGene[]>
 {
-    return _.reduce(await client.genesGetUsingGET({}), (map:{[entrezGeneId:number]:boolean}, next:OncoKbGene)=>{
-            map[next.entrezGeneId] = true;
-            return map;
-        }, {});
-}
-
-export async function fetchOncoKbAnnotatedGenesSuppressErrors(client: OncoKbAPI = oncokbClient): Promise<{[entrezGeneId:number]:boolean}|Error>
-{
-    // we want to catch the error and fail silently with an empty result set,
-    // because we don't want other MobXPromises depending on this data to fail in case of an error
-    try {
-        return await fetchOncoKbAnnotatedGenes(client);
-    } catch (e) {
-        return new Error();
-    }
+    return await client.utilsCancerGeneListGetUsingGET({});
 }
 
 export async function fetchOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
