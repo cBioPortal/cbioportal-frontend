@@ -18,6 +18,7 @@ import classnames from 'classnames';
 import OncoKbTreatmentTable from "./OncoKbTreatmentTable";
 import ReferenceList from "./ReferenceList";
 import SummaryWithRefs from "./SummaryWithRefs";
+import OncoKBSuggestAnnotationLinkout from "shared/components/annotation/oncokb/OncoKBSuggestAnnotationLinkout";
 
 type OncoKbCardPropsBase = {
     title: string;
@@ -47,8 +48,8 @@ export type OncoKbTreatment = {
 }
 
 export type OncoKbCardProps =
-    (OncoKbCardPropsBase & { geneNotExist:false}) |
-    (Partial<OncoKbCardPropsBase> & {geneNotExist: true});
+    (OncoKbCardPropsBase & { geneNotExist:boolean; isCancerGene:boolean}) |
+    (Partial<OncoKbCardPropsBase> & {geneNotExist: boolean; isCancerGene: boolean});
 
 export const LEVEL_ICON_STYLE = {
     backgroundImage: `url(${require('../images/levels_colors_v2_09302016.png')})`
@@ -170,7 +171,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                                                 <p>{this.props.geneSummary}</p>
                                                 <p>
                                                     {
-                                                        this.insertLink(this.props.variantSummary, {
+                                                        this.insertLink(this.props.variantSummary!, {
                                                             keyword: 'Chang et al. 2016',
                                                             link: getNCBIlink('/pubmed/26619011')
                                                         })
@@ -178,9 +179,9 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                                                 </p>
                                                 <p style={{marginBottom: 0}}>{this.props.tumorTypeSummary}</p>
                                             </div>
-                                            <If condition={this.props.treatments.length > 0}>
-                                                <OncoKbTreatmentTable pmidData={this.props.pmidData}
-                                                                      treatments={this.props.treatments}/>
+                                            <If condition={this.props.treatments!.length > 0}>
+                                                <OncoKbTreatmentTable pmidData={this.props.pmidData!}
+                                                                      treatments={this.props.treatments!}/>
                                             </If>
                                         </div>
                                     </If>
@@ -189,14 +190,14 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                                              style={{maxHeight: 200, overflowY: 'auto'}}>
                                             <If condition={this.props.biologicalSummary !== undefined && this.props.biologicalSummary.length > 0}>
                                                 <Then>
-                                                    <SummaryWithRefs content={this.props.biologicalSummary} type={'tooltip'} pmidData={this.props.pmidData}/>
+                                                    <SummaryWithRefs content={this.props.biologicalSummary} type={'tooltip'} pmidData={this.props.pmidData!}/>
                                                 </Then>
                                                 <Else>
                                                     <If condition={this.props.mutationEffectCitations && (this.props.mutationEffectCitations.abstracts.length > 0 || this.props.mutationEffectCitations.pmids.length > 0)}>
                                                         <Then>
                                                             <ReferenceList pmidData={this.props.pmidData}
-                                                                           pmids={this.props.mutationEffectCitations.pmids.map((pmid) => Number(pmid))}
-                                                                           abstracts={this.props.mutationEffectCitations.abstracts}/>
+                                                                           pmids={this.props.mutationEffectCitations!.pmids.map((pmid) => Number(pmid))}
+                                                                           abstracts={this.props.mutationEffectCitations!.abstracts}/>
                                                         </Then>
                                                         <Else>
                                                             <span>Mutation effect information is not available.</span>
@@ -237,12 +238,18 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                                 </div>
                             </span>
                     )}
-                    {this.props.geneNotExist && (
-                            <div className={mainStyles["additional-info"]}>There is currently no information about this gene in OncoKB.</div>
+                    {!this.props.isCancerGene && (
+                        <div className={mainStyles["additional-info"]}>There is currently no information about this gene
+                            in OncoKB.</div>
+                    )}
+                    {this.props.geneNotExist && this.props.isCancerGene && (
+                        <div className={mainStyles["additional-info"]}>
+                            <OncoKBSuggestAnnotationLinkout gene={this.props.gene!} />
+                        </div>
                     )}
 
                     <div className={mainStyles.footer}>
-                        <If condition={this.oncokbLinkOut===undefined}>
+                        <If condition={this.oncokbLinkOut === undefined}>
                             <Then>
                                 {oncokbLogo}
                             </Then>

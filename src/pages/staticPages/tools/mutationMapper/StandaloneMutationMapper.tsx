@@ -23,7 +23,7 @@ export default class StandaloneMutationMapper extends MutationMapper<IStandalone
         return (
             <StandaloneMutationTable
                 uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
-                oncoKbAnnotatedGenes={this.props.store.oncoKbAnnotatedGenes}
+                oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
                 indexedVariantAnnotations={this.props.store.indexedVariantAnnotations}
                 genomeNexusCache={this.props.genomeNexusCache}
                 oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}

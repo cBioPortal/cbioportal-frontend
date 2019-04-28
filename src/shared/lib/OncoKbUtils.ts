@@ -22,9 +22,9 @@ const ONCOGENIC_CLASS_NAMES:{[oncogenic:string]: string} = {
 // oncogenic value => score
 // (used for sorting purposes)
 const ONCOGENIC_SCORE:{[oncogenic:string]: number} = {
-    'Unknown': 1,
-    'Inconclusive': 1,
-    'Likely Neutral': 3,
+    'Unknown': 0,
+    'Inconclusive': 0,
+    'Likely Neutral': 0,
     'Predicted Oncogenic': 5,
     'Likely Oncogenic': 5,
     'Oncogenic': 5
@@ -260,15 +260,9 @@ export function oncogenicImageClassNames(oncogenic: string,
     return classNames;
 }
 
-export function calcOncogenicScore(oncogenic:string, isVus:boolean)
+export function calcOncogenicScore(oncogenic:string)
 {
-    let score:number = ONCOGENIC_SCORE[oncogenic] || 0;
-
-    if (isVus && score === 0) {
-        score += 0.5;
-    }
-
-    return score;
+    return ONCOGENIC_SCORE[oncogenic] || 0;
 }
 
 export function calcSensitivityLevelScore(level:string)
