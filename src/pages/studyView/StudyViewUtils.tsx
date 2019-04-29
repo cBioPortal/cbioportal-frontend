@@ -18,7 +18,8 @@ import {
     ClinicalDataTypeEnum,
     Datalabel,
     StudyViewFilterWithSampleIdentifierFilters,
-    StudyWithSamples
+    StudyWithSamples,
+    StudyViewPageTabKeyEnum
 } from "pages/studyView/StudyViewPageStore";
 import {
     ChartMeta,
@@ -1397,4 +1398,13 @@ export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, n
         }
     }
     return getClinicalDataCountWithColorByClinicalDataCount(_.values(dataCountSet));
+}
+
+export function getStudyViewTabId(pathname:string) {
+    const match = pathname.match(/study\/([^\/]+)/);
+    if (match) {
+        return match[1] as StudyViewPageTabKeyEnum;
+    } else {
+        return undefined;
+    }
 }
