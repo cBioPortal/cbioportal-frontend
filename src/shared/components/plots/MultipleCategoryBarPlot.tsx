@@ -293,7 +293,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
 
     @computed get chartDomainPadding() {
         return {
-            [this.countAxis]:this.countAxisDomainPadding,
+            [this.countAxis]: this.props.percentage ? 0 : this.countAxisDomainPadding,
             [this.categoryAxis]:this.categoryAxisDomainPadding + this.additionalPadding
         };
     }
