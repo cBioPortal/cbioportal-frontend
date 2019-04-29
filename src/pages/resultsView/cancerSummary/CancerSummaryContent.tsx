@@ -18,10 +18,10 @@ import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWi
 
 export const OrderedAlterationLabelMap: Record<keyof IAlterationCountMap, string> = {
     multiple: "Multiple Alterations",
-    protExpressionDown: "Protein Low",
-    protExpressionUp: "Protein High",
-    mrnaExpressionDown: "mRNA Low",
-    mrnaExpressionUp: "mRNA High",
+    protExpressionLow: "Protein Low",
+    protExpressionHigh: "Protein High",
+    mrnaExpressionLow: "mRNA Low",
+    mrnaExpressionHigh: "mRNA High",
     hetloss: "Shallow Deletion",
     homdel: "Deep Deletion",
     gain: "Gain",
@@ -37,10 +37,10 @@ const alterationToColor: Record<keyof IAlterationCountMap, string> = {
     hetloss: "#8fd8d8",
     gain: "rgb(255,182,193)",
     fusion: "#8B00C9",
-    mrnaExpressionUp: "#FF989A",
-    mrnaExpressionDown: "#529AC8",
-    protExpressionUp: "#FF989A",
-    protExpressionDown: "#E0FFFF",
+    mrnaExpressionHigh: "#FF989A",
+    mrnaExpressionLow: "#529AC8",
+    protExpressionHigh: "#FF989A",
+    protExpressionLow: "#E0FFFF",
     multiple: "#666"
 };
 
@@ -52,10 +52,10 @@ export interface IAlterationCountMap {
     hetloss: number;
     gain: number;
     fusion: number;
-    mrnaExpressionUp: number;
-    mrnaExpressionDown: number;
-    protExpressionUp: number;
-    protExpressionDown: number;
+    mrnaExpressionHigh: number;
+    mrnaExpressionLow: number;
+    protExpressionHigh: number;
+    protExpressionLow: number;
     multiple: number;
 };
 
