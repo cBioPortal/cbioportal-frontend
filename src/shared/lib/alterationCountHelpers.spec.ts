@@ -216,10 +216,10 @@ describe('alterationCountHelpers', () => {
                         "hetloss": 0,
                         "gain": 0,
                         "fusion": 0,
-                        "mrnaExpressionUp": 0,
-                        "mrnaExpressionDown": 0,
-                        "protExpressionUp": 0,
-                        "protExpressionDown": 0,
+                        "mrnaExpressionHigh": 0,
+                        "mrnaExpressionLow": 0,
+                        "protExpressionHigh": 0,
+                        "protExpressionLow": 0,
                         "multiple": 0
                     },
                     "alteredSampleCount": 2,
@@ -271,10 +271,10 @@ describe('alterationCountHelpers', () => {
                         "hetloss": 0,
                         "gain": 0,
                         "fusion": 1,
-                        "mrnaExpressionUp": 0,
-                        "mrnaExpressionDown": 0,
-                        "protExpressionUp": 0,
-                        "protExpressionDown": 0,
+                        "mrnaExpressionHigh": 0,
+                        "mrnaExpressionLow": 0,
+                        "protExpressionHigh": 0,
+                        "protExpressionLow": 0,
                         "multiple": 0
                     },
                     "alteredSampleCount": 5,
@@ -311,10 +311,10 @@ describe('alterationCountHelpers', () => {
                         "hetloss": 0,
                         "gain": 0,
                         "fusion": 0,
-                        "mrnaExpressionUp": 0,
-                        "mrnaExpressionDown": 0,
-                        "protExpressionUp": 0,
-                        "protExpressionDown": 0,
+                        "mrnaExpressionHigh": 0,
+                        "mrnaExpressionLow": 0,
+                        "protExpressionHigh": 0,
+                        "protExpressionLow": 0,
                         "multiple": 1
                     },
                     "alteredSampleCount": 3,
@@ -332,7 +332,7 @@ describe('alterationCountHelpers', () => {
                 {
                     "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
                     "molecularProfileAlterationType": "MUTATION_EXTENDED",
-                    "alterationSubType": "down",
+                    "alterationSubType": "low",
                     "alterationType": "MRNA_EXPRESSION"
                 },
             ];
@@ -340,15 +340,15 @@ describe('alterationCountHelpers', () => {
             alterationsBySampleId["VzAxMjpjaG9sX251c18yMDEy"] = [
                 {
                     "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
-                    "alterationSubType": "up",
+                    "alterationSubType": "high",
                     "alterationType": "MRNA_EXPRESSION"
                 }
             ];
 
             const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId);
 
-            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.mrnaExpressionDown, 1);
-            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.mrnaExpressionUp, 1);
+            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.mrnaExpressionLow, 1);
+            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.mrnaExpressionHigh, 1);
 
         });
 
@@ -358,7 +358,7 @@ describe('alterationCountHelpers', () => {
                 {
                     "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
                     "molecularProfileAlterationType": "MUTATION_EXTENDED",
-                    "alterationSubType": "down",
+                    "alterationSubType": "low",
                     "alterationType": "PROTEIN_LEVEL"
                 },
             ];
@@ -366,15 +366,15 @@ describe('alterationCountHelpers', () => {
             alterationsBySampleId["VzAxMjpjaG9sX251c18yMDEy"] = [
                 {
                     "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
-                    "alterationSubType": "up",
+                    "alterationSubType": "high",
                     "alterationType": "PROTEIN_LEVEL"
                 }
             ];
 
             const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId);
 
-            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.protExpressionDown, 1);
-            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.protExpressionUp, 1);
+            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.protExpressionLow, 1);
+            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.protExpressionHigh, 1);
 
         });
 
