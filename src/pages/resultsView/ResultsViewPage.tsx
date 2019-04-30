@@ -471,6 +471,5 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         }
     }
 
-
 }
 
