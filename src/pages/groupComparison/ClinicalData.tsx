@@ -26,6 +26,7 @@ import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCateg
 import { STUDY_VIEW_CONFIG } from "pages/studyView/StudyViewConfig";
 import ReactSelect from "react-select";
 import { MakeMobxView } from "shared/components/MobxView";
+import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 
 export interface IClinicalDataProps {
     store: GroupComparisonStore
@@ -101,22 +102,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                 return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
                 let content: any = [];
-                if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE &&
-                    (selectionInfo.overlappingSamples.length !== 0 || selectionInfo.overlappingPatients.length !== 0)
-                ) {
-                    content.push(
-                        <div className={'alert alert-warning'}>
-                            <i
-                                className="fa fa-md fa-exclamation-triangle"
-                                style={{
-                                    color: "#000000",
-                                    marginRight:5
-                                }}
-                            />
-                            {`Your selected groups overlap in ${caseCounts(selectionInfo.overlappingSamples.length, selectionInfo.overlappingPatients.length, " and ")}.`}
-                        </div>
-                    );
-                }
+                content.push(<OverlapExclusionIndicator store={this.props.store}/>);
                 content.push(this.overlapUI.component)
                 return content;
             }
