@@ -63,7 +63,7 @@ export enum OverlapStrategy {
 export default class GroupComparisonStore {
 
     @observable private _currentTabId:GroupComparisonTab|undefined = undefined;
-    @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.INCLUDE;
+    @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.EXCLUDE;
     @observable private sessionId:string;
     private unsavedGroups = observable.shallowArray<SessionGroupData>([]);
 
@@ -186,7 +186,7 @@ export default class GroupComparisonStore {
     });
 
     readonly availableGroups = remoteData<OverlapFilteredComparisonGroup[]>({
-        await:()=>[this._selectionInfo, this._originalGroups],
+        await:()=>[this._selectionInfo, this._originalGroups, this._originalGroupsOverlapRemoved],
         invoke:()=>{
             const selectionInfo = this._selectionInfo.result!;
             let ret:OverlapFilteredComparisonGroup[];
@@ -199,7 +199,7 @@ export default class GroupComparisonStore {
                     break;
                 case OverlapStrategy.EXCLUDE:
                 default:
-                    ret = getOverlapFilteredGroups(this._originalGroups.result!, selectionInfo);
+                    ret = this._originalGroupsOverlapRemoved.result!;
                     break;
             }
             return Promise.resolve(ret);
@@ -211,7 +211,7 @@ export default class GroupComparisonStore {
         invoke:()=>Promise.resolve(this.availableGroups.result!.filter(group=>this.isGroupActive(group)))
     });
 
-    readonly filteredAvailableGroups = remoteData<OverlapFilteredComparisonGroup[]>({
+    readonly _originalGroupsOverlapRemoved = remoteData<OverlapFilteredComparisonGroup[]>({
         await:()=>[this._selectionInfo, this._originalGroups],
         invoke:()=>{
             const selectionInfo = this._selectionInfo.result!;
@@ -221,11 +221,15 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly filteredActiveGroups = remoteData<OverlapFilteredComparisonGroup[]>({
-        await:()=>[this.filteredAvailableGroups],
-        invoke:()=>Promise.resolve(this.filteredAvailableGroups.result!.filter(group=>this.isGroupActive(group)))
+    readonly _activeGroupsOverlapRemoved = remoteData<OverlapFilteredComparisonGroup[]>({
+        await:()=>[this._originalGroupsOverlapRemoved],
+        invoke:()=>Promise.resolve(this._originalGroupsOverlapRemoved.result!.filter(group=>this.isGroupActive(group)))
     });
 
+    readonly _activeGroupsNotOverlapRemoved = remoteData({
+        await:()=>[this._originalGroups],
+        invoke:()=>Promise.resolve(this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid))) // selected not active because overlap-removed empty groups are never active
+    });
 
     readonly enrichmentsGroup1 = remoteData({
         await:()=>[this.activeGroups],
@@ -295,7 +299,7 @@ export default class GroupComparisonStore {
         );
     }
 
-    private isGroupSelected(uid:string) {
+    public isGroupSelected(uid:string) {
         if (!this._selectedGroupIds.has(uid)) {
             return true; // selected by default, until user toggles and thus adds a value to the map
         } else {
@@ -341,10 +345,10 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly filteredActiveSamples = remoteData({
-        await:()=>[this.sampleSet, this.filteredActiveGroups],
+    readonly activeSamplesOverlapRemoved = remoteData({
+        await:()=>[this.sampleSet, this._activeGroupsOverlapRemoved],
         invoke:()=>{
-            const activeSampleIdentifiers = getSampleIdentifiers(this.filteredActiveGroups.result!);
+            const activeSampleIdentifiers = getSampleIdentifiers(this._activeGroupsOverlapRemoved.result!);
             const sampleSet = this.sampleSet.result!;
             return Promise.resolve(
                 activeSampleIdentifiers.map(sampleIdentifier=>sampleSet.get(sampleIdentifier)!)
@@ -359,10 +363,10 @@ export default class GroupComparisonStore {
         )
     });
 
-    readonly filteredActivePatientKeys = remoteData({
-        await:()=>[this.filteredActiveSamples],
+    readonly activePatientKeysOverlapRemoved = remoteData({
+        await:()=>[this.activeSamplesOverlapRemoved],
         invoke:()=>Promise.resolve(
-            _.uniq(this.filteredActiveSamples.result!.map(s=>s.uniquePatientKey))
+            _.uniq(this.activeSamplesOverlapRemoved.result!.map(s=>s.uniquePatientKey))
         )
     });
 
@@ -712,12 +716,12 @@ export default class GroupComparisonStore {
 
     public readonly patientToAnalysisGroups = remoteData({
         await: () => [
-            this.filteredAvailableGroups,
+            this._originalGroupsOverlapRemoved,
             this.sampleSet
         ],
         invoke: () => {
             let sampleSet = this.sampleSet.result!;
-            let patientToAnalysisGroups = _.reduce(this.filteredAvailableGroups.result, (acc, next) => {
+            let patientToAnalysisGroups = _.reduce(this._originalGroupsOverlapRemoved.result, (acc, next) => {
                 next.studies.forEach(study=>{
                     const studyId = study.id;
                     study.samples.forEach(sampleId => {
@@ -737,12 +741,12 @@ export default class GroupComparisonStore {
 
     readonly survivalClinicalDataExists = remoteData<boolean>({
         await: () => [
-            this.filteredActiveSamples
+            this.activeSamplesOverlapRemoved
         ],
         invoke: async () => {
             const filter: ClinicalDataMultiStudyFilter = {
                 attributeIds: SURVIVAL_CHART_ATTRIBUTES,
-                identifiers: this.filteredActiveSamples.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
+                identifiers: this.activeSamplesOverlapRemoved.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
             };
             const count = await client.fetchClinicalDataUsingPOSTWithHttpInfo({
                 clinicalDataType: "PATIENT",
@@ -761,12 +765,12 @@ export default class GroupComparisonStore {
 
     readonly survivalClinicalData = remoteData<ClinicalData[]>({
         await: () => [
-            this.filteredActiveSamples
+            this.activeSamplesOverlapRemoved
         ],
         invoke: () => {
             const filter: ClinicalDataMultiStudyFilter = {
                 attributeIds: SURVIVAL_CHART_ATTRIBUTES,
-                identifiers: this.filteredActiveSamples.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
+                identifiers: this.activeSamplesOverlapRemoved.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
             };
             return client.fetchClinicalDataUsingPOST({
                 clinicalDataType: 'PATIENT',
@@ -787,22 +791,22 @@ export default class GroupComparisonStore {
     readonly overallPatientSurvivals = remoteData<PatientSurvival[]>({
         await: () => [
             this.survivalClinicalDataGroupByUniquePatientKey,
-            this.filteredActivePatientKeys,
+            this.activePatientKeysOverlapRemoved,
         ],
         invoke: async () => {
             return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result,
-                this.filteredActivePatientKeys.result!, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
+                this.activePatientKeysOverlapRemoved.result!, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
         }
     }, []);
 
     readonly diseaseFreePatientSurvivals = remoteData<PatientSurvival[]>({
         await: () => [
             this.survivalClinicalDataGroupByUniquePatientKey,
-            this.filteredActivePatientKeys,
+            this.activePatientKeysOverlapRemoved,
         ],
         invoke: async () => {
             return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result,
-                this.filteredActivePatientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred')
+                this.activePatientKeysOverlapRemoved.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred')
         }
     }, []);
 
@@ -814,12 +818,12 @@ export default class GroupComparisonStore {
     });
 
     public readonly clinicalDataEnrichments = remoteData({
-        await: () => [this.filteredActiveGroups],
+        await: () => [this._activeGroupsOverlapRemoved],
         invoke: () => {
             if (this.clinicalTabGrey) {
                 return Promise.resolve([]);
             }
-            let groups: Group[] = _.map(this.filteredActiveGroups.result, group => {
+            let groups: Group[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
                 const sampleIdentifiers = [];
                 for (const studySpec of group.studies) {
                     const studyId = studySpec.id;
