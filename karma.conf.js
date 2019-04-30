@@ -12,16 +12,16 @@ var path = require('path');
 
 // code which should not impact coverage reports should be listed
 // in exclude
-webpackConfig.module.rules.push({
-        test: /.tsx?$/,
-        include: path.resolve(__dirname, 'src/'),
-        exclude: [
-            /.spec./,
-            /\/shared\/api\//
-        ],
-        enforce:'post',
-        loader: 'istanbul-instrumenter-loader'
-});
+// webpackConfig.module.rules.push({
+//         test: /.tsx?$/,
+//         include: path.resolve(__dirname, 'src/'),
+//         exclude: [
+//             /.spec./,
+//             /\/shared\/api\//
+//         ],
+//         enforce:'post',
+//         loader: 'istanbul-instrumenter-loader'
+// });
 
 //this will be used by in test context to load corresponding spec files if there is a grep passed (or all if not)
 webpackConfig.plugins.push(new webpack.DefinePlugin({
