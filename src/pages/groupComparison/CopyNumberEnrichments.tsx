@@ -8,9 +8,7 @@ import {MolecularProfile} from "../../shared/api/generated/CBioPortalAPI";
 import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import {ENRICHMENTS_NOT_2_GROUPS_MSG, getNumSamples} from "./GroupComparisonUtils";
-import {AlterationEnrichmentTableColumnType} from "../resultsView/enrichments/AlterationEnrichmentsTable";
-import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
+import {getNumSamples, MakeEnrichmentsTabUI} from "./GroupComparisonUtils";
 
 export interface ICopyNumberEnrichmentsProps {
     store: GroupComparisonStore
@@ -23,29 +21,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
         this.props.store.setCopyNumberEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeMobxView({
-        await:()=>{
-            if (this.props.store.activeGroups.isComplete &&
-                this.props.store.activeGroups.result.length !== 2) {
-                // dont bother loading data for and computing enrichments UI if its not valid situation for it
-                return [this.props.store.activeGroups];
-            } else {
-                return [this.props.store.activeGroups, this.enrichmentsUI];
-            }
-        },
-        render:()=>{
-            if (this.props.store.activeGroups.result!.length !== 2) {
-                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeGroups.result!.length > 2)}</span>;
-            } else {
-                const content:any = [];
-                content.push(<OverlapExclusionIndicator store={this.props.store}/>);
-                content.push(this.enrichmentsUI.component);
-                return content;
-            }
-        },
-        renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
-        renderError:()=><ErrorMessage/>
-    });
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI);
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
