@@ -45,16 +45,16 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     readonly tabUI = MakeMobxView({
         await:()=>{
-            if (this.props.store._activeGroupsNotOverlapRemoved.isComplete &&
-                this.props.store._activeGroupsNotOverlapRemoved.result.length < 2) {
+            if (this.props.store._selectedGroupsNotOverlapRemoved.isComplete &&
+                this.props.store._selectedGroupsNotOverlapRemoved.result.length < 2) {
                 // dont bother loading data for and computing overlap if not enough groups for it
-                return [this.props.store._activeGroupsNotOverlapRemoved];
+                return [this.props.store._selectedGroupsNotOverlapRemoved];
             } else {
-                return [this.props.store._activeGroupsNotOverlapRemoved, this.overlapUI];
+                return [this.props.store._selectedGroupsNotOverlapRemoved, this.overlapUI];
             }
         },
         render:()=>{
-            if (this.props.store._activeGroupsNotOverlapRemoved.result!.length < 2) {
+            if (this.props.store._selectedGroupsNotOverlapRemoved.result!.length < 2) {
                 return <span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
                 return this.overlapUI.component;
@@ -70,19 +70,19 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     }
 
     readonly plotType = remoteData({
-        await:()=>[this.props.store._activeGroupsNotOverlapRemoved],
-        invoke:async()=>(this.props.store._activeGroupsNotOverlapRemoved.result!.length > 3 ? PlotType.Upset : PlotType.Venn)
+        await:()=>[this.props.store._selectedGroupsNotOverlapRemoved],
+        invoke:async()=>(this.props.store._selectedGroupsNotOverlapRemoved.result!.length > 3 ? PlotType.Upset : PlotType.Venn)
     });
 
 
     public readonly sampleGroupsWithCases = remoteData({
         await: () => [
-            this.props.store._activeGroupsNotOverlapRemoved,
+            this.props.store._selectedGroupsNotOverlapRemoved,
             this.props.store.sampleSet,
         ],
         invoke: () => {
             const sampleSet = this.props.store.sampleSet.result!;
-            const groupsWithSamples = _.map(this.props.store._activeGroupsNotOverlapRemoved.result, group => {
+            const groupsWithSamples = _.map(this.props.store._selectedGroupsNotOverlapRemoved.result, group => {
                 let samples = getSampleIdentifiers([group]).map(sampleIdentifier => sampleSet.get({studyId: sampleIdentifier.studyId, sampleId: sampleIdentifier.sampleId}));
                 return {
                     uid: group.uid,
@@ -95,12 +95,12 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     public readonly patientGroupsWithCases = remoteData({
         await: () => [
-            this.props.store._activeGroupsNotOverlapRemoved,
+            this.props.store._selectedGroupsNotOverlapRemoved,
             this.props.store.sampleSet,
         ],
         invoke: () => {
             const sampleSet = this.props.store.sampleSet.result!;
-            const groupsWithPatients = _.map(this.props.store._activeGroupsNotOverlapRemoved.result, group => {
+            const groupsWithPatients = _.map(this.props.store._selectedGroupsNotOverlapRemoved.result, group => {
                 let samples = getSampleIdentifiers([group]).map(sampleIdentifier => sampleSet.get({studyId: sampleIdentifier.studyId, sampleId: sampleIdentifier.sampleId}));
                 return {
                     uid: group.uid,
@@ -112,8 +112,8 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     }, []);
 
     readonly uidToGroup = remoteData({
-        await:()=>[this.props.store._activeGroupsNotOverlapRemoved],
-        invoke:()=>Promise.resolve(_.keyBy(this.props.store._activeGroupsNotOverlapRemoved.result!, group=>group.uid))
+        await:()=>[this.props.store._selectedGroupsNotOverlapRemoved],
+        invoke:()=>Promise.resolve(_.keyBy(this.props.store._selectedGroupsNotOverlapRemoved.result!, group=>group.uid))
     });
 
     readonly plot = MakeMobxView({
