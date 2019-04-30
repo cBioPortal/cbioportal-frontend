@@ -1,31 +1,36 @@
 import * as React from "react";
-import { observer, Observer } from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import autobind from "autobind-decorator";
-import GroupComparisonStore, { OverlapStrategy } from "./GroupComparisonStore";
+import GroupComparisonStore from "./GroupComparisonStore";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import { computed, observable, IReactionDisposer, autorun, action } from "mobx";
-import { SimpleGetterLazyMobXTableApplicationDataStore } from "shared/lib/ILazyMobXTableApplicationDataStore";
+import {action, autorun, computed, IReactionDisposer, observable} from "mobx";
+import {SimpleGetterLazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
 import ClinicalDataEnrichmentsTable from "./ClinicalDataEnrichmentsTable";
 import _ from "lodash";
-import { remoteData } from "shared/api/remoteData";
+import {remoteData} from "shared/api/remoteData";
 import client from "shared/api/cbioportalClientInstance";
-import { IAxisData, IStringAxisData, makeBoxScatterPlotData, IBoxScatterPlotPoint, INumberAxisData, isNumberData, isStringData, boxPlotTooltip, mutationSummaryToAppearance, MutationSummary } from "pages/resultsView/plots/PlotsTabUtils";
+import {
+    boxPlotTooltip,
+    IAxisData,
+    IBoxScatterPlotPoint,
+    INumberAxisData,
+    isNumberData,
+    isStringData,
+    IStringAxisData,
+    makeBoxScatterPlotData,
+    MutationSummary,
+    mutationSummaryToAppearance
+} from "pages/resultsView/plots/PlotsTabUtils";
 import DownloadControls from "shared/components/downloadControls/DownloadControls";
 import ScrollBar from "shared/components/Scrollbar/ScrollBar";
-import BoxScatterPlot, { IBoxScatterPlotData } from "shared/components/plots/BoxScatterPlot";
-import { getMobxPromiseGroupStatus } from "shared/lib/getMobxPromiseGroupStatus";
-import { scatterPlotSize } from "shared/components/plots/PlotUtils";
-import {
-    ClinicalDataEnrichmentWithQ,
-    CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG,
-    CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
-    EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG,
-    caseCounts
-} from "./GroupComparisonUtils";
+import BoxScatterPlot, {IBoxScatterPlotData} from "shared/components/plots/BoxScatterPlot";
+import {getMobxPromiseGroupStatus} from "shared/lib/getMobxPromiseGroupStatus";
+import {scatterPlotSize} from "shared/components/plots/PlotUtils";
+import {CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG, ClinicalDataEnrichmentWithQ} from "./GroupComparisonUtils";
 import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCategoryBarPlot";
-import { STUDY_VIEW_CONFIG } from "pages/studyView/StudyViewConfig";
+import {STUDY_VIEW_CONFIG} from "pages/studyView/StudyViewConfig";
 import ReactSelect from "react-select";
-import { MakeMobxView } from "shared/components/MobxView";
+import {MakeMobxView} from "shared/components/MobxView";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 
 export interface IClinicalDataProps {
@@ -88,18 +93,18 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
 
     readonly tabUI = MakeMobxView({
         await: () => {
+            const ret:any[] = [this.props.store._selectedGroupsNotOverlapRemoved, this.props.store.activeGroups];
             if (this.props.store.activeGroups.isComplete &&
                 this.props.store.activeGroups.result.length < 2) {
                 // dont bother loading data for and computing clinical tab if not enough groups for it
-                return [this.props.store.activeGroups];
             } else {
-                return [this.props.store.activeGroups, this.overlapUI];
+                ret.push(this.overlapUI);
             }
+            return ret;
         },
         render: () => {
-            const selectionInfo = this.props.store._selectionInfo.result!;
             if (this.props.store.activeGroups.result!.length < 2) {
-                return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG}</span>;
+                return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(this.props.store._selectedGroupsNotOverlapRemoved.result!.length)}</span>;
             } else {
                 let content: any = [];
                 content.push(<OverlapExclusionIndicator store={this.props.store}/>);

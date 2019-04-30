@@ -186,9 +186,8 @@ export default class GroupComparisonStore {
     });
 
     readonly availableGroups = remoteData<OverlapFilteredComparisonGroup[]>({
-        await:()=>[this._selectionInfo, this._originalGroups, this._originalGroupsOverlapRemoved],
+        await:()=>[this._originalGroups, this._originalGroupsOverlapRemoved],
         invoke:()=>{
-            const selectionInfo = this._selectionInfo.result!;
             let ret:OverlapFilteredComparisonGroup[];
             switch (this.overlapStrategy) {
                 case OverlapStrategy.INCLUDE:
@@ -226,7 +225,7 @@ export default class GroupComparisonStore {
         invoke:()=>Promise.resolve(this._originalGroupsOverlapRemoved.result!.filter(group=>this.isGroupActive(group)))
     });
 
-    readonly _activeGroupsNotOverlapRemoved = remoteData({
+    readonly _selectedGroupsNotOverlapRemoved = remoteData({
         await:()=>[this._originalGroups],
         invoke:()=>Promise.resolve(this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid))) // selected not active because overlap-removed empty groups are never active
     });
@@ -551,7 +550,7 @@ export default class GroupComparisonStore {
             const ampData = this.copyNumberAmpEnrichmentData.result!.map(d=>{
                 (d as CopyNumberEnrichment).value = 2;
                 return d as CopyNumberEnrichment;
-            })
+            });
             const homdelData = this.copyNumberHomdelEnrichmentData.result!.map(d=>{
                 (d as CopyNumberEnrichment).value = -2;
                 return d as CopyNumberEnrichment;
@@ -727,7 +726,7 @@ export default class GroupComparisonStore {
                     });
                 });
                 return acc;
-            }, {} as { [patientKey: string]: string[] })
+            }, {} as { [patientKey: string]: string[] });
             return Promise.resolve(patientToAnalysisGroups);
         }
     });

@@ -1,17 +1,11 @@
 import {MobxPromise} from 'mobxpromise/dist/src/MobxPromise';
-import {
-    ClinicalAttribute,
-    ClinicalData,
-    PatientIdentifier,
-    Sample,
-    SampleIdentifier
-} from "../../shared/api/generated/CBioPortalAPI";
+import {ClinicalAttribute, PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 import {
-    ClinicalDataIntervalFilterValue,
     ClinicalDataEnrichment,
-    StudyViewFilter,
-    CopyNumberGeneFilterElement
+    ClinicalDataIntervalFilterValue,
+    CopyNumberGeneFilterElement,
+    StudyViewFilter
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
 import {GroupData, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
@@ -21,6 +15,11 @@ import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeyS
 import ComplexKeyCounter from "../../shared/lib/complexKeyDataStructures/ComplexKeyCounter";
 import {GeneIdentifier} from "../studyView/StudyViewPageStore";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
+import GroupComparisonStore from "./GroupComparisonStore";
+import {MakeMobxView, MobxViewAlwaysComponent} from "../../shared/components/MobxView";
+import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
+import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
+import ErrorMessage from "../../shared/components/ErrorMessage";
 
 export enum GroupComparisonTab {
     OVERLAP = "overlap",
@@ -334,8 +333,55 @@ export function getOverlapFilteredGroups(
     });
 }
 
-export function ENRICHMENTS_NOT_2_GROUPS_MSG(tooMany:boolean) {
-    return `We can only show enrichments when two groups are selected. Please ${tooMany ? "deselect" : "select"} groups in the 'Active Groups' section so that only two are selected.`;
+export function MakeEnrichmentsTabUI(
+    getStore:()=>GroupComparisonStore,
+    getEnrichmentsUI:()=>MobxViewAlwaysComponent
+) {
+    return MakeMobxView({
+        await:()=>{
+            const store = getStore();
+            const ret:any[] = [store._selectedGroupsNotOverlapRemoved, store.activeGroups, store.activeStudyIds];
+            if ((store.activeGroups.isComplete &&
+                store.activeGroups.result.length !== 2) ||
+                (store.activeStudyIds.isComplete && store.activeStudyIds.result.length > 1)) {
+                // dont bother loading data for and computing enrichments UI if its not valid situation for it
+            } else {
+                ret.push(getEnrichmentsUI());
+            }
+            return ret;
+        },
+        render:()=>{
+            const store = getStore();
+            if (store.activeGroups.result!.length !== 2) {
+                return (
+                    <span>
+                        {ENRICHMENTS_NOT_2_GROUPS_MSG(store.activeGroups.result!.length, store._selectedGroupsNotOverlapRemoved.result!.length)}
+                    </span>
+                );
+            } else if (store.activeStudyIds.result!.length > 1) {
+                return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG("protein")}</span>;
+            } else {
+                const content:any = [];
+                content.push(<OverlapExclusionIndicator store={store}/>);
+                content.push(getEnrichmentsUI().component);
+                return content;
+            }
+        },
+        renderPending:()=><Loader center={true} isLoading={true} size={"big"}/>,
+        renderError:()=><ErrorMessage/>
+    });
+}
+
+export function ENRICHMENTS_NOT_2_GROUPS_MSG(numActiveGroups:number, numSelectedGroups:number) {
+    if (numSelectedGroups < 2) {
+        return "Please select more groups - we need exactly 2 selected groups to show enrichments.";
+    } else if (numActiveGroups < 2) {
+        // at least 2 selected, but less than 2 active, meaning overlap has reduced it
+        return "Due to excluded overlapping cases, there are less than 2 selected nonempty groups - we need exactly 2 nonempty selected groups to show enrichments.";
+    } else if (numActiveGroups > 2) {
+        // more than 2 active
+        return "Please deselect groups - we need exactly 2 selected groups to show enrichments.";
+    }
 }
 
 export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
@@ -350,11 +396,13 @@ export const DUPLICATE_GROUP_NAME_MSG = "Another group already has this name.";
 export const OVERLAP_NOT_ENOUGH_GROUPS_MSG =
     "We can't show overlap for 1 group. Please select more groups from the 'Active Groups' section above.";
 
-export const CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG =
-    "We can't show clinical plots for 1 group. Please select more groups from the 'Active Groups' section above.";
-
-export const CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG =
-    "We can only show clinical plots when groups don't have overlapping samples. Please exclude them by changing dropdown option to 'Exclude overlapping samples and patients'";
+export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups:number) {
+    if (numSelectedGroups >= 2) {
+        return "Due to excluded overlapping cases, there are less than 2 selected nonempty groups - we need at least 2.";
+    } else {
+        return "Please select more groups - we need at least 2.";
+    }
+}
 
 export const EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG =
     "We exclude overlapping samples and patients by default to display this tab";
