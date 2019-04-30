@@ -292,13 +292,6 @@ export default class GroupComparisonStore {
         this.unsavedGroups.clear();
     }
 
-    public groupSelectionCanBeToggled(group:ComparisonGroup) {
-        return (
-            this.activeGroups.isComplete && // dont allow toggling until we know what the current active groups are
-            !isGroupEmpty(group) // cant be toggled if no cases in it
-        );
-    }
-
     public isGroupSelected(uid:string) {
         if (!this._selectedGroupIds.has(uid)) {
             return true; // selected by default, until user toggles and thus adds a value to the map
