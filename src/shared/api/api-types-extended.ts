@@ -1,4 +1,4 @@
-import { ClinicalData } from "./generated/CBioPortalAPI";
+import { ClinicalData } from './generated/CBioPortalAPI';
 
 export type ClinicalDataBySampleId = {
     id: string;

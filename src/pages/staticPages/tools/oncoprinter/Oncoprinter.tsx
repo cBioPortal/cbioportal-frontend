@@ -1,22 +1,22 @@
-import * as React from "react";
-import {observer, Observer} from "mobx-react";
-import {action, computed, IObservableObject, observable} from "mobx";
-import Oncoprint from "../../../../shared/components/oncoprint/Oncoprint";
+import * as React from 'react';
+import { observer, Observer } from 'mobx-react';
+import { action, computed, IObservableObject, observable } from 'mobx';
+import Oncoprint from '../../../../shared/components/oncoprint/Oncoprint';
 import OncoprintControls, {
     IOncoprintControlsHandlers,
-    IOncoprintControlsState
-} from "shared/components/oncoprint/controls/OncoprintControls";
-import {Sample} from "../../../../shared/api/generated/CBioPortalAPI";
-import {percentAltered} from "../../../../shared/components/oncoprint/OncoprintUtils";
-import AppConfig from "appConfig";
-import OncoprintJS from "oncoprintjs";
-import fileDownload from "react-file-download";
-import svgToPdfDownload from "shared/lib/svgToPdfDownload";
-import classNames from "classnames";
-import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
-import OncoprinterStore from "./OncoprinterStore";
-import autobind from "autobind-decorator";
-import onMobxPromise from "../../../../shared/lib/onMobxPromise";
+    IOncoprintControlsState,
+} from 'shared/components/oncoprint/controls/OncoprintControls';
+import { Sample } from '../../../../shared/api/generated/CBioPortalAPI';
+import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
+import AppConfig from 'appConfig';
+import OncoprintJS from 'oncoprintjs';
+import fileDownload from 'react-file-download';
+import svgToPdfDownload from 'shared/lib/svgToPdfDownload';
+import classNames from 'classnames';
+import FadeInteraction from 'shared/components/fadeInteraction/FadeInteraction';
+import OncoprinterStore from './OncoprinterStore';
+import autobind from 'autobind-decorator';
+import onMobxPromise from '../../../../shared/lib/onMobxPromise';
 
 interface IOncoprinterProps {
     divId: string;
@@ -24,28 +24,30 @@ interface IOncoprinterProps {
 }
 
 @observer
-export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> {
+export default class Oncoprinter extends React.Component<
+    IOncoprinterProps,
+    {}
+> {
+    @observable distinguishMutationType: boolean = true;
+    @observable sortByMutationType: boolean = true;
+    @observable sortByDrivers: boolean = true;
 
-    @observable distinguishMutationType:boolean = true;
-    @observable sortByMutationType:boolean = true;
-    @observable sortByDrivers:boolean = true;
+    @observable showWhitespaceBetweenColumns: boolean = true;
 
-    @observable showWhitespaceBetweenColumns:boolean = true;
+    @observable showMinimap: boolean = false;
 
-    @observable showMinimap:boolean = false;
+    @observable horzZoom: number = 0.5;
 
-    @observable horzZoom:number = 0.5;
-
-    @observable mouseInsideBounds:boolean = false;
+    @observable mouseInsideBounds: boolean = false;
 
     @observable renderingComplete = true;
 
-    private controlsHandlers:IOncoprintControlsHandlers;
-    private controlsState:IOncoprintControlsState & IObservableObject;
+    private controlsHandlers: IOncoprintControlsHandlers;
+    private controlsState: IOncoprintControlsState & IObservableObject;
 
-    @observable.ref public oncoprint:OncoprintJS<any>;
+    @observable.ref public oncoprint: OncoprintJS<any>;
 
-    constructor(props:IOncoprinterProps) {
+    constructor(props: IOncoprinterProps) {
         super(props);
 
         (window as any).oncoprinter = this;
@@ -86,13 +88,17 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                 return self.props.store.didOncoKbFail;
             },
             get annotateDriversCBioPortal() {
-                return self.props.store.driverAnnotationSettings.cbioportalCount;
+                return self.props.store.driverAnnotationSettings
+                    .cbioportalCount;
             },
             get hidePutativePassengers() {
                 return self.props.store.driverAnnotationSettings.ignoreUnknown;
             },
             get annotateCBioPortalInputValue() {
-                return self.props.store.driverAnnotationSettings.cbioportalCountThreshold + "";
+                return (
+                    self.props.store.driverAnnotationSettings
+                        .cbioportalCountThreshold + ''
+                );
             },
             get sortByDrivers() {
                 return self.sortByDrivers;
@@ -118,151 +124,188 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     }
 
     @autobind
-    onMouseEnter(){
+    onMouseEnter() {
         this.mouseInsideBounds = true;
     }
 
     @autobind
-    onMouseLeave(){
+    onMouseLeave() {
         this.mouseInsideBounds = false;
     }
 
     @action
-    public setAnnotateCBioPortalInputValue(value:string) {
-        this.controlsHandlers.onChangeAnnotateCBioPortalInputValue && this.controlsHandlers.onChangeAnnotateCBioPortalInputValue(value);
+    public setAnnotateCBioPortalInputValue(value: string) {
+        this.controlsHandlers.onChangeAnnotateCBioPortalInputValue &&
+            this.controlsHandlers.onChangeAnnotateCBioPortalInputValue(value);
     }
 
     private buildControlsHandlers() {
         return {
-            onSelectShowUnalteredColumns:(show:boolean)=>{this.props.store.showUnalteredColumns = show;},
-            onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
-            onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
-            onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
-            onSelectDistinguishDrivers:action((s:boolean)=>{
+            onSelectShowUnalteredColumns: (show: boolean) => {
+                this.props.store.showUnalteredColumns = show;
+            },
+            onSelectShowWhitespaceBetweenColumns: (show: boolean) => {
+                this.showWhitespaceBetweenColumns = show;
+            },
+            onSelectShowMinimap: (show: boolean) => {
+                this.showMinimap = show;
+            },
+            onSelectDistinguishMutationType: (s: boolean) => {
+                this.distinguishMutationType = s;
+            },
+            onSelectDistinguishDrivers: action((s: boolean) => {
                 if (!s) {
                     this.props.store.driverAnnotationSettings.oncoKb = false;
                     this.props.store.driverAnnotationSettings.cbioportalCount = false;
                     this.props.store.driverAnnotationSettings.ignoreUnknown = false;
                 } else {
-                    if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
+                    if (
+                        !this.controlsState.annotateDriversOncoKbDisabled &&
+                        !this.controlsState.annotateDriversOncoKbError
+                    )
                         this.props.store.driverAnnotationSettings.oncoKb = true;
 
                     this.props.store.driverAnnotationSettings.cbioportalCount = true;
                 }
             }),
-            onSelectAnnotateOncoKb:action((s:boolean)=>{
+            onSelectAnnotateOncoKb: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.oncoKb = s;
             }),
-            onSelectAnnotateCBioPortal:action((s:boolean)=>{
+            onSelectAnnotateCBioPortal: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.cbioportalCount = s;
             }),
             /*onSelectAnnotateHotspots:action((s:boolean)=>{
                 this.props.store.driverAnnotationSettings.hotspots = s;
             }),*/
-            onChangeAnnotateCBioPortalInputValue:action((s:string)=>{
-                this.props.store.driverAnnotationSettings.cbioportalCountThreshold = parseInt(s, 10);
-                this.controlsHandlers.onSelectAnnotateCBioPortal && this.controlsHandlers.onSelectAnnotateCBioPortal(true);
+            onChangeAnnotateCBioPortalInputValue: action((s: string) => {
+                this.props.store.driverAnnotationSettings.cbioportalCountThreshold = parseInt(
+                    s,
+                    10
+                );
+                this.controlsHandlers.onSelectAnnotateCBioPortal &&
+                    this.controlsHandlers.onSelectAnnotateCBioPortal(true);
             }),
-            onSelectHidePutativePassengers:(s:boolean)=>{
+            onSelectHidePutativePassengers: (s: boolean) => {
                 this.props.store.driverAnnotationSettings.ignoreUnknown = s;
             },
-            onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
-            onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
-            onClickDownload:(type:string)=>{
-                switch(type) {
-                    case "pdf":
-                        svgToPdfDownload("oncoprint.pdf", this.oncoprint.toSVG(false));
+            onSelectSortByMutationType: (s: boolean) => {
+                this.sortByMutationType = s;
+            },
+            onSelectSortByDrivers: (sort: boolean) => {
+                this.sortByDrivers = sort;
+            },
+            onClickDownload: (type: string) => {
+                switch (type) {
+                    case 'pdf':
+                        svgToPdfDownload(
+                            'oncoprint.pdf',
+                            this.oncoprint.toSVG(false)
+                        );
                         // if (!pdfDownload("oncoprint.pdf", this.oncoprint.toSVG(true))) {
                         //     alert("Oncoprint too big to download as PDF - please download as SVG.");
                         // }
                         break;
-                    case "png":
-                        const img = this.oncoprint.toCanvas((canvas, truncated)=>{
-                            canvas.toBlob(blob=>{
-                                if (truncated) {
-                                    alert(
-                                        `Oncoprint too large - PNG truncated to ${canvas.getAttribute("width")}x${canvas.getAttribute("height")}`
-                                    );
-                                }
-                                fileDownload(
-                                    blob,
-                                    "oncoprint.png"
-                                );
-                            });
-                        }, 2);
-                        break;
-                    case "svg":
-                        fileDownload(
-                            (new XMLSerializer).serializeToString(this.oncoprint.toSVG(false)),
-                            "oncoprint.svg"
+                    case 'png':
+                        const img = this.oncoprint.toCanvas(
+                            (canvas, truncated) => {
+                                canvas.toBlob(blob => {
+                                    if (truncated) {
+                                        alert(
+                                            `Oncoprint too large - PNG truncated to ${canvas.getAttribute(
+                                                'width'
+                                            )}x${canvas.getAttribute('height')}`
+                                        );
+                                    }
+                                    fileDownload(blob, 'oncoprint.png');
+                                });
+                            },
+                            2
                         );
                         break;
-                    case "order":
-                        const capitalizedColumnMode = "Sample";
+                    case 'svg':
+                        fileDownload(
+                            new XMLSerializer().serializeToString(
+                                this.oncoprint.toSVG(false)
+                            ),
+                            'oncoprint.svg'
+                        );
+                        break;
+                    case 'order':
+                        const capitalizedColumnMode = 'Sample';
                         let file = `${capitalizedColumnMode} order in the Oncoprint is:\n`;
                         const caseIds = this.oncoprint.getIdOrder();
                         for (const caseId of caseIds) {
                             file += `${caseId}\n`;
                         }
-                        fileDownload(
-                            file,
-                            `OncoPrintSamples.txt`
-                        );
+                        fileDownload(file, `OncoPrintSamples.txt`);
                         break;
                 }
             },
-            onSetHorzZoom:(z:number)=>{
+            onSetHorzZoom: (z: number) => {
                 this.oncoprint.setHorzZoom(z);
             },
-            onClickZoomIn:()=>{
-                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom()/0.7);
+            onClickZoomIn: () => {
+                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() / 0.7);
             },
-            onClickZoomOut:()=>{
-                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom()*0.7);
-            }
+            onClickZoomOut: () => {
+                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() * 0.7);
+            },
         };
     }
 
     @autobind
-    private oncoprintRef(oncoprint:OncoprintJS<any>) {
+    private oncoprintRef(oncoprint: OncoprintJS<any>) {
         this.oncoprint = oncoprint;
 
-        this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
+        this.oncoprint.onHorzZoom(z => (this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
     }
 
     @autobind
-    @action private onMinimapClose() {
+    @action
+    private onMinimapClose() {
         this.showMinimap = false;
     }
 
     @autobind
-    @action private onSuppressRendering() {
+    @action
+    private onSuppressRendering() {
         this.renderingComplete = false;
     }
 
     @autobind
-    @action private onReleaseRendering() {
+    @action
+    private onReleaseRendering() {
         this.renderingComplete = true;
     }
 
     @computed get sortConfig() {
         return {
-            sortByMutationType:this.sortByMutationType,
-            sortByDrivers:this.sortByDrivers,
+            sortByMutationType: this.sortByMutationType,
+            sortByDrivers: this.sortByDrivers,
             order: this.props.store.inputSampleIdOrder,
         };
     }
 
     @computed get alterationInfo() {
-        if (this.props.store.alteredSampleIds.isComplete ) {
+        if (this.props.store.alteredSampleIds.isComplete) {
             const numSamples = this.props.store.sampleIds.length;
-            const alteredSamples = this.props.store.alteredSampleIds.result.length;
+            const alteredSamples = this.props.store.alteredSampleIds.result
+                .length;
             return (
-                <span style={{marginTop:"15px", marginBottom:"15px", display: "block"}}>
-                    {`Altered in ${alteredSamples} (${percentAltered(alteredSamples, numSamples)}) of ${numSamples} samples.`}
+                <span
+                    style={{
+                        marginTop: '15px',
+                        marginBottom: '15px',
+                        display: 'block',
+                    }}
+                >
+                    {`Altered in ${alteredSamples} (${percentAltered(
+                        alteredSamples,
+                        numSamples
+                    )}) of ${numSamples} samples.`}
                 </span>
-            )
+            );
         } else {
             return null;
         }
@@ -270,9 +313,11 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
 
     @computed get isLoading() {
         // todo: use mobxview
-        return this.props.store.geneticTracks.isPending ||
+        return (
+            this.props.store.geneticTracks.isPending ||
             this.props.store.alteredSampleIds.isPending ||
-                this.props.store.unalteredSampleIds.isPending;
+            this.props.store.unalteredSampleIds.isPending
+        );
     }
 
     @computed get isHidden() {
@@ -282,36 +327,41 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     @autobind
     private getControls() {
         if (this.oncoprint && !this.oncoprint.webgl_unavailable) {
-            return (<FadeInteraction showByDefault={true} show={true}>
-                <OncoprintControls
-                    handlers={this.controlsHandlers}
-                    state={this.controlsState}
-                    oncoprinterMode={true}
-                />
-            </FadeInteraction>);
+            return (
+                <FadeInteraction showByDefault={true} show={true}>
+                    <OncoprintControls
+                        handlers={this.controlsHandlers}
+                        state={this.controlsState}
+                        oncoprinterMode={true}
+                    />
+                </FadeInteraction>
+            );
         } else {
-            return <span/>;
+            return <span />;
         }
     }
 
     public render() {
         return (
             <div className="posRelative">
-                <div className={classNames('oncoprintContainer', { fadeIn: !this.isHidden })}
-                     onMouseEnter={this.onMouseEnter}
-                     onMouseLeave={this.onMouseLeave}
+                <div
+                    className={classNames('oncoprintContainer', {
+                        fadeIn: !this.isHidden,
+                    })}
+                    onMouseEnter={this.onMouseEnter}
+                    onMouseLeave={this.onMouseLeave}
                 >
-                    <Observer>
-                        {this.getControls}
-                    </Observer>
+                    <Observer>{this.getControls}</Observer>
 
-                    <div style={{position:"relative"}} >
+                    <div style={{ position: 'relative' }}>
                         <div id="oncoprintDiv">
                             {this.alterationInfo}
                             <Oncoprint
                                 oncoprintRef={this.oncoprintRef}
                                 clinicalTracks={[]}
-                                geneticTracks={this.props.store.geneticTracks.result}
+                                geneticTracks={
+                                    this.props.store.geneticTracks.result
+                                }
                                 geneticTracksOrder={this.props.store.geneOrder}
                                 genesetHeatmapTracks={[]}
                                 heatmapTracks={[]}
@@ -321,13 +371,20 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
                                 onReleaseRendering={this.onReleaseRendering}
-                                hiddenIds={this.props.store.hiddenSampleIds.result}
-
-                                horzZoomToFitIds={this.props.store.alteredSampleIds.result}
-                                distinguishMutationType={this.distinguishMutationType}
+                                hiddenIds={
+                                    this.props.store.hiddenSampleIds.result
+                                }
+                                horzZoomToFitIds={
+                                    this.props.store.alteredSampleIds.result
+                                }
+                                distinguishMutationType={
+                                    this.distinguishMutationType
+                                }
                                 distinguishDrivers={this.distinguishDrivers}
                                 sortConfig={this.sortConfig}
-                                showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
+                                showWhitespaceBetweenColumns={
+                                    this.showWhitespaceBetweenColumns
+                                }
                                 showMinimap={this.showMinimap}
                                 onMinimapClose={this.onMinimapClose}
                             />

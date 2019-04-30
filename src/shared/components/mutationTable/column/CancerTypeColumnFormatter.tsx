@@ -1,15 +1,16 @@
-import * as React from "react";
-import * as _ from "lodash";
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import TableCellStatusIndicator from "shared/components/TableCellStatus";
-import {TableCellStatus} from "shared/components/TableCellStatus";
-import TruncatedText from "shared/components/TruncatedText";
+import * as React from 'react';
+import * as _ from 'lodash';
+import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import TableCellStatusIndicator from 'shared/components/TableCellStatus';
+import { TableCellStatus } from 'shared/components/TableCellStatus';
+import TruncatedText from 'shared/components/TruncatedText';
 
 export default class CancerTypeColumnFormatter {
-
-    public static getData(d: Mutation[], uniqueSampleKeyToTumorType?: {[uniqueSampleKey: string]: string}): string|null
-    {
-        let data: string|null = null;
+    public static getData(
+        d: Mutation[],
+        uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string }
+    ): string | null {
+        let data: string | null = null;
 
         if (uniqueSampleKeyToTumorType) {
             data = uniqueSampleKeyToTumorType[d[0].uniqueSampleKey] || null;
@@ -18,40 +19,52 @@ export default class CancerTypeColumnFormatter {
         return data;
     }
 
-    public static sortBy(d: Mutation[], uniqueSampleKeyToTumorType?: {[uniqueSampleKey: string]: string}): string|null
-    {
-        const data = CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType);
+    public static sortBy(
+        d: Mutation[],
+        uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string }
+    ): string | null {
+        const data = CancerTypeColumnFormatter.getData(
+            d,
+            uniqueSampleKeyToTumorType
+        );
 
         if (data) {
             return data;
-        }
-        else {
+        } else {
             return null;
         }
     }
 
-    public static filter(d: Mutation[],
-                         filterStringUpper: string,
-                         uniqueSampleKeyToTumorType?: {[uniqueSampleKey: string]: string}): boolean
-    {
-        const data = CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType);
+    public static filter(
+        d: Mutation[],
+        filterStringUpper: string,
+        uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string }
+    ): boolean {
+        const data = CancerTypeColumnFormatter.getData(
+            d,
+            uniqueSampleKeyToTumorType
+        );
 
         return (
-            data !== null &&
-            data.toUpperCase().indexOf(filterStringUpper) > -1
+            data !== null && data.toUpperCase().indexOf(filterStringUpper) > -1
         );
     }
 
-    public static isVisible(mutations?: Mutation[][], uniqueSampleKeyToTumorType?: {[uniqueSampleKey: string]: string}): boolean
-    {
+    public static isVisible(
+        mutations?: Mutation[][],
+        uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string }
+    ): boolean {
         if (!mutations || !uniqueSampleKeyToTumorType) {
             return false;
         }
 
-        const tumorTypeToSampleId: {[tumorType: string]: string} = {};
+        const tumorTypeToSampleId: { [tumorType: string]: string } = {};
 
         mutations.forEach((d: Mutation[]) => {
-            const tumorType = CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType);
+            const tumorType = CancerTypeColumnFormatter.getData(
+                d,
+                uniqueSampleKeyToTumorType
+            );
 
             if (tumorType) {
                 tumorTypeToSampleId[tumorType] = d[0].sampleId;
@@ -62,25 +75,34 @@ export default class CancerTypeColumnFormatter {
         return _.keys(tumorTypeToSampleId).length > 1;
     }
 
-    public static download(d: Mutation[], uniqueSampleKeyToTumorType?: {[uniqueSampleKey: string]: string})
-    {
-        return CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType) || "";
+    public static download(
+        d: Mutation[],
+        uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string }
+    ) {
+        return (
+            CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType) ||
+            ''
+        );
     }
 
-    public static render(d: Mutation[], uniqueSampleKeyToTumorType?: {[uniqueSampleKey: string]: string})
-    {
-        const data = CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType);
+    public static render(
+        d: Mutation[],
+        uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string }
+    ) {
+        const data = CancerTypeColumnFormatter.getData(
+            d,
+            uniqueSampleKeyToTumorType
+        );
 
         if (data) {
             return (
                 <TruncatedText
                     maxLength={30}
-                    text={data || ""}
-                    tooltip={<div style={{maxWidth: 300}}>{data}</div>}
+                    text={data || ''}
+                    tooltip={<div style={{ maxWidth: 300 }}>{data}</div>}
                 />
             );
-        }
-        else {
+        } else {
             return (
                 <TableCellStatusIndicator
                     status={TableCellStatus.NA}

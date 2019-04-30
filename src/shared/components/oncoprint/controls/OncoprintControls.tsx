@@ -1,173 +1,191 @@
-import * as React from "react";
-import {observer, Observer} from "mobx-react";
-import {Button, ButtonGroup} from "react-bootstrap";
-import CustomDropdown from "./CustomDropdown";
-import ReactSelect from "react-select";
-import {MobxPromise} from "mobxpromise";
-import {action, computed, IObservableObject, observable, ObservableMap, reaction} from "mobx";
-import _ from "lodash";
-import {SortMode} from "../ResultsViewOncoprint";
-import {Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
-import Slider from "react-rangeslider";
-import "react-rangeslider/lib/index.css";
-import EditableSpan from "shared/components/editableSpan/EditableSpan";
-import "./styles.scss";
-import ErrorIcon from "../../ErrorIcon";
-import classNames from "classnames";
-import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
-import ClinicalAttributeSelector from "../../clinicalAttributeSelector/ClinicalAttributeSelector";
-import {ResultsViewPageStore} from "../../../../pages/resultsView/ResultsViewPageStore";
-import {ExtendedClinicalAttribute} from "../../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {getNCBIlink} from "../../../api/urls";
-import {GeneBoxType} from "../../GeneSelectionBox/GeneSelectionBox";
-import GeneSelectionBox from "../../GeneSelectionBox/GeneSelectionBox";
-import autobind from "autobind-decorator";
-import {SingleGeneQuery} from "../../../lib/oql/oql-parser";
-import DriverAnnotationControls, {IDriverAnnotationControlsHandlers} from "../../../../pages/resultsView/settings/DriverAnnotationControls";
+import * as React from 'react';
+import { observer, Observer } from 'mobx-react';
+import { Button, ButtonGroup } from 'react-bootstrap';
+import CustomDropdown from './CustomDropdown';
+import ReactSelect from 'react-select';
+import { MobxPromise } from 'mobxpromise';
+import {
+    action,
+    computed,
+    IObservableObject,
+    observable,
+    ObservableMap,
+    reaction,
+} from 'mobx';
+import _ from 'lodash';
+import { SortMode } from '../ResultsViewOncoprint';
+import { Gene, MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import Slider from 'react-rangeslider';
+import 'react-rangeslider/lib/index.css';
+import EditableSpan from 'shared/components/editableSpan/EditableSpan';
+import './styles.scss';
+import ErrorIcon from '../../ErrorIcon';
+import classNames from 'classnames';
+import { SpecialAttribute } from '../../../cache/ClinicalDataCache';
+import ClinicalAttributeSelector from '../../clinicalAttributeSelector/ClinicalAttributeSelector';
+import { ResultsViewPageStore } from '../../../../pages/resultsView/ResultsViewPageStore';
+import { ExtendedClinicalAttribute } from '../../../../pages/resultsView/ResultsViewPageStoreUtils';
+import { getNCBIlink } from '../../../api/urls';
+import { GeneBoxType } from '../../GeneSelectionBox/GeneSelectionBox';
+import GeneSelectionBox from '../../GeneSelectionBox/GeneSelectionBox';
+import autobind from 'autobind-decorator';
+import { SingleGeneQuery } from '../../../lib/oql/oql-parser';
+import DriverAnnotationControls, {
+    IDriverAnnotationControlsHandlers,
+} from '../../../../pages/resultsView/settings/DriverAnnotationControls';
 
 export interface IOncoprintControlsHandlers {
-    onSelectColumnType?:(type:"sample"|"patient")=>void,
-    onSelectShowUnalteredColumns:(unalteredColumnsShown:boolean)=>void,
-    onSelectShowWhitespaceBetweenColumns:(showWhitespace:boolean)=>void,
-    onSelectShowClinicalTrackLegends?:(showLegends:boolean)=>void,
-    onSelectOnlyShowClinicalLegendForAlteredCases?:(showLegends:boolean)=>void,
-    onSelectShowOqlInLabels?:(show:boolean)=>void,
-    onSelectShowMinimap:(showMinimap:boolean)=>void,
-    onSelectDistinguishMutationType:(distinguish:boolean)=>void,
-    onSelectDistinguishDrivers:(distinguish:boolean)=>void,
-    onSelectDistinguishGermlineMutations?:(distinguish:boolean)=>void,
+    onSelectColumnType?: (type: 'sample' | 'patient') => void;
+    onSelectShowUnalteredColumns: (unalteredColumnsShown: boolean) => void;
+    onSelectShowWhitespaceBetweenColumns: (showWhitespace: boolean) => void;
+    onSelectShowClinicalTrackLegends?: (showLegends: boolean) => void;
+    onSelectOnlyShowClinicalLegendForAlteredCases?: (
+        showLegends: boolean
+    ) => void;
+    onSelectShowOqlInLabels?: (show: boolean) => void;
+    onSelectShowMinimap: (showMinimap: boolean) => void;
+    onSelectDistinguishMutationType: (distinguish: boolean) => void;
+    onSelectDistinguishDrivers: (distinguish: boolean) => void;
+    onSelectDistinguishGermlineMutations?: (distinguish: boolean) => void;
 
-    onSelectAnnotateOncoKb:(annotate:boolean)=>void,
-    onSelectAnnotateHotspots?:(annotate:boolean)=>void,
-    onSelectAnnotateCBioPortal:(annotate:boolean)=>void,
-    onSelectAnnotateCOSMIC?:(annotate:boolean)=>void,
-    onSelectHidePutativePassengers:(hide:boolean)=>void,
-    onChangeAnnotateCBioPortalInputValue:(value:string)=>void,
-    onSelectShowGermlineMutations?:(hide:boolean)=>void,
-    onChangeAnnotateCOSMICInputValue?:(value:string)=>void,
-    onSelectCustomDriverAnnotationBinary?:(s:boolean)=>void;
-    onSelectCustomDriverAnnotationTier?:(value:string, s:boolean)=>void;
+    onSelectAnnotateOncoKb: (annotate: boolean) => void;
+    onSelectAnnotateHotspots?: (annotate: boolean) => void;
+    onSelectAnnotateCBioPortal: (annotate: boolean) => void;
+    onSelectAnnotateCOSMIC?: (annotate: boolean) => void;
+    onSelectHidePutativePassengers: (hide: boolean) => void;
+    onChangeAnnotateCBioPortalInputValue: (value: string) => void;
+    onSelectShowGermlineMutations?: (hide: boolean) => void;
+    onChangeAnnotateCOSMICInputValue?: (value: string) => void;
+    onSelectCustomDriverAnnotationBinary?: (s: boolean) => void;
+    onSelectCustomDriverAnnotationTier?: (value: string, s: boolean) => void;
 
-    onSelectSortByMutationType:(sort:boolean)=>void;
-    onSelectSortByDrivers:(sort:boolean)=>void;
-    onClickSortByData?:()=>void;
-    onClickSortAlphabetical?:()=>void;
-    onClickSortCaseListOrder?:()=>void;
-    onClickDownload?:(type:string)=>void; // type is "pdf", "png", "svg", "order", or "tabular"
-    onChangeSelectedClinicalTracks?:(attributeIds:(string|SpecialAttribute)[])=>void;
+    onSelectSortByMutationType: (sort: boolean) => void;
+    onSelectSortByDrivers: (sort: boolean) => void;
+    onClickSortByData?: () => void;
+    onClickSortAlphabetical?: () => void;
+    onClickSortCaseListOrder?: () => void;
+    onClickDownload?: (type: string) => void; // type is "pdf", "png", "svg", "order", or "tabular"
+    onChangeSelectedClinicalTracks?: (
+        attributeIds: (string | SpecialAttribute)[]
+    ) => void;
 
-    onClickAddGenesToHeatmap?:()=>void;
-    onClickRemoveHeatmap?:()=>void;
-    onClickClusterHeatmap?:()=>void;
-    onSelectHeatmapProfile?:(molecularProfileId:string)=>void;
-    onChangeHeatmapGeneInputValue?:(value:string)=>void;
+    onClickAddGenesToHeatmap?: () => void;
+    onClickRemoveHeatmap?: () => void;
+    onClickClusterHeatmap?: () => void;
+    onSelectHeatmapProfile?: (molecularProfileId: string) => void;
+    onChangeHeatmapGeneInputValue?: (value: string) => void;
 
-    onSetHorzZoom:(z:number)=>void;
-    onClickZoomIn:()=>void;
-    onClickZoomOut:()=>void;
-};
+    onSetHorzZoom: (z: number) => void;
+    onClickZoomIn: () => void;
+    onClickZoomOut: () => void;
+}
 export interface IOncoprintControlsState {
-    selectedColumnType?:"sample"|"patient",
-    showUnalteredColumns:boolean,
-    showWhitespaceBetweenColumns:boolean,
-    showClinicalTrackLegends?:boolean,
-    onlyShowClinicalLegendForAlteredCases?:boolean,
-    showOqlInLabels?:boolean;
-    showMinimap:boolean,
-    distinguishMutationType:boolean,
-    distinguishDrivers:boolean,
-    distinguishGermlineMutations?:boolean,
-    sortByMutationType:boolean,
-    sortByDrivers:boolean,
-    sortByCaseListDisabled:boolean,
-    annotateDriversOncoKb:boolean,
-    annotateDriversOncoKbError:boolean;
-    annotateDriversOncoKbDisabled:boolean;
-    annotateDriversHotspots?:boolean,
-    annotateDriversHotspotsError?:boolean;
-    annotateDriversHotspotsDisabled?:boolean,
-    annotateDriversCBioPortal:boolean,
-    annotateDriversCOSMIC?:boolean,
-    hidePutativePassengers:boolean,
-    annotateCBioPortalInputValue:string,
-    showGermlineMutations?:boolean,
-    annotateCOSMICInputValue?:string,
+    selectedColumnType?: 'sample' | 'patient';
+    showUnalteredColumns: boolean;
+    showWhitespaceBetweenColumns: boolean;
+    showClinicalTrackLegends?: boolean;
+    onlyShowClinicalLegendForAlteredCases?: boolean;
+    showOqlInLabels?: boolean;
+    showMinimap: boolean;
+    distinguishMutationType: boolean;
+    distinguishDrivers: boolean;
+    distinguishGermlineMutations?: boolean;
+    sortByMutationType: boolean;
+    sortByDrivers: boolean;
+    sortByCaseListDisabled: boolean;
+    annotateDriversOncoKb: boolean;
+    annotateDriversOncoKbError: boolean;
+    annotateDriversOncoKbDisabled: boolean;
+    annotateDriversHotspots?: boolean;
+    annotateDriversHotspotsError?: boolean;
+    annotateDriversHotspotsDisabled?: boolean;
+    annotateDriversCBioPortal: boolean;
+    annotateDriversCOSMIC?: boolean;
+    hidePutativePassengers: boolean;
+    annotateCBioPortalInputValue: string;
+    showGermlineMutations?: boolean;
+    annotateCOSMICInputValue?: string;
 
-    sortMode?:SortMode,
-    clinicalAttributesPromise?:MobxPromise<ExtendedClinicalAttribute[]>,
-    clinicalAttributeSampleCountPromise?:MobxPromise<{[clinicalAttributeId:string]:number}>,
-    selectedClinicalAttributeIds?:string[],
-    heatmapProfilesPromise?:MobxPromise<MolecularProfile[]>,
-    selectedHeatmapProfile?:string;
-    heatmapIsDynamicallyQueried?:boolean;
+    sortMode?: SortMode;
+    clinicalAttributesPromise?: MobxPromise<ExtendedClinicalAttribute[]>;
+    clinicalAttributeSampleCountPromise?: MobxPromise<{
+        [clinicalAttributeId: string]: number;
+    }>;
+    selectedClinicalAttributeIds?: string[];
+    heatmapProfilesPromise?: MobxPromise<MolecularProfile[]>;
+    selectedHeatmapProfile?: string;
+    heatmapIsDynamicallyQueried?: boolean;
     heatmapGeneInputValue?: string;
-    clusterHeatmapButtonActive?:boolean;
-    hideClusterHeatmapButton?:boolean;
-    hideHeatmapMenu?:boolean;
+    clusterHeatmapButtonActive?: boolean;
+    hideClusterHeatmapButton?: boolean;
+    hideHeatmapMenu?: boolean;
 
-    customDriverAnnotationBinaryMenuLabel?:string;
-    customDriverAnnotationTiersMenuLabel?:string;
-    customDriverAnnotationTiers?:string[];
-    selectedCustomDriverAnnotationTiers?:ObservableMap<boolean>;
-    annotateCustomDriverBinary?:boolean;
+    customDriverAnnotationBinaryMenuLabel?: string;
+    customDriverAnnotationTiersMenuLabel?: string;
+    customDriverAnnotationTiers?: string[];
+    selectedCustomDriverAnnotationTiers?: ObservableMap<boolean>;
+    annotateCustomDriverBinary?: boolean;
 
-    columnMode?:"sample"|"patient";
+    columnMode?: 'sample' | 'patient';
 
-    horzZoom:number;
-};
+    horzZoom: number;
+}
 
 export interface IOncoprintControlsProps {
     store?: ResultsViewPageStore;
     handlers: IOncoprintControlsHandlers;
-    state: IOncoprintControlsState & IObservableObject
-    oncoprinterMode?:boolean;
+    state: IOncoprintControlsState & IObservableObject;
+    oncoprinterMode?: boolean;
 }
 
 const EVENT_KEY = {
-    columnTypeSample: "0",
-    columnTypePatient: "1",
-    showUnalteredColumns: "2",
-    showWhitespaceBetweenColumns: "3",
-    showClinicalTrackLegends: "4",
-    onlyShowClinicalLegendForAlteredCases: "4.1",
-    showOqlInLabels:"4.2",
-    distinguishMutationType: "5",
-    distinguishGermlineMutations:"5.1",
-    sortByMutationType: "6",
-    sortAlphabetical: "7",
-    sortCaseListOrder: "8",
-    sortByData:"9",
-    sortByDrivers:"10",
-    sortByHeatmapClustering:"11",
-    addGenesToHeatmap: "13",
-    removeHeatmap: "14",
-    distinguishDrivers: "15",
-    annotateOncoKb:"16",
-    annotateHotspots:"17",
-    annotateCBioPortal:"18",
-    annotateCOSMIC:"19",
-    annotateCBioPortalInput:"20",
-    annotateCOSMICInput:"21",
-    hidePutativePassengers:"22",
-    showGermlineMutations: "22.1",
-    customDriverBinaryAnnotation:"23",
-    customDriverTierAnnotation:"24",
-    downloadPDF:"25",
-    downloadPNG:"26",
-    downloadSVG:"27",
-    downloadOrder:"28",
-    downloadTabular:"29",
-    horzZoomSlider:"30",
+    columnTypeSample: '0',
+    columnTypePatient: '1',
+    showUnalteredColumns: '2',
+    showWhitespaceBetweenColumns: '3',
+    showClinicalTrackLegends: '4',
+    onlyShowClinicalLegendForAlteredCases: '4.1',
+    showOqlInLabels: '4.2',
+    distinguishMutationType: '5',
+    distinguishGermlineMutations: '5.1',
+    sortByMutationType: '6',
+    sortAlphabetical: '7',
+    sortCaseListOrder: '8',
+    sortByData: '9',
+    sortByDrivers: '10',
+    sortByHeatmapClustering: '11',
+    addGenesToHeatmap: '13',
+    removeHeatmap: '14',
+    distinguishDrivers: '15',
+    annotateOncoKb: '16',
+    annotateHotspots: '17',
+    annotateCBioPortal: '18',
+    annotateCOSMIC: '19',
+    annotateCBioPortalInput: '20',
+    annotateCOSMICInput: '21',
+    hidePutativePassengers: '22',
+    showGermlineMutations: '22.1',
+    customDriverBinaryAnnotation: '23',
+    customDriverTierAnnotation: '24',
+    downloadPDF: '25',
+    downloadPNG: '26',
+    downloadSVG: '27',
+    downloadOrder: '28',
+    downloadTabular: '29',
+    horzZoomSlider: '30',
 };
 
 @observer
-export default class OncoprintControls extends React.Component<IOncoprintControlsProps, {}> {
-    @observable horzZoomSliderState:number;
-    @observable heatmapGenesReady:boolean = false;
+export default class OncoprintControls extends React.Component<
+    IOncoprintControlsProps,
+    {}
+> {
+    @observable horzZoomSliderState: number;
+    @observable heatmapGenesReady: boolean = false;
 
-    constructor(props:IOncoprintControlsProps) {
+    constructor(props: IOncoprintControlsProps) {
         super(props);
 
         this.getHeatmapMenu = this.getHeatmapMenu.bind(this);
@@ -185,14 +203,18 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         this.onButtonClick = this.onButtonClick.bind(this);
         this.onZoomInClick = this.onZoomInClick.bind(this);
         this.onZoomOutClick = this.onZoomOutClick.bind(this);
-        this.onCustomDriverTierCheckboxClick = this.onCustomDriverTierCheckboxClick.bind(this);
+        this.onCustomDriverTierCheckboxClick = this.onCustomDriverTierCheckboxClick.bind(
+            this
+        );
         this.onHorzZoomSliderChange = this.onHorzZoomSliderChange.bind(this);
         this.onHorzZoomSliderSet = this.onHorzZoomSliderSet.bind(this);
         this.onSetHorzZoomTextInput = this.onSetHorzZoomTextInput.bind(this);
 
         this.horzZoomSliderState = props.state.horzZoom;
-        reaction(()=>this.props.state.horzZoom,
-            z=>(this.horzZoomSliderState = z)); // when horz zoom changes, set slider state
+        reaction(
+            () => this.props.state.horzZoom,
+            z => (this.horzZoomSliderState = z)
+        ); // when horz zoom changes, set slider state
     }
 
     private onZoomInClick() {
@@ -203,119 +225,161 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         this.props.handlers.onClickZoomOut();
     }
 
-    private onSetHorzZoomTextInput(val:string) {
+    private onSetHorzZoomTextInput(val: string) {
         const percentage = parseFloat(val);
-        const zoom = percentage/100;
+        const zoom = percentage / 100;
         this.props.handlers.onSetHorzZoom(zoom);
     }
 
-    private onSelect(eventKey:any) {
+    private onSelect(eventKey: any) {
         if (eventKey === EVENT_KEY.distinguishMutationType) {
             this.props.handlers.onSelectDistinguishMutationType &&
-            this.props.handlers.onSelectDistinguishMutationType(!this.props.state.distinguishMutationType);
+                this.props.handlers.onSelectDistinguishMutationType(
+                    !this.props.state.distinguishMutationType
+                );
         }
     }
-    private onHeatmapProfileSelect(option:{label:string, value:string}) {
+    private onHeatmapProfileSelect(option: { label: string; value: string }) {
         this.props.handlers.onSelectHeatmapProfile &&
-        this.props.handlers.onSelectHeatmapProfile(option.value);
+            this.props.handlers.onSelectHeatmapProfile(option.value);
     }
 
-    private toggleShowMinimap(eventKey:any) {
+    private toggleShowMinimap(eventKey: any) {
         this.props.handlers.onSelectShowMinimap &&
-        this.props.handlers.onSelectShowMinimap(!this.props.state.showMinimap);
+            this.props.handlers.onSelectShowMinimap(
+                !this.props.state.showMinimap
+            );
     }
 
-    private onInputClick(event:React.MouseEvent<HTMLInputElement>) {
+    private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
             case EVENT_KEY.showUnalteredColumns:
                 this.props.handlers.onSelectShowUnalteredColumns &&
-                this.props.handlers.onSelectShowUnalteredColumns(!this.props.state.showUnalteredColumns);
+                    this.props.handlers.onSelectShowUnalteredColumns(
+                        !this.props.state.showUnalteredColumns
+                    );
                 break;
             case EVENT_KEY.showWhitespaceBetweenColumns:
                 this.props.handlers.onSelectShowWhitespaceBetweenColumns &&
-                this.props.handlers.onSelectShowWhitespaceBetweenColumns(!this.props.state.showWhitespaceBetweenColumns);
+                    this.props.handlers.onSelectShowWhitespaceBetweenColumns(
+                        !this.props.state.showWhitespaceBetweenColumns
+                    );
                 break;
             case EVENT_KEY.showClinicalTrackLegends:
                 this.props.handlers.onSelectShowClinicalTrackLegends &&
-                this.props.handlers.onSelectShowClinicalTrackLegends(!this.props.state.showClinicalTrackLegends);
+                    this.props.handlers.onSelectShowClinicalTrackLegends(
+                        !this.props.state.showClinicalTrackLegends
+                    );
                 break;
             case EVENT_KEY.onlyShowClinicalLegendForAlteredCases:
-                this.props.handlers.onSelectOnlyShowClinicalLegendForAlteredCases &&
-                this.props.handlers.onSelectOnlyShowClinicalLegendForAlteredCases(!this.props.state.onlyShowClinicalLegendForAlteredCases);
+                this.props.handlers
+                    .onSelectOnlyShowClinicalLegendForAlteredCases &&
+                    this.props.handlers.onSelectOnlyShowClinicalLegendForAlteredCases(
+                        !this.props.state.onlyShowClinicalLegendForAlteredCases
+                    );
                 break;
             case EVENT_KEY.showOqlInLabels:
                 this.props.handlers.onSelectShowOqlInLabels &&
-                this.props.handlers.onSelectShowOqlInLabels(!this.props.state.showOqlInLabels);
+                    this.props.handlers.onSelectShowOqlInLabels(
+                        !this.props.state.showOqlInLabels
+                    );
                 break;
             case EVENT_KEY.columnTypeSample:
                 this.props.handlers.onSelectColumnType &&
-                this.props.handlers.onSelectColumnType("sample");
+                    this.props.handlers.onSelectColumnType('sample');
                 break;
             case EVENT_KEY.columnTypePatient:
                 this.props.handlers.onSelectColumnType &&
-                this.props.handlers.onSelectColumnType("patient");
+                    this.props.handlers.onSelectColumnType('patient');
                 break;
             case EVENT_KEY.sortByData:
-                this.props.handlers.onClickSortByData && this.props.handlers.onClickSortByData();
+                this.props.handlers.onClickSortByData &&
+                    this.props.handlers.onClickSortByData();
                 break;
             case EVENT_KEY.sortAlphabetical:
-                this.props.handlers.onClickSortAlphabetical && this.props.handlers.onClickSortAlphabetical();
+                this.props.handlers.onClickSortAlphabetical &&
+                    this.props.handlers.onClickSortAlphabetical();
                 break;
             case EVENT_KEY.sortCaseListOrder:
-                this.props.handlers.onClickSortCaseListOrder && this.props.handlers.onClickSortCaseListOrder();
+                this.props.handlers.onClickSortCaseListOrder &&
+                    this.props.handlers.onClickSortCaseListOrder();
                 break;
             case EVENT_KEY.sortByMutationType:
                 this.props.handlers.onSelectSortByMutationType &&
-                this.props.handlers.onSelectSortByMutationType(!this.props.state.sortByMutationType);
+                    this.props.handlers.onSelectSortByMutationType(
+                        !this.props.state.sortByMutationType
+                    );
                 break;
             case EVENT_KEY.sortByDrivers:
                 this.props.handlers.onSelectSortByDrivers &&
-                this.props.handlers.onSelectSortByDrivers(!this.props.state.sortByDrivers);
+                    this.props.handlers.onSelectSortByDrivers(
+                        !this.props.state.sortByDrivers
+                    );
                 break;
             case EVENT_KEY.distinguishDrivers:
                 this.props.handlers.onSelectDistinguishDrivers &&
-                this.props.handlers.onSelectDistinguishDrivers(!this.props.state.distinguishDrivers);
+                    this.props.handlers.onSelectDistinguishDrivers(
+                        !this.props.state.distinguishDrivers
+                    );
                 break;
             case EVENT_KEY.distinguishMutationType:
                 this.props.handlers.onSelectDistinguishMutationType &&
-                this.props.handlers.onSelectDistinguishMutationType(!this.props.state.distinguishMutationType);
+                    this.props.handlers.onSelectDistinguishMutationType(
+                        !this.props.state.distinguishMutationType
+                    );
                 break;
             case EVENT_KEY.distinguishGermlineMutations:
                 this.props.handlers.onSelectDistinguishGermlineMutations &&
-                this.props.handlers.onSelectDistinguishGermlineMutations(!this.props.state.distinguishGermlineMutations);
+                    this.props.handlers.onSelectDistinguishGermlineMutations(
+                        !this.props.state.distinguishGermlineMutations
+                    );
                 break;
             case EVENT_KEY.annotateOncoKb:
                 this.props.handlers.onSelectAnnotateOncoKb &&
-                this.props.handlers.onSelectAnnotateOncoKb(!this.props.state.annotateDriversOncoKb);
+                    this.props.handlers.onSelectAnnotateOncoKb(
+                        !this.props.state.annotateDriversOncoKb
+                    );
                 break;
             case EVENT_KEY.annotateHotspots:
                 this.props.handlers.onSelectAnnotateHotspots &&
-                this.props.handlers.onSelectAnnotateHotspots(!this.props.state.annotateDriversHotspots);
+                    this.props.handlers.onSelectAnnotateHotspots(
+                        !this.props.state.annotateDriversHotspots
+                    );
                 break;
             case EVENT_KEY.annotateCBioPortal:
                 this.props.handlers.onSelectAnnotateCBioPortal &&
-                this.props.handlers.onSelectAnnotateCBioPortal(!this.props.state.annotateDriversCBioPortal);
+                    this.props.handlers.onSelectAnnotateCBioPortal(
+                        !this.props.state.annotateDriversCBioPortal
+                    );
                 break;
             case EVENT_KEY.annotateCOSMIC:
                 this.props.handlers.onSelectAnnotateCOSMIC &&
-                this.props.handlers.onSelectAnnotateCOSMIC(!this.props.state.annotateDriversCOSMIC);
+                    this.props.handlers.onSelectAnnotateCOSMIC(
+                        !this.props.state.annotateDriversCOSMIC
+                    );
                 break;
             case EVENT_KEY.hidePutativePassengers:
                 this.props.handlers.onSelectHidePutativePassengers &&
-                this.props.handlers.onSelectHidePutativePassengers(!this.props.state.hidePutativePassengers);
+                    this.props.handlers.onSelectHidePutativePassengers(
+                        !this.props.state.hidePutativePassengers
+                    );
                 break;
             case EVENT_KEY.showGermlineMutations:
                 this.props.handlers.onSelectShowGermlineMutations &&
-                this.props.handlers.onSelectShowGermlineMutations(!this.props.state.showGermlineMutations);
+                    this.props.handlers.onSelectShowGermlineMutations(
+                        !this.props.state.showGermlineMutations
+                    );
                 break;
             case EVENT_KEY.customDriverBinaryAnnotation:
                 this.props.handlers.onSelectCustomDriverAnnotationBinary &&
-                this.props.handlers.onSelectCustomDriverAnnotationBinary(!this.props.state.annotateCustomDriverBinary);
+                    this.props.handlers.onSelectCustomDriverAnnotationBinary(
+                        !this.props.state.annotateCustomDriverBinary
+                    );
                 break;
         }
     }
 
-    private onHorzZoomSliderChange(z:number) {
+    private onHorzZoomSliderChange(z: number) {
         this.horzZoomSliderState = z;
     }
 
@@ -324,84 +388,110 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         this.horzZoomSliderState = this.props.state.horzZoom; // set it back in case it doesnt change
     }
 
-    private onCustomDriverTierCheckboxClick(event:React.MouseEvent<HTMLInputElement>) {
+    private onCustomDriverTierCheckboxClick(
+        event: React.MouseEvent<HTMLInputElement>
+    ) {
         this.props.handlers.onSelectCustomDriverAnnotationTier &&
-        this.props.handlers.onSelectCustomDriverAnnotationTier(
-            (event.target as HTMLInputElement).value,
-            !(this.props.state.selectedCustomDriverAnnotationTiers && this.props.state.selectedCustomDriverAnnotationTiers.get((event.target as HTMLInputElement).value))
-        );
+            this.props.handlers.onSelectCustomDriverAnnotationTier(
+                (event.target as HTMLInputElement).value,
+                !(
+                    this.props.state.selectedCustomDriverAnnotationTiers &&
+                    this.props.state.selectedCustomDriverAnnotationTiers.get(
+                        (event.target as HTMLInputElement).value
+                    )
+                )
+            );
     }
 
-    private onButtonClick(event:React.MouseEvent<HTMLButtonElement>) {
+    private onButtonClick(event: React.MouseEvent<HTMLButtonElement>) {
         switch ((event.target as HTMLButtonElement).name) {
             case EVENT_KEY.addGenesToHeatmap:
                 this.props.handlers.onClickAddGenesToHeatmap &&
-                this.props.handlers.onClickAddGenesToHeatmap();
+                    this.props.handlers.onClickAddGenesToHeatmap();
                 break;
             case EVENT_KEY.removeHeatmap:
                 this.props.handlers.onClickRemoveHeatmap &&
-                this.props.handlers.onClickRemoveHeatmap();
+                    this.props.handlers.onClickRemoveHeatmap();
                 break;
             case EVENT_KEY.downloadSVG:
                 this.props.handlers.onClickDownload &&
-                this.props.handlers.onClickDownload("svg");
+                    this.props.handlers.onClickDownload('svg');
                 break;
             case EVENT_KEY.downloadPNG:
                 this.props.handlers.onClickDownload &&
-                this.props.handlers.onClickDownload("png");
+                    this.props.handlers.onClickDownload('png');
                 break;
             case EVENT_KEY.downloadPDF:
                 this.props.handlers.onClickDownload &&
-                this.props.handlers.onClickDownload("pdf");
+                    this.props.handlers.onClickDownload('pdf');
                 break;
             case EVENT_KEY.downloadOrder:
                 this.props.handlers.onClickDownload &&
-                this.props.handlers.onClickDownload("order");
+                    this.props.handlers.onClickDownload('order');
                 break;
             case EVENT_KEY.downloadTabular:
                 this.props.handlers.onClickDownload &&
-                this.props.handlers.onClickDownload("tabular");
+                    this.props.handlers.onClickDownload('tabular');
                 break;
             case EVENT_KEY.sortByHeatmapClustering:
                 this.props.handlers.onClickClusterHeatmap &&
-                this.props.handlers.onClickClusterHeatmap();
+                    this.props.handlers.onClickClusterHeatmap();
                 break;
         }
     }
 
     @autobind
     @action
-    private onChangeHeatmapGeneInput(oql:any, genes:any, queryStr:string, status:any) {
+    private onChangeHeatmapGeneInput(
+        oql: any,
+        genes: any,
+        queryStr: string,
+        status: any
+    ) {
         this.props.handlers.onChangeHeatmapGeneInputValue &&
-        this.props.handlers.onChangeHeatmapGeneInputValue(queryStr);
+            this.props.handlers.onChangeHeatmapGeneInputValue(queryStr);
 
-        const foundGenes = _.keyBy(genes.found as Gene[], gene=>gene.hugoGeneSymbol.toUpperCase());
-
-        this.heatmapGenesReady = (
-            status === "complete" && // validation promise complete
-            _.every(oql.query as SingleGeneQuery[], query=>query.gene.toUpperCase() in foundGenes) // all genes valid
+        const foundGenes = _.keyBy(genes.found as Gene[], gene =>
+            gene.hugoGeneSymbol.toUpperCase()
         );
+
+        this.heatmapGenesReady =
+            status === 'complete' && // validation promise complete
+            _.every(
+                oql.query as SingleGeneQuery[],
+                query => query.gene.toUpperCase() in foundGenes
+            ); // all genes valid
     }
 
-    private onType(event:React.ChangeEvent<HTMLTextAreaElement>) {
+    private onType(event: React.ChangeEvent<HTMLTextAreaElement>) {
         switch ((event.target as HTMLTextAreaElement).name) {
             case EVENT_KEY.annotateCBioPortalInput:
                 this.props.handlers.onChangeAnnotateCBioPortalInputValue &&
-                this.props.handlers.onChangeAnnotateCBioPortalInputValue(event.target.value);
+                    this.props.handlers.onChangeAnnotateCBioPortalInputValue(
+                        event.target.value
+                    );
                 break;
             case EVENT_KEY.annotateCOSMICInput:
                 this.props.handlers.onChangeAnnotateCOSMICInputValue &&
-                this.props.handlers.onChangeAnnotateCOSMICInputValue(event.target.value);
+                    this.props.handlers.onChangeAnnotateCOSMICInputValue(
+                        event.target.value
+                    );
                 break;
         }
     }
 
     @computed get heatmapProfileOptions() {
-        if (this.props.state.heatmapProfilesPromise && this.props.state.heatmapProfilesPromise.result) {
-            return _.map(this.props.state.heatmapProfilesPromise.result, profile=>({
-                label: profile.name,
-                value: profile.molecularProfileId
-            }));
+        if (
+            this.props.state.heatmapProfilesPromise &&
+            this.props.state.heatmapProfilesPromise.result
+        ) {
+            return _.map(
+                this.props.state.heatmapProfilesPromise.result,
+                profile => ({
+                    label: profile.name,
+                    value: profile.molecularProfileId,
+                })
+            );
         } else {
             return [];
         }
@@ -411,44 +501,63 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         // TODO: put onFocus handler on CheckedSelect when possible
         // TODO: pass unmodified string array as value prop when possible
         // TODO: remove labelKey specification, leave to default prop, when possible
-        if (this.props.store && this.props.state.selectedClinicalAttributeIds &&
-            this.props.handlers.onChangeSelectedClinicalTracks) {
+        if (
+            this.props.store &&
+            this.props.state.selectedClinicalAttributeIds &&
+            this.props.handlers.onChangeSelectedClinicalTracks
+        ) {
             return (
-                <div className="clinical-track-selector" style={{position:"relative"}}>
+                <div
+                    className="clinical-track-selector"
+                    style={{ position: 'relative' }}
+                >
                     <ClinicalAttributeSelector
                         store={this.props.store}
-                        selectedClinicalAttributeIds={this.props.state.selectedClinicalAttributeIds}
-                        onChange={this.props.handlers.onChangeSelectedClinicalTracks}
+                        selectedClinicalAttributeIds={
+                            this.props.state.selectedClinicalAttributeIds
+                        }
+                        onChange={
+                            this.props.handlers.onChangeSelectedClinicalTracks
+                        }
                     />
                 </div>
             );
         } else {
-            return <span/>;
+            return <span />;
         }
     }
 
     private getHeatmapMenu() {
-        if (this.props.oncoprinterMode || this.props.state.hideHeatmapMenu || !this.props.state.heatmapProfilesPromise) {
-            return <span/>;
+        if (
+            this.props.oncoprinterMode ||
+            this.props.state.hideHeatmapMenu ||
+            !this.props.state.heatmapProfilesPromise
+        ) {
+            return <span />;
         }
-        let menu = <LoadingIndicator isLoading={true}/>;
+        let menu = <LoadingIndicator isLoading={true} />;
         if (this.props.state.heatmapProfilesPromise.isComplete) {
             if (!this.props.state.heatmapProfilesPromise.result!.length) {
-                return <span/>;
+                return <span />;
             } else {
                 menu = (
                     <div className="oncoprint__controls__heatmap_menu">
                         <ReactSelect
                             clearable={false}
                             searchable={false}
-                            isLoading={this.props.state.heatmapProfilesPromise.isPending}
+                            isLoading={
+                                this.props.state.heatmapProfilesPromise
+                                    .isPending
+                            }
                             onChange={this.onHeatmapProfileSelect}
                             value={this.props.state.selectedHeatmapProfile}
                             options={this.heatmapProfileOptions}
                         />
                         {this.props.state.heatmapIsDynamicallyQueried && [
                             <GeneSelectionBox
-                                inputGeneQuery={this.props.state.heatmapGeneInputValue || ""}
+                                inputGeneQuery={
+                                    this.props.state.heatmapGeneInputValue || ''
+                                }
                                 callback={this.onChangeHeatmapGeneInput}
                                 location={GeneBoxType.ONCOPRINT_HEATMAP}
                             />,
@@ -458,32 +567,51 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 name={EVENT_KEY.addGenesToHeatmap}
                                 onClick={this.onButtonClick}
                                 disabled={!this.heatmapGenesReady}
-                             >Add Genes to Heatmap</button>,
+                            >
+                                Add Genes to Heatmap
+                            </button>,
 
                             <button
                                 key="removeHeatmapButton"
                                 className="btn btn-sm btn-default"
                                 name={EVENT_KEY.removeHeatmap}
                                 onClick={this.onButtonClick}
-                            >Remove Heatmap</button>
+                            >
+                                Remove Heatmap
+                            </button>,
                         ]}
 
-                        {!this.props.state.hideClusterHeatmapButton &&
-                            (<button
+                        {!this.props.state.hideClusterHeatmapButton && (
+                            <button
                                 data-test="clusterHeatmapBtn"
-                                 className={classNames("btn", "btn-sm", "btn-default", {active:this.props.state.clusterHeatmapButtonActive})}
-                                 name={EVENT_KEY.sortByHeatmapClustering}
-                                 onClick={this.onButtonClick}
-                             >Cluster Heatmap</button>)
-                        }
+                                className={classNames(
+                                    'btn',
+                                    'btn-sm',
+                                    'btn-default',
+                                    {
+                                        active: this.props.state
+                                            .clusterHeatmapButtonActive,
+                                    }
+                                )}
+                                name={EVENT_KEY.sortByHeatmapClustering}
+                                onClick={this.onButtonClick}
+                            >
+                                Cluster Heatmap
+                            </button>
+                        )}
                     </div>
                 );
             }
         } else if (this.props.state.heatmapProfilesPromise.isError) {
-            menu = (<span>Error loading heatmap profiles.</span>);
+            menu = <span>Error loading heatmap profiles.</span>;
         }
         return (
-            <CustomDropdown bsStyle="default" title="Heatmap" id="heatmapDropdown" className="heatmap">
+            <CustomDropdown
+                bsStyle="default"
+                title="Heatmap"
+                id="heatmapDropdown"
+                className="heatmap"
+            >
                 {menu}
             </CustomDropdown>
         );
@@ -492,25 +620,36 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     private getSortMenuOncoprinter() {
         return (
             <CustomDropdown bsStyle="default" title="Sort" id="sortDropdown">
-                <div className="oncoprint__controls__sort_menu" data-test="oncoprintSortDropdownMenu">
-                    <div className="checkbox"><label>
-                        <input
-                            type="checkbox"
-                            value={EVENT_KEY.sortByMutationType}
-                            checked={this.props.state.sortByMutationType}
-                            onClick={this.onInputClick}
-                            disabled={!this.props.state.distinguishMutationType}
-                        /> Mutation Type
-                    </label></div>
-                    <div className="checkbox"><label>
-                        <input
-                            type="checkbox"
-                            value={EVENT_KEY.sortByDrivers}
-                            checked={this.props.state.sortByDrivers}
-                            onClick={this.onInputClick}
-                            disabled={!this.props.state.distinguishDrivers}
-                        /> Driver/Passenger
-                    </label></div>
+                <div
+                    className="oncoprint__controls__sort_menu"
+                    data-test="oncoprintSortDropdownMenu"
+                >
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                type="checkbox"
+                                value={EVENT_KEY.sortByMutationType}
+                                checked={this.props.state.sortByMutationType}
+                                onClick={this.onInputClick}
+                                disabled={
+                                    !this.props.state.distinguishMutationType
+                                }
+                            />{' '}
+                            Mutation Type
+                        </label>
+                    </div>
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                type="checkbox"
+                                value={EVENT_KEY.sortByDrivers}
+                                checked={this.props.state.sortByDrivers}
+                                onClick={this.onInputClick}
+                                disabled={!this.props.state.distinguishDrivers}
+                            />{' '}
+                            Driver/Passenger
+                        </label>
+                    </div>
                 </div>
             </CustomDropdown>
         );
@@ -519,69 +658,119 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     private getSortMenuOncoprint() {
         return (
             <CustomDropdown bsStyle="default" title="Sort" id="sortDropdown">
-                <div className="oncoprint__controls__sort_menu" data-test="oncoprintSortDropdownMenu">
-                        <div className="radio"><label>
+                <div
+                    className="oncoprint__controls__sort_menu"
+                    data-test="oncoprintSortDropdownMenu"
+                >
+                    <div className="radio">
+                        <label>
                             <input
                                 data-test="sortByData"
                                 type="radio"
                                 name="sortBy"
                                 value={EVENT_KEY.sortByData}
-                                checked={this.props.state.sortMode!.type === "data"}
+                                checked={
+                                    this.props.state.sortMode!.type === 'data'
+                                }
                                 onClick={this.onInputClick}
-                            /> Sort by data
-                        </label></div>
-                        <div style={{marginLeft: "10px"}}>
-                            <div className="checkbox"><label>
+                            />{' '}
+                            Sort by data
+                        </label>
+                    </div>
+                    <div style={{ marginLeft: '10px' }}>
+                        <div className="checkbox">
+                            <label>
                                 <input
                                     type="checkbox"
                                     value={EVENT_KEY.sortByMutationType}
-                                    checked={this.props.state.sortByMutationType}
+                                    checked={
+                                        this.props.state.sortByMutationType
+                                    }
                                     onClick={this.onInputClick}
-                                    disabled={this.props.state.sortMode!.type !== "data" || !this.props.state.distinguishMutationType}
-                                /> Mutation Type
-                            </label></div>
-                            <div className="checkbox"><label>
+                                    disabled={
+                                        this.props.state.sortMode!.type !==
+                                            'data' ||
+                                        !this.props.state
+                                            .distinguishMutationType
+                                    }
+                                />{' '}
+                                Mutation Type
+                            </label>
+                        </div>
+                        <div className="checkbox">
+                            <label>
                                 <input
                                     type="checkbox"
                                     value={EVENT_KEY.sortByDrivers}
                                     checked={this.props.state.sortByDrivers}
                                     onClick={this.onInputClick}
-                                    disabled={this.props.state.sortMode!.type !== "data" || !this.props.state.distinguishDrivers}
-                                /> Driver/Passenger
-                            </label></div>
+                                    disabled={
+                                        this.props.state.sortMode!.type !==
+                                            'data' ||
+                                        !this.props.state.distinguishDrivers
+                                    }
+                                />{' '}
+                                Driver/Passenger
+                            </label>
                         </div>
-                        <div className="radio"><label>
+                    </div>
+                    <div className="radio">
+                        <label>
                             <input
                                 type="radio"
                                 name="sortBy"
                                 value={EVENT_KEY.sortAlphabetical}
-                                checked={this.props.state.sortMode!.type === "alphabetical"}
+                                checked={
+                                    this.props.state.sortMode!.type ===
+                                    'alphabetical'
+                                }
                                 onClick={this.onInputClick}
-                            /> Sort by case id (alphabetical)
-                        </label></div>
-                        <div className="radio"><label>
+                            />{' '}
+                            Sort by case id (alphabetical)
+                        </label>
+                    </div>
+                    <div className="radio">
+                        <label>
                             <input
                                 type="radio"
                                 name="sortBy"
                                 value={EVENT_KEY.sortCaseListOrder}
-                                checked={this.props.state.sortMode!.type === "caseList"}
+                                checked={
+                                    this.props.state.sortMode!.type ===
+                                    'caseList'
+                                }
                                 onClick={this.onInputClick}
                                 data-test="caseList"
-                                disabled={!!this.props.state.sortByCaseListDisabled}
-                            /> Sort by case list order
-                        </label></div>
-                        {(this.props.state.heatmapProfilesPromise &&
-                                !(this.props.state.heatmapProfilesPromise.isComplete
-                                    && !this.props.state.heatmapProfilesPromise.result!.length))
-                        && (<div className="radio"><label>
-                            <input
-                                data-test="sortByHeatmapClustering"
-                                type="radio"
-                                name="sortBy"
-                                checked={this.props.state.sortMode!.type === "heatmap"}
-                                disabled
-                            /> Sorted by heatmap clustering order
-                        </label></div>)}
+                                disabled={
+                                    !!this.props.state.sortByCaseListDisabled
+                                }
+                            />{' '}
+                            Sort by case list order
+                        </label>
+                    </div>
+                    {this.props.state.heatmapProfilesPromise &&
+                        !(
+                            this.props.state.heatmapProfilesPromise
+                                .isComplete &&
+                            !this.props.state.heatmapProfilesPromise.result!
+                                .length
+                        ) && (
+                            <div className="radio">
+                                <label>
+                                    <input
+                                        data-test="sortByHeatmapClustering"
+                                        type="radio"
+                                        name="sortBy"
+                                        checked={
+                                            this.props.state.sortMode!.type ===
+                                            'heatmap'
+                                        }
+                                        disabled
+                                    />{' '}
+                                    Sorted by heatmap clustering order
+                                </label>
+                            </div>
+                        )}
                 </div>
             </CustomDropdown>
         );
@@ -589,56 +778,89 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     private getMutationColorMenu() {
         return (
-            <CustomDropdown bsStyle="default" title="Mutations" id="mutationColorDropdown">
+            <CustomDropdown
+                bsStyle="default"
+                title="Mutations"
+                id="mutationColorDropdown"
+            >
                 <div className="oncoprint__controls__mutation_color_menu">
                     <h5>Color by</h5>
-                    <div style={{marginLeft: "10px"}}>
-                        <div className="checkbox"><label>
-                            <input
-                                data-test="ColorByType"
-                                type="checkbox"
-                                value={EVENT_KEY.distinguishMutationType}
-                                checked={this.props.state.distinguishMutationType}
-                                onClick={this.onInputClick}
-                            /> Type
-                        </label></div>
-                        <div className="checkbox"><label>
-                            <input
-                                data-test="ColorByGermline"
-                                type="checkbox"
-                                value={EVENT_KEY.distinguishGermlineMutations}
-                                checked={this.props.state.distinguishGermlineMutations}
-                                onClick={this.onInputClick}
-                            /> Somatic vs Germline
-                        </label></div>
+                    <div style={{ marginLeft: '10px' }}>
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="ColorByType"
+                                    type="checkbox"
+                                    value={EVENT_KEY.distinguishMutationType}
+                                    checked={
+                                        this.props.state.distinguishMutationType
+                                    }
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Type
+                            </label>
+                        </div>
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="ColorByGermline"
+                                    type="checkbox"
+                                    value={
+                                        EVENT_KEY.distinguishGermlineMutations
+                                    }
+                                    checked={
+                                        this.props.state
+                                            .distinguishGermlineMutations
+                                    }
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Somatic vs Germline
+                            </label>
+                        </div>
                         <DriverAnnotationControls
                             state={this.props.state}
-                            handlers={Object.assign({
-                                onCustomDriverTierCheckboxClick: this.onCustomDriverTierCheckboxClick
-                            } as Partial<IDriverAnnotationControlsHandlers>, this.props.handlers)}
+                            handlers={Object.assign(
+                                {
+                                    onCustomDriverTierCheckboxClick: this
+                                        .onCustomDriverTierCheckboxClick,
+                                } as Partial<IDriverAnnotationControlsHandlers>,
+                                this.props.handlers
+                            )}
                         />
                     </div>
                     <h5>Filter</h5>
-                    <div style={{marginLeft:10}}>
-                        <div className="checkbox"><label>
-                            <input
-                                data-test="HideVUS"
-                                type="checkbox"
-                                value={EVENT_KEY.hidePutativePassengers}
-                                checked={!this.props.state.hidePutativePassengers}
-                                onClick={this.onInputClick}
-                                disabled={!this.props.state.distinguishDrivers}
-                            /> Show VUS (variants of unknown significance)
-                        </label></div>
-                        <div className="checkbox"><label>
-                            <input
-                                data-test="HideGermline"
-                                type="checkbox"
-                                value={EVENT_KEY.showGermlineMutations}
-                                checked={this.props.state.showGermlineMutations}
-                                onClick={this.onInputClick}
-                            /> Show germline mutations
-                        </label></div>
+                    <div style={{ marginLeft: 10 }}>
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="HideVUS"
+                                    type="checkbox"
+                                    value={EVENT_KEY.hidePutativePassengers}
+                                    checked={
+                                        !this.props.state.hidePutativePassengers
+                                    }
+                                    onClick={this.onInputClick}
+                                    disabled={
+                                        !this.props.state.distinguishDrivers
+                                    }
+                                />{' '}
+                                Show VUS (variants of unknown significance)
+                            </label>
+                        </div>
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="HideGermline"
+                                    type="checkbox"
+                                    value={EVENT_KEY.showGermlineMutations}
+                                    checked={
+                                        this.props.state.showGermlineMutations
+                                    }
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Show germline mutations
+                            </label>
+                        </div>
                     </div>
                 </div>
             </CustomDropdown>
@@ -655,124 +877,202 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     private getViewMenuOncoprinter() {
         return (
-            <CustomDropdown bsStyle="default" title="View" id="viewDropdownButton">
-                <div className="checkbox"><label>
-                    <input
-                        type="checkbox"
-                        value={EVENT_KEY.showUnalteredColumns}
-                        checked={this.props.state.showUnalteredColumns}
-                        onClick={this.onInputClick}
-                    /> Show unaltered columns
-                </label></div>
-                <div className="checkbox"><label>
-                    <input
-                        type="checkbox"
-                        value={EVENT_KEY.showWhitespaceBetweenColumns}
-                        checked={this.props.state.showWhitespaceBetweenColumns}
-                        onClick={this.onInputClick}
-                    /> Show whitespace between columns
-                </label></div>
+            <CustomDropdown
+                bsStyle="default"
+                title="View"
+                id="viewDropdownButton"
+            >
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            value={EVENT_KEY.showUnalteredColumns}
+                            checked={this.props.state.showUnalteredColumns}
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Show unaltered columns
+                    </label>
+                </div>
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            value={EVENT_KEY.showWhitespaceBetweenColumns}
+                            checked={
+                                this.props.state.showWhitespaceBetweenColumns
+                            }
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Show whitespace between columns
+                    </label>
+                </div>
             </CustomDropdown>
         );
     }
     private getViewMenuOncoprint() {
         return (
-            <CustomDropdown bsStyle="default" title="View" id="viewDropdownButton">
+            <CustomDropdown
+                bsStyle="default"
+                title="View"
+                id="viewDropdownButton"
+            >
                 <strong>Data type:</strong>
-                <div className="radio"><label>
-                    <input
-                        type="radio"
-                        name="columnType"
-                        value={EVENT_KEY.columnTypeSample}
-                        checked={this.props.state.selectedColumnType === "sample"}
-                        onClick={this.onInputClick}
-                    /> Events per sample
-                </label></div>
-                <div className="radio"><label>
-                    <input
-                        type="radio"
-                        name="columnType"
-                        value={EVENT_KEY.columnTypePatient}
-                        checked={this.props.state.selectedColumnType === "patient"}
-                        onClick={this.onInputClick}
-                    /> Events per patient
-                </label></div>
+                <div className="radio">
+                    <label>
+                        <input
+                            type="radio"
+                            name="columnType"
+                            value={EVENT_KEY.columnTypeSample}
+                            checked={
+                                this.props.state.selectedColumnType === 'sample'
+                            }
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Events per sample
+                    </label>
+                </div>
+                <div className="radio">
+                    <label>
+                        <input
+                            type="radio"
+                            name="columnType"
+                            value={EVENT_KEY.columnTypePatient}
+                            checked={
+                                this.props.state.selectedColumnType ===
+                                'patient'
+                            }
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Events per patient
+                    </label>
+                </div>
 
                 <hr />
-                <div className="checkbox"><label>
-                    <input
-                        type="checkbox"
-                        value={EVENT_KEY.showUnalteredColumns}
-                        checked={this.props.state.showUnalteredColumns}
-                        onClick={this.onInputClick}
-                    /> Show unaltered columns
-                </label></div>
-                <div className="checkbox"><label>
-                    <input
-                        type="checkbox"
-                        value={EVENT_KEY.showWhitespaceBetweenColumns}
-                        checked={this.props.state.showWhitespaceBetweenColumns}
-                        onClick={this.onInputClick}
-                    /> Show whitespace between columns
-                </label></div>
-                <div className="checkbox"><label>
-                    <input
-                        type="checkbox"
-                        value={EVENT_KEY.showClinicalTrackLegends}
-                        checked={this.props.state.showClinicalTrackLegends}
-                        onClick={this.onInputClick}
-                    /> Show legends for clinical tracks
-                </label></div>
-                <div className="checkbox" style={{marginLeft:20, maxWidth: 220}}><label>
-                    <input
-                        data-test="onlyShowClinicalLegendsForAltered"
-                        type="checkbox"
-                        value={EVENT_KEY.onlyShowClinicalLegendForAlteredCases}
-                        checked={this.props.state.onlyShowClinicalLegendForAlteredCases}
-                        onClick={this.onInputClick}
-                        disabled={!this.props.state.showClinicalTrackLegends}
-                    /> Only show clinical track legends for altered {this.props.state.columnMode === "patient" ? "patients" : "samples"}.
-                </label></div>
-                <div className="checkbox"><label>
-                    <input
-                        type="checkbox"
-                        value={EVENT_KEY.showOqlInLabels}
-                        checked={this.props.state.showOqlInLabels}
-                        onClick={this.onInputClick}
-                    /> Show OQL filters
-                </label></div>
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            value={EVENT_KEY.showUnalteredColumns}
+                            checked={this.props.state.showUnalteredColumns}
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Show unaltered columns
+                    </label>
+                </div>
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            value={EVENT_KEY.showWhitespaceBetweenColumns}
+                            checked={
+                                this.props.state.showWhitespaceBetweenColumns
+                            }
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Show whitespace between columns
+                    </label>
+                </div>
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            value={EVENT_KEY.showClinicalTrackLegends}
+                            checked={this.props.state.showClinicalTrackLegends}
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Show legends for clinical tracks
+                    </label>
+                </div>
+                <div
+                    className="checkbox"
+                    style={{ marginLeft: 20, maxWidth: 220 }}
+                >
+                    <label>
+                        <input
+                            data-test="onlyShowClinicalLegendsForAltered"
+                            type="checkbox"
+                            value={
+                                EVENT_KEY.onlyShowClinicalLegendForAlteredCases
+                            }
+                            checked={
+                                this.props.state
+                                    .onlyShowClinicalLegendForAlteredCases
+                            }
+                            onClick={this.onInputClick}
+                            disabled={
+                                !this.props.state.showClinicalTrackLegends
+                            }
+                        />{' '}
+                        Only show clinical track legends for altered{' '}
+                        {this.props.state.columnMode === 'patient'
+                            ? 'patients'
+                            : 'samples'}
+                        .
+                    </label>
+                </div>
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            value={EVENT_KEY.showOqlInLabels}
+                            checked={this.props.state.showOqlInLabels}
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Show OQL filters
+                    </label>
+                </div>
             </CustomDropdown>
         );
     }
 
     private getDownloadMenu() {
         return (
-            <CustomDropdown bsStyle="default" title="Download" id="downloadDropdownButton">
+            <CustomDropdown
+                bsStyle="default"
+                title="Download"
+                id="downloadDropdownButton"
+            >
                 <button
                     className="btn btn-sm btn-default"
                     name={EVENT_KEY.downloadPDF}
                     onClick={this.onButtonClick}
-                >PDF</button>
+                >
+                    PDF
+                </button>
                 <button
                     className="btn btn-sm btn-default"
                     name={EVENT_KEY.downloadPNG}
                     onClick={this.onButtonClick}
-                >PNG</button>
+                >
+                    PNG
+                </button>
                 <button
                     className="btn btn-sm btn-default"
                     name={EVENT_KEY.downloadSVG}
                     onClick={this.onButtonClick}
-                >SVG</button>
+                >
+                    SVG
+                </button>
                 <button
                     className="btn btn-sm btn-default"
                     name={EVENT_KEY.downloadOrder}
                     onClick={this.onButtonClick}
-                >{(this.props.state.columnMode && this.props.state.columnMode[0].toUpperCase() + this.props.state.columnMode.slice(1))||"Sample"} order</button>
-                { !this.props.oncoprinterMode && (<button
-                    className="btn btn-sm btn-default"
-                    name={EVENT_KEY.downloadTabular}
-                    onClick={this.onButtonClick}
-                >Tabular</button>) }
+                >
+                    {(this.props.state.columnMode &&
+                        this.props.state.columnMode[0].toUpperCase() +
+                            this.props.state.columnMode.slice(1)) ||
+                        'Sample'}{' '}
+                    order
+                </button>
+                {!this.props.oncoprinterMode && (
+                    <button
+                        className="btn btn-sm btn-default"
+                        name={EVENT_KEY.downloadTabular}
+                        onClick={this.onButtonClick}
+                    >
+                        Tabular
+                    </button>
+                )}
             </CustomDropdown>
         );
     }
@@ -780,19 +1080,15 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     private getHorzZoomControls() {
         return (
             <div className="btn btn-default oncoprint__zoom-controls">
-                <DefaultTooltip
-                    overlay={<span>Zoom out of oncoprint.</span>}
-                >
-                    <div
-                        onClick={this.onZoomOutClick}
-                    >
-                        <i className="fa fa-search-minus"></i>
+                <DefaultTooltip overlay={<span>Zoom out of oncoprint.</span>}>
+                    <div onClick={this.onZoomOutClick}>
+                        <i className="fa fa-search-minus" />
                     </div>
                 </DefaultTooltip>
                 <DefaultTooltip
                     overlay={<span>Zoom in/out of oncoprint.</span>}
                 >
-                    <div style={{width:"90px"}}>
+                    <div style={{ width: '90px' }}>
                         <Slider
                             value={this.horzZoomSliderState}
                             onChange={this.onHorzZoomSliderChange}
@@ -806,32 +1102,28 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 </DefaultTooltip>
 
                 <EditableSpan
-                    value={(100*this.horzZoomSliderState).toFixed()}
+                    value={(100 * this.horzZoomSliderState).toFixed()}
                     setValue={this.onSetHorzZoomTextInput}
                     maxChars={3}
                     numericOnly={true}
                     textFieldAppearance={true}
                     style={{
-                        background:"white",
-                        minWidth:"30px",
-                        fontSize: "14px",
-                        fontFamily: "arial",
-                        border:'none',
-                        padding:0,
-                        marginTop:0,
-                        marginBottom:0,
-                        marginRight:2
+                        background: 'white',
+                        minWidth: '30px',
+                        fontSize: '14px',
+                        fontFamily: 'arial',
+                        border: 'none',
+                        padding: 0,
+                        marginTop: 0,
+                        marginBottom: 0,
+                        marginRight: 2,
                     }}
                 />
                 <div>%</div>
 
-                <DefaultTooltip
-                    overlay={<span>Zoom in to oncoprint.</span>}
-                >
-                    <div
-                        onClick={this.onZoomInClick}
-                    >
-                          <i className="fa fa-search-plus"></i>
+                <DefaultTooltip overlay={<span>Zoom in to oncoprint.</span>}>
+                    <div onClick={this.onZoomInClick}>
+                        <i className="fa fa-search-plus" />
                     </div>
                 </DefaultTooltip>
             </div>
@@ -845,17 +1137,19 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     private get minimapButton() {
         return (
             <div className="btn-group">
-            <DefaultTooltip
-                overlay={<span>Toggle minimap panel.</span>}
-            >
-                <Button
-                    active={this.showMinimap}
-                    onClick={this.toggleShowMinimap}
-                    className="oncoprint__controls__minimap_button"
-                >
-                    <img src={require("./toggle-minimap.svg")} alt="icon" style={{width:15, height:15, margin:2}}/>
-                </Button>
-            </DefaultTooltip>
+                <DefaultTooltip overlay={<span>Toggle minimap panel.</span>}>
+                    <Button
+                        active={this.showMinimap}
+                        onClick={this.toggleShowMinimap}
+                        className="oncoprint__controls__minimap_button"
+                    >
+                        <img
+                            src={require('./toggle-minimap.svg')}
+                            alt="icon"
+                            style={{ width: 15, height: 15, margin: 2 }}
+                        />
+                    </Button>
+                </DefaultTooltip>
             </div>
         );
     }
@@ -871,30 +1165,16 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     render() {
         return (
             <div className="oncoprint__controls">
-                <div style={{width:250, marginRight:5, marginTop:-0.5}}>
-                    <Observer>
-                        {this.getClinicalTracksMenu}
-                    </Observer>
+                <div style={{ width: 250, marginRight: 5, marginTop: -0.5 }}>
+                    <Observer>{this.getClinicalTracksMenu}</Observer>
                 </div>
                 <ButtonGroup>
-                    <Observer>
-                        {this.getHeatmapMenu}
-                    </Observer>
-                    <Observer>
-                        {this.getSortMenu}
-                    </Observer>
-                    <Observer>
-                        {this.getMutationColorMenu}
-                    </Observer>
-                    <Observer>
-                        {this.getViewMenu}
-                    </Observer>
-                    <Observer>
-                        {this.getDownloadMenu}
-                    </Observer>
-                    <Observer>
-                        {this.getHorzZoomControls}
-                    </Observer>
+                    <Observer>{this.getHeatmapMenu}</Observer>
+                    <Observer>{this.getSortMenu}</Observer>
+                    <Observer>{this.getMutationColorMenu}</Observer>
+                    <Observer>{this.getViewMenu}</Observer>
+                    <Observer>{this.getDownloadMenu}</Observer>
+                    <Observer>{this.getHorzZoomControls}</Observer>
                     {this.minimapButton}
                 </ButtonGroup>
             </div>

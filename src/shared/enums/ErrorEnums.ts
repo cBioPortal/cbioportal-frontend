@@ -1,5 +1,3 @@
 export enum ErrorMessages {
-
-    InvalidGenes = "INVALID GENE SYMBOLS"
-
+    InvalidGenes = 'INVALID GENE SYMBOLS',
 }

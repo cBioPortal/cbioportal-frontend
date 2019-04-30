@@ -1,8 +1,8 @@
-import {assert} from "chai";
-import {getHeatmapMeta} from "./MDACCUtils";
+import { assert } from 'chai';
+import { getHeatmapMeta } from './MDACCUtils';
 
-describe("MDACCUtils", () => {
-    describe("getHeatmapMeta", () => {
+describe('MDACCUtils', () => {
+    describe('getHeatmapMeta', () => {
         // These tests will be transferred to e2e tests once the interface is finalized
         // it("return empty array for other non heatmap services", (done) => {
         //     getHeatmapMeta("")

@@ -1,13 +1,13 @@
-import * as React from "react";
-import * as _ from "lodash";
-import {observer} from "mobx-react";
-import {computed} from "mobx";
-import HotspotTrack, {hotspotTooltip} from "./HotspotTrack";
-import OncoKbTrack from "./OncoKbTrack";
-import {TrackItemSpec} from "./TrackCircle";
-import OncoKbTrackTooltip from "./OncoKbTrackTooltip";
-import {TrackNames, TrackVisibility} from "./TrackSelector";
-import MutationMapperStore from "../mutationMapper/MutationMapperStore";
+import * as React from 'react';
+import * as _ from 'lodash';
+import { observer } from 'mobx-react';
+import { computed } from 'mobx';
+import HotspotTrack, { hotspotTooltip } from './HotspotTrack';
+import OncoKbTrack from './OncoKbTrack';
+import { TrackItemSpec } from './TrackCircle';
+import OncoKbTrackTooltip from './OncoKbTrackTooltip';
+import { TrackNames, TrackVisibility } from './TrackSelector';
+import MutationMapperStore from '../mutationMapper/MutationMapperStore';
 
 type TrackPanelProps = {
     store: MutationMapperStore;
@@ -19,8 +19,7 @@ type TrackPanelProps = {
 };
 
 @observer
-export default class TrackPanel extends React.Component<TrackPanelProps, {}>
-{
+export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
     constructor(props: TrackPanelProps) {
         super(props);
     }
@@ -31,44 +30,60 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}>
     }
 
     @computed get hotspotSpecs(): TrackItemSpec[] {
-        if(!_.isEmpty(this.props.store.filteredHotspotsByProteinPosStart)) {
+        if (!_.isEmpty(this.props.store.filteredHotspotsByProteinPosStart)) {
             return _.keys(this.props.store.filteredHotspotsByProteinPosStart)
                 .filter(position => Number(position) >= 0)
                 .map(position => ({
                     codon: Number(position),
-                    color: "#FF9900",
+                    color: '#FF9900',
                     tooltip: hotspotTooltip(
-                        this.props.store.filteredMutationsByPosition[Number(position)],
+                        this.props.store.filteredMutationsByPosition[
+                            Number(position)
+                        ],
                         this.props.store.indexedHotspotData.result || {},
-                        this.props.store.filteredHotspotsByProteinPosStart[Number(position)])
+                        this.props.store.filteredHotspotsByProteinPosStart[
+                            Number(position)
+                        ]
+                    ),
                 }));
-        }
-        else {
+        } else {
             return [];
         }
     }
 
     @computed get oncoKbSpecs(): TrackItemSpec[] {
-        if(!_.isEmpty(this.props.store.filteredOncoKbDataByProteinPosStart)) {
+        if (!_.isEmpty(this.props.store.filteredOncoKbDataByProteinPosStart)) {
             return _.keys(this.props.store.filteredOncoKbDataByProteinPosStart)
                 .filter(position => Number(position) >= 0)
                 .map(position => ({
                     codon: Number(position),
-                    color: "#007FFF",
+                    color: '#007FFF',
                     tooltip: (
                         <OncoKbTrackTooltip
-                            mutations={this.props.store.filteredMutationsByPosition[Number(position)]}
-                            indicatorData={this.props.store.filteredOncoKbDataByProteinPosStart[Number(position)]}
-                            oncoKbData={
-                                this.props.store.oncoKbData.result instanceof Error ?
-                                    undefined : this.props.store.oncoKbData.result
+                            mutations={
+                                this.props.store.filteredMutationsByPosition[
+                                    Number(position)
+                                ]
                             }
-                            hugoGeneSymbol={this.props.store.gene.hugoGeneSymbol}
+                            indicatorData={
+                                this.props.store
+                                    .filteredOncoKbDataByProteinPosStart[
+                                    Number(position)
+                                ]
+                            }
+                            oncoKbData={
+                                this.props.store.oncoKbData.result instanceof
+                                Error
+                                    ? undefined
+                                    : this.props.store.oncoKbData.result
+                            }
+                            hugoGeneSymbol={
+                                this.props.store.gene.hugoGeneSymbol
+                            }
                         />
-                    )
+                    ),
                 }));
-        }
-        else {
+        } else {
             return [];
         }
     }
@@ -77,38 +92,46 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}>
         return (
             <div
                 style={{
-                    overflowY: "hidden",
+                    overflowY: 'hidden',
                     maxHeight: this.props.maxHeight,
-                    position: "relative"
+                    position: 'relative',
                 }}
             >
-                {
-                    (!this.props.trackVisibility || this.props.trackVisibility[TrackNames.CancerHotspots] === 'visible') &&
+                {(!this.props.trackVisibility ||
+                    this.props.trackVisibility[TrackNames.CancerHotspots] ===
+                        'visible') && (
                     <HotspotTrack
                         dataStore={this.props.store.dataStore}
-                        hotspotIndex={this.props.store.indexedHotspotData.result || {}}
+                        hotspotIndex={
+                            this.props.store.indexedHotspotData.result || {}
+                        }
                         width={this.props.geneWidth}
                         xOffset={this.props.geneXOffset}
                         trackItems={this.hotspotSpecs}
                         proteinLength={this.proteinLength}
                     />
-                }
-                {
-                    (!this.props.trackVisibility || this.props.trackVisibility[TrackNames.OncoKB] === 'visible') &&
+                )}
+                {(!this.props.trackVisibility ||
+                    this.props.trackVisibility[TrackNames.OncoKB] ===
+                        'visible') && (
                     <OncoKbTrack
                         dataStore={this.props.store.dataStore}
                         oncoKbData={
                             this.props.store.oncoKbData &&
                             this.props.store.oncoKbData.result &&
-                            !(this.props.store.oncoKbData.result instanceof Error) ?
-                            this.props.store.oncoKbData.result : undefined
+                            !(
+                                this.props.store.oncoKbData.result instanceof
+                                Error
+                            )
+                                ? this.props.store.oncoKbData.result
+                                : undefined
                         }
                         width={this.props.geneWidth}
                         xOffset={this.props.geneXOffset}
                         trackItems={this.oncoKbSpecs}
                         proteinLength={this.proteinLength}
                     />
-                }
+                )}
             </div>
         );
     }

@@ -1,14 +1,14 @@
 import load from 'little-loader';
-import getBrowserWindow from "./getBrowserWindow";
-import {ICustomTabConfiguration} from "../model/ITabConfiguration";
-import {autorun} from "mobx";
+import getBrowserWindow from './getBrowserWindow';
+import { ICustomTabConfiguration } from '../model/ITabConfiguration';
+import { autorun } from 'mobx';
 
-export function loadCustomTabDeps(tab:any){
+export function loadCustomTabDeps(tab: any) {
     if (tab.pathsToJs) {
-        const proms:Promise<any>[] = [];
-        tab.pathsToJs.forEach((str:string)=>{
-            const p = new Promise(function(resolve, reject){
-                load(str,(err:any)=>{
+        const proms: Promise<any>[] = [];
+        tab.pathsToJs.forEach((str: string) => {
+            const p = new Promise(function(resolve, reject) {
+                load(str, (err: any) => {
                     if (err) {
                         reject(err);
                     } else {
@@ -23,18 +23,31 @@ export function loadCustomTabDeps(tab:any){
     }
 }
 
-export function showCustomTab(div:HTMLDivElement, tab:ICustomTabConfiguration, url:string, store:any, isUnmount = false){
+export function showCustomTab(
+    div: HTMLDivElement,
+    tab: ICustomTabConfiguration,
+    url: string,
+    store: any,
+    isUnmount = false
+) {
     tab.dependencyPromise = tab.dependencyPromise || loadCustomTabDeps(tab);
 
-    const runCallback = (tab:ICustomTabConfiguration)=>{
+    const runCallback = (tab: ICustomTabConfiguration) => {
         if (getBrowserWindow()[tab.mountCallbackName]) {
-            getBrowserWindow()[tab.mountCallbackName](div, tab, url, store, autorun, isUnmount);
+            getBrowserWindow()[tab.mountCallbackName](
+                div,
+                tab,
+                url,
+                store,
+                autorun,
+                isUnmount
+            );
         } else {
             alert(`Callback for tab ${tab.title} not found`);
         }
-    }
+    };
 
-    tab.dependencyPromise!.then(()=>{
+    tab.dependencyPromise!.then(() => {
         runCallback(tab);
     });
 }

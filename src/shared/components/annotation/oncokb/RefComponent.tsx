@@ -1,11 +1,15 @@
 import * as React from 'react';
-import {getNCBIlink} from "../../../api/urls";
-import mainStyles from "../styles/oncokb/main.module.scss";
-import ReferenceList from "./ReferenceList";
-import DefaultTooltip from "../../defaultTooltip/DefaultTooltip";
-import {ICache} from "../../../lib/SimpleCache";
+import { getNCBIlink } from '../../../api/urls';
+import mainStyles from '../styles/oncokb/main.module.scss';
+import ReferenceList from './ReferenceList';
+import DefaultTooltip from '../../defaultTooltip/DefaultTooltip';
+import { ICache } from '../../../lib/SimpleCache';
 
-export default class RefComponent extends React.Component<{ content: string, componentType: 'tooltip' | 'linkout', pmidData:ICache<any>}> {
+export default class RefComponent extends React.Component<{
+    content: string;
+    componentType: 'tooltip' | 'linkout';
+    pmidData: ICache<any>;
+}> {
     render() {
         const parts = this.props.content.split(/pmid|nct/i);
 
@@ -21,10 +25,10 @@ export default class RefComponent extends React.Component<{ content: string, com
 
         let prefix: string | undefined;
 
-        if (this.props.content.toLowerCase().indexOf("pmid") >= 0) {
-            prefix = "PMID: ";
-        } else if (this.props.content.toLowerCase().indexOf("nct") >= 0) {
-            prefix = "NCT";
+        if (this.props.content.toLowerCase().indexOf('pmid') >= 0) {
+            prefix = 'PMID: ';
+        } else if (this.props.content.toLowerCase().indexOf('nct') >= 0) {
+            prefix = 'NCT';
         }
 
         let link: JSX.Element | undefined;
@@ -33,18 +37,21 @@ export default class RefComponent extends React.Component<{ content: string, com
             link = (
                 <a
                     target="_blank"
-                    href={getNCBIlink(`/pubmed/${ids.join(",")}`)}
+                    href={getNCBIlink(`/pubmed/${ids.join(',')}`)}
                 >
-                    {`${prefix}${ids.join(",")}`}
+                    {`${prefix}${ids.join(',')}`}
                 </a>
             );
         }
 
         if (this.props.componentType === 'tooltip') {
             const tooltipContent = () => (
-                <div className={mainStyles["tooltip-refs"]}>
-                    <ReferenceList pmids={ids.map((id: string) => parseInt(id))} pmidData={this.props.pmidData}
-                                   abstracts={[]}/>
+                <div className={mainStyles['tooltip-refs']}>
+                    <ReferenceList
+                        pmids={ids.map((id: string) => parseInt(id))}
+                        pmidData={this.props.pmidData}
+                        abstracts={[]}
+                    />
                 </div>
             );
 
@@ -57,7 +64,7 @@ export default class RefComponent extends React.Component<{ content: string, com
                         trigger={['hover', 'focus']}
                         destroyTooltipOnHide={true}
                     >
-                        <i className="fa fa-book" style={{color: "black"}}/>
+                        <i className="fa fa-book" style={{ color: 'black' }} />
                     </DefaultTooltip>
                     {`)`}
                 </span>
@@ -73,6 +80,5 @@ export default class RefComponent extends React.Component<{ content: string, com
         } else {
             return <span>{this.props.content}</span>;
         }
-
     }
 }

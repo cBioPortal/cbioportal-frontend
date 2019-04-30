@@ -1,4 +1,4 @@
-import jStat from 'jStat'
+import jStat from 'jStat';
 import * as _ from 'lodash';
 
 const SUSPECTED_OUTLIER_MULTIPLE = 1.5;
@@ -12,46 +12,55 @@ interface Outliers {
     lower: {
         suspectedOutliers: number[];
         outliers: number[];
-    }
-};
-
-export type BoxPlotModel = {
-    min: number,
-    median: number,
-    max: number,
-    q1: number,
-    q2: number,
-    q3: number,
-    x?: number,
-    whiskerUpper: number,
-    whiskerLower: number,
-    IQR: number,
-    outliersUpper: Outliers["upper"],
-    outliersLower: Outliers["lower"]
-};
-
-
-function calculateOutliers(vector: number[], suspectedOutlierThresholdUpper: number, outlierThresholdUpper: number,
-                           suspectedOutlierThresholdLower: number, outlierThresholdLower: number): Outliers {
-
-    return vector.reduce((memo: Outliers, val) => {
-        if (val >= suspectedOutlierThresholdUpper) {
-            (val < outlierThresholdUpper) ?
-                memo.upper.suspectedOutliers.push(val) : memo.upper.outliers.push(val);
-        }
-
-        if (val <= suspectedOutlierThresholdLower) {
-            (val > outlierThresholdLower) ?
-                memo.lower.suspectedOutliers.push(val) : memo.lower.outliers.push(val);
-        }
-
-        return memo;
-    }, {upper: {outliers: [], suspectedOutliers: []}, lower: {outliers: [], suspectedOutliers: []}});
+    };
 }
 
+export type BoxPlotModel = {
+    min: number;
+    median: number;
+    max: number;
+    q1: number;
+    q2: number;
+    q3: number;
+    x?: number;
+    whiskerUpper: number;
+    whiskerLower: number;
+    IQR: number;
+    outliersUpper: Outliers['upper'];
+    outliersLower: Outliers['lower'];
+};
+
+function calculateOutliers(
+    vector: number[],
+    suspectedOutlierThresholdUpper: number,
+    outlierThresholdUpper: number,
+    suspectedOutlierThresholdLower: number,
+    outlierThresholdLower: number
+): Outliers {
+    return vector.reduce(
+        (memo: Outliers, val) => {
+            if (val >= suspectedOutlierThresholdUpper) {
+                val < outlierThresholdUpper
+                    ? memo.upper.suspectedOutliers.push(val)
+                    : memo.upper.outliers.push(val);
+            }
+
+            if (val <= suspectedOutlierThresholdLower) {
+                val > outlierThresholdLower
+                    ? memo.lower.suspectedOutliers.push(val)
+                    : memo.lower.outliers.push(val);
+            }
+
+            return memo;
+        },
+        {
+            upper: { outliers: [], suspectedOutliers: [] },
+            lower: { outliers: [], suspectedOutliers: [] },
+        }
+    );
+}
 
 export function calculateBoxPlotModel(vector: number[]): BoxPlotModel {
-
     const sortedVector = _.sortBy<number>(vector, [(n: number) => n]);
 
     const quartiles = jStat.quartiles(sortedVector) as number[];
@@ -64,20 +73,33 @@ export function calculateBoxPlotModel(vector: number[]): BoxPlotModel {
     const max: number = sortedVector[sortedVector.length - 1];
     const min: number = sortedVector[0];
 
-    const outlierThresholdLower = q1 - (OUTLIER_MULTIPLE * IQR);
-    const outlierThresholdUpper = q3 + (OUTLIER_MULTIPLE * IQR);
+    const outlierThresholdLower = q1 - OUTLIER_MULTIPLE * IQR;
+    const outlierThresholdUpper = q3 + OUTLIER_MULTIPLE * IQR;
 
-    const suspectedOutlierThresholdLower = q1 - (SUSPECTED_OUTLIER_MULTIPLE * IQR);
-    const suspectedOutlierThresholdUpper = q3 + (SUSPECTED_OUTLIER_MULTIPLE * IQR);
+    const suspectedOutlierThresholdLower =
+        q1 - SUSPECTED_OUTLIER_MULTIPLE * IQR;
+    const suspectedOutlierThresholdUpper =
+        q3 + SUSPECTED_OUTLIER_MULTIPLE * IQR;
 
-    const outliers = calculateOutliers(sortedVector, suspectedOutlierThresholdUpper, outlierThresholdUpper,
-        suspectedOutlierThresholdLower, outlierThresholdLower);
+    const outliers = calculateOutliers(
+        sortedVector,
+        suspectedOutlierThresholdUpper,
+        outlierThresholdUpper,
+        suspectedOutlierThresholdLower,
+        outlierThresholdLower
+    );
 
-    const whiskerLower = (outliers.lower.suspectedOutliers.length > 0 || outliers.lower.outliers.length > 0) ?
-        suspectedOutlierThresholdLower : sortedVector[0];
+    const whiskerLower =
+        outliers.lower.suspectedOutliers.length > 0 ||
+        outliers.lower.outliers.length > 0
+            ? suspectedOutlierThresholdLower
+            : sortedVector[0];
 
-    const whiskerUpper = (outliers.upper.suspectedOutliers.length > 0 || outliers.upper.outliers.length > 0) ?
-        suspectedOutlierThresholdUpper : sortedVector[sortedVector.length - 1];
+    const whiskerUpper =
+        outliers.upper.suspectedOutliers.length > 0 ||
+        outliers.upper.outliers.length > 0
+            ? suspectedOutlierThresholdUpper
+            : sortedVector[sortedVector.length - 1];
 
     return {
         q1,
@@ -91,15 +113,15 @@ export function calculateBoxPlotModel(vector: number[]): BoxPlotModel {
         min,
         outliersUpper: outliers.upper,
         outliersLower: outliers.lower,
-    }
+    };
 }
 
 export const BOX_STYLES = {
-    min: {stroke: "#999999"},
-    max: {stroke: "#999999"},
-    q1: {fill: "#eeeeee"},
-    q3: {fill: "#eeeeee"},
-    median: {stroke: "#999999", strokeWidth: 1}
+    min: { stroke: '#999999' },
+    max: { stroke: '#999999' },
+    q1: { fill: '#eeeeee' },
+    q3: { fill: '#eeeeee' },
+    median: { stroke: '#999999', strokeWidth: 1 },
 };
 
 export interface VictoryBoxPlotModel extends BoxPlotModel {
