@@ -43,7 +43,6 @@
   "dependencies": {
     "3dmol": "1.1.4",
     "@babel/core": "7.4.4",
-    "@babel/plugin-transform-modules-commonjs": "^7.4.4",
     "@babel/preset-env": "^7.4.4",
     "@babel/preset-react": "^7.0.0",
     "@types/chai": "3.5.2",
@@ -239,7 +238,6 @@
   },
   "devDependencies": {
     "argparse": "^1.0.9",
-    "babel-plugin-istanbul": "^3.1.2",
     "babel-plugin-rewire": "^1.0.0",
     "chai": "^4.2.0",
     "chai-enzyme": "^1.0.0-beta.1",
@@ -256,7 +254,6 @@
     "expect": "^1.20.2",
     "expect-jsx": "^5.0.0",
     "http-server": "^0.11.1",
-    "istanbul-instrumenter-loader": "^1.2.0",
     "jasmine-core": "^2.5.2",
     "json": "^9.0.6",
     "karma": "^1.7.0",
