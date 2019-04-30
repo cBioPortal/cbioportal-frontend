@@ -1,24 +1,29 @@
 {
-  "presets": ["es2015", "stage-0", "react"],
-  "env": {
-    "development": {
-      "presets": ["react-hmre"]
-    },
-    "production": {
-      "presets": []
-    },
-    "test": {
-      "presets": [],
-      "compact": false,
-      "plugins": [
-
-        ["rewire",{
-          "exclude": [
-            "**/*.spec.js"
-          ]
-        }]
-
-      ]
+    "presets": ["@babel/preset-env", "@babel/preset-react"],
+    "plugins": ["@babel/plugin-transform-modules-commonjs"],
+    "env": {
+        "development": {
+            "presets": ["@babel/preset-env"]
+        },
+        "production": {
+            "presets": []
+        },
+        "test": {
+            "presets": [],
+            "compact": false,
+            "plugins": [
+                [
+                    "rewire",
+                    {
+                        "exclude": ["**/*.spec.js"]
+                    }
+                ],
+                [
+                    "@babel/plugin-transform-module-commonjs", {
+                        "allowTopLevelThis": true
+                    }
+                ]
+            ]
+        }
     }
-  }
 }

@@ -14,6 +14,7 @@ interface ICancerTypeStudy {
     caseCount?:number;
 }
 
+
 export interface IBarGraphProps {
     data:ICancerTypeStudy[];
     openStudy:(studyId:string)=>void;

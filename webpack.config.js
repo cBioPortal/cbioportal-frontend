@@ -1,4 +1,4 @@
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var MiniCssExtractPlugin = require('mini-css-extract-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var WebpackFailPlugin = require('webpack-fail-plugin');
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
@@ -150,7 +150,10 @@ var config = {
                 test: /\.tsx?$/,
                 use: [
                     {
-                        loader: "babel-loader"
+                        loader: "babel-loader",
+                        options: {
+                            "presets": ["@babel/preset-env", "@babel/preset-react"]
+                        },
                     },
                     {
                         loader: "ts-loader",
@@ -158,17 +161,18 @@ var config = {
                             transpileOnly: (isDev || isTest)
                         }
                     }
-                ]
+                ],
+                exclude: /node_modules/
             },
             {
                 test: /\.(js|jsx|babel)$/,
                 use: [{
-                    loader: "babel-loader"
+                    loader: "babel-loader",
+                    options: {
+                        "presets": ["@babel/preset-env", "@babel/preset-react"]
+                    },
                 }],
-                exclude: function(modulePath) {
-                    return /node_modules/.test(modulePath) &&
-                        !/node_modules\/igv\/dist/.test(modulePath);
-                }
+                exclude: /node_modules/
             },
             {
                 test: /\.otf(\?\S*)?$/,
@@ -325,7 +329,7 @@ const defines =
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new ExtractTextPlugin({
+    new MiniCssExtractPlugin({
         filename:'reactapp/styles.css',
         allChunks: true
     }),
@@ -335,8 +339,6 @@ config.plugins = [
     })
 ].concat(config.plugins);
 // END ENV variables
-
-//config.module.loaders.push.apply(this);
 
 // include jquery when we load boostrap-sass
 config.module.rules.push(
@@ -362,7 +364,6 @@ if (isDev) {
     config.entry.push(`${path.join(src, 'testWriter.js')}`);
 
     config.plugins.push(
-        new webpack.NamedModulesPlugin(),
         new webpack.HotModuleReplacementPlugin()
     );
 
@@ -439,70 +440,42 @@ if (isDev || isTest) {
     config.module.rules.push(
         {
             test: /\.module\.scss$/,
-            use: ExtractTextPlugin.extract({
-                fallback:'style-loader',
-                use:[
-                    {
-                        loader: 'css-loader',
-                        options:{
-                            modules:true,
-                            importLoaders:2,
-                            localIdentName:'[name]__[local]__[hash:base64:5]'
-                        }
-                    },
-                    'sass-loader',
-                    sassResourcesLoader
-                ]
-            })
+            use: [
+                {
+                    loader: 'css-loader',
+                    options: {
+                        modules:true,
+                        importLoaders:2,
+                        localIdentName:'[name]__[local]__[hash:base64:5]'
+                    }
+                },
+                'sass-loader',
+                sassResourcesLoader
+            ]
         }
     );
 
     config.module.rules.push(
         {
-            test: /\.scss$/,
+            test: /\.(sa|sc|c)ss$/,
             exclude: /\.module\.scss/,
-            use: ExtractTextPlugin.extract({
-                fallback:'style-loader',
-                use:[
-                    'css-loader',
-                    'sass-loader',
-                    sassResourcesLoader
-                ]
-            })
+            use: [
+                {
+                    loader: MiniCssExtractPlugin.loader,
+                    options: {
+                        fallback: 'style-loader'
+                    },
+                },
+                'css-loader',
+                'sass-loader',
+                sassResourcesLoader
+            ]
         }
     );
-
-    config.module.rules.push(
-        {
-            test: /\.css/,
-            loader: ExtractTextPlugin.extract({
-                fallback:'style-loader',
-                use:'css-loader'
-            })
-        }
-    );
-
-    config.plugins.push(
-        new webpack.DefinePlugin({
-            'process.env': {
-                'NODE_ENV': `"${process.env.NODE_ENV || 'production'}"`
-            }
-        }),
-        new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false
-            },
-            sourceMap: true,
-            comments: false
-        })
-    );
-
 }
 
 //config.entry.push('bootstrap-loader');
 // END BOOTSTRAP LOADER
-
-config.entry.push('font-awesome-webpack');
 
 // Roots
 config.resolve.modules = [
