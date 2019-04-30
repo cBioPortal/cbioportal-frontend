@@ -6,6 +6,7 @@ import sinon from 'sinon';
 import {getExpectedCivicEntry, getExpectedCnaCivicEntry} from "test/CivicMockUtils";
 import CivicCard from "./CivicCard";
 import {ICivicProps} from "./Civic";
+import {Circle} from "better-react-spinkit";
 
 describe('Civic with no data', () => {
     const props = {
@@ -21,7 +22,7 @@ describe('Civic with no data', () => {
     });
 
     it('displays a load spinner when there is no civic data', () => {
-        const spinner = component.find("Circle");
+        const spinner = component.find(Circle);
 
         assert.isTrue(spinner.exists(),
             "Spinner component should exist");
