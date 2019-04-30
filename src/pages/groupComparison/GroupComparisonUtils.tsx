@@ -117,20 +117,18 @@ export function getVennPlotData(combinationSets: { groups: string[], cases: stri
 
 export function caseCountsInParens(
     samples:MobxPromise<any[]>|any[],
-    patients:MobxPromise<any[]>|any[],
-    asteriskForSamples:boolean = false,
-    asteriskForPatients:boolean = false
+    patients:MobxPromise<any[]>|any[]
 ) {
     let text = "";
     if ((Array.isArray(samples) || samples.isComplete) && (Array.isArray(patients) || patients.isComplete)) {
         const samplesArr = Array.isArray(samples) ? samples : samples.result!;
         const patientsArr = Array.isArray(patients) ? patients : patients.result!;
         if (samplesArr.length === patientsArr.length) {
-            text = `(${samplesArr.length}${asteriskForSamples || asteriskForPatients ? "*" : ""})`;
+            text = `(${samplesArr.length})`;
         } else {
             const pluralSamples = (samplesArr.length !== 1);
             const pluralPatients = (patientsArr.length !== 1);
-            text = `(${samplesArr.length}${asteriskForSamples ? "*" : ""} sample${pluralSamples ? "s" : ""}/${patientsArr.length}${asteriskForPatients ? "*" : ""} patient${pluralPatients ? "s" : ""})`;
+            text = `(${samplesArr.length} sample${pluralSamples ? "s" : ""}/${patientsArr.length} patient${pluralPatients ? "s" : ""})`;
         }
     }
     return text;
