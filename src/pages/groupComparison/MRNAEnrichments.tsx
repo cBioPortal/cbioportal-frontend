@@ -10,6 +10,7 @@ import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupComparisonStore from "./GroupComparisonStore";
 import ExpressionEnrichmentContainer from "../resultsView/enrichments/ExpressionEnrichmentsContainer";
 import { ENRICHMENTS_NOT_2_GROUPS_MSG, ENRICHMENTS_TOO_MANY_STUDIES_MSG } from "./GroupComparisonUtils";
+import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 
 export interface IMRNAEnrichmentsProps {
     store: GroupComparisonStore
@@ -40,7 +41,10 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
             } else if (this.props.store.activeStudyIds.result!.length > 1) {
                 return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG("mRNA")}</span>;
             } else {
-                return this.enrichmentsUI.component;
+                const content:any = [];
+                content.push(<OverlapExclusionIndicator store={this.props.store}/>);
+                content.push(this.enrichmentsUI.component);
+                return content;
             }
         },
         renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,

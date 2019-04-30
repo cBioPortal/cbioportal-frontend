@@ -9,6 +9,7 @@ import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupComparisonStore from "./GroupComparisonStore";
 import { ENRICHMENTS_NOT_2_GROUPS_MSG, ENRICHMENTS_TOO_MANY_STUDIES_MSG } from "./GroupComparisonUtils";
+import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 
 export interface IProteinEnrichmentsProps {
     store: GroupComparisonStore
@@ -39,7 +40,10 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
             } else if (this.props.store.activeStudyIds.result!.length > 1) {
                 return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG("protein")}</span>;
             } else {
-                return this.enrichmentsUI.component;
+                const content:any = [];
+                content.push(<OverlapExclusionIndicator store={this.props.store}/>);
+                content.push(this.enrichmentsUI.component);
+                return content;
             }
         },
         renderPending:()=><Loader center={true} isLoading={true} size={"big"}/>,
