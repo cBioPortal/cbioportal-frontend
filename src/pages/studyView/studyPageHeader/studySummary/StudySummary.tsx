@@ -12,13 +12,38 @@ import MobxPromise from 'mobxpromise';
 import {StudyDataDownloadLink} from "../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
 import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
 import {serializeEvent} from "../../../../shared/lib/tracking";
+import { PortalAnalyticsResponse } from '../../../../shared/api/queryStudyAnalytics';
+import { Badge } from 'react-bootstrap';
 
 interface IStudySummaryProps {
     studies: CancerStudy[],
     hasRawDataForDownload: boolean,
     originStudies: MobxPromise<CancerStudy[]>,
-    showOriginStudiesInSummaryDescription: boolean
+    showOriginStudiesInSummaryDescription: boolean,
+    studyAnalytics?: PortalAnalyticsResponse,
 }
+
+const renderBadge = (analytics: PortalAnalyticsResponse) => {
+    return (
+        <DefaultTooltip
+            trigger={["hover"]}
+            placement={"top"}
+            overlay={
+                <span>
+                    Total Unique Queries: {analytics.totalUniqueUses}
+                    <br />
+                    Total Visits: {analytics.timesVisited}
+                    <br />
+                    Total Unique Visits: {analytics.timesUniqueVisited}
+                </span>
+            }
+        >
+            <Badge className="pill secondary" style={{ marginLeft: "10px" }}>
+                Total Queries: {analytics.totalUses}
+            </Badge>
+        </DefaultTooltip>
+    );
+};
 
 @observer
 export default class StudySummary extends React.Component<IStudySummaryProps, {}> {
@@ -93,6 +118,7 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
                             </span>
                         </DefaultTooltip>
                     )}
+                    {this.props.studyAnalytics ? renderBadge(this.props.studyAnalytics) : null}
                 </h3>
                 <div className={styles.description}>
                     <div>

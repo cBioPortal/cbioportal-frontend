@@ -28,6 +28,7 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
                     studies={this.props.store.displayedStudies.result}
                     originStudies={this.props.store.originStudies}
                     showOriginStudiesInSummaryDescription={this.props.store.showOriginStudiesInSummaryDescription}
+                    studyAnalytics={this.props.store.studyGoogleAnalytics.result}
                 />
                 <RightPanel
                     store={this.props.store}/>

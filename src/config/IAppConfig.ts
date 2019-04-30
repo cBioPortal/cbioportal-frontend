@@ -5,6 +5,7 @@ export interface IAppConfig {
     frontendUrl?: string;
     serverConfig:IServerConfig;
     hide_login?:boolean;
+
 }
 
 export type CategorizedConfigItems = {
@@ -25,6 +26,7 @@ export type StudyView = {
 };
 
 export interface IServerConfig {
+    "analytics_report_url": string | null;
     "app_name": string | null;
     "app_version": string|null;   // default: "1.0"
     "authenticationMethod": string | undefined;
