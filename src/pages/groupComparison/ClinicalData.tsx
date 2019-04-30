@@ -15,7 +15,13 @@ import ScrollBar from "shared/components/Scrollbar/ScrollBar";
 import BoxScatterPlot, { IBoxScatterPlotData } from "shared/components/plots/BoxScatterPlot";
 import { getMobxPromiseGroupStatus } from "shared/lib/getMobxPromiseGroupStatus";
 import { scatterPlotSize } from "shared/components/plots/PlotUtils";
-import { ClinicalDataEnrichmentWithQ, CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG, CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG, EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG } from "./GroupComparisonUtils";
+import {
+    ClinicalDataEnrichmentWithQ,
+    CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG,
+    CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
+    EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG,
+    caseCounts
+} from "./GroupComparisonUtils";
 import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCategoryBarPlot";
 import { STUDY_VIEW_CONFIG } from "pages/studyView/StudyViewConfig";
 import ReactSelect from "react-select";
@@ -81,21 +87,35 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
 
     readonly tabUI = MakeMobxView({
         await: () => {
-            if (this.props.store._originalGroupsOverlapRemoved.isComplete &&
-                this.props.store._originalGroupsOverlapRemoved.result.length < 2) {
+            if (this.props.store.activeGroups.isComplete &&
+                this.props.store.activeGroups.result.length < 2) {
                 // dont bother loading data for and computing clinical tab if not enough groups for it
-                return [this.props.store._originalGroupsOverlapRemoved];
+                return [this.props.store.activeGroups];
             } else {
-                return [this.props.store._originalGroupsOverlapRemoved, this.overlapUI];
+                return [this.props.store.activeGroups, this.overlapUI];
             }
         },
         render: () => {
-            if (this.props.store._originalGroupsOverlapRemoved.result!.length < 2) {
+            const selectionInfo = this.props.store._selectionInfo.result!;
+            if (this.props.store.activeGroups.result!.length < 2) {
                 return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
                 let content: any = [];
-                if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE && (this.props.store._selectionInfo.result!.overlappingSamples.length !== 0 || this.props.store._selectionInfo.result!.overlappingPatients.length !== 0)) {
-                    content.push(<div className={'alert alert-info'}>{EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG}</div>);
+                if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE &&
+                    (selectionInfo.overlappingSamples.length !== 0 || selectionInfo.overlappingPatients.length !== 0)
+                ) {
+                    content.push(
+                        <div className={'alert alert-warning'}>
+                            <i
+                                className="fa fa-md fa-exclamation-triangle"
+                                style={{
+                                    color: "#000000",
+                                    marginRight:5
+                                }}
+                            />
+                            {`Your selected groups overlap in ${caseCounts(selectionInfo.overlappingSamples.length, selectionInfo.overlappingPatients.length, " and ")}.`}
+                        </div>
+                    );
                 }
                 content.push(this.overlapUI.component)
                 return content;
@@ -163,21 +183,21 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     }
 
     private readonly clinicalDataPromise = remoteData({
-        await: () => [this.props.store.patientKeyToSamples, this.props.store._originalGroupsOverlapRemoved],
+        await: () => [this.props.store.patientKeyToSamples, this.props.store.activeGroups],
         invoke: async () => {
             const axisData: IAxisData = { data: [], datatype: 'string' };
             if (this.highlightedRow) {
                 let attribute = this.highlightedRow!.clinicalAttribute;
                 let patientKeyToSamples = this.props.store.patientKeyToSamples.result!;
 
-                let sampleIdentifiers = _.flatMap(this.props.store._originalGroupsOverlapRemoved.result, group => _.flatMap(group.studies, study => {
+                let sampleIdentifiers = _.flatMap(this.props.store.activeGroups.result, group => _.flatMap(group.studies, study => {
                     return study.samples.map(sample => ({
                         studyId: study.id,
                         entityId: sample
                     }));
                 }));
 
-                let patientidentifiers = _.flatMap(this.props.store._originalGroupsOverlapRemoved.result, group => _.flatMap(group.studies, study => {
+                let patientidentifiers = _.flatMap(this.props.store.activeGroups.result, group => _.flatMap(group.studies, study => {
                     return study.patients.map(patient => ({
                         studyId: study.id,
                         entityId: patient
@@ -226,13 +246,13 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     });
 
     private readonly groupSampleDataPromise = remoteData({
-        await: () => [this.props.store._originalGroupsOverlapRemoved, this.props.store.sampleSet],
+        await: () => [this.props.store.activeGroups, this.props.store.sampleSet],
         invoke: async () => {
             const axisData: IAxisData = { data: [], datatype: "string" };
             if (this.highlightedRow) {
                 let sampleSet = this.props.store.sampleSet.result!;
                 const axisData_Data = axisData.data;
-                _.forEach(this.props.store._originalGroupsOverlapRemoved.result!, group => {
+                _.forEach(this.props.store.activeGroups.result!, group => {
                     group.studies.forEach(study => {
                         study.samples.forEach(sampleId => {
                             const sample = sampleSet.get({ studyId: study.id, sampleId });
