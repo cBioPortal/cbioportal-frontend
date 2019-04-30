@@ -9,6 +9,7 @@ import AlterationEnrichmentContainer from "../resultsView/enrichments/Alteration
 import autobind from "autobind-decorator";
 import {MakeMobxView} from "../../shared/components/MobxView";
 import {ENRICHMENTS_NOT_2_GROUPS_MSG, getNumSamples} from "./GroupComparisonUtils";
+import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 
 export interface IMutationEnrichmentsProps {
     store: GroupComparisonStore
@@ -36,7 +37,10 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
             if (this.props.store.activeGroups.result!.length !== 2) {
                 return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeGroups.result!.length > 2)}</span>;
             } else {
-                return this.enrichmentsUI.component;
+                const content:any = [];
+                content.push(<OverlapExclusionIndicator store={this.props.store}/>);
+                content.push(this.enrichmentsUI.component);
+                return content;
             }
         },
         renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
