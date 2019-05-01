@@ -81,16 +81,16 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
 
     readonly tabUI = MakeMobxView({
         await: () => {
-            if (this.props.store.filteredAvailableGroups.isComplete &&
-                this.props.store.filteredAvailableGroups.result.length < 2) {
+            if (this.props.store._originalGroupsOverlapRemoved.isComplete &&
+                this.props.store._originalGroupsOverlapRemoved.result.length < 2) {
                 // dont bother loading data for and computing clinical tab if not enough groups for it
-                return [this.props.store.filteredAvailableGroups];
+                return [this.props.store._originalGroupsOverlapRemoved];
             } else {
-                return [this.props.store.filteredAvailableGroups, this.overlapUI];
+                return [this.props.store._originalGroupsOverlapRemoved, this.overlapUI];
             }
         },
         render: () => {
-            if (this.props.store.filteredAvailableGroups.result!.length < 2) {
+            if (this.props.store._originalGroupsOverlapRemoved.result!.length < 2) {
                 return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
                 let content: any = [];
@@ -163,21 +163,21 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     }
 
     private readonly clinicalDataPromise = remoteData({
-        await: () => [this.props.store.patientKeyToSamples, this.props.store.filteredAvailableGroups],
+        await: () => [this.props.store.patientKeyToSamples, this.props.store._originalGroupsOverlapRemoved],
         invoke: async () => {
             const axisData: IAxisData = { data: [], datatype: 'string' };
             if (this.highlightedRow) {
                 let attribute = this.highlightedRow!.clinicalAttribute;
                 let patientKeyToSamples = this.props.store.patientKeyToSamples.result!;
 
-                let sampleIdentifiers = _.flatMap(this.props.store.filteredAvailableGroups.result, group => _.flatMap(group.studies, study => {
+                let sampleIdentifiers = _.flatMap(this.props.store._originalGroupsOverlapRemoved.result, group => _.flatMap(group.studies, study => {
                     return study.samples.map(sample => ({
                         studyId: study.id,
                         entityId: sample
                     }));
                 }));
 
-                let patientidentifiers = _.flatMap(this.props.store.filteredAvailableGroups.result, group => _.flatMap(group.studies, study => {
+                let patientidentifiers = _.flatMap(this.props.store._originalGroupsOverlapRemoved.result, group => _.flatMap(group.studies, study => {
                     return study.patients.map(patient => ({
                         studyId: study.id,
                         entityId: patient
@@ -226,13 +226,13 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     });
 
     private readonly groupSampleDataPromise = remoteData({
-        await: () => [this.props.store.filteredAvailableGroups, this.props.store.sampleSet],
+        await: () => [this.props.store._originalGroupsOverlapRemoved, this.props.store.sampleSet],
         invoke: async () => {
             const axisData: IAxisData = { data: [], datatype: "string" };
             if (this.highlightedRow) {
                 let sampleSet = this.props.store.sampleSet.result!;
                 const axisData_Data = axisData.data;
-                _.forEach(this.props.store.filteredAvailableGroups.result!, group => {
+                _.forEach(this.props.store._originalGroupsOverlapRemoved.result!, group => {
                     group.studies.forEach(study => {
                         study.samples.forEach(sampleId => {
                             const sample = sampleSet.get({ studyId: study.id, sampleId });

@@ -1,5 +1,5 @@
 import * as React from "react";
-import {observer} from "mobx-react";
+import {Observer, observer} from "mobx-react";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import {VictoryAxis, VictoryChart, VictoryLabel, VictoryScatter, VictorySelectionContainer, VictoryLine} from "victory";
@@ -8,6 +8,8 @@ import DownloadControls from "../../../shared/components/downloadControls/Downlo
 import {Popover} from "react-bootstrap";
 import {formatLogOddsRatio} from "../../../shared/lib/FormatUtils";
 import {toConditionalPrecision} from "../../../shared/lib/NumberUtils";
+import SelectionComponent from "./SelectionComponent";
+import HoverablePoint from "./HoverablePoint";
 
 export interface IMiniFrequencyScatterChartData {
     x:number;
@@ -25,6 +27,7 @@ export interface IMiniFrequencyScatterChartProps {
     onGeneNameClick: (hugoGeneSymbol: string, entrezGeneId: number) => void;
     onSelection: (hugoGeneSymbols: string[]) => void;
     onSelectionCleared: () => void;
+    selectedGenesSet:{[hugoGeneSymbol:string]:any};
 }
 
 const MAX_DOT_SIZE = 10;
@@ -34,6 +37,8 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
 
     @observable tooltipModel: any;
     @observable private svgContainer: any;
+    private dragging = false;
+
 
     @autobind
     @action private svgRef(svgContainer:SVGElement|null) {
@@ -44,7 +49,7 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
         this.props.onSelection(points[0].data.map((d:any) => d.hugoGeneSymbol));
     }
 
-    private handleSelectionCleared(props: any) {
+    private handleSelectionCleared() {
         if (this.tooltipModel) {
             this.props.onGeneNameClick(this.tooltipModel.datum.hugoGeneSymbol, this.tooltipModel.datum.entrezGeneId);
         }
@@ -113,48 +118,59 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                     return this.handleSelection(points, bounds, props);
                 }}
                 responsive={false}
-                onSelectionCleared={(props:any) => this.handleSelectionCleared(props)}
+                onSelectionCleared={this.handleSelectionCleared}
+                activateSelectedData={false}
+                selectionComponent={<SelectionComponent onRender={this.onSelectionComponentRender}/>}
             />
         );
     }
 
+    @autobind @action private onMouseOver(datum:any, x:number, y:number) {
+        this.tooltipModel = {
+            datum,
+            x,
+            y
+        };
+    }
+
+    @autobind @action private onMouseOut() {
+        this.tooltipModel = null;
+    }
+
+    @autobind private getTooltip() {
+        if (this.tooltipModel) {
+            return (
+                <Popover className={"cbioTooltip"} positionLeft={this.tooltipModel.x + 15}
+                             positionTop={this.tooltipModel.y - 44}>
+                    Gene: {this.tooltipModel.datum.hugoGeneSymbol}<br/>
+                    Log Ratio: {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}<br/>
+                    Alteration Frequency in {this.props.xGroupName}: {this.tooltipModel.datum.x.toFixed()}%<br/>
+                    Alteration Frequency in {this.props.yGroupName}: {this.tooltipModel.datum.y.toFixed()}%<br/>
+                    p-Value: {toConditionalPrecision(this.tooltipModel.datum.pValue, 3, 0.01)}<br/>
+                    q-Value: {toConditionalPrecision(this.tooltipModel.datum.qValue, 3, 0.01)}
+                </Popover>
+            );
+        } else {
+            return <span/>;
+        }
+    }
+
+    @autobind private onClick() {
+        if (!this.dragging) {
+            this.handleSelectionCleared();
+        }
+        this.dragging = false;
+    }
+
+    @autobind private onSelectionComponentRender() {
+        this.dragging = true;
+    }
+
+
     public render() {
-
-        const events = [{
-            target: "data",
-            eventHandlers: {
-                onMouseOver: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props: any) => {
-                                this.tooltipModel = props;
-                                return {
-                                    datum: Object.assign({}, props.datum, {hovered: true})
-                                };
-                            }
-                        }
-                    ];
-                },
-                onMouseOut: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props: any) => {
-                                this.tooltipModel = null;
-                                return {
-                                    datum: Object.assign({}, props.datum, {hovered: false})
-                                };
-                            }
-                        }
-                    ];
-                }
-            }
-        }];
-
         return (
             <div className="posRelative">
-                <div className="borderedChart inlineBlock" style={{position:"relative"}}>
+                <div className="borderedChart inlineBlock" style={{position:"relative"}} onClick={this.onClick}>
                     <VictoryChart containerComponent={this.containerComponent} theme={CBIOPORTAL_VICTORY_THEME}
                                   domainPadding={20} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}>
                         <VictoryAxis tickValues={[0,25,50,75]} domain={[0,this.plotDomainMax]}
@@ -183,26 +199,46 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                         <VictoryScatter
                             style={{
                                 data: {
-                                    fill: (d:any, active: any) => (active ? "#FE9929" : "#D3D3D3"),
                                     fillOpacity: 0.4
                                 }
                             }}
                             data={this.splitData.insignificant}
+                            dataComponent={
+                                <HoverablePoint
+                                    onMouseOver={this.onMouseOver}
+                                    onMouseOut={this.onMouseOut}
+                                    fill={(datum:any)=>{
+                                        if (datum.hugoGeneSymbol in this.props.selectedGenesSet) {
+                                            return "#FE9929";
+                                        } else {
+                                            return "#D3D3D3";
+                                        }
+                                    }}
+                                />
+                            }
                             symbol="circle"
                             size={3}
-                            events={events}
                         />
                         <VictoryScatter
                             style={{
                                 data: {
-                                    fill: (d:any, active: any) => (active ? "#FE9929" : "#58ACFA"),
                                     fillOpacity: 0.6
                                 }
                             }}
                             data={this.splitData.significant}
-                            symbol="circle"
-                            size={3}
-                            events={events}
+                            dataComponent={
+                                <HoverablePoint
+                                    onMouseOver={this.onMouseOver}
+                                    onMouseOut={this.onMouseOut}
+                                    fill={(datum:any)=>{
+                                        if (datum.hugoGeneSymbol in this.props.selectedGenesSet) {
+                                            return "#FE9929";
+                                        } else {
+                                            return "#58ACFA";
+                                        }
+                                    }}
+                                />
+                            }
                         />
                     </VictoryChart>
                     <DownloadControls
@@ -213,17 +249,9 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                         style={{position:"absolute", top:10, right:10, zIndex:0}}
                     />
                 </div>
-                {this.tooltipModel &&
-                    <Popover className={"cbioTooltip"} positionLeft={this.tooltipModel.x + 15}
-                             positionTop={this.tooltipModel.y - 44}>
-                        Gene: {this.tooltipModel.datum.hugoGeneSymbol}<br/>
-                        Log Ratio: {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}<br/>
-                        Alteration Frequency in {this.props.xGroupName}: {this.tooltipModel.datum.x.toFixed()}%<br/>
-                        Alteration Frequency in {this.props.yGroupName}: {this.tooltipModel.datum.y.toFixed()}%<br/>
-                        p-Value: {toConditionalPrecision(this.tooltipModel.datum.pValue, 3, 0.01)}<br/>
-                        q-Value: {toConditionalPrecision(this.tooltipModel.datum.qValue, 3, 0.01)}
-                    </Popover>
-                }
+                <Observer>
+                    {this.getTooltip}
+                </Observer>
             </div>
         );
     }
