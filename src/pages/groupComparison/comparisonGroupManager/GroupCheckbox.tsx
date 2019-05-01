@@ -15,6 +15,7 @@ import ErrorIcon from "../../../shared/components/ErrorIcon";
 import styles from "../styles.module.scss"
 import {SyntheticEvent} from "react";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 
 
@@ -87,7 +88,15 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
     }
 
     @computed get label() {
-        return `${this.props.group.name} (${caseCounts(getNumSamples(this.props.group), getNumPatients(this.props.group))})`;
+        return (
+            <span style={{display:"flex", alignItems:"center"}}>
+                <EllipsisTextTooltip
+                    text={this.props.group.name}
+                    shownWidth={100}
+                />
+                &nbsp;({caseCounts(getNumSamples(this.props.group), getNumPatients(this.props.group))})
+            </span>
+        );
     }
 
     @computed get editSubmitError() {
