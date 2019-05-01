@@ -60,7 +60,9 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                         {
                             target: "data",
                             mutation: (props: any) => {
-                                this.tooltipModel = props;
+                                if (!props.datum || !props.datum.dontShowTooltip) {
+                                    this.tooltipModel = props;
+                                }
                                 return null;
                             }
                         }
@@ -223,10 +225,13 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
 
     @computed get scatterData() {
         return _.flatMap(this.groupCombinationSets, (set, index) => {
+            const {fill, ...setRest} = set;
             return _.map(this.activeGroups, (group, i) => ({
                 x: this.categoryCoord(index),
                 y: this.categoryCoord(i),
-                fill: _.includes(set.groups, group.uid) ? set.fill : DEFAULT_SCATTER_DOT_COLOR
+                fill: _.includes(set.groups, group.uid) ? fill : DEFAULT_SCATTER_DOT_COLOR,
+                dontShowTooltip: !_.includes(set.groups, group.uid),
+                ...setRest
             }));
         });
     }
@@ -241,12 +246,16 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
 
     @computed private get getGroupIntersectionLines() {
         const activeUids = _.map(this.activeGroups, g => g.uid)
-        return _.map(this.groupCombinationSets, (set, index) => {
+        return _.flatMap(this.groupCombinationSets, (set, index) => {
             const data = _.map(set.groups, groupUid => {
                 const groupIndex = _.indexOf(activeUids, groupUid);
-                return { x: this.categoryCoord(index), y: this.categoryCoord(groupIndex) };
+                return {
+                    x: this.categoryCoord(index),
+                    y: this.categoryCoord(groupIndex),
+                    ...set
+                };
             });
-            return (
+            return [
                 <VictoryLine
                     style={{
                         data: {
@@ -256,7 +265,19 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                         },
                     }}
                     data={data}
-                />)
+                />,
+                <VictoryLine
+                    style={{
+                        data: {
+                            strokeOpacity: 0,
+                            strokeWidth: 20,
+                            strokeLinecap: "round"
+                        },
+                    }}
+                    data={data}
+                    events={this.mouseEvents}
+                />
+            ]
         })
     }
 
@@ -438,6 +459,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                                         }
                                     }}
                                     data={this.scatterData}
+                                    events={this.mouseEvents}
                                 />
                                 {this.getGroupIntersectionLines}
 
@@ -465,7 +487,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                             positionLeft={this.mousePosition.x+8}
                             positionTop={this.mousePosition.y-17}
                         >
-                            {this.tooltip(this.tooltipModel.datum)}
+                            {this.tooltip(this.tooltipModel.datum || this.tooltipModel.data[0])}
                         </Popover>,
                         document.body
                     )
