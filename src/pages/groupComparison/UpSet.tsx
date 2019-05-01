@@ -108,7 +108,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
     }
 
     private barChartHeight() {
-        return 500;
+        return 250;
     }
 
     @computed get scatterChartHeight() {
