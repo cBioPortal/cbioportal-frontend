@@ -49,7 +49,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     @observable.shallow checkedGenes: string[] = [];
     @observable clickedGeneHugo: string;
     @observable clickedGeneEntrez: number;
-    @observable selectedGenes: string[]|null;
+    @observable.ref selectedGenes: string[]|null;
     @observable.ref highlightedRow:ExpressionEnrichmentRow|undefined;
 
     @computed get data(): ExpressionEnrichmentRow[] {
@@ -139,6 +139,10 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         }
     }
 
+    @computed get selectedGenesSet() {
+        return _.keyBy(this.selectedGenes || []);
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
@@ -159,7 +163,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
             <div className={styles.Container}>
                 <div className={styles.LeftColumn}>
                     <MiniScatterChart data={data}
-                        xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={Math.ceil(Math.abs(maxData.x))}
+                                      selectedGenesSet={this.selectedGenesSet}
+                                      xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={Math.ceil(Math.abs(maxData.x))}
                         xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
                         onSelectionCleared={this.onSelectionCleared}/>
                     { this.props.store && <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez}
