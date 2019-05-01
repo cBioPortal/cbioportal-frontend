@@ -91,13 +91,44 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         }
     }
 
-    private get headerWithSearch() {
+    @autobind
+    @action
+    private selectAllFiltered() {
+        for (const group of this.filteredGroups.result!) {
+            this.props.store.setComparisonGroupSelected(group.uid, true);
+        }
+    }
+
+    @autobind
+    @action
+    private deselectAllFiltered() {
+        for (const group of this.filteredGroups.result!) {
+            this.props.store.setComparisonGroupSelected(group.uid, false);
+        }
+    }
+
+    private get header() {
         return (
-            <div style={{display:"flex", flexDirection:"row", justifyContent:"space-between", width:"100%", marginTop:3}}>
+            <div style={{
+                display:"flex",
+                justifyContent:"space-between",
+                width:"100%",
+                marginTop:3,
+                alignItems:"center",
+                marginBottom:10
+            }}>
+                <div className="btn-group" role="group">
+                    <button className="btn btn-default btn-xs" onClick={this.selectAllFiltered}>
+                        Select all&nbsp;{this.filteredGroups.isComplete ? `(${this.filteredGroups.result!.length})` : ""}
+                    </button>
+                    <button className="btn btn-default btn-xs" onClick={this.deselectAllFiltered}>
+                        Deselect all
+                    </button>
+                </div>
                 <input
                     className="form-control"
                     style={{
-                        right:0, width:140, marginTop:-4
+                        right:0, width:140, height:25
                     }}
                     type="text"
                     placeholder="Search.."
@@ -105,12 +136,6 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                     onChange={this.onChangeGroupNameFilter}
                 />
             </div>
-        );
-    }
-
-    private get headerWithoutSearch() {
-        return (
-         null
         );
     }
 
@@ -177,7 +202,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         )
     });
 
-    private get selectButton() {
+    private get viewButton() {
         if (this.props.store.comparisonGroups.isComplete &&
             this.props.store.comparisonGroups.result.length > 0) {
             // only show select button if there are any groups
@@ -190,7 +215,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                         this.props.store.clearAllFilters();
                         this.props.store.updateComparisonGroupsFilter();
                     }}
-                >Select</button>
+                >View</button>
             );
         } else {
             return null;
@@ -261,7 +286,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                         }}
                     >
                         {this.compareButton}
-                        {this.selectButton}
+                        {this.viewButton}
                     </div>
                 } else {
                    return null;
@@ -362,7 +387,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
             <div className={styles.comparisonGroupManager}
                  style={{position:"relative"}}
             >
-                {this.headerWithoutSearch}
+                {this.header}
                 {this.groupsSection.component}
                 {this.actionButtons.component}
                 <hr />
