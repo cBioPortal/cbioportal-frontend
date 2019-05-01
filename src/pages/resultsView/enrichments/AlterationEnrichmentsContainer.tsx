@@ -21,7 +21,7 @@ import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
 import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
-import Checkbox from "../../../shared/components/Checkbox";
+import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -242,17 +242,17 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
-                        <Checkbox
+                        <FlexAlignedCheckbox
                             checked={this.coOccurenceFilter}
                             onClick={this.toggleCoOccurenceFilter}
                             label={this.group1CheckboxLabel}
                         />
-                        <Checkbox
+                        <FlexAlignedCheckbox
                             checked={this.mutualExclusivityFilter}
                             onClick={this.toggleMutualExclusivityFilter}
                             label={this.group2CheckboxLabel}
                         />
-                        <Checkbox
+                        <FlexAlignedCheckbox
                             checked={this.significanceFilter}
                             onClick={this.toggleSignificanceFilter}
                             label="Significant only"
