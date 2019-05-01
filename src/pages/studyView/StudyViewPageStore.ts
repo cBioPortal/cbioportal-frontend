@@ -354,12 +354,12 @@ export class StudyViewPageStore {
     private _selectedComparisonGroups = observable.shallowMap<boolean>();
     private _comparisonGroupsMarkedForDeletion = observable.shallowMap<boolean>();
 
-    @action public setComparisonGroupSelected(groupId:string) {
-        this._selectedComparisonGroups.set(groupId, true);
+    @action public setComparisonGroupSelected(groupId:string, selected=true) {
+        this._selectedComparisonGroups.set(groupId, selected);
     }
 
     @action public toggleComparisonGroupSelected(groupId:string) {
-        this._selectedComparisonGroups.set(groupId, !this.isComparisonGroupSelected(groupId));
+        this.setComparisonGroupSelected(groupId, !this.isComparisonGroupSelected(groupId));
     }
 
     @action public toggleComparisonGroupMarkedForDeletion(groupId:string) {
