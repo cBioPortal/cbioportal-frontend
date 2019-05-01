@@ -324,13 +324,8 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
         const includedGroupNames = _.map(datum.groups as string[], groupUid => this.props.uidToGroup[groupUid].name);
         const casesCount = datum.cases.length;
         return (
-            <div style={{ width: 300, whiteSpace: "normal" }}>
-                This bar contains {this.props.caseType}s which are in {joinNames(includedGroupNames, "and")}&nbsp;
-                ({casesCount} {pluralize(this.props.caseType, casesCount)}).
-                {(casesCount > 0) && [
-                    <br />,
-                    <br />
-                ]}
+            <div style={{ maxWidth: 300, whiteSpace: "normal" }}>
+                {joinNames(includedGroupNames, "and")}:&nbsp;{`${casesCount} ${pluralize(this.props.caseType, casesCount)}`}
             </div>
         );
     }
