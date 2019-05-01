@@ -244,6 +244,13 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
         }));
     }
 
+    @computed get barPlotHitzoneData() {
+        const minY = this.barPlotDomain.y[1]/15;
+        return this.barPlotData.map(d=>{
+            return Object.assign({}, d, { y: Math.max(d.y, minY) });
+        });
+    }
+
     @computed private get getGroupIntersectionLines() {
         const activeUids = _.map(this.activeGroups, g => g.uid)
         return _.flatMap(this.groupCombinationSets, (set, index) => {
@@ -400,7 +407,12 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                                 <VictoryBar
                                     style={{ data: { fill: (d: any) => d.fill, width: this.barWidth() } }}
                                     data={this.barPlotData}
-                                    events={this.mouseEvents} />
+                                />
+                                <VictoryBar
+                                    style={{ data: { fillOpacity:0, width: this.barWidth()} }}
+                                    data={this.barPlotHitzoneData}
+                                    events={this.mouseEvents}
+                                />
 
                             </VictoryChart>
                         </g>
