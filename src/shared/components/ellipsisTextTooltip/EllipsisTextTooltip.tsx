@@ -7,7 +7,7 @@ import $ from "jquery";
 import autobind from "autobind-decorator";
 
 @observer
-export default class EllipsisTextTooltip extends React.Component<{ text:string; shownWidth?:number },{}> {
+export default class EllipsisTextTooltip extends React.Component<{ text:string; style?:any; shownWidth?:number, hideTooltip?:boolean },{}> {
 
     @observable tooltipVisible = false;
 
@@ -25,7 +25,7 @@ export default class EllipsisTextTooltip extends React.Component<{ text:string; 
         }
         
         const isOverflowed = (actualWidth - shownWidth) > 1;
-        this.tooltipVisible = isVisible && isOverflowed;
+        this.tooltipVisible = !this.props.hideTooltip && isVisible && isOverflowed;
     }
 
     @autobind
@@ -34,7 +34,7 @@ export default class EllipsisTextTooltip extends React.Component<{ text:string; 
     }
 
     @computed get style() {
-        const style:any = {};
+        const style:any = Object.assign({}, this.props.style);
         if (this.props.shownWidth) {
             style.maxWidth = this.props.shownWidth;
         }

@@ -11,12 +11,29 @@ import * as _ from "lodash";
 import {AlterationTypeConstants} from "../ResultsViewPageStore";
 import {filterAndSortProfiles} from "../coExpression/CoExpressionTabUtils";
 import {IMiniFrequencyScatterChartData} from "./MiniFrequencyScatterChart";
+import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 const LOG_VALUE = "LOG-VALUE";
 const LOG2_VALUE = "LOG2-VALUE";
 
 export type AlterationEnrichmentWithQ = AlterationEnrichment & { qValue:number, value?:number /* used for copy number in group comparison */ };
 export type ExpressionEnrichmentWithQ = ExpressionEnrichment & { qValue:number };
+
+export function PERCENTAGE_IN_headerRender(name:string) {
+    return (
+        <div style={{display:"flex", alignItems:"center"}}>
+            In&nbsp;<EllipsisTextTooltip text={name} shownWidth={100} hideTooltip={true}/>
+        </div>
+    );
+}
+
+export function STAT_IN_headerRender(stat:string, name:string) {
+    return (
+        <div style={{display:"flex", alignItems:"center"}}>
+            {stat}&nbsp;in&nbsp;<EllipsisTextTooltip text={name} shownWidth={100} hideTooltip={true}/>
+        </div>
+    );
+}
 
 export function calculateAlterationTendency(logOddsRatio: number): string {
     return logOddsRatio > 0 ? "Co-occurrence" : "Mutual exclusivity";
@@ -27,9 +44,9 @@ export function calculateExpressionTendency(logOddsRatio: number): string {
 }
 
 export function calculateGenericTendency(
-    logOddsRatio:number, alteredGroupName:string, unalteredGroupName:string
+    logOddsRatio:number, group1Name:string, group2Name:string
 ) {
-    return logOddsRatio > 0 ? alteredGroupName : unalteredGroupName;
+    return <EllipsisTextTooltip style={{display:"inline-block"}} text={logOddsRatio > 0 ? group1Name: group2Name} shownWidth={100}/>;
 }
 
 export function formatPercentage(count: number, percentage: number): string {
