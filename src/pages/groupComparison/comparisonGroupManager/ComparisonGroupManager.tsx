@@ -204,15 +204,16 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     }
 
     @autobind
-    private async submitNewGroup() {
+    @action private async submitNewGroup() {
         const selectedSamples = this.props.store.selectedSamples.isComplete ? this.props.store.selectedSamples.result :  undefined;
-            await comparisonClient.addGroup(getGroupParameters(
-                this.inputGroupName,
-                selectedSamples!,
-                this.props.store
-            ));
-            this.props.store.notifyComparisonGroupsChange();
-            this.cancelAddGroup();
+        const {id}= await comparisonClient.addGroup(getGroupParameters(
+            this.inputGroupName,
+            selectedSamples!,
+            this.props.store
+        ));
+        this.props.store.setComparisonGroupSelected(id); // created groups start selected
+        this.props.store.notifyComparisonGroupsChange();
+        this.cancelAddGroup();
     }
 
     private get compareButton() {
