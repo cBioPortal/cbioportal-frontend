@@ -10,7 +10,7 @@ export interface ICheckboxProps {
 }
 
 @observer
-export default class Checkbox extends React.Component<ICheckboxProps, {}> {
+export default class FlexAlignedCheckbox extends React.Component<ICheckboxProps, {}> {
     render() {
         return (
             <div className="checkbox" style={{display:"flex", alignItems:"center"}}><label>

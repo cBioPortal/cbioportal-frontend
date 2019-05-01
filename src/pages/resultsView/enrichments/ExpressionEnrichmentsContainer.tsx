@@ -20,7 +20,7 @@ import * as _ from "lodash";
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
-import Checkbox from "../../../shared/components/Checkbox";
+import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];
@@ -179,17 +179,17 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
-                        <Checkbox
+                        <FlexAlignedCheckbox
                             checked={this.overExpressedFilter}
                             onClick={this.toggleOverExpressedFilter}
                             label={this.group1CheckboxLabel}
                         />
-                        <Checkbox
+                        <FlexAlignedCheckbox
                             checked={this.underExpressedFilter}
                             onClick={this.toggleUnderExpressedFilter}
                             label={this.group2CheckboxLabel}
                         />
-                        <Checkbox
+                        <FlexAlignedCheckbox
                             checked={this.significanceFilter}
                             onClick={this.toggleSignificanceFilter}
                             label="Significant only"
