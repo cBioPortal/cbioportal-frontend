@@ -8,7 +8,7 @@ import EnrichmentsDataSetDropdown from "../resultsView/enrichments/EnrichmentsDa
 import AlterationEnrichmentContainer from "../resultsView/enrichments/AlterationEnrichmentsContainer";
 import autobind from "autobind-decorator";
 import {MakeMobxView} from "../../shared/components/MobxView";
-import {ENRICHMENTS_NOT_2_GROUPS_MSG, getNumSamples} from "./GroupComparisonUtils";
+import {getNumSamples, MakeEnrichmentsTabUI} from "./GroupComparisonUtils";
 
 export interface IMutationEnrichmentsProps {
     store: GroupComparisonStore
@@ -22,26 +22,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
         this.props.store.setMutationEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeMobxView({
-        await:()=>{
-            if (this.props.store.activeGroups.isComplete &&
-                this.props.store.activeGroups.result.length !== 2) {
-                // dont bother loading data for and computing enrichments UI if its not valid situation for it
-                return [this.props.store.activeGroups];
-            } else {
-                return [this.props.store.activeGroups, this.enrichmentsUI];
-            }
-        },
-        render:()=>{
-            if (this.props.store.activeGroups.result!.length !== 2) {
-                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeGroups.result!.length > 2)}</span>;
-            } else {
-                return this.enrichmentsUI.component;
-            }
-        },
-        renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
-        renderError:()=><ErrorMessage/>
-    });
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI);
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
