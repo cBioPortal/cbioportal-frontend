@@ -21,7 +21,7 @@ var rootUrl = getRootUrl(window.location.href);
 var diffSliderMode = true;
 
 function updateComparisonMode() {
-    if (diffSliderMode) {
+    if (!diffSliderMode) {
         $("#juxta").show();
         $("#sidebyside").hide();
     } else {
@@ -86,13 +86,24 @@ function buildDisplay(ref, rootUrl){
         <button id="toggleDiffModeBtn" style="font-size:16px">Toggle Comparison Mode</button>
         <br/><br/>
         
-        <div id="juxta" class="juxtapose" style="${diffSliderMode ? '' : 'display:none'}">
+        <div id="juxta" class="juxtapose" style="${diffSliderMode ? 'display:none' : 'display:block'}">
             
         </div>
         
-        <div id="sidebyside" style="${diffSliderMode ? 'display:none' : ''}">
-            <img style="border:1px solid;" src="${data.refImagePath}" width="48%"/>
-            <img style="border:1px solid;" src="${data.screenImagePath}" width="48%""/>
+       
+        
+        <div id="sidebyside" style="position:relative">
+             <div>
+                <div class="slidecontainer">
+                  Reference&nbsp;
+                  <input type="range" min="1" max="100" value="50" class="slider" id="opacitySlider">
+                  &nbsp;Screen
+                </div>
+             </div>    
+        
+            <div style="position:relative" class="imgs"><img style="border:1px solid;" src="${data.refImagePath}"/>
+            <img style="border:1px solid; position:absolute;left:0" src="${data.screenImagePath}"/>
+            </div>
         </div>
         
         <h2>Screenshot Diff</h2>
@@ -125,6 +136,10 @@ function buildDisplay(ref, rootUrl){
     `;
 
     $("#display").html(template);
+
+    $("#opacitySlider").on("input", (e)=>{
+       $("#sidebyside div.imgs img")[1].style.opacity = e.target.value/100;
+    });
 
     var slider = new juxtapose.JXSlider('#juxta',
         [
