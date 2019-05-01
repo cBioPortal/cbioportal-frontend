@@ -216,11 +216,14 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
         
         return (
             <div key={group.uid}
+                className={styles.groupRow}
                 style={{
                     display:"flex",
                     flexDirection:"row",
                     justifyContent:"space-between",
-                    alignItems:"center"
+                    alignItems:"center",
+                    paddingBottom:4,
+                    paddingTop:4
                 }}
             >
                 {checkboxAndLabel}

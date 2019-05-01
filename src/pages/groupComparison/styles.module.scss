@@ -9,7 +9,7 @@
 .comparisonGroupManager {
     .groupCheckboxes {
         margin-top:4px;
-        max-height:130px;
+        max-height:350px;
         width:100%;
         overflow:auto;
         padding:3px;
@@ -25,6 +25,10 @@
             display:flex;
             flex-direction:row;
             justify-content:space-between;
+        }
+
+        .groupRow:nth-of-type(even) {
+            background-color: #f9f9f9;
         }
     }
 
