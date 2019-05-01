@@ -21,11 +21,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     public readonly analysisGroups = remoteData({
         await: () => [
-            this.props.store.filteredActiveGroups
+            this.props.store._activeGroupsOverlapRemoved
         ],
         invoke: () => {
             let colorIndex = 0;
-            return Promise.resolve(this.props.store.filteredActiveGroups.result!.map((group)=>({
+            return Promise.resolve(this.props.store._activeGroupsOverlapRemoved.result!.map((group)=>({
                 name: group.name,
                 color: group.color,
                 value: group.uid,
@@ -37,16 +37,16 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     readonly tabUI = MakeMobxView({
         await:()=>{
-            if (this.props.store.filteredActiveGroups.isComplete &&
-                this.props.store.filteredActiveGroups.result.length > 10) {
+            if (this.props.store._activeGroupsOverlapRemoved.isComplete &&
+                this.props.store._activeGroupsOverlapRemoved.result.length > 10) {
                 // dont bother loading data for and computing UI if its not valid situation for it
-                return [this.props.store.filteredActiveGroups];
+                return [this.props.store._activeGroupsOverlapRemoved];
             } else {
-                return [this.props.store.filteredActiveGroups, this.survivalUI];
+                return [this.props.store._activeGroupsOverlapRemoved, this.survivalUI];
             }
         },
         render:()=>{
-            if (this.props.store.filteredActiveGroups.result!.length > 10) {
+            if (this.props.store._activeGroupsOverlapRemoved.result!.length > 10) {
                 return <span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>;
             } else {
                 let content: any = [];
