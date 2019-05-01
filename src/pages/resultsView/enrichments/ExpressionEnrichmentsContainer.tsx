@@ -5,7 +5,6 @@ import { observable, computed } from 'mobx';
 import ExpressionEnrichmentTable from 'pages/resultsView/enrichments/ExpressionEnrichmentsTable';
 import { ExpressionEnrichment } from 'shared/api/generated/CBioPortalAPIInternal';
 import styles from "./styles.module.scss";
-import { Button, FormControl, FormGroup, Form, ControlLabel, Checkbox } from 'react-bootstrap';
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import {
     ExpressionEnrichmentWithQ,
@@ -20,6 +19,8 @@ import MiniBoxPlot from 'pages/resultsView/enrichments/MiniBoxPlot';
 import * as _ from "lodash";
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
+import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import Checkbox from "../../../shared/components/Checkbox";
 
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];
@@ -127,7 +128,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         if (this.props.alteredVsUnalteredMode) {
             return "Over-expressed";
         } else {
-            return `Enriched in ${this.props.group1Name!}`;
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group1Name!} shownWidth={100}/></span>;
         }
     }
 
@@ -135,7 +136,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         if (this.props.alteredVsUnalteredMode) {
             return "Under-expressed";
         } else {
-            return `Enriched in ${this.props.group2Name!}`;
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group2Name!} shownWidth={100}/></span>;
         }
     }
 
@@ -178,18 +179,21 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
-                        <Checkbox checked={this.overExpressedFilter}
-                            onChange={this.toggleOverExpressedFilter}>
-                            {this.group1CheckboxLabel}
-                        </Checkbox>
-                        <Checkbox checked={this.underExpressedFilter}
-                            onChange={this.toggleUnderExpressedFilter}>
-                            {this.group2CheckboxLabel}
-                        </Checkbox>
-                        <Checkbox checked={this.significanceFilter}
-                            onChange={this.toggleSignificanceFilter}>
-                            Significant only
-                        </Checkbox>
+                        <Checkbox
+                            checked={this.overExpressedFilter}
+                            onClick={this.toggleOverExpressedFilter}
+                            label={this.group1CheckboxLabel}
+                        />
+                        <Checkbox
+                            checked={this.underExpressedFilter}
+                            onClick={this.toggleUnderExpressedFilter}
+                            label={this.group2CheckboxLabel}
+                        />
+                        <Checkbox
+                            checked={this.significanceFilter}
+                            onClick={this.toggleSignificanceFilter}
+                            label="Significant only"
+                        />
                     </div>
                     <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
                                                onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}

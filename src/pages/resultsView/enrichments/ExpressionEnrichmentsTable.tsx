@@ -4,7 +4,7 @@ import LazyMobXTable, { Column } from "../../../shared/components/lazyMobXTable/
 import { observer } from "mobx-react";
 import {computed, observable} from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
-import {calculateExpressionTendency, calculateGenericTendency} from "./EnrichmentsUtil";
+import {calculateExpressionTendency, calculateGenericTendency, STAT_IN_headerRender} from "./EnrichmentsUtil";
 import { formatLogOddsRatio, formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
@@ -106,7 +106,8 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.MEAN_IN_GROUP1] = {
-            name: `μ in ${this.props.group1Name}`,
+            name: this.props.group1Name,
+            headerRender:(name:string)=>STAT_IN_headerRender("μ", name),
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInAlteredGroup.toFixed(2)}</span>,
             tooltip: <span>Mean log2 expression of the listed gene in {this.props.group1Description}</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInAlteredGroup,
@@ -114,7 +115,8 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.MEAN_IN_GROUP2] = {
-            name: `μ in ${this.props.group2Name}`,
+            name: this.props.group2Name,
+            headerRender:(name:string)=>STAT_IN_headerRender("μ", name),
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInUnalteredGroup.toFixed(2)}</span>,
             tooltip: <span>Mean log2 expression of the listed gene in {this.props.group2Description}</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInUnalteredGroup,
@@ -122,7 +124,8 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_GROUP1] = {
-            name: `σ in ${this.props.group1Name}`,
+            name: this.props.group1Name,
+            headerRender:(name:string)=>STAT_IN_headerRender("σ", name),
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInAlteredGroup.toFixed(2)}</span>,
             tooltip: <span>Standard deviation of log2 expression of the listed gene in {this.props.group1Description}</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInAlteredGroup,
@@ -130,7 +133,8 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_GROUP2] = {
-            name: `σ in ${this.props.group2Name}`,
+            name: this.props.group2Name,
+            headerRender:(name:string)=>STAT_IN_headerRender("σ", name),
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInUnalteredGroup.toFixed(2)}</span>,
             tooltip: <span>Standard deviation of log2 expression of the listed gene in {this.props.group2Description}</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInUnalteredGroup,
