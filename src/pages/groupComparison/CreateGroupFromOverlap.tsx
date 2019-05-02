@@ -65,13 +65,13 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
         let studiesAttr:SessionGroupData["studies"];
         if (this.props.caseType === "sample") {
             studiesAttr = getStudiesAttrForSampleOverlapGroup(
-                this.props.store.availableGroups.result!,
+                this.props.store._originalGroups.result!,
                 this.props.includedRegions,
                 this.props.allGroupsInVenn
             );
         } else {
             studiesAttr = getStudiesAttrForPatientOverlapGroup(
-                this.props.store.availableGroups.result!,
+                this.props.store._originalGroups.result!,
                 this.props.includedRegions,
                 this.props.allGroupsInVenn,
                 this.props.store.patientToSamplesSet.result!
@@ -87,9 +87,9 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
     }
 
     readonly existingGroupNames = remoteData({
-        await:()=>[this.props.store.availableGroups],
+        await:()=>[this.props.store._originalGroups],
         invoke:()=>Promise.resolve(
-            this.props.store.availableGroups.result!.map(g=>g.name)
+            this.props.store._originalGroups.result!.map(g=>g.name)
         )
     });
 
@@ -102,7 +102,7 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
             this.props.store.origin,
             this.props.store.sampleSet,
             this.existingGroupNames,
-            this.props.store.availableGroups,
+            this.props.store._originalGroups,
             this.props.store.patientToSamplesSet
         ],
         render:()=>(
