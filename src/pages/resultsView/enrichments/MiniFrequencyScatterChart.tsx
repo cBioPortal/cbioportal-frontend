@@ -10,6 +10,7 @@ import {formatLogOddsRatio} from "../../../shared/lib/FormatUtils";
 import {toConditionalPrecision} from "../../../shared/lib/NumberUtils";
 import SelectionComponent from "./SelectionComponent";
 import HoverablePoint from "./HoverablePoint";
+import {truncateWithEllipsis} from "../../../shared/lib/wrapText";
 
 export interface IMiniFrequencyScatterChartData {
     x:number;
@@ -57,11 +58,11 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
     }
 
     @computed get xLabel() {
-        return `Alteration Frequency in ${this.props.xGroupName} (%)`;
+        return `Alteration Frequency in ${truncateWithEllipsis(this.props.xGroupName, 100, "Arial", "13px")} (%)`;
     }
 
     @computed get yLabel() {
-        return `Alteration Frequency in ${this.props.yGroupName} (%)`;
+        return `Alteration Frequency in ${truncateWithEllipsis(this.props.yGroupName, 100, "Arial", "13px")} (%)`;
     }
 
     /*@computed get size() {

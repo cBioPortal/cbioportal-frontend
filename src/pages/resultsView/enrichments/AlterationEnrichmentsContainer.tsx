@@ -12,7 +12,6 @@ import {
     getAlterationRowData,
     AlterationEnrichmentWithQ, getAlterationFrequencyScatterData
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import { Checkbox, Button, Form, FormGroup, ControlLabel, FormControl } from 'react-bootstrap';
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
@@ -21,6 +20,8 @@ import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
+import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -182,7 +183,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         if (this.props.alteredVsUnalteredMode) {
             return "Co-occurrence";
         } else {
-            return `Enriched in ${this.props.group1Name!}`;
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group1Name!} shownWidth={100}/></span>;
         }
     }
 
@@ -190,7 +191,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         if (this.props.alteredVsUnalteredMode) {
             return "Mutual exclusivity";
         } else {
-            return `Enriched in ${this.props.group2Name!}`;
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group2Name!} shownWidth={100}/></span>;
         }
     }
 
@@ -241,18 +242,21 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
-                        <Checkbox checked={this.coOccurenceFilter}
-                            onChange={this.toggleCoOccurenceFilter}>
-                            {this.group1CheckboxLabel}
-                        </Checkbox>
-                        <Checkbox checked={this.mutualExclusivityFilter}
-                            onChange={this.toggleMutualExclusivityFilter}>
-                            {this.group2CheckboxLabel}
-                        </Checkbox>
-                        <Checkbox checked={this.significanceFilter}
-                            onChange={this.toggleSignificanceFilter}>
-                            Significant only
-                        </Checkbox>
+                        <FlexAlignedCheckbox
+                            checked={this.coOccurenceFilter}
+                            onClick={this.toggleCoOccurenceFilter}
+                            label={this.group1CheckboxLabel}
+                        />
+                        <FlexAlignedCheckbox
+                            checked={this.mutualExclusivityFilter}
+                            onClick={this.toggleMutualExclusivityFilter}
+                            label={this.group2CheckboxLabel}
+                        />
+                        <FlexAlignedCheckbox
+                            checked={this.significanceFilter}
+                            onClick={this.toggleSignificanceFilter}
+                            label="Significant only"
+                        />
                     </div>
                     <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
                                                onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} alterationType={this.props.alterationType!} dataStore={this.dataStore}
