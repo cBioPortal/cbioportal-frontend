@@ -5,7 +5,11 @@ import { observer } from "mobx-react";
 import {computed, observable} from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
 import {
-    calculateAlterationTendency, calculateExpressionTendency, calculateGenericTendency, formatPercentage
+    calculateAlterationTendency,
+    calculateExpressionTendency,
+    calculateGenericTendency,
+    formatPercentage,
+    PERCENTAGE_IN_headerRender
 } from "./EnrichmentsUtil";
 import { formatLogOddsRatio, formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
@@ -15,6 +19,7 @@ import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import classNames from "classnames";
+import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 export interface IAlterationEnrichmentTableProps {
     columns?: AlterationEnrichmentTableColumnType[];
@@ -121,7 +126,8 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP1] = {
-            name: `In ${this.props.group1Name}`,
+            name: this.props.group1Name,
+            headerRender:PERCENTAGE_IN_headerRender,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
             tooltip: <span>Number (percentage) of samples {this.props.group1Description}</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.alteredCount,
@@ -129,7 +135,8 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP2] = {
-            name: `In ${this.props.group2Name}`,
+            name: this.props.group2Name,
+            headerRender:PERCENTAGE_IN_headerRender,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
             tooltip: <span>Number (percentage) of samples {this.props.group2Description}</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.unalteredCount,
