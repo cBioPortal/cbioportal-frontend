@@ -32,14 +32,6 @@ const VENN_PLOT_HEIGHT = 400;
 const PADDING_BTWN_VENN_AND_LEGEND = 20;
 const LEGEND_WIDTH = 180;
 
-declare global {
-    namespace JSX {
-        interface IntrinsicElements {
-            feDropShadow:any; // for some reason typescript doesnt know about this SVG tag
-        }
-    }
-}
-
 @observer
 export default class Venn extends React.Component<IVennProps, {}> {
 
@@ -60,15 +52,15 @@ export default class Venn extends React.Component<IVennProps, {}> {
 
     @autobind
     @action
-    private submitSampleOverlapGroup(group:SessionGroupData) {
-        this.props.store.addUnsavedGroup(group);
+    private submitSampleOverlapGroup(group:SessionGroupData, saveToUser:boolean) {
+        this.props.store.addUnsavedGroup(group, saveToUser);
         this.sampleSelection.regions = [];
     }
 
     @autobind
     @action
-    private submitPatientOverlapGroup(group:SessionGroupData) {
-        this.props.store.addUnsavedGroup(group);
+    private submitPatientOverlapGroup(group:SessionGroupData, saveToUser:boolean) {
+        this.props.store.addUnsavedGroup(group, saveToUser);
         this.patientSelection.regions = [];
     }
 
