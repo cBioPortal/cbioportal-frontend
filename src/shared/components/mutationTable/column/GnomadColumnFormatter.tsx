@@ -139,6 +139,8 @@ export default class GnomadColumnFormatter {
                     result = gnomadResult;
                 }
                 
+                const sorted = _.sortBy(Object.values(result).slice(0,7), ['alleleFrequency']).reverse();
+                sorted.push(result["Total"]);
                 // The column will show the total frequency
                 if (result["Total"].alleleFrequency === 0) {
                     display = <span>0</span>
@@ -149,7 +151,7 @@ export default class GnomadColumnFormatter {
                 
                 overlay = () => (
                     <span className={styles["gnomad-table"]} data-test='gnomad-table'>
-                        <GnomadFrequencyTable data={Object.values(result)}/>
+                        <GnomadFrequencyTable data={sorted}/>
                     </span>
                     
                 );

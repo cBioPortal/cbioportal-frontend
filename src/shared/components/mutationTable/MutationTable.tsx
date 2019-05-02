@@ -536,11 +536,11 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         };
         
         this._columns[MutationTableColumnType.GNOMAD] = {
-            name: "GNOMAD",
+            name: "gnomAD",
             render: (d:Mutation[])=>GnomadColumnFormatter.renderFunction(d, this.props.genomeNexusCache as GenomeNexusCache),
             sortBy: (d:Mutation[])=>GnomadColumnFormatter.getSortValue(d, this.props.genomeNexusCache as GenomeNexusCache),
             download: (d:Mutation[])=>GnomadColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
-            tooltip: (<span>Gnomad data</span>),
+            tooltip: (<span>gnomAD data</span>),
             defaultSortDirection: "desc",
             visible: false,
             align:"right"
