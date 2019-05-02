@@ -19,6 +19,7 @@ export default class FlexAlignedCheckbox extends React.Component<ICheckboxProps,
                     value={this.props.value}
                     checked={this.props.checked}
                     onClick={this.props.onClick}
+                    style={{marginTop:1}}
                 />
                 {typeof this.props.label === "function" ? this.props.label() : this.props.label}
             </label></div>
