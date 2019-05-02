@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 import CBIOPORTAL_VICTORY_THEME, { axisTickLabelStyles } from 'shared/theme/cBioPoralTheme';
 import autobind from 'autobind-decorator';
 import { getCombinations, ComparisonGroup } from './GroupComparisonUtils';
-import { getTextWidth } from 'shared/lib/wrapText';
+import {getTextWidth, truncateWithEllipsis} from 'shared/lib/wrapText';
 import { tickFormatNumeral } from 'shared/components/plots/TickUtils';
 import Timer = NodeJS.Timer;
 import ScatterPlotTooltip from 'shared/components/plots/ScatterPlotTooltip';
@@ -94,7 +94,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
     }
 
     @computed get groupLabels() {
-        return _.map(this.activeGroups, group => group.name);
+        return _.map(this.activeGroups, group => truncateWithEllipsis(group.name, 100, "Arial", "13px"));
     }
 
     private barSeparation() {
