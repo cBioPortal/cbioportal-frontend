@@ -8,7 +8,7 @@ import ExpressionEnrichmentContainer from "../resultsView/enrichments/Expression
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupComparisonStore from "./GroupComparisonStore";
-import { ENRICHMENTS_NOT_2_GROUPS_MSG, ENRICHMENTS_TOO_MANY_STUDIES_MSG } from "./GroupComparisonUtils";
+import {MakeEnrichmentsTabUI} from "./GroupComparisonUtils";
 
 export interface IProteinEnrichmentsProps {
     store: GroupComparisonStore
@@ -21,30 +21,7 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
         this.props.store.setProteinEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeMobxView({
-        await:()=>{
-            const ret = [this.props.store.activeGroups, this.props.store.activeStudyIds];
-            if ((this.props.store.activeGroups.isComplete &&
-                this.props.store.activeGroups.result.length !== 2) ||
-                (this.props.store.activeStudyIds.isComplete && this.props.store.activeStudyIds.result.length > 1)) {
-                // dont bother loading data for and computing enrichments UI if its not valid situation for it
-                return ret;
-            } else {
-                return [this.props.store.activeGroups, this.enrichmentsUI];
-            }
-        },
-        render:()=>{
-            if (this.props.store.activeGroups.result!.length !== 2) {
-                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG(this.props.store.activeGroups.result!.length > 2)}</span>;
-            } else if (this.props.store.activeStudyIds.result!.length > 1) {
-                return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG("protein")}</span>;
-            } else {
-                return this.enrichmentsUI.component;
-            }
-        },
-        renderPending:()=><Loader center={true} isLoading={true} size={"big"}/>,
-        renderError:()=><ErrorMessage/>
-    });
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI);
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
