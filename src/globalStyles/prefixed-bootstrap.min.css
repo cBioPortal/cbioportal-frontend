@@ -715,7 +715,7 @@
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
 .cbioportal-frontend body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.428571429;
   color: #333333;
   background-color: #fff; }
@@ -757,8 +757,8 @@
 .cbioportal-frontend .img-circle {
   border-radius: 50%; }
 .cbioportal-frontend hr {
-  margin-top: 18px;
-  margin-bottom: 18px;
+  margin-top: 20px;
+  margin-bottom: 20px;
   border: 0;
   border-top: 1px solid #eeeeee; }
 .cbioportal-frontend .sr-only {
@@ -789,39 +789,39 @@
   line-height: 1;
   color: #777777; }
 .cbioportal-frontend h1, .cbioportal-frontend .h1, .cbioportal-frontend h2, .cbioportal-frontend .h2, .cbioportal-frontend h3, .cbioportal-frontend .h3 {
-  margin-top: 18px;
-  margin-bottom: 9px; }
+  margin-top: 20px;
+  margin-bottom: 10px; }
 .cbioportal-frontend h1 small, .cbioportal-frontend h1 .small, .cbioportal-frontend .h1 small, .cbioportal-frontend .h1 .small, .cbioportal-frontend h2 small, .cbioportal-frontend h2 .small, .cbioportal-frontend .h2 small, .cbioportal-frontend .h2 .small, .cbioportal-frontend h3 small, .cbioportal-frontend h3 .small, .cbioportal-frontend .h3 small, .cbioportal-frontend .h3 .small {
   font-size: 65%; }
 .cbioportal-frontend h4, .cbioportal-frontend .h4, .cbioportal-frontend h5, .cbioportal-frontend .h5, .cbioportal-frontend h6, .cbioportal-frontend .h6 {
-  margin-top: 9px;
-  margin-bottom: 9px; }
+  margin-top: 10px;
+  margin-bottom: 10px; }
 .cbioportal-frontend h4 small, .cbioportal-frontend h4 .small, .cbioportal-frontend .h4 small, .cbioportal-frontend .h4 .small, .cbioportal-frontend h5 small, .cbioportal-frontend h5 .small, .cbioportal-frontend .h5 small, .cbioportal-frontend .h5 .small, .cbioportal-frontend h6 small, .cbioportal-frontend h6 .small, .cbioportal-frontend .h6 small, .cbioportal-frontend .h6 .small {
   font-size: 75%; }
 .cbioportal-frontend h1, .cbioportal-frontend .h1 {
-  font-size: 33px; }
+  font-size: 36px; }
 .cbioportal-frontend h2, .cbioportal-frontend .h2 {
-  font-size: 27px; }
+  font-size: 30px; }
 .cbioportal-frontend h3, .cbioportal-frontend .h3 {
-  font-size: 23px; }
+  font-size: 24px; }
 .cbioportal-frontend h4, .cbioportal-frontend .h4 {
-  font-size: 17px; }
+  font-size: 18px; }
 .cbioportal-frontend h5, .cbioportal-frontend .h5 {
-  font-size: 13px; }
+  font-size: 14px; }
 .cbioportal-frontend h6, .cbioportal-frontend .h6 {
   font-size: 12px; }
 .cbioportal-frontend p {
-  margin: 0 0 9px; }
+  margin: 0 0 10px; }
 .cbioportal-frontend .lead {
-  margin-bottom: 18px;
-  font-size: 14px;
+  margin-bottom: 20px;
+  font-size: 16px;
   font-weight: 300;
   line-height: 1.4; }
 @media (min-width: 768px) {
   .cbioportal-frontend .lead {
-    font-size: 19.5px; } }
+    font-size: 21px; } }
 .cbioportal-frontend small, .cbioportal-frontend .small {
-  font-size: 92%; }
+  font-size: 85%; }
 .cbioportal-frontend mark, .cbioportal-frontend .mark {
   padding: .2em;
   background-color: #fcf8e3; }
@@ -886,12 +886,12 @@
 .cbioportal-frontend a.bg-danger:hover, .cbioportal-frontend a.bg-danger:focus {
   background-color: #e4b9b9; }
 .cbioportal-frontend .page-header {
-  padding-bottom: 8px;
-  margin: 36px 0 18px;
+  padding-bottom: 9px;
+  margin: 40px 0 20px;
   border-bottom: 1px solid #eeeeee; }
 .cbioportal-frontend ul, .cbioportal-frontend ol {
   margin-top: 0;
-  margin-bottom: 9px; }
+  margin-bottom: 10px; }
 .cbioportal-frontend ul ul, .cbioportal-frontend ul ol, .cbioportal-frontend ol ul, .cbioportal-frontend ol ol {
   margin-bottom: 0; }
 .cbioportal-frontend .list-unstyled {
@@ -907,7 +907,7 @@
   padding-left: 5px; }
 .cbioportal-frontend dl {
   margin-top: 0;
-  margin-bottom: 18px; }
+  margin-bottom: 20px; }
 .cbioportal-frontend dt, .cbioportal-frontend dd {
   line-height: 1.428571429; }
 .cbioportal-frontend dt {
@@ -935,9 +935,9 @@
 .cbioportal-frontend .initialism {
   font-size: 90%; }
 .cbioportal-frontend blockquote {
-  padding: 9px 18px;
-  margin: 0 0 18px;
-  font-size: 16.25px;
+  padding: 10px 20px;
+  margin: 0 0 20px;
+  font-size: 17.5px;
   border-left: 5px solid #eeeeee; }
 .cbioportal-frontend blockquote p:last-child, .cbioportal-frontend blockquote ul:last-child, .cbioportal-frontend blockquote ol:last-child {
   margin-bottom: 0; }
@@ -959,7 +959,7 @@
 .cbioportal-frontend .blockquote-reverse footer:after, .cbioportal-frontend .blockquote-reverse small:after, .cbioportal-frontend .blockquote-reverse .small:after, .cbioportal-frontend blockquote.pull-right footer:after, .cbioportal-frontend blockquote.pull-right small:after, .cbioportal-frontend blockquote.pull-right .small:after {
   content: "\00A0 \2014"; }
 .cbioportal-frontend address {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   font-style: normal;
   line-height: 1.428571429; }
 .cbioportal-frontend code, .cbioportal-frontend kbd, .cbioportal-frontend pre, .cbioportal-frontend samp {
@@ -984,9 +984,9 @@
   box-shadow: none; }
 .cbioportal-frontend pre {
   display: block;
-  padding: 8.5px;
-  margin: 0 0 9px;
-  font-size: 12px;
+  padding: 9.5px;
+  margin: 0 0 10px;
+  font-size: 13px;
   line-height: 1.428571429;
   color: #333333;
   word-break: break-all;
@@ -1491,7 +1491,7 @@
 .cbioportal-frontend .table {
   width: 100%;
   max-width: 100%;
-  margin-bottom: 18px; }
+  margin-bottom: 20px; }
 .cbioportal-frontend .table > thead > tr > th, .cbioportal-frontend .table > thead > tr > td, .cbioportal-frontend .table > tbody > tr > th, .cbioportal-frontend .table > tbody > tr > td, .cbioportal-frontend .table > tfoot > tr > th, .cbioportal-frontend .table > tfoot > tr > td {
   padding: 8px;
   line-height: 1.428571429;
@@ -1544,7 +1544,7 @@
 @media screen and (max-width: 767px) {
   .cbioportal-frontend .table-responsive {
     width: 100%;
-    margin-bottom: 13.5px;
+    margin-bottom: 15px;
     overflow-y: hidden;
     -ms-overflow-style: -ms-autohiding-scrollbar;
     border: 1px solid #ddd; }
@@ -1569,8 +1569,8 @@
   display: block;
   width: 100%;
   padding: 0;
-  margin-bottom: 18px;
-  font-size: 19.5px;
+  margin-bottom: 20px;
+  font-size: 21px;
   line-height: inherit;
   color: #333333;
   border: 0;
@@ -1605,15 +1605,15 @@
 .cbioportal-frontend output {
   display: block;
   padding-top: 7px;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.428571429;
   color: #555555; }
 .cbioportal-frontend .form-control {
   display: block;
   width: 100%;
-  height: 32px;
+  height: 34px;
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.428571429;
   color: #555555;
   background-color: #fff;
@@ -1649,11 +1649,11 @@
   height: auto; }
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
   .cbioportal-frontend input[type="date"].form-control, .cbioportal-frontend input[type="time"].form-control, .cbioportal-frontend input[type="datetime-local"].form-control, .cbioportal-frontend input[type="month"].form-control {
-    line-height: 32px; }
+    line-height: 34px; }
   .cbioportal-frontend input[type="date"].input-sm, .cbioportal-frontend .input-group-sm > input[type="date"].form-control, .cbioportal-frontend .input-group-sm > input[type="date"].input-group-addon, .cbioportal-frontend .input-group-sm > .input-group-btn > input[type="date"].btn, .input-group-sm .cbioportal-frontend input[type="date"], .cbioportal-frontend input[type="time"].input-sm, .cbioportal-frontend .input-group-sm > input[type="time"].form-control, .cbioportal-frontend .input-group-sm > input[type="time"].input-group-addon, .cbioportal-frontend .input-group-sm > .input-group-btn > input[type="time"].btn, .input-group-sm .cbioportal-frontend input[type="time"], .cbioportal-frontend input[type="datetime-local"].input-sm, .cbioportal-frontend .input-group-sm > input[type="datetime-local"].form-control, .cbioportal-frontend .input-group-sm > input[type="datetime-local"].input-group-addon, .cbioportal-frontend .input-group-sm > .input-group-btn > input[type="datetime-local"].btn, .input-group-sm .cbioportal-frontend input[type="datetime-local"], .cbioportal-frontend input[type="month"].input-sm, .cbioportal-frontend .input-group-sm > input[type="month"].form-control, .cbioportal-frontend .input-group-sm > input[type="month"].input-group-addon, .cbioportal-frontend .input-group-sm > .input-group-btn > input[type="month"].btn, .input-group-sm .cbioportal-frontend input[type="month"] {
     line-height: 30px; }
   .cbioportal-frontend input[type="date"].input-lg, .cbioportal-frontend .input-group-lg > input[type="date"].form-control, .cbioportal-frontend .input-group-lg > input[type="date"].input-group-addon, .cbioportal-frontend .input-group-lg > .input-group-btn > input[type="date"].btn, .input-group-lg .cbioportal-frontend input[type="date"], .cbioportal-frontend input[type="time"].input-lg, .cbioportal-frontend .input-group-lg > input[type="time"].form-control, .cbioportal-frontend .input-group-lg > input[type="time"].input-group-addon, .cbioportal-frontend .input-group-lg > .input-group-btn > input[type="time"].btn, .input-group-lg .cbioportal-frontend input[type="time"], .cbioportal-frontend input[type="datetime-local"].input-lg, .cbioportal-frontend .input-group-lg > input[type="datetime-local"].form-control, .cbioportal-frontend .input-group-lg > input[type="datetime-local"].input-group-addon, .cbioportal-frontend .input-group-lg > .input-group-btn > input[type="datetime-local"].btn, .input-group-lg .cbioportal-frontend input[type="datetime-local"], .cbioportal-frontend input[type="month"].input-lg, .cbioportal-frontend .input-group-lg > input[type="month"].form-control, .cbioportal-frontend .input-group-lg > input[type="month"].input-group-addon, .cbioportal-frontend .input-group-lg > .input-group-btn > input[type="month"].btn, .input-group-lg .cbioportal-frontend input[type="month"] {
-    line-height: 45px; } }
+    line-height: 46px; } }
 .cbioportal-frontend .form-group {
   margin-bottom: 15px; }
 .cbioportal-frontend .radio, .cbioportal-frontend .checkbox {
@@ -1664,7 +1664,7 @@
 .cbioportal-frontend .radio.disabled label, fieldset[disabled] .cbioportal-frontend .radio label, .cbioportal-frontend .checkbox.disabled label, fieldset[disabled] .cbioportal-frontend .checkbox label {
   cursor: not-allowed; }
 .cbioportal-frontend .radio label, .cbioportal-frontend .checkbox label {
-  min-height: 18px;
+  min-height: 20px;
   padding-left: 20px;
   margin-bottom: 0;
   font-weight: 400;
@@ -1689,7 +1689,7 @@
   margin-top: 0;
   margin-left: 10px; }
 .cbioportal-frontend .form-control-static {
-  min-height: 31px;
+  min-height: 34px;
   padding-top: 7px;
   padding-bottom: 7px;
   margin-bottom: 0; }
@@ -1720,57 +1720,57 @@
   height: auto; }
 .cbioportal-frontend .form-group-sm .form-control-static {
   height: 30px;
-  min-height: 30px;
+  min-height: 32px;
   padding: 6px 10px;
   font-size: 12px;
   line-height: 1.5; }
 .cbioportal-frontend .input-lg, .cbioportal-frontend .input-group-lg > .form-control, .cbioportal-frontend .input-group-lg > .input-group-addon, .cbioportal-frontend .input-group-lg > .input-group-btn > .btn {
-  height: 45px;
+  height: 46px;
   padding: 10px 16px;
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.3333333;
   border-radius: 6px; }
 .cbioportal-frontend select.input-lg, .cbioportal-frontend .input-group-lg > select.form-control, .cbioportal-frontend .input-group-lg > select.input-group-addon, .cbioportal-frontend .input-group-lg > .input-group-btn > select.btn {
-  height: 45px;
-  line-height: 45px; }
+  height: 46px;
+  line-height: 46px; }
 .cbioportal-frontend textarea.input-lg, .cbioportal-frontend .input-group-lg > textarea.form-control, .cbioportal-frontend .input-group-lg > textarea.input-group-addon, .cbioportal-frontend .input-group-lg > .input-group-btn > textarea.btn, .cbioportal-frontend select[multiple].input-lg, .cbioportal-frontend .input-group-lg > select[multiple].form-control, .cbioportal-frontend .input-group-lg > select[multiple].input-group-addon, .cbioportal-frontend .input-group-lg > .input-group-btn > select[multiple].btn {
   height: auto; }
 .cbioportal-frontend .form-group-lg .form-control {
-  height: 45px;
+  height: 46px;
   padding: 10px 16px;
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.3333333;
   border-radius: 6px; }
 .cbioportal-frontend .form-group-lg select.form-control {
-  height: 45px;
-  line-height: 45px; }
+  height: 46px;
+  line-height: 46px; }
 .cbioportal-frontend .form-group-lg textarea.form-control, .cbioportal-frontend .form-group-lg select[multiple].form-control {
   height: auto; }
 .cbioportal-frontend .form-group-lg .form-control-static {
-  height: 45px;
-  min-height: 35px;
+  height: 46px;
+  min-height: 38px;
   padding: 11px 16px;
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.3333333; }
 .cbioportal-frontend .has-feedback {
   position: relative; }
 .cbioportal-frontend .has-feedback .form-control {
-  padding-right: 40px; }
+  padding-right: 42.5px; }
 .cbioportal-frontend .form-control-feedback {
   position: absolute;
   top: 0;
   right: 0;
   z-index: 2;
   display: block;
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
   text-align: center;
   pointer-events: none; }
 .cbioportal-frontend .input-lg + .form-control-feedback, .cbioportal-frontend .input-group-lg > .form-control + .form-control-feedback, .cbioportal-frontend .input-group-lg > .input-group-addon + .form-control-feedback, .cbioportal-frontend .input-group-lg > .input-group-btn > .btn + .form-control-feedback, .cbioportal-frontend .input-group-lg + .form-control-feedback, .cbioportal-frontend .form-group-lg .form-control + .form-control-feedback {
-  width: 45px;
-  height: 45px;
-  line-height: 45px; }
+  width: 46px;
+  height: 46px;
+  line-height: 46px; }
 .cbioportal-frontend .input-sm + .form-control-feedback, .cbioportal-frontend .input-group-sm > .form-control + .form-control-feedback, .cbioportal-frontend .input-group-sm > .input-group-addon + .form-control-feedback, .cbioportal-frontend .input-group-sm > .input-group-btn > .btn + .form-control-feedback, .cbioportal-frontend .input-group-sm + .form-control-feedback, .cbioportal-frontend .form-group-sm .form-control + .form-control-feedback {
   width: 30px;
   height: 30px;
@@ -1824,7 +1824,7 @@
 .cbioportal-frontend .has-error .form-control-feedback {
   color: #a94442; }
 .cbioportal-frontend .has-feedback label ~ .form-control-feedback {
-  top: 23px; }
+  top: 25px; }
 .cbioportal-frontend .has-feedback label.sr-only ~ .form-control-feedback {
   top: 0; }
 .cbioportal-frontend .help-block {
@@ -1870,7 +1870,7 @@
   margin-top: 0;
   margin-bottom: 0; }
 .cbioportal-frontend .form-horizontal .radio, .cbioportal-frontend .form-horizontal .checkbox {
-  min-height: 25px; }
+  min-height: 27px; }
 .cbioportal-frontend .form-horizontal .form-group {
   margin-right: -15px;
   margin-left: -15px; }
@@ -1889,7 +1889,7 @@
 @media (min-width: 768px) {
   .cbioportal-frontend .form-horizontal .form-group-lg .control-label {
     padding-top: 11px;
-    font-size: 17px; } }
+    font-size: 18px; } }
 @media (min-width: 768px) {
   .cbioportal-frontend .form-horizontal .form-group-sm .control-label {
     padding-top: 6px;
@@ -1906,7 +1906,7 @@
   background-image: none;
   border: 1px solid transparent;
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.428571429;
   border-radius: 4px;
   -webkit-user-select: none;
@@ -2113,7 +2113,7 @@
   text-decoration: none; }
 .cbioportal-frontend .btn-lg, .cbioportal-frontend .btn-group-lg > .btn {
   padding: 10px 16px;
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.3333333;
   border-radius: 6px; }
 .cbioportal-frontend .btn-sm, .cbioportal-frontend .btn-group-sm > .btn {
@@ -2182,7 +2182,7 @@
   min-width: 160px;
   padding: 5px 0;
   margin: 2px 0 0;
-  font-size: 13px;
+  font-size: 14px;
   text-align: left;
   list-style: none;
   background-color: #fff;
@@ -2197,7 +2197,7 @@
   left: auto; }
 .cbioportal-frontend .dropdown-menu .divider {
   height: 1px;
-  margin: 8px 0;
+  margin: 9px 0;
   overflow: hidden;
   background-color: #e5e5e5; }
 .cbioportal-frontend .dropdown-menu > li > a {
@@ -2409,7 +2409,7 @@
   vertical-align: middle; }
 .cbioportal-frontend .input-group-addon {
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
   line-height: 1;
   color: #555555;
@@ -2423,7 +2423,7 @@
   border-radius: 3px; }
 .cbioportal-frontend .input-group-addon.input-lg, .cbioportal-frontend .input-group-lg > .input-group-addon, .cbioportal-frontend .input-group-lg > .input-group-btn > .input-group-addon.btn {
   padding: 10px 16px;
-  font-size: 17px;
+  font-size: 18px;
   border-radius: 6px; }
 .cbioportal-frontend .input-group-addon input[type="radio"], .cbioportal-frontend .input-group-addon input[type="checkbox"] {
   margin-top: 0; }
@@ -2483,7 +2483,7 @@
   border-color: #3786C2; }
 .cbioportal-frontend .nav .nav-divider {
   height: 1px;
-  margin: 8px 0;
+  margin: 9px 0;
   overflow: hidden;
   background-color: #e5e5e5; }
 .cbioportal-frontend .nav > li > a > img {
@@ -2560,7 +2560,7 @@
 .cbioportal-frontend .navbar {
   position: relative;
   min-height: 50px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   border: 1px solid transparent; }
 .cbioportal-frontend .navbar:before, .cbioportal-frontend .navbar:after {
   display: table;
@@ -2643,9 +2643,9 @@
 .cbioportal-frontend .navbar-brand {
   float: left;
   height: 50px;
-  padding: 16px 15px;
-  font-size: 17px;
-  line-height: 18px; }
+  padding: 15px 15px;
+  font-size: 18px;
+  line-height: 20px; }
 .cbioportal-frontend .navbar-brand:hover, .cbioportal-frontend .navbar-brand:focus {
   text-decoration: none; }
 .cbioportal-frontend .navbar-brand > img {
@@ -2677,11 +2677,11 @@
   .cbioportal-frontend .navbar-toggle {
     display: none; } }
 .cbioportal-frontend .navbar-nav {
-  margin: 8px -15px; }
+  margin: 7.5px -15px; }
 .cbioportal-frontend .navbar-nav > li > a {
   padding-top: 10px;
   padding-bottom: 10px;
-  line-height: 18px; }
+  line-height: 20px; }
 @media (max-width: 767px) {
   .cbioportal-frontend .navbar-nav .open .dropdown-menu {
     position: static;
@@ -2694,7 +2694,7 @@
   .cbioportal-frontend .navbar-nav .open .dropdown-menu > li > a, .cbioportal-frontend .navbar-nav .open .dropdown-menu .dropdown-header {
     padding: 5px 15px 5px 25px; }
   .cbioportal-frontend .navbar-nav .open .dropdown-menu > li > a {
-    line-height: 18px; }
+    line-height: 20px; }
   .cbioportal-frontend .navbar-nav .open .dropdown-menu > li > a:hover, .cbioportal-frontend .navbar-nav .open .dropdown-menu > li > a:focus {
     background-image: none; } }
 @media (min-width: 768px) {
@@ -2704,8 +2704,8 @@
   .cbioportal-frontend .navbar-nav > li {
     float: left; }
   .cbioportal-frontend .navbar-nav > li > a {
-    padding-top: 16px;
-    padding-bottom: 16px; } }
+    padding-top: 15px;
+    padding-bottom: 15px; } }
 .cbioportal-frontend .navbar-form {
   padding: 10px 15px;
   margin-right: -15px;
@@ -2714,8 +2714,8 @@
   border-bottom: 1px solid transparent;
   -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 1px 0 rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 1px 0 rgba(255, 255, 255, 0.1);
-  margin-top: 9px;
-  margin-bottom: 9px; }
+  margin-top: 8px;
+  margin-bottom: 8px; }
 @media (min-width: 768px) {
   .cbioportal-frontend .navbar-form .form-group {
     display: inline-block;
@@ -2775,8 +2775,8 @@
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0; }
 .cbioportal-frontend .navbar-btn {
-  margin-top: 9px;
-  margin-bottom: 9px; }
+  margin-top: 8px;
+  margin-bottom: 8px; }
 .cbioportal-frontend .navbar-btn.btn-sm, .cbioportal-frontend .btn-group-sm > .navbar-btn.btn {
   margin-top: 10px;
   margin-bottom: 10px; }
@@ -2784,8 +2784,8 @@
   margin-top: 14px;
   margin-bottom: 14px; }
 .cbioportal-frontend .navbar-text {
-  margin-top: 16px;
-  margin-bottom: 16px; }
+  margin-top: 15px;
+  margin-bottom: 15px; }
 @media (min-width: 768px) {
   .cbioportal-frontend .navbar-text {
     float: left;
@@ -2913,7 +2913,7 @@
   color: #444; }
 .cbioportal-frontend .breadcrumb {
   padding: 8px 15px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   list-style: none;
   background-color: #f5f5f5;
   border-radius: 4px; }
@@ -2928,7 +2928,7 @@
 .cbioportal-frontend .pagination {
   display: inline-block;
   padding-left: 0;
-  margin: 18px 0;
+  margin: 20px 0;
   border-radius: 4px; }
 .cbioportal-frontend .pagination > li {
   display: inline; }
@@ -2967,7 +2967,7 @@
   border-color: #ddd; }
 .cbioportal-frontend .pagination-lg > li > a, .cbioportal-frontend .pagination-lg > li > span {
   padding: 10px 16px;
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.3333333; }
 .cbioportal-frontend .pagination-lg > li:first-child > a, .cbioportal-frontend .pagination-lg > li:first-child > span {
   border-top-left-radius: 6px;
@@ -2987,7 +2987,7 @@
   border-bottom-right-radius: 3px; }
 .cbioportal-frontend .pager {
   padding-left: 0;
-  margin: 18px 0;
+  margin: 20px 0;
   text-align: center;
   list-style: none; }
 .cbioportal-frontend .pager:before, .cbioportal-frontend .pager:after {
@@ -3102,7 +3102,7 @@
   color: inherit; }
 .cbioportal-frontend .jumbotron p {
   margin-bottom: 15px;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 200; }
 .cbioportal-frontend .jumbotron > hr {
   border-top-color: #d5d5d5; }
@@ -3120,11 +3120,11 @@
     padding-right: 60px;
     padding-left: 60px; }
   .cbioportal-frontend .jumbotron h1, .cbioportal-frontend .jumbotron .h1 {
-    font-size: 59px; } }
+    font-size: 63px; } }
 .cbioportal-frontend .thumbnail {
   display: block;
   padding: 4px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   line-height: 1.428571429;
   background-color: #fff;
   border: 1px solid #ddd;
@@ -3145,7 +3145,7 @@
   border-color: #3786C2; }
 .cbioportal-frontend .alert {
   padding: 15px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   border: 1px solid transparent;
   border-radius: 4px; }
 .cbioportal-frontend .alert h4 {
@@ -3207,8 +3207,8 @@
   to {
     background-position: 0 0; } }
 .cbioportal-frontend .progress {
-  height: 18px;
-  margin-bottom: 18px;
+  height: 20px;
+  margin-bottom: 20px;
   overflow: hidden;
   background-color: #f5f5f5;
   border-radius: 4px;
@@ -3219,7 +3219,7 @@
   width: 0%;
   height: 100%;
   font-size: 12px;
-  line-height: 18px;
+  line-height: 20px;
   color: #fff;
   text-align: center;
   background-color: #3786C2;
@@ -3399,7 +3399,7 @@
   margin-bottom: 0;
   line-height: 1.3; }
 .cbioportal-frontend .panel {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   background-color: #fff;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -3422,7 +3422,7 @@
 .cbioportal-frontend .panel-title {
   margin-top: 0;
   margin-bottom: 0;
-  font-size: 15px;
+  font-size: 16px;
   color: inherit; }
 .cbioportal-frontend .panel-title > a, .cbioportal-frontend .panel-title > small, .cbioportal-frontend .panel-title > .small, .cbioportal-frontend .panel-title > small > a, .cbioportal-frontend .panel-title > .small > a {
   color: inherit; }
@@ -3495,7 +3495,7 @@
   margin-bottom: 0;
   border: 0; }
 .cbioportal-frontend .panel-group {
-  margin-bottom: 18px; }
+  margin-bottom: 20px; }
 .cbioportal-frontend .panel-group .panel {
   margin-bottom: 0;
   border-radius: 4px; }
@@ -3625,7 +3625,7 @@
   border-radius: 3px; }
 .cbioportal-frontend .close {
   float: right;
-  font-size: 19.5px;
+  font-size: 21px;
   font-weight: bold;
   line-height: 1;
   color: #000;
@@ -3874,7 +3874,7 @@
   word-spacing: normal;
   word-wrap: normal;
   white-space: normal;
-  font-size: 13px;
+  font-size: 14px;
   background-color: #fff;
   background-clip: padding-box;
   border: 1px solid #ccc;
@@ -3957,7 +3957,7 @@
 .cbioportal-frontend .popover-title {
   padding: 8px 14px;
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   background-color: #f7f7f7;
   border-bottom: 1px solid #ebebeb;
   border-radius: 5px 5px 0 0; }
