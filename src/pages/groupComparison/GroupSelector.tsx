@@ -22,11 +22,11 @@ export interface IGroupSelectorProps {
 export default class GroupSelector extends React.Component<IGroupSelectorProps,{}> {
     readonly tabUI = MakeMobxView({
         await:()=>[
-            this.props.store.availableGroups,
+            this.props.store._originalGroups,
             this.props.store.sampleSet
         ],
         render:()=>{
-            if (this.props.store.availableGroups.result!.length === 0) {
+            if (this.props.store._originalGroups.result!.length === 0) {
                 return null;
             } else {
                 return (
@@ -36,22 +36,21 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                     }}>
                         <strong style={{marginRight:5}}>Groups: </strong>
                         <div className={styles.groupButtons}>
-                            {this.props.store.availableGroups.result!.map(group=>{
-                                const active = this.props.store.isGroupActive(group);
+                            {this.props.store._originalGroups.result!.map(group=>{
+                                const selected = this.props.store.isGroupSelected(group.uid);
                                 const sampleIdentifiers = getSampleIdentifiers([group]);
                                 const patientIdentifiers = getPatientIdentifiers(sampleIdentifiers, this.props.store.sampleSet.result!);
                                 return (
                                     <button
-                                        className={classNames('btn btn-xs', 'btn-primary', { [styles.buttonUnselected]:!active})}
+                                        className={classNames('btn btn-xs', 'btn-primary', { [styles.buttonUnselected]:!selected})}
                                         onClick={()=>this.props.store.toggleGroupSelected(group.uid)}
-                                        disabled={!this.props.store.groupSelectionCanBeToggled(group)}
                                     >
                                         {
-                                            active ?  <i className={'fa fa-check'}></i> : <i className={'fa fa-minus'}></i>
+                                            selected ?  <i className={'fa fa-check'}></i> : <i className={'fa fa-minus'}></i>
                                         }
                                         &nbsp;
                                         {`${group.name} ${
-                                            caseCountsInParens(sampleIdentifiers, patientIdentifiers, group.hasOverlappingSamples, group.hasOverlappingPatients)
+                                            caseCountsInParens(sampleIdentifiers, patientIdentifiers)
                                         }`}
                                         {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
                                         {this.props.store.isGroupUnsaved(group) && (
@@ -91,7 +90,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                             <a onClick={this.props.store.deselectAllGroups}
                             >Deselect all
                             </a>
-                            { (this.props.store.availableGroups.result!.findIndex(g=>this.props.store.isGroupUnsaved(g)) > -1) && (
+                            { (this.props.store._originalGroups.result!.findIndex(g=>this.props.store.isGroupUnsaved(g)) > -1) && (
                                 <span>
                                     &nbsp;|&nbsp;
                                     <a onClick={this.props.store.saveAndGoToNewSession}
