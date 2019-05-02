@@ -10,7 +10,6 @@ import {default as TableCellStatusIndicator, TableCellStatus} from "shared/compo
 import {MyVariantInfo, MyVariantInfoAnnotation, Gnomad, AlleleCount, AlleleNumber, Homozygotes, AlleleFrequency} from 'shared/api/generated/GenomeNexusAPI';
 import GenomeNexusCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusCache";
 import GnomadFrequencyTable from 'shared/components/gnomad/GnomadFrequencyTable';
-import {toFixedWithThreshold} from 'shared/lib/FormatUtils.tsx';
 
 export type GnomadData = {
     'population': string
@@ -57,13 +56,12 @@ export enum ColumnName {
 }
 
 export function frequencyOutput(frequency: number) {
-    // Alignment in gnomad table
-    // Align first digit (align 0 with 0.00** with first 0)
+    
     if (frequency === 0) {
-        return <span style = {{float:"right",marginRight:30}}> 0 </span>
+        return <span>0</span>
     }
     else {
-        return <span>{toFixedWithThreshold(frequency,4)}</span>;
+        return <span>{parseFloat(frequency.toString()).toExponential(1)}</span>;
     }
 }
 export default class GnomadColumnFormatter {
@@ -140,14 +138,13 @@ export default class GnomadColumnFormatter {
                     })
                     result = gnomadResult;
                 }
-
-                // The column will show the frequency in total
-                // Align the 0 with 0.00**
+                
+                // The column will show the total frequency
                 if (result["Total"].alleleFrequency === 0) {
-                    display = <span style = {{float:"right",marginRight:35}}> 0 </span>
+                    display = <span>0</span>
                 }
                 else {
-                    display = <span>{toFixedWithThreshold(result["Total"].alleleFrequency,4)}</span>;
+                    display = <span>{parseFloat(result["Total"].alleleFrequency.toString()).toExponential(1)}</span>
                 }       
                 
                 overlay = () => (
