@@ -54,6 +54,7 @@ import { STUDY_VIEW_CONFIG } from "pages/studyView/StudyViewConfig";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import {GroupComparisonURLQuery} from "./GroupComparisonPage";
+import {AppStore} from "../../AppStore";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples and patients",
@@ -67,12 +68,20 @@ export default class GroupComparisonStore {
     @observable private sessionId:string;
     private unsavedGroups = observable.shallowArray<SessionGroupData>([]);
 
-    constructor(sessionId:string) {
+    constructor(sessionId:string, private appStore:AppStore) {
         this.sessionId = sessionId;
     }
 
-    public addUnsavedGroup(group:SessionGroupData) {
+    public get isLoggedIn() {
+        return this.appStore.isLoggedIn;
+    }
+
+    public addUnsavedGroup(group:SessionGroupData, saveToUser:boolean) {
         this.unsavedGroups.push(group);
+
+        if (saveToUser && this.isLoggedIn) {
+            comparisonClient.addGroup(group);
+        }
     }
 
     public isGroupUnsaved(group:ComparisonGroup) {
@@ -121,6 +130,24 @@ export default class GroupComparisonStore {
             return undefined;
         }
     }
+
+    readonly existingGroupNames = remoteData({
+        await:()=>[
+            this._originalGroups,
+            this.origin
+        ],
+        invoke:async()=>{
+            const ret = {
+                session:this._originalGroups.result!.map(g=>g.name),
+                user:[] as string[]
+            };
+            if (this.isLoggedIn) {
+                // need to add all groups belonging to this user for this origin
+                ret.user = (await comparisonClient.getGroupsForStudies(this.origin.result!)).map(g=>g.data.name);
+            }
+            return ret;
+        }
+    });
 
     readonly _originalGroups = remoteData<ComparisonGroup[]>({
         await:()=>[this._session, this.sampleSet],

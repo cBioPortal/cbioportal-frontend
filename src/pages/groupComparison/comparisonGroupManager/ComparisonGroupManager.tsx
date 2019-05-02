@@ -234,7 +234,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         const {id}= await comparisonClient.addGroup(getGroupParameters(
             this.inputGroupName,
             selectedSamples!,
-            this.props.store
+            this.props.store.studyIds
         ));
         this.props.store.setComparisonGroupSelected(id); // created groups start selected
         this.props.store.notifyComparisonGroupsChange();
