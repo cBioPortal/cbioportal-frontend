@@ -89,6 +89,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
 
     readonly tabs = MakeMobxView({
         await:()=>[
+            this.store._selectedGroupsNotOverlapRemoved,
             this.store.activeGroups,
             this.store.mutationEnrichmentProfiles,
             this.store.copyNumberEnrichmentProfiles,
@@ -98,7 +99,13 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         ],
         render:()=>{
             if (this.store.activeGroups.result!.length === 0) {
-                return <div style={{display:"flex", justifyContent:"center", alignItems:"center"}}>To get started, select groups from the Active Groups section above.</div>;
+                let message;
+                if (this.store._selectedGroupsNotOverlapRemoved.result!.length > 0) {
+                    message = "Since overlapping cases are excluded, all of your selected groups are empty.";
+                } else {
+                    message = "To get started, select groups from the Groups section above.";
+                }
+                return <div style={{display:"flex", justifyContent:"center", alignItems:"center"}}>{message}</div>;
             } else if ((this.store.mutationEnrichmentProfiles.result!.length > 0) ||
                 (this.store.copyNumberEnrichmentProfiles.result!.length > 0) ||
                 (this.store.mRNAEnrichmentProfiles.result!.length > 0) ||

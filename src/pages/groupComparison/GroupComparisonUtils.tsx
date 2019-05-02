@@ -385,16 +385,16 @@ export function ENRICHMENTS_NOT_2_GROUPS_MSG(numActiveGroups:number, numSelected
 }
 
 export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
-    return `The selected comparison groups span more than one study, so we can't show ${enrichmentsType} enrichments. Please change your selection in the 'Active Groups' section so that all samples only come from one study.`;
+    return `The selected comparison groups span more than one study, so we can't show ${enrichmentsType} enrichments. Please change your selection in the Groups section so that all samples only come from one study.`;
 }
 
 export const SURVIVAL_TOO_MANY_GROUPS_MSG =
-    "We can't show survival for more than 10 groups. Please deselect groups in the 'Active Groups' section.";
+    "We can't show survival for more than 10 groups. Please deselect groups in the Groups section.";
 
 export const DUPLICATE_GROUP_NAME_MSG = "Another group already has this name.";
 
 export const OVERLAP_NOT_ENOUGH_GROUPS_MSG =
-    "We can't show overlap for 1 group. Please select more groups from the 'Active Groups' section above.";
+    "We can't show overlap for 1 group. Please select more groups from the Groups section above.";
 
 export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups:number) {
     if (numSelectedGroups >= 2) {
