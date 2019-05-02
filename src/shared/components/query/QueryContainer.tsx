@@ -13,6 +13,9 @@ import {providesStoreContext} from "../../lib/ContextUtils";
 import CaseSetSelector from "./CaseSetSelector";
 import UnknownStudiesWarning from "../unknownStudies/UnknownStudiesWarning";
 import classNames from 'classnames';
+import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
+import { computed } from "mobx";
+import { If, Then, Else } from "react-if";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -54,8 +57,12 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 			this.props.onSubmit();
 		}
 	}
-	
 
+	// indicates we have loaded the study data necessary to show default selected studies (e.g. modify query scenario)
+	@computed get studiesDataReady() : boolean {
+		return this.store.selectableSelectedStudyIds.length > 0 && this.store.initiallySelected.profileIds && this.store.cancerTypes.isComplete && this.store.cancerStudies.isComplete && this.store.profiledSamplesCount.isComplete;
+	}
+	
     render():JSX.Element
     {
         // {Remove until #3395 is implemented
@@ -77,61 +84,68 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
                     <UnknownStudiesWarning ids={this.store.unknownStudyIds.result} />
                 }
 
-				<CancerStudySelector queryStore={this.store}/>
+				{   
+					<If condition={this.store.defaultSelectedIds.size === 0 || this.studiesDataReady}>
+						<Then>
+							<CancerStudySelector queryStore={this.store}/>
 
-				{this.store.physicalStudyIdsInSelection.length > 1 ?
-					(<DataTypePrioritySelector/>) :
-					(<MolecularProfileSelector/>)
-				}
+							{this.store.physicalStudyIdsInSelection.length > 1 ?
+								(<DataTypePrioritySelector/>) :
+								(<MolecularProfileSelector/>)
+							}
 
-				{(this.store.selectableSelectedStudyIds.length > 0) && (
-					<CaseSetSelector/>
-				)}
+							{(this.store.selectableSelectedStudyIds.length > 0) && (
+								<CaseSetSelector/>
+							)}
 
-				<GeneSetSelector/>
-				
-				{!! (this.store.isGenesetProfileSelected) && (
-				    <GenesetsSelector/>
-				)}
+							<GeneSetSelector/>
 
-				{!!(this.store.forDownloadTab) && (
-					<span className={styles.downloadSubmitExplanation}>
-						Clicking submit will generate a tab-delimited file containing your requested data.
-					</span>
-				)}
+							{!! (this.store.isGenesetProfileSelected) && (
+								<GenesetsSelector/>
+							)}
 
-				{!!(this.store.forDownloadTab) && (
-					<LabeledCheckbox
-						labelProps={{className: styles.transposeDataMatrix}}
-						checked={this.store.transposeDataMatrix}
-						onChange={event => this.store.transposeDataMatrix = event.currentTarget.checked}
-					>
-						Transpose data matrix
-					</LabeledCheckbox>
-				)}
-
-				<FlexRow padded className={styles.submitRow}>
-					<button style={{paddingLeft:50, paddingRight:50, marginRight:50 }} disabled={!this.store.submitEnabled} className="btn btn-primary btn-lg" onClick={() => this.handleSubmit()} data-test='queryButton'>
-						{!this.store.forDownloadTab ? "Submit Query": "Download"}
-					</button>
-					<FlexCol>
-						{!!(this.store.submitError) && (
-							<span className={styles.errorMessage} data-test="oqlErrorMessage">
-							{this.store.submitError}
-						</span>
-						)}
-
-						{this.store.oqlMessages.map(msg=>{
-							return (
-								<span className={styles.oqlMessage}>
-									<i className='fa fa-info-circle' style={{marginRight: 5}}/>
-									{msg}
+							{!!(this.store.forDownloadTab) && (
+								<span className={styles.downloadSubmitExplanation}>
+									Clicking submit will generate a tab-delimited file containing your requested data.
 								</span>
-							);
-						})}
-					</FlexCol>
+							)}
 
-				</FlexRow>
+							{!!(this.store.forDownloadTab) && (
+								<LabeledCheckbox
+									labelProps={{className: styles.transposeDataMatrix}}
+									checked={this.store.transposeDataMatrix}
+									onChange={event => this.store.transposeDataMatrix = event.currentTarget.checked}
+								>
+									Transpose data matrix
+								</LabeledCheckbox>
+							)}
+							<FlexRow padded className={styles.submitRow}>
+								<button style={{paddingLeft:50, paddingRight:50, marginRight:50 }} disabled={!this.store.submitEnabled} className="btn btn-primary btn-lg" onClick={() => this.handleSubmit()} data-test='queryButton'>
+									{!this.store.forDownloadTab ? "Submit Query": "Download"}
+								</button>
+								<FlexCol>
+									{!!(this.store.submitError) && (
+										<span className={styles.errorMessage} data-test="oqlErrorMessage">
+										{this.store.submitError}
+									</span>
+									)}
+
+									{this.store.oqlMessages.map(msg=>{
+										return (
+											<span className={styles.oqlMessage}>
+												<i className='fa fa-info-circle' style={{marginRight: 5}}/>
+												{msg}
+											</span>
+										);
+									})}
+								</FlexCol>
+							</FlexRow>
+						</Then>
+						<Else>
+							<LoadingIndicator isLoading={true} center={true} size={"big"}/>
+						</Else>
+					</If>
+				}
 			</FlexCol>
         );
     }
