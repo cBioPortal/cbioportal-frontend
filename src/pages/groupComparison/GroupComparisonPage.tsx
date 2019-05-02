@@ -14,7 +14,7 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupSelector from "./GroupSelector";
-import {caseCountsInParens, getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
+import {getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
 import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
 import {computed, IReactionDisposer, reaction} from "mobx";
@@ -197,7 +197,6 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 this.store._selectionInfo.result!.overlappingPatients.length === 0) {
                 return null;
             } else {
-                // (${caseCountsInParens(this.store._selectionInfo.result.overlappingSamples, this.store._selectionInfo.result.overlappingPatients)})
                 return (
                     <div style={{width:355, zIndex:20}}>
                         <ReactSelect

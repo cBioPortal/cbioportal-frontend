@@ -1,25 +1,37 @@
 import * as React from "react";
-import { observer, Observer } from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import autobind from "autobind-decorator";
-import GroupComparisonStore, { OverlapStrategy } from "./GroupComparisonStore";
+import GroupComparisonStore from "./GroupComparisonStore";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import { computed, observable, IReactionDisposer, autorun, action } from "mobx";
-import { SimpleGetterLazyMobXTableApplicationDataStore } from "shared/lib/ILazyMobXTableApplicationDataStore";
+import {action, autorun, computed, IReactionDisposer, observable} from "mobx";
+import {SimpleGetterLazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
 import ClinicalDataEnrichmentsTable from "./ClinicalDataEnrichmentsTable";
 import _ from "lodash";
-import { remoteData } from "shared/api/remoteData";
+import {remoteData} from "shared/api/remoteData";
 import client from "shared/api/cbioportalClientInstance";
-import { IAxisData, IStringAxisData, makeBoxScatterPlotData, IBoxScatterPlotPoint, INumberAxisData, isNumberData, isStringData, boxPlotTooltip, mutationSummaryToAppearance, MutationSummary } from "pages/resultsView/plots/PlotsTabUtils";
+import {
+    boxPlotTooltip,
+    IAxisData,
+    IBoxScatterPlotPoint,
+    INumberAxisData,
+    isNumberData,
+    isStringData,
+    IStringAxisData,
+    makeBoxScatterPlotData,
+    MutationSummary,
+    mutationSummaryToAppearance
+} from "pages/resultsView/plots/PlotsTabUtils";
 import DownloadControls from "shared/components/downloadControls/DownloadControls";
 import ScrollBar from "shared/components/Scrollbar/ScrollBar";
-import BoxScatterPlot, { IBoxScatterPlotData } from "shared/components/plots/BoxScatterPlot";
-import { getMobxPromiseGroupStatus } from "shared/lib/getMobxPromiseGroupStatus";
-import { scatterPlotSize } from "shared/components/plots/PlotUtils";
-import { ClinicalDataEnrichmentWithQ, CLINICAL_TAB_OVERLAPPING_SAMPLES_MSG, CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG, EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG } from "./GroupComparisonUtils";
+import BoxScatterPlot, {IBoxScatterPlotData} from "shared/components/plots/BoxScatterPlot";
+import {getMobxPromiseGroupStatus} from "shared/lib/getMobxPromiseGroupStatus";
+import {scatterPlotSize} from "shared/components/plots/PlotUtils";
+import {CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG, ClinicalDataEnrichmentWithQ} from "./GroupComparisonUtils";
 import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCategoryBarPlot";
-import { STUDY_VIEW_CONFIG } from "pages/studyView/StudyViewConfig";
+import {STUDY_VIEW_CONFIG} from "pages/studyView/StudyViewConfig";
 import ReactSelect from "react-select";
-import { MakeMobxView } from "shared/components/MobxView";
+import {MakeMobxView} from "shared/components/MobxView";
+import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 
 export interface IClinicalDataProps {
     store: GroupComparisonStore
@@ -81,22 +93,21 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
 
     readonly tabUI = MakeMobxView({
         await: () => {
-            if (this.props.store._originalGroupsOverlapRemoved.isComplete &&
-                this.props.store._originalGroupsOverlapRemoved.result.length < 2) {
+            const ret:any[] = [this.props.store._selectedGroupsNotOverlapRemoved, this.props.store.activeGroups];
+            if (this.props.store.activeGroups.isComplete &&
+                this.props.store.activeGroups.result.length < 2) {
                 // dont bother loading data for and computing clinical tab if not enough groups for it
-                return [this.props.store._originalGroupsOverlapRemoved];
             } else {
-                return [this.props.store._originalGroupsOverlapRemoved, this.overlapUI];
+                ret.push(this.overlapUI);
             }
+            return ret;
         },
         render: () => {
-            if (this.props.store._originalGroupsOverlapRemoved.result!.length < 2) {
-                return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG}</span>;
+            if (this.props.store.activeGroups.result!.length < 2) {
+                return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(this.props.store._selectedGroupsNotOverlapRemoved.result!.length)}</span>;
             } else {
                 let content: any = [];
-                if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE && (this.props.store._selectionInfo.result!.overlappingSamples.length !== 0 || this.props.store._selectionInfo.result!.overlappingPatients.length !== 0)) {
-                    content.push(<div className={'alert alert-info'}>{EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG}</div>);
-                }
+                content.push(<OverlapExclusionIndicator store={this.props.store}/>);
                 content.push(this.overlapUI.component)
                 return content;
             }
@@ -163,21 +174,21 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     }
 
     private readonly clinicalDataPromise = remoteData({
-        await: () => [this.props.store.patientKeyToSamples, this.props.store._originalGroupsOverlapRemoved],
+        await: () => [this.props.store.patientKeyToSamples, this.props.store.activeGroups],
         invoke: async () => {
             const axisData: IAxisData = { data: [], datatype: 'string' };
             if (this.highlightedRow) {
                 let attribute = this.highlightedRow!.clinicalAttribute;
                 let patientKeyToSamples = this.props.store.patientKeyToSamples.result!;
 
-                let sampleIdentifiers = _.flatMap(this.props.store._originalGroupsOverlapRemoved.result, group => _.flatMap(group.studies, study => {
+                let sampleIdentifiers = _.flatMap(this.props.store.activeGroups.result, group => _.flatMap(group.studies, study => {
                     return study.samples.map(sample => ({
                         studyId: study.id,
                         entityId: sample
                     }));
                 }));
 
-                let patientidentifiers = _.flatMap(this.props.store._originalGroupsOverlapRemoved.result, group => _.flatMap(group.studies, study => {
+                let patientidentifiers = _.flatMap(this.props.store.activeGroups.result, group => _.flatMap(group.studies, study => {
                     return study.patients.map(patient => ({
                         studyId: study.id,
                         entityId: patient
@@ -226,13 +237,13 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     });
 
     private readonly groupSampleDataPromise = remoteData({
-        await: () => [this.props.store._originalGroupsOverlapRemoved, this.props.store.sampleSet],
+        await: () => [this.props.store.activeGroups, this.props.store.sampleSet],
         invoke: async () => {
             const axisData: IAxisData = { data: [], datatype: "string" };
             if (this.highlightedRow) {
                 let sampleSet = this.props.store.sampleSet.result!;
                 const axisData_Data = axisData.data;
-                _.forEach(this.props.store._originalGroupsOverlapRemoved.result!, group => {
+                _.forEach(this.props.store.activeGroups.result!, group => {
                     group.studies.forEach(study => {
                         study.samples.forEach(sampleId => {
                             const sample = sampleSet.get({ studyId: study.id, sampleId });
