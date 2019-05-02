@@ -79,6 +79,10 @@ export default class GroupComparisonStore {
         return !group.savedInSession;
     }
 
+    public get unsavedGroupNames() {
+        return this.unsavedGroups.map(g=>g.name);
+    }
+
     get currentTabId() {
         return this._currentTabId;
     }

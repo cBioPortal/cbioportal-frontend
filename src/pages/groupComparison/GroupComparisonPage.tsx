@@ -23,6 +23,7 @@ import {AppStore} from "../../AppStore";
 import _ from "lodash";
 import ClinicalData from "./ClinicalData";
 import ReactSelect from "react-select2";
+import {joinNames} from "./OverlapUtils";
 
 export interface IGroupComparisonPageProps {
     routing:any;
@@ -227,6 +228,40 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         }
     });
 
+    @computed get unsavedWarningHeader() {
+        const pluralUnsaved = this.store.unsavedGroupNames.length > 1;
+
+        if (this.store.unsavedGroupNames.length > 0) {
+            return (
+                <div className="alert alert-warning" style={{display:"inline-flex", marginBottom:3}}>
+                    <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
+                    <div style={{maxWidth:500, display:"inline-block", marginRight: 6}}>
+                        {joinNames(this.store.unsavedGroupNames, "and")} {pluralUnsaved ? "are" : "is"} not saved. Others visiting this link will not see {pluralUnsaved ? "them" : "it"}.
+                    </div>
+                    <div
+                        style={{display:"inline-block"}}
+                    >
+                        <button
+                            className="btn btn-xs btn-default"
+                            onClick={this.store.saveAndGoToNewSession}
+                            style={{marginRight:5}}
+                        >
+                            Save to new comparison session
+                        </button>
+                        <button
+                            className="btn btn-xs btn-default"
+                            onClick={this.store.clearUnsavedGroups}
+                        >
+                            Delete {pluralUnsaved ? "them" : "it"}
+                        </button>
+                    </div>
+                </div>
+            );
+        } else {
+            return null;
+        }
+    }
+
     render() {
         if (!this.store) {
             return null;
@@ -237,6 +272,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 <div>
                     <div className={"headBlock"}>
                         {this.studyLink.component}
+                        {this.unsavedWarningHeader}
                         <div>
                             <div className={styles.headerControls}>
                                 <GroupSelector
