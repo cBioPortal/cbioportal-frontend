@@ -10,6 +10,7 @@ import CreateGroupFromOverlap from "./CreateGroupFromOverlap";
 import GroupComparisonStore from "./GroupComparisonStore";
 import autobind from "autobind-decorator";
 import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
+import {truncateWithEllipsis} from "../../shared/lib/wrapText";
 
 export interface IVennProps {
     svgId?: string;
@@ -97,7 +98,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
         _.forEach(this.props.uidToGroup, (group) => {
             if (group.uid in usedGroups) {
                 legendData.push({
-                    name: group.name,
+                    name: truncateWithEllipsis(group.name, 100, "Arial", "13px"),
                     symbol: { fill: group.color, strokeOpacity:0, type:"square", size: 6 }
                 });
             }
