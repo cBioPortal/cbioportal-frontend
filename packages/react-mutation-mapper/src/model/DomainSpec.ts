@@ -6,5 +6,3 @@ export type DomainSpec = {
     labelColor?:string;
     tooltip?:JSX.Element;
 };
-
-export default DomainSpec;

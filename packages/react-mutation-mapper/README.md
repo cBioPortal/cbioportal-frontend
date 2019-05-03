@@ -29,6 +29,23 @@ class Example extends React.Component {
 }
 ```
 
+### LollipopMutationPlot
+
+```tsx
+import * as React from 'react'
+
+import {LollipopMutationPlot} from 'react-mutation-mapper'
+
+class Example extends React.Component {
+  render () {
+    // TODO a better example with props
+    return (
+      <LollipopMutationPlot />
+    )
+  }
+}
+```
+
 ## License
 
  © [cBioPortal](https://github.com/cBioPortal)

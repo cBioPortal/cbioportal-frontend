@@ -2,7 +2,7 @@ import * as React from 'react';
 import {observer} from "mobx-react";
 import {computed, observable} from "mobx";
 
-import LollipopSpec from "./model/LollipopSpec";
+import {LollipopSpec} from "./model/LollipopSpec";
 
 type LollipopProps = {
     x:number;
