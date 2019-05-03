@@ -67,7 +67,7 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
             {
                 label: (
                     <span>
-                        PTM Sites
+                        Post Translational Modifications
                         {this.isPending(TrackNames.PTM) && this.loaderIcon()}
                     </span>
                 ),

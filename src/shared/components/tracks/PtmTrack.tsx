@@ -34,7 +34,7 @@ export function ptmInfoTooltip(transcriptId?: string)
     return (
         <div style={{maxWidth: 400}}>
             <p>
-                Displays all Post Transactional Modifications (PTMs) available
+                Displays all Post Translational Modifications (PTMs) available
                 {transcriptId && <span> for the Ensembl transcript {transcriptId}</span>}.
             </p>
             <p className={styles.ptmLegend}>
@@ -89,7 +89,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}>
     };
 
     @observable
-    private expanded = false;
+    private expanded = true;
 
     @computed get ptmSpecs(): TrackItemSpec[] {
         const ptmDataByProteinPosStart = this.props.store.ptmDataByProteinPosStart.result;
@@ -134,17 +134,17 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}>
 
     @computed get mainTrackTitle() {
         return (
-            <span
-                style={{cursor: "pointer"}}
-                onClick={this.handleToggleExpand}
-            >
-                {this.expander}
+            <span style={{cursor: "pointer"}}>
+                <span onClick={this.handleToggleExpand}>{this.expander}</span>
                 <DefaultTooltip
                     placement="left"
                     overlay={() => ptmInfoTooltip(this.props.ensemblTranscriptId)}
                     destroyTooltipOnHide={true}
                 >
-                    <span style={{marginLeft: 4}}>
+                    <span
+                        style={{marginLeft: 4}}
+                        onClick={this.handleToggleExpand}
+                    >
                         PTM Sites <i className="fa fa-info-circle" />
                     </span>
                 </DefaultTooltip>
@@ -188,7 +188,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}>
                         width={this.props.width}
                         proteinLength={this.props.proteinLength}
                         trackItems={item.specs}
-                        idClassPrefix={`${PTM_ID_CLASS_PREFIX}-${index}`}
+                        idClassPrefix={`${PTM_ID_CLASS_PREFIX}${index}-`}
                     />
                 )): null
         );
