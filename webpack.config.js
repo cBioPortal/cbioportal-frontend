@@ -459,11 +459,15 @@ if (isDev || isTest) {
             test: /\.module\.scss$/,
             use: [
                 {
+                    loader: MiniCssExtractPlugin.loader,
+                    options: {
+                        fallback: 'style-loader'
+                    },
+                },
+                {
                     loader: 'css-loader',
                     options: {
-                        modules:true,
-                        importLoaders:2,
-                        localIdentName:'[name]__[local]__[hash:base64:5]'
+                        modules:true
                     }
                 },
                 'sass-loader',
@@ -474,7 +478,7 @@ if (isDev || isTest) {
 
     config.module.rules.push(
         {
-            test: /\.(sa|sc|c)ss$/,
+            test: /\.scss$/,
             exclude: /\.module\.scss/,
             use: [
                 {
@@ -489,6 +493,22 @@ if (isDev || isTest) {
             ]
         }
     );
+
+    config.module.rules.push(
+        {
+            test: /\.css/,
+            use: [
+                {
+                    loader: MiniCssExtractPlugin.loader,
+                    options: {
+                        fallback: 'style-loader'
+                    },
+                },
+                'css-loader'
+            ]
+        }
+    );
+
 }
 
 //config.entry.push('bootstrap-loader');
