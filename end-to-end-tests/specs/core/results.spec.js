@@ -169,8 +169,8 @@ describe('Results Page', function() {
                 browser.waitForExist("[class=onco-kb-0]", 10000);
 
                 // open PTM track
-                browser.elements('.//*[text()[contains(.,"PTM Sites")]]').value[0].click();
-                browser.waitForExist("[class=ptm-0]", 10000);
+                browser.elements('.//*[text()[contains(.,"Post Translational Modifications")]]').value[0].click();
+                browser.waitForExist("[class=ptm-0-0]", 10000);
 
                 // open 3D visualizer via tracks menu
                 browser.elements('.//*[text()[contains(.,"3D Structure")]]').value[0].click();
@@ -185,7 +185,7 @@ describe('Results Page', function() {
                 browser.waitForExist("[class=cancer-hotspot-0]", 10000);
                 browser.waitForExist("[class=onco-kb-0]", 10000);
                 browser.waitForExist("[class=chain-0]", 10000);
-                browser.waitForExist("[class=ptm-0]", 10000);
+                browser.waitForExist("[class=ptm-0-0]", 10000);
             });
 
         });
