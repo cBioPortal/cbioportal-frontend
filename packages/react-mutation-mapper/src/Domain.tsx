@@ -1,9 +1,10 @@
 import * as React from 'react';
-import $ from 'jquery';
 import {observer} from "mobx-react";
 import {computed, observable} from "mobx";
 
-import DomainSpec from "./model/DomainSpec";
+import $ from 'jquery';
+
+import {DomainSpec} from "./model/DomainSpec";
 
 type DomainProps = {
     x:number;
