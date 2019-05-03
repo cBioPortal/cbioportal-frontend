@@ -232,7 +232,7 @@ export default class GnomadColumnFormatter {
     }
 
     public static calculateAlleleFrequency(count: number | null, totalNumber: number | null, frequency: number | null): number {
-        if (frequency != null) {
+        if (frequency !== null) {
             return frequency;
         }
         else {
