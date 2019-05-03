@@ -10,5 +10,3 @@ export type LollipopSpec = {
     color?:string;
     tooltip?:JSX.Element;
 };
-
-export default LollipopSpec;

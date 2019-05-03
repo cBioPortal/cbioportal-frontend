@@ -5,6 +5,7 @@ import autoExternal from 'rollup-plugin-auto-external';
 // import postcss from 'rollup-plugin-postcss-modules'
 import postcss from 'rollup-plugin-postcss';
 import resolve from 'rollup-plugin-node-resolve';
+import sourcemaps from 'rollup-plugin-sourcemaps';
 import url from 'rollup-plugin-url';
 import svgr from '@svgr/rollup';
 
@@ -33,11 +34,12 @@ export default {
     }),
     url(),
     svgr(),
-    resolve(),
     typescript({
       rollupCommonJSResolveHack: true,
       clean: true
     }),
-    commonjs()
+    commonjs(),
+    resolve(),
+    sourcemaps()
   ]
 }

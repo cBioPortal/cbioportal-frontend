@@ -4,13 +4,14 @@ import _ from "lodash";
 import Sequence from "./Sequence";
 import Lollipop from "./Lollipop";
 import Domain from "./Domain";
-import LollipopSpec from "./model/LollipopSpec";
-import DomainSpec from "./model/DomainSpec";
+import {LollipopSpec} from "./model/LollipopSpec";
+import {DomainSpec} from "./model/DomainSpec";
 import {SVGAxis, Tick, getComponentIndex, unhoverAllComponents} from 'cbioportal-frontend-commons';
 import {observer} from "mobx-react";
 import {computed, action} from "mobx";
-import $ from "jquery";
 import {LollipopPlotProps} from "./LollipopPlot";
+
+import $ from "jquery";
 
 export type LollipopPlotNoTooltipProps = LollipopPlotProps & {
     setHitZone?:(
@@ -273,8 +274,8 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
     }
 
     @computed private get geneX() {
-        // TODO make + 60 customizable
-        return this.yAxisWidth + 60;
+        // TODO make + 75 customizable
+        return this.yAxisWidth + 75;
     }
 
     @computed private get geneY() {

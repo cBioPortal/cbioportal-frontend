@@ -1,4 +1,5 @@
 export interface DataStore {
+    sortedFilteredData: any[]; // TODO find a better way to define/access this data
     setPositionSelected: (position:number, newVal:boolean) => void;
     setPositionHighlighted: (position:number, newVal:boolean) => void;
     clearSelectedPositions: () => void;
