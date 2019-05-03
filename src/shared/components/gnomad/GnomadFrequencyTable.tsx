@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { GnomadData, frequencyOutput} from '../mutationTable/column/GnomadColumnFormatter';
 import {Column, default as LazyMobXTable} from "../lazyMobXTable/LazyMobXTable";
+import SimpleTable from '../simpleTable/SimpleTable';
 export interface IGnomadFrequencyTableProps
 {
     data: GnomadData[];
@@ -15,49 +16,38 @@ class GnomadTable extends LazyMobXTable<GnomadData> {}
 
 export default class GnomadFrequencyTable extends React.Component<IGnomadFrequencyTableProps, {}>
 {
-    public static defaultProps = {
-        data: [],
-        columns: [
-            {
-                name: "Population",
-                order: 1.00,
-                render: (d:GnomadData) => (<span>{d.population}</span>),
-                sortBy: (d:GnomadData) => d.population
-            },
-            {
-                name: "Allele Count",
-                order: 2.00,
-                render: (d:GnomadData) => (<span>{d.alleleCount}</span>),
-                sortBy: (d:GnomadData) => d.alleleCount
-            },
-            {
-                name: "Allele Number",
-                order: 3.00,
-                render: (d:GnomadData) => (<span>{d.alleleNumber}</span>),
-                sortBy: (d:GnomadData) => d.alleleNumber
-            },
-            {
-                name: "Number of Homozygotes",
-                order: 4.00,
-                render: (d:GnomadData) => (<span>{d.homezygotes}</span>),
-                sortBy: (d:GnomadData) => d.homezygotes
-            },
-            {
-                name: "Allele Frequency",
-                order: 5.00,
-                render: (d:GnomadData) => (frequencyOutput(d.alleleFrequency)),
-                sortBy: (d:GnomadData) => d.alleleFrequency
-            }
-        ],
-        initialSortColumn: "Occurrence",
-        initialSortDirection: "desc",
-        initialItemsPerPage: 10
-    };
-
     constructor(props: IGnomadFrequencyTableProps)
     {
         super(props);
         this.state = {};
+    }
+
+    private getHeaders(): JSX.Element[] {
+        const ret: JSX.Element[] = [];
+        const titles = ['Population', 'Allele Count', 'Allele Number', 'Number of Homezygotes', 'Allele Frequency'];
+        titles.forEach(title => {
+            ret.push(
+                <td>{title}</td>
+            );
+        });
+        return ret;
+    }
+
+    private getRows(): JSX.Element[] {
+        const ret: JSX.Element[] = [];
+        this.props.data.forEach(d => {
+            ret.push(
+
+            <tr>
+                <td>{d.population}</td>
+                <td>{d.alleleCount}</td>
+                <td>{d.alleleNumber}</td>
+                <td>{d.homezygotes}</td>
+                <td>{frequencyOutput(d.alleleFrequency)}</td>
+            </tr>
+            );
+        });
+        return ret;
     }
 
     public render()
@@ -72,18 +62,9 @@ export default class GnomadFrequencyTable extends React.Component<IGnomadFrequen
 
         return (
             <div className='cbioportal-frontend'>
-                <GnomadTable
-                    data = {data}
-                    columns={columns || GnomadFrequencyTable.defaultProps.columns}
-                    initialSortColumn={initialSortColumn}
-                    initialSortDirection={initialSortDirection}
-                    initialItemsPerPage={initialItemsPerPage}
-                    showCopyDownload={false}
-                    showColumnVisibility={false}
-                    showFilter={false}
-                    
-                    showPaginationAtTop={true}
-                    paginationProps={{showMoreButton:false}}
+                <SimpleTable
+                    headers={this.getHeaders()}
+                    rows={this.getRows()}
                 />
             </div>
         );
