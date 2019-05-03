@@ -293,8 +293,6 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
     }
 
     render() {
-
-        this.layoutParams;
         return (
             <g
                 transform={`translate(${this.props.x},${this.props.y})`}

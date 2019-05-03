@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 import CBIOPORTAL_VICTORY_THEME, { axisTickLabelStyles } from 'shared/theme/cBioPoralTheme';
 import autobind from 'autobind-decorator';
 import { getCombinations, ComparisonGroup } from './GroupComparisonUtils';
-import { getTextWidth } from 'shared/lib/wrapText';
+import {getTextWidth, truncateWithEllipsis} from 'shared/lib/wrapText';
 import { tickFormatNumeral } from 'shared/components/plots/TickUtils';
 import Timer = NodeJS.Timer;
 import ScatterPlotTooltip from 'shared/components/plots/ScatterPlotTooltip';
@@ -60,7 +60,9 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                         {
                             target: "data",
                             mutation: (props: any) => {
-                                this.tooltipModel = props;
+                                if (!props.datum || !props.datum.dontShowTooltip) {
+                                    this.tooltipModel = props;
+                                }
                                 return null;
                             }
                         }
@@ -92,7 +94,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
     }
 
     @computed get groupLabels() {
-        return _.map(this.activeGroups, group => group.name);
+        return _.map(this.activeGroups, group => truncateWithEllipsis(group.name, 100, "Arial", "13px"));
     }
 
     private barSeparation() {
@@ -108,7 +110,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
     }
 
     private barChartHeight() {
-        return 500;
+        return 250;
     }
 
     @computed get scatterChartHeight() {
@@ -223,10 +225,13 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
 
     @computed get scatterData() {
         return _.flatMap(this.groupCombinationSets, (set, index) => {
+            const {fill, ...setRest} = set;
             return _.map(this.activeGroups, (group, i) => ({
                 x: this.categoryCoord(index),
                 y: this.categoryCoord(i),
-                fill: _.includes(set.groups, group.uid) ? set.fill : DEFAULT_SCATTER_DOT_COLOR
+                fill: _.includes(set.groups, group.uid) ? fill : DEFAULT_SCATTER_DOT_COLOR,
+                dontShowTooltip: !_.includes(set.groups, group.uid),
+                ...setRest
             }));
         });
     }
@@ -239,14 +244,25 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
         }));
     }
 
+    @computed get barPlotHitzoneData() {
+        const minY = this.barPlotDomain.y[1]/15;
+        return this.barPlotData.map(d=>{
+            return Object.assign({}, d, { y: Math.max(d.y, minY) });
+        });
+    }
+
     @computed private get getGroupIntersectionLines() {
         const activeUids = _.map(this.activeGroups, g => g.uid)
-        return _.map(this.groupCombinationSets, (set, index) => {
+        return _.flatMap(this.groupCombinationSets, (set, index) => {
             const data = _.map(set.groups, groupUid => {
                 const groupIndex = _.indexOf(activeUids, groupUid);
-                return { x: this.categoryCoord(index), y: this.categoryCoord(groupIndex) };
+                return {
+                    x: this.categoryCoord(index),
+                    y: this.categoryCoord(groupIndex),
+                    ...set
+                };
             });
-            return (
+            return [
                 <VictoryLine
                     style={{
                         data: {
@@ -256,7 +272,19 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                         },
                     }}
                     data={data}
-                />)
+                />,
+                <VictoryLine
+                    style={{
+                        data: {
+                            strokeOpacity: 0,
+                            strokeWidth: 20,
+                            strokeLinecap: "round"
+                        },
+                    }}
+                    data={data}
+                    events={this.mouseEvents}
+                />
+            ]
         })
     }
 
@@ -296,13 +324,8 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
         const includedGroupNames = _.map(datum.groups as string[], groupUid => this.props.uidToGroup[groupUid].name);
         const casesCount = datum.cases.length;
         return (
-            <div style={{ width: 300, whiteSpace: "normal" }}>
-                This bar contains {this.props.caseType}s which are in {joinNames(includedGroupNames, "and")}&nbsp;
-                ({casesCount} {pluralize(this.props.caseType, casesCount)}).
-                {(casesCount > 0) && [
-                    <br />,
-                    <br />
-                ]}
+            <div style={{ maxWidth: 300, whiteSpace: "normal" }}>
+                {joinNames(includedGroupNames, "and")}:&nbsp;{`${casesCount} ${pluralize(this.props.caseType, casesCount)}`}
             </div>
         );
     }
@@ -379,7 +402,12 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                                 <VictoryBar
                                     style={{ data: { fill: (d: any) => d.fill, width: this.barWidth() } }}
                                     data={this.barPlotData}
-                                    events={this.mouseEvents} />
+                                />
+                                <VictoryBar
+                                    style={{ data: { fillOpacity:0, width: this.barWidth()} }}
+                                    data={this.barPlotHitzoneData}
+                                    events={this.mouseEvents}
+                                />
 
                             </VictoryChart>
                         </g>
@@ -438,6 +466,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                                         }
                                     }}
                                     data={this.scatterData}
+                                    events={this.mouseEvents}
                                 />
                                 {this.getGroupIntersectionLines}
 
@@ -465,7 +494,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                             positionLeft={this.mousePosition.x+8}
                             positionTop={this.mousePosition.y-17}
                         >
-                            {this.tooltip(this.tooltipModel.datum)}
+                            {this.tooltip(this.tooltipModel.datum || this.tooltipModel.data[0])}
                         </Popover>,
                         document.body
                     )
