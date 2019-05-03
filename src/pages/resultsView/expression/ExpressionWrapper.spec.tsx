@@ -2,9 +2,8 @@ import * as React from "react";
 import {assert} from 'chai';
 import { mount, shallow } from 'enzyme';
 import ExpressionWrapper, {ExpressionWrapperProps} from './ExpressionWrapper';
-import {NumericGeneMolecularData} from "../../../shared/api/generated/CBioPortalAPI";
 
-const expressionTestData: ExpressionWrapperProps = require('json-loader!./expressionTestData.json');
+const expressionTestData: ExpressionWrapperProps = require('./expressionTestData.json');
 
 describe('Expression Wrapper',()=>{
 

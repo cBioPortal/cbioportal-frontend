@@ -6,6 +6,7 @@ import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 
 describe('CosmicColumnFormatter', () => {
 
@@ -99,11 +100,11 @@ describe('CosmicColumnFormatter', () => {
     });
 
     it('generates component tooltip', () => {
-        assert.isTrue(component273.find('DefaultTooltip').exists(),
+        assert.isTrue(component273.find(DefaultTooltip).exists(),
             'Tooltip should exists for TP53 R273 missense mutation');
-        assert.isTrue(component38.find('DefaultTooltip').exists(),
+        assert.isTrue(component38.find(DefaultTooltip).exists(),
             'Tooltip should exists for PIK3CA R38 missense mutation');
-        assert.isFalse(component666.find('DefaultTooltip').exists(),
+        assert.isFalse(component666.find(DefaultTooltip).exists(),
             'Tooltip should not exist for DIABLO mutation');
     });
 

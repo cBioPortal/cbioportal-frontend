@@ -4,6 +4,7 @@ import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import FrequencyBar from "./FrequencyBar";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 
 describe('FrequencyBar', () => {
 
@@ -65,7 +66,7 @@ describe('FrequencyBar', () => {
         assert.equal(rootSvg.find("text").text(), "43.0%",
             "percentage text should reflect only the first value in the count array");
 
-        assert.isTrue(component.find("DefaultTooltip").exists(),
+        assert.isTrue(component.find(DefaultTooltip).exists(),
             "component should have a tooltip");
     });
 
