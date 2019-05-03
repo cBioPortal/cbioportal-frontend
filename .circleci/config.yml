@@ -40,6 +40,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         environment:
           JUNIT_REPORT_PATH: ./junit/
           FRONTEND_TEST_USE_LOCAL_DIST: true
+          NO_PARALLEL: true
     - run:
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
         command: 'for f in end-to-end-tests/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
@@ -98,6 +99,8 @@ jobs:
       - run:
           name: "Run build if no dist folder"
           command: 'ls dist || yarn run build'
+          environment:
+            DISABLE_SOURCEMAP: true
       - save_cache:
           paths:
             - node_modules
@@ -132,6 +135,8 @@ jobs:
           environment:
             JUNIT_REPORT_PATH: ./junit/
             JUNIT_REPORT_NAME: test-results.xml
+            DISABLE_SOURCEMAP: true
+            NO_PARALLEL: true
           when: always
       - store_test_results:
           path: /tmp/repo/junit

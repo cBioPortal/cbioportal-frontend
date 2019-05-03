@@ -58,6 +58,8 @@ if (browser) {
     });
 }
 
+const moo = "aaron";
+
 // e2e test specific stuff
 if (getBrowserWindow().navigator.webdriver) {
 

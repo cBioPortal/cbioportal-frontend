@@ -6,6 +6,7 @@ import OncoKB from './OncoKB';
 import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
+import {Circle} from "better-react-spinkit";
 import sinon from 'sinon';
 
 describe('OncoKB', () => {
@@ -21,7 +22,7 @@ describe('OncoKB', () => {
     });
 
     it('displays a load spinner when there is no indicator data', () => {
-        const spinner = component.find("Circle");
+        const spinner = component.find(Circle);
 
         assert.isTrue(spinner.exists(),
             "Spinner component should exist");

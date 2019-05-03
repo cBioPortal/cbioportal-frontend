@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {Observer, observer} from "mobx-react";
 import { VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, VictoryScatter } from 'victory';
-import { observable, action } from 'mobx';
+import {observable, action, computed} from 'mobx';
 import { Popover } from 'react-bootstrap';
 import CBIOPORTAL_VICTORY_THEME, {axisLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { formatLogOddsRatio } from "shared/lib/FormatUtils";
@@ -10,6 +10,7 @@ import DownloadControls from 'shared/components/downloadControls/DownloadControl
 import autobind from 'autobind-decorator';
 import SelectionComponent from "./SelectionComponent";
 import HoverablePoint from "./HoverablePoint";
+import {getTextWidth, truncateWithEllipsis} from "../../../shared/lib/wrapText";
 
 export interface IMiniScatterChartProps {
     data: any[];
@@ -85,6 +86,27 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
         this.dragging = true;
     }
 
+    private get totalLabelWidths() {
+        return getTextWidth(this.props.xAxisLeftLabel, "Arial", "13px") +
+            getTextWidth(this.props.xAxisRightLabel, "Arial", "13px");
+    }
+
+    @computed get xAxisLeftLabel() {
+        if (this.totalLabelWidths > 200) {
+            return truncateWithEllipsis(this.props.xAxisLeftLabel, 90, "Arial", "13px");
+        } else {
+            return this.props.xAxisLeftLabel;
+        }
+    }
+
+    @computed get xAxisRightLabel() {
+        if (this.totalLabelWidths > 180) {
+            return truncateWithEllipsis(this.props.xAxisRightLabel, 90, "Arial", "13px");
+        } else {
+            return this.props.xAxisRightLabel;
+        }
+    }
+
     public render() {
 
         return (
@@ -118,8 +140,8 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                                 axisLabel: { padding: 165 },
                                 ticks: { size: 0 }
                             }} />
-                        <VictoryLabel style={axisLabelStyles} text={"← " + this.props.xAxisLeftLabel} x={60} y={300}/>
-                        <VictoryLabel style={axisLabelStyles} text={this.props.xAxisRightLabel + " →"} textAnchor="end" x={310} y={300}/>
+                        <VictoryLabel style={axisLabelStyles} text={"← " + this.xAxisLeftLabel} x={60} y={300}/>
+                        <VictoryLabel style={axisLabelStyles} text={this.xAxisRightLabel + " →"} textAnchor="end" x={310} y={300}/>
                         <VictoryLabel style={axisLabelStyles} text="Significance →" x={320} y={210} angle={-90}/>
                         <VictoryScatter style={{ data: { fillOpacity: 0.4 } }}
                             data={this.props.data}
