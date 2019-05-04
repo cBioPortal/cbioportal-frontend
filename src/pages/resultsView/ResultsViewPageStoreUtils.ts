@@ -31,6 +31,7 @@ import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInte
 import {remoteData} from "../../shared/api/remoteData";
 import {calculateQValues} from "../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {SpecialAttribute} from "../../shared/cache/ClinicalDataCache";
+import { isSampleProfiled } from "shared/lib/isSampleProfiled";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -60,7 +61,7 @@ export type CoverageInformation = {
         {[uniquePatientKey:string]:CoverageInformationForCase};
 };
 
-export type SampleAlteredMap = {[trackOqlKey:string]:boolean[]};
+export type SampleAlteredMap = {[trackOqlKey:string]:(boolean | undefined)[]};
 
 export function computeCustomDriverAnnotationReport(mutations:Mutation[]):CustomDriverAnnotationReport {
     let hasBinary = false;
@@ -414,14 +415,23 @@ export function doesQueryHaveCNSegmentData(
     }
 }
 
-export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackCaseData[], samples: Sample[], oqlQuery: string){
+export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackCaseData[], samples: Sample[], oqlQuery: string, coverageInformation: CoverageInformation, selectedMolecularProfileIds: string[]){
     const result : SampleAlteredMap = {};
     filteredAlterationData.forEach((element, key) => {
         //1: is not group
         if (element.mergedTrackOqlList === undefined) {
             const notGroupedOql = element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;                    
             const sampleKeys = _.map(notGroupedOql.data, (data) => data.uniqueSampleKey);
+            const unProfiledSampleKeys = samples.map((sample) => sample.uniqueSampleKey).filter((sampleKey) => {
+                // if not profiled in some genes molecular profile, then we think it is not profiled and will exclude this sample
+                return _.some(_.map(selectedMolecularProfileIds, (selectedMolecularProfileId) => {
+                    return isSampleProfiled(sampleKey, selectedMolecularProfileId, notGroupedOql.gene, coverageInformation);
+                }) , (profiled) => profiled === false);
+            });
             result[getSingleGeneResultKey(key, oqlQuery, notGroupedOql)] = samples.map((sample: Sample) => {
+                if (unProfiledSampleKeys.includes(sample.uniqueSampleKey)) {
+                    return undefined;
+                }
                 return sampleKeys.includes(sample.uniqueSampleKey);
             });
         }
@@ -429,7 +439,20 @@ export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackC
         else {
             const groupedOql = element.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
             const sampleKeys = _.map(_.flatten(_.map(groupedOql.list, (list) => list.data)), (data) => data.uniqueSampleKey);
+            const groupGenes = _.map(groupedOql.list, (oql) => oql.gene);
+            const unProfiledSampleKeys = samples.map((sample) => sample.uniqueSampleKey).filter((sampleKey) => {
+                // if not profiled in some genes molecular profile, then we think it is not profiled and will exclude this sample
+                return _.some(_.map(selectedMolecularProfileIds, (selectedMolecularProfileId) => {
+                    // if not profiled in every genes, then the sample is not profiled, or we think it is profiled
+                    return _.every(_.map(groupGenes, (gene) => {
+                        return isSampleProfiled(sampleKey, selectedMolecularProfileId, gene, coverageInformation);
+                    }), (profiled) => profiled === false);
+                }) , (notProfiled) => notProfiled === true);
+            });
             result[getMultipleGeneResultKey(groupedOql)] = samples.map((sample: Sample) => {
+                if (unProfiledSampleKeys.includes(sample.uniqueSampleKey)) {
+                    return undefined;
+                }
                 return sampleKeys.includes(sample.uniqueSampleKey);
             });
         }

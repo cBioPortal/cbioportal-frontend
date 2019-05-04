@@ -123,6 +123,19 @@ describe("MutualExclusivityUtil", () => {
         it("returns [2, 0, 0, 0] for [false, false] and [false, false]", () => {
             assert.deepEqual(countOccurences([false, false], [false, false]), [2, 0, 0, 0]);
         });
+
+        it("returns [1, 0, 1, 1] for [undefined, undefined, true, false] and [true, true, false, false]", () => {
+            assert.deepEqual(countOccurences([undefined, undefined, true, false], [true, true, false, false]), [1, 0, 1, 0]);
+        });
+
+        it("returns [0, 0, 0, 0] for [undefined, undefined, true, false] and [true, true, undefined, undefined]", () => {
+            assert.deepEqual(countOccurences([undefined, undefined, true, false], [true, true, undefined, undefined]), [0, 0, 0, 0]);
+        });
+        
+        it("returns [0, 0, 0, 0] for [undefined, undefined, undefined, undefined] and [true, true, false, false]", () => {
+            assert.deepEqual(countOccurences([undefined, undefined, undefined, undefined], [true, true, false, false]), [0, 0, 0, 0]);
+        });
+
     });
 
     describe("#calculatePValue()", () => {

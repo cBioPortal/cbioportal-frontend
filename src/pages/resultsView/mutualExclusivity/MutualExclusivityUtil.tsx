@@ -10,7 +10,7 @@ export function calculateAssociation(logOddsRatio: number): string {
     return logOddsRatio > 0 ? "Co-occurrence" : "Mutual exclusivity";
 }
 
-export function countOccurences(valuesA: boolean[], valuesB: boolean[]): [number, number, number, number] {
+export function countOccurences(valuesA: (boolean | undefined)[], valuesB: (boolean | undefined)[]): [number, number, number, number] {
 
     let neither = 0;
     let bNotA = 0;
@@ -18,7 +18,10 @@ export function countOccurences(valuesA: boolean[], valuesB: boolean[]): [number
     let both = 0;
 
     valuesA.forEach((valueA, index) => {
-
+        // jump over this comparison if there is undefined value(not profiled value)
+        if (valueA === undefined || valuesB[index] === undefined) {
+            return true;
+        }
         const valueB = valuesB[index];
         if (!valueA && !valueB) {
             neither++;
@@ -97,7 +100,7 @@ export function getCountsText(data: MutualExclusivity[]): JSX.Element {
             coOccurentCounts[1]}.</p>;
 }
 
-export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclusivity[] {
+export function getData(isSampleAlteredMap: Dictionary<(boolean | undefined)[]>): MutualExclusivity[] {
 
     let data: MutualExclusivity[] = [];
     const combinations: string[][] = (Combinatorics as any).bigCombination(Object.keys(isSampleAlteredMap), 2).toArray();
