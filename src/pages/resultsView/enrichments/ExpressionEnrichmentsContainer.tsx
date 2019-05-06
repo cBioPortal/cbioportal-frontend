@@ -38,8 +38,8 @@ export interface IExpressionEnrichmentContainerProps {
 export default class ExpressionEnrichmentContainer extends React.Component<IExpressionEnrichmentContainerProps, {}> {
 
     static defaultProps:Partial<IExpressionEnrichmentContainerProps> = {
-        group1Name: "altered group",
-        group2Name: "unaltered group",
+        group1Name: "Altered group",
+        group2Name: "Unaltered group",
         group1Description: "samples that have alterations in the query gene(s).",
         group2Description: "samples that do not have alterations in the query gene(s).",
         alteredVsUnalteredMode:true

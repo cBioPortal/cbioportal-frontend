@@ -8,7 +8,9 @@ import {MolecularProfile} from "../../shared/api/generated/CBioPortalAPI";
 import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import {getNumSamples, MakeEnrichmentsTabUI} from "./GroupComparisonUtils";
+import {MakeEnrichmentsTabUI, getNumSamples} from "./GroupComparisonUtils";
+import { remoteData } from "shared/api/remoteData";
+import _ from "lodash";
 
 export interface ICopyNumberEnrichmentsProps {
     store: GroupComparisonStore
@@ -21,33 +23,39 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
         this.props.store.setCopyNumberEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, true);
+
+    private readonly enrichmentAnalysisGroups = remoteData({
+        await:()=>[this.props.store._activeGroupsOverlapRemoved],
+        invoke:()=>{
+            const groups = _.map(this.props.store._activeGroupsOverlapRemoved.result, group => {
+                return {
+                    name:group.name,
+                    description:`Number (percentage) of samples in ${group.name} that have the listed alteration in the listed gene.`,
+                    count: getNumSamples(group)
+                }
+            })
+            return Promise.resolve(groups);
+        }
+    });
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
             this.props.store.copyNumberData,
             this.props.store.copyNumberEnrichmentProfile,
-            this.props.store.enrichmentsGroup1,
-            this.props.store.enrichmentsGroup2
+            this.enrichmentAnalysisGroups
         ],
         render:()=>{
-            const group1Name = this.props.store.enrichmentsGroup1.result!.name;
-            const group2Name = this.props.store.enrichmentsGroup2.result!.name;
             return (
                 <div data-test="GroupComparisonCopyNumberEnrichments">
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles} onChange={this.onChangeProfile}
                                                 selectedValue={this.props.store.copyNumberEnrichmentProfile.result!.molecularProfileId}/>
                     <AlterationEnrichmentContainer data={this.props.store.copyNumberData.result!}
-                                                   totalGroup1Count={getNumSamples(this.props.store.enrichmentsGroup1.result!)}
-                                                   totalGroup2Count={getNumSamples(this.props.store.enrichmentsGroup2.result!)}
-                                                   group1Name={group1Name}
-                                                   group2Name={group2Name}
-                                                   group1Description={`in ${group1Name} that have the listed alteration in the listed gene.`}
-                                                   group2Description={`in ${group2Name} that have the listed alteration in the listed gene.`}
-                                                   alteredVsUnalteredMode={false}
-                                                   selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
-                                                   headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
-                                                   showCNAInTable={true}
+                        groups={this.enrichmentAnalysisGroups.result}
+                        alteredVsUnalteredMode={false}
+                        selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
+                        headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
+                        showCNAInTable={true}
                     />
                 </div>
             );
