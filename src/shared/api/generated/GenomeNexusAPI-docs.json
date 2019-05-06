@@ -939,7 +939,7 @@
           "ptm-controller"
         ],
         "summary": "Retrieves PTM entries by Ensembl Transcript IDs",
-        "operationId": "fetchPostTransactionalModificationsByPtmFilterPOST",
+        "operationId": "fetchPostTranslationalModificationsByPtmFilterPOST",
         "consumes": [
           "application/json"
         ],
@@ -2179,7 +2179,7 @@
           "$ref": "#/definitions/MyVariantInfoAnnotation"
         },
         "ptms": {
-          "description": "Post Transactional Modifications",
+          "description": "Post Translational Modifications",
           "$ref": "#/definitions/PtmAnnotation"
         },
         "seq_region_name": {
