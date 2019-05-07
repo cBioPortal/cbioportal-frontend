@@ -93,7 +93,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
 
     readonly tabUI = MakeMobxView({
         await: () => {
-            const ret:any[] = [this.props.store._selectedGroupsNotOverlapRemoved, this.props.store.activeGroups];
+            const ret:any[] = [this.props.store._activeGroupsNotOverlapRemoved, this.props.store.activeGroups];
             if (this.props.store.activeGroups.isComplete &&
                 this.props.store.activeGroups.result.length < 2) {
                 // dont bother loading data for and computing clinical tab if not enough groups for it
@@ -104,7 +104,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         },
         render: () => {
             if (this.props.store.activeGroups.result!.length < 2) {
-                return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(this.props.store._selectedGroupsNotOverlapRemoved.result!.length)}</span>;
+                return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(this.props.store._activeGroupsNotOverlapRemoved.result!.length)}</span>;
             } else {
                 let content: any = [];
                 content.push(<OverlapExclusionIndicator store={this.props.store}/>);
