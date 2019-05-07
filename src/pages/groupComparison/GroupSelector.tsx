@@ -13,6 +13,8 @@ import GroupComparisonStore from "./GroupComparisonStore";
 import classNames from "classnames";
 import styles from './styles.module.scss';
 import ErrorIcon from "../../shared/components/ErrorIcon";
+import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
+import {joinNames} from "./OverlapUtils";
 import EllipsisTextTooltip from "../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 export interface IGroupSelectorProps {
@@ -55,31 +57,6 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                                             &nbsp;
                                             {caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
                                             {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
-                                            {this.props.store.isGroupUnsaved(group) && (
-                                                <span style={{
-                                                    display:"inline-block",
-                                                    marginLeft:4,
-                                                    minWidth:16,
-                                                    position:"relative"
-                                                }}>
-                                                    <i className={'fa fa-save'}
-                                                       style={{
-                                                           position:"absolute",
-                                                           left:0,
-                                                           top:-10
-                                                       }}
-                                                    />
-                                                    <i className={'fa fa-ban'}
-                                                       style={{
-                                                           position:"absolute",
-                                                           left:4,
-                                                           top:-12,
-                                                           opacity:0.6,
-                                                           color:"red"
-                                                       }}
-                                                    />
-                                                </span>
-                                            )}
                                         </span>
                                     </button>
                                 );
@@ -93,18 +70,6 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                             <a onClick={this.props.store.deselectAllGroups}
                             >Deselect all
                             </a>
-                            { (this.props.store._originalGroups.result!.findIndex(g=>this.props.store.isGroupUnsaved(g)) > -1) && (
-                                <span>
-                                    &nbsp;|&nbsp;
-                                    <a onClick={this.props.store.saveAndGoToNewSession}
-                                    >Save
-                                    </a>
-                                    &nbsp;|&nbsp;
-                                    <a onClick={this.props.store.clearUnsavedGroups}
-                                    >Clear unsaved
-                                    </a>
-                                </span>
-                            )}
                         </div>
                     </div>
                 )
