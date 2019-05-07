@@ -722,6 +722,29 @@ export default class GroupComparisonStore {
         }
     });
 
+    public readonly sampleKeyToActiveGroups = remoteData({
+        await:()=>[
+            this.activeGroups,
+            this.sampleSet
+        ],
+        invoke:()=>{
+            const sampleKeyToGroups:{[sampleKey:string]:string[]} = {};
+            const sampleSet = this.sampleSet.result!;
+            for (const group of this.activeGroups.result!) {
+                for (const studyEntry of group.studies) {
+                    for (const sampleId of studyEntry.samples) {
+                        const sample = sampleSet.get({ studyId: studyEntry.id, sampleId });
+                        if (sample) {
+                            sampleKeyToGroups[sample.uniqueSampleKey] = sampleKeyToGroups[sample.uniqueSampleKey] || [];
+                            sampleKeyToGroups[sample.uniqueSampleKey].push(group.uid);
+                        }
+                    }
+                }
+            }
+            return Promise.resolve(sampleKeyToGroups);
+        }
+    });
+
     public readonly patientsVennPartition = remoteData({
         await:()=>[
             this._originalGroups,
@@ -828,12 +851,12 @@ export default class GroupComparisonStore {
     });
 
     public readonly clinicalDataEnrichments = remoteData({
-        await: () => [this._activeGroupsOverlapRemoved],
+        await: () => [this.activeGroups],
         invoke: () => {
             if (this.clinicalTabGrey) {
                 return Promise.resolve([]);
             }
-            let groups: Group[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
+            let groups: Group[] = _.map(this.activeGroups.result, group => {
                 const sampleIdentifiers = [];
                 for (const studySpec of group.studies) {
                     const studyId = studySpec.id;
@@ -848,11 +871,15 @@ export default class GroupComparisonStore {
                     sampleIdentifiers: sampleIdentifiers
                 }
             });
-            return internalClient.fetchClinicalEnrichmentsUsingPOST({
-                'groupFilter': {
-                    groups: groups
-                }
-            });
+            if (groups.length > 1) {
+                return internalClient.fetchClinicalEnrichmentsUsingPOST({
+                    'groupFilter': {
+                        groups: groups
+                    }
+                });
+            } else {
+                return Promise.resolve([]);
+            }
         }
     }, []);
 
