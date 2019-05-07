@@ -170,15 +170,6 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
             //  except for the intersection.
             let hoverArea:JSX.Element = (
                 <g>
-                    {region.numCases === 0 && (
-                        <rect
-                            x="0"
-                            y="0"
-                            height={this.props.height}
-                            width={this.props.width}
-                            fill="white"
-                        />
-                    )}
                     <rect
                         x="0"
                         y="0"
@@ -226,16 +217,16 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
 
             const textContents = `${region.numCases.toString()}${selected ? " "+String.fromCharCode(10004) : ""}`;
             // Add rect behind for ease of reading
-            const textSize = measureText({text:textContents, fontFamily:"Arial", fontSize:"14px", lineHeight: 1});
+            const textSize = measureText({text:textContents, fontFamily:"Arial", fontSize:"13px", lineHeight: 1});
             const padding = 4;
             const textPosition = this.layoutParams.textCenters[region.combination.map(i=>this.props.groups[i].uid).join(",")];
             let textBackground = null;
             if (selected) {
                 textBackground = <rect
                     x={textPosition.x - textSize.width.value / 2 - padding}
-                    y={textPosition.y - textSize.height.value / 2 - padding}
+                    y={textPosition.y - textSize.height.value}
                     width={textSize.width.value + 2*padding}
-                    height={textSize.height.value + 2*padding}
+                    height={textSize.height.value + padding}
                     fill={"yellow"}
                     rx={3}
                     ry={3}
