@@ -26,13 +26,15 @@ export function getExcludedIndexes(combination:number[], numGroupsTotal:number) 
 
 export function joinNames(names:string[], conj:string) {
     switch (names.length) {
+        case 0:
+            return <span></span>;
         case 1:
             return <strong>{names[0]}</strong>;
         case 2:
             return <span><strong>{names[0]}</strong> {conj} <strong>{names[1]}</strong></span>;
-        case 3:
         default:
-            return <span><strong>{names[0]}</strong>, <strong>{names[1]}</strong>, {conj} <strong>{names[2]}</strong></span>;
+            const beforeConj = names.slice(0, names.length-1);
+            return <span>{beforeConj.map(name=>[<strong>{name}</strong>,", "])}{conj}&nbsp;<strong>{names[names.length-1]}</strong></span>;
     }
 }
 
