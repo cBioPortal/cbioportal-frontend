@@ -99,10 +99,17 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
             alignmentDataStatus = 'empty';
         }
 
+        let ptmDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.ptmData.status;
+
+        if (ptmDataStatus === 'complete' && this.props.store.ptmData.result.length === 0) {
+            ptmDataStatus = 'empty';
+        }
+
         return {
             [TrackNames.OncoKB]: oncoKbDataStatus,
             [TrackNames.CancerHotspots]: hotspotDataStatus,
-            [TrackNames.PDB]: alignmentDataStatus
+            [TrackNames.PDB]: alignmentDataStatus,
+            [TrackNames.PTM]: ptmDataStatus
         };
     }
 
@@ -392,11 +399,11 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         return (
             <TrackPanel
                 store={this.props.store}
+                pubMedCache={this.props.pubMedCache}
                 trackVisibility={this.trackVisibility}
                 geneWidth={this.geneWidth}
                 proteinLength={transcript && transcript.proteinLength}
                 geneXOffset={this.lollipopPlotGeneX}
-                maxHeight={200}
             />
         );
     }
