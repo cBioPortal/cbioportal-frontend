@@ -42,13 +42,13 @@ export function getStudiesAttr(
 export function getGroupParameters(
     name:string,
     selectedSamples:SampleIdentifier[],
-    store:StudyViewPageStore
+    origin:string[]
 ) {
     return {
         name,
         description: "",
         studies: getStudiesAttr(selectedSamples),
-        origin: store.studyIds
+        origin
     };
 }
 

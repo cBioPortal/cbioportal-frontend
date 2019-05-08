@@ -340,7 +340,7 @@ export function MakeEnrichmentsTabUI(
     return MakeMobxView({
         await:()=>{
             const store = getStore();
-            const ret:any[] = [store._selectedGroupsNotOverlapRemoved, store.activeGroups, store.activeStudyIds];
+            const ret:any[] = [store._activeGroupsNotOverlapRemoved, store.activeGroups, store.activeStudyIds];
             if ((store.activeGroups.isComplete &&
                 store.activeGroups.result.length !== 2) ||
                 (store.activeStudyIds.isComplete && store.activeStudyIds.result.length > 1)) {
@@ -355,7 +355,7 @@ export function MakeEnrichmentsTabUI(
             if (store.activeGroups.result!.length !== 2) {
                 return (
                     <span>
-                        {ENRICHMENTS_NOT_2_GROUPS_MSG(store.activeGroups.result!.length, store._selectedGroupsNotOverlapRemoved.result!.length)}
+                        {ENRICHMENTS_NOT_2_GROUPS_MSG(store.activeGroups.result!.length, store._activeGroupsNotOverlapRemoved.result!.length)}
                     </span>
                 );
             } else if (store.activeStudyIds.result!.length > 1) {
