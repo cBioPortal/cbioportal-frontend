@@ -47,7 +47,8 @@ describe("coexpression tab screenshot tests", function() {
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub switch profiles', function() {
-        browser.execute(function() { resultsViewCoExpressionTab.onSelectDataSet({ value: "coadread_tcga_pub_mrna"}); });
+        browser.execute(function() { resultsViewCoExpressionTab.onSelectProfileX({ value: "coadread_tcga_pub_mrna"}); });
+        browser.execute(function() { resultsViewCoExpressionTab.onSelectProfileY({ value: "coadread_tcga_pub_mrna"}); });
         browser.pause(100); // give time to start loading
         browser.waitForExist('div[data-test="CoExpressionPlot"]', 60000); // wait for plot to show up
         var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
