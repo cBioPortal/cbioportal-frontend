@@ -2409,7 +2409,7 @@ export default class GenomeNexusAPI {
                 return response.body;
             });
         };
-    fetchPostTransactionalModificationsByPtmFilterPOSTURL(parameters: {
+    fetchPostTranslationalModificationsByPtmFilterPOSTURL(parameters: {
         'ptmFilter': PtmFilter,
         $queryParameters ? : any
     }): string {
@@ -2429,10 +2429,10 @@ export default class GenomeNexusAPI {
     /**
      * Retrieves PTM entries by Ensembl Transcript IDs
      * @method
-     * @name GenomeNexusAPI#fetchPostTransactionalModificationsByPtmFilterPOST
+     * @name GenomeNexusAPI#fetchPostTranslationalModificationsByPtmFilterPOST
      * @param {} ptmFilter - List of Ensembl transcript IDs. For example ["ENST00000420316", "ENST00000646891", "ENST00000371953"]
      */
-    fetchPostTransactionalModificationsByPtmFilterPOSTWithHttpInfo(parameters: {
+    fetchPostTranslationalModificationsByPtmFilterPOSTWithHttpInfo(parameters: {
         'ptmFilter': PtmFilter,
         $queryParameters ? : any,
         $domain ? : string
@@ -2473,16 +2473,16 @@ export default class GenomeNexusAPI {
     /**
      * Retrieves PTM entries by Ensembl Transcript IDs
      * @method
-     * @name GenomeNexusAPI#fetchPostTransactionalModificationsByPtmFilterPOST
+     * @name GenomeNexusAPI#fetchPostTranslationalModificationsByPtmFilterPOST
      * @param {} ptmFilter - List of Ensembl transcript IDs. For example ["ENST00000420316", "ENST00000646891", "ENST00000371953"]
      */
-    fetchPostTransactionalModificationsByPtmFilterPOST(parameters: {
+    fetchPostTranslationalModificationsByPtmFilterPOST(parameters: {
             'ptmFilter': PtmFilter,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < PostTranslationalModification >
         > {
-            return this.fetchPostTransactionalModificationsByPtmFilterPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.fetchPostTranslationalModificationsByPtmFilterPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
