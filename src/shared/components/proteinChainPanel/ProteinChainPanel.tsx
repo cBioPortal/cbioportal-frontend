@@ -255,9 +255,8 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                         position:'relative',
                     }}>
                         <div className="small" style={{position: "absolute"}}>
-                            {/* This span is a place holder for a possible PDB icon, for now manually aligning with a margin */}
-                            <span style={{marginRight: 16}} />
-                            PDB Chains
+                            {/* Place holder for a possible PDB icon, for now manually aligning with a margin */}
+                            <span style={{marginLeft: 16}} >PDB Chains</span>
                             <DefaultTooltip
                                 placement="left"
                                 overlay={this.helpTooltipContent}
