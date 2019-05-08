@@ -102,7 +102,7 @@ function buildDisplay(ref, rootUrl){
              </div>    
         
             <div style="position:relative" class="imgs"><img style="border:1px solid;" src="${data.refImagePath}"/>
-            <img style="border:1px solid; position:absolute;left:0" src="${data.screenImagePath}"/>
+            <img style="border:1px solid; position:absolute;left:0;top:0" src="${data.screenImagePath}"/>
             </div>
         </div>
         
