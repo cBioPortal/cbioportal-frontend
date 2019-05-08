@@ -56,6 +56,7 @@ const devPort = process.env.PORT || 3000;
 const root = resolve(__dirname);
 const src = join(root, 'src');
 const modules = join(root, 'node_modules');
+const common = join(src, "common");
 const dest = join(root, 'dist');
 const css = join(src, 'styles');
 
@@ -507,6 +508,7 @@ config.entry.push('font-awesome-webpack');
 // Roots
 config.resolve.modules = [
     src,
+    common,
     modules
 ];
 
