@@ -4,8 +4,8 @@
   "scripts": {
     "start": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server",
     "startSSL": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server --https",
-    "clean": "rimraf dist tsDist common-dist",
-    "build": "yarn run clean && yarn run compileOqlParser && yarn run buildDLL:prod && cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 webpack --mode production --progress --colors",
+    "clean": "rimraf dist tsDist",
+    "build": "yarn run clean && yarn run compileOqlParser && cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 webpack --mode production --progress --colors",
     "buildDLL:prod": "yarn run clean && cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 webpack --mode production --config vendor-bundles.webpack.config.js",
     "buildDLL:dev": "yarn run clean && cross-env NODE_ENV=development webpack --mode development --config vendor-bundles.webpack.config.js",
     "build:size": "yarn run clean && yarn run buildDLL:prod && cross-env NODE_ENV=production webpack --mode production --json > stats.json",

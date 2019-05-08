@@ -1,24 +1,20 @@
 import * as React from "react";
+import {SyntheticEvent} from "react";
 import {observer} from "mobx-react";
 import GroupComparisonStore from "./GroupComparisonStore";
 import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
 import autobind from "autobind-decorator";
 import {action, computed, observable} from "mobx";
-import {SyntheticEvent} from "react";
 import {remoteData} from "../../shared/api/remoteData";
-import {
-    ComparisonGroup,
-    DUPLICATE_GROUP_NAME_MSG,
-    excludeSamples,
-    intersectSamples,
-    unionSamples
-} from "./GroupComparisonUtils";
-import {StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {ComparisonGroup, DUPLICATE_GROUP_NAME_MSG} from "./GroupComparisonUtils";
 import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import _ from "lodash";
 import {getStudiesAttrForPatientOverlapGroup, getStudiesAttrForSampleOverlapGroup, joinNames} from "./OverlapUtils";
+import {Checkbox} from "react-bootstrap";
+import InfoIcon from "../../shared/components/InfoIcon";
+import FlexAlignedCheckbox from "../../shared/components/FlexAlignedCheckbox";
 
 export interface ICreateGroupFromOverlapProps {
     store:GroupComparisonStore;
@@ -26,7 +22,7 @@ export interface ICreateGroupFromOverlapProps {
     allGroupsInVenn:string[]; // uid[]
     x:number;
     y:number;
-    submitGroup:(group:SessionGroupData)=>void;
+    submitGroup:(group:SessionGroupData, saveToUser:boolean)=>void;
     caseType:"sample"|"patient";
     width:number;
 }
@@ -52,6 +48,13 @@ function getRegionSummary(
 @observer
 export default class CreateGroupFromOverlap extends React.Component<ICreateGroupFromOverlapProps, {}> {
     @observable inputGroupName = "";
+    @observable saveGroupToUser = true;
+
+    @autobind
+    @action
+    private toggleSaveGroupToUser() {
+        this.saveGroupToUser = !this.saveGroupToUser;
+    }
 
     @autobind
     @action
@@ -83,17 +86,17 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
             description: "",
             studies:studiesAttr,
             origin:this.props.store.origin.result!
-        });
+        }, this.saveGroupToUser);
     }
 
-    readonly existingGroupNames = remoteData({
-        await:()=>[this.props.store._originalGroups],
-        invoke:()=>Promise.resolve(
-            this.props.store._originalGroups.result!.map(g=>g.name)
-        )
-    });
-
-    private isDuplicateName(existingGroupNames:string[]) {
+    @computed get isDuplicateName() {
+        const existingGroupNamesObj = this.props.store.existingGroupNames.result!;
+        let existingGroupNames = existingGroupNamesObj.session;
+        if (this.saveGroupToUser) {
+            // if we're going to save the group to the user, we have to compare the group name
+            //  with all existing groups on the user for these studies
+            existingGroupNames = existingGroupNames.concat(existingGroupNamesObj.user);
+        }
         return existingGroupNames.includes(this.inputGroupName.trim());
     }
 
@@ -101,12 +104,22 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
         await:()=>[
             this.props.store.origin,
             this.props.store.sampleSet,
-            this.existingGroupNames,
+            this.props.store.existingGroupNames,
             this.props.store._originalGroups,
             this.props.store.patientToSamplesSet
         ],
         render:()=>(
             <div style={{width:250}}>
+                {this.props.store.isLoggedIn && (
+                    <FlexAlignedCheckbox
+                        checked={this.saveGroupToUser}
+                        onClick={this.toggleSaveGroupToUser}
+                        label={[
+                            <span style={{marginRight:5}}>Save group to user account</span>,
+                            <InfoIcon divStyle={{display:"inline"}} tooltip={<span>Selecting this will save the new group with the associated study in your user account.</span>}/>
+                        ]}
+                    />
+                )}
                 <div style={{display:"flex", justifyContent:"center", alignItems:"center"}}>
                     <input
                         className="form-control"
@@ -118,13 +131,13 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                     />
                     <button
                         className="btn btm-sm btn-primary"
-                        disabled={this.inputGroupName.length === 0 || this.isDuplicateName(this.existingGroupNames.result!)}
+                        disabled={this.inputGroupName.length === 0 || this.isDuplicateName}
                         onClick={this.submit}
                     >
                         Submit
                     </button>
                 </div>
-                { this.isDuplicateName(this.existingGroupNames.result!) && (
+                { this.isDuplicateName && (
                     <div style={{marginTop:4}}>
                         {DUPLICATE_GROUP_NAME_MSG}
                     </div>
