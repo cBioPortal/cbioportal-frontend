@@ -9,8 +9,11 @@ let config = {
     entry: {
         // create two library bundles, one with jQuery and
         // another with Angular and related libraries
-        common: ['jquery','imports-loader?jquery=jquery!jquery-migrate', 'react', 'react-dom', 'react-bootstrap', 'seamless-immutable', 'lodash',
-            'mobx', 'mobx-react', 'chart.js', 'victory', 'react-select', 'react-rangeslider', 'mobx-utils', 'd3', 'datatables.net', 'webpack-raphael']
+        common: [
+            'jquery','imports-loader?jquery=jquery!jquery-migrate', 'react', 'react-dom', 'react-bootstrap', 'seamless-immutable', 'lodash',
+            'mobx', 'mobx-react', 'chart.js', 'victory', 'react-select', 'react-rangeslider', 'mobx-utils', 'd3', 'datatables.net', 'webpack-raphael',
+            'FreeSans.json'
+        ]
     },
 
     module: {
@@ -35,6 +38,10 @@ let config = {
     ],
 
     devtool : 'source-map'
+};
+
+config.resolve = {
+    modules: [path.join("src", "common"), "node_modules"]
 };
 
 config.plugins = [
