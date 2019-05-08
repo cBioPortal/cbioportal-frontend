@@ -66,9 +66,13 @@ export default class OncoKbSummaryTable extends React.Component<IOncoKbSummaryTa
                                     <div>
                                         <i
                                             className={`${styles["level-icon"]} ${styles[`level-${level.level}`]}`}
-                                            style={{...LEVEL_ICON_STYLE, verticalAlign: "bottom"}}
+                                            style={{
+                                                ...LEVEL_ICON_STYLE,
+                                                verticalAlign: "bottom",
+                                                display: "inline-block"
+                                            }}
                                         />
-                                        <span> : </span>
+                                        <span>: </span>
                                         <TruncatedText
                                             text={level.tumorTypes.join(", ")}
                                             tooltip={<div style={{maxWidth: 300}}>{level.tumorTypes.join(", ")}</div>}
