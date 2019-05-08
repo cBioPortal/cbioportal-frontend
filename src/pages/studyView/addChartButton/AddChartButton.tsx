@@ -40,6 +40,12 @@ export interface IAddChartButtonProps extends IAddChartTabsProps {
 
 
 export enum TabKeysEnum {
+    CUSTOM_DATA = 'Custom_Data',
+    CLINICAL = 'Clinical',
+    GENOMIC = 'Genomic'
+}
+
+export enum TabNamesEnum {
     CUSTOM_DATA = 'Custom Data',
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic'
@@ -226,7 +232,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                      onTabClick={this.updateActiveId}
                      className="addChartTabs mainTabs">
 
-                <MSKTab key={0} id={TabKeysEnum.CLINICAL} linkText={TabKeysEnum.CLINICAL}
+                <MSKTab key={0} id={TabKeysEnum.CLINICAL} linkText={TabNamesEnum.CLINICAL}
                         hide={this.props.disableClinicalTab}>
                     <AddChartByType options={this.clinicalDataOptions}
                                     freqPromise={this.getClinicalDataCount}
@@ -235,7 +241,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     onToggleOption={this.onToggleOption}
                     />
                 </MSKTab>
-                <MSKTab key={1} id={TabKeysEnum.GENOMIC} linkText={TabKeysEnum.GENOMIC}
+                <MSKTab key={1} id={TabKeysEnum.GENOMIC} linkText={TabNamesEnum.GENOMIC}
                         hide={this.props.disableGenomicTab}>
                     <AddChartByType options={this.genomicDataOptions}
                                     freqPromise={this.getGenomicDataCount}
@@ -243,7 +249,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     onClearAll={this.onClearAll}
                                     onToggleOption={this.onToggleOption}/>
                 </MSKTab>
-                <MSKTab key={2} id={TabKeysEnum.CUSTOM_DATA} linkText={TabKeysEnum.CUSTOM_DATA}
+                <MSKTab key={2} id={TabKeysEnum.CUSTOM_DATA} linkText={TabNamesEnum.CUSTOM_DATA}
                         hide={this.props.disableCustomTab}>
                     <CustomCaseSelection
                         allSamples={this.props.store.samples.result}
