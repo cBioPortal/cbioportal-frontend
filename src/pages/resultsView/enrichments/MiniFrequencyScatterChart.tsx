@@ -10,7 +10,7 @@ import {formatLogOddsRatio} from "../../../shared/lib/FormatUtils";
 import {toConditionalPrecision} from "../../../shared/lib/NumberUtils";
 import SelectionComponent from "./SelectionComponent";
 import HoverablePoint from "./HoverablePoint";
-import {truncateWithEllipsis} from "../../../shared/lib/wrapText";
+import {getTextWidth, truncateWithEllipsis} from "../../../shared/lib/wrapText";
 
 export interface IMiniFrequencyScatterChartData {
     x:number;
@@ -57,12 +57,23 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
         this.props.onSelectionCleared();
     }
 
+    @computed get maxLabelWidth() {
+        const totalLabelWidths = getTextWidth(this.props.xGroupName, "Arial", "13px") +
+                                 getTextWidth(this.props.yGroupName, "Arial", "13px");
+
+        if (totalLabelWidths > 150) {
+            return 75;
+        } else {
+            return 90;
+        }
+    }
+
     @computed get xLabel() {
-        return `Alteration Frequency in ${truncateWithEllipsis(this.props.xGroupName, 100, "Arial", "13px")} (%)`;
+        return `Altered Frequency in ${truncateWithEllipsis(this.props.xGroupName, this.maxLabelWidth, "Arial", "13px")} (%)`;
     }
 
     @computed get yLabel() {
-        return `Alteration Frequency in ${truncateWithEllipsis(this.props.yGroupName, 100, "Arial", "13px")} (%)`;
+        return `Altered Frequency in ${truncateWithEllipsis(this.props.yGroupName, this.maxLabelWidth, "Arial", "13px")} (%)`;
     }
 
     /*@computed get size() {
@@ -173,7 +184,8 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
             <div className="posRelative">
                 <div className="borderedChart inlineBlock" style={{position:"relative"}} onClick={this.onClick}>
                     <VictoryChart containerComponent={this.containerComponent} theme={CBIOPORTAL_VICTORY_THEME}
-                                  domainPadding={20} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}>
+                                  domainPadding={20} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}
+                    >
                         <VictoryAxis tickValues={[0,25,50,75]} domain={[0,this.plotDomainMax]}
                                      label={this.xLabel}
                                      style={{
