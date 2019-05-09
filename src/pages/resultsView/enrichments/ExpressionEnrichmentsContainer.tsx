@@ -21,6 +21,7 @@ import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
+import classNames from 'classnames';
 
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];
@@ -162,16 +163,18 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
 
         return (
             <div className={styles.Container}>
-                <div className={styles.LeftColumn}>
+
+                <div className={styles.ChartsPanel}>
                     <MiniScatterChart data={data}
                                       selectedGenesSet={this.selectedGenesSet}
                                       xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={Math.ceil(Math.abs(maxData.x))}
-                        xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
-                        onSelectionCleared={this.onSelectionCleared}/>
+                                      xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
+                                      onSelectionCleared={this.onSelectionCleared}/>
                     { this.props.store && <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez}
-                        selectedProfile={this.props.selectedProfile} queryGenes={this.props.store.hugoGeneSymbols}
-                        selectedGeneQValue={selectedGeneQValue} store={this.props.store}/>}
+                                                       selectedProfile={this.props.selectedProfile} queryGenes={this.props.store.hugoGeneSymbols}
+                                                       selectedGeneQValue={selectedGeneQValue} store={this.props.store}/>}
                 </div>
+
                 <div className={styles.TableContainer}>
                     <div>
                         <h3>{this.props.selectedProfile.name}</h3>
@@ -202,6 +205,9 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                                                group2Description={this.props.group2Description!}
                     />
                 </div>
+
+
+
             </div>
         );
     }

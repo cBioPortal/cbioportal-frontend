@@ -119,15 +119,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @autobind
-    private toggleChart() {
-        if (this.chartType === ChartType.VOLCANO) {
-            this.chartType = ChartType.FREQUENCY;
-        } else {
-            this.chartType = ChartType.VOLCANO;
-        }
-    }
-
-    @autobind
     private onGeneNameClick(hugoGeneSymbol: string) {
         this.clickedGene = hugoGeneSymbol;
     }
@@ -207,35 +198,24 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
         return (
             <div className={styles.Container}>
-                <div className={styles.LeftColumn}>
-                    {this.chartType === ChartType.VOLCANO && (
-                        <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
-                                          xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
-                                          xAxisTickValues={[-10, 0, 10]}
-                                          selectedGenesSet={this.selectedGenesSet}
-                                          onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
-                                          onSelectionCleared={this.onSelectionCleared}/>
-                    )}
-                    {this.chartType === ChartType.FREQUENCY && (
-                        <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
-                                                   xGroupName={this.props.group1Name!} yGroupName={this.props.group2Name!} onGeneNameClick={this.onGeneNameClick}
-                                                   selectedGenesSet={this.selectedGenesSet} onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared}/>
-                    )}
-                    <button
-                        className="btn btn-sm btn-default"
-                        onClick={this.toggleChart}
-                        style={{
-                            position:"absolute",
-                            top:10,
-                            left:10
-                        }}
-                    >
-                        {this.chartType === ChartType.VOLCANO ? "Show Frequency Plot" : "Show Volcano Plot"}
-                    </button>
+                <div className={styles.ChartsPanel}>
+                    <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
+                                      xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
+                                      xAxisTickValues={[-10, 0, 10]}
+                                      selectedGenesSet={this.selectedGenesSet}
+                                      onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
+                                      onSelectionCleared={this.onSelectionCleared}/>
+
+
+                    <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
+                                               xGroupName={this.props.group1Name!} yGroupName={this.props.group2Name!} onGeneNameClick={this.onGeneNameClick}
+                                               selectedGenesSet={this.selectedGenesSet} onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared}/>
+
                     {this.props.store && <MiniBarChart totalAlteredCount={this.props.totalGroup1Count} totalUnalteredCount={this.props.totalGroup2Count}
                                                        selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />}
                 </div>
-                <div className={styles.TableContainer}>
+
+                <div>
                     <div>
                         <h3>{this.props.headerName}</h3>
                         {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
