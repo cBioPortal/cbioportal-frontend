@@ -56,7 +56,7 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
             return _order[m];
         }
     })();
-    const regulation_order = makeComparatorMetric(['up', 'down', undefined]);
+    const regulation_order = makeComparatorMetric(['high', 'low', undefined]);
     const germline_order = makeComparatorMetric([true, false, undefined]); // germline mutation is prioritized
 
     function mandatoryHelper(d:GeneticTrackDatum):number[] {
