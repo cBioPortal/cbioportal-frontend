@@ -39,6 +39,8 @@ export function emptyQueryIndicator(): IndicatorQueryResp
         },
         treatments: [],
         tumorTypeSummary: "",
+        diagnosticSummary: "",
+        prognosticSummary: "",
         variantExist: false,
         variantSummary: "",
         vus: false
