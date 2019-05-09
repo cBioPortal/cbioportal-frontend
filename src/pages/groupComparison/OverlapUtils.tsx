@@ -34,7 +34,7 @@ export function joinNames(names:string[], conj:string) {
             return <span><strong>{names[0]}</strong> {conj} <strong>{names[1]}</strong></span>;
         default:
             const beforeConj = names.slice(0, names.length-1);
-            return <span>{beforeConj.map(name=>[<strong>{name}</strong>,", "])}{conj}&nbsp;<strong>{names[names.length-1]}</strong></span>;
+            return <span>{beforeConj.map(name=>[<strong>{name}</strong>,", "])}{conj} <strong>{names[names.length-1]}</strong></span>;
     }
 }
 
@@ -57,27 +57,6 @@ export function blendColors(colors:string[]) {
     }, d3.interpolateLab(colors[0], colors[1])(0.5));
 }
 
-export function toggleRegionSelected(
-    regionComb:number[],
-    selectedRegions:number[][]
-) {
-    const withoutComb = selectedRegions.filter(r=>!_.isEqual(r, regionComb));
-    if (withoutComb.length === selectedRegions.length) {
-        // combination currently not selected, so add it
-        return selectedRegions.concat([regionComb]);
-    } else {
-        // combination was selected, so return version without it
-        return withoutComb;
-    }
-}
-
-export function regionIsSelected(
-    regionComb:number[],
-    selectedRegions:number[][]
-) {
-    return !!selectedRegions.find(r=>_.isEqual(r, regionComb));
-}
-
 export function getTextColor(
     backgroundColor:string,
     inverse:boolean=false
@@ -96,7 +75,7 @@ export function getTextColor(
 }
 
 export function getStudiesAttrForSampleOverlapGroup(
-    availableGroups:ComparisonGroup[],
+    availableGroups:(Pick<ComparisonGroup, "uid">&Pick<SessionGroupData,"studies">)[],
     includedRegions:string[][], // uid[][],
     allGroupsInVenn:string[] // uid[]
 ) {
@@ -121,10 +100,10 @@ export function getStudiesAttrForSampleOverlapGroup(
 }
 
 export function getStudiesAttrForPatientOverlapGroup(
-    availableGroups:ComparisonGroup[],
+    availableGroups:(Pick<ComparisonGroup, "uid">&{ studies: {id:string, patients:string[]}[]})[],
     includedRegions:string[][], // uid[][]
     allGroupsInVenn:string[], // uid[]
-    patientToSamplesSet:ComplexKeyGroupsMap<Sample>
+    patientToSamplesSet:ComplexKeyGroupsMap<Pick<Sample, "sampleId">>
 ) {
     // compute set operations to find contents
     const groups = _.keyBy(availableGroups, g=>g.uid);
