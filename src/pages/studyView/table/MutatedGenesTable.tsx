@@ -62,16 +62,16 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         [ColumnKey.FREQ]: 0,
     };
 
-    private reactions:IReactionDisposer[] = [];
+    private disposers:IReactionDisposer[] = [];
 
     constructor(props: IMutatedGenesTablePros) {
         super(props);
-        this.reactions.push(
+        this.disposers.push(
             reaction(() => this.columnsWidth, () => {
                 this.updateCellMargin();
             }, {fireImmediately: true})
         );
-        this.reactions.push(
+        this.disposers.push(
             reaction(() => this.props.promise.result, () => {
                 this.updateCellMargin();
             }, {fireImmediately: true})
@@ -79,7 +79,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     }
 
     componentWillUnmount() {
-        for (const disposer of this.reactions) {
+        for (const disposer of this.disposers) {
             disposer();
         }
     }
