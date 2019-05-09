@@ -21,8 +21,9 @@ export type TrackProps = {
     dataStore: MutationMapperDataStore;
     width: number;
     proteinLength: number;
-    trackItems: TrackItemSpec[];
+    trackItems?: TrackItemSpec[];
     trackTitle?: JSX.Element;
+    hideBaseline?: boolean;
     xOffset?: number;
     dataHighlightFilter?: (d: Mutation[]) => boolean
     dataSelectFilter?: (d: Mutation[]) => boolean
@@ -164,7 +165,7 @@ export default class Track extends React.Component<TrackProps, {}>
     get items() {
         this.circles = {};
 
-        return this.props.trackItems.map((spec, index) => {
+        return (this.props.trackItems || []).map((spec, index) => {
             return (
                 <TrackCircle
                     ref={(circle: TrackCircle) => {
@@ -246,6 +247,7 @@ export default class Track extends React.Component<TrackProps, {}>
                              height={this.svgHeight}
                              className="track-svgnode"
                              onMouseLeave={this.onSVGMouseLeave}
+                             style={{overflow: "visible"}}
                         >
                             <rect
                                 fill="#FFFFFF"
@@ -256,14 +258,16 @@ export default class Track extends React.Component<TrackProps, {}>
                                 onClick={action(this.onBackgroundClick)}
                                 onMouseMove={this.onBackgroundMouseMove}
                             />
-                            <line
-                                stroke="#666666"
-                                strokeWidth="0.5"
-                                x1={0}
-                                x2={this.props.width}
-                                y1={this.svgHeight / 2}
-                                y2={this.svgHeight / 2}
-                            />
+                            {!this.props.hideBaseline &&
+                                <line
+                                    stroke="#666666"
+                                    strokeWidth="0.5"
+                                    x1={0}
+                                    x2={this.props.width}
+                                    y1={this.svgHeight / 2}
+                                    y2={this.svgHeight / 2}
+                                />
+                            }
                             {this.items}
                         </svg>
                     </span>

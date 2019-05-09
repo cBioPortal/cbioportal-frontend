@@ -43,7 +43,8 @@ import {
     showOriginStudiesInSummaryDescription,
     shouldShowChart,
     toFixedDigit,
-    updateGeneQuery
+    updateGeneQuery,
+    getStudyViewTabId
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -56,7 +57,8 @@ import {
     ChartMeta,
     ChartMetaDataTypeEnum,
     StudyViewFilterWithSampleIdentifierFilters,
-    UniqueKey
+    UniqueKey,
+    StudyViewPageTabKeyEnum
 } from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
@@ -2166,4 +2168,14 @@ describe('StudyViewUtils', () => {
             assert.equal(getPositionYByUniqueKey(layoutForPositionTest, 'test'), 1);
         });
     })
+
+    describe("getStudyViewTabId", ()=>{
+        it("gets study view tab id correctly", ()=>{
+            assert.equal(getStudyViewTabId("study"), undefined);
+            assert.equal(getStudyViewTabId("study/"), undefined);
+            assert.equal(getStudyViewTabId("study/asdf"), "asdf" as any);
+            assert.equal(getStudyViewTabId("study/summary"), StudyViewPageTabKeyEnum.SUMMARY);
+            assert.equal(getStudyViewTabId("study/summary/"), StudyViewPageTabKeyEnum.SUMMARY);
+        });
+    });
 });
