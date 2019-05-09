@@ -205,7 +205,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 align={tooltipAlign}
                                 overlay={<span>Survival Analysis</span>}
                             >
-                                <img src="images/survival_icon.svg"
+                                <img src={require("../../../rootImages/survival_icon.svg")} 
                                      className={classnames(styles.survivalIcon, styles.item, styles.clickable, 'survivalIcon')}
                                      style={{verticalAlign: "initial"}} alt="Survival Analysis"
                                      onClick={this.props.setAnalysisGroups}/>
