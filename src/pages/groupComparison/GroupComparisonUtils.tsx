@@ -150,7 +150,7 @@ export function caseCounts(
 
 export function getPatientIdentifiers(
     sampleIdentifiers:SampleIdentifier[],
-    sampleSet:ComplexKeyMap<Sample>
+    sampleSet:ComplexKeyMap<Pick<Sample, "uniquePatientKey"|"patientId"|"studyId">>
 ) {
     const patientSet:{[uniquePatientKey:string]:PatientIdentifier} = {};
     for (const sampleId of sampleIdentifiers) {
@@ -207,7 +207,7 @@ export function getOverlappingPatients(
 }
 
 export function isGroupEmpty(
-    group:ComparisonGroup
+    group:Pick<ComparisonGroup, "studies">
 ) {
     return !_.some(group.studies, study=>(study.samples.length > 0 || study.patients.length > 0));
 }
@@ -404,9 +404,6 @@ export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups:number) {
     }
 }
 
-export const EXCLUDE_OVERLAPPING_SAMPLES_AND_PATIENTS_MSG =
-    "We exclude overlapping samples and patients by default to display this tab";
-
 export function getDefaultGroupName(
     filters:StudyViewFilter,
     entrezGeneIdToGene:{[entrez:number]:GeneIdentifier}
@@ -447,67 +444,6 @@ export function getTabId(pathname:string) {
     } else {
         return undefined;
     }
-}
-
-export function getNumberAttributeGroupFilters(
-    baseFilters: StudyViewFilter,
-    clinicalAttribute:ClinicalAttribute,
-    range:[number, number]
-) {
-    const clinicalDataType = clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE";
-    const newFilters = _.cloneDeep(baseFilters);
-
-    newFilters.clinicalDataIntervalFilters = newFilters.clinicalDataIntervalFilters || [];
-    const existingFilter = newFilters.clinicalDataIntervalFilters.find(f=>{
-        return f.attributeId === clinicalAttribute.clinicalAttributeId &&
-            f.clinicalDataType === clinicalDataType;
-    });
-
-    if (existingFilter) {
-        // if theres an existing filter object for this clinical attribute, then we need to
-        //    add this range to that filter
-        existingFilter.values = _.uniqWith(
-            existingFilter.values.concat([{
-                start:range[0],
-                end:range[1]
-            } as ClinicalDataIntervalFilterValue]
-        ), (a:ClinicalDataIntervalFilterValue, b:ClinicalDataIntervalFilterValue)=>{
-            return (a.start === b.start && a.end === b.end);
-        });
-    } else {
-        // if no existing filter object, add one
-        newFilters.clinicalDataIntervalFilters.push({
-            attributeId: clinicalAttribute.clinicalAttributeId,
-            clinicalDataType,
-            values:[{start:range[0], end:range[1]} as ClinicalDataIntervalFilterValue]
-        });
-    }
-    return newFilters;
-}
-
-export function getStringAttributeGroupFilters(
-    baseFilters: StudyViewFilter,
-    clinicalAttribute:ClinicalAttribute,
-    clinicalAttributeValue:string
-) {
-    const clinicalDataType = clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE";
-    const newFilters = _.cloneDeep(baseFilters);
-
-    newFilters.clinicalDataEqualityFilters = newFilters.clinicalDataEqualityFilters || [];
-    const existingFilter = newFilters.clinicalDataEqualityFilters.find(f=>{
-        return f.attributeId === clinicalAttribute.clinicalAttributeId &&
-                f.clinicalDataType === clinicalDataType;
-    });
-    if (existingFilter) {
-        existingFilter.values = _.uniq(existingFilter.values.concat([clinicalAttributeValue]));
-    } else {
-        newFilters.clinicalDataEqualityFilters.push({
-            attributeId: clinicalAttribute.clinicalAttributeId,
-            clinicalDataType,
-            values:[clinicalAttributeValue]
-        });
-    }
-    return newFilters;
 }
 
 export function MissingSamplesMessage(
@@ -654,7 +590,7 @@ export function unionPatients(
 
 export function convertPatientsStudiesAttrToSamples(
     data:{id:string, patients:string[]}[],
-    patientToSamples:ComplexKeyGroupsMap<Sample>
+    patientToSamples:ComplexKeyGroupsMap<Pick<Sample, "sampleId">>
 ) {
     return data.map(elt=>({
         id: elt.id,
