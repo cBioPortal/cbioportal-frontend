@@ -36,6 +36,7 @@ import {AppStore} from "../../AppStore";
 import ActionButtons from "./studyPageHeader/ActionButtons";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import {GACustomFieldsEnum, trackEvent} from "../../shared/lib/tracking";
+import { getStudyViewTabId } from './StudyViewUtils';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -83,7 +84,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     return;
                 }
 
-                this.store.updateCurrentTab(props.routing.location.query.tab);
+                this.store.updateCurrentTab(getStudyViewTabId(getBrowserWindow().globalStores.routing.location.pathname));
                 const newStudyViewFilter:StudyViewURLQuery = _.pick(props.routing.location.query, ['id', 'studyId', 'cancer_study_id', 'filters', 'filterAttributeId', 'filterValues']);
 
                 if (!_.isEqual(newStudyViewFilter, this.studyViewQueryFilter)) {
@@ -105,8 +106,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     }
 
+    componentDidMount() {
+        // make the route as the default tab value
+        this.props.routing.updateRoute({},`study/${this.store.currentTab}`);
+    }
+
     private handleTabChange(id: string) {
-        this.props.routing.updateRoute({tab: id});
+        this.props.routing.updateRoute({},`study/${id}`);
     }
 
     private chartDataPromises = remoteData({
@@ -163,7 +169,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             />
 
                             <div className={styles.mainTabs}>
-                                <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
+                                <MSKTabs id="studyViewTabs" activeTabId={this.store.currentTab}
                                          onTabClick={(id: string) => this.handleTabChange(id)}
                                          className="mainTabs"
                                          unmountOnHide={false}>
