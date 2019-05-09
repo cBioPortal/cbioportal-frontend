@@ -16,14 +16,14 @@ export interface IStudyPageHeaderProps {
 export default class StudyPageHeader extends React.Component<IStudyPageHeaderProps, {}> {
     render() {
         return (
-            <div style={{display: 'flex', flexDirection:'column',margin: '0 20px 5px 20px'}} data-test="study-view-header">
+            <div className={'headBlock'} data-test="study-view-header">
                 {_.keys(this.props.store.pageStatusMessages).length > 0 && (
                     <div>
                         {_.values(this.props.store.pageStatusMessages).map(statusMessage => <div
                             className={`alert alert-${statusMessage.status}`}>{statusMessage.message}</div>)}
                     </div>
                 )}
-                <div style={{display: 'flex', marginBottom:10}}>
+                <div style={{display: 'flex'}}>
                 <StudySummary
                     hasRawDataForDownload={this.props.store.hasRawDataForDownload.result}
                     studies={this.props.store.displayedStudies.result}

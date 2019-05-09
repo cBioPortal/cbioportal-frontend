@@ -55,11 +55,6 @@ a:hover {
   margin:0 8px;
 }
 
-
-.headBlock {
-  margin:0 20px 20px 20px;
-}
-
 /* Buttons */
 
 .cta { // "Call To Action"
@@ -143,9 +138,6 @@ th.reactable-header-sort-asc:after {
   }
 
 }
-
-
-
 
 .secondaryNavigation {
 
@@ -233,6 +225,8 @@ th.reactable-header-sort-asc:after {
     position:relative;
     z-index:1;
 
+    background:$main-bg !important;
+
     display:flex;
 
     > li {
@@ -262,7 +256,7 @@ th.reactable-header-sort-asc:after {
     background:#fff;
     border-top:1px solid #ddd;
     margin-top:-1px;
-    min-height:500px;
+    min-height:50px;
     position:relative;
 
     .tabLoader {
@@ -348,7 +342,13 @@ th.reactable-header-sort-asc:after {
 }
 
 .subhead-dark #mainColumn {
-  background:$main-bg !important;
+
+}
+
+.headBlock {
+  padding:$gutterWidth $gutterWidth 10px $gutterWidth;
+  background:$main-bg;
+  margin-top:-$gutterWidth;
 }
 
 #mainColumn {
@@ -468,8 +468,13 @@ h3 {
   }
 }
 
+.mainContainer {
+  display:flex;
+  flex-direction:column;
+
+}
+
 .contentWidth {
-  margin:0 auto;
   display:flex;
   justify-content:space-between;
   padding-left:20px;
@@ -478,7 +483,7 @@ h3 {
   #mainColumn {
     flex:1;
     padding-left:0;
-    min-height:500px;
+    min-height:80vh;
   }
 
   &.noMargin {
