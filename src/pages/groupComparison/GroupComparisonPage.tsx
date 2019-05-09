@@ -268,7 +268,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         }
 
         return (
-            <PageLayout noMargin={true} className={"subhead-dark"}>
+            <PageLayout noMargin={true} hideFooter={true} className={"subhead-dark"}>
                 <div>
                     <div className={"headBlock"}>
                         {this.studyLink.component}
