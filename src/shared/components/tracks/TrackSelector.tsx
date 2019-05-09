@@ -1,9 +1,10 @@
 import * as React from "react";
-import {computed} from "mobx";
+import {action, computed} from "mobx";
 import {observer} from "mobx-react";
 
 import {loaderIcon} from "../annotation/StatusHelpers";
 import CheckedSelect, {Option} from "../checkedSelect/CheckedSelect";
+import autobind from "autobind-decorator";
 
 export type TrackVisibility = {[trackName: string]: 'visible' | 'hidden'};
 export type TrackDataStatus = {[trackName: string]: 'pending' | 'error' | 'complete' | 'empty'}
@@ -11,7 +12,8 @@ export type TrackDataStatus = {[trackName: string]: 'pending' | 'error' | 'compl
 export enum TrackNames {
     PDB = "PDB",
     CancerHotspots = "CANCER_HOTSPOTS",
-    OncoKB = "ONCO_KB"
+    OncoKB = "ONCO_KB",
+    PTM = "PTM"
 }
 
 interface ITrackSelectorProps {
@@ -25,16 +27,15 @@ interface ITrackSelectorProps {
 @observer
 export default class TrackSelector extends React.Component<ITrackSelectorProps, {}>
 {
-
     public static defaultProps:Partial<ITrackSelectorProps> = {
         name: "mutationMapperTrackSelector",
         placeholder: "Add annotation tracks"
     };
 
-    @computed get onChange() {
-        return (values: {value:string}[]) => {
-            this.props.onChange(values.map(o => o.value));
-        };
+    @autobind
+    @action
+    private onChange(values: {value: string}[]) {
+        this.props.onChange(values.map(o => o.value));
     }
 
     @computed get selectedValues() {
@@ -62,6 +63,15 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
                     </span>
                 ),
                 value: TrackNames.OncoKB
+            },
+            {
+                label: (
+                    <span>
+                        Post Translational Modifications
+                        {this.isPending(TrackNames.PTM) && this.loaderIcon()}
+                    </span>
+                ),
+                value: TrackNames.PTM
             },
             {
                 label: (
