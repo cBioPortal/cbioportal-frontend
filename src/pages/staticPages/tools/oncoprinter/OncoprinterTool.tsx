@@ -51,14 +51,14 @@ const helpSection = (
                     </li>
                     <li>mRNA expression - please use one of the two events below:
                         <ul>
-                            <li><code>UP</code>: expression up</li>
-                            <li><code>DOWN</code>: expression down</li>
+                            <li><code>HIGH</code>: expression high</li>
+                            <li><code>LOW</code>: expression low</li>
                         </ul>
                     </li>
                     <li>Protein expression - please use one of the two events below:
                         <ul>
-                            <li><code>HIGH</code>: Protein High</li>
-                            <li><code>LOW</code>: Protein Low</li>
+                            <li><code>HIGH</code>: Protein high</li>
+                            <li><code>LOW</code>: Protein low</li>
                         </ul>
                     </li>
                 </ul>

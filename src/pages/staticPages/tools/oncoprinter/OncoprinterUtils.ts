@@ -38,7 +38,7 @@ export type OncoprinterInputLineType1 = {
 }
 export type OncoprinterInputLineType2 = OncoprinterInputLineType1 & {
     hugoGeneSymbol:string;
-    alteration:OncoprintMutationType | "amp" | "homdel" | "gain" | "hetloss" | "mrnaUp" | "mrnaDown" | "protUp" | "protDown";
+    alteration:OncoprintMutationType | "amp" | "homdel" | "gain" | "hetloss" | "mrnaHigh" | "mrnaLow" | "protHigh" | "protLow";
     proteinChange?:string; // optional parameter: protein change
 };
 /* Leaving commented only for reference, this will be replaced by unified input strategy
@@ -227,7 +227,7 @@ export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:Oncoprinte
 
         // we'll update these later in this function
         molecularProfileAlterationType: undefined, // the profile type in AlterationTypeConstants
-        alterationSubType: "", // up or down or cna_profile_data_to_string[value] or SimplifiedMutationType,
+        alterationSubType: "", // high or low or cna_profile_data_to_string[value] or SimplifiedMutationType,
         value:undefined, // numeric cna
         mutationType: "",
         entrezGeneId:0,
@@ -316,28 +316,28 @@ export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:Oncoprinte
                 value:-1
             });
             break;
-        case "mrnaUp":
+        case "mrnaHigh":
             ret = Object.assign(ret, {
                 molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
-                alterationSubType: "up",
+                alterationSubType: "high",
             });
             break;
-        case "mrnaDown":
+        case "mrnaLow":
             ret = Object.assign(ret, {
                 molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
-                alterationSubType: "down",
+                alterationSubType: "low",
             });
             break;
-        case "protUp":
+        case "protHigh":
             ret = Object.assign(ret, {
                 molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
-                alterationSubType: "up",
+                alterationSubType: "high",
             });
             break;
-        case "protDown":
+        case "protLow":
             ret = Object.assign(ret, {
                 molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
-                alterationSubType: "down",
+                alterationSubType: "low",
             });
             break;
     }
@@ -542,21 +542,21 @@ export function parseInput(input:string):{status:"complete", result:OncoprinterI
                         ret.alteration = lcAlteration as "amp"|"gain"|"hetloss"|"homdel";
                         break;
                     case "exp":
-                        if (lcAlteration === "up") {
-                            ret.alteration = "mrnaUp";
-                        } else if (lcAlteration === "down") {
-                            ret.alteration = "mrnaDown";
+                        if (lcAlteration === "high") {
+                            ret.alteration = "mrnaHigh";
+                        } else if (lcAlteration === "low") {
+                            ret.alteration = "mrnaLow";
                         } else {
-                            throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "UP" or "DOWN" if Type is "EXP"`);
+                            throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "EXP"`);
                         }
                         break;
                     case "prot":
-                        if (lcAlteration === "up") {
-                            ret.alteration = "protUp";
-                        } else if (lcAlteration === "down") {
-                            ret.alteration = "protDown";
+                        if (lcAlteration === "high") {
+                            ret.alteration = "protHigh";
+                        } else if (lcAlteration === "low") {
+                            ret.alteration = "protLow";
                         } else {
-                            throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "UP" or "DOWN" if Type is "PROT"`);
+                            throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "PROT"`);
                         }
                         break;
                     default:

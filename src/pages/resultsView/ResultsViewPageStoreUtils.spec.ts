@@ -253,7 +253,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.lengthOf(gene2AlterationsBySample['SAMPLE2'], 1);
             assert.equal(
                 gene2AlterationsBySample['SAMPLE2'][0].alterationSubType,
-                'up'
+                'high'
             );
         });
     });
