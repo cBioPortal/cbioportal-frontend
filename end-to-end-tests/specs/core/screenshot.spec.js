@@ -50,7 +50,7 @@ function runResultsTestSuite(prefix){
         waitForAndCheckPlotsTab();
     });
 
-    it.skip(`${prefix} mutation tab`, function(){
+    it(`${prefix} mutation tab`, function(){
         browser.click("a.tabAnchor_mutations");
         browser.waitForVisible('.borderedChart svg',20000);
         var res = browser.checkElement('[data-test="mutationsTabDiv"]',{hide:['.qtip', '[data-test=view3DStructure]', '[data-test=GeneSummaryUniProt]'], viewportChangePause:4000}); // hide these things because the timing of data loading makes this test so flaky
@@ -144,7 +144,7 @@ describe("download tab screenshot tests", function() {
     });
 });
 
-describe.skip('patient view page screenshot test', function(){
+describe('patient view page screenshot test', function(){
     before(function(){
         var url = `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&caseId=P04`;
         goToUrlAndSetLocalStorage(url);
