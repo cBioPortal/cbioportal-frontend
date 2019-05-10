@@ -6,6 +6,11 @@ import {
     ALIGNMENT_GAP, ALIGNMENT_MINUS, ALIGNMENT_PLUS, ALIGNMENT_SPACE,
 } from "shared/model/Pdb";
 
+// TODO temporary workaround for pdb structures not well supported by 3Dmol.js
+export const PDB_IGNORELIST = [
+    '5xzc'
+];
+
 /**
  * Generates a pdb info summary for the given pdb header and the chain id.
  */
