@@ -18,7 +18,7 @@ export type GnomadData = {
 
         'alleleNumber': number
 
-        'homezygotes': number
+        'homozygotes': number
 
         'alleleFrequency': number
 };
@@ -50,7 +50,7 @@ export enum ColumnName {
     
         alleleNumber = 'an',
     
-        homezygotes = 'hom',
+        homozygotes = 'hom',
     
         alleleFrequency = 'af'
 }
@@ -61,6 +61,7 @@ export function frequencyOutput(frequency: number) {
         return <span>0</span>
     }
     else {
+        // keep one digit on allele frequency and using scientific notation
         return <span>{parseFloat(frequency.toString()).toExponential(1)}</span>;
     }
 }
@@ -96,13 +97,17 @@ export default class GnomadColumnFormatter {
         } else {
 
             const gnomadData = GnomadColumnFormatter.getData(genomeNexusCacheData.data.my_variant_info);
-
+            let gnomadUrl = "";
             let display: JSX.Element;
             let overlay: (() => JSX.Element) | null = null;
             let content: JSX.Element;
             let result : {[key:string]: GnomadData} = {};
             // Checking if gnomad data is valid
             if (gnomadData && (gnomadData.gnomadExome || gnomadData.gnomadGenome)) {
+                // get gnomad link from chrom, location, ref and alt
+                gnomadUrl = (gnomadData && gnomadData.dbsnp) ? GnomadColumnFormatter.generateGnomadUrl(
+                    gnomadData.dbsnp.chrom, gnomadData.dbsnp.hg19.start, gnomadData.dbsnp.ref, gnomadData.dbsnp.alt) : "";
+
                 const gnomadExome : {[key:string]: GnomadData} = {};
                 const gnomadGenome : {[key:string]: GnomadData} = {};
                 const gnomadResult : {[key:string]: GnomadData} = {};
@@ -129,8 +134,8 @@ export default class GnomadColumnFormatter {
                         gnomadResult[key] = {
                             'population': key,
                             'alleleCount': gnomadExome[key].alleleCount + gnomadGenome[key].alleleCount,
-                            'alleleNumber':gnomadExome[key].alleleNumber + gnomadGenome[key].alleleNumber,
-                            'homezygotes': gnomadExome[key].homezygotes + gnomadGenome[key].homezygotes,
+                            'alleleNumber': gnomadExome[key].alleleNumber + gnomadGenome[key].alleleNumber,
+                            'homozygotes': gnomadExome[key].homozygotes + gnomadGenome[key].homozygotes,
                             'alleleFrequency': GnomadColumnFormatter.calculateAlleleFrequency(
                                                 gnomadExome[key].alleleCount + gnomadGenome[key].alleleCount, 
                                                 gnomadExome[key].alleleNumber + gnomadGenome[key].alleleNumber, null)
@@ -151,7 +156,7 @@ export default class GnomadColumnFormatter {
                 
                 overlay = () => (
                     <span className={styles["gnomad-table"]} data-test='gnomad-table'>
-                        <GnomadFrequencyTable data={sorted}/>
+                        <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl}/>
                     </span>
                     
                 );
@@ -169,8 +174,7 @@ export default class GnomadColumnFormatter {
             );
 
             // add a tooltip if the gnomad value is valid
-            if (overlay)
-            {
+            if (overlay) {
                 content = (
                     <DefaultTooltip
                         overlay={overlay}
@@ -198,8 +202,7 @@ export default class GnomadColumnFormatter {
             }
     }
 
-    public static getData(genomeNexusData: MyVariantInfoAnnotation | null): MyVariantInfo | null
-    {
+    public static getData(genomeNexusData: MyVariantInfoAnnotation | null): MyVariantInfo | null {
         if (!genomeNexusData)
         {
             return null;
@@ -215,17 +218,16 @@ export default class GnomadColumnFormatter {
                                                                         : ColumnName.alleleCount).toString() as keyof AlleleCount;
         const alleleNumberName : keyof AlleleNumber = (PopulationName[key] ? ColumnName.alleleNumber + "_" + PopulationName[key]
                                                                         : ColumnName.alleleNumber).toString() as keyof AlleleNumber;
-        const homozygotesName : keyof Homozygotes = (PopulationName[key] ? ColumnName.homezygotes + "_" + PopulationName[key]
-                                                                        : ColumnName.homezygotes).toString() as keyof Homozygotes;
+        const homozygotesName : keyof Homozygotes = (PopulationName[key] ? ColumnName.homozygotes + "_" + PopulationName[key]
+                                                                        : ColumnName.homozygotes).toString() as keyof Homozygotes;
         const alleleFrequencyName : keyof AlleleFrequency = (PopulationName[key] ? ColumnName.alleleFrequency + "_" + PopulationName[key]
                                                                         : ColumnName.alleleFrequency).toString() as keyof AlleleFrequency;
 
-        result[key] = 
-        {
+        result[key] = {
             'population' : key,
             'alleleCount': data.alleleCount[alleleCountName] ? data.alleleCount[alleleCountName] : 0,
             'alleleNumber': data.alleleNumber[alleleNumberName] ? data.alleleNumber[alleleNumberName] : 0,
-            'homezygotes': data.homozygotes[homozygotesName],
+            'homozygotes': data.homozygotes[homozygotesName],
             'alleleFrequency': GnomadColumnFormatter.calculateAlleleFrequency(
                             data.alleleCount[alleleCountName], data.alleleNumber[alleleNumberName], data.alleleFrequency[alleleFrequencyName])
         } as GnomadData;
@@ -236,7 +238,7 @@ export default class GnomadColumnFormatter {
             return frequency;
         }
         else {
-            return count && totalNumber && totalNumber !== 0 ? count / totalNumber : 0;  
+            return count && totalNumber && totalNumber !== 0 ? count / totalNumber : 0;
         }
     }
 
@@ -295,5 +297,16 @@ export default class GnomadColumnFormatter {
         
         return "";
 
+    }
+
+    public static generateGnomadUrl(chrom: String | null, start: number | null, alt: String | null, ref: String | null) {
+        
+        if (chrom && start && alt && ref) {
+            return "https://gnomad.broadinstitute.org/variant/" + chrom + "-" + start.toString() + "-" + alt + "-" + ref;
+        }
+        else {
+            return "https://gnomad.broadinstitute.org/";
+        }
+        
     }
 } 
