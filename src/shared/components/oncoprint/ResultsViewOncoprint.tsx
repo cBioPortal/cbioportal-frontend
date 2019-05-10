@@ -973,8 +973,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return (
             <div style={{ position:"relative" }}>
 
-                <LoadingIndicator isLoading={this.isHidden} size={"big"} centerRelativeToContainer={true} className="oncoprintLoadingIndicator">
-                    <div style={{marginTop:20}}>
+                <LoadingIndicator isLoading={this.isHidden} size={"big"}  centerRelativeToContainer={false} center={true} className="oncoprintLoadingIndicator">
+                    <div>
                         <ProgressIndicator getItems={this.getProgressItems} show={this.isHidden} sequential={true}/>
                     </div>
                 </LoadingIndicator>
@@ -1000,7 +1000,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 genesetHeatmapTracks={this.genesetHeatmapTracks.result}
                                 heatmapTracks={this.heatmapTracks.result}
                                 divId={this.props.divId}
-                                width={1050}
+                                width={900}
                                 caseLinkOutInTooltips={true}
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
