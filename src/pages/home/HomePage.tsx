@@ -79,7 +79,7 @@ export default class HomePage extends React.Component<IResultsViewPageProps, {}>
         return (
             <PageLayout className="homePageLayout" noMargin={true} rightBar={<RightBar queryStore={this.queryStore} />}>
 
-                <div className={"skinBlurb"} dangerouslySetInnerHTML={{__html:AppConfig.serverConfig.skin_blurb!}}></div>
+                <div className={"headBlock"} dangerouslySetInnerHTML={{__html:AppConfig.serverConfig.skin_blurb!}}></div>
                 <QueryAndDownloadTabs getQueryStore={this.getQueryStore} showQuickSearchTab={AppConfig.serverConfig.quick_search_enabled} showDownloadTab={true}/>
 
             </PageLayout>
