@@ -23,7 +23,7 @@ import {
 } from "shared/api/generated/GenomeNexusAPI";
 import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
-import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
+import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments, PDB_IGNORELIST} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 
@@ -447,7 +447,9 @@ export default class MutationMapperStore
 
     @cached get pdbChainDataStore(): PdbChainDataStore {
         // initialize with sorted merged alignment data
-        return new PdbChainDataStore(this.sortedMergedAlignmentData);
+        return new PdbChainDataStore(this.sortedMergedAlignmentData.filter(
+            // TODO temporary workaround for problematic pdb structures
+            chain => !PDB_IGNORELIST.includes(chain.pdbId.toLowerCase())));
     }
 
     @cached get residueMappingCache()
