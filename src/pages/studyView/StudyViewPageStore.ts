@@ -44,6 +44,7 @@ import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import {
     calculateLayout,
+    clinicalAttributeComparator,
     generateScatterPlotDownloadData,
     getChartMetaDataType,
     getClinicalAttributeUniqueKey,
@@ -67,10 +68,9 @@ import {
     makePatientToClinicalAnalysisGroup,
     MutationCountVsCnaYBinsMin,
     NA_DATA,
-    showOriginStudiesInSummaryDescription,
-    submitToPage,
     shouldShowChart,
-    clinicalAttributeComparator
+    showOriginStudiesInSummaryDescription,
+    submitToPage
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -94,21 +94,19 @@ import {
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import request from 'superagent';
 import {trackStudyViewFilterEvent} from "../../shared/lib/tracking";
-import {Group, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
+import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {
     finalizeStudiesAttr,
-    StudyViewComparisonGroup,
-    getNumberAttributeGroupFilters,
-    getStringAttributeGroupFilters, sortDataIntoQuartiles, getSampleIdentifiers
+    getSampleIdentifiers,
+    sortDataIntoQuartiles,
+    StudyViewComparisonGroup
 } from "../groupComparison/GroupComparisonUtils";
 import {getSelectedGroups, getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import client from "../../shared/api/cbioportalClientInstance";
 import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
-import ListIndexedMap from "../../shared/lib/ListIndexedMap";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
-import {toFixedWithoutTrailingZeros} from "../../shared/lib/FormatUtils";
 import jStat from 'jStat'
 
 export enum ClinicalDataTypeEnum {
