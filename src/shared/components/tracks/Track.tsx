@@ -35,6 +35,7 @@ export default class Track extends React.Component<TrackProps, {}>
 {
     @observable private hitZoneConfig: HitZoneConfig = defaultHitzoneConfig();
     @observable private shiftPressed = false;
+    private tooltipActive = false;
 
     private circles: {[index:string]: TrackCircle};
 
@@ -67,6 +68,7 @@ export default class Track extends React.Component<TrackProps, {}>
     }
 
     @autobind
+    @action
     onMouseLeave() {
         if (this.hitZoneConfig.onMouseOut) {
             this.hitZoneConfig.onMouseOut();
@@ -78,18 +80,17 @@ export default class Track extends React.Component<TrackProps, {}>
         if (this.hitZoneConfig.onMouseOut) {
             this.hitZoneConfig.onMouseOut();
         }
-
-        // unhover all of the components if mouse hits background
-        this.unhoverAllComponents();
     }
 
     @autobind
+    @action
     onBackgroundClick() {
         this.props.dataStore.clearSelectedPositions();
         this.props.dataStore.clearDataSelectFilter();
     }
 
     @autobind
+    @action
     onTrackCircleClick(codon: number) {
         const isSelected = this.props.dataStore.isPositionSelected(codon);
         if (!this.shiftPressed) {
@@ -103,6 +104,7 @@ export default class Track extends React.Component<TrackProps, {}>
     }
 
     @autobind
+    @action
     onKeyDown(e: JQueryKeyEventObject) {
         if (e.which === 16) {
             this.shiftPressed = true;
@@ -110,6 +112,7 @@ export default class Track extends React.Component<TrackProps, {}>
     }
 
     @autobind
+    @action
     onKeyUp (e: JQueryKeyEventObject) {
         if (e.which === 16) {
             this.shiftPressed = false;
@@ -117,6 +120,7 @@ export default class Track extends React.Component<TrackProps, {}>
     }
 
     @autobind
+    @action
     onMouseOver(e: SyntheticEvent<any>) {
         // No matter what, unhover all components - if we're hovering one, we'll set it later in this method
         this.unhoverAllComponents();
@@ -142,7 +146,7 @@ export default class Track extends React.Component<TrackProps, {}>
                         circleComponent.isHovered = true;
                     }),
                     action(() => this.onTrackCircleClick(circleComponent.props.spec.codon)),
-                    () => undefined,
+                    this.onHitzoneMouseOut,
                     "pointer",
                     "bottom"
                 );
@@ -151,10 +155,29 @@ export default class Track extends React.Component<TrackProps, {}>
     }
 
     @autobind
+    @action
     onSVGMouseLeave(e:SyntheticEvent<any>) {
         const target = e.target as Element;
         if (target.tagName.toLowerCase() === "svg") {
             this.onMouseLeave();
+        }
+    }
+
+    @autobind
+    @action
+    onTooltipVisibleChange(visible: boolean) {
+        this.tooltipActive = visible;
+
+        if (!visible) {
+            this.unhoverAllComponents();
+        }
+    }
+
+    @autobind
+    @action
+    onHitzoneMouseOut() {
+        if (!this.tooltipActive) {
+            this.unhoverAllComponents();
         }
     }
 
@@ -190,6 +213,7 @@ export default class Track extends React.Component<TrackProps, {}>
         });
     }
 
+    @action
     private unhoverAllComponents() {
         unhoverAllComponents(this.circles);
         this.props.dataStore.clearHighlightedPositions();
@@ -234,6 +258,7 @@ export default class Track extends React.Component<TrackProps, {}>
                     <DefaultTooltip
                         placement={this.getOverlayPlacement()}
                         overlay={this.getOverlay}
+                        onVisibleChange={this.onTooltipVisibleChange}
                         {...this.tooltipVisibleProps}
                     >
                         {this.hitZone}
