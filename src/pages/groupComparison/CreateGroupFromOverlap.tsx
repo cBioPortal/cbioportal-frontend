@@ -187,7 +187,7 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                     placement="bottom"
                 >
                     <button
-                        className="btn btn-md btn-default"
+                        className="btn btn-md btn-primary"
                         disabled={this.props.includedRegions.length === 0}
                     >
                         Create Group From Selected Diagram Areas
