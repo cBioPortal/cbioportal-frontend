@@ -1,5 +1,17 @@
 .Container {
-    display: flex;
+
+}
+
+.ChartsPanel {
+    display:flex;
+    justify-content: flex-start;
+
+    > div {
+        margin-right:$standardMargin;
+    }
+
+    margin-bottom: $standardMargin;
+
 }
 
 .Checkboxes {
@@ -13,10 +25,7 @@
 .Checkboxes > * {
     margin:0 10px !important;
 }
-  
-.TableContainer {
 
-}
 
 //.TableContainer th {
 //    font-size: 10px;
@@ -79,9 +88,4 @@
     &.Significant {
         font-weight: bold;
     }
-}
-
-.LeftColumn {
-    width:400px;
-    position:relative;
 }
