@@ -2,7 +2,7 @@
     max-width: 470px;
     display: block;
     text-align: right;
-    // bold last row 
+    // bold last row
     tr:last-child {
       font-weight: bold;
     }
@@ -18,4 +18,7 @@
     thead {
         border-bottom: 2px solid #ddd;
     }
+}
+.link {
+    text-align: left;
 }
