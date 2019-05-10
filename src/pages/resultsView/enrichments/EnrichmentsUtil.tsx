@@ -22,7 +22,7 @@ export type ExpressionEnrichmentWithQ = ExpressionEnrichment & { qValue:number }
 export function PERCENTAGE_IN_headerRender(name:string) {
     return (
         <div style={{display:"flex", alignItems:"center"}}>
-            In&nbsp;<EllipsisTextTooltip text={name} shownWidth={100} hideTooltip={true}/>
+            <EllipsisTextTooltip text={name} shownWidth={100} hideTooltip={true}/>
         </div>
     );
 }

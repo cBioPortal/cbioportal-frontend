@@ -47,8 +47,8 @@ enum ChartType {
 export default class AlterationEnrichmentContainer extends React.Component<IAlterationEnrichmentContainerProps, {}> {
 
     static defaultProps:Partial<IAlterationEnrichmentContainerProps> = {
-        group1Name: "altered group",
-        group2Name: "unaltered group",
+        group1Name: "Altered group",
+        group2Name: "Unaltered group",
         alterationType: "a mutation",
         showCNAInTable: false,
         alteredVsUnalteredMode: true
