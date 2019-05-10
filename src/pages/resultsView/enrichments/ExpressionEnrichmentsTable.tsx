@@ -21,6 +21,7 @@ export interface IExpressionEnrichmentTableProps {
     dataStore: EnrichmentsTableDataStore;
     onCheckGene?: (hugoGeneSymbol: string) => void;
     onGeneNameClick?: (hugoGeneSymbol: string, entrezGeneId: number) => void;
+    checkedGenes?:string[];
     group1Name:string;
     group2Name:string;
     group1Description:string;
@@ -84,9 +85,20 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.GENE] = {
             name: "Gene",
             render: (d: ExpressionEnrichmentRow) => <div style={{ display: 'flex' }}>
-                {this.props.onCheckGene && (<Checkbox checked={d.checked}
-                disabled={d.disabled} key={d.hugoGeneSymbol} className={styles.Checkbox} 
-                onChange={() => this.checkboxChange(d.hugoGeneSymbol)} title={d.disabled ? "This is one of the query genes" : ""} />)}
+                {this.props.onCheckGene && this.props.checkedGenes && (
+                    <Checkbox checked={this.props.checkedGenes.includes(d.hugoGeneSymbol)}
+                              disabled={d.disabled}
+                              key={d.hugoGeneSymbol}
+                              className={styles.Checkbox}
+                              onChange={() => {
+                                  this.checkboxChange(d.hugoGeneSymbol);
+                              }}
+                              onClick={(e)=>{
+                                  e.stopPropagation();
+                              }}
+                              title={d.disabled ? "This is one of the query genes" : ""}
+                    />
+                )}
                 <span className={styles.GeneName}>
                 <b>{d.hugoGeneSymbol}</b></span></div>,
             tooltip: <span>Gene</span>,

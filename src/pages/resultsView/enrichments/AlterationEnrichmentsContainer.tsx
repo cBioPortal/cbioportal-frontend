@@ -70,7 +70,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     @observable significanceFilter: boolean = false;
     @observable.shallow checkedGenes: string[] = [];
     @observable clickedGene: string;
-    @observable.ref selectedGenes: string[]|null;
+    @observable.shallow selectedGenes: string[]|null;
     @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
 
     @computed get data(): AlterationEnrichmentRow[] {
@@ -239,6 +239,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         />
                     </div>
                     <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
+                                               checkedGenes={this.props.store ? this.checkedGenes : undefined}
                                                onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} alterationType={this.props.alterationType!} dataStore={this.dataStore}
                                                group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}
                                                group1Description={this.group1Description}
