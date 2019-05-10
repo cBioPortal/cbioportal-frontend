@@ -26,10 +26,11 @@ import {getGAInstance} from "../../../shared/lib/tracking";
 import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
 
 @observer
-export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
+export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore, onToggleQueryFormVisiblity:(visible:boolean)=>void }, {}> {
 
     @autobind
     private toggleQueryFormVisibility() {
+        this.props.onToggleQueryFormVisiblity(this._queryFormVisible);
         this._queryFormVisible = !this._queryFormVisible;
     }
 
@@ -138,7 +139,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     }
 
     @computed get queryForm(){
-        return <div style={{marginTop:10}}>
+        return <div style={{margin:"10px -20px 0 -20px"}}>
             <QueryAndDownloadTabs onSubmit={this.onSubmit}
                                   showQuickSearchTab={false}
                                   showDownloadTab={false}
