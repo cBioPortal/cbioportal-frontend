@@ -23,6 +23,7 @@ import GroupCheckbox from "./GroupCheckbox";
 import {sleepUntil} from "../../../shared/lib/TimeUtils";
 import {LoadingPhase} from "../GroupComparisonLoading";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import _ from "lodash";
 
 export interface IComparisonGroupManagerProps {
     store:StudyViewPageStore;
@@ -54,7 +55,10 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         await:()=>[this.props.store.comparisonGroups],
         invoke:()=>Promise.resolve(
             // TODO: fuzzy string search?
-            this.props.store.comparisonGroups.result!.filter(group=>(new RegExp(this.groupNameFilter, "i")).test(group.name))
+            _.sortBy(
+                this.props.store.comparisonGroups.result!.filter(group=>(new RegExp(this.groupNameFilter, "i")).test(group.name)),
+                group=>group.name.toLowerCase()
+            )
         )
     });
 

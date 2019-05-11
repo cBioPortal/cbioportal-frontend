@@ -2,7 +2,7 @@ import * as React from "react";
 import * as _ from "lodash";
 import $ from "jquery";
 import {inject, observer} from "mobx-react";
-import {computed, reaction, runInAction} from "mobx";
+import {computed, observable, reaction, runInAction} from "mobx";
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
 import CancerSummaryContainer from "pages/resultsView/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
@@ -129,6 +129,8 @@ export interface IResultsViewPageProps {
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
     private resultsViewPageStore: ResultsViewPageStore;
+
+    @observable showTabs = true;
 
     constructor(props: IResultsViewPageProps) {
         super(props);
@@ -432,13 +434,19 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             }
             {(this.resultsViewPageStore.studies.isComplete) && (
                     <div>
-                        <div style={{margin:"0 20px 10px 20px"}}>
-                            <QuerySummary routingStore={this.props.routing} store={this.resultsViewPageStore}/>
+                        <div className={'headBlock'}>
+                            <QuerySummary
+                                routingStore={this.props.routing}
+                                store={this.resultsViewPageStore}
+                                onToggleQueryFormVisiblity={(visible)=>{
+                                    this.showTabs = visible;
+                                }}
+                            />
                         </div>
 
                         {
                             // we don't show the result tabs if we don't have valid query
-                            (!this.resultsViewPageStore.genesInvalid && !this.resultsViewPageStore.isQueryInvalid) && (
+                            (this.showTabs && !this.resultsViewPageStore.genesInvalid && !this.resultsViewPageStore.isQueryInvalid) && (
                                 <MSKTabs key={this.resultsViewPageStore.rvQuery.hash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
                                          onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                                     {
@@ -451,7 +459,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     </div>
                 )
             }
-        </div>)
+        </div>);
     }
 
     public render() {
