@@ -33,6 +33,7 @@ export interface IAlterationEnrichmentTableProps {
     dataStore: EnrichmentsTableDataStore;
     onCheckGene?: (hugoGeneSymbol: string) => void;
     onGeneNameClick?: (hugoGeneSymbol: string) => void;
+    checkedGenes?:string[];
     mutexTendency?:boolean;
 }
 
@@ -94,9 +95,19 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns[AlterationEnrichmentTableColumnType.GENE] = {
             name: "Gene",
             render: (d: AlterationEnrichmentRow) => <div style={{ display: 'flex' }}>
-                {this.props.onCheckGene && (<Checkbox checked={d.checked}
-                    disabled={d.disabled} key={d.hugoGeneSymbol} className={styles.Checkbox}
-                    onChange={() => this.checkboxChange(d.hugoGeneSymbol)} title={d.disabled ? "This is one of the query genes" : ""} />
+                {this.props.onCheckGene && this.props.checkedGenes && (
+                    <Checkbox checked={this.props.checkedGenes.includes(d.hugoGeneSymbol)}
+                              disabled={d.disabled}
+                              key={d.hugoGeneSymbol}
+                              className={styles.Checkbox}
+                              onChange={() => {
+                                  this.checkboxChange(d.hugoGeneSymbol);
+                              }}
+                              onClick={(e)=>{
+                                  e.stopPropagation();
+                              }}
+                              title={d.disabled ? "This is one of the query genes" : ""}
+                    />
                 )}
                 <span className={styles.GeneName}><b>{d.hugoGeneSymbol}</b></span></div>,
             tooltip: <span>Gene</span>,

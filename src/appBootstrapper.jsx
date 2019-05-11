@@ -47,6 +47,8 @@ if (!window.hasOwnProperty("$")) {
     window.$ = $;
 }
 
+
+
 if (!window.hasOwnProperty("jQuery")) {
     window.jQuery = $;
 }
@@ -57,8 +59,6 @@ if (browser) {
         $("body").addClass(browser.name);
     });
 }
-
-const moo = "aaron";
 
 // e2e test specific stuff
 if (getBrowserWindow().navigator.webdriver) {

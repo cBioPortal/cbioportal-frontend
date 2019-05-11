@@ -203,6 +203,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                                                mutexTendency={this.props.alteredVsUnalteredMode}
                                                group1Description={this.props.group1Description!}
                                                group2Description={this.props.group2Description!}
+                                               checkedGenes={this.props.store ? this.checkedGenes : undefined}
                     />
                 </div>
 

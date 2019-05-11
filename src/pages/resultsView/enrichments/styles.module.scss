@@ -17,23 +17,14 @@
 .Checkboxes {
     display: flex;
     flex-direction: row;
-    float: left;
     align-items:center;
     height: 30px;
+    float:left;
 }
   
 .Checkboxes > * {
     margin:0 10px !important;
 }
-
-
-//.TableContainer th {
-//    font-size: 10px;
-//}
-//
-//.TableContainer td {
-//    font-size: 11px;
-//}
 
 .TableContainer {
     :global(.tableSearchInput) {
