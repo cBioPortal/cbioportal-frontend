@@ -3,9 +3,14 @@ import {Column, default as LazyMobXTable} from "shared/components/lazyMobXTable/
 import {observer} from "mobx-react";
 import * as _ from 'lodash';
 import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
-import {getClinicalAttributeOverlay, getClinicalAttributeUniqueKey, chartMetaComparator} from "../StudyViewUtils";
+import {
+    getClinicalAttributeOverlay,
+    getClinicalAttributeUniqueKey,
+    chartMetaComparator,
+    ChartMeta
+} from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import {ChartMeta, StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
+import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
 import {remoteData} from "shared/api/remoteData";
 import {Else, If, Then} from 'react-if';
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";

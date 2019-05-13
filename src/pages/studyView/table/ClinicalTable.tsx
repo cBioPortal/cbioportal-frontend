@@ -4,7 +4,7 @@ import {action, computed, observable, toJS, reaction, IReactionDisposer} from "m
 import autobind from 'autobind-decorator';
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
-import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
+import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewUtils";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
 import {
