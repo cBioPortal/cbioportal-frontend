@@ -49,10 +49,6 @@ export interface IUserSelectionsProps {
 @observer
 export default class UserSelections extends React.Component<IUserSelectionsProps, {}> {
 
-    constructor(props: IUserSelectionsProps) {
-        super(props);
-    }
-
     @computed
     get showFilters() {
         //return isFiltered(this.props.filter)
