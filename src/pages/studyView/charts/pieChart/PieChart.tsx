@@ -8,7 +8,7 @@ import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
 import autobind from 'autobind-decorator';
-import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
+import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewUtils";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
