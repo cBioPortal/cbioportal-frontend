@@ -189,8 +189,8 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     </h4>);
             }
             let ret;
-            if (this.store.sessionClinicalAttribute) {
-                ret = <span>{studyHeader}Groups from <span style={{color:"#3487c7"}}>{this.store.sessionClinicalAttribute.displayName}</span></span>
+            if (this.store.sessionClinicalAttributeName) {
+                ret = <span>{studyHeader}Groups from <span style={{color:"#3487c7"}}>{this.store.sessionClinicalAttributeName}</span></span>
             } else {
                 ret = studyHeader;
             }

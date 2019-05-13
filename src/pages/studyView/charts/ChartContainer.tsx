@@ -5,10 +5,6 @@ import {action, computed, observable} from "mobx";
 import _ from "lodash";
 import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
 import {
-    AnalysisGroup,
-    ChartMeta,
-    ChartType,
-    ClinicalDataCountWithColor,
     StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
 import {DataBin, StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
@@ -24,11 +20,13 @@ import autobind from 'autobind-decorator';
 import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {
+    AnalysisGroup,
+    ChartMeta, ChartType, ClinicalDataCountWithColor,
     getHeightByDimension,
     getTableHeightByDimension,
     getWidthByDimension,
     mutationCountVsCnaTooltip,
-    MutationCountVsCnaYBinsMin
+    MutationCountVsCnaYBinsMin, SPECIAL_CHARTS, UniqueKey
 } from "../StudyViewUtils";
 import {ClinicalAttribute, ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
@@ -70,8 +68,8 @@ export interface IChartContainerProps {
     isNewlyAdded: (uniqueKey: string) => boolean;
 
     openComparisonPage:(params:{
-        type:ChartType,
-        clinicalAttribute:ClinicalAttribute,
+        chartMeta: ChartMeta,
+        clinicalAttribute?:ClinicalAttribute,
         clinicalAttributeValues?:{ value:string, color:string }[]
     })=>void;
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
@@ -219,10 +217,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get comparisonPagePossible() {
-        return !!this.props.chartMeta.clinicalAttribute &&
+        const validChart = (!!this.props.chartMeta.clinicalAttribute ||
+            this.props.chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES);
+
+        return validChart &&
             this.props.promise.isComplete &&
-            this.props.promise.result!.length > 1 &&
-            (COMPARISON_CHART_TYPES.indexOf(this.props.chartMeta.chartType) > -1);
+                this.props.promise.result!.length > 1 &&
+                (COMPARISON_CHART_TYPES.indexOf(this.props.chartMeta.chartType) > -1);
     }
 
     @autobind
@@ -239,7 +240,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
                     this.props.openComparisonPage({
-                        type:this.props.chartMeta.chartType,
+                        chartMeta: this.props.chartMeta,
                         clinicalAttribute: this.props.chartMeta.clinicalAttribute!,
                         clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]).map(d=>{
                             return {
@@ -251,7 +252,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     break;
                 case ChartTypeEnum.BAR_CHART:
                     this.props.openComparisonPage({
-                        type:ChartTypeEnum.BAR_CHART,
+                        chartMeta: this.props.chartMeta,
                         clinicalAttribute: this.props.chartMeta.clinicalAttribute!
                     });
                     break;

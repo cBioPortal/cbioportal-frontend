@@ -120,9 +120,9 @@ export default class GroupComparisonStore {
         invoke:()=>Promise.resolve(this._session.result!.origin)
     });
 
-    @computed get sessionClinicalAttribute() {
+    @computed get sessionClinicalAttributeName() {
         if (this._session.isComplete) {
-            return this._session.result.clinicalAttribute;
+            return this._session.result.clinicalAttributeName;
         } else {
             return undefined;
         }
