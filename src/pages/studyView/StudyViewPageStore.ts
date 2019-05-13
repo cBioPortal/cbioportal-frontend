@@ -454,17 +454,16 @@ export class StudyViewPageStore {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
         // for now, the only one possible is cancer studies
         return new Promise<string>(resolve=>{
-            onMobxPromise<any>([this.selectedSamples, this.displayedStudies, this.cancerStudiesData],
-                async (selectedSamples:Sample[], studies:CancerStudy[], cancerStudiesData:ClinicalDataCountWithColor[])=>{
+            onMobxPromise<any>([this.selectedSamples, this.cancerStudiesData],
+                async (selectedSamples:Sample[], cancerStudiesData:ClinicalDataCountWithColor[])=>{
 
                     // group samples by study
                     const studyIdToSamples:{[studyId:string]:Sample[]} = _.groupBy(selectedSamples, s=>s.studyId);
-                    const studyIdToStudy = _.keyBy(studies, s=>s.studyId);
                     const studyIdToCountWithColor = _.keyBy(cancerStudiesData, s=>s.value);
                     const groups = _.map(studyIdToSamples, (samples, studyId)=>{
                         return {
-                            name: studyIdToStudy[studyId].name,
-                            description: studyIdToStudy[studyId].description,
+                            name: studyId,
+                            description: "",
                             studies: getStudiesAttr(samples),
                             origin: this.studyIds,
                             color: studyIdToCountWithColor[studyId].color

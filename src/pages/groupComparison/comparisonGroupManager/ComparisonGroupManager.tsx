@@ -67,7 +67,11 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     @action
     private showAddGroupPanel() {
         this.addGroupPanelOpen = true;
-        this._inputGroupName = getDefaultGroupName(this.props.store.filters, this.props.store.entrezGeneIdToGene.result!);
+        this._inputGroupName = getDefaultGroupName(
+            this.props.store.filters,
+            this.props.store.customChartFilterSet.toJS(),
+            this.props.store.entrezGeneIdToGene.result!
+        );
     }
 
     @autobind
