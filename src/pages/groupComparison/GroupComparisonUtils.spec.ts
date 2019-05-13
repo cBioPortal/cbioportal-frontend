@@ -2,107 +2,39 @@ import chai, {assert, expect} from 'chai';
 import {
     caseCounts,
     caseCountsInParens,
-    ComparisonGroup, convertPatientsStudiesAttrToSamples, excludePatients, excludeSamples,
+    ComparisonGroup,
+    convertPatientsStudiesAttrToSamples,
+    excludePatients,
+    excludeSamples,
     finalizeStudiesAttr,
-    getCombinations, getNumPatients,
+    getNumPatients,
     getNumSamples,
     getOverlapFilteredGroups,
     getOverlappingPatients,
-    getOverlappingSamples, getPatientIdentifiers,
+    getOverlappingSamples,
+    getPatientIdentifiers,
     getSampleIdentifiers,
     getStackedBarData,
     getStudyIds,
-    getVennPlotData, intersectPatients, intersectSamples, isGroupEmpty,
-    OverlapFilteredComparisonGroup, sortDataIntoQuartiles, unionPatients, unionSamples
+    getVennPlotData,
+    intersectPatients,
+    intersectSamples,
+    isGroupEmpty,
+    OverlapFilteredComparisonGroup,
+    sortDataIntoQuartiles,
+    unionPatients,
+    unionSamples
 } from './GroupComparisonUtils';
 import deepEqualInAnyOrder from "deep-equal-in-any-order";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
-import ListIndexedMap from "../../shared/lib/ListIndexedMap";
 import {Sample} from "../../shared/api/generated/CBioPortalAPI";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import {assertDeepEqualInAnyOrder} from "../../shared/lib/SpecUtils";
-import _ from "lodash";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 
 chai.use(deepEqualInAnyOrder);
 
 describe('GroupComparisonUtils', () => {
-
-    describe('getCombinations', () => {
-        it('when empty groups', () => {
-            assert.deepEqual(getCombinations([]), [])
-        });
-
-        it('when there are no overlapping groups', () => {
-            assert.deepEqual(
-                getCombinations([{
-                    uid: '1',
-                    cases: ['1-1', '1-2']
-                }, {
-                    uid: '2',
-                    cases: ['2-1']
-                }]), [
-                    { groups: ['1'], cases: ['1-1', '1-2'] },
-                    { groups: ['1', '2'], cases: [] },
-                    { groups: ['2'], cases: ['2-1'] }
-                ]);
-        });
-
-        it('when there are one or more overlapping groups', () => {
-            assert.deepEqual(
-                getCombinations([{
-                    uid: '1',
-                    cases: ['1-1', '1-2']
-                }, {
-                    uid: '2',
-                    cases: ['1-1']
-                }]), [
-                    { groups: ['1'], cases: ['1-1', '1-2'] },
-                    { groups: ['1', '2'], cases: ['1-1'] },
-                    { groups: ['2'], cases: ['1-1'] }
-                ]);
-
-            assert.deepEqual(
-                getCombinations([{
-                    uid: '1',
-                    cases: ['1-1', '1-2']
-                }, {
-                    uid: '2',
-                    cases: ['1-1', '1-3']
-                }, {
-                    uid: '3',
-                    cases: ['1-1', '1-2', '1-3']
-                }]), [
-                    { groups: ['1'], cases: ['1-1', '1-2'] },
-                    { groups: ['1', '2'], cases: ['1-1'] },
-                    { groups: ['1', '2', '3'], cases: ['1-1'] },
-                    { groups: ['1', '3'], cases: ['1-1', '1-2'] },
-                    { groups: ['2'], cases: ['1-1', '1-3'] },
-                    { groups: ['2', '3'], cases: ['1-1', '1-3'] },
-                    { groups: ['3'], cases: ['1-1', '1-2', '1-3'] }
-                ]);
-
-            assert.deepEqual(
-                getCombinations([{
-                    uid: '1',
-                    cases: ['1-1', '1-2']
-                }, {
-                    uid: '2',
-                    cases: ['1-2', '1-3']
-                }, {
-                    uid: '3',
-                    cases: ['1-3', '1-1']
-                }]), [
-                    { groups: ['1'], cases: ['1-1', '1-2'] },
-                    { groups: ['1', '2'], cases: ['1-2'] },
-                    { groups: ['1', '2', '3'], cases: [] },
-                    { groups: ['1', '3'], cases: ['1-1'] },
-                    { groups: ['2'], cases: ['1-2', '1-3'] },
-                    { groups: ['2', '3'], cases: ['1-3'] },
-                    { groups: ['3'], cases: ['1-3', '1-1'] }
-                ]);
-        });
-    });
 
     describe('getStackedBarData', () => {
         const uidToGroup = {
