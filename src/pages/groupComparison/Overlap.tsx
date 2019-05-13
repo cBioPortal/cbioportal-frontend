@@ -1,22 +1,16 @@
 import * as React from 'react';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import { observer, Observer } from "mobx-react";
+import {observer} from "mobx-react";
 import GroupComparisonStore from './GroupComparisonStore';
-import { computed, observable } from 'mobx';
+import {observable} from 'mobx';
 import Venn from './OverlapVenn';
 import _ from "lodash";
-import OverlapStackedBar from './OverlapStackedBar';
 import autobind from 'autobind-decorator';
 import DownloadControls from 'shared/components/downloadControls/DownloadControls';
 import {MakeMobxView} from "../../shared/components/MobxView";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import {
-    ENRICHMENTS_NOT_2_GROUPS_MSG,
-    getCombinations,
-    getSampleIdentifiers,
-    OVERLAP_NOT_ENOUGH_GROUPS_MSG
-} from "./GroupComparisonUtils";
+import {getSampleIdentifiers, OVERLAP_NOT_ENOUGH_GROUPS_MSG} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import UpSet from './UpSet';
 
@@ -34,9 +28,6 @@ enum PlotType {
 @observer
 export default class Overlap extends React.Component<IOverlapProps, {}> {
 
-    constructor(props: IOverlapProps, context: any) {
-        super(props, context);
-    }
     @observable plotExists = false;
 
     componentDidUpdate() {
