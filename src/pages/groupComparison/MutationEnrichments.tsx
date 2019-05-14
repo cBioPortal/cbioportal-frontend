@@ -31,8 +31,8 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
         invoke:()=>{
             const groups = _.map(this.props.store._activeGroupsOverlapRemoved.result, group => {
                 return {
-                    name:group.name,
-                    description:`Number (percentage) of samples in ${group.name} that have a mutation in the listed gene.`,
+                    name:group.nameWithOrdinal,
+                    description:`Number (percentage) of samples in ${group.nameWithOrdinal} that have a mutation in the listed gene.`,
                     count: getNumSamples(group)
                 }
             })
