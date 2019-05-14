@@ -1,9 +1,8 @@
 import {MobxPromise} from 'mobxpromise/dist/src/MobxPromise';
-import {ClinicalAttribute, PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
+import {PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 import {
     ClinicalDataEnrichment,
-    ClinicalDataIntervalFilterValue,
     CopyNumberGeneFilterElement,
     StudyViewFilter
 } from "../../shared/api/generated/CBioPortalAPIInternal";
@@ -54,25 +53,6 @@ export type OverlapFilteredComparisonGroup = ComparisonGroup & {
 export type ClinicalDataEnrichmentWithQ = ClinicalDataEnrichment & { qValue:number };
 
 export type CopyNumberEnrichment = AlterationEnrichmentWithQ & { value:number };
-
-export function getCombinations(groups: { uid: string, cases: string[] }[]) {
-    let combinations: { groups: string[], cases: string[] }[] = [];
-
-    let f = function (res: { groups: string[], cases: string[] }, groups: { uid: string, cases: string[] }[]) {
-        for (let i = 0; i < groups.length; i++) {
-            let currentSet = groups[i];
-            let commonCases = res.groups.length === 0 ? currentSet.cases : _.intersection(res.cases, currentSet.cases)
-            let newSet = {
-                groups: [...res.groups, currentSet.uid],
-                cases: commonCases
-            }
-            combinations.push(newSet);
-            f(newSet, groups.slice(i + 1));
-        }
-    }
-    f({ groups: [], cases: [] }, groups);
-    return combinations;
-}
 
 export const OVERLAP_GROUP_COLOR = "#CCCCCC";
 

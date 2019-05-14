@@ -11,6 +11,7 @@ import {
 } from "./GroupComparisonUtils";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import {Sample} from "../../shared/api/generated/CBioPortalAPI";
+import {stringListToSet} from "../../shared/lib/StringUtils";
 
 export function getExcludedIndexes(combination:number[], numGroupsTotal:number) {
     // get all indexes not in the given combination
@@ -123,4 +124,50 @@ export function getStudiesAttrForPatientOverlapGroup(
         studiesAttr = unionPatients(studiesAttr, regionStudiesAttr);
     }
     return convertPatientsStudiesAttrToSamples(studiesAttr, patientToSamplesSet);
+}
+
+type GroupMembershipKey = {[groupUid:string]:boolean};
+
+export function getAllCombinationsOfKey(groupMembershipKey:GroupMembershipKey):GroupMembershipKey[] {
+    const groups = Object.keys(groupMembershipKey);
+    if (groups.length === 1) {
+        return [groupMembershipKey];
+    } else {
+        const group = groups.pop()!;
+        const newKey = stringListToSet(groups);
+        const subcombinations = getAllCombinationsOfKey(newKey);
+        return [{[group]:true} as GroupMembershipKey] // we include this in the recursion in order to avoid having to have empty set in the result
+            .concat(subcombinations)
+            .concat(subcombinations.map(c=>Object.assign({ [group]:true }, c)));
+    }
+}
+
+export function getCombinations(groups: { uid: string, cases: string[] }[]) {
+    const groupToCases = groups.reduce((map, group)=>{
+        map[group.uid] = _.keyBy(group.cases);
+        return map;
+    }, {} as {[uid:string]:{[caseKey:string]:any}});
+
+    const allCases = _.uniq(_.flatten(groups.map(group=>group.cases)));
+
+    const intersectionMap = new ComplexKeyGroupsMap<string>();
+
+    for (const caseKey of allCases) {
+        const groupMembershipKey:GroupMembershipKey = {};
+        for (const group of groups) {
+            if (caseKey in groupToCases[group.uid]) {
+                groupMembershipKey[group.uid] = true;
+            }
+        }
+        for (const key of getAllCombinationsOfKey(groupMembershipKey)) {
+            intersectionMap.add(key, caseKey);
+        }
+    }
+
+    return intersectionMap.entries().map(entry=>{
+        return {
+            groups: Object.keys(entry.key),
+            cases: entry.value
+        };
+    });
 }
