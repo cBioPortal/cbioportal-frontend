@@ -24,6 +24,7 @@ import {countMutations, mutationCountByPositionKey} from "../../../resultsView/m
 import {Mutation, MutationCountByPosition} from "../../../../shared/api/generated/CBioPortalAPI";
 import {SampleAlteredMap} from "../../../resultsView/ResultsViewPageStoreUtils";
 import {CancerGene} from "shared/api/generated/OncoKbAPI";
+import { AlteredStatus } from "pages/resultsView/mutualExclusivity/MutualExclusivityUtil";
 
 export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "ignoreUnknown" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
 
@@ -290,9 +291,11 @@ export default class OncoprinterStore {
                 map[next.label] = this.sampleIds.map(sampleId=>{
                     const datum = sampleToDatum[sampleId];
                     if (!datum) {
-                        return false;
+                        return AlteredStatus.UNPROFILED;
+                    } else if (datum.data.length > 0) {
+                        return AlteredStatus.ALTERED;
                     } else {
-                        return datum.data.length > 0;
+                        return AlteredStatus.UNALTERED;
                     }
                 });
                 return map;
