@@ -26,6 +26,7 @@ import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy, VirtualStudyData } from "shared/model/VirtualStudy";
 import client from "shared/api/cbioportalClientInstance";
 import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
+import { AlteredStatus } from "./mutualExclusivity/MutualExclusivityUtil";
 
 describe("ResultsViewPageStoreUtils", ()=>{
     describe("computeCustomDriverAnnotationReport", ()=>{
@@ -2277,44 +2278,44 @@ describe('getSampleAlteredMap', () => {
         const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformation, molecularProfileIds);
         const expectedResult = {
             "RAS": [
-                true,
-                false,
-                true,
-                false,
-                false,
-                true,
-                false,
-                false
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ],
             "SMAD4 / RAN": [
-                false,
-                true,
-                true,
-                false,
-                true,
-                true,
-                false,
-                false
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ],
             "SMAD4: MUT": [
-                false,
-                true,
-                true,
-                false,
-                true,
-                true,
-                false,
-                false
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ],
             "KRAS": [
-                true,
-                false,
-                true,
-                false,
-                false,
-                true,
-                false,
-                false
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ]
         };
         assert.deepEqual(ret["KRAS"], expectedResult["KRAS"], "single gene track");
@@ -2329,44 +2330,44 @@ describe('getSampleAlteredMap', () => {
         const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, molecularProfileIds);
         const expectedResult = {
             "RAS": [
-                true,
-                false,
-                true,
-                false,
-                false,
-                true,
-                false,
-                false
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ],
             "SMAD4 / RAN": [
-                undefined,
-                true,
-                true,
-                false,
-                true,
-                true,
-                false,
-                false
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ],
             "SMAD4: MUT": [
-                false,
-                true,
-                true,
-                false,
-                true,
-                true,
-                false,
-                false
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ],
             "KRAS": [
-                undefined,
-                undefined,
-                true,
-                false,
-                false,
-                true,
-                false,
-                false
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ]
         };
         assert.deepEqual(ret["KRAS"], expectedResult["KRAS"], "single gene track with unprofiled samples");
@@ -2379,14 +2380,14 @@ describe('getSampleAlteredMap', () => {
         const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, unprofiledMolecularProfileIds);
         const expectedResult = {
             "RAS": [
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED
             ]
         };
         assert.deepEqual(ret["RAS"], expectedResult["RAS"], "should return an list contains only undefined value");
