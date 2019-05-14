@@ -84,7 +84,7 @@ export interface IChartContainerProps {
 
 @observer
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
-    private chartHeaderHeight = 15;
+    private chartHeaderHeight = 20;
 
     private handlers: any;
     private plot: AbstractChart;
