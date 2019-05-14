@@ -85,8 +85,12 @@ export default class GroupComparisonStore {
         return !group.savedInSession;
     }
 
-    public get unsavedGroupNames() {
-        return this.unsavedGroups.map(g=>g.name);
+    @computed public get unsavedGroupNamesWithOrdinal() {
+        if (this._originalGroups.isComplete) {
+            return this._originalGroups.result.filter(g=>this.isGroupUnsaved(g)).map(g=>g.nameWithOrdinal);
+        } else {
+            return [];
+        }
     }
 
     get currentTabId() {
@@ -504,7 +508,7 @@ export default class GroupComparisonStore {
                         })
                     });
                     return {
-                        name: group.name,
+                        name: group.nameWithOrdinal,
                         molecularProfileCaseIdentifiers
                     }
                 });
@@ -534,7 +538,7 @@ export default class GroupComparisonStore {
                     });
                 });
                 return {
-                    name: group.name,
+                    name: group.nameWithOrdinal,
                     molecularProfileCaseIdentifiers
                 }
             });
@@ -874,7 +878,7 @@ export default class GroupComparisonStore {
                     }
                 }
                 return {
-                    name: group.name ? group.name : group.uid,
+                    name: group.nameWithOrdinal || group.uid,
                     sampleIdentifiers: sampleIdentifiers
                 }
             });

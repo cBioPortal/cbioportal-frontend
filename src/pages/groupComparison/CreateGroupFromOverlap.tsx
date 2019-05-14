@@ -33,8 +33,8 @@ function getRegionSummary(
     uidToGroup:{[uid:string]:ComparisonGroup},
     caseType:"sample"|"patient"
 ) {
-    const includedNames = region.map(uid=>uidToGroup[uid].name);
-    const excludedNames = _.difference(allGroupsInVenn, region).map(uid=>uidToGroup[uid].name);
+    const includedNames = region.map(uid=>uidToGroup[uid].nameWithOrdinal);
+    const excludedNames = _.difference(allGroupsInVenn, region).map(uid=>uidToGroup[uid].nameWithOrdinal);
 
     let ret = <span>{caseType[0].toUpperCase()}{caseType.substring(1)}s in {joinNames(includedNames, "and")}</span>;
     if (excludedNames.length > 0) {
