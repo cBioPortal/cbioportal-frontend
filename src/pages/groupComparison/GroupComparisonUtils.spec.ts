@@ -8,7 +8,7 @@ import {
     excludeSamples,
     finalizeStudiesAttr,
     getNumPatients,
-    getNumSamples,
+    getNumSamples, getOrdinals,
     getOverlapFilteredGroups,
     getOverlappingPatients,
     getOverlappingSamples,
@@ -35,6 +35,37 @@ import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/Compl
 chai.use(deepEqualInAnyOrder);
 
 describe('GroupComparisonUtils', () => {
+    describe("getOrdinals", ()=>{
+        it("correct values", ()=>{
+            assert.deepEqual(
+                getOrdinals(0,5),
+                []
+            );
+            assert.deepEqual(
+                getOrdinals(1,5),
+                ["A"]
+            );
+            assert.deepEqual(
+                getOrdinals(5,5),
+                ["A","B","C","D","E"]
+            );
+            assert.deepEqual(
+                getOrdinals(20,5),
+                [
+                    "A","B","C","D","E","AA","AB","AC","AD","AE",
+                    "BA","BB","BC","BD","BE","CA","CB","CC","CD","CE"
+                ]
+            );
+            assert.deepEqual(
+                getOrdinals(20, 3),
+                [
+                    "A","B","C","AA","AB","AC","BA","BB","BC",
+                    "CA","CB","CC","AAA","AAB","AAC","ABA","ABB","ABC",
+                    "ACA","ACB"
+                ]
+            );
+        });
+    });
 
     describe('getStackedBarData', () => {
         const uidToGroup = {
