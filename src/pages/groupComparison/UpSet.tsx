@@ -1,22 +1,21 @@
 import * as React from 'react';
-import { observer, Observer } from "mobx-react";
-import { VictoryChart, VictoryAxis, VictoryBar, VictoryScatter, VictoryLine, VictoryLabel } from 'victory';
-import { computed, observable } from 'mobx';
+import {observer, Observer} from "mobx-react";
+import {VictoryAxis, VictoryBar, VictoryChart, VictoryLabel, VictoryLine, VictoryScatter} from 'victory';
+import {computed, observable} from 'mobx';
 import * as _ from 'lodash';
-import CBIOPORTAL_VICTORY_THEME, { axisTickLabelStyles } from 'shared/theme/cBioPoralTheme';
+import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from 'shared/theme/cBioPoralTheme';
 import autobind from 'autobind-decorator';
-import { getCombinations, ComparisonGroup } from './GroupComparisonUtils';
+import {ComparisonGroup} from './GroupComparisonUtils';
 import {getTextWidth, truncateWithEllipsis} from 'shared/lib/wrapText';
-import { tickFormatNumeral } from 'shared/components/plots/TickUtils';
-import Timer = NodeJS.Timer;
-import ScatterPlotTooltip from 'shared/components/plots/ScatterPlotTooltip';
-import { joinNames, blendColors } from './OverlapUtils';
-import { pluralize } from 'shared/lib/StringUtils';
-import { getPlotDomain } from './UpSetUtils';
+import {tickFormatNumeral} from 'shared/components/plots/TickUtils';
+import {blendColors, getCombinations, joinNames} from './OverlapUtils';
+import {pluralize} from 'shared/lib/StringUtils';
+import {getPlotDomain} from './UpSetUtils';
 import * as ReactDOM from "react-dom";
 import {Popover} from "react-bootstrap";
 import classnames from "classnames";
 import styles from "../resultsView/survival/styles.module.scss";
+import Timer = NodeJS.Timer;
 
 export interface IUpSetrProps {
     groups: {
