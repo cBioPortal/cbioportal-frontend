@@ -1,14 +1,6 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
-export type AnnotateMutationByGenomicChangeQuery = {
-    'genomicLocation': string
-
-        'id': string
-
-        'tumorType': string
-
-};
 export type TreatmentDrug = {
     'priority': number
 
@@ -172,7 +164,7 @@ export type GeneEvidence = {
 
         'evidenceId': number
 
-        'evidenceType': "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
+        'evidenceType': "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
 
         'gene': Gene
 
@@ -196,7 +188,7 @@ export type Evidence = {
 
         'description': string
 
-        'evidenceType': "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
+        'evidenceType': "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
 
         'gene': Gene
 
@@ -206,7 +198,7 @@ export type Evidence = {
 
         'lastEdit': string
 
-        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
         'oncoTreeType': TumorType
 
@@ -217,34 +209,18 @@ export type Evidence = {
         'treatments': Array < Treatment >
 
 };
-export type AnnotateStructuralVariantQuery = {
-    'functionalFusion': boolean
-
-        'geneA': QueryGene
-
-        'geneB': QueryGene
-
-        'id': string
-
-        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION"
-
-        'tumorType': string
-
-};
 export type IndicatorQueryResp = {
     'alleleExist': boolean
 
         'dataVersion': string
 
-        'diagnosticSummary': string
-
         'geneExist': boolean
 
         'geneSummary': string
 
-        'highestResistanceLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'highestResistanceLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
-        'highestSensitiveLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'highestSensitiveLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
         'hotspot': boolean
 
@@ -254,11 +230,9 @@ export type IndicatorQueryResp = {
 
         'oncogenic': string
 
-        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
+        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
 
-        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
-
-        'prognosticSummary': string
+        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
 
         'query': Query
 
@@ -303,24 +277,12 @@ export type ArticleAbstract = {
         'link': string
 
 };
-export type InfoLevel = {
-    'colorHex': string
-
-        'description': string
-
-        'htmlDescription': string
-
-        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
-
-};
 export type Drug = {
-    'drugName': string
+    'atcCodes': Array < string >
 
-        'ncitCode': string
+        'drugName': string
 
         'synonyms': Array < string >
-
-        'uuid': string
 
 };
 export type CuratedGene = {
@@ -356,17 +318,11 @@ export type EvidenceQueryRes = {
 
         'id': string
 
-        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
+        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
 
         'oncoTreeTypes': Array < TumorType >
 
         'query': Query
-
-};
-export type QueryGene = {
-    'entrezGeneId': number
-
-        'hugoSymbol': string
 
 };
 export type CancerGene = {
@@ -384,13 +340,9 @@ export type CancerGene = {
 
         'occurrenceCount': number
 
-        'oncogene': boolean
-
         'oncokbAnnotated': boolean
 
         'sangerCGC': boolean
-
-        'tsg': boolean
 
         'vogelstein': boolean
 
@@ -404,10 +356,6 @@ export type MainType = {
 export type OncoKBInfo = {
     'dataVersion': Version
 
-        'levels': Array < InfoLevel >
-
-        'ncitVersion': string
-
         'oncoTreeVersion': string
 
 };
@@ -419,22 +367,6 @@ export type VariantConsequence = {
         'term': string
 
 };
-export type AnnotateMutationByProteinChangeQuery = {
-    'alteration': string
-
-        'consequence': string
-
-        'gene': QueryGene
-
-        'id': string
-
-        'proteinEnd': number
-
-        'proteinStart': number
-
-        'tumorType': string
-
-};
 export type IndicatorQueryTreatment = {
     'abstracts': Array < ArticleAbstract >
 
@@ -444,7 +376,7 @@ export type IndicatorQueryTreatment = {
 
         'fdaApproved': boolean
 
-        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
         'pmids': Array < string >
 
@@ -452,7 +384,7 @@ export type IndicatorQueryTreatment = {
 export type ResponseEntity = {
     'body': {}
 
-    'statusCode': "100" | "101" | "102" | "103" | "200" | "201" | "202" | "203" | "204" | "205" | "206" | "207" | "208" | "226" | "300" | "301" | "302" | "302" | "303" | "304" | "305" | "307" | "308" | "400" | "401" | "402" | "403" | "404" | "405" | "406" | "407" | "408" | "409" | "410" | "411" | "412" | "413" | "413" | "414" | "414" | "415" | "416" | "417" | "418" | "419" | "420" | "421" | "422" | "423" | "424" | "426" | "428" | "429" | "431" | "500" | "501" | "502" | "503" | "504" | "505" | "506" | "507" | "508" | "509" | "510" | "511"
+    'statusCode': "100" | "101" | "102" | "103" | "200" | "201" | "202" | "203" | "204" | "205" | "206" | "207" | "208" | "226" | "300" | "301" | "302" | "303" | "304" | "305" | "307" | "308" | "400" | "401" | "402" | "403" | "404" | "405" | "406" | "407" | "408" | "409" | "410" | "411" | "412" | "413" | "414" | "415" | "416" | "417" | "418" | "419" | "420" | "421" | "422" | "423" | "424" | "426" | "428" | "429" | "431" | "500" | "501" | "502" | "503" | "504" | "505" | "506" | "507" | "508" | "509" | "510" | "511"
 
 };
 export type Treatment = {
@@ -468,7 +400,7 @@ export type EvidenceQueries = {
 
         'highestLevelOnly': boolean
 
-        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
+        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
 
         'queries': Array < Query >
 
@@ -499,24 +431,6 @@ export type MutationEffectResp = {
         'description': string
 
         'knownEffect': string
-
-};
-export type AnnotateCopyNumberAlterationQuery = {
-    'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS"
-
-        'gene': QueryGene
-
-        'id': string
-
-        'tumorType': string
-
-};
-export type AnnotateMutationByHGVSgQuery = {
-    'hgvsg': string
-
-        'id': string
-
-        'tumorType': string
 
 };
 export type Citations = {
@@ -588,1007 +502,6 @@ export default class OncoKbAPI {
         });
     }
 
-    annotateCopyNumberAlterationsGetUsingGETURL(parameters: {
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS",
-        'tumorType' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/annotate/copyNumberAlterations';
-        if (parameters['hugoSymbol'] !== undefined) {
-            queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-        }
-
-        if (parameters['entrezGeneId'] !== undefined) {
-            queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-        }
-
-        if (parameters['copyNameAlterationType'] !== undefined) {
-            queryParameters['copyNameAlterationType'] = parameters['copyNameAlterationType'];
-        }
-
-        if (parameters['tumorType'] !== undefined) {
-            queryParameters['tumorType'] = parameters['tumorType'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Annotate copy number alteration.
-     * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsGetUsingGET
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
-     * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
-     * @param {string} copyNameAlterationType - Copy number alteration type
-     * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
-     */
-    annotateCopyNumberAlterationsGetUsingGETWithHttpInfo(parameters: {
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS",
-        'tumorType' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotate/copyNumberAlterations';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['hugoSymbol'] !== undefined) {
-                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-            }
-
-            if (parameters['entrezGeneId'] !== undefined) {
-                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-            }
-
-            if (parameters['copyNameAlterationType'] !== undefined) {
-                queryParameters['copyNameAlterationType'] = parameters['copyNameAlterationType'];
-            }
-
-            if (parameters['copyNameAlterationType'] === undefined) {
-                reject(new Error('Missing required  parameter: copyNameAlterationType'));
-                return;
-            }
-
-            if (parameters['tumorType'] !== undefined) {
-                queryParameters['tumorType'] = parameters['tumorType'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Annotate copy number alteration.
-     * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsGetUsingGET
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
-     * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
-     * @param {string} copyNameAlterationType - Copy number alteration type
-     * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
-     */
-    annotateCopyNumberAlterationsGetUsingGET(parameters: {
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS",
-        'tumorType' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < IndicatorQueryResp > {
-        return this.annotateCopyNumberAlterationsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    annotateCopyNumberAlterationsPostUsingPOSTURL(parameters: {
-        'body': Array < AnnotateCopyNumberAlterationQuery > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/annotate/copyNumberAlterations';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Annotate copy number alterations.
-     * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsPostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     */
-    annotateCopyNumberAlterationsPostUsingPOSTWithHttpInfo(parameters: {
-        'body': Array < AnnotateCopyNumberAlterationQuery > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotate/copyNumberAlterations';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['body'] !== undefined) {
-                body = parameters['body'];
-            }
-
-            if (parameters['body'] === undefined) {
-                reject(new Error('Missing required  parameter: body'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Annotate copy number alterations.
-     * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsPostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     */
-    annotateCopyNumberAlterationsPostUsingPOST(parameters: {
-            'body': Array < AnnotateCopyNumberAlterationQuery > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < IndicatorQueryResp >
-        > {
-            return this.annotateCopyNumberAlterationsPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    annotateMutationsByGenomicChangeGetUsingGETURL(parameters: {
-        'genomicLocation': string,
-        'tumorType' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/annotate/mutations/byGenomicChange';
-        if (parameters['genomicLocation'] !== undefined) {
-            queryParameters['genomicLocation'] = parameters['genomicLocation'];
-        }
-
-        if (parameters['tumorType'] !== undefined) {
-            queryParameters['tumorType'] = parameters['tumorType'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Annotate mutation by genomic change.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangeGetUsingGET
-     * @param {string} genomicLocation - Genomic location. Example: 7,140453136,140453136,A,T
-     * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
-     */
-    annotateMutationsByGenomicChangeGetUsingGETWithHttpInfo(parameters: {
-        'genomicLocation': string,
-        'tumorType' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotate/mutations/byGenomicChange';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['genomicLocation'] !== undefined) {
-                queryParameters['genomicLocation'] = parameters['genomicLocation'];
-            }
-
-            if (parameters['genomicLocation'] === undefined) {
-                reject(new Error('Missing required  parameter: genomicLocation'));
-                return;
-            }
-
-            if (parameters['tumorType'] !== undefined) {
-                queryParameters['tumorType'] = parameters['tumorType'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Annotate mutation by genomic change.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangeGetUsingGET
-     * @param {string} genomicLocation - Genomic location. Example: 7,140453136,140453136,A,T
-     * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
-     */
-    annotateMutationsByGenomicChangeGetUsingGET(parameters: {
-        'genomicLocation': string,
-        'tumorType' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < IndicatorQueryResp > {
-        return this.annotateMutationsByGenomicChangeGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    annotateMutationsByGenomicChangePostUsingPOSTURL(parameters: {
-        'body': Array < AnnotateMutationByGenomicChangeQuery > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/annotate/mutations/byGenomicChange';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Annotate mutations by genomic change.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangePostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     */
-    annotateMutationsByGenomicChangePostUsingPOSTWithHttpInfo(parameters: {
-        'body': Array < AnnotateMutationByGenomicChangeQuery > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotate/mutations/byGenomicChange';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['body'] !== undefined) {
-                body = parameters['body'];
-            }
-
-            if (parameters['body'] === undefined) {
-                reject(new Error('Missing required  parameter: body'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Annotate mutations by genomic change.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangePostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     */
-    annotateMutationsByGenomicChangePostUsingPOST(parameters: {
-            'body': Array < AnnotateMutationByGenomicChangeQuery > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < IndicatorQueryResp >
-        > {
-            return this.annotateMutationsByGenomicChangePostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    annotateMutationsByHGVSgGetUsingGETURL(parameters: {
-        'hgvsg': string,
-        'tumorType' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/annotate/mutations/byHGVSg';
-        if (parameters['hgvsg'] !== undefined) {
-            queryParameters['hgvsg'] = parameters['hgvsg'];
-        }
-
-        if (parameters['tumorType'] !== undefined) {
-            queryParameters['tumorType'] = parameters['tumorType'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Annotate mutation by HGVSg.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgGetUsingGET
-     * @param {string} hgvsg - HGVS genomic format. Example: 7:g.140453136A>T
-     * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
-     */
-    annotateMutationsByHGVSgGetUsingGETWithHttpInfo(parameters: {
-        'hgvsg': string,
-        'tumorType' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotate/mutations/byHGVSg';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['hgvsg'] !== undefined) {
-                queryParameters['hgvsg'] = parameters['hgvsg'];
-            }
-
-            if (parameters['hgvsg'] === undefined) {
-                reject(new Error('Missing required  parameter: hgvsg'));
-                return;
-            }
-
-            if (parameters['tumorType'] !== undefined) {
-                queryParameters['tumorType'] = parameters['tumorType'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Annotate mutation by HGVSg.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgGetUsingGET
-     * @param {string} hgvsg - HGVS genomic format. Example: 7:g.140453136A>T
-     * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
-     */
-    annotateMutationsByHGVSgGetUsingGET(parameters: {
-        'hgvsg': string,
-        'tumorType' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < IndicatorQueryResp > {
-        return this.annotateMutationsByHGVSgGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    annotateMutationsByHGVSgPostUsingPOSTURL(parameters: {
-        'body': Array < AnnotateMutationByHGVSgQuery > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/annotate/mutations/byHGVSg';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Annotate mutations by genomic change.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgPostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     */
-    annotateMutationsByHGVSgPostUsingPOSTWithHttpInfo(parameters: {
-        'body': Array < AnnotateMutationByHGVSgQuery > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotate/mutations/byHGVSg';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['body'] !== undefined) {
-                body = parameters['body'];
-            }
-
-            if (parameters['body'] === undefined) {
-                reject(new Error('Missing required  parameter: body'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Annotate mutations by genomic change.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgPostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     */
-    annotateMutationsByHGVSgPostUsingPOST(parameters: {
-            'body': Array < AnnotateMutationByHGVSgQuery > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < IndicatorQueryResp >
-        > {
-            return this.annotateMutationsByHGVSgPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    annotateMutationsByProteinChangeGetUsingGETURL(parameters: {
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'alteration' ? : string,
-        'consequence' ? : "feature_truncation" | "frameshift_variant" | "inframe_deletion" | "inframe_insertion" | "start_lost" | "missense_variant" | "splice_region_variant" | "stop_gained" | "synonymous_variant",
-        'proteinStart' ? : number,
-        'proteinEnd' ? : number,
-        'tumorType' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/annotate/mutations/byProteinChange';
-        if (parameters['hugoSymbol'] !== undefined) {
-            queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-        }
-
-        if (parameters['entrezGeneId'] !== undefined) {
-            queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-        }
-
-        if (parameters['alteration'] !== undefined) {
-            queryParameters['alteration'] = parameters['alteration'];
-        }
-
-        if (parameters['consequence'] !== undefined) {
-            queryParameters['consequence'] = parameters['consequence'];
-        }
-
-        if (parameters['proteinStart'] !== undefined) {
-            queryParameters['proteinStart'] = parameters['proteinStart'];
-        }
-
-        if (parameters['proteinEnd'] !== undefined) {
-            queryParameters['proteinEnd'] = parameters['proteinEnd'];
-        }
-
-        if (parameters['tumorType'] !== undefined) {
-            queryParameters['tumorType'] = parameters['tumorType'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Annotate mutation by protein change.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangeGetUsingGET
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
-     * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
-     * @param {string} alteration - Protein Change. Example: V600E
-     * @param {string} consequence - Consequence. Exacmple: missense_variant
-     * @param {integer} proteinStart - Protein Start. Example: 600
-     * @param {integer} proteinEnd - Protein End. Example: 600
-     * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
-     */
-    annotateMutationsByProteinChangeGetUsingGETWithHttpInfo(parameters: {
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'alteration' ? : string,
-        'consequence' ? : "feature_truncation" | "frameshift_variant" | "inframe_deletion" | "inframe_insertion" | "start_lost" | "missense_variant" | "splice_region_variant" | "stop_gained" | "synonymous_variant",
-        'proteinStart' ? : number,
-        'proteinEnd' ? : number,
-        'tumorType' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotate/mutations/byProteinChange';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['hugoSymbol'] !== undefined) {
-                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-            }
-
-            if (parameters['entrezGeneId'] !== undefined) {
-                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-            }
-
-            if (parameters['alteration'] !== undefined) {
-                queryParameters['alteration'] = parameters['alteration'];
-            }
-
-            if (parameters['consequence'] !== undefined) {
-                queryParameters['consequence'] = parameters['consequence'];
-            }
-
-            if (parameters['proteinStart'] !== undefined) {
-                queryParameters['proteinStart'] = parameters['proteinStart'];
-            }
-
-            if (parameters['proteinEnd'] !== undefined) {
-                queryParameters['proteinEnd'] = parameters['proteinEnd'];
-            }
-
-            if (parameters['tumorType'] !== undefined) {
-                queryParameters['tumorType'] = parameters['tumorType'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Annotate mutation by protein change.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangeGetUsingGET
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
-     * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
-     * @param {string} alteration - Protein Change. Example: V600E
-     * @param {string} consequence - Consequence. Exacmple: missense_variant
-     * @param {integer} proteinStart - Protein Start. Example: 600
-     * @param {integer} proteinEnd - Protein End. Example: 600
-     * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
-     */
-    annotateMutationsByProteinChangeGetUsingGET(parameters: {
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'alteration' ? : string,
-        'consequence' ? : "feature_truncation" | "frameshift_variant" | "inframe_deletion" | "inframe_insertion" | "start_lost" | "missense_variant" | "splice_region_variant" | "stop_gained" | "synonymous_variant",
-        'proteinStart' ? : number,
-        'proteinEnd' ? : number,
-        'tumorType' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < IndicatorQueryResp > {
-        return this.annotateMutationsByProteinChangeGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    annotateMutationsByProteinChangePostUsingPOSTURL(parameters: {
-        'body': Array < AnnotateMutationByProteinChangeQuery > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/annotate/mutations/byProteinChange';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Annotate mutations by protein change.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangePostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     */
-    annotateMutationsByProteinChangePostUsingPOSTWithHttpInfo(parameters: {
-        'body': Array < AnnotateMutationByProteinChangeQuery > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotate/mutations/byProteinChange';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['body'] !== undefined) {
-                body = parameters['body'];
-            }
-
-            if (parameters['body'] === undefined) {
-                reject(new Error('Missing required  parameter: body'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Annotate mutations by protein change.
-     * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangePostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     */
-    annotateMutationsByProteinChangePostUsingPOST(parameters: {
-            'body': Array < AnnotateMutationByProteinChangeQuery > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < IndicatorQueryResp >
-        > {
-            return this.annotateMutationsByProteinChangePostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    annotateStructuralVariantsGetUsingGETURL(parameters: {
-        'hugoSymbolA' ? : string,
-        'entrezGeneIdA' ? : number,
-        'hugoSymbolB' ? : string,
-        'entrezGeneIdB' ? : number,
-        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
-        'isFunctionalFusion': boolean,
-        'tumorType' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/annotate/structuralVariants';
-        if (parameters['hugoSymbolA'] !== undefined) {
-            queryParameters['hugoSymbolA'] = parameters['hugoSymbolA'];
-        }
-
-        if (parameters['entrezGeneIdA'] !== undefined) {
-            queryParameters['entrezGeneIdA'] = parameters['entrezGeneIdA'];
-        }
-
-        if (parameters['hugoSymbolB'] !== undefined) {
-            queryParameters['hugoSymbolB'] = parameters['hugoSymbolB'];
-        }
-
-        if (parameters['entrezGeneIdB'] !== undefined) {
-            queryParameters['entrezGeneIdB'] = parameters['entrezGeneIdB'];
-        }
-
-        if (parameters['structuralVariantType'] !== undefined) {
-            queryParameters['structuralVariantType'] = parameters['structuralVariantType'];
-        }
-
-        if (parameters['isFunctionalFusion'] !== undefined) {
-            queryParameters['isFunctionalFusion'] = parameters['isFunctionalFusion'];
-        }
-
-        if (parameters['tumorType'] !== undefined) {
-            queryParameters['tumorType'] = parameters['tumorType'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Annotate structural variant.
-     * @method
-     * @name OncoKbAPI#annotateStructuralVariantsGetUsingGET
-     * @param {string} hugoSymbolA - The gene symbol A used in Human Genome Organisation. Example: ABL1
-     * @param {integer} entrezGeneIdA - The entrez gene ID A. (Higher priority than hugoSymbolA) Example: 25
-     * @param {string} hugoSymbolB - The gene symbol B used in Human Genome Organisation.Example: BCR 
-     * @param {integer} entrezGeneIdB - The entrez gene ID B. (Higher priority than hugoSymbolB) Example: 613
-     * @param {string} structuralVariantType - Structural variant type
-     * @param {boolean} isFunctionalFusion - Whether is functional fusion
-     * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
-     */
-    annotateStructuralVariantsGetUsingGETWithHttpInfo(parameters: {
-        'hugoSymbolA' ? : string,
-        'entrezGeneIdA' ? : number,
-        'hugoSymbolB' ? : string,
-        'entrezGeneIdB' ? : number,
-        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
-        'isFunctionalFusion': boolean,
-        'tumorType' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotate/structuralVariants';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['hugoSymbolA'] !== undefined) {
-                queryParameters['hugoSymbolA'] = parameters['hugoSymbolA'];
-            }
-
-            if (parameters['entrezGeneIdA'] !== undefined) {
-                queryParameters['entrezGeneIdA'] = parameters['entrezGeneIdA'];
-            }
-
-            if (parameters['hugoSymbolB'] !== undefined) {
-                queryParameters['hugoSymbolB'] = parameters['hugoSymbolB'];
-            }
-
-            if (parameters['entrezGeneIdB'] !== undefined) {
-                queryParameters['entrezGeneIdB'] = parameters['entrezGeneIdB'];
-            }
-
-            if (parameters['structuralVariantType'] !== undefined) {
-                queryParameters['structuralVariantType'] = parameters['structuralVariantType'];
-            }
-
-            if (parameters['structuralVariantType'] === undefined) {
-                reject(new Error('Missing required  parameter: structuralVariantType'));
-                return;
-            }
-
-            if (parameters['isFunctionalFusion'] !== undefined) {
-                queryParameters['isFunctionalFusion'] = parameters['isFunctionalFusion'];
-            }
-
-            if (parameters['isFunctionalFusion'] === undefined) {
-                reject(new Error('Missing required  parameter: isFunctionalFusion'));
-                return;
-            }
-
-            if (parameters['tumorType'] !== undefined) {
-                queryParameters['tumorType'] = parameters['tumorType'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Annotate structural variant.
-     * @method
-     * @name OncoKbAPI#annotateStructuralVariantsGetUsingGET
-     * @param {string} hugoSymbolA - The gene symbol A used in Human Genome Organisation. Example: ABL1
-     * @param {integer} entrezGeneIdA - The entrez gene ID A. (Higher priority than hugoSymbolA) Example: 25
-     * @param {string} hugoSymbolB - The gene symbol B used in Human Genome Organisation.Example: BCR 
-     * @param {integer} entrezGeneIdB - The entrez gene ID B. (Higher priority than hugoSymbolB) Example: 613
-     * @param {string} structuralVariantType - Structural variant type
-     * @param {boolean} isFunctionalFusion - Whether is functional fusion
-     * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
-     */
-    annotateStructuralVariantsGetUsingGET(parameters: {
-        'hugoSymbolA' ? : string,
-        'entrezGeneIdA' ? : number,
-        'hugoSymbolB' ? : string,
-        'entrezGeneIdB' ? : number,
-        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
-        'isFunctionalFusion': boolean,
-        'tumorType' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < IndicatorQueryResp > {
-        return this.annotateStructuralVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    annotateStructuralVariantsPostUsingPOSTURL(parameters: {
-        'body': Array < AnnotateStructuralVariantQuery > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/annotate/structuralVariants';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Annotate structural variants.
-     * @method
-     * @name OncoKbAPI#annotateStructuralVariantsPostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     */
-    annotateStructuralVariantsPostUsingPOSTWithHttpInfo(parameters: {
-        'body': Array < AnnotateStructuralVariantQuery > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotate/structuralVariants';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['body'] !== undefined) {
-                body = parameters['body'];
-            }
-
-            if (parameters['body'] === undefined) {
-                reject(new Error('Missing required  parameter: body'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Annotate structural variants.
-     * @method
-     * @name OncoKbAPI#annotateStructuralVariantsPostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     */
-    annotateStructuralVariantsPostUsingPOST(parameters: {
-            'body': Array < AnnotateStructuralVariantQuery > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < IndicatorQueryResp >
-        > {
-            return this.annotateStructuralVariantsPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
     classificationVariantsGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -1717,7 +630,7 @@ export default class OncoKbAPI {
         };
     drugsLookupGetUsingGETURL(parameters: {
         'name' ? : string,
-        'ncitCode' ? : string,
+        'atcCode' ? : string,
         'synonym' ? : string,
         'exactMatch': boolean,
         $queryParameters ? : any
@@ -1728,8 +641,8 @@ export default class OncoKbAPI {
             queryParameters['name'] = parameters['name'];
         }
 
-        if (parameters['ncitCode'] !== undefined) {
-            queryParameters['ncitCode'] = parameters['ncitCode'];
+        if (parameters['atcCode'] !== undefined) {
+            queryParameters['atcCode'] = parameters['atcCode'];
         }
 
         if (parameters['synonym'] !== undefined) {
@@ -1755,13 +668,13 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#drugsLookupGetUsingGET
      * @param {string} name - Drug Name
-     * @param {string} ncitCode - NCI Thesaurus Code
+     * @param {string} atcCode - ATC Code
      * @param {string} synonym - Drug Synonyms
      * @param {boolean} exactMatch - Exactly Match
      */
     drugsLookupGetUsingGETWithHttpInfo(parameters: {
         'name' ? : string,
-        'ncitCode' ? : string,
+        'atcCode' ? : string,
         'synonym' ? : string,
         'exactMatch': boolean,
         $queryParameters ? : any,
@@ -1783,8 +696,8 @@ export default class OncoKbAPI {
                 queryParameters['name'] = parameters['name'];
             }
 
-            if (parameters['ncitCode'] !== undefined) {
-                queryParameters['ncitCode'] = parameters['ncitCode'];
+            if (parameters['atcCode'] !== undefined) {
+                queryParameters['atcCode'] = parameters['atcCode'];
             }
 
             if (parameters['synonym'] !== undefined) {
@@ -1817,13 +730,13 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#drugsLookupGetUsingGET
      * @param {string} name - Drug Name
-     * @param {string} ncitCode - NCI Thesaurus Code
+     * @param {string} atcCode - ATC Code
      * @param {string} synonym - Drug Synonyms
      * @param {boolean} exactMatch - Exactly Match
      */
     drugsLookupGetUsingGET(parameters: {
             'name' ? : string,
-            'ncitCode' ? : string,
+            'atcCode' ? : string,
             'synonym' ? : string,
             'exactMatch': boolean,
             $queryParameters ? : any,
@@ -2012,7 +925,7 @@ export default class OncoKbAPI {
      * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
      * @param {boolean} highestLevelOnly - Only show highest level evidences
      * @param {string} levelOfEvidence - Separate by comma. LEVEL_1, LEVEL_2A, LEVEL_2B, LEVEL_3A, LEVEL_3B, LEVEL_4, LEVEL_R1, LEVEL_R2, LEVEL_R3
-     * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND, MUTATION_SUMMARY, ONCOGENIC, MUTATION_EFFECT, VUS, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, TUMOR_TYPE_SUMMARY, DIAGNOSTIC_SUMMARY, PROGNOSTIC_SUMMARY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE
+     * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND, MUTATION_SUMMARY, ONCOGENIC, MUTATION_EFFECT, VUS, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, TUMOR_TYPE_SUMMARY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE
      * @param {string} fields - The fields to be returned.
      */
     evidencesLookupGetUsingGETWithHttpInfo(parameters: {
@@ -2117,7 +1030,7 @@ export default class OncoKbAPI {
      * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
      * @param {boolean} highestLevelOnly - Only show highest level evidences
      * @param {string} levelOfEvidence - Separate by comma. LEVEL_1, LEVEL_2A, LEVEL_2B, LEVEL_3A, LEVEL_3B, LEVEL_4, LEVEL_R1, LEVEL_R2, LEVEL_R3
-     * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND, MUTATION_SUMMARY, ONCOGENIC, MUTATION_EFFECT, VUS, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, TUMOR_TYPE_SUMMARY, DIAGNOSTIC_SUMMARY, PROGNOSTIC_SUMMARY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE
+     * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND, MUTATION_SUMMARY, ONCOGENIC, MUTATION_EFFECT, VUS, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, TUMOR_TYPE_SUMMARY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE
      * @param {string} fields - The fields to be returned.
      */
     evidencesLookupGetUsingGET(parameters: {
