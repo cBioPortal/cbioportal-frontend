@@ -30,8 +30,8 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
         invoke:()=>{
             const groups = _.map(this.props.store._activeGroupsOverlapRemoved.result, group => {
                 return {
-                    name:group.name,
-                    description:`Number (percentage) of samples in ${group.name} that have the listed alteration in the listed gene.`,
+                    name:group.nameWithOrdinal,
+                    description:`Number (percentage) of samples in ${group.nameWithOrdinal} that have the listed alteration in the listed gene.`,
                     count: getNumSamples(group)
                 }
             })
