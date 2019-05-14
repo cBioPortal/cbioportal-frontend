@@ -8,7 +8,7 @@ import {
     isGroupEmpty,
     ClinicalDataEnrichmentWithQ,
     OverlapFilteredComparisonGroup, getSampleIdentifiers,
-    GroupComparisonTab
+    GroupComparisonTab, getOrdinals
 } from "./GroupComparisonUtils";
 import { remoteData } from "../../shared/api/remoteData";
 import {
@@ -152,6 +152,7 @@ export default class GroupComparisonStore {
             // (1) ensure color
             // (2) filter out, and add list of, nonexistent samples
             // (3) add patients
+            // (4) add ordinals
 
             const ret:ComparisonGroup[] = [];
             const sampleSet = this.sampleSet.result!;
@@ -173,6 +174,7 @@ export default class GroupComparisonStore {
                     studies,
                     nonExistentSamples,
                     uid: index.toString(),
+                    nameWithOrdinal: "", // fill in later
                     savedInSession
                 });
             };
@@ -183,6 +185,11 @@ export default class GroupComparisonStore {
 
             this.unsavedGroups.slice().forEach((groupData, index)=>{
                 ret.push(finalizeGroup(false, groupData, index+this._session.result!.groups.length));
+            });
+
+            const ordinals = getOrdinals(ret.length, 26);
+            ret.forEach((group, index)=>{
+                group.nameWithOrdinal = `${ordinals[index]}. ${group.name}`;
             });
             return Promise.resolve(ret);
         }
@@ -639,7 +646,7 @@ export default class GroupComparisonStore {
     }
 
     @computed get mutationsTabGrey() {
-        return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups 
+        return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
         || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study;
     }
 
@@ -653,7 +660,7 @@ export default class GroupComparisonStore {
     }
     
     @computed get copyNumberTabGrey() {
-        return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups 
+        return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
         || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study;
     }
 
