@@ -4,6 +4,8 @@ import expectJSX from 'expect-jsx';
 import * as React from "react";
 expect.extend(expectJSX);
 import {
+    getAllCombinationsOfKey,
+    getCombinations,
     getExcludedIndexes,
     getStudiesAttrForPatientOverlapGroup,
     getStudiesAttrForSampleOverlapGroup,
@@ -16,6 +18,95 @@ import {Sample} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 
 describe("OverlapUtils", () => {
+    describe("getAllCombinationsOfKey", ()=>{
+        it("one", ()=>{
+            assertDeepEqualInAnyOrder(getAllCombinationsOfKey({ a:true}), [{a:true}]);
+        });
+        it("two", ()=>{
+            assertDeepEqualInAnyOrder(getAllCombinationsOfKey({ a:true, b:true}), [
+                {a:true}, {b:true}, {a:true, b:true}
+            ]);
+        });
+        it("three", ()=>{
+            assertDeepEqualInAnyOrder(getAllCombinationsOfKey({ a:true, b:true, c:true}), [
+                {a:true}, {b:true}, {a:true, b:true}, {c:true},
+                {a:true, c:true}, {b:true, c:true}, {a:true, b:true, c:true}
+            ]);
+        });
+    });
+    describe('getCombinations', () => {
+        it('when empty groups', () => {
+            assert.deepEqual(getCombinations([]), [])
+        });
+
+        it('when there are no overlapping groups', () => {
+            assertDeepEqualInAnyOrder(
+                getCombinations([{
+                    uid: '1',
+                    cases: ['1-1', '1-2']
+                }, {
+                    uid: '2',
+                    cases: ['2-1']
+                }]), [
+                    { groups: ['1'], cases: ['1-1', '1-2'] },
+                    { groups: ['2'], cases: ['2-1'] }
+                ]);
+        });
+
+        it('when there are one or more overlapping groups', () => {
+            assertDeepEqualInAnyOrder(
+                getCombinations([{
+                    uid: '1',
+                    cases: ['1-1', '1-2']
+                }, {
+                    uid: '2',
+                    cases: ['1-1']
+                }]), [
+                    { groups: ['1'], cases: ['1-1', '1-2'] },
+                    { groups: ['1', '2'], cases: ['1-1'] },
+                    { groups: ['2'], cases: ['1-1'] }
+                ]);
+
+            assertDeepEqualInAnyOrder(
+                getCombinations([{
+                    uid: '1',
+                    cases: ['1-1', '1-2']
+                }, {
+                    uid: '2',
+                    cases: ['1-1', '1-3']
+                }, {
+                    uid: '3',
+                    cases: ['1-1', '1-2', '1-3']
+                }]), [
+                    { groups: ['1'], cases: ['1-1', '1-2'] },
+                    { groups: ['1', '2'], cases: ['1-1'] },
+                    { groups: ['1', '2', '3'], cases: ['1-1'] },
+                    { groups: ['1', '3'], cases: ['1-1', '1-2'] },
+                    { groups: ['2'], cases: ['1-1', '1-3'] },
+                    { groups: ['2', '3'], cases: ['1-1', '1-3'] },
+                    { groups: ['3'], cases: ['1-1', '1-2', '1-3'] }
+                ]);
+
+            assertDeepEqualInAnyOrder(
+                getCombinations([{
+                    uid: '1',
+                    cases: ['1-1', '1-2']
+                }, {
+                    uid: '2',
+                    cases: ['1-2', '1-3']
+                }, {
+                    uid: '3',
+                    cases: ['1-3', '1-1']
+                }]), [
+                    { groups: ['1'], cases: ['1-1', '1-2'] },
+                    { groups: ['1', '2'], cases: ['1-2'] },
+                    { groups: ['1', '3'], cases: ['1-1'] },
+                    { groups: ['2'], cases: ['1-2', '1-3'] },
+                    { groups: ['2', '3'], cases: ['1-3'] },
+                    { groups: ['3'], cases: ['1-3', '1-1'] }
+                ]);
+        });
+    });
     describe("getExcludedIndexes", ()=>{
         it("empty input", ()=>{
             assert.deepEqual(
