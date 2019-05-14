@@ -6,11 +6,17 @@ import Combinatorics from 'js-combinatorics';
 import Dictionary = _.Dictionary;
 import * as _ from 'lodash';
 
+export enum AlteredStatus {
+    UNPROFILED = "unprofiled",
+    ALTERED = "altered",
+    UNALTERED = "unaltered"
+}
+
 export function calculateAssociation(logOddsRatio: number): string {
     return logOddsRatio > 0 ? "Co-occurrence" : "Mutual exclusivity";
 }
 
-export function countOccurences(valuesA: (boolean | undefined)[], valuesB: (boolean | undefined)[]): [number, number, number, number] {
+export function countOccurences(valuesA: AlteredStatus[], valuesB: AlteredStatus[]): [number, number, number, number] {
 
     let neither = 0;
     let bNotA = 0;
@@ -18,16 +24,16 @@ export function countOccurences(valuesA: (boolean | undefined)[], valuesB: (bool
     let both = 0;
 
     valuesA.forEach((valueA, index) => {
-        // jump over this comparison if there is undefined value(not profiled value)
-        if (valueA === undefined || valuesB[index] === undefined) {
+        // jump over this comparison if there is a unprofiled value
+        if (valueA === AlteredStatus.UNPROFILED || valuesB[index] === AlteredStatus.UNPROFILED) {
             return true;
         }
         const valueB = valuesB[index];
-        if (!valueA && !valueB) {
+        if (valueA === AlteredStatus.UNALTERED && valueB === AlteredStatus.UNALTERED) {
             neither++;
-        } else if (!valueA && valueB) {
+        } else if (valueA === AlteredStatus.UNALTERED && valueB === AlteredStatus.ALTERED) {
             bNotA++;
-        } else if (valueA && !valueB) {
+        } else if (valueA === AlteredStatus.ALTERED && valueB === AlteredStatus.UNALTERED) {
             aNotB++;
         } else {
             both++;
@@ -100,7 +106,7 @@ export function getCountsText(data: MutualExclusivity[]): JSX.Element {
             coOccurentCounts[1]}.</p>;
 }
 
-export function getData(isSampleAlteredMap: Dictionary<(boolean | undefined)[]>): MutualExclusivity[] {
+export function getData(isSampleAlteredMap: Dictionary<AlteredStatus[]>): MutualExclusivity[] {
 
     let data: MutualExclusivity[] = [];
     const combinations: string[][] = (Combinatorics as any).bigCombination(Object.keys(isSampleAlteredMap), 2).toArray();
