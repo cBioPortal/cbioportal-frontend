@@ -2,19 +2,15 @@ import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type AlterationEnrichment = {
-    'cytoband': string
+    'counts': Array < CountSummary >
+
+        'cytoband': string
 
         'entrezGeneId': number
 
         'hugoGeneSymbol': string
 
-        'logRatio': string
-
         'pValue': number
-
-        'set1CountSummary': CountSummary
-
-        'set2CountSummary': CountSummary
 
 };
 export type ClinicalAttribute = {
@@ -179,6 +175,8 @@ export type CosmicMutation = {
 };
 export type CountSummary = {
     'alteredCount': number
+
+        'name': string
 
         'profiledCount': number
 
@@ -395,6 +393,12 @@ export type MolecularProfileCaseIdentifier = {
         'molecularProfileId': string
 
 };
+export type MolecularProfileCasesGroup = {
+    'molecularProfileCaseIdentifiers': Array < MolecularProfileCaseIdentifier >
+
+        'name': string
+
+};
 export type MolecularProfileSampleCount = {
     'numberOfCNAProfiledSamples': number
 
@@ -425,12 +429,6 @@ export type MrnaPercentile = {
         'uniqueSampleKey': string
 
         'zScore': number
-
-};
-export type MultipleStudiesEnrichmentFilter = {
-    'molecularProfileCaseSet1': Array < MolecularProfileCaseIdentifier >
-
-        'molecularProfileCaseSet2': Array < MolecularProfileCaseIdentifier >
 
 };
 export type MutSig = {
@@ -1161,8 +1159,8 @@ export default class CBioPortalAPIInternal {
     fetchCopyNumberEnrichmentsUsingPOSTURL(parameters: {
         'copyNumberEventType' ? : "HOMDEL" | "AMP",
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'multipleStudiesEnrichmentFilter': MultipleStudiesEnrichmentFilter,
-        $queryParameters ? : any
+        'groups': Array < MolecularProfileCasesGroup > ,
+            $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/copy-number-enrichments/fetch';
@@ -1190,13 +1188,13 @@ export default class CBioPortalAPIInternal {
      * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
      * @param {string} copyNumberEventType - Type of the copy number event
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} multipleStudiesEnrichmentFilter - List of entities
+     * @param {} groups - List of entities
      */
     fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters: {
         'copyNumberEventType' ? : "HOMDEL" | "AMP",
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'multipleStudiesEnrichmentFilter': MultipleStudiesEnrichmentFilter,
-        $queryParameters ? : any,
+        'groups': Array < MolecularProfileCasesGroup > ,
+            $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
@@ -1219,12 +1217,12 @@ export default class CBioPortalAPIInternal {
                 queryParameters['enrichmentType'] = parameters['enrichmentType'];
             }
 
-            if (parameters['multipleStudiesEnrichmentFilter'] !== undefined) {
-                body = parameters['multipleStudiesEnrichmentFilter'];
+            if (parameters['groups'] !== undefined) {
+                body = parameters['groups'];
             }
 
-            if (parameters['multipleStudiesEnrichmentFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: multipleStudiesEnrichmentFilter'));
+            if (parameters['groups'] === undefined) {
+                reject(new Error('Missing required  parameter: groups'));
                 return;
             }
 
@@ -1246,13 +1244,13 @@ export default class CBioPortalAPIInternal {
      * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
      * @param {string} copyNumberEventType - Type of the copy number event
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} multipleStudiesEnrichmentFilter - List of entities
+     * @param {} groups - List of entities
      */
     fetchCopyNumberEnrichmentsUsingPOST(parameters: {
             'copyNumberEventType' ? : "HOMDEL" | "AMP",
             'enrichmentType' ? : "SAMPLE" | "PATIENT",
-            'multipleStudiesEnrichmentFilter': MultipleStudiesEnrichmentFilter,
-            $queryParameters ? : any,
+            'groups': Array < MolecularProfileCasesGroup > ,
+                $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < AlterationEnrichment >
         > {
@@ -3044,8 +3042,8 @@ export default class CBioPortalAPIInternal {
         };
     fetchMutationEnrichmentsUsingPOSTURL(parameters: {
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'multipleStudiesEnrichmentFilter': MultipleStudiesEnrichmentFilter,
-        $queryParameters ? : any
+        'groups': Array < MolecularProfileCasesGroup > ,
+            $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/mutation-enrichments/fetch';
@@ -3068,12 +3066,12 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#fetchMutationEnrichmentsUsingPOST
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} multipleStudiesEnrichmentFilter - List of entities
+     * @param {} groups - List of groups
      */
     fetchMutationEnrichmentsUsingPOSTWithHttpInfo(parameters: {
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'multipleStudiesEnrichmentFilter': MultipleStudiesEnrichmentFilter,
-        $queryParameters ? : any,
+        'groups': Array < MolecularProfileCasesGroup > ,
+            $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
@@ -3092,12 +3090,12 @@ export default class CBioPortalAPIInternal {
                 queryParameters['enrichmentType'] = parameters['enrichmentType'];
             }
 
-            if (parameters['multipleStudiesEnrichmentFilter'] !== undefined) {
-                body = parameters['multipleStudiesEnrichmentFilter'];
+            if (parameters['groups'] !== undefined) {
+                body = parameters['groups'];
             }
 
-            if (parameters['multipleStudiesEnrichmentFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: multipleStudiesEnrichmentFilter'));
+            if (parameters['groups'] === undefined) {
+                reject(new Error('Missing required  parameter: groups'));
                 return;
             }
 
@@ -3118,12 +3116,12 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#fetchMutationEnrichmentsUsingPOST
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} multipleStudiesEnrichmentFilter - List of entities
+     * @param {} groups - List of groups
      */
     fetchMutationEnrichmentsUsingPOST(parameters: {
             'enrichmentType' ? : "SAMPLE" | "PATIENT",
-            'multipleStudiesEnrichmentFilter': MultipleStudiesEnrichmentFilter,
-            $queryParameters ? : any,
+            'groups': Array < MolecularProfileCasesGroup > ,
+                $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < AlterationEnrichment >
         > {
