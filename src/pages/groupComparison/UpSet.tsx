@@ -93,7 +93,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
     }
 
     @computed get groupLabels() {
-        return _.map(this.activeGroups, group => truncateWithEllipsis(group.name, 100, "Arial", "13px"));
+        return _.map(this.activeGroups, group => truncateWithEllipsis(group.nameWithOrdinal, 100, "Arial", "13px"));
     }
 
     private barSeparation() {
@@ -174,7 +174,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
 
     @computed get biggestCategoryLabelSize() {
         return Math.max(
-            ..._.map(this.activeGroups, group => getTextWidth(group.name, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize + "px"))
+            ..._.map(this.activeGroups, group => getTextWidth(group.nameWithOrdinal, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize + "px"))
         );
     }
 
@@ -320,7 +320,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
     }
 
     private tooltip(datum: any) {
-        const includedGroupNames = _.map(datum.groups as string[], groupUid => this.props.uidToGroup[groupUid].name);
+        const includedGroupNames = _.map(datum.groups as string[], groupUid => this.props.uidToGroup[groupUid].nameWithOrdinal);
         const casesCount = datum.cases.length;
         return (
             <div style={{ maxWidth: 300, whiteSpace: "normal" }}>

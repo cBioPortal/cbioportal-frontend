@@ -26,7 +26,7 @@ import ScrollBar from "shared/components/Scrollbar/ScrollBar";
 import BoxScatterPlot, {IBoxScatterPlotData} from "shared/components/plots/BoxScatterPlot";
 import {getMobxPromiseGroupStatus} from "shared/lib/getMobxPromiseGroupStatus";
 import {scatterPlotSize} from "shared/components/plots/PlotUtils";
-import {CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG, ClinicalDataEnrichmentWithQ} from "./GroupComparisonUtils";
+import {CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG, ClinicalDataEnrichmentWithQ, ComparisonGroup} from "./GroupComparisonUtils";
 import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCategoryBarPlot";
 import {STUDY_VIEW_CONFIG} from "pages/studyView/StudyViewConfig";
 import ReactSelect from "react-select";
@@ -246,7 +246,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                 _.forEach(this.props.store.sampleKeyToActiveGroups.result!, (groupUids, uniqueSampleKey)=>{
                     axisData_Data.push({
                         uniqueSampleKey,
-                        value: groupUids.map(uid=>uidToGroup[uid].name),
+                        value: groupUids.map(uid=>uidToGroup[uid].nameWithOrdinal),
                     });
                 });
             }
@@ -334,10 +334,12 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
 
     @computed get categoryToColor() {
         //add group colors and reserved category colors
-        return _.reduce(this.props.store.uidToGroup.result!, (acc, next) => {
-            acc[next.name] = next.color;
+        const map = _.reduce(this.props.store.uidToGroup.result!, (acc, next) => {
+            acc[next.nameWithOrdinal] = next.color;
             return acc;
         }, STUDY_VIEW_CONFIG.colors.reservedValue);
+
+        return map;
     }
 
     @observable plotType: PlotType = PlotType.PercentageStackedBar;
