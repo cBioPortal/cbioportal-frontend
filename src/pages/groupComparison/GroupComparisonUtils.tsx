@@ -315,7 +315,8 @@ export function getOverlapFilteredGroups(
 
 export function MakeEnrichmentsTabUI(
     getStore:()=>GroupComparisonStore,
-    getEnrichmentsUI:()=>MobxViewAlwaysComponent
+    getEnrichmentsUI:()=>MobxViewAlwaysComponent,
+    multiGroupAnalysisPossible?:boolean
 ) {
     return MakeMobxView({
         await:()=>{
@@ -332,10 +333,11 @@ export function MakeEnrichmentsTabUI(
         },
         render:()=>{
             const store = getStore();
-            if (store.activeGroups.result!.length !== 2) {
+            const activeGroupsCount = store.activeGroups.result!.length;
+            if ((!multiGroupAnalysisPossible && activeGroupsCount !== 2) || (multiGroupAnalysisPossible && activeGroupsCount < 2)) {
                 return (
                     <span>
-                        {ENRICHMENTS_NOT_2_GROUPS_MSG(store.activeGroups.result!.length, store._activeGroupsNotOverlapRemoved.result!.length)}
+                        {ENRICHMENTS_NOT_2_GROUPS_MSG(store.activeGroups.result!.length, store._activeGroupsNotOverlapRemoved.result!.length, multiGroupAnalysisPossible)}
                     </span>
                 );
             } else if (store.activeStudyIds.result!.length > 1) {
@@ -352,9 +354,10 @@ export function MakeEnrichmentsTabUI(
     });
 }
 
-export function ENRICHMENTS_NOT_2_GROUPS_MSG(numActiveGroups:number, numSelectedGroups:number) {
+export function ENRICHMENTS_NOT_2_GROUPS_MSG(numActiveGroups:number, numSelectedGroups:number, isMultiGroupAnalysis?:boolean) {
     if (numSelectedGroups < 2) {
-        return "Please select more groups - we need exactly 2 selected groups to show enrichments.";
+
+        return `Please select more groups - we need ${isMultiGroupAnalysis ? 'at least' : 'exactly'} 2 selected groups to show enrichments.`;
     } else if (numActiveGroups < 2) {
         // at least 2 selected, but less than 2 active, meaning overlap has reduced it
         return "Due to excluded overlapping cases, there are less than 2 selected nonempty groups - we need exactly 2 nonempty selected groups to show enrichments.";
