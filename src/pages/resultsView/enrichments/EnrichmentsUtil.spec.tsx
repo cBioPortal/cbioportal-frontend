@@ -1,12 +1,12 @@
 import { assert } from 'chai';
-import React from 'react';
 import { calculateAlterationTendency, calculateExpressionTendency,
     formatPercentage, getAlterationScatterData, getExpressionScatterData,
     getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData, 
-    getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels
+    getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels, getFilteredDataByGroups, getGroupColumns
 } from "./EnrichmentsUtil";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
+import * as _ from "lodash";
 
 expect.extend(expectJSX);
 
@@ -15,15 +15,15 @@ const exampleAlterationEnrichments = [
         "entrezGeneId": 1956,
         "hugoGeneSymbol": "EGFR",
         "cytoband": "7p11.2",
-        "set1CountSummary": {
-            alteredCount: 3,
-            profiledCount:4
-        },
-        "set2CountSummary": {
-            alteredCount: 0,
-            profiledCount: 84
-        },
-        "logRatio": "Infinity",
+        "counts":[{
+            "alteredCount": 3,
+            "name": "altered group",
+            "profiledCount": 4
+        },{
+            "alteredCount": 0,
+            "name": "unaltered group",
+            "profiledCount": 4
+        }],
         "pValue": 0.00003645111904935468,
         "qValue": 0.2521323904643863
     },
@@ -31,15 +31,15 @@ const exampleAlterationEnrichments = [
         "entrezGeneId": 6468,
         "hugoGeneSymbol": "FBXW4",
         "cytoband": "10q24.32",
-        "set1CountSummary": {
-            alteredCount: 2,
-            profiledCount: 4
-        },
-        "set2CountSummary": {
-            alteredCount: 0,
-            profiledCount: 84
-        },
-        "logRatio": "Infinity",
+        "counts":[{
+            "alteredCount": 2,
+            "name": "altered group",
+            "profiledCount": 4
+        },{
+            "alteredCount": 0,
+            "name": "unaltered group",
+            "profiledCount": 4
+        }],
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061
     }, 
@@ -47,15 +47,15 @@ const exampleAlterationEnrichments = [
         "entrezGeneId": 23066,
         "hugoGeneSymbol": "CAND2",
         "cytoband": "3p25.2",
-        "set1CountSummary": {
-            alteredCount: 2,
-            profiledCount: 4
-        },
-        "set2CountSummary": {
-            alteredCount: 0,
-            profiledCount: 84
-        },
-        "logRatio": "Infinity",
+        "counts":[{
+            "alteredCount": 2,
+            "name": "altered group",
+            "profiledCount": 4
+        },{
+            "alteredCount": 0,
+            "name": "unaltered group",
+            "profiledCount": 4
+        }],
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061
     }
@@ -68,10 +68,20 @@ const exampleAlterationEnrichmentRowData = [
         "entrezGeneId": 1956,
         "hugoGeneSymbol": "EGFR",
         "cytoband": "7p11.2",
-        "alteredCount": 3,
-        "alteredPercentage": 75,
-        "unalteredCount": 0,
-        "unalteredPercentage": 0,
+        "groupsSet": {
+            "altered group": {
+                "name": "altered group",
+                "alteredCount": 3,
+                "profiledCount": 4,
+                "alteredPercentage": 0.75
+            },
+            "unaltered group": {
+                "name": "unaltered group",
+                "alteredCount": 0,
+                "profiledCount": 4,
+                "alteredPercentage": 0
+            }
+        },
         "logRatio": Infinity,
         "pValue": 0.00003645111904935468,
         "qValue": 0.2521323904643863,
@@ -83,10 +93,20 @@ const exampleAlterationEnrichmentRowData = [
         "entrezGeneId": 6468,
         "hugoGeneSymbol": "FBXW4",
         "cytoband": "10q24.32",
-        "alteredCount": 2,
-        "alteredPercentage": 50,
-        "unalteredCount": 0,
-        "unalteredPercentage": 0,
+        "groupsSet": {
+            "altered group": {
+                "name":"altered group",
+                "alteredCount": 2,
+                "profiledCount": 4,
+                "alteredPercentage": 0.5
+            },
+            "unaltered group": {
+                "name":"unaltered group",
+                "alteredCount": 0,
+                "profiledCount": 4,
+                "alteredPercentage": 0
+            }
+        },
         "logRatio": Infinity,
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061,
@@ -98,10 +118,20 @@ const exampleAlterationEnrichmentRowData = [
         "entrezGeneId": 23066,
         "hugoGeneSymbol": "CAND2",
         "cytoband": "3p25.2",
-        "alteredCount": 2,
-        "alteredPercentage": 50,
-        "unalteredCount": 0,
-        "unalteredPercentage": 0,
+        "groupsSet": {
+            "altered group": {
+                "name":"altered group",
+                "alteredCount": 2,
+                "profiledCount": 4,
+                "alteredPercentage": 0.5
+            },
+            "unaltered group": {
+                "name":"unaltered group",
+                "alteredCount": 0,
+                "profiledCount": 4,
+                "alteredPercentage": 0
+            }
+        },
         "logRatio": Infinity,
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061,
@@ -372,12 +402,28 @@ describe("EnrichmentsUtil", () => {
     });
 
     describe("#formatPercentage()", () => {
-        it("returns 5 (10.35%) for 5 and 10.3452", () => {
-            assert.equal(formatPercentage(5, 10.3452), "5 (10.35%)");
+        it("returns 3 (75%) for altered count 3 and profiled count 4", () => {
+            assert.equal(formatPercentage("altered group", {
+                "groupsSet": {
+                    "altered group": {
+                        "name": "altered group",
+                        "alteredCount": 3,
+                        "alteredPercentage": 75
+                    }
+                }
+            } as any), "3 (75.00%)");
         });
 
-        it("returns 1 (1.00%) for 1 and 1", () => {
-            assert.equal(formatPercentage(1, 1), "1 (1.00%)");
+        it("returns 1 (1.00%) for altered count 1 and profiled count 100", () => {
+            assert.equal(formatPercentage("altered group", {
+                "groupsSet": {
+                    "altered group": {
+                        "name": "altered group",
+                        "alteredCount": 1,
+                        "alteredPercentage": 1
+                    }
+                }
+            } as any), "1 (1.00%)");
         });
     });
 
@@ -387,7 +433,7 @@ describe("EnrichmentsUtil", () => {
         });
 
         it("returns correct scatter data", () => {
-            assert.deepEqual(getAlterationScatterData(exampleAlterationEnrichmentRowData, ["EGFR"]), [
+            assert.deepEqual(getAlterationScatterData(exampleAlterationEnrichmentRowData as any, ["EGFR"]), [
                 {x: 10, y: 2.804820678721167, hugoGeneSymbol: "FBXW4", logRatio: Infinity, pValue:0.0015673981191222392, qValue: 0.9385345997286061, hovered: false},
                 {x: 10, y: 2.804820678721167, hugoGeneSymbol: "CAND2", logRatio: Infinity, pValue:0.0015673981191222392, qValue: 0.9385345997286061, hovered: false},
             ]);
@@ -413,11 +459,11 @@ describe("EnrichmentsUtil", () => {
 
     describe("#getAlterationRowData()", () => {
         it("returns empty array for empty array", () => {
-            assert.deepEqual(getAlterationRowData([], []), []);
+            assert.deepEqual(getAlterationRowData([], [], false, "", ""), []);
         });
 
         it("returns correct row data", () => {
-            assert.deepEqual(getAlterationRowData(exampleAlterationEnrichments, ["EGFR"]), exampleAlterationEnrichmentRowData);
+            assert.deepEqual(getAlterationRowData(exampleAlterationEnrichments, ["EGFR"], true, "altered group", "unaltered group"), exampleAlterationEnrichmentRowData as any);
         });
     });
 
@@ -433,10 +479,10 @@ describe("EnrichmentsUtil", () => {
 
     describe("#getFilteredData()", () => {
         it("returns correct filtered data", () => {
-            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, true, true, false, null),
+            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData as any, true, true, false, null),
                 exampleExpressionEnrichmentRowData);
 
-            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, true, false, true, null), [
+            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData as any , true, false, true, null), [
                 {
                     "checked": false,
                     "disabled": false,
@@ -453,7 +499,7 @@ describe("EnrichmentsUtil", () => {
                 }
             ]);
 
-            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, false, true, false, ["DHRS7B", "PTPN3"]), [
+            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData as any, false, true, false, ["DHRS7B", "PTPN3"]), [
                 {
                     "checked": false,
                     "disabled": false,
@@ -467,6 +513,44 @@ describe("EnrichmentsUtil", () => {
                     "logRatio": 1.373692179998275,
                     "pValue": 3.698700537372556E-9,
                     "qValue": 0.000024032306741578182
+                }
+            ]);
+        });
+    });
+
+
+    describe("#getFilteredDataByGroups()", () => {
+        it("returns correct filtered data", () => {
+            assert.deepEqual(getFilteredDataByGroups(exampleAlterationEnrichmentRowData as any, ["altered group", "unaltered group"], false, null),
+            exampleAlterationEnrichmentRowData);
+
+            assert.deepEqual(getFilteredDataByGroups(exampleAlterationEnrichmentRowData as any , ["unaltered group"], true, null), []);
+
+            assert.deepEqual(getFilteredDataByGroups(exampleAlterationEnrichmentRowData as any, ["altered group"], false, ["FBXW4"]), [
+                {
+                    "checked": false,
+                    "disabled": false,
+                    "entrezGeneId": 6468,
+                    "hugoGeneSymbol": "FBXW4",
+                    "cytoband": "10q24.32",
+                    "groupsSet": {
+                        "altered group": {
+                            "name":"altered group",
+                            "alteredCount": 2,
+                            "profiledCount": 4,
+                            "alteredPercentage": 0.5
+                        },
+                        "unaltered group": {
+                            "name":"unaltered group",
+                            "alteredCount": 0,
+                            "profiledCount": 4,
+                            "alteredPercentage": 0
+                        }
+                    },
+                    "logRatio": Infinity,
+                    "pValue": 0.0015673981191222392,
+                    "qValue": 0.9385345997286061,
+                    "value":undefined
                 }
             ]);
         });
@@ -632,6 +716,16 @@ describe("EnrichmentsUtil", () => {
             }
             assert.deepEqual(getBoxPlotScatterData(exampleMolecularData, "acc_tcga_rna_seq_v2_mrna", sampleAlterations, []), 
                 exampleBoxPlotScatterData);
+        });
+    });
+
+    describe("#getGroupColumns()", () => {
+        it("returns correct group columns", () => {
+            assert.deepEqual(getGroupColumns([]),[]);
+            assert.deepEqual(_.map(getGroupColumns([{name:"altered group", description:""}]),datum=>datum.name),['altered group']);
+            assert.deepEqual(_.map(getGroupColumns([{name:"altered group", description:""},{name:"unaltered group", description:""}], true),datum=>datum.name),["Log Ratio", "Tendency", "altered group", "unaltered group"]);
+            assert.deepEqual(_.map(getGroupColumns([{name:"group1", description:""},{name:"group2", description:""}]),datum=>datum.name),["Log Ratio", "Enriched in", "group1", "group2"]);
+            assert.deepEqual(_.map(getGroupColumns([{name:"group1", description:""},{name:"group2", description:""}, {name:"group3", description:""}]),datum=>datum.name),["group1", "group2", "group3"]);
         });
     });
 });
