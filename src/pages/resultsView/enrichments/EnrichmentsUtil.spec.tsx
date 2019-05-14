@@ -73,7 +73,7 @@ const exampleAlterationEnrichmentRowData = [
                 "name": "altered group",
                 "alteredCount": 3,
                 "profiledCount": 4,
-                "alteredPercentage": 0.75
+                "alteredPercentage": 75
             },
             "unaltered group": {
                 "name": "unaltered group",
@@ -98,7 +98,7 @@ const exampleAlterationEnrichmentRowData = [
                 "name":"altered group",
                 "alteredCount": 2,
                 "profiledCount": 4,
-                "alteredPercentage": 0.5
+                "alteredPercentage": 50
             },
             "unaltered group": {
                 "name":"unaltered group",
@@ -123,7 +123,7 @@ const exampleAlterationEnrichmentRowData = [
                 "name":"altered group",
                 "alteredCount": 2,
                 "profiledCount": 4,
-                "alteredPercentage": 0.5
+                "alteredPercentage": 50
             },
             "unaltered group": {
                 "name":"unaltered group",
@@ -402,7 +402,7 @@ describe("EnrichmentsUtil", () => {
     });
 
     describe("#formatPercentage()", () => {
-        it("returns 3 (75%) for altered count 3 and profiled count 4", () => {
+        it("returns 3 (75.00%) for altered count 3 and profiled count 4", () => {
             assert.equal(formatPercentage("altered group", {
                 "groupsSet": {
                     "altered group": {
@@ -538,7 +538,7 @@ describe("EnrichmentsUtil", () => {
                             "name":"altered group",
                             "alteredCount": 2,
                             "profiledCount": 4,
-                            "alteredPercentage": 0.5
+                            "alteredPercentage": 50
                         },
                         "unaltered group": {
                             "name":"unaltered group",
