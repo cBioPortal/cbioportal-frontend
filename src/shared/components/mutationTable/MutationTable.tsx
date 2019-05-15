@@ -540,7 +540,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             render: (d:Mutation[]) => GnomadColumnFormatter.renderFunction(d, this.props.genomeNexusCache as GenomeNexusCache),
             sortBy: (d:Mutation[]) => GnomadColumnFormatter.getSortValue(d, this.props.genomeNexusCache as GenomeNexusCache),
             download: (d:Mutation[]) => GnomadColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
-            tooltip: (<span>gnomAD data</span>),
+            tooltip: (<span><a href="https://gnomad.broadinstitute.org/">gnomAD</a> population allele frequencies</span>),
             defaultSortDirection: "desc",
             visible: false,
             align: "right"
