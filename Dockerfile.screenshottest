@@ -20,4 +20,4 @@ CMD cd /cbioportal-frontend && \
     echo PROBE CBIOPORTAL && curl $CBIOPORTAL_URL > /dev/null && \
     sleep 20s && \
     echo PROBE FRONTEND SERVER && (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
-    echo RUN E2E-TESTS && cd /cbioportal-frontend/end-to-end-tests && yarn run e2e-local
+    echo RUN E2E-TESTS && cd /cbioportal-frontend/end-to-end-tests && yarn run e2e-localdb

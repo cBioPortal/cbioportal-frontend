@@ -15,7 +15,6 @@ describe('homepage', function() {
     if (useExternalFrontend) {
         it('it should show dev mode when testing', function() {
             var devMode = $('.alert-warning');
-
             devMode.waitForExist(10000);
             assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
         });
