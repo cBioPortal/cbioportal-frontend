@@ -1,7 +1,7 @@
 import * as React from "react";
 import {SyntheticEvent} from "react";
 import {observer} from "mobx-react";
-import {StudyViewPageStore, UniqueKey} from "../../studyView/StudyViewPageStore";
+import {StudyViewPageStore} from "../../studyView/StudyViewPageStore";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import {
@@ -24,6 +24,7 @@ import {sleepUntil} from "../../../shared/lib/TimeUtils";
 import {LoadingPhase} from "../GroupComparisonLoading";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import _ from "lodash";
+import {UniqueKey} from "../../studyView/StudyViewUtils";
 
 export interface IComparisonGroupManagerProps {
     store:StudyViewPageStore;
@@ -66,7 +67,11 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     @action
     private showAddGroupPanel() {
         this.addGroupPanelOpen = true;
-        this._inputGroupName = getDefaultGroupName(this.props.store.filters, this.props.store.entrezGeneIdToGene.result!);
+        this._inputGroupName = getDefaultGroupName(
+            this.props.store.filters,
+            this.props.store.customChartFilterSet.toJS(),
+            this.props.store.entrezGeneIdToGene.result!
+        );
     }
 
     @autobind
