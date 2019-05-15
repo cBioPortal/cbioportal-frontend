@@ -53,7 +53,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                                                 selected ?  <i className={'fa fa-check'}></i> : <i className={'fa fa-minus'}></i>
                                             }
                                             &nbsp;
-                                            <EllipsisTextTooltip style={{display:"inline-block"}} text={group.name} shownWidth={100}/>
+                                            <EllipsisTextTooltip style={{display:"inline-block"}} text={group.nameWithOrdinal} shownWidth={100}/>
                                             &nbsp;
                                             {caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
                                             {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
