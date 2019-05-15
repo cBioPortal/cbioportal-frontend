@@ -69,7 +69,6 @@ export interface IChartContainerProps {
 
     openComparisonPage:(params:{
         chartMeta: ChartMeta,
-        clinicalAttribute?:ClinicalAttribute,
         clinicalAttributeValues?:{ value:string, color:string }[]
     })=>void;
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
@@ -241,7 +240,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 case ChartTypeEnum.TABLE:
                     this.props.openComparisonPage({
                         chartMeta: this.props.chartMeta,
-                        clinicalAttribute: this.props.chartMeta.clinicalAttribute!,
                         clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]).map(d=>{
                             return {
                                 value: d.value,
@@ -253,7 +251,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 case ChartTypeEnum.BAR_CHART:
                     this.props.openComparisonPage({
                         chartMeta: this.props.chartMeta,
-                        clinicalAttribute: this.props.chartMeta.clinicalAttribute!
                     });
                     break;
             }

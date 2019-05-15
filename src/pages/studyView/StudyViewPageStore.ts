@@ -552,7 +552,6 @@ export class StudyViewPageStore {
     @autobind
     public async openComparisonPage(params:{
         chartMeta: ChartMeta,
-        clinicalAttribute?: ClinicalAttribute,
         clinicalAttributeValues?: {value:string, color:string}[]
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
@@ -591,7 +590,7 @@ export class StudyViewPageStore {
                 case ChartTypeEnum.TABLE:
                     sessionId =
                         await this.createStringAttributeComparisonSession(
-                            params.clinicalAttribute!,
+                            params.chartMeta.clinicalAttribute!,
                             params.clinicalAttributeValues!,
                             statusCallback
                         );
@@ -599,7 +598,7 @@ export class StudyViewPageStore {
                 default:
                     sessionId =
                         await this.createNumberAttributeComparisonSession(
-                            params.clinicalAttribute!,
+                            params.chartMeta.clinicalAttribute!,
                             statusCallback
                         );
                     break;
