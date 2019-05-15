@@ -6,16 +6,18 @@ LABEL Description="End-2-end test image for cBioPortal frontend"
 USER root
 
 COPY . /cbioportal-frontend
-RUN npm install --global yarn@1.13.0 && \
-    yarn build && \
-    cd /cbioportal-frontend/end-to-end-tests && \
-    yarn install --frozen-lockfile
+RUN cd /cbioportal-frontend && npm install --global yarn@1.13.0 && cd end-to-end-tests && yarn install
 
-CMD bash -c 'cd cbioportal-frontend && \
+CMD cd /cbioportal-frontend && \
     yarn serveDistLocalDb & \
-    cd end-to-end-tests && \
-    ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome "2.42" && \
-    ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome "2.42" & \
-    sleep 30; \
-    (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
-    yarn run test-webdriver-manager'
+    cd /cbioportal-frontend/end-to-end-tests && \
+    echo UPDATE WEBDRIVER-MANAGER && ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome "2.42" && \
+    echo START WEBDRIVER-MANAGER && ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome "2.42" & \
+    echo PROBE CBIOPORTAL && curl $CBIOPORTAL_URL > /dev/null && \
+    sleep 5s && \
+    echo PROBE CBIOPORTAL && curl $CBIOPORTAL_URL > /dev/null && \
+    sleep 5s && \
+    echo PROBE CBIOPORTAL && curl $CBIOPORTAL_URL > /dev/null && \
+    sleep 20s && \
+    echo PROBE FRONTEND SERVER && (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
+    echo RUN E2E-TESTS && cd /cbioportal-frontend/end-to-end-tests && yarn run e2e-local

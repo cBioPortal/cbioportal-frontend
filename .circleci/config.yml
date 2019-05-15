@@ -174,7 +174,7 @@ jobs:
             SESSION_SERVICE_HOST_NAME: cbio-session-service
             DIFF_SCREENSHOT_DIR_NAME: diff_localdb_specified
             SPEC_FILE_PATTERN: ./local_database/specs/**/*.spec.js
-            JUNIT_REPORT_PATH: ./junit/
+            JUNIT_REPORT_PATH: ./local_database/junit/
             PORTAL_SOURCE_DIR: /tmp/repo
             TEST_HOME: /tmp/repo/end-to-end-tests
             FRONTEND_TEST_USE_LOCAL_DIST: true

@@ -65,9 +65,10 @@ run_cbioportal_container() {
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/local_database/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
         -e CATALINA_OPTS='-Xms2g -Xmx4g' \
+        -p 8081:8080 \
         cbioportal-endtoend-image
     
-    echo Wait 2 minutes for the server to initialize
+    echo Wait 2 minutes for the cBioPortal server to initialize
     sleep 120
 
 }
@@ -125,10 +126,12 @@ download_db_seed() {
 }
 
 run_session_service() {
+    docker stop mongoDB && docker rm mongoDB
     docker run -d --name=mongoDB --net=$DOCKER_NETWORK_NAME \
         -e MONGO_INITDB_DATABASE=session_service \
         mongo:4.0
 
+    docker stop cbio-session-service && docker rm cbio-session-service
     docker run -d --name=cbio-session-service --net=$DOCKER_NETWORK_NAME -p 8084:8080 \
         -e JAVA_OPTS="-Dspring.data.mongodb.uri=mongodb://mongoDB:27017/session-service" \
         thehyve/cbioportal-session-service:cbiov2.1.0
