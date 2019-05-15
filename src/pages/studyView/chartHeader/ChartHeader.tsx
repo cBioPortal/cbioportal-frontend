@@ -1,7 +1,7 @@
 import * as React from "react";
 import styles from "./styles.module.scss";
 import {If} from 'react-if';
-import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
+import {ChartType} from "pages/studyView/StudyViewUtils";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import autobind from 'autobind-decorator';
@@ -12,7 +12,7 @@ import {observer} from "mobx-react";
 import {IChartContainerDownloadProps} from "../charts/ChartContainer";
 import {saveSvgAsPng} from "save-svg-as-png";
 import {ChartTypeEnum} from "../StudyViewConfig";
-import {getClinicalAttributeOverlay} from "../StudyViewUtils";
+import {ChartMeta, getClinicalAttributeOverlay} from "../StudyViewUtils";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import {Dropdown, MenuItem} from "react-bootstrap";
 

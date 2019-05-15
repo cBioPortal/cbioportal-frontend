@@ -389,12 +389,18 @@ export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups:number) {
 
 export function getDefaultGroupName(
     filters:StudyViewFilter,
+    customChartFilterSet:{[chartId:string]:string[]},
     entrezGeneIdToGene:{[entrez:number]:GeneIdentifier}
 ) {
     const equalityFilters = _.sortBy( // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
         filters.clinicalDataEqualityFilters || [],
         filter=>filter.attributeId
     ).map(filter=>filter.values.join("+")); // get each attributes selected values, joined by +
+
+    const customChartValues =
+        _(customChartFilterSet).keys().sortBy() // sort into a canonical order - lets just do alphabetical by chart id
+            .map(key=>customChartFilterSet[key].join("+"))// get each attributes selected values, joined by +
+            .value();
 
     const mutatedGenes =
         _.flattenDeep<number>((filters.mutatedGenes || []).map(filter=>filter.entrezGeneIds))
@@ -415,7 +421,11 @@ export function getDefaultGroupName(
     }
 
 
-    const allFilters = mutatedGenes.concat(cnaGenes).concat(equalityFilters).concat(withData);
+    const allFilters = mutatedGenes
+                        .concat(cnaGenes)
+                        .concat(equalityFilters)
+                        .concat(customChartValues)
+                        .concat(withData);
     
     return allFilters.join(", "); // comma separate each attributes values
 }
