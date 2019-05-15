@@ -141,7 +141,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         if(this.isTwoGroupAnalysis) {
             columns.push(AlterationEnrichmentTableColumnType.LOG_RATIO);
         }
-        
+
         columns.push(
         AlterationEnrichmentTableColumnType.P_VALUE,
         AlterationEnrichmentTableColumnType.Q_VALUE);
@@ -214,7 +214,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         <h3>{this.props.headerName}</h3>
                         {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
                     </div>
-                    <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
 
                         <div style={{ width: 250, marginRight: 7 }} >
