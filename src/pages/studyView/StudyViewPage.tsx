@@ -66,6 +66,7 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
 @observer
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
     private store: StudyViewPageStore;
+    private enableCustomSelectionInTabs = [StudyViewPageTabKeyEnum.SUMMARY, StudyViewPageTabKeyEnum.CLINICAL_DATA, StudyViewPageTabKeyEnum.CN_SEGMENTS];
     private enableAddChartInTabs = [StudyViewPageTabKeyEnum.SUMMARY, StudyViewPageTabKeyEnum.CLINICAL_DATA];
     private queryReaction:IReactionDisposer;
     @observable showCustomSelectTooltip = false;
@@ -220,10 +221,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                             }
                                         }
                                     </Observer>
-                                    {(this.enableAddChartInTabs.includes(this.store.currentTab))
-                                    && (
+
                                         <div style={{display: 'flex'}}>
 
+                                            {(this.enableCustomSelectionInTabs.includes(this.store.currentTab))
+                                            && (
                                             <DefaultTooltip
                                                 visible={this.showCustomSelectTooltip}
                                                 placement={"bottomLeft"}
@@ -255,6 +257,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                         style={{marginLeft: '10px'}}>Custom Selection
                                                 </button>
                                             </DefaultTooltip>
+                                            )}
+                                            {(this.enableAddChartInTabs.includes(this.store.currentTab))
+                                            && (
                                             <AddChartButton
                                                 buttonText={this.addChartButtonText}
                                                 store={this.store}
@@ -262,8 +267,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                 addChartOverlayClassName='studyViewAddChartOverlay'
                                                 disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
                                             />
+                                            )}
                                         </div>
-                                    )}
+
                                 </div>
                             </div>
                         </div>
