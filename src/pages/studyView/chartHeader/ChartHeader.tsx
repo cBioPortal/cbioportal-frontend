@@ -14,6 +14,7 @@ import {saveSvgAsPng} from "save-svg-as-png";
 import {ChartTypeEnum} from "../StudyViewConfig";
 import {getClinicalAttributeOverlay} from "../StudyViewUtils";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
+import {Dropdown, MenuItem} from "react-bootstrap";
 
 // there's some incompatiblity with rc-tooltip and study view layout
 // these adjustments force tooltips to open top right because tooltips
@@ -49,11 +50,8 @@ export interface ChartControls {
 
 @observer
 export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
-    constructor(props: IChartHeaderProps) {
-        super(props);
-    }
 
-    @observable downloadMenuActive = false;
+    @observable menuOpen = false;
     @observable downloadPending = {
         TSV: false,
         SVG: false,
@@ -66,166 +64,145 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         return this.props.chartMeta.displayName.replace(/[ \t]/g, '_');
     }
 
-    private downloadControls() {
-        const overlay = (
-            <div className={styles.downloadControl}>
-                {
-                    this.props.download && this.props.download.map(props =>
-                        <button
-                            key={props.type}
-                            className="btn btn-xs"
-                            onClick={() => {
-                                this.downloadPending[props.type] = true;
-                                props.initDownload!().then(data => {
-                                    if (data) {
-                                        const fileName = `${this.fileName}.${props.type.substring(0, 3).toLowerCase()}`;
-                                        if (props.type === "PNG") {
-                                            saveSvgAsPng(data, fileName, {backgroundColor:"#ffffff"});
-                                        } else if (typeof data === "string" && data.length > 0) {
-                                            fileDownload(data, fileName);
-                                        } else if (props.type === "PDF" && data) {
-                                            svgToPdfDownload(fileName, data)
-                                        }
-                                    }
-                                    this.downloadPending[props.type] = false;
-                                }).catch(() => {
-                                    // TODO this.triggerDownloadError();
-                                    this.downloadPending[props.type] = false;
-                                });
-                            }}
-                        >
-                            {this.downloadPending[props.type] ?
-                                <i className="fa fa-spinner fa-spin" aria-hidden="true"/> : props.type}
-                        </button>
-                    )
-                }
-            </div>
-        );
-
-        return (
-            <DefaultTooltip
-                placement={tooltipPosition}
-                align={tooltipAlign}
-                overlay={<span>Download</span>}>
-                <DefaultTooltip
-                    placement="bottom"
-                    overlay={overlay}
-                    destroyTooltipOnHide={true}
-                    onVisibleChange={this.onTooltipVisibleChange}
-                    trigger={["click"]}
-                    getTooltipContainer={(...args:any[])=>{
-                        // this weirdness is necessary to fix broken type
-                        return args[0].parentNode;
-                    }}
-                >
-                    <i className={classnames("fa", "fa-download", styles.item, styles.clickable)}
-                       aria-hidden="true"></i>
-                </DefaultTooltip>
-            </DefaultTooltip>
-        );
-    }
-
     @autobind
     @action
-    onTooltipVisibleChange(visible: boolean) {
-        this.downloadMenuActive = visible;
+    onMenuToggle(isOpen:boolean) {
+        this.menuOpen = isOpen;
     }
 
     @computed get active() {
-        return this.downloadMenuActive || this.props.active;
+        return this.menuOpen || this.props.active;
+    }
+
+    @computed get menuItems() {
+        const items = [];
+        if (this.props.chartControls && !!this.props.chartControls.showLogScaleToggle) {
+            items.push(
+                <MenuItem>
+                    <LabeledCheckbox
+                        checked={this.props.chartControls && this.props.chartControls.logScaleChecked}
+                        onChange={event => {
+                            if (this.props.toggleLogScale) {
+                                this.props.toggleLogScale();
+                            }
+                        }}
+                    >
+                        <span>Log Scale</span>
+                    </LabeledCheckbox>
+                </MenuItem>
+            );
+        }
+
+        if (this.props.chartControls && !!this.props.chartControls.showResetIcon) {
+            items.push(
+                <MenuItem onClick={this.props.resetChart}>
+                    Reset filters in chart
+                </MenuItem>
+            );
+        }
+
+        if (this.props.chartControls && !!this.props.chartControls.showTableIcon) {
+            items.push(
+                <MenuItem
+                    onClick={() => this.props.changeChartType(ChartTypeEnum.TABLE)}
+                >
+                    Convert pie chart to table
+                </MenuItem>
+            );
+        }
+
+        if (this.props.chartControls && !!this.props.chartControls.showPieIcon) {
+            items.push(
+                <MenuItem
+                    onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}
+                >
+                    Convert table to pie chart
+                </MenuItem>
+            );
+        }
+
+        if (this.props.chartControls && this.props.chartControls.showComparisonPageIcon) {
+            items.push(
+                <MenuItem
+                    onClick={this.props.openComparisonPage}
+                >
+                    Compare samples in these groups
+                </MenuItem>
+            );
+        }
+
+        if (this.props.chartControls && !!this.props.chartControls.showAnalysisGroupsIcon) {
+            items.push(
+                <MenuItem
+                    onClick={this.props.setAnalysisGroups}
+                >
+                    Survival Analysis
+                </MenuItem>
+            );
+        }
+
+        if (this.props.download && this.props.download.length > 0) {
+            if (items.length > 0) {
+                items.push(<MenuItem divider={true}/>);
+            }
+            for (const props of this.props.download) {
+                items.push(
+                    <MenuItem
+                        onClick={()=>{
+                            this.downloadPending[props.type] = true;
+                            props.initDownload!().then(data => {
+                                if (data) {
+                                    const fileName = `${this.fileName}.${props.type.substring(0, 3).toLowerCase()}`;
+                                    if (props.type === "PNG") {
+                                        saveSvgAsPng(data, fileName, {backgroundColor:"#ffffff"});
+                                    } else if (typeof data === "string" && data.length > 0) {
+                                        fileDownload(data, fileName);
+                                    } else if (props.type === "PDF" && data) {
+                                        svgToPdfDownload(fileName, data)
+                                    }
+                                }
+                                this.downloadPending[props.type] = false;
+                            }).catch(() => {
+                                // TODO this.triggerDownloadError();
+                                this.downloadPending[props.type] = false;
+                            });
+                        }}
+                    >
+                        {
+                            this.downloadPending[props.type] ?
+                            <i className="fa fa-spinner fa-spin" aria-hidden="true"/> :
+                            `Download ${props.type}`
+                        }
+                    </MenuItem>
+                );
+            }
+        }
+
+        return items;
     }
 
     public render() {
         return (
             <div className={classnames(styles.header, 'chartHeader')}
-                 style={{height: `${this.props.height}px`, lineHeight: `${this.props.height}px`}}>
+                 style={{position:"relative", height: `${this.props.height}px`, lineHeight: `${this.props.height}px`}}>
                 <div className={styles.name}>
                     {!this.props.hideLabel && <span className='chartTitle'>{this.props.title}</span>}
                 </div>
-                <If condition={this.active}>
+                {this.active && (
                     <div className={classnames(styles.controls, 'controls')}>
-                        <div role="group" className="btn-group logScaleCheckbox">
-                            <If condition={this.props.chartControls && !!this.props.chartControls.showLogScaleToggle}>
-                                <LabeledCheckbox
-                                    checked={this.props.chartControls && this.props.chartControls.logScaleChecked}
-                                    onChange={event => {
-                                        if (this.props.toggleLogScale) {
-                                            this.props.toggleLogScale();
-                                        }
-                                    }}
-                                >
-                                    <span>Log Scale</span>
-                                </LabeledCheckbox>
-                            </If>
-                        </div>
-                        <If condition={this.props.chartControls && !!this.props.chartControls.showResetIcon}>
-                            <DefaultTooltip
-                                placement={tooltipPosition}
-                                align={tooltipAlign}
-                                overlay={<span>Reset filters in chart</span>}
-                                destroyTooltipOnHide={true}
-                            >
-                                <i className={classnames("fa", "fa-undo", styles.item, styles.clickable, styles.undo)}
-                                   aria-hidden="true" onClick={() => this.props.resetChart()}></i>
-                            </DefaultTooltip>
-                        </If>
                         <If condition={!!this.props.chartMeta.description}>
                             <DefaultTooltip
+                                trigger={["hover","click"]}
                                 placement={tooltipPosition}
                                 align={tooltipAlign}
                                 overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description)}
                                 destroyTooltipOnHide={true}
                             >
-                                <i className={classnames("fa", "fa-info-circle", styles.item)} aria-hidden="true"></i>
+                                <i
+                                    className={classnames("fa", "fa-info-circle", styles.item, styles.clickable)}
+                                    aria-hidden="true"
+                                />
                             </DefaultTooltip>
-                        </If>
-                        <If condition={this.props.chartControls && !!this.props.chartControls.showTableIcon}>
-                            <DefaultTooltip
-                                placement={tooltipPosition}
-                                align={tooltipAlign}
-                                overlay={<span>Convert pie chart to table</span>}
-                            >
-                                <i className={classnames("fa", "fa-table", styles.item, styles.clickable)}
-                                   aria-hidden="true"
-                                   onClick={() => this.props.changeChartType(ChartTypeEnum.TABLE)}></i>
-                            </DefaultTooltip>
-                        </If>
-                        <If condition={this.props.chartControls && !!this.props.chartControls.showPieIcon}>
-                            <DefaultTooltip
-                                placement={tooltipPosition}
-                                align={tooltipAlign}
-                                overlay={<span>Convert table to pie chart</span>}
-                            >
-                                <i className={classnames("fa", "fa-pie-chart", styles.item, styles.clickable)}
-                                   aria-hidden="true"
-                                   onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}></i>
-                            </DefaultTooltip>
-                        </If>
-                        <If condition={this.props.chartControls && this.props.chartControls.showComparisonPageIcon}>
-                            <DefaultTooltip
-                                placement={tooltipPosition}
-                                align={tooltipAlign}
-                                overlay={<span>Compare samples in these groups.</span>}
-                            >
-                                <i className={classnames("fa", "fa-balance-scale", styles.item, styles.clickable)}
-                                   aria-hidden="true"
-                                   onClick={this.props.openComparisonPage}></i>
-                            </DefaultTooltip>
-                        </If>
-                        <If condition={this.props.chartControls && !!this.props.chartControls.showAnalysisGroupsIcon}>
-                            <DefaultTooltip
-                                placement={tooltipPosition}
-                                align={tooltipAlign}
-                                overlay={<span>Survival Analysis</span>}
-                            >
-                                <img src="images/survival_icon.svg"
-                                     className={classnames(styles.survivalIcon, styles.item, styles.clickable, 'survivalIcon')}
-                                     style={{verticalAlign: "initial"}} alt="Survival Analysis"
-                                     onClick={this.props.setAnalysisGroups}/>
-                            </DefaultTooltip>
-                        </If>
-                        <If condition={this.props.download && this.props.download.length > 0}>
-                            {this.downloadControls()}
                         </If>
                         <DefaultTooltip
                             placement={tooltipPosition}
@@ -244,8 +221,21 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             <i className={classnames("fa", "fa-times", styles.item, styles.clickable)}
                                aria-hidden="true" onClick={() => this.props.deleteChart()}></i>
                         </DefaultTooltip>
+                        <Dropdown
+                            id={"chartMenu"}
+                            onToggle={this.onMenuToggle}
+                        >
+                            <Dropdown.Toggle id="btn" bsStyle="default" bsSize="xs">
+                                <span>
+                                    <i className="fa fa-xs fa-bars" style={{marginRight:3}}/>
+                                </span>
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu>
+                                {this.menuItems}
+                            </Dropdown.Menu>
+                        </Dropdown>
                     </div>
-                </If>
+                )}
             </div>
         );
     }
