@@ -9,6 +9,11 @@ require.extensions['.txt'] = function (module, filename) {
     module.exports = fs.readFileSync(filename, 'utf8');
 };
 
+var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
+var refDir = process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
+var screenDir = process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
+var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
+
 var config = {
     //
     // ==================
@@ -89,7 +94,7 @@ var config = {
     bail: 0,
     //
     // Saves a screenshot to a given path if a command fails.
-    screenshotPath: './errorShots/',
+    screenshotPath: errorDir,
     //
     // Set a base URL in order to shorten url command calls. If your url parameter starts
     // with "/", then the base url gets prepended.
@@ -137,8 +142,8 @@ var config = {
 
     visualRegression: {
         compare: new VisualRegressionCompare.LocalCompare({
-            referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
-            screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
+            referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
+            screenshotName: getScreenshotName(path.join(process.cwd(), screenDir)),
             diffName: getScreenshotName(path.join(process.cwd(), diffDir)),
             misMatchTolerance:0.01,
             ignoreComparison: "antialiasing"

@@ -34,4 +34,10 @@ python3 read_portalproperties.py portal.properties
     # DB_CONNECTION_STRING          ->  (e.g. 'jdbc:mysql://cbiodb-endtoend:3306/')
     # DB_HOST                       ->  (e.g. 'cbiodb-endtoend')
 
+echo export E2E_CBIOPORTAL_HOST_NAME=cbioportal
+echo export DOCKER_NETWORK_NAME=endtoend_localdb_network
+echo export SESSION_SERVICE_HOST_NAME=cbio-session-service
+echo export SCREENSHOT_DIRECTORY=./local_database/screenshots
+echo export SPEC_FILE_PATTERN=./local_database/specs/**/*.spec.js
+
 exit 0
