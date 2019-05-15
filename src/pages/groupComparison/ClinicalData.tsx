@@ -112,7 +112,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                 return content;
             }
         },
-        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true} size={"big"} />
+        renderPending: () => <LoadingIndicator isLoading={true} center={true} size={"big"} />
     });
 
     readonly overlapUI = MakeMobxView({
