@@ -63,7 +63,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 // dont bother loading data for and computing UI if its not valid situation for it
                 return [this.props.store._activeGroupsNotOverlapRemoved];
             } else {
-                return [this.props.store._activeGroupsNotOverlapRemoved, this.survivalUI];
+                return [this.props.store._activeGroupsNotOverlapRemoved, this.survivalUI, this.props.store._selectionInfo];
             }
         },
         render:()=>{
@@ -73,21 +73,24 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 let content: any = [];
                 switch (this.props.store.overlapStrategy) {
                     case OverlapStrategy.EXCLUDE:
-                        content.push(<OverlapExclusionIndicator store={this.props.store}/>);
+                        content.push(<OverlapExclusionIndicator store={this.props.store} only="patient"/>);
                         break;
                     case OverlapStrategy.INCLUDE:
-                        content.push(
-                            <div className={`alert alert-info`}>
-                                <i
-                                    className={`fa fa-md fa-info-circle`}
-                                    style={{
-                                        color: "#000000",
-                                        marginRight:5
-                                    }}
-                                />
-                                Overlapping samples and patients are graphed in multiple-group curves below.
-                            </div>
-                        );
+                        const selectionInfo = this.props.store._selectionInfo.result!;
+                        if (selectionInfo.overlappingPatients.length > 0) {
+                            content.push(
+                                <div className={`alert alert-info`}>
+                                    <i
+                                        className={`fa fa-md fa-info-circle`}
+                                        style={{
+                                            color: "#000000",
+                                            marginRight:5
+                                        }}
+                                    />
+                                    Overlapping patients are graphed in multiple-group curves below.
+                                </div>
+                            );
+                        }
                         break;
                 }
                 content.push(this.survivalUI.component)
