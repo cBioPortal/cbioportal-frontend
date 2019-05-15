@@ -34,11 +34,22 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
                         selectedValue={this.props.store.selectedEnrichmentMutationProfile.molecularProfileId}
                         molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}/>
                     <AlterationEnrichmentContainer data={this.props.store.mutationEnrichmentData.result!}
-                                                   totalGroup1Count={this.props.store.alteredSampleKeys.result!.length}
-                                                   totalGroup2Count={this.props.store.unalteredSampleKeys.result!.length}
-                                                   selectedProfile={this.props.store.selectedEnrichmentMutationProfile}
-                                                   headerName={this.props.store.selectedEnrichmentMutationProfile.name}
-                                                   store={this.props.store} alterationType="a mutation"/>
+                        selectedProfile={this.props.store.selectedEnrichmentMutationProfile}
+                        headerName={this.props.store.selectedEnrichmentMutationProfile.name}
+                        store={this.props.store}
+                        groups={[
+                            {
+                                name: "Altered group",
+                                description: "Number (percentage) of samples that have alterations in the query gene(s) that also have a mutation in the listed gene.",
+                                nameOfEnrichmentDirection: "Co-occurrence",
+                                count: this.props.store.alteredSampleKeys.result!.length
+                            }, {
+                                name: "Unaltered group",
+                                description: "Number (percentage) of samples that do not have alterations in the query gene(s) that have a mutation in the listed gene.",
+                                nameOfEnrichmentDirection: "Mutual exclusivity",
+                                count: this.props.store.unalteredSampleKeys.result!.length
+                            }
+                        ]} />
                 </div>
             );
         }

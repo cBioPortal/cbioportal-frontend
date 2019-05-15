@@ -37,18 +37,40 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                                                     selectedValue={this.props.store.selectedEnrichmentCopyNumberProfile.molecularProfileId}
                                                     molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}/>
                         <AlterationEnrichmentContainer data={this.props.store.copyNumberHomdelEnrichmentData.result!}
-                                                       totalGroup1Count={this.props.store.alteredSampleKeys.result!.length}
-                                                       totalGroup2Count={this.props.store.unalteredSampleKeys.result!.length}
-                                                       selectedProfile={this.props.store.selectedEnrichmentCopyNumberProfile}
-                                                       headerName={"Deep Deletion - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
-                                                       store={this.props.store} alterationType="a deep deletion"/>
+                            groups={[
+                                {
+                                    name: "Altered group",
+                                    description: "Number (percentage) of samples that have alterations in the query gene(s) that also have a deep deletion in the listed gene.",
+                                    nameOfEnrichmentDirection: "Co-occurrence",
+                                    count: this.props.store.alteredSampleKeys.result!.length
+                                }, {
+                                    name: "Unaltered group",
+                                    description: "Number (percentage) of samples that do not have alterations in the query gene(s) that have a deep deletion in the listed gene.",
+                                    nameOfEnrichmentDirection: "Mutual exclusivity",
+                                    count: this.props.store.unalteredSampleKeys.result!.length
+                                }
+                            ]}
+                            selectedProfile={this.props.store.selectedEnrichmentCopyNumberProfile}
+                            headerName={"Deep Deletion - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
+                            store={this.props.store} />
                         <hr />
                         <AlterationEnrichmentContainer data={this.props.store.copyNumberAmpEnrichmentData.result!}
-                                                       totalGroup1Count={this.props.store.alteredSampleKeys.result!.length}
-                                                       totalGroup2Count={this.props.store.unalteredSampleKeys.result!.length}
-                                                       selectedProfile={this.props.store.selectedEnrichmentCopyNumberProfile}
-                                                       headerName={"Amplification - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
-                                                       store={this.props.store} alterationType="an amplification"/>
+                            groups={[
+                                {
+                                    name: "Altered group",
+                                    description: "Number (percentage) of samples that have alterations in the query gene(s) that also have an amplification in the listed gene.",
+                                    nameOfEnrichmentDirection: "Co-occurrence",
+                                    count: this.props.store.alteredSampleKeys.result!.length
+                                }, {
+                                    name: "Unaltered group",
+                                    description: "Number (percentage) of samples that do not have alterations in the query gene(s) that have an amplification in the listed gene.",
+                                    nameOfEnrichmentDirection: "Mutual exclusivity",
+                                    count: this.props.store.unalteredSampleKeys.result!.length
+                                }
+                            ]}
+                            selectedProfile={this.props.store.selectedEnrichmentCopyNumberProfile}
+                            headerName={"Amplification - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
+                            store={this.props.store} />
                     </div>
                 );
         }
