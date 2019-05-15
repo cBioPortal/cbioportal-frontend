@@ -11,7 +11,7 @@ import {
     ValidationResult,
     validateLines, WarningCodeEnum
 } from "./CustomCaseSelectionUtils";
-import {ClinicalDataTypeEnum} from "../../StudyViewPageStore";
+import {ClinicalDataTypeEnum} from "../../StudyViewUtils";
 import {Sample} from "../../../../shared/api/generated/CBioPortalAPI";
 
 describe('CustomCaseSelectionUtils', () => {
