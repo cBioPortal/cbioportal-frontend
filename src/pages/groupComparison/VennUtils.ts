@@ -1,4 +1,5 @@
 import _ from "lodash";
+const VennJs = require("venn.js");
 
 export function computeVennJsSizes<R extends {
     combination:number[],
@@ -62,4 +63,51 @@ export function computeVennJsSizes<R extends {
         (region as R & {vennJsSize:number}).vennJsSize = region.numCases > 0 ? newSize(region) : region.intersectionSize;
     }
     return regions as (R & {vennJsSize:number})[];
+}
+
+export function lossFunction(
+    sets:any, overlaps:any
+) {
+    // almost identical to https://github.com/benfred/venn.js/blob/master/src/layout.js#L395
+    let output = 0;
+
+    function getCircles(indices:number[]) {
+        return indices.map(function(i) { return sets[i]; });
+    }
+
+    for (let i = 0; i < overlaps.length; ++i) {
+        const area = overlaps[i];
+        let overlap:any;
+        if (area.sets.length == 1) {
+            continue;
+        } else if (area.sets.length == 2) {
+            var left = sets[area.sets[0]],
+                right = sets[area.sets[1]];
+            overlap = VennJs.circleOverlap(left.radius, right.radius,
+                VennJs.distance(left, right));
+        } else {
+            overlap = VennJs.intersectionArea(getCircles(area.sets));
+        }
+
+        let weight = area.hasOwnProperty('weight') ? area.weight : 1.0;
+
+        // the following two lines differ from the vennjs-provided loss
+        // Instead of using square difference as in the original vennjs-provided loss function:
+        //              (overlap - area.size)^2
+        // we use square of log ratio (plus 1 to avoid division by zero). The advantage of this is now
+        //  instead of working with differences, we're working with ratios, so all sets deviations
+        //  are weighted more equally, since when dealing with differences the smaller sets will
+        //  contribute smaller loss terms even when the percent difference (ratio) is significant.
+        //  Using log means that 1/2 size ratio is as bad as double size ratio.
+        //
+        // This fixes errors where zero-size sets were showing nonzero overlap, because their
+        //  contributions to the loss were automatically small.
+        const differenceFromIdeal = Math.log((overlap + 1)/ (area.size + 1));
+
+        // We square differenceFromIdeal to differentiably use positive values - contributions to
+        // the loss function should be positive no matter which direction the differenceFromIdeal is.
+        output += weight * differenceFromIdeal * differenceFromIdeal;
+    }
+
+    return output;
 }
