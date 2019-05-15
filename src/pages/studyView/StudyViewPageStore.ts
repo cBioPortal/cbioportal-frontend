@@ -43,8 +43,15 @@ import {fetchCopyNumberSegmentsForSamples} from "shared/lib/StoreUtils";
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import {
+    AnalysisGroup,
     calculateLayout,
+    ChartMeta,
+    ChartType,
     clinicalAttributeComparator,
+    ClinicalDataCountSet,
+    ClinicalDataCountWithColor,
+    ClinicalDataTypeEnum,
+    Datalabel,
     generateScatterPlotDownloadData,
     getChartMetaDataType,
     getClinicalAttributeUniqueKey,
@@ -65,12 +72,16 @@ import {
     getSamplesByExcludingFiltersOnChart,
     isFiltered,
     isLogScaleByDataBins,
+    isSpecialChart,
     makePatientToClinicalAnalysisGroup,
     MutationCountVsCnaYBinsMin,
     NA_DATA,
     shouldShowChart,
     showOriginStudiesInSummaryDescription,
-    submitToPage
+    SPECIAL_CHARTS,
+    StudyWithSamples,
+    submitToPage,
+    UniqueKey
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -109,31 +120,6 @@ import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import jStat from 'jStat'
 
-export enum ClinicalDataTypeEnum {
-    SAMPLE = 'SAMPLE',
-    PATIENT = 'PATIENT',
-}
-
-// Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
-export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
-
-
-export type ChartType = 'PIE_CHART' | 'BAR_CHART' | 'SURVIVAL' | 'TABLE' | 'SCATTER' | 'MUTATED_GENES_TABLE' | 'CNA_GENES_TABLE' | 'NONE';
-
-export enum UniqueKey {
-    MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
-    CNA_GENES_TABLE = 'CNA_GENES_TABLE',
-    CUSTOM_SELECT = 'CUSTOM_SELECT',
-    SELECTED_COMPARISON_GROUPS = 'SELECTED_COMPARISON_GROUPS',
-    MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
-    DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
-    OVERALL_SURVIVAL = 'OS_SURVIVAL',
-    CANCER_STUDIES = 'CANCER_STUDIES',
-    MUTATION_COUNT = "SAMPLE_MUTATION_COUNT",
-    FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
-    WITH_MUTATION_DATA = "WITH_MUTATION_DATA",
-    WITH_CNA_DATA = "WITH_CNA_DATA"
-}
 
 export enum StudyViewPageTabKeyEnum {
     SUMMARY = 'summary',
@@ -165,8 +151,6 @@ export const DFS_MONTHS = "DFS_MONTHS";
 export const SELECTED_ANALYSIS_GROUP_VALUE = "Selected";
 export const UNSELECTED_ANALYSIS_GROUP_VALUE = "Unselected";
 
-export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
-export type AnalysisGroup = { value:string, color:string, legendText?:string};
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
 export type SurvivalType = {
@@ -176,26 +160,6 @@ export type SurvivalType = {
     filter: string[],
     alteredGroup: PatientSurvival[]
     unalteredGroup: PatientSurvival[]
-}
-
-export enum ChartMetaDataTypeEnum {
-    CLINICAL = 'CLINICAL',
-    GENOMIC = 'GENOMIC'
-}
-
-export type ChartMetaDataType = ChartMetaDataTypeEnum.CLINICAL | ChartMetaDataTypeEnum.GENOMIC;
-
-export type ChartMeta = {
-    clinicalAttribute?: ClinicalAttribute,
-    uniqueKey: string,
-    displayName: string,
-    description: string,
-    dimension: ChartDimension,
-    priority: number,
-    dataType: ChartMetaDataType,
-    patientAttribute: boolean,
-    chartType: ChartType,
-    renderWhenDataChange: boolean
 }
 
 export type StudyViewURLQuery = {
@@ -208,48 +172,6 @@ export type StudyViewURLQuery = {
     filterValues?: string
 }
 
-export const SPECIAL_CHARTS: ChartMeta[] = [{
-    uniqueKey: UniqueKey.CANCER_STUDIES,
-    displayName: 'Cancer Studies',
-    description: 'Cancer Studies',
-    dataType: ChartMetaDataTypeEnum.CLINICAL,
-    patientAttribute:false,
-    chartType: ChartTypeEnum.PIE_CHART,
-    dimension: {
-        w: 1,
-        h: 1
-    },
-    renderWhenDataChange: false,
-    priority: 70
-},
-{
-    uniqueKey: UniqueKey.WITH_MUTATION_DATA,
-    displayName: 'With Mutation Data',
-    description: 'With Mutation Data',
-    chartType: ChartTypeEnum.PIE_CHART,
-    dataType: ChartMetaDataTypeEnum.GENOMIC,
-    patientAttribute:false,
-    dimension: {
-        w: 1,
-        h: 1
-    },
-    priority: 0,
-    renderWhenDataChange: false
-},{
-    uniqueKey: UniqueKey.WITH_CNA_DATA,
-    displayName: 'With CNA Data',
-    description: 'With CNA Data',
-    chartType: ChartTypeEnum.PIE_CHART,
-    dataType: ChartMetaDataTypeEnum.GENOMIC,
-    patientAttribute:false,
-    dimension: {
-        w: 1,
-        h: 1
-    },
-    priority: 0,
-    renderWhenDataChange: false
-}];
-
 export type CustomGroup = {
     name: string,
     cases: CustomChartIdentifier[]
@@ -260,20 +182,10 @@ export type NewChart = {
     groups: CustomGroup[]
 }
 
-export type ClinicalDataCountSet = { [attrId: string]: number };
-
-export type StudyWithSamples = CancerStudy & {
-    uniqueSampleKeys : string[]
-}
-
 export const DataBinMethodConstants: {[key: string]: 'DYNAMIC' | 'STATIC'}= {
     STATIC: 'STATIC',
     DYNAMIC: 'DYNAMIC'
 };
-
-export type StudyViewFilterWithSampleIdentifierFilters = StudyViewFilter & {
-    sampleIdentifiersSet: { [id: string]: SampleIdentifier[] }
-}
 
 export type CustomChartIdentifier = {
     studyId: string,
@@ -299,12 +211,6 @@ export type StatusMessage = {
     status: 'success' | 'warning' | 'danger' | 'info',
     message: string
 };
-
-export enum Datalabel {
-    YES = 'YES',
-    NO = 'NO',
-    NA = "NA"
-}
 
 export class StudyViewPageStore {
     private reactionDisposers:IReactionDisposer[] = [];
@@ -530,7 +436,46 @@ export class StudyViewPageStore {
                     }
 
                     // create session and get id
-                    const {id} = await comparisonClient.addComparisonSession({ groups, clinicalAttribute, origin:this.studyIds });
+                    const {id} = await comparisonClient.addComparisonSession({
+                        groups,
+                        clinicalAttributeName:clinicalAttribute.displayName,
+                        origin:this.studyIds
+                    });
+                    return resolve(id);
+                }
+            );
+        });
+    }
+
+    private createSpecialChartComparisonSession(
+        chartMeta: ChartMeta,
+        statusCallback:(phase:LoadingPhase)=>void
+    ) {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+        // for now, the only one possible is cancer studies
+        return new Promise<string>(resolve=>{
+            onMobxPromise<any>([this.selectedSamples, this.cancerStudiesData],
+                async (selectedSamples:Sample[], cancerStudiesData:ClinicalDataCountWithColor[])=>{
+
+                    // group samples by study
+                    const studyIdToSamples:{[studyId:string]:Sample[]} = _.groupBy(selectedSamples, s=>s.studyId);
+                    const studyIdToCountWithColor = _.keyBy(cancerStudiesData, s=>s.value);
+                    const groups = _.map(studyIdToSamples, (samples, studyId)=>{
+                        return {
+                            name: studyId,
+                            description: "",
+                            studies: getStudiesAttr(samples),
+                            origin: this.studyIds,
+                            color: studyIdToCountWithColor[studyId].color
+                        };
+                    });
+
+                    // create session and get id
+                    const {id} = await comparisonClient.addComparisonSession({
+                        groups,
+                        clinicalAttributeName: chartMeta.displayName,
+                        origin: this.studyIds
+                    });
                     return resolve(id);
                 }
             );
@@ -593,7 +538,11 @@ export class StudyViewPageStore {
                         };
                     });
                     // create session and get id
-                    const {id} = await comparisonClient.addComparisonSession({ groups, clinicalAttribute, origin: this.studyIds });
+                    const {id} = await comparisonClient.addComparisonSession({
+                        groups,
+                        clinicalAttributeName: clinicalAttribute.displayName,
+                        origin: this.studyIds
+                    });
                     return resolve(id);
                 }
             );
@@ -602,15 +551,14 @@ export class StudyViewPageStore {
 
     @autobind
     public async openComparisonPage(params:{
-        type:ChartTypeEnum.PIE_CHART|ChartTypeEnum.TABLE|ChartTypeEnum.BAR_CHART,
-        clinicalAttribute: ClinicalAttribute,
+        chartMeta: ChartMeta,
         clinicalAttributeValues?: {value:string, color:string}[]
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
         const comparisonWindow:any = window.open(getComparisonLoadingUrl({
             phase: LoadingPhase.DOWNLOADING_GROUPS,
-            clinicalAttributeName: params.clinicalAttribute.displayName
+            clinicalAttributeName: params.chartMeta.displayName
         }), "_blank");
 
         // wait until the new window has routingStore available, or its closed
@@ -625,31 +573,36 @@ export class StudyViewPageStore {
 
         // save comparison session, and get id
         let sessionId:string;
-        switch (params.type) {
-            case ChartTypeEnum.PIE_CHART:
-            case ChartTypeEnum.TABLE:
-                sessionId =
-                    await this.createStringAttributeComparisonSession(
-                        params.clinicalAttribute,
-                        params.clinicalAttributeValues!,
-                        (phase:LoadingPhase)=>{
-                            if (!comparisonWindow.closed) {
-                                comparisonWindow.routingStore.updateRoute({phase}, undefined, false);
-                            }
-                        }
-                    );
-                break;
-            default:
-                sessionId =
-                    await this.createNumberAttributeComparisonSession(
-                        params.clinicalAttribute,
-                        (phase:LoadingPhase)=>{
-                            if (!comparisonWindow.closed) {
-                                comparisonWindow.routingStore.updateRoute({phase}, undefined, false);
-                            }
-                        }
-                    );
-                break;
+        const statusCallback = (phase:LoadingPhase)=>{
+            if (!comparisonWindow.closed) {
+                comparisonWindow.routingStore.updateRoute({phase}, undefined, false);
+            }
+        };
+
+        if (isSpecialChart(params.chartMeta)) {
+            sessionId = await this.createSpecialChartComparisonSession(
+                params.chartMeta,
+                statusCallback
+            );
+        } else {
+            switch (params.chartMeta.chartType) {
+                case ChartTypeEnum.PIE_CHART:
+                case ChartTypeEnum.TABLE:
+                    sessionId =
+                        await this.createStringAttributeComparisonSession(
+                            params.chartMeta.clinicalAttribute!,
+                            params.clinicalAttributeValues!,
+                            statusCallback
+                        );
+                    break;
+                default:
+                    sessionId =
+                        await this.createNumberAttributeComparisonSession(
+                            params.chartMeta.clinicalAttribute!,
+                            statusCallback
+                        );
+                    break;
+            }
         }
 
         if (!comparisonWindow.closed) {
