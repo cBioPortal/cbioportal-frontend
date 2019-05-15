@@ -401,11 +401,14 @@
           },
           {
             "in": "body",
-            "name": "multipleStudiesEnrichmentFilter",
+            "name": "groups",
             "description": "List of entities",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/MultipleStudiesEnrichmentFilter"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfileCasesGroup"
+              }
             }
           }
         ],
@@ -1318,11 +1321,14 @@
           },
           {
             "in": "body",
-            "name": "multipleStudiesEnrichmentFilter",
-            "description": "List of entities",
+            "name": "groups",
+            "description": "List of groups",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/MultipleStudiesEnrichmentFilter"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfileCasesGroup"
+              }
             }
           }
         ],
@@ -1572,14 +1578,18 @@
     "AlterationEnrichment": {
       "type": "object",
       "required": [
+        "counts",
         "entrezGeneId",
         "hugoGeneSymbol",
-        "logRatio",
-        "pValue",
-        "set1CountSummary",
-        "set2CountSummary"
+        "pValue"
       ],
       "properties": {
+        "counts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CountSummary"
+          }
+        },
         "cytoband": {
           "type": "string"
         },
@@ -1590,17 +1600,8 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "logRatio": {
-          "type": "string"
-        },
         "pValue": {
           "type": "number"
-        },
-        "set1CountSummary": {
-          "$ref": "#/definitions/CountSummary"
-        },
-        "set2CountSummary": {
-          "$ref": "#/definitions/CountSummary"
         }
       },
       "title": "AlterationEnrichment"
@@ -1991,12 +1992,16 @@
       "type": "object",
       "required": [
         "alteredCount",
+        "name",
         "profiledCount"
       ],
       "properties": {
         "alteredCount": {
           "type": "integer",
           "format": "int32"
+        },
+        "name": {
+          "type": "string"
         },
         "profiledCount": {
           "type": "integer",
@@ -2484,6 +2489,21 @@
       },
       "title": "MolecularProfileCaseIdentifier"
     },
+    "MolecularProfileCasesGroup": {
+      "type": "object",
+      "properties": {
+        "molecularProfileCaseIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MolecularProfileCaseIdentifier"
+          }
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "title": "MolecularProfileCasesGroup"
+    },
     "MolecularProfileSampleCount": {
       "type": "object",
       "properties": {
@@ -2552,28 +2572,6 @@
         }
       },
       "title": "MrnaPercentile"
-    },
-    "MultipleStudiesEnrichmentFilter": {
-      "type": "object",
-      "required": [
-        "molecularProfileCaseSet1",
-        "molecularProfileCaseSet2"
-      ],
-      "properties": {
-        "molecularProfileCaseSet1": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/MolecularProfileCaseIdentifier"
-          }
-        },
-        "molecularProfileCaseSet2": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/MolecularProfileCaseIdentifier"
-          }
-        }
-      },
-      "title": "MultipleStudiesEnrichmentFilter"
     },
     "MutSig": {
       "type": "object",

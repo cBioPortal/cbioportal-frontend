@@ -2723,14 +2723,19 @@ export class ResultsViewPageStore {
             const molecularProfile = this.selectedEnrichmentMutationProfile;
             return internalClient.fetchMutationEnrichmentsUsingPOST({
                 enrichmentType: "SAMPLE",
-                multipleStudiesEnrichmentFilter: {
-                    molecularProfileCaseSet1: this.alteredSamples.result!
-                        .filter(s=>s.studyId === molecularProfile.studyId)
-                        .map(s=>({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
-                    molecularProfileCaseSet2: this.unalteredSamples.result!
-                        .filter(s=>s.studyId === molecularProfile.studyId)
-                        .map(s=>({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
-                }
+                groups: [
+                    {
+                        molecularProfileCaseIdentifiers: this.alteredSamples.result!
+                            .filter(s => s.studyId === molecularProfile.studyId)
+                            .map(s => ({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                        name: 'Altered group'
+                    }, {
+                        molecularProfileCaseIdentifiers: this.unalteredSamples.result!
+                            .filter(s => s.studyId === molecularProfile.studyId)
+                            .map(s => ({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                        name: 'Unaltered group'
+                    }
+                ]
             });
         }
     });
@@ -2749,8 +2754,7 @@ export class ResultsViewPageStore {
             this.unalteredSamples
         ],
         getSelectedProfile:()=>this.selectedEnrichmentCopyNumberProfile,
-        fetchData:()=>this.getCopyNumberEnrichmentData(this.alteredSamples.result,
-                            this.unalteredSamples.result, "HOMDEL")
+        fetchData:()=>this.getCopyNumberEnrichmentData("HOMDEL")
         }
     );
 
@@ -2761,25 +2765,28 @@ export class ResultsViewPageStore {
             this.unalteredSamples
         ],
         getSelectedProfile:()=>this.selectedEnrichmentCopyNumberProfile,
-        fetchData:()=>this.getCopyNumberEnrichmentData(this.alteredSamples.result,
-            this.unalteredSamples.result, "AMP")
+        fetchData:()=>this.getCopyNumberEnrichmentData("AMP")
     });
 
-    private getCopyNumberEnrichmentData(alteredSamples: Sample[], unalteredSamples: Sample[],
-        copyNumberEventType: "HOMDEL" | "AMP"): Promise<AlterationEnrichment[]> {
+    private getCopyNumberEnrichmentData(copyNumberEventType: "HOMDEL" | "AMP"): Promise<AlterationEnrichment[]> {
 
         const molecularProfile = this.selectedEnrichmentCopyNumberProfile;
         return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             copyNumberEventType: copyNumberEventType,
             enrichmentType: "SAMPLE",
-            multipleStudiesEnrichmentFilter: {
-                molecularProfileCaseSet1: this.alteredSamples.result!
-                    .filter(s=>s.studyId === molecularProfile.studyId)
-                    .map(s=>({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
-                molecularProfileCaseSet2: this.unalteredSamples.result!
-                    .filter(s=>s.studyId === molecularProfile.studyId)
-                    .map(s=>({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
-            }
+            groups: [
+                {
+                    molecularProfileCaseIdentifiers: this.alteredSamples.result!
+                        .filter(s => s.studyId === molecularProfile.studyId)
+                        .map(s => ({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                    name: 'Altered group'
+                }, {
+                    molecularProfileCaseIdentifiers: this.unalteredSamples.result!
+                        .filter(s => s.studyId === molecularProfile.studyId)
+                        .map(s => ({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                    name: 'Unaltered group'
+                }
+            ]
         });
     }
 

@@ -4,13 +4,11 @@ import { observer } from "mobx-react";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import {observable, computed, action} from 'mobx';
 import AlterationEnrichmentTable, {AlterationEnrichmentTableColumnType} from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
-import { AlterationEnrichment } from 'shared/api/generated/CBioPortalAPIInternal';
 import styles from "./styles.module.scss";
 import {
     getAlterationScatterData,
-    getFilteredData,
     getAlterationRowData,
-    AlterationEnrichmentWithQ, getAlterationFrequencyScatterData
+    getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getFilteredDataByGroups, getGroupColumns
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
@@ -20,86 +18,67 @@ import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
-import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
+import CheckedSelect, {Option} from 'shared/components/checkedSelect/CheckedSelect';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
-    totalGroup1Count: number;
-    totalGroup2Count: number;
-    group1Name?:string;
-    group2Name?:string;
-    group1Description?:string;
-    group2Description?:string;
+    groups:{name:string, description:string, nameOfEnrichmentDirection?:string, count:number}[]
     alteredVsUnalteredMode?:boolean;
     headerName: string;
     selectedProfile:MolecularProfile;
     store?: ResultsViewPageStore;
-    alterationType?: string;
     showCNAInTable?:boolean;
-}
-
-enum ChartType {
-    VOLCANO, FREQUENCY
 }
 
 @observer
 export default class AlterationEnrichmentContainer extends React.Component<IAlterationEnrichmentContainerProps, {}> {
 
     static defaultProps:Partial<IAlterationEnrichmentContainerProps> = {
-        group1Name: "altered group",
-        group2Name: "unaltered group",
-        alterationType: "a mutation",
         showCNAInTable: false,
         alteredVsUnalteredMode: true
     };
 
-    @computed get group1Description() {
-        return this.props.group1Description ||
-            `that have alterations in the query gene(s) that also have ${this.props.alterationType!} in the listed gene.`;
-    }
-
-    @computed get group2Description() {
-        return this.props.group2Description ||
-            `that do not have alterations in the query gene(s) that have ${this.props.alterationType!} in the listed gene.`;
-    }
-
-    @observable chartType:ChartType = ChartType.VOLCANO;
-    @observable mutualExclusivityFilter: boolean = true;
-    @observable coOccurenceFilter: boolean = true;
     @observable significanceFilter: boolean = false;
     @observable.shallow checkedGenes: string[] = [];
     @observable clickedGene: string;
     @observable.shallow selectedGenes: string[]|null;
     @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
 
+    @observable _enrichedGroups: string[] = this.props.groups.map(group=>group.name);
+
+    @computed get isTwoGroupAnalysis(): boolean {
+        return this.props.groups.length == 2;
+    }
+
+    //used in 2 groups analysis
+    @computed get group1() {
+        return this.props.groups[0];
+    }
+
+    //used in 2 groups analysis
+    @computed get group2() {
+        return this.props.groups[1];
+    }
+
     @computed get data(): AlterationEnrichmentRow[] {
-        return getAlterationRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
+        return getAlterationRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.isTwoGroupAnalysis, this.group1.name, this.group2.name);
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {
-        return getFilteredData(this.data, this.mutualExclusivityFilter, this.coOccurenceFilter,
-            this.significanceFilter, this.selectedGenes);
+        return getFilteredDataByGroups(this.data, this._enrichedGroups, this.significanceFilter, this.selectedGenes);
     }
 
     @computed get clickedGeneStats(): [number, number, number, number] {
-
-        const clickedAlterationEnrichment: AlterationEnrichment = _.find(this.props.data, ['hugoGeneSymbol', this.clickedGene])!;
-
-        return [this.props.totalGroup1Count - clickedAlterationEnrichment.set1CountSummary.alteredCount,
-            clickedAlterationEnrichment.set1CountSummary.alteredCount,
-            clickedAlterationEnrichment.set2CountSummary.alteredCount,
-            this.props.totalGroup2Count - clickedAlterationEnrichment.set2CountSummary.alteredCount];
-    }
-
-    @autobind
-    private toggleMutualExclusivityFilter() {
-        this.mutualExclusivityFilter = !this.mutualExclusivityFilter;
-    }
-
-    @autobind
-    private toggleCoOccurenceFilter() {
-        this.coOccurenceFilter = !this.coOccurenceFilter;
+        const clickedAlterationEnrichment: AlterationEnrichmentWithQ = _.find(this.props.data, ['hugoGeneSymbol', this.clickedGene])!;
+        const groupCountsSummary = clickedAlterationEnrichment.counts;
+        const groupCountsSet = _.keyBy(groupCountsSummary, groupCount => groupCount.name);
+        const set1CountSummary = groupCountsSet[this.group1.name];
+        const set2CountSummary = groupCountsSet[this.group2.name];
+        return [this.group1.count - set1CountSummary.alteredCount,
+        set1CountSummary.alteredCount,
+        set2CountSummary.alteredCount,
+        this.group2.count - set2CountSummary.alteredCount];
     }
 
     @autobind
@@ -145,49 +124,64 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         }
     );
 
-    @computed get columns() {
+    @computed get customColumns() {
+        return getGroupColumns(this.props.groups, this.props.alteredVsUnalteredMode);
+    }
+
+    @computed get visibleOrderedColumnNames() {
         const columns = [];
         columns.push(AlterationEnrichmentTableColumnType.GENE,
             AlterationEnrichmentTableColumnType.CYTOBAND);
         if (this.props.showCNAInTable) {
             columns.push(AlterationEnrichmentTableColumnType.ALTERATION);
         }
-        columns.push(AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP1,
-        AlterationEnrichmentTableColumnType.PERCENTAGE_IN_GROUP2,
-        AlterationEnrichmentTableColumnType.LOG_RATIO,
+        this.props.groups.forEach(group=>{
+            columns.push(group.name);
+        })
+        if(this.isTwoGroupAnalysis) {
+            columns.push(AlterationEnrichmentTableColumnType.LOG_RATIO);
+        }
+        
+        columns.push(
         AlterationEnrichmentTableColumnType.P_VALUE,
-        AlterationEnrichmentTableColumnType.Q_VALUE,
-        AlterationEnrichmentTableColumnType.TENDENCY);
+        AlterationEnrichmentTableColumnType.Q_VALUE);
+
+        if(this.isTwoGroupAnalysis) {
+            columns.push(this.props.alteredVsUnalteredMode ? AlterationEnrichmentTableColumnType.TENDENCY : AlterationEnrichmentTableColumnType.ENRICHED);
+        }
 
         return columns;
     }
 
     @computed get volcanoPlotLabels() {
-        if (this.props.alteredVsUnalteredMode) {
-            return ["Mutual exclusivity", "Co-occurrence"];
-        } else {
-            return [this.props.group2Name!, this.props.group1Name!];
+        if(this.props.groups.length === 2) {
+            let label1 = this.props.groups[0].nameOfEnrichmentDirection || this.props.groups[0].name;
+            let label2 = this.props.groups[1].nameOfEnrichmentDirection || this.props.groups[1].name;
+            return [label2, label1];
         }
-    }
-
-    @computed get group1CheckboxLabel() {
-        if (this.props.alteredVsUnalteredMode) {
-            return "Co-occurrence";
-        } else {
-            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group1Name!} shownWidth={100}/></span>;
-        }
-    }
-
-    @computed get group2CheckboxLabel() {
-        if (this.props.alteredVsUnalteredMode) {
-            return "Mutual exclusivity";
-        } else {
-            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group2Name!} shownWidth={100}/></span>;
-        }
+        return [];
     }
 
     @computed get selectedGenesSet() {
         return _.keyBy(this.selectedGenes || []);
+    }
+
+    @autobind
+    @action onChange(values: { value: string }[]) {
+        this._enrichedGroups = _.map(values, datum => datum.value);
+    }
+
+    @computed get selectedValues() {
+        return this._enrichedGroups.map(id => ({ value: id }));
+    }
+
+    @computed get options(): Option[] {
+        return _.map(this.props.groups, group => {
+            return {
+                label: group.nameOfEnrichmentDirection ? group.nameOfEnrichmentDirection : group.name,
+                value: group.name
+            }
+        });
     }
 
     public render() {
@@ -198,7 +192,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
         return (
             <div className={styles.Container}>
-                <div className={styles.ChartsPanel}>
+                {this.isTwoGroupAnalysis && <div className={styles.ChartsPanel}>
                     <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
                                       xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
                                       xAxisTickValues={[-10, 0, 10]}
@@ -207,13 +201,13 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                                       onSelectionCleared={this.onSelectionCleared}/>
 
 
-                    <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
-                                               xGroupName={this.props.group1Name!} yGroupName={this.props.group2Name!} onGeneNameClick={this.onGeneNameClick}
+                    <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.group1.name, this.group2.name)}
+                                               xGroupName={this.volcanoPlotLabels[1]} yGroupName={this.volcanoPlotLabels[0]} onGeneNameClick={this.onGeneNameClick}
                                                selectedGenesSet={this.selectedGenesSet} onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared}/>
 
-                    {this.props.store && <MiniBarChart totalAlteredCount={this.props.totalGroup1Count} totalUnalteredCount={this.props.totalGroup2Count}
+                    {this.props.store && <MiniBarChart totalAlteredCount={this.group1.count} totalUnalteredCount={this.group2.count}
                                                        selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />}
-                </div>
+                </div>}
 
                 <div>
                     <div>
@@ -222,16 +216,16 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
-                        <FlexAlignedCheckbox
-                            checked={this.coOccurenceFilter}
-                            onClick={this.toggleCoOccurenceFilter}
-                            label={this.group1CheckboxLabel}
-                        />
-                        <FlexAlignedCheckbox
-                            checked={this.mutualExclusivityFilter}
-                            onClick={this.toggleMutualExclusivityFilter}
-                            label={this.group2CheckboxLabel}
-                        />
+
+                        <div style={{ width: 250, marginRight: 7 }} >
+                            <CheckedSelect
+                                name={"enrichedGroupsSelector"}
+                                placeholder={"Select enriched groups"}
+                                onChange={this.onChange}
+                                options={this.options}
+                                value={this.selectedValues}
+                            />
+                        </div>
                         <FlexAlignedCheckbox
                             checked={this.significanceFilter}
                             onClick={this.toggleSignificanceFilter}
@@ -240,12 +234,10 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                     </div>
                     <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
                                                checkedGenes={this.props.store ? this.checkedGenes : undefined}
-                                               onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} alterationType={this.props.alterationType!} dataStore={this.dataStore}
-                                               group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}
-                                               group1Description={this.group1Description}
-                                               group2Description={this.group2Description}
-                                               mutexTendency={this.props.alteredVsUnalteredMode}
-                                               columns={this.columns}
+                                               onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined}
+                                               dataStore={this.dataStore}
+                                               visibleOrderedColumnNames={this.visibleOrderedColumnNames}
+                                               customColumns={_.keyBy(this.customColumns,column=>column.name)}
                     />
                 </div>
             </div>
