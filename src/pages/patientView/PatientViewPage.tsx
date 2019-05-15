@@ -260,7 +260,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             target="_blank"
                                             onClick={(e: React.MouseEvent<HTMLAnchorElement>) => this.handleSampleClick(sample.id, e)}
                                         >
-                                            {SampleManager.getClinicalAttributeInSample(sample, "DISPLAY_SAMPLE_NAME") ? `${SampleManager.getClinicalAttributeInSample(sample, "DISPLAY_SAMPLE_NAME")!.value} (${sample.id})` : sample.id}
+                                            {SampleManager.getClinicalAttributeInSample(sample, "DISPLAY_SAMPLE_ID") && SampleManager.getClinicalAttributeInSample(sample, "DISPLAY_SAMPLE_ID")!.value ? `${SampleManager.getClinicalAttributeInSample(sample, "DISPLAY_SAMPLE_ID")!.value} (${sample.id})` : sample.id}
                                         </a>
                                         {sampleManager &&
                                         sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
