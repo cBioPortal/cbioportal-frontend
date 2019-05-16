@@ -31,8 +31,8 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
             this.props.store.enrichmentsGroup2
         ],
         render:()=>{
-            const group1Name = this.props.store.enrichmentsGroup1.result!.name;
-            const group2Name = this.props.store.enrichmentsGroup2.result!.name;
+            const group1Name = this.props.store.enrichmentsGroup1.result!.nameWithOrdinal;
+            const group2Name = this.props.store.enrichmentsGroup2.result!.nameWithOrdinal;
             return (
                 <div data-test="GroupComparisonMRNAEnrichments">
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.mRNAEnrichmentProfiles} onChange={this.onChangeProfile}

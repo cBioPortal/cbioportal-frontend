@@ -2,7 +2,7 @@ import AppConfig from "appConfig";
 import {StudyView} from "../../config/IAppConfig";
 import {Layout} from 'react-grid-layout';
 import * as _ from 'lodash';
-import {ChartType} from "./StudyViewPageStore";
+import {ChartType} from "./StudyViewUtils";
 import {
     CNA_COLOR_AMP, CNA_COLOR_GAIN, CNA_COLOR_HETLOSS, CNA_COLOR_HOMDEL,
     DEFAULT_GREY,

@@ -1,12 +1,11 @@
 import {
-    ClinicalDataType,
-    ClinicalDataTypeEnum,
     CustomChartIdentifier,
     CustomGroup,
     NewChart
 } from "../../StudyViewPageStore";
 import * as _ from 'lodash';
 import {Sample} from "../../../../shared/api/generated/CBioPortalAPI";
+import {ClinicalDataType, ClinicalDataTypeEnum} from "../../StudyViewUtils";
 
 type Code =
     'MULTI_NAME'
