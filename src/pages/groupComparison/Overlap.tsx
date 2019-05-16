@@ -51,7 +51,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 return this.overlapUI.component;
             }
         },
-        renderPending:()=><Loader isLoading={true} centerRelativeToContainer={true} size={"big"}/>,
+        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
     });
 

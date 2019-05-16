@@ -9,8 +9,12 @@ import { remoteData } from 'shared/api/remoteData';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { If, Then, Else } from 'react-if';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import { StudyWithSamples, ChartMeta, StudyViewFilterWithSampleIdentifierFilters } from 'pages/studyView/StudyViewPageStore';
-import { getVirtualStudyDescription, getCurrentDate } from 'pages/studyView/StudyViewUtils';
+import { ChartMeta} from 'pages/studyView/StudyViewUtils';
+import {
+    getVirtualStudyDescription,
+    getCurrentDate,
+    StudyViewFilterWithSampleIdentifierFilters, StudyWithSamples
+} from 'pages/studyView/StudyViewUtils';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import autobind from 'autobind-decorator';
 import client from "shared/api/cbioportalClientInstance";

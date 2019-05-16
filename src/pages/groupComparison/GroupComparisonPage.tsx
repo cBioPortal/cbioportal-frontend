@@ -189,8 +189,8 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     </h4>);
             }
             let ret;
-            if (this.store.sessionClinicalAttribute) {
-                ret = <span>{studyHeader}Groups from <span style={{color:"#3487c7"}}>{this.store.sessionClinicalAttribute.displayName}</span></span>
+            if (this.store.sessionClinicalAttributeName) {
+                ret = <span>{studyHeader}Groups from <span style={{color:"#3487c7"}}>{this.store.sessionClinicalAttributeName}</span></span>
             } else {
                 ret = studyHeader;
             }
@@ -229,14 +229,14 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     });
 
     @computed get unsavedWarningHeader() {
-        const pluralUnsaved = this.store.unsavedGroupNames.length > 1;
+        const pluralUnsaved = this.store.unsavedGroupNamesWithOrdinal.length > 1;
 
-        if (this.store.unsavedGroupNames.length > 0) {
+        if (this.store.unsavedGroupNamesWithOrdinal.length > 0) {
             return (
                 <div className="alert alert-warning" style={{display:"inline-flex", marginBottom:3}}>
                     <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
                     <div style={{maxWidth:500, display:"inline-block", marginRight: 6}}>
-                        {joinNames(this.store.unsavedGroupNames, "and")} {pluralUnsaved ? "are" : "is"} not saved. Others visiting this link will not see {pluralUnsaved ? "them" : "it"}.
+                        {joinNames(this.store.unsavedGroupNamesWithOrdinal, "and")} {pluralUnsaved ? "are" : "is"} not saved. Others visiting this link will not see {pluralUnsaved ? "them" : "it"}.
                     </div>
                     <div
                         style={{display:"inline-block"}}
