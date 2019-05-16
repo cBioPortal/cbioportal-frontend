@@ -35,6 +35,7 @@ type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 export type ComparisonGroup = Omit<SessionGroupData, "studies"|"color"> & {
     color:string; // color mandatory here, bc we'll assign one if its missing
     uid:string; // unique in the session
+    nameWithOrdinal:string; // for easy disambiguation when groups are abbreviated
     studies:{ id:string, samples: string[], patients:string[] }[]; // include patients, filter out nonexistent samples
     nonExistentSamples:SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
     savedInSession:boolean;
@@ -53,6 +54,34 @@ export type OverlapFilteredComparisonGroup = ComparisonGroup & {
 export type ClinicalDataEnrichmentWithQ = ClinicalDataEnrichment & { qValue:number };
 
 export type CopyNumberEnrichment = AlterationEnrichmentWithQ & { value:number };
+
+const alphabet = "-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+export function getOrdinals(num:number, base:number) {
+    if (num <= 0) {
+        return [];
+    }
+    const inNewBase = [[1]];
+    let prev:number[];
+    let next:number[];
+    for (let i=1; i<num; i++) {
+        prev = inNewBase[i-1];
+        next = _.clone(prev);
+        next[next.length-1] += 1;
+        for (let carryIndex = next.length-1; carryIndex >= 0; carryIndex--) {
+            if (next[carryIndex] > base) {
+                next[carryIndex] -= base;
+                if (carryIndex > 0) {
+                    next[carryIndex-1]+=1;
+                } else {
+                    next.unshift(1);
+                }
+            }
+        }
+        inNewBase.push(next);
+    }
+    return inNewBase.map(n=>n.map(i=>alphabet[i]).join(""));
+}
 
 export const OVERLAP_GROUP_COLOR = "#CCCCCC";
 
@@ -389,12 +418,18 @@ export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups:number) {
 
 export function getDefaultGroupName(
     filters:StudyViewFilter,
+    customChartFilterSet:{[chartId:string]:string[]},
     entrezGeneIdToGene:{[entrez:number]:GeneIdentifier}
 ) {
     const equalityFilters = _.sortBy( // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
         filters.clinicalDataEqualityFilters || [],
         filter=>filter.attributeId
     ).map(filter=>filter.values.join("+")); // get each attributes selected values, joined by +
+
+    const customChartValues =
+        _(customChartFilterSet).keys().sortBy() // sort into a canonical order - lets just do alphabetical by chart id
+            .map(key=>customChartFilterSet[key].join("+"))// get each attributes selected values, joined by +
+            .value();
 
     const mutatedGenes =
         _.flattenDeep<number>((filters.mutatedGenes || []).map(filter=>filter.entrezGeneIds))
@@ -415,7 +450,11 @@ export function getDefaultGroupName(
     }
 
 
-    const allFilters = mutatedGenes.concat(cnaGenes).concat(equalityFilters).concat(withData);
+    const allFilters = mutatedGenes
+                        .concat(cnaGenes)
+                        .concat(equalityFilters)
+                        .concat(customChartValues)
+                        .concat(withData);
     
     return allFilters.join(", "); // comma separate each attributes values
 }

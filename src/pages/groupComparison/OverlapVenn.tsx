@@ -90,7 +90,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
         _.forEach(this.props.uidToGroup, (group) => {
             if (group.uid in usedGroups) {
                 legendData.push({
-                    name: truncateWithEllipsis(group.name, 100, "Arial", "13px"),
+                    name: truncateWithEllipsis(group.nameWithOrdinal, 100, "Arial", "13px"),
                     symbol: { fill: group.color, strokeOpacity:0, type:"square", size: 6 }
                 });
             }

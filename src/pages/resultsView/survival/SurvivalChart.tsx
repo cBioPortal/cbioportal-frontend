@@ -20,7 +20,7 @@ import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import {getPatientViewUrl} from "../../../shared/api/urls";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
-import {AnalysisGroup} from "../../studyView/StudyViewPageStore";
+import {AnalysisGroup} from "../../studyView/StudyViewUtils";
 import {AbstractChart} from "../../studyView/charts/ChartContainer";
 import {toSvgDomNodeWithLegend} from "../../studyView/StudyViewUtils";
 import classnames from "classnames";

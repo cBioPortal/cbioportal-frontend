@@ -4,11 +4,12 @@ import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import styles from "./styles.module.scss";
 import {ClinicalDataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
-import {ChartMeta, StudyViewFilterWithSampleIdentifierFilters, UniqueKey} from 'pages/studyView/StudyViewPageStore';
+import {UniqueKey} from 'pages/studyView/StudyViewUtils';
 import {
+    ChartMeta,
     getCNAColorByAlteration, getPatientIdentifiers,
     getSelectedGroupNames,
-    intervalFiltersDisplayValue
+    intervalFiltersDisplayValue, StudyViewFilterWithSampleIdentifierFilters
 } from 'pages/studyView/StudyViewUtils';
 import {PillTag} from "../../shared/components/PillTag/PillTag";
 import {GroupLogic} from "./filters/groupLogic/GroupLogic";
@@ -47,10 +48,6 @@ export interface IUserSelectionsProps {
 
 @observer
 export default class UserSelections extends React.Component<IUserSelectionsProps, {}> {
-
-    constructor(props: IUserSelectionsProps) {
-        super(props);
-    }
 
     @computed
     get showFilters() {
