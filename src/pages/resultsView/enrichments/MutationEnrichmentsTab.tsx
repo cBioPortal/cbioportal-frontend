@@ -34,7 +34,6 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
                         selectedValue={this.props.store.selectedEnrichmentMutationProfile.molecularProfileId}
                         molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}/>
                     <AlterationEnrichmentContainer data={this.props.store.mutationEnrichmentData.result!}
-                        selectedProfile={this.props.store.selectedEnrichmentMutationProfile}
                         headerName={this.props.store.selectedEnrichmentMutationProfile.name}
                         store={this.props.store}
                         groups={[

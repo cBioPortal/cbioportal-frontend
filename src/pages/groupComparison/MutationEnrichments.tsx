@@ -55,7 +55,6 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                         groups={this.enrichmentAnalysisGroups.result}
                         alteredVsUnalteredMode={false}
                         headerName={this.props.store.mutationEnrichmentProfile.result!.name}
-                        selectedProfile={this.props.store.mutationEnrichmentProfile.result!}
                     />
                 </div>
             );
