@@ -120,7 +120,7 @@ export function getAlterationRowData(
         let groupsSetWithPercentages = _.mapValues(_.keyBy(alterationEnrichment.counts, count => count.name), datum => {
             return {
                 ...datum,
-                alteredPercentage: datum.alteredCount / datum.profiledCount
+                alteredPercentage: (datum.alteredCount / datum.profiledCount)*100
             }
         });
         let logRatio: number | undefined = undefined;
