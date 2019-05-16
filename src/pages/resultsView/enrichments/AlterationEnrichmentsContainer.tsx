@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as _ from "lodash";
 import { observer } from "mobx-react";
+import numeral from 'numeral';
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import {observable, computed, action} from 'mobx';
 import AlterationEnrichmentTable, {AlterationEnrichmentTableColumnType} from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
@@ -18,6 +19,8 @@ import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/Enrichm
 import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 import CheckedSelect, {Option} from 'shared/components/checkedSelect/CheckedSelect';
+import {MiniOncoprint} from "shared/components/miniOncoprint/MiniOncoprint";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import GeneBarPlot from './GeneBarPlot';
 
 export interface IAlterationEnrichmentContainerProps {
@@ -40,7 +43,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
     @observable significanceFilter: boolean = false;
     @observable.shallow checkedGenes: string[] = [];
-    @observable clickedGene: string;
     @observable.shallow selectedGenes: string[]|null;
     @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
 
@@ -68,18 +70,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return getFilteredDataByGroups(this.data, this._enrichedGroups, this.significanceFilter, this.selectedGenes);
     }
 
-    @computed get clickedGeneStats(): [number, number, number, number] {
-        const clickedAlterationEnrichment: AlterationEnrichmentWithQ = _.find(this.props.data, ['hugoGeneSymbol', this.clickedGene])!;
-        const groupCountsSummary = clickedAlterationEnrichment.counts;
-        const groupCountsSet = _.keyBy(groupCountsSummary, groupCount => groupCount.name);
-        const set1CountSummary = groupCountsSet[this.group1.name];
-        const set2CountSummary = groupCountsSet[this.group2.name];
-        return [this.group1.count - set1CountSummary.alteredCount,
-        set1CountSummary.alteredCount,
-        set2CountSummary.alteredCount,
-        this.group2.count - set2CountSummary.alteredCount];
-    }
-
     @autobind
     private toggleSignificanceFilter() {
         this.significanceFilter = !this.significanceFilter;
@@ -98,7 +88,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
     @autobind
     private onGeneNameClick(hugoGeneSymbol: string) {
-        this.clickedGene = hugoGeneSymbol;
+        //noop
     }
 
     @autobind
@@ -124,7 +114,68 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     );
 
     @computed get customColumns() {
-        return getGroupColumns(this.props.groups, this.props.alteredVsUnalteredMode);
+        const cols =  getGroupColumns(this.props.groups, this.props.alteredVsUnalteredMode);
+        if (this.isTwoGroupAnalysis) {
+            cols.push({
+                          name: 'Alteration Overlap',
+                          headerRender: () => <span>Co-occurrence Pattern</span>,
+                          render: (data) => {
+
+                              const groups = _.map(data.groupsSet);
+
+                              const group1 = groups[0];
+                              const group2 = groups[1];
+
+                              const totalUniqueSamples = group1.profiledCount + group2.profiledCount;
+
+                              const group1Width = (group1.profiledCount/totalUniqueSamples)*100;
+                              const group2Width = 100 - group1Width;
+                              const group1Unaltered = ((group1.profiledCount - group1.alteredCount)/ totalUniqueSamples) * 100;
+                              const group1Altered = (group1.alteredCount / totalUniqueSamples) * 100;
+                              const group2Altered = (group2.alteredCount / totalUniqueSamples) * 100;
+
+                              const alterationLanguage = this.props.showCNAInTable ? 'copy number alterations' : 'mutations'
+
+                              const overlay = ()=>{
+                                  return (<div>
+                                      <h3>{data.hugoGeneSymbol} {alterationLanguage} in:</h3>
+                                      <table className={'table table-striped'}>
+                                          <tbody>
+                                          <tr>
+                                              <td><strong>{group1.name}: </strong></td>
+                                              <td>{group1.alteredCount} of {group1.profiledCount} of samples ({numeral(group1.alteredPercentage).format('0.0')}%)</td>
+                                          </tr>
+                                          <tr>
+                                              <td><strong>{group2.name}: </strong></td>
+                                              <td>{group2.alteredCount} of {group2.profiledCount} of samples ({numeral(group2.alteredPercentage).format('0.0')}%)
+                                              </td>
+                                          </tr>
+                                          </tbody>
+
+                                      </table>
+
+                                  </div>);
+                              };
+
+                              return <DefaultTooltip destroyTooltipOnHide={true}  trigger={['hover']} overlay={overlay}>
+                                  <div className={'inlineBlock'} style={{padding:'3px 0'}}>
+                                      <MiniOncoprint
+                                          group1Width={group1Width}
+                                          group2Width={group2Width}
+                                          group1Unaltered={group1Unaltered}
+                                          group1Altered={group1Altered}
+                                          group2Altered={group2Altered}
+                                          width={150}
+                                      />
+                                  </div>
+                              </DefaultTooltip>;
+                          },
+                      });
+        }
+
+
+        return cols;
+
     }
 
     @computed get visibleOrderedColumnNames() {
@@ -138,6 +189,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
             columns.push(group.name);
         })
         if(this.isTwoGroupAnalysis) {
+            columns.push('Alteration Overlap');
             columns.push(AlterationEnrichmentTableColumnType.LOG_RATIO);
         }
 
@@ -243,7 +295,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                     </div>
                     <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
                                                checkedGenes={this.props.store ? this.checkedGenes : undefined}
-                                               onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined}
                                                dataStore={this.dataStore}
                                                visibleOrderedColumnNames={this.visibleOrderedColumnNames}
                                                customColumns={_.keyBy(this.customColumns,column=>column.name)}
