@@ -373,7 +373,7 @@ export function MakeEnrichmentsTabUI(
                 return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG("protein")}</span>;
             } else {
                 const content:any = [];
-                content.push(<OverlapExclusionIndicator store={store}/>);
+                content.push(<OverlapExclusionIndicator store={store} only="sample"/>);
                 content.push(getEnrichmentsUI().component);
                 return content;
             }
