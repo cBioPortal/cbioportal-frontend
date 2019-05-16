@@ -181,24 +181,12 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
         };
         let categoryCoord = (categoryIndex:number)=>25*categoryIndex;
         it("returns correct result for empty input", ()=>{
-            assert.deepEqual(makeBarSpecs([], undefined, undefined, getColor, categoryCoord, false, false), []);
+            assert.deepEqual(makeBarSpecs([], undefined, undefined, getColor, categoryCoord, false, false, false), []);
         });
-        it("returns correct results for singleValueVertBarsData (note output arrays given in reverse order bc its vertical bars)", ()=>{
+        it("returns correct results for singleValueVertBarsData", ()=>{
             assert.deepEqual(makeBarSpecs(
-                singleValueVertBarsData, undefined, undefined, getColor, categoryCoord, false, false
+                singleValueVertBarsData, undefined, undefined, getColor, categoryCoord, false, false, false
             ), [{
-                fill: "colorD",
-                data: [{
-                    majorCategory: "categoryA", minorCategory:"categoryD",
-                    count: 1, x: 0, y:1, percentage: 33.33
-                },{
-                    majorCategory: "categoryB", minorCategory:"categoryD",
-                    count: 0, x: 25, y:0, percentage: 0
-                },{
-                    majorCategory: "categoryE", minorCategory:"categoryD",
-                    count: 1, x: 50, y:1, percentage: 100
-                }]
-            },{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryA", minorCategory:"categoryC",
@@ -210,23 +198,23 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryC",
                     count: 0, x: 50, y:0, percentage: 0
                 }]
-            }], "no given order (alphabetical both)");
-
-            assert.deepEqual(makeBarSpecs(
-                singleValueVertBarsData, undefined, undefined, getColor, categoryCoord, false, true
-            ), [{
+            },{
                 fill: "colorD",
                 data: [{
                     majorCategory: "categoryA", minorCategory:"categoryD",
-                    count: 1, x: 0, y:33.33, percentage: 33.33
+                    count: 1, x: 0, y:1, percentage: 33.33
                 },{
                     majorCategory: "categoryB", minorCategory:"categoryD",
                     count: 0, x: 25, y:0, percentage: 0
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryD",
-                    count: 1, x: 50, y:100, percentage: 100
+                    count: 1, x: 50, y:1, percentage: 100
                 }]
-            },{
+            }], "no given order (alphabetical both)");
+
+            assert.deepEqual(makeBarSpecs(
+                singleValueVertBarsData, undefined, undefined, getColor, categoryCoord, false, false, true
+            ), [{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryA", minorCategory:"categoryC",
@@ -237,12 +225,36 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryC",
                     count: 0, x: 50, y:0, percentage: 0
+                }]
+            },{
+                fill: "colorD",
+                data: [{
+                    majorCategory: "categoryA", minorCategory:"categoryD",
+                    count: 1, x: 0, y:33.33, percentage: 33.33
+                },{
+                    majorCategory: "categoryB", minorCategory:"categoryD",
+                    count: 0, x: 25, y:0, percentage: 0
+                },{
+                    majorCategory: "categoryE", minorCategory:"categoryD",
+                    count: 1, x: 50, y:100, percentage: 100
                 }]
             }], "no given order (alphabetical both), percentages");
  
             assert.deepEqual(makeBarSpecs(
-                singleValueVertBarsData, categoryOrder, undefined, getColor, categoryCoord, false, false
+                singleValueVertBarsData, categoryOrder, undefined, getColor, categoryCoord, false, false, false
             ), [{
+                fill: "colorD",
+                data: [{
+                    majorCategory: "categoryA", minorCategory:"categoryD",
+                    count: 1, x: 0, y:1, percentage: 33.33
+                },{
+                    majorCategory: "categoryB", minorCategory:"categoryD",
+                    count: 0, x: 25, y:0, percentage: 0
+                },{
+                    majorCategory: "categoryE", minorCategory:"categoryD",
+                    count: 1, x: 50, y:1, percentage: 100
+                }]
+            }, {
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryA", minorCategory:"categoryC",
@@ -254,23 +266,23 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryC",
                     count: 0, x: 50, y:0, percentage: 0
                 }]
-            },{
+            }], "given minor order (alphabetical major)");
+
+            assert.deepEqual(makeBarSpecs(
+                singleValueVertBarsData, categoryOrder, undefined, getColor, categoryCoord, false, false, true
+            ), [{
                 fill: "colorD",
                 data: [{
                     majorCategory: "categoryA", minorCategory:"categoryD",
-                    count: 1, x: 0, y:1, percentage: 33.33
+                    count: 1, x: 0, y:33.33, percentage: 33.33
                 },{
                     majorCategory: "categoryB", minorCategory:"categoryD",
                     count: 0, x: 25, y:0, percentage: 0
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryD",
-                    count: 1, x: 50, y:1, percentage: 100
+                    count: 1, x: 50, y:100, percentage: 100
                 }]
-            }], "given minor order (alphabetical major)");
-
-            assert.deepEqual(makeBarSpecs(
-                singleValueVertBarsData, categoryOrder, undefined, getColor, categoryCoord, false, true
-            ), [{
+            },{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryA", minorCategory:"categoryC",
@@ -282,35 +294,11 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryC",
                     count: 0, x: 50, y:0, percentage: 0
                 }]
-            },{
-                fill: "colorD",
-                data: [{
-                    majorCategory: "categoryA", minorCategory:"categoryD",
-                    count: 1, x: 0, y:33.33, percentage: 33.33
-                },{
-                    majorCategory: "categoryB", minorCategory:"categoryD",
-                    count: 0, x: 25, y:0, percentage: 0
-                },{
-                    majorCategory: "categoryE", minorCategory:"categoryD",
-                    count: 1, x: 50, y:100, percentage: 100
-                }]
             }], "given minor order (alphabetical major), percentages");
 
             assert.deepEqual(makeBarSpecs(
-                singleValueVertBarsData, undefined, categoryOrder, getColor, categoryCoord, false, false
+                singleValueVertBarsData, undefined, categoryOrder, getColor, categoryCoord, false, false, false
             ), [{
-                fill: "colorD",
-                data: [{
-                    majorCategory: "categoryB", minorCategory:"categoryD",
-                    count: 0, x: 0, y:0, percentage: 0
-                },{
-                    majorCategory: "categoryA", minorCategory:"categoryD",
-                    count: 1, x: 25, y:1, percentage: 33.33
-                },{
-                    majorCategory: "categoryE", minorCategory:"categoryD",
-                    count: 1, x: 50, y:1, percentage: 100
-                }]
-            },{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryB", minorCategory:"categoryC",
@@ -322,23 +310,23 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryC",
                     count: 0, x: 50, y:0, percentage: 0
                 }]
-            }], "given major order (alphabetical minor)");
-
-            assert.deepEqual(makeBarSpecs(
-                singleValueVertBarsData, undefined, categoryOrder, getColor, categoryCoord, false, true
-            ), [{
+            },{
                 fill: "colorD",
                 data: [{
                     majorCategory: "categoryB", minorCategory:"categoryD",
                     count: 0, x: 0, y:0, percentage: 0
                 },{
                     majorCategory: "categoryA", minorCategory:"categoryD",
-                    count: 1, x: 25, y:33.33, percentage: 33.33
+                    count: 1, x: 25, y:1, percentage: 33.33
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryD",
-                    count: 1, x: 50, y:100, percentage: 100
+                    count: 1, x: 50, y:1, percentage: 100
                 }]
-            },{
+            },], "given major order (alphabetical minor)");
+
+            assert.deepEqual(makeBarSpecs(
+                singleValueVertBarsData, undefined, categoryOrder, getColor, categoryCoord, false, false, true
+            ), [{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryB", minorCategory:"categoryC",
@@ -349,24 +337,24 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryC",
                     count: 0, x: 50, y:0, percentage: 0
+                }]
+            },{
+                fill: "colorD",
+                data: [{
+                    majorCategory: "categoryB", minorCategory:"categoryD",
+                    count: 0, x: 0, y:0, percentage: 0
+                },{
+                    majorCategory: "categoryA", minorCategory:"categoryD",
+                    count: 1, x: 25, y:33.33, percentage: 33.33
+                },{
+                    majorCategory: "categoryE", minorCategory:"categoryD",
+                    count: 1, x: 50, y:100, percentage: 100
                 }]
             }], "given major order (alphabetical minor), percentages");
 
             assert.deepEqual(makeBarSpecs(
-                singleValueVertBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, false, false
+                singleValueVertBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, false, false, false
             ), [{
-                fill: "colorC",
-                data:[{
-                    majorCategory: "categoryB", minorCategory:"categoryC",
-                    count: 1, x: 0, y:1, percentage: 100
-                },{
-                    majorCategory: "categoryA", minorCategory:"categoryC",
-                    count: 2, x: 25, y:2, percentage: 66.67
-                },{
-                    majorCategory: "categoryE", minorCategory:"categoryC",
-                    count: 0, x: 50, y:0, percentage: 0
-                }]
-            },{
                 fill: "colorD",
                 data: [{
                     majorCategory: "categoryB", minorCategory:"categoryD",
@@ -378,23 +366,23 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryD",
                     count: 1, x: 50, y:1, percentage: 100
                 }]
-            }], "given minor and major order");
-
-            assert.deepEqual(makeBarSpecs(
-                singleValueVertBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, false, true
-            ), [{
+            },{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryB", minorCategory:"categoryC",
-                    count: 1, x: 0, y:100, percentage: 100
+                    count: 1, x: 0, y:1, percentage: 100
                 },{
                     majorCategory: "categoryA", minorCategory:"categoryC",
-                    count: 2, x: 25, y:66.67, percentage: 66.67
+                    count: 2, x: 25, y:2, percentage: 66.67
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryC",
                     count: 0, x: 50, y:0, percentage: 0
                 }]
-            },{
+            }], "given minor and major order");
+
+            assert.deepEqual(makeBarSpecs(
+                singleValueVertBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, false, false, true
+            ), [{
                 fill: "colorD",
                 data: [{
                     majorCategory: "categoryB", minorCategory:"categoryD",
@@ -406,18 +394,31 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryD",
                     count: 1, x: 50, y:100, percentage: 100
                 }]
+            },{
+                fill: "colorC",
+                data:[{
+                    majorCategory: "categoryB", minorCategory:"categoryC",
+                    count: 1, x: 0, y:100, percentage: 100
+                },{
+                    majorCategory: "categoryA", minorCategory:"categoryC",
+                    count: 2, x: 25, y:66.67, percentage: 66.67
+                },{
+                    majorCategory: "categoryE", minorCategory:"categoryC",
+                    count: 0, x: 50, y:0, percentage: 0
+                }]
             }], "given minor and major order, percentages");
         });
+        //
         it("returns correct results for singleValueHorzBarsData", ()=>{
             assert.deepEqual(makeBarSpecs(
-                singleValueHorzBarsData, undefined, undefined, getColor, categoryCoord, true, false
+                singleValueHorzBarsData, undefined, undefined, getColor, categoryCoord, true, false, false
             ), [{
-                fill: "colorA",
-                data: [{
-                    majorCategory: "categoryC", minorCategory:"categoryA",
-                    count: 2, x: 0, y:2, percentage: 66.67
+                fill: "colorE",
+                data:[{
+                    majorCategory: "categoryC", minorCategory:"categoryE",
+                    count: 0, x: 0, y:0, percentage: 0
                 },{
-                    majorCategory: "categoryD", minorCategory:"categoryA",
+                    majorCategory: "categoryD", minorCategory:"categoryE",
                     count: 1, x: 25, y:1, percentage: 50
                 }]
             },{
@@ -430,25 +431,25 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 0, x: 25, y:0, percentage: 0
                 }]
             },{
-                fill: "colorE",
-                data:[{
-                    majorCategory: "categoryC", minorCategory:"categoryE",
-                    count: 0, x: 0, y:0, percentage: 0
+                fill: "colorA",
+                data: [{
+                    majorCategory: "categoryC", minorCategory:"categoryA",
+                    count: 2, x: 0, y:2, percentage: 66.67
                 },{
-                    majorCategory: "categoryD", minorCategory:"categoryE",
+                    majorCategory: "categoryD", minorCategory:"categoryA",
                     count: 1, x: 25, y:1, percentage: 50
                 }]
             }], "no given order (alphabetical both)");
 
             assert.deepEqual(makeBarSpecs(
-                singleValueHorzBarsData, undefined, undefined, getColor, categoryCoord, true, true
+                singleValueHorzBarsData, undefined, undefined, getColor, categoryCoord, true, false, true
             ), [{
-                fill: "colorA",
-                data: [{
-                    majorCategory: "categoryC", minorCategory:"categoryA",
-                    count: 2, x: 0, y:66.67, percentage: 66.67
+                fill: "colorE",
+                data:[{
+                    majorCategory: "categoryC", minorCategory:"categoryE",
+                    count: 0, x: 0, y:0, percentage: 0
                 },{
-                    majorCategory: "categoryD", minorCategory:"categoryA",
+                    majorCategory: "categoryD", minorCategory:"categoryE",
                     count: 1, x: 25, y:50, percentage: 50
                 }]
             },{
@@ -461,26 +462,26 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 0, x: 25, y:0, percentage: 0
                 }]
             },{
+                fill: "colorA",
+                data: [{
+                    majorCategory: "categoryC", minorCategory:"categoryA",
+                    count: 2, x: 0, y:66.67, percentage: 66.67
+                },{
+                    majorCategory: "categoryD", minorCategory:"categoryA",
+                    count: 1, x: 25, y:50, percentage: 50
+                }]
+            }], "no given order (alphabetical both), percentages");
+
+            assert.deepEqual(makeBarSpecs(
+                singleValueHorzBarsData, categoryOrder, undefined, getColor, categoryCoord, true, false, false
+            ), [{
                 fill: "colorE",
                 data:[{
                     majorCategory: "categoryC", minorCategory:"categoryE",
                     count: 0, x: 0, y:0, percentage: 0
                 },{
                     majorCategory: "categoryD", minorCategory:"categoryE",
-                    count: 1, x: 25, y:50, percentage: 50
-                }]
-            }], "no given order (alphabetical both), percentages");
-
-            assert.deepEqual(makeBarSpecs(
-                singleValueHorzBarsData, categoryOrder, undefined, getColor, categoryCoord, true, false
-            ), [{
-                fill: "colorB",
-                data:[{
-                    majorCategory: "categoryC", minorCategory:"categoryB",
-                    count: 1, x: 0, y:1, percentage: 33.33
-                },{
-                    majorCategory: "categoryD", minorCategory:"categoryB",
-                    count: 0, x: 25, y:0, percentage: 0
+                    count: 1, x: 25, y:1, percentage: 50
                 }]
             },{
                 fill: "colorA",
@@ -492,26 +493,26 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 1, x: 25, y:1, percentage: 50
                 }]
             },{
+                fill: "colorB",
+                data:[{
+                    majorCategory: "categoryC", minorCategory:"categoryB",
+                    count: 1, x: 0, y:1, percentage: 33.33
+                },{
+                    majorCategory: "categoryD", minorCategory:"categoryB",
+                    count: 0, x: 25, y:0, percentage: 0
+                }]
+            }], "given minor order (alphabetical major)");
+
+            assert.deepEqual(makeBarSpecs(
+                singleValueHorzBarsData, categoryOrder, undefined, getColor, categoryCoord, true, false, true
+            ), [{
                 fill: "colorE",
                 data:[{
                     majorCategory: "categoryC", minorCategory:"categoryE",
                     count: 0, x: 0, y:0, percentage: 0
                 },{
                     majorCategory: "categoryD", minorCategory:"categoryE",
-                    count: 1, x: 25, y:1, percentage: 50
-                }]
-            }], "given minor order (alphabetical major)");
-
-            assert.deepEqual(makeBarSpecs(
-                singleValueHorzBarsData, categoryOrder, undefined, getColor, categoryCoord, true, true
-            ), [{
-                fill: "colorB",
-                data:[{
-                    majorCategory: "categoryC", minorCategory:"categoryB",
-                    count: 1, x: 0, y:33.33, percentage: 33.33
-                },{
-                    majorCategory: "categoryD", minorCategory:"categoryB",
-                    count: 0, x: 25, y:0, percentage: 0
+                    count: 1, x: 25, y:50, percentage: 50
                 }]
             },{
                 fill: "colorA",
@@ -523,26 +524,26 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 1, x: 25, y:50, percentage: 50
                 }]
             },{
-                fill: "colorE",
+                fill: "colorB",
                 data:[{
-                    majorCategory: "categoryC", minorCategory:"categoryE",
-                    count: 0, x: 0, y:0, percentage: 0
+                    majorCategory: "categoryC", minorCategory:"categoryB",
+                    count: 1, x: 0, y:33.33, percentage: 33.33
                 },{
-                    majorCategory: "categoryD", minorCategory:"categoryE",
-                    count: 1, x: 25, y:50, percentage: 50
+                    majorCategory: "categoryD", minorCategory:"categoryB",
+                    count: 0, x: 25, y:0, percentage: 0
                 }]
             }], "given minor order (alphabetical major), percentages");
 
             assert.deepEqual(makeBarSpecs(
-                singleValueHorzBarsData, undefined, categoryOrder, getColor, categoryCoord, true, false
+                singleValueHorzBarsData, undefined, categoryOrder, getColor, categoryCoord, true, false, false
             ), [{
-                fill: "colorA",
-                data: [{
-                    majorCategory: "categoryD", minorCategory:"categoryA",
+                fill: "colorE",
+                data:[{
+                    majorCategory: "categoryD", minorCategory:"categoryE",
                     count: 1, x: 0, y:1, percentage: 50
                 },{
-                    majorCategory: "categoryC", minorCategory:"categoryA",
-                    count: 2, x: 25, y:2, percentage: 66.67
+                    majorCategory: "categoryC", minorCategory:"categoryE",
+                    count: 0, x: 25, y:0, percentage: 0
                 }]
             },{
                 fill: "colorB",
@@ -554,26 +555,26 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 1, x: 25, y:1, percentage: 33.33
                 }]
             },{
-                fill: "colorE",
-                data:[{
-                    majorCategory: "categoryD", minorCategory:"categoryE",
+                fill: "colorA",
+                data: [{
+                    majorCategory: "categoryD", minorCategory:"categoryA",
                     count: 1, x: 0, y:1, percentage: 50
                 },{
-                    majorCategory: "categoryC", minorCategory:"categoryE",
-                    count: 0, x: 25, y:0, percentage: 0
+                    majorCategory: "categoryC", minorCategory:"categoryA",
+                    count: 2, x: 25, y:2, percentage: 66.67
                 }]
             }], "given major order (alphabetical minor)");
 
             assert.deepEqual(makeBarSpecs(
-                singleValueHorzBarsData, undefined, categoryOrder, getColor, categoryCoord, true, true
+                singleValueHorzBarsData, undefined, categoryOrder, getColor, categoryCoord, true, false, true
             ), [{
-                fill: "colorA",
-                data: [{
-                    majorCategory: "categoryD", minorCategory:"categoryA",
+                fill: "colorE",
+                data:[{
+                    majorCategory: "categoryD", minorCategory:"categoryE",
                     count: 1, x: 0, y:50, percentage: 50
                 },{
-                    majorCategory: "categoryC", minorCategory:"categoryA",
-                    count: 2, x: 25, y:66.67, percentage: 66.67
+                    majorCategory: "categoryC", minorCategory:"categoryE",
+                    count: 0, x: 25, y:0, percentage: 0
                 }]
             },{
                 fill: "colorB",
@@ -585,26 +586,26 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 1, x: 25, y:33.33, percentage: 33.33
                 }]
             },{
-                fill: "colorE",
-                data:[{
-                    majorCategory: "categoryD", minorCategory:"categoryE",
+                fill: "colorA",
+                data: [{
+                    majorCategory: "categoryD", minorCategory:"categoryA",
                     count: 1, x: 0, y:50, percentage: 50
                 },{
-                    majorCategory: "categoryC", minorCategory:"categoryE",
-                    count: 0, x: 25, y:0, percentage: 0
+                    majorCategory: "categoryC", minorCategory:"categoryA",
+                    count: 2, x: 25, y:66.67, percentage: 66.67
                 }]
             }], "given major order (alphabetical minor), percentages");
 
             assert.deepEqual(makeBarSpecs(
-                singleValueHorzBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, true, false
+                singleValueHorzBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, true, false, false
             ), [{
-                fill: "colorB",
+                fill: "colorE",
                 data:[{
-                    majorCategory: "categoryD", minorCategory:"categoryB",
-                    count: 0, x: 0, y:0, percentage: 0
+                    majorCategory: "categoryD", minorCategory:"categoryE",
+                    count: 1, x: 0, y:1, percentage: 50
                 },{
-                    majorCategory: "categoryC", minorCategory:"categoryB",
-                    count: 1, x: 25, y:1, percentage: 33.33
+                    majorCategory: "categoryC", minorCategory:"categoryE",
+                    count: 0, x: 25, y:0, percentage: 0
                 }]
             },{
                 fill: "colorA",
@@ -616,26 +617,26 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 2, x: 25, y:2, percentage: 66.67
                 }]
             },{
-                fill: "colorE",
-                data:[{
-                    majorCategory: "categoryD", minorCategory:"categoryE",
-                    count: 1, x: 0, y:1, percentage: 50
-                },{
-                    majorCategory: "categoryC", minorCategory:"categoryE",
-                    count: 0, x: 25, y:0, percentage: 0
-                }]
-            }], "given minor and major order");
-
-            assert.deepEqual(makeBarSpecs(
-                singleValueHorzBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, true, true
-            ), [{
                 fill: "colorB",
                 data:[{
                     majorCategory: "categoryD", minorCategory:"categoryB",
                     count: 0, x: 0, y:0, percentage: 0
                 },{
                     majorCategory: "categoryC", minorCategory:"categoryB",
-                    count: 1, x: 25, y:33.33, percentage: 33.33
+                    count: 1, x: 25, y:1, percentage: 33.33
+                }]
+            }], "given minor and major order");
+
+            assert.deepEqual(makeBarSpecs(
+                singleValueHorzBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, true, false, true
+            ), [{
+                fill: "colorE",
+                data:[{
+                    majorCategory: "categoryD", minorCategory:"categoryE",
+                    count: 1, x: 0, y:50, percentage: 50
+                },{
+                    majorCategory: "categoryC", minorCategory:"categoryE",
+                    count: 0, x: 25, y:0, percentage: 0
                 }]
             },{
                 fill: "colorA",
@@ -647,32 +648,20 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 2, x: 25, y:66.67, percentage: 66.67
                 }]
             },{
-                fill: "colorE",
+                fill: "colorB",
                 data:[{
-                    majorCategory: "categoryD", minorCategory:"categoryE",
-                    count: 1, x: 0, y:50, percentage: 50
+                    majorCategory: "categoryD", minorCategory:"categoryB",
+                    count: 0, x: 0, y:0, percentage: 0
                 },{
-                    majorCategory: "categoryC", minorCategory:"categoryE",
-                    count: 0, x: 25, y:0, percentage: 0
+                    majorCategory: "categoryC", minorCategory:"categoryB",
+                    count: 1, x: 25, y:33.33, percentage: 33.33
                 }]
             }], "given minor and major order, percentages");
         });
-        it("returns correct results for multipleValueVertBarsData (note output arrays given in reverse order bc its vertical bars)", ()=>{
+        it("returns correct results for multipleValueVertBarsData", ()=>{
             assert.deepEqual(makeBarSpecs(
-                multipleValueVertBarsData, undefined, undefined, getColor, categoryCoord, false, false
+                multipleValueVertBarsData, undefined, undefined, getColor, categoryCoord, false, false, false
             ), [{
-                fill: "colorD",
-                data: [{
-                    majorCategory: "categoryA", minorCategory:"categoryD",
-                    count: 2, x: 0, y:2, percentage: 50
-                },{
-                    majorCategory: "categoryB", minorCategory:"categoryD",
-                    count: 2, x: 25, y:2, percentage: 40
-                },{
-                    majorCategory: "categoryE", minorCategory:"categoryD",
-                    count: 2, x: 50, y:2, percentage: 50
-                }]
-            },{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryA", minorCategory:"categoryC",
@@ -682,25 +671,25 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 3, x: 25, y:3, percentage: 60
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryC",
+                    count: 2, x: 50, y:2, percentage: 50
+                }]
+            },{
+                fill: "colorD",
+                data: [{
+                    majorCategory: "categoryA", minorCategory:"categoryD",
+                    count: 2, x: 0, y:2, percentage: 50
+                },{
+                    majorCategory: "categoryB", minorCategory:"categoryD",
+                    count: 2, x: 25, y:2, percentage: 40
+                },{
+                    majorCategory: "categoryE", minorCategory:"categoryD",
                     count: 2, x: 50, y:2, percentage: 50
                 }]
             }], "no given order (alphabetical both)");
 
             assert.deepEqual(makeBarSpecs(
-                multipleValueVertBarsData, undefined, undefined, getColor, categoryCoord, false, true
+                multipleValueVertBarsData, undefined, undefined, getColor, categoryCoord, false, false, true
             ), [{
-                fill: "colorD",
-                data: [{
-                    majorCategory: "categoryA", minorCategory:"categoryD",
-                    count: 2, x: 0, y:50, percentage: 50
-                },{
-                    majorCategory: "categoryB", minorCategory:"categoryD",
-                    count: 2, x: 25, y:40, percentage: 40
-                },{
-                    majorCategory: "categoryE", minorCategory:"categoryD",
-                    count: 2, x: 50, y:50, percentage: 50
-                }]
-            },{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryA", minorCategory:"categoryC",
@@ -712,23 +701,23 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryC",
                     count: 2, x: 50, y:50, percentage: 50
                 }]
+            },{
+                fill: "colorD",
+                data: [{
+                    majorCategory: "categoryA", minorCategory:"categoryD",
+                    count: 2, x: 0, y:50, percentage: 50
+                },{
+                    majorCategory: "categoryB", minorCategory:"categoryD",
+                    count: 2, x: 25, y:40, percentage: 40
+                },{
+                    majorCategory: "categoryE", minorCategory:"categoryD",
+                    count: 2, x: 50, y:50, percentage: 50
+                }]
             }], "no given order (alphabetical both), percentages");
 
             assert.deepEqual(makeBarSpecs(
-                multipleValueVertBarsData, categoryOrder, undefined, getColor, categoryCoord, false, false
+                multipleValueVertBarsData, categoryOrder, undefined, getColor, categoryCoord, false, false, false
             ), [{
-                fill: "colorC",
-                data:[{
-                    majorCategory: "categoryA", minorCategory:"categoryC",
-                    count: 2, x: 0, y:2, percentage: 50
-                },{
-                    majorCategory: "categoryB", minorCategory:"categoryC",
-                    count: 3, x: 25, y:3, percentage: 60
-                },{
-                    majorCategory: "categoryE", minorCategory:"categoryC",
-                    count: 2, x: 50, y:2, percentage: 50
-                }]
-            },{
                 fill: "colorD",
                 data: [{
                     majorCategory: "categoryA", minorCategory:"categoryD",
@@ -740,23 +729,23 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryD",
                     count: 2, x: 50, y:2, percentage: 50
                 }]
-            }], "given minor order (alphabetical major)");
-
-            assert.deepEqual(makeBarSpecs(
-                multipleValueVertBarsData, categoryOrder, undefined, getColor, categoryCoord, false, true
-            ), [{
+            },{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryA", minorCategory:"categoryC",
-                    count: 2, x: 0, y:50, percentage: 50
+                    count: 2, x: 0, y:2, percentage: 50
                 },{
                     majorCategory: "categoryB", minorCategory:"categoryC",
-                    count: 3, x: 25, y:60, percentage: 60
+                    count: 3, x: 25, y:3, percentage: 60
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryC",
-                    count: 2, x: 50, y:50, percentage: 50
+                    count: 2, x: 50, y:2, percentage: 50
                 }]
-            },{
+            }], "given minor order (alphabetical major)");
+
+            assert.deepEqual(makeBarSpecs(
+                multipleValueVertBarsData, categoryOrder, undefined, getColor, categoryCoord, false, false, true
+            ), [{
                 fill: "colorD",
                 data: [{
                     majorCategory: "categoryA", minorCategory:"categoryD",
@@ -768,23 +757,23 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryD",
                     count: 2, x: 50, y:50, percentage: 50
                 }]
+            },{
+                fill: "colorC",
+                data:[{
+                    majorCategory: "categoryA", minorCategory:"categoryC",
+                    count: 2, x: 0, y:50, percentage: 50
+                },{
+                    majorCategory: "categoryB", minorCategory:"categoryC",
+                    count: 3, x: 25, y:60, percentage: 60
+                },{
+                    majorCategory: "categoryE", minorCategory:"categoryC",
+                    count: 2, x: 50, y:50, percentage: 50
+                }]
             }], "given minor order (alphabetical major), percentages");
 
             assert.deepEqual(makeBarSpecs(
-                multipleValueVertBarsData, undefined, categoryOrder, getColor, categoryCoord, false, false
+                multipleValueVertBarsData, undefined, categoryOrder, getColor, categoryCoord, false, false, false
             ), [{
-                fill: "colorD",
-                data: [{
-                    majorCategory: "categoryB", minorCategory:"categoryD",
-                    count: 2, x: 0, y:2, percentage: 40
-                },{
-                    majorCategory: "categoryA", minorCategory:"categoryD",
-                    count: 2, x: 25, y:2, percentage: 50
-                },{
-                    majorCategory: "categoryE", minorCategory:"categoryD",
-                    count: 2, x: 50, y:2, percentage: 50
-                }]
-            },{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryB", minorCategory:"categoryC",
@@ -796,23 +785,23 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryC",
                     count: 2, x: 50, y:2, percentage: 50
                 }]
-            }], "given major order (alphabetical minor)");
-
-            assert.deepEqual(makeBarSpecs(
-                multipleValueVertBarsData, undefined, categoryOrder, getColor, categoryCoord, false, true
-            ), [{
+            },{
                 fill: "colorD",
                 data: [{
                     majorCategory: "categoryB", minorCategory:"categoryD",
-                    count: 2, x: 0, y:40, percentage: 40
+                    count: 2, x: 0, y:2, percentage: 40
                 },{
                     majorCategory: "categoryA", minorCategory:"categoryD",
-                    count: 2, x: 25, y:50, percentage: 50
+                    count: 2, x: 25, y:2, percentage: 50
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryD",
-                    count: 2, x: 50, y:50, percentage: 50
+                    count: 2, x: 50, y:2, percentage: 50
                 }]
-            },{
+            }], "given major order (alphabetical minor)");
+
+            assert.deepEqual(makeBarSpecs(
+                multipleValueVertBarsData, undefined, categoryOrder, getColor, categoryCoord, false, false, true
+            ), [{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryB", minorCategory:"categoryC",
@@ -822,25 +811,25 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 2, x: 25, y:50, percentage: 50
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryC",
+                    count: 2, x: 50, y:50, percentage: 50
+                }]
+            },{
+                fill: "colorD",
+                data: [{
+                    majorCategory: "categoryB", minorCategory:"categoryD",
+                    count: 2, x: 0, y:40, percentage: 40
+                },{
+                    majorCategory: "categoryA", minorCategory:"categoryD",
+                    count: 2, x: 25, y:50, percentage: 50
+                },{
+                    majorCategory: "categoryE", minorCategory:"categoryD",
                     count: 2, x: 50, y:50, percentage: 50
                 }]
             }], "given major order (alphabetical minor), perccentages");
 
             assert.deepEqual(makeBarSpecs(
-                multipleValueVertBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, false, false
+                multipleValueVertBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, false, false, false
             ), [{
-                fill: "colorC",
-                data:[{
-                    majorCategory: "categoryB", minorCategory:"categoryC",
-                    count: 3, x: 0, y:3, percentage: 60
-                },{
-                    majorCategory: "categoryA", minorCategory:"categoryC",
-                    count: 2, x: 25, y:2, percentage: 50
-                },{
-                    majorCategory: "categoryE", minorCategory:"categoryC",
-                    count: 2, x: 50, y:2, percentage: 50
-                }]
-            },{
                 fill: "colorD",
                 data: [{
                     majorCategory: "categoryB", minorCategory:"categoryD",
@@ -852,23 +841,23 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryD",
                     count: 2, x: 50, y:2, percentage: 50
                 }]
-            }], "given minor and major order");
-
-            assert.deepEqual(makeBarSpecs(
-                multipleValueVertBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, false, true
-            ), [{
+            },{
                 fill: "colorC",
                 data:[{
                     majorCategory: "categoryB", minorCategory:"categoryC",
-                    count: 3, x: 0, y:60, percentage: 60
+                    count: 3, x: 0, y:3, percentage: 60
                 },{
                     majorCategory: "categoryA", minorCategory:"categoryC",
-                    count: 2, x: 25, y:50, percentage: 50
+                    count: 2, x: 25, y:2, percentage: 50
                 },{
                     majorCategory: "categoryE", minorCategory:"categoryC",
-                    count: 2, x: 50, y:50, percentage: 50
+                    count: 2, x: 50, y:2, percentage: 50
                 }]
-            },{
+            }], "given minor and major order");
+
+            assert.deepEqual(makeBarSpecs(
+                multipleValueVertBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, false, false, true
+            ), [{
                 fill: "colorD",
                 data: [{
                     majorCategory: "categoryB", minorCategory:"categoryD",
@@ -880,18 +869,31 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     majorCategory: "categoryE", minorCategory:"categoryD",
                     count: 2, x: 50, y:50, percentage: 50
                 }]
+            },{
+                fill: "colorC",
+                data:[{
+                    majorCategory: "categoryB", minorCategory:"categoryC",
+                    count: 3, x: 0, y:60, percentage: 60
+                },{
+                    majorCategory: "categoryA", minorCategory:"categoryC",
+                    count: 2, x: 25, y:50, percentage: 50
+                },{
+                    majorCategory: "categoryE", minorCategory:"categoryC",
+                    count: 2, x: 50, y:50, percentage: 50
+                }]
             }], "given minor and major order, percentages");
         });
+        //
         it("returns correct results for multipleValueHorzBarsData", ()=>{
             assert.deepEqual(makeBarSpecs(
-                multipleValueHorzBarsData, undefined, undefined, getColor, categoryCoord, true, false
+                multipleValueHorzBarsData, undefined, undefined, getColor, categoryCoord, true, false, false
             ), [{
-                fill: "colorA",
-                data: [{
-                    majorCategory: "categoryC", minorCategory:"categoryA",
+                fill: "colorE",
+                data:[{
+                    majorCategory: "categoryC", minorCategory:"categoryE",
                     count: 2, x: 0, y:2, percentage: 28.57
                 },{
-                    majorCategory: "categoryD", minorCategory:"categoryA",
+                    majorCategory: "categoryD", minorCategory:"categoryE",
                     count: 2, x: 25, y:2, percentage: 33.33
                 }]
             },{
@@ -904,18 +906,18 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 2, x: 25, y:2, percentage: 33.33
                 }]
             },{
-                fill: "colorE",
-                data:[{
-                    majorCategory: "categoryC", minorCategory:"categoryE",
+                fill: "colorA",
+                data: [{
+                    majorCategory: "categoryC", minorCategory:"categoryA",
                     count: 2, x: 0, y:2, percentage: 28.57
                 },{
-                    majorCategory: "categoryD", minorCategory:"categoryE",
+                    majorCategory: "categoryD", minorCategory:"categoryA",
                     count: 2, x: 25, y:2, percentage: 33.33
                 }]
             }], "no given order (alphabetical both)");
 
             assert.deepEqual(makeBarSpecs(
-                multipleValueHorzBarsData, undefined, undefined, getColor, categoryCoord, true, true
+                multipleValueHorzBarsData, undefined, undefined, getColor, categoryCoord, true, true, true
             ), [{
                 fill: "colorA",
                 data: [{
@@ -946,14 +948,14 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
             }], "no given order (alphabetical both), percentages");
 
             assert.deepEqual(makeBarSpecs(
-                multipleValueHorzBarsData, categoryOrder, undefined, getColor, categoryCoord, true, false
+                multipleValueHorzBarsData, categoryOrder, undefined, getColor, categoryCoord, true, false, false
             ), [{
-                fill: "colorB",
+                fill: "colorE",
                 data:[{
-                    majorCategory: "categoryC", minorCategory:"categoryB",
-                    count: 3, x: 0, y:3, percentage: 42.86
+                    majorCategory: "categoryC", minorCategory:"categoryE",
+                    count: 2, x: 0, y:2, percentage: 28.57
                 },{
-                    majorCategory: "categoryD", minorCategory:"categoryB",
+                    majorCategory: "categoryD", minorCategory:"categoryE",
                     count: 2, x: 25, y:2, percentage: 33.33
                 }]
             },{
@@ -966,18 +968,18 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 2, x: 25, y:2, percentage: 33.33
                 }]
             },{
-                fill: "colorE",
+                fill: "colorB",
                 data:[{
-                    majorCategory: "categoryC", minorCategory:"categoryE",
-                    count: 2, x: 0, y:2, percentage: 28.57
+                    majorCategory: "categoryC", minorCategory:"categoryB",
+                    count: 3, x: 0, y:3, percentage: 42.86
                 },{
-                    majorCategory: "categoryD", minorCategory:"categoryE",
+                    majorCategory: "categoryD", minorCategory:"categoryB",
                     count: 2, x: 25, y:2, percentage: 33.33
                 }]
             }], "given minor order (alphabetical major)");
 
             assert.deepEqual(makeBarSpecs(
-                multipleValueHorzBarsData, categoryOrder, undefined, getColor, categoryCoord, true, true
+                multipleValueHorzBarsData, categoryOrder, undefined, getColor, categoryCoord, true, true, true
             ), [{
                 fill: "colorB",
                 data:[{
@@ -1008,14 +1010,14 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
             }], "given minor order (alphabetical major), percentages");
 
             assert.deepEqual(makeBarSpecs(
-                multipleValueHorzBarsData, undefined, categoryOrder, getColor, categoryCoord, true, false
+                multipleValueHorzBarsData, undefined, categoryOrder, getColor, categoryCoord, true, false, false
             ), [{
-                fill: "colorA",
-                data: [{
-                    majorCategory: "categoryD", minorCategory:"categoryA",
+                fill: "colorE",
+                data:[{
+                    majorCategory: "categoryD", minorCategory:"categoryE",
                     count: 2, x: 0, y:2, percentage: 33.33
                 },{
-                    majorCategory: "categoryC", minorCategory:"categoryA",
+                    majorCategory: "categoryC", minorCategory:"categoryE",
                     count: 2, x: 25, y:2, percentage: 28.57
                 }]
             },{
@@ -1028,18 +1030,18 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 3, x: 25, y:3, percentage: 42.86
                 }]
             },{
-                fill: "colorE",
-                data:[{
-                    majorCategory: "categoryD", minorCategory:"categoryE",
+                fill: "colorA",
+                data: [{
+                    majorCategory: "categoryD", minorCategory:"categoryA",
                     count: 2, x: 0, y:2, percentage: 33.33
                 },{
-                    majorCategory: "categoryC", minorCategory:"categoryE",
+                    majorCategory: "categoryC", minorCategory:"categoryA",
                     count: 2, x: 25, y:2, percentage: 28.57
                 }]
             }], "given major order (alphabetical minor)");
 
             assert.deepEqual(makeBarSpecs(
-                multipleValueHorzBarsData, undefined, categoryOrder, getColor, categoryCoord, true, true
+                multipleValueHorzBarsData, undefined, categoryOrder, getColor, categoryCoord, true, true, true
             ), [{
                 fill: "colorA",
                 data: [{
@@ -1070,15 +1072,15 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
             }], "given major order (alphabetical minor), percentages");
 
            assert.deepEqual(makeBarSpecs(
-                multipleValueHorzBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, true, false
+                multipleValueHorzBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, true, false, false
             ), [{
-                fill: "colorB",
+                fill: "colorE",
                 data:[{
-                    majorCategory: "categoryD", minorCategory:"categoryB",
+                    majorCategory: "categoryD", minorCategory:"categoryE",
                     count: 2, x: 0, y:2, percentage: 33.33
                 },{
-                    majorCategory: "categoryC", minorCategory:"categoryB",
-                    count: 3, x: 25, y:3, percentage: 42.86
+                    majorCategory: "categoryC", minorCategory:"categoryE",
+                    count: 2, x: 25, y:2, percentage: 28.57
                 }]
             },{
                 fill: "colorA",
@@ -1090,18 +1092,18 @@ describe("MultipleCategoryBarPlotUtils", ()=>{
                     count: 2, x: 25, y:2, percentage: 28.57
                 }]
             },{
-                fill: "colorE",
+                fill: "colorB",
                 data:[{
-                    majorCategory: "categoryD", minorCategory:"categoryE",
+                    majorCategory: "categoryD", minorCategory:"categoryB",
                     count: 2, x: 0, y:2, percentage: 33.33
                 },{
-                    majorCategory: "categoryC", minorCategory:"categoryE",
-                    count: 2, x: 25, y:2, percentage: 28.57
+                    majorCategory: "categoryC", minorCategory:"categoryB",
+                    count: 3, x: 25, y:3, percentage: 42.86
                 }]
             }], "given minor and major order");
 
             assert.deepEqual(makeBarSpecs(
-                multipleValueHorzBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, true, true
+                multipleValueHorzBarsData, categoryOrder, categoryOrder, getColor, categoryCoord, true, true, true
             ), [{
                 fill: "colorB",
                 data:[{
