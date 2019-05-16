@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { calculateAlterationTendency, calculateExpressionTendency,
     formatPercentage, getAlterationScatterData, getExpressionScatterData,
     getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData, 
-    getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels, getFilteredDataByGroups, getGroupColumns
+    getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels, getFilteredDataByGroups, getGroupColumns, getEnrichmentBarPlotData, getGeneListOptions
 } from "./EnrichmentsUtil";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
@@ -726,6 +726,38 @@ describe("EnrichmentsUtil", () => {
             assert.deepEqual(_.map(getGroupColumns([{name:"altered group", description:""},{name:"unaltered group", description:""}], true),datum=>datum.name),["Log Ratio", "Tendency", "altered group", "unaltered group"]);
             assert.deepEqual(_.map(getGroupColumns([{name:"group1", description:""},{name:"group2", description:""}]),datum=>datum.name),["Log Ratio", "Enriched in", "group1", "group2"]);
             assert.deepEqual(_.map(getGroupColumns([{name:"group1", description:""},{name:"group2", description:""}, {name:"group3", description:""}]),datum=>datum.name),["group1", "group2", "group3"]);
+        });
+    });
+
+    describe("#getEnrichmentBarPlotData()", () => {
+        it("returns correct data", () => {
+            //empty requests
+            assert.deepEqual(getEnrichmentBarPlotData([], []), []);
+            //empty genes
+            assert.deepEqual(getEnrichmentBarPlotData(exampleAlterationEnrichmentRowData, []), []);
+            //genes not present in data
+            assert.deepEqual(getEnrichmentBarPlotData(exampleAlterationEnrichmentRowData, ['ABC']), []);
+            //genes present in data
+            assert.deepEqual(getEnrichmentBarPlotData(exampleAlterationEnrichmentRowData, ['EGFR']), [
+                { "minorCategory": "altered group", "counts": [{ "majorCategory": "EGFR", "count": 3, "percentage": 100 }] },
+                { "minorCategory": "unaltered group", "counts": [{ "majorCategory": "EGFR", "count": 0, "percentage": 0 }] }
+            ]);
+        });
+    });
+
+    describe("#getGeneListOptions()", () => {
+        it("returns correct options", () => {
+            //empty requests
+            assert.deepEqual(getGeneListOptions([]), [{ "label": "User-defined List", "value": "" }]);
+
+            //non empty requests
+            assert.deepEqual(getGeneListOptions(exampleAlterationEnrichmentRowData), [
+                { "label": "User-defined List", "value": "" },
+                { "label": "Top 3 genes with max frequency in any group", "value": "EGFR FBXW4 CAND2" },
+                { "label": "Top 3 genes with avg. frequency in any group", "value": "EGFR FBXW4 CAND2" },
+                { "label": "Top 3 genes with significant p-value", "value": "EGFR FBXW4 CAND2" }
+            ]);
+
         });
     });
 });
