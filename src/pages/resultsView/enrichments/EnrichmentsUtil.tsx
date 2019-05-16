@@ -15,9 +15,15 @@ import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/
 import { AlterationEnrichmentTableColumn, AlterationEnrichmentTableColumnType } from './AlterationEnrichmentsTable';
 import styles from "./styles.module.scss";
 import classNames from "classnames";
+import { IMultipleCategoryBarPlotData } from 'shared/components/plots/MultipleCategoryBarPlot';
 
 export type AlterationEnrichmentWithQ = AlterationEnrichment & { logRatio?:number, qValue:number, value?:number /* used for copy number in group comparison */ };
 export type ExpressionEnrichmentWithQ = ExpressionEnrichment & { qValue:number };
+
+export const USER_DEFINED_OPTION = {
+    label: 'User-defined List',
+    value: ''
+}
 
 export function PERCENTAGE_IN_headerRender(name:string) {
     return (
@@ -400,4 +406,109 @@ export function getGroupColumns(groups: { name: string, description: string }[],
         });
     });
     return columns;
+}
+
+export function getEnrichmentBarPlotData(data: AlterationEnrichmentRow[], genes: string[]): IMultipleCategoryBarPlotData[] {
+    const usedGenes: {[gene:string]:boolean} = {};
+    if (_.isEmpty(genes)) {
+        return [];
+    }
+    let groupToGeneCounts = _.reduce(data, (acc, datum) => {
+        _.each(datum.groupsSet, group => {
+            const groupName = group.name + (datum.qValue < 0.05 ? '*' : '')
+            if (genes.includes(datum.hugoGeneSymbol)) {
+                if (!acc[groupName]) {
+                    acc[groupName] = {};
+                }
+                acc[groupName][datum.hugoGeneSymbol] = group.alteredCount;
+                usedGenes[datum.hugoGeneSymbol] = true;
+            }
+        });
+        return acc;
+    }, {} as { [group: string]: { [gene: string]: number } });
+
+    const geneTotalCounts: { [id: string]: number } = {}
+    // ensure entries for all used minor categories - we need 0 entries for those major/minor combos we didnt see
+    _.forEach(usedGenes, (z, gene) => {
+        let totalCount = 0;
+        _.forEach(groupToGeneCounts, geneCounts => {
+            geneCounts[gene] = geneCounts[gene] || 0;
+            totalCount += geneCounts[gene];
+        });
+        geneTotalCounts[gene] = totalCount;
+    });
+
+    return _.map(groupToGeneCounts, (geneCounts: { [gene: string]: number }, group) => {
+        let counts = _.map(geneCounts, (count, gene) => {
+            const percentage = (count / geneTotalCounts[gene]) * 100;
+            return {
+                majorCategory:gene,
+                count:count,
+                percentage: parseFloat(percentage.toFixed(2))
+            }
+        });
+        return {
+            minorCategory:group,
+            counts
+        }
+    });
+}
+
+export function getGeneListOptions(data: AlterationEnrichmentRow[]): { label: string, value: string }[] {
+    if (_.isEmpty(data)) {
+        return [USER_DEFINED_OPTION];
+    }
+
+    let dataSortedByAlteredPercentage = data.sort(function (kv1, kv2) {
+        const t1 = _.reduce(kv1.groupsSet, (acc, next) => {
+            acc = next.alteredPercentage > acc ? next.alteredPercentage : acc;
+            return acc;
+        }, 0);
+        const t2 = _.reduce(kv2.groupsSet, (acc, next) => {
+            acc = next.alteredPercentage > acc ? next.alteredPercentage : acc;
+            return acc;
+        }, 0);
+        return t2 - t1;
+    });
+
+    //limit to top 10
+    if (dataSortedByAlteredPercentage.length > 10) {
+        dataSortedByAlteredPercentage = dataSortedByAlteredPercentage.slice(0, 9);
+    }
+
+    let dataSortedByAvgFrequency = data.sort(function (kv1, kv2) {
+        const t1 = _.sumBy(_.values(kv1.groupsSet), count => count.alteredPercentage) / _.keys(kv1.groupsSet).length;
+        const t2 = _.sumBy(_.values(kv2.groupsSet), count => count.alteredPercentage) / _.keys(kv2.groupsSet).length;
+        return t2 - t1;
+    });
+
+    //limit to top 10
+    if (dataSortedByAvgFrequency.length > 10) {
+        dataSortedByAvgFrequency = dataSortedByAvgFrequency.slice(0, 9);
+    }
+
+    let dataSortedBypValue = data.sort(function (kv1, kv2) {
+        return kv1.pValue - kv2.pValue;
+    });
+
+    //limit to top 10
+    if (dataSortedBypValue.length > 10) {
+        dataSortedBypValue = dataSortedBypValue.slice(0, 9);
+    }
+
+    return [
+        USER_DEFINED_OPTION,
+        {
+            label: `Top ${dataSortedByAlteredPercentage.length} genes with max frequency in any group`,
+            value: _.map(dataSortedByAlteredPercentage, datum => datum.hugoGeneSymbol).join(' ')
+        },
+        {
+            label: `Top ${dataSortedByAlteredPercentage.length} genes with avg. frequency in any group`,
+            value: _.map(dataSortedByAvgFrequency, datum => datum.hugoGeneSymbol).join(' ')
+        },
+        {
+            label: `Top ${dataSortedByAlteredPercentage.length} genes with significant p-value`,
+            value: _.map(dataSortedBypValue, datum => datum.hugoGeneSymbol).join(' ')
+        }
+    ];
 }
