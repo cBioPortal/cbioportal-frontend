@@ -142,7 +142,7 @@ describe('oncoprint', function() {
                 browser.pause(100);// wait for oncoprint to sort
                 assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active - 1");
                 // change heatmap profile
-                browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(1); });
+                browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(2); });
                 assert(!browser.isExisting(clusterButtonSelector), "button doesnt exist for profile with no heatmap tracks");
                 browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(0); });
                 assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active - 2");
