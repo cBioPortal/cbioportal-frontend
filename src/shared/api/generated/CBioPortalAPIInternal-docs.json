@@ -402,12 +402,12 @@
           {
             "in": "body",
             "name": "groups",
-            "description": "List of entities",
+            "description": "List of groups containing sample identifiers",
             "required": true,
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/MolecularProfileCasesGroup"
+                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
               }
             }
           }
@@ -1322,12 +1322,12 @@
           {
             "in": "body",
             "name": "groups",
-            "description": "List of groups",
+            "description": "List of groups containing sample identifiers",
             "required": true,
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/MolecularProfileCasesGroup"
+                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
               }
             }
           }
@@ -2489,7 +2489,7 @@
       },
       "title": "MolecularProfileCaseIdentifier"
     },
-    "MolecularProfileCasesGroup": {
+    "MolecularProfileCasesGroupFilter": {
       "type": "object",
       "properties": {
         "molecularProfileCaseIdentifiers": {
@@ -2502,7 +2502,7 @@
           "type": "string"
         }
       },
-      "title": "MolecularProfileCasesGroup"
+      "title": "MolecularProfileCasesGroupFilter"
     },
     "MolecularProfileSampleCount": {
       "type": "object",

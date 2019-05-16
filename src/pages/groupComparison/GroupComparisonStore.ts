@@ -42,7 +42,7 @@ import {COLORS, getPatientIdentifiers, pickClinicalDataColors} from "pages/study
 import {
     AlterationEnrichment,
     Group,
-    MolecularProfileCasesGroup
+    MolecularProfileCasesGroupFilter
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import { Session, SessionGroupData } from "../../shared/api/ComparisonGroupClient";
 import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
@@ -498,7 +498,7 @@ export default class GroupComparisonStore {
         fetchData: () => {
             let molecularProfile = this.mutationEnrichmentProfile.result!;
             if (this._activeGroupsOverlapRemoved.result!.length > 1) {
-                let groups: MolecularProfileCasesGroup[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
+                let groups: MolecularProfileCasesGroupFilter[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
                     const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
                         return _.map(study.samples, sampleId => {
                             return {
@@ -528,7 +528,7 @@ export default class GroupComparisonStore {
         await: () => [this.copyNumberEnrichmentProfile, this._activeGroupsOverlapRemoved],
         invoke: async () => {
             let molecularProfile = this.copyNumberEnrichmentProfile.result!;
-            let groups: MolecularProfileCasesGroup[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
+            let groups: MolecularProfileCasesGroupFilter[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
                 const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
                     return _.map(study.samples, sampleId => {
                         return {
@@ -593,7 +593,7 @@ export default class GroupComparisonStore {
     });
 
     private getCopyNumberEnrichmentData(
-        groups:MolecularProfileCasesGroup[],
+        groups:MolecularProfileCasesGroupFilter[],
         copyNumberEventType: "HOMDEL" | "AMP")
     : Promise<AlterationEnrichment[]> {
 
