@@ -162,6 +162,13 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return [];
     }
 
+    @computed get scatterPlotLabels() {
+        if(this.props.groups.length === 2) {
+            return [this.props.groups[0].name, this.props.groups[1].name];
+        }
+        return [];
+    }
+
     @computed get selectedGenesSet() {
         return _.keyBy(this.selectedGenes || []);
     }
@@ -202,7 +209,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
 
                     <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.group1.name, this.group2.name)}
-                                               xGroupName={this.volcanoPlotLabels[1]} yGroupName={this.volcanoPlotLabels[0]} onGeneNameClick={this.onGeneNameClick}
+                                               xGroupName={this.scatterPlotLabels[1]} yGroupName={this.scatterPlotLabels[0]} onGeneNameClick={this.onGeneNameClick}
                                                selectedGenesSet={this.selectedGenesSet} onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared}/>
 
                     {this.props.store && <MiniBarChart totalAlteredCount={this.group1.count} totalUnalteredCount={this.group2.count}
