@@ -78,7 +78,7 @@ export enum PlotType {
     PercentageStackedBar = "PercentageStackedBar"
 }
 
-const plotTypeOptions = [
+export const plotTypeOptions = [
     { value: PlotType.Bar, label: "Bar chart" },
     { value: PlotType.StackedBar, label: "Stacked bar chart" },
     { value: PlotType.PercentageStackedBar, label: "100% stacked bar chart" }
