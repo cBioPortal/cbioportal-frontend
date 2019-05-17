@@ -77,33 +77,25 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         modalPanelGenes: []
     };
 
-    private reactions: IReactionDisposer[] = [];
+    private disposers:IReactionDisposer[] = [];
 
     constructor(props: ICNAGenesTablePros) {
         super(props);
 
-        this.reactions.push(
-            reaction(
-                () => this.columnsWidth,
-                () => {
-                    this.updateCellMargin();
-                },
-                { fireImmediately: true }
-            )
+        this.disposers.push(
+            reaction(() => this.columnsWidth, () => {
+                this.updateCellMargin();
+            }, {fireImmediately: true})
         );
-        this.reactions.push(
-            reaction(
-                () => this.props.promise.result,
-                () => {
-                    this.updateCellMargin();
-                },
-                { fireImmediately: true }
-            )
+        this.disposers.push(
+            reaction(() => this.props.promise.result, () => {
+                this.updateCellMargin();
+            }, {fireImmediately: true})
         );
     }
 
     componentWillUnmount() {
-        for (const disposer of this.reactions) {
+        for (const disposer of this.disposers) {
             disposer();
         }
     }

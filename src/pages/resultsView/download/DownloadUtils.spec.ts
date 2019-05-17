@@ -75,7 +75,7 @@ describe('DownloadUtils', () => {
         },
         molecularProfileAlterationType: "MRNA_EXPRESSION",
         alterationType: "MRNA_EXPRESSION",
-        alterationSubType: "up"
+        alterationSubType: "high"
     };
 
     const proteinDataForTCGAEEA20C = {
@@ -97,7 +97,7 @@ describe('DownloadUtils', () => {
         },
         molecularProfileAlterationType: "PROTEIN_LEVEL",
         alterationType: "PROTEIN_LEVEL",
-        alterationSubType: "up"
+        alterationSubType: "high"
     };
 
     const cnaDataForTCGAEEA20C = {
@@ -350,8 +350,8 @@ describe('DownloadUtils', () => {
                 uid: "VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ",
                 trackLabel: "PTEN",
                 data: [mrnaDataForTCGAEEA20C, proteinDataForTCGAEEA20C] as any[],
-                disp_mrna: "up",
-                disp_prot: "up"
+                disp_mrna: "high",
+                disp_prot: "high"
             };
 
             const oqlData = generateOqlData(geneticTrackDatum);

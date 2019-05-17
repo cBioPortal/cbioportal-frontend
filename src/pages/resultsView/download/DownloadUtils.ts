@@ -20,15 +20,6 @@ export interface IDownloadFileRow {
     alterationData: {[gene: string]: string[]};
 }
 
-const mrnaMap:any = {
-    'DOWN': 'LOW',
-    'UP': 'HIGH'
-};
-const proteinMap:any = {
-    'DOWN': 'LOW',
-    'UP': 'HIGH'
-};
-
 export function generateOqlData(datum: GeneticTrackDatum,
                                 geneAlterationDataByGene?: {[gene: string]: IGeneAlteration},
                                 molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile}): IOqlData
@@ -59,7 +50,7 @@ export function generateOqlData(datum: GeneticTrackDatum,
             case AlterationTypeConstants.MRNA_EXPRESSION:
                 if (alterationSubType.length > 0) {
                     mrnaExpressions.push({
-                        type: mrnaMap[alterationSubType],
+                        type: alterationSubType,
                         value: alteration.value
                     });
                     alterationTypes.push("EXP");
@@ -68,7 +59,7 @@ export function generateOqlData(datum: GeneticTrackDatum,
             case AlterationTypeConstants.PROTEIN_LEVEL:
                 if (alterationSubType.length > 0) {
                     proteinLevels.push({
-                        type: proteinMap[alterationSubType],
+                        type: alterationSubType,
                         value: alteration.value
                     });
                     alterationTypes.push("PROT");
