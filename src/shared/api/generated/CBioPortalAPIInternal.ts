@@ -393,7 +393,7 @@ export type MolecularProfileCaseIdentifier = {
         'molecularProfileId': string
 
 };
-export type MolecularProfileCasesGroup = {
+export type MolecularProfileCasesGroupFilter = {
     'molecularProfileCaseIdentifiers': Array < MolecularProfileCaseIdentifier >
 
         'name': string
@@ -1159,7 +1159,7 @@ export default class CBioPortalAPIInternal {
     fetchCopyNumberEnrichmentsUsingPOSTURL(parameters: {
         'copyNumberEventType' ? : "HOMDEL" | "AMP",
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroup > ,
+        'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1188,12 +1188,12 @@ export default class CBioPortalAPIInternal {
      * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
      * @param {string} copyNumberEventType - Type of the copy number event
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of entities
+     * @param {} groups - List of groups containing sample identifiers
      */
     fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters: {
         'copyNumberEventType' ? : "HOMDEL" | "AMP",
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroup > ,
+        'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -1244,12 +1244,12 @@ export default class CBioPortalAPIInternal {
      * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
      * @param {string} copyNumberEventType - Type of the copy number event
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of entities
+     * @param {} groups - List of groups containing sample identifiers
      */
     fetchCopyNumberEnrichmentsUsingPOST(parameters: {
             'copyNumberEventType' ? : "HOMDEL" | "AMP",
             'enrichmentType' ? : "SAMPLE" | "PATIENT",
-            'groups': Array < MolecularProfileCasesGroup > ,
+            'groups': Array < MolecularProfileCasesGroupFilter > ,
                 $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < AlterationEnrichment >
@@ -3042,7 +3042,7 @@ export default class CBioPortalAPIInternal {
         };
     fetchMutationEnrichmentsUsingPOSTURL(parameters: {
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroup > ,
+        'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3066,11 +3066,11 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#fetchMutationEnrichmentsUsingPOST
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups
+     * @param {} groups - List of groups containing sample identifiers
      */
     fetchMutationEnrichmentsUsingPOSTWithHttpInfo(parameters: {
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroup > ,
+        'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3116,11 +3116,11 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#fetchMutationEnrichmentsUsingPOST
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups
+     * @param {} groups - List of groups containing sample identifiers
      */
     fetchMutationEnrichmentsUsingPOST(parameters: {
             'enrichmentType' ? : "SAMPLE" | "PATIENT",
-            'groups': Array < MolecularProfileCasesGroup > ,
+            'groups': Array < MolecularProfileCasesGroupFilter > ,
                 $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < AlterationEnrichment >

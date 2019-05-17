@@ -53,7 +53,6 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                     <AlterationEnrichmentContainer data={this.props.store.copyNumberData.result!}
                         groups={this.enrichmentAnalysisGroups.result}
                         alteredVsUnalteredMode={false}
-                        selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
                         headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
                         showCNAInTable={true}
                     />
