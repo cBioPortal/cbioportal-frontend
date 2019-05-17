@@ -56,7 +56,7 @@ describe('Mutation Table', function() {
                 textValuesWith6 = browser.getText('//*[text()="6"]');
                 // 4 values from Exon column + 1 value from #Mut in Sample column + 1 value from COSMIC column
                 return textValuesWith6.length === 6;
-            }, 20000, "Exon data not in Exon column after clikcing show more button");
+            }, 60000, "Exon data not in Exon column after clikcing show more button");
         });
 
         it('should show the HGVSc data after adding the HGVSc column', ()=>{
@@ -69,7 +69,7 @@ describe('Mutation Table', function() {
             browser.waitUntil(() => {
                 var hgvscValues = browser.getText('//*[text()[contains(.,"ENST00000269305.4:c.817C>T")]]');
                 return hgvscValues.length > 0;
-            }, 20000, "HGVSc values not in hgvs column");
+            }, 60000, "HGVSc values not in hgvs column");
         });
 
         it('should show more HGVSc data after clicking "Show more"', ()=>{
@@ -79,7 +79,7 @@ describe('Mutation Table', function() {
             browser.waitUntil(() => {
                 var hgvscValues = browser.getText('//*[text()[contains(.,"C>T")]]');
                 return hgvscValues.length > 0;
-            }, 20000, "HGVSc values not in hgvs column after clicking show more button");
+            }, 60000, "HGVSc values not in hgvs column after clicking show more button");
         });
     });
 
@@ -95,7 +95,7 @@ describe('Mutation Table', function() {
 
         it('should show the gnomad table after mouse over the frequency in gnomad column', ()=>{
     
-            browser.waitForText('//*[text()="TCGA-78-7540-01"]',30000);
+            browser.waitForText('//*[text()="TCGA-78-7540-01"]',60000);
             // show the gnomad column
             browser.scroll(1000, 0);
             // click on column button
@@ -106,7 +106,7 @@ describe('Mutation Table', function() {
             browser.click('//*[text()="gnomAD"]');
             // find frequency
             const frequency = '[data-test2="TCGA-78-7540-01"][data-test="gnomad-column"]';
-            browser.waitForExist(frequency, 30000);
+            browser.waitForExist(frequency, 60000);
             // wait for gnomad frequency show in the column
             browser.waitUntil(() => {
                 var textFrequency = browser.getText(frequency);
