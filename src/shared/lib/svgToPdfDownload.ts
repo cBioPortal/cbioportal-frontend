@@ -1,5 +1,6 @@
 import svg2pdf from "svg2pdf.js";
 import {jsPDF} from "jspdf-yworks";
+import font from "FreeSans.json";
 import _ from "lodash";
 
 function base64ToArrayBuffer(base64:string) {
@@ -24,7 +25,6 @@ export default function svgToPdfDownload(fileName: string, svg: any) {
 
     const pdf = new jsPDF(direction, 'pt', [width, height]);
 
-    const font = require("shared/static-data/font.json");
     pdf.addFileToVFS("FreeSans-normal.ttf", font.FreeSans);
     pdf.addFont("FreeSans-normal.ttf", "FreeSans", "normal");
 

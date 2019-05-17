@@ -787,7 +787,7 @@ describe("DataUtils", ()=>{
 
        it("fills a datum w one mrna data correctly", ()=>{
            let data = [{
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -797,15 +797,15 @@ describe("DataUtils", ()=>{
                    trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
-                   disp_mrna: "up",
+                   disp_mrna: "high",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
                },
-               "up");
+               "high");
 
            data = [{
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -815,16 +815,16 @@ describe("DataUtils", ()=>{
                    trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
-                   disp_mrna: "down",
+                   disp_mrna: "low",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
                },
-               "down");
+               "low");
        });
        it("fills a datum w one protein data correctly", ()=>{
            let data = [{
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -835,14 +835,14 @@ describe("DataUtils", ()=>{
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
-                   disp_prot: "up",
+                   disp_prot: "high",
                    disp_mut: undefined,
                    disp_germ: undefined
                },
-               "up");
+               "high");
 
            data = [{
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -853,11 +853,11 @@ describe("DataUtils", ()=>{
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
-                   disp_prot: "down",
+                   disp_prot: "low",
                    disp_mut: undefined,
                    disp_germ: undefined
                },
-               "down");
+               "low");
        });
        it("fills a datum w two mutation data w correct priority", ()=>{
            let data = [{
@@ -1022,13 +1022,13 @@ describe("DataUtils", ()=>{
        });
        it("fills a datum w multiple mrna data w correct priority", ()=>{
            let data = [{
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -1038,21 +1038,21 @@ describe("DataUtils", ()=>{
                    trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
-                   disp_mrna: "down",
+                   disp_mrna: "low",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
                },
-               "two downs beats one up");
+               "two downs beats one high");
 
            data = [{
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -1062,22 +1062,22 @@ describe("DataUtils", ()=>{
                    trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
-                   disp_mrna: "up",
+                   disp_mrna: "high",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
                },
-               "two ups beats one down");
+               "two ups beats one low");
        });
        it("fills a datum w multiple protein data w correct priority", ()=>{
            let data = [{
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -1088,20 +1088,20 @@ describe("DataUtils", ()=>{
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
-                   disp_prot: "down",
+                   disp_prot: "low",
                    disp_mut: undefined,
                    disp_germ: undefined
                },
-               "two downs beats one up");
+               "two downs beats one high");
 
            data = [{
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -1112,30 +1112,30 @@ describe("DataUtils", ()=>{
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
-                   disp_prot: "up",
+                   disp_prot: "high",
                    disp_mut: undefined,
                    disp_germ: undefined
                },
-               "two ups beats one down");
+               "two ups beats one low");
        });
        it("fills a datum w several data of different types correctly", ()=>{
            let data = [{
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"up",
+               alterationSubType:"high",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration, {
-               alterationSubType:"down",
+               alterationSubType:"low",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration, {
                value: -2,
@@ -1162,8 +1162,8 @@ describe("DataUtils", ()=>{
                    trackLabel: "gene",
                    data: data,
                    disp_cna: "homdel",
-                   disp_mrna: "up",
-                   disp_prot: "down",
+                   disp_mrna: "high",
+                   disp_prot: "low",
                    disp_mut: "trunc_rec",
                    disp_germ: false
                });
