@@ -97,7 +97,7 @@ export default class FACETSCNAColumnFormatter {
         "WGD,3,3":"2",
         "WGD,4,3":"2",
         "WGD,5,3":"2",
-        "WGD,6,3":"2"	
+        "WGD,6,3":"2"
     };
 
     private static getFacetsCNAData(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
@@ -134,7 +134,7 @@ export default class FACETSCNAColumnFormatter {
         if (tcn === -1 || lcn === -1 || wgd === null) {
             return (<span><b>NA</b></span>);
         } else {
-            facetsTooltip = FACETSCNAColumnFormatter.getFacetsCall(mcn, lcn, wgd).toLowerCase() 
+            facetsTooltip = FACETSCNAColumnFormatter.getFacetsCall(mcn, lcn, wgd).toLowerCase()
         }
         return (<span><b>{facetsTooltip}</b> ({wgd} with total copy number of {tcn.toString(10)} and a minor copy number of {lcn.toString(10)})</span>);
     }
@@ -161,8 +161,8 @@ export default class FACETSCNAColumnFormatter {
             facetsCNA = FACETSCNAColumnFormatter.facetsCNATable[key];
         }
         return facetsCNA;
-    }   
-   
+    }
+
     public static renderFunction(data: Mutation[], sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined, sampleIds:string[]) {
         const displayValuesBySample:{[key:string]:JSX.Element} = FACETSCNAColumnFormatter.getElementsForMutations(data, sampleIdToClinicalDataMap);
         const sampleIdsWithElements = sampleIds.filter(sampleId => displayValuesBySample[sampleId]);
@@ -176,7 +176,7 @@ export default class FACETSCNAColumnFormatter {
                     return <li>{displayElement}<span style={{fontSize:"small"}}>{";"}</span></li>;
                 }
                 return <li>{displayElement}</li>;
-            }) 
+            })
             return (
              <span style={{display:'inline-block', minWidth:100}}>
                  <ul style={{marginBottom:0}} className="list-inline list-unstyled">{ content }</ul>
@@ -192,7 +192,7 @@ export default class FACETSCNAColumnFormatter {
             return displayValuesBySample[sampleId];
         })
         return displayValuesAsString.join(";");
-    } 
+    }
 
     public static getAllTotalCopyNumberForMutation(data:Mutation[], sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined, sampleIds:string[]) {
         const sampleToCNA:{[key: string]: string} = {};
@@ -205,7 +205,7 @@ export default class FACETSCNAColumnFormatter {
             }
         }
         return sampleToCNA;
-    }          
+    }
 
     public static filter(data:Mutation[], sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined, sampleIds:string[], filterString:string):boolean {
         const displayValuesBySample:{[key: string]: string} = FACETSCNAColumnFormatter.getAllTotalCopyNumberForMutation(data, sampleIdToClinicalDataMap, sampleIds);
@@ -216,7 +216,7 @@ export default class FACETSCNAColumnFormatter {
         return displayValuesAsString.join(";").toLowerCase().indexOf(filterString.toLowerCase()) > -1;
     }
 
-    // map sample id to an element (square with tcn inside) 
+    // map sample id to an element (square with tcn inside)
     public static getElementsForMutations(data:Mutation[], sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined) {
         const sampleToElement:{[key: string]: JSX.Element} = {};
         for (const mutation of data) {
@@ -227,54 +227,76 @@ export default class FACETSCNAColumnFormatter {
     }
 
     public static getElement(mutation:Mutation, sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined) {
+        const sampleId:string = mutation.sampleId;
+        let wgd = null;
+        if (sampleIdToClinicalDataMap) {
+          const wgdData = sampleIdToClinicalDataMap[sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_WGD");
+          if (wgdData !== undefined && wgdData.length > 0) {
+              wgd = wgdData[0].value;
+          }
+        }
         const facetsCNAData = FACETSCNAColumnFormatter.getFacetsCNAData(mutation, sampleIdToClinicalDataMap);
         let cnaDataValue = null;
         if (facetsCNAData === "NA") {
-            cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, "NA");
+            cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, "NA", wgd);
         } else {
-            cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, mutation.totalCopyNumber);
+            cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, mutation.totalCopyNumber, wgd);
         }
         const cnaToolTip = FACETSCNAColumnFormatter.getFacetsCNATooltip(mutation, sampleIdToClinicalDataMap);
-        return (<DefaultTooltip placement="left" 
-                    overlay={cnaToolTip} 
+        return (<DefaultTooltip placement="left"
+                    overlay={cnaToolTip}
                     arrowContent={<div className="rc-tooltip-arrow-inner"/>}
                 >
                     {cnaDataValue}
                 </DefaultTooltip>
         );
     }
-    
+
     // returns an element (rounded rectangle with tcn inside - coloring based on FACETS CNA number equivalent)
-    public static formatFacetsCNAData(facetsCNAData:string, tcn:string|number) {
+    public static formatFacetsCNAData(facetsCNAData:string, tcn:string|number, wgd:null|string) {
         let color = "";
+        let textcolor = "white"
+        let opacity = 100
         if (facetsCNAData === "2") {
             color = "red";
         } else if (facetsCNAData === "1") {
             color = "#e15b5b";
         } else if (facetsCNAData === "0") {
-            color = "black"
+            color = "#BCBCBC"
         } else if (facetsCNAData === "-1") {
             color = "#2a5eea";
         } else if (facetsCNAData === "-2") {
             color = "blue";
-        } else { 
-            color = "#7a7a7a";
+        } else {
+          textcolor = "black"
+          opacity = 0
         }
-        return FACETSCNAColumnFormatter.getFacetsCNAIcon(tcn.toString(), color);
+        return FACETSCNAColumnFormatter.getFacetsCNAIcon(tcn.toString(), color, opacity, wgd, textcolor);
     }
 
-    public static getFacetsCNAIcon(cnaNumber:string, color:string) {
-        let size = 9;
-        if (cnaNumber === "NA") {
-            size = 8;
-        }
-        return (
-            <svg width='13' height='13' className='case-label-header'>
-                <g transform='translate(1,1)'>
-                    <rect width='12' height='12' rx='15%' ry='15%' fill={color} />
-                    <text x='6' y='9' textAnchor='middle' fontSize={size} fill='white'>{cnaNumber}</text>
-                </g>
-            </svg>
-        );  
-    }   
+    public static getFacetsCNAIcon(cnaNumber:string, color:string, opacity:number, wgd:null|string, textcolor:string) {
+      let size = 9;
+      let shadowOpacity = 0
+      let strokeWidth = 0
+      let facetsCNAIconRectangle = <rect width='12' height='12' rx='15%' ry='15%' fill={color} opacity={opacity}/>
+
+      if (wgd === "WGD" && cnaNumber !== "NA") {
+        shadowOpacity = 0.5
+        strokeWidth = 0
+      }
+
+      return (
+          <svg width='17' height='17' className='case-label-header'>
+              <g transform="translate(5,5)">
+                <rect width='12' height='12' rx='15%' ry='15%' fill={color} opacity={shadowOpacity}/>
+              </g>
+              <g transform="translate(2,2)">
+                facetsCNAIconRectangle = <rect width='12' height='12' rx='15%' ry='15%' stroke='black' strokeWidth={strokeWidth} fill={color} opacity={opacity}/>
+                <svg>
+                  <text x='6' y='6.5' dominantBaseline='middle' textAnchor='middle' fontSize={size} fill={textcolor}>{cnaNumber}</text>
+                </svg>
+              </g>
+          </svg>
+      );
+    }
 }

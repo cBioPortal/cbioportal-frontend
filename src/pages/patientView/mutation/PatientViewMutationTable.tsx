@@ -99,7 +99,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             download: (d:Mutation[])=>TumorColumnFormatter.getSample(d),
         };
 
-        // customization for FACETS count columns 
+        // customization for FACETS count columns
         // primarily to change display in case of patient with a shared mutation across multiple samples
 
         this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
@@ -123,11 +123,11 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
             render:(d:Mutation[])=>FACETSMutantCopiesColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, this.getSamples(), this.props.sampleManager),
             download:(d:Mutation[])=>MutantCopiesColumnFormatter.getMutantCopiesDownload(d, this.props.sampleIdToClinicalDataMap),
-            sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, this.getSamples())        
+            sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, this.getSamples())
         };
 
         this._columns[MutationTableColumnType.FACETS_COPY_NUM] = {
-            name: "FACETS Copy #",
+            name: "Integer Copy #",
             render:(d:Mutation[])=>PatientFACETSCNAColumnFormatter.renderFunction(d,this.props.sampleIdToClinicalDataMap, this.getSamples(), this.props.sampleManager),
             sortBy:(d:Mutation[])=>FACETSCNAColumnFormatter.getSortValue(d, this.props.sampleIdToClinicalDataMap, this.getSamples())
         };

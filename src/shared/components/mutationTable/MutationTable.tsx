@@ -285,7 +285,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         };
 
         this._columns[MutationTableColumnType.FACETS_COPY_NUM] = {
-            name: "FACETS Copy #",
+            name: "Integer Copy #",
             render:(d:Mutation[])=>{
                 return FACETSCNAColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
             },
