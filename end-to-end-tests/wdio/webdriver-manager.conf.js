@@ -1,3 +1,4 @@
+var CustomReporter = require('./customReporter');
 
 
 var path = require('path');
@@ -46,7 +47,7 @@ var config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: 5,
+    maxInstances: 3,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
@@ -158,12 +159,18 @@ var config = {
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
     // see also: http://webdriver.io/guide/testrunner/reporters.html
-    reporters: ['spec', 'junit'],
+    reporters: ['spec', 'junit', CustomReporter],
     reporterOptions: {
         junit: {
             outputDir: process.env.JUNIT_REPORT_PATH,
             outputFileFormat: function(opts) { // optional
                 return `results-${opts.cid}.${opts.capabilities}.xml`
+            }
+        },
+        custom: {
+            outputDir: process.env.JUNIT_REPORT_PATH,
+            outputFileFormat: function(opts) { // optional
+                return `custom-results-${opts.cid}.${opts.capabilities}.xml`
             }
         }
     },
@@ -251,8 +258,26 @@ var config = {
      * Function to be executed after a test (in Mocha/Jasmine) or a step (in Cucumber) starts.
      * @param {Object} test test details
      */
-    // afterTest: function (test) {
-    // },
+    afterTest: function (test) {
+
+        var networkLog = browser.execute(function() {
+
+            Object.keys(window.ajaxRequests).forEach((key)=>{
+                window.ajaxRequests[key].end = Date.now();
+                window.ajaxRequests[key].duration = window.ajaxRequests[key].end - window.ajaxRequests[key].started;
+            });
+
+            return JSON.stringify(window.ajaxRequests);
+
+        }).value;
+
+        process.send({
+            event: 'custom-report',
+            data: { test:test, network:JSON.parse(networkLog) }
+        });
+
+
+    },
     /**
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details
@@ -299,7 +324,7 @@ if (doBrowserstack) {
 }
 
 // config.specs = [
-//     './specs/**/oncoprinter.screenshot.spec.js'
+//     './specs/**/oncoprint.spec.js'
 // ];
 
 

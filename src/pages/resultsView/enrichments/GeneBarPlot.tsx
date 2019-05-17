@@ -224,17 +224,15 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     private onChangeGeneInput(
         oql: { query: SingleGeneQuery[], error?: any },
         genes: { found: Gene[]; suggestions: any; },
-        queryStr: string,
-        status: "pending" | "error" | "complete") {
-        if (status === "complete") {
-            const foundGenes = _.keyBy(genes.found, gene => gene.hugoGeneSymbol.toUpperCase());
-            const queriedGenes = _.map(oql.query, query => query.gene.toUpperCase())
-            this.selectedGenesHasError = !_.every(queriedGenes, gene => gene in foundGenes)
-            if (!this.selectedGenesHasError) {
-                this.genesToPlot = queriedGenes
-            }
-            this._geneQuery = queryStr
+        queryStr: string
+    ) {
+        const foundGenes = _.keyBy(genes.found, gene => gene.hugoGeneSymbol.toUpperCase());
+        const queriedGenes = _.map(oql.query, query => query.gene.toUpperCase())
+        this.selectedGenesHasError = !_.every(queriedGenes, gene => gene in foundGenes)
+        if (!this.selectedGenesHasError) {
+            this.genesToPlot = queriedGenes
         }
+        this._geneQuery = queryStr
     }
 
     @computed get addGenesButtonDisabled() {
