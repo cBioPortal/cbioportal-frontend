@@ -13,6 +13,9 @@ import * as React from "react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import {BarDatum} from "./charts/barChart/BarChart";
+import {
+    StudyViewPageTabKeyEnum
+} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
@@ -209,7 +212,7 @@ export function getClinicalAttributeOverlay(displayName: string, description: st
     </div>;
 }
 
-export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
+export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): SingleGeneQuery[] {
 
     let updatedQueries = _.filter(geneQueries,query=> query.gene !== selectedGene)
     if(updatedQueries.length === geneQueries.length){
@@ -218,7 +221,7 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
             alterations: false
         })
     }
-    return updatedQueries.map(query=>unparseOQLQueryLine(query)).join(' ');
+    return updatedQueries;
 
 }
 
@@ -1492,6 +1495,15 @@ export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, n
         }
     }
     return getClinicalDataCountWithColorByClinicalDataCount(_.values(dataCountSet));
+}
+
+export function getStudyViewTabId(pathname:string) {
+    const match = pathname.match(/study\/([^\/]+)/);
+    if (match) {
+        return match[1] as StudyViewPageTabKeyEnum;
+    } else {
+        return undefined;
+    }
 }
 
 export function getSelectedGroupNames(

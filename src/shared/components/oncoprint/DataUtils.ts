@@ -51,12 +51,12 @@ const cnaRenderPriority = {
     'hetloss': 1
 };
 const mrnaRenderPriority = {
-    'up': 0,
-    'down': 0
+    'high': 0,
+    'low': 0
 };
 const protRenderPriority = {
-    'up': 0,
-    'down': 0
+    'high': 0,
+    'low': 0
 };
 
 export type OncoprintMutationType = "missense" | "inframe" | "fusion" | "promoter" | "trunc" | "other";
