@@ -54,10 +54,10 @@ export function countAlterationOccurences(groupedSamples: {[groupingProperty: st
             hetloss: 0, // -1
             gain:0, // 1
             fusion: 0,
-            mrnaExpressionUp: 0,
-            mrnaExpressionDown: 0,
-            protExpressionUp: 0,
-            protExpressionDown: 0,
+            mrnaExpressionHigh: 0,
+            mrnaExpressionLow: 0,
+            protExpressionHigh: 0,
+            protExpressionLow: 0,
             multiple: 0,
         };
 
@@ -101,12 +101,12 @@ export function countAlterationOccurences(groupedSamples: {[groupingProperty: st
                                 counts[(alteration.alterationSubType as keyof IAlterationCountMap)]++;
                                 break;
                             case AlterationTypeConstants.MRNA_EXPRESSION:
-                                if (alteration.alterationSubType === 'up') counts.mrnaExpressionUp++;
-                                if (alteration.alterationSubType === 'down') counts.mrnaExpressionDown++;
+                                if (alteration.alterationSubType === 'high') counts.mrnaExpressionHigh++;
+                                if (alteration.alterationSubType === 'low') counts.mrnaExpressionLow++;
                                 break;
                             case AlterationTypeConstants.PROTEIN_LEVEL:
-                                if (alteration.alterationSubType === 'up') counts.protExpressionUp++;
-                                if (alteration.alterationSubType === 'down') counts.protExpressionDown++;
+                                if (alteration.alterationSubType === 'high') counts.protExpressionHigh++;
+                                if (alteration.alterationSubType === 'low') counts.protExpressionLow++;
                                 break;
                             case AlterationTypeConstants.MUTATION_EXTENDED:
                                 counts.mutated++;
