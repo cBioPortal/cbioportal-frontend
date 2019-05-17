@@ -408,22 +408,25 @@ export function getGroupColumns(groups: { name: string, description: string }[],
     return columns;
 }
 
-export function getEnrichmentBarPlotData(data: AlterationEnrichmentRow[], genes: string[]): IMultipleCategoryBarPlotData[] {
-    const usedGenes: {[gene:string]:boolean} = {};
+export function getEnrichmentBarPlotData(data: { [gene: string]: AlterationEnrichmentRow }, genes: string[]): IMultipleCategoryBarPlotData[] {
+    const usedGenes: { [gene: string]: boolean } = {};
     if (_.isEmpty(genes)) {
         return [];
     }
-    let groupToGeneCounts = _.reduce(data, (acc, datum) => {
-        _.each(datum.groupsSet, group => {
-            const groupName = group.name + (datum.qValue < 0.05 ? '*' : '')
-            if (genes.includes(datum.hugoGeneSymbol)) {
+
+    const groupToGeneCounts = _.reduce(genes, (acc, gene) => {
+        const datum = data[gene];
+        if (datum) {
+            _.each(datum.groupsSet, group => {
+                const groupName = group.name;
                 if (!acc[groupName]) {
                     acc[groupName] = {};
                 }
-                acc[groupName][datum.hugoGeneSymbol] = group.alteredCount;
-                usedGenes[datum.hugoGeneSymbol] = true;
-            }
-        });
+                const displayedGene = gene + (datum.qValue < 0.05 ? '*' : '')
+                acc[groupName][displayedGene] = group.alteredPercentage;
+                usedGenes[displayedGene] = true;
+            });
+        }
         return acc;
     }, {} as { [group: string]: { [gene: string]: number } });
 
@@ -442,13 +445,13 @@ export function getEnrichmentBarPlotData(data: AlterationEnrichmentRow[], genes:
         let counts = _.map(geneCounts, (count, gene) => {
             const percentage = (count / geneTotalCounts[gene]) * 100;
             return {
-                majorCategory:gene,
-                count:count,
+                majorCategory: gene,
+                count: count,
                 percentage: parseFloat(percentage.toFixed(2))
             }
         });
         return {
-            minorCategory:group,
+            minorCategory: group,
             counts
         }
     });
@@ -473,7 +476,7 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[]): { label: st
 
     //limit to top 10
     if (dataSortedByAlteredPercentage.length > 10) {
-        dataSortedByAlteredPercentage = dataSortedByAlteredPercentage.slice(0, 9);
+        dataSortedByAlteredPercentage = dataSortedByAlteredPercentage.slice(0, 10);
     }
 
     let dataSortedByAvgFrequency = data.sort(function (kv1, kv2) {
@@ -484,7 +487,7 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[]): { label: st
 
     //limit to top 10
     if (dataSortedByAvgFrequency.length > 10) {
-        dataSortedByAvgFrequency = dataSortedByAvgFrequency.slice(0, 9);
+        dataSortedByAvgFrequency = dataSortedByAvgFrequency.slice(0, 10);
     }
 
     let dataSortedBypValue = data.sort(function (kv1, kv2) {
@@ -493,7 +496,7 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[]): { label: st
 
     //limit to top 10
     if (dataSortedBypValue.length > 10) {
-        dataSortedBypValue = dataSortedBypValue.slice(0, 9);
+        dataSortedBypValue = dataSortedBypValue.slice(0, 10);
     }
 
     return [
