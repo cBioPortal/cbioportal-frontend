@@ -15,6 +15,8 @@ import {ChartTypeEnum} from "../StudyViewConfig";
 import {ChartMeta, getClinicalAttributeOverlay} from "../StudyViewUtils";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import {Dropdown, MenuItem} from "react-bootstrap";
+import Timer = NodeJS.Timer;
+import DownloadControls, {DownloadControlsButton} from "../../../shared/components/downloadControls/DownloadControls";
 
 // there's some incompatiblity with rc-tooltip and study view layout
 // these adjustments force tooltips to open top right because tooltips
@@ -33,7 +35,9 @@ export interface IChartHeaderProps {
     hideLabel?       : boolean;
     chartControls?   : ChartControls;
     changeChartType  : (chartType: ChartType) => void;
-    download?        : IChartContainerDownloadProps[];
+    getSVG?          : ()=>Promise<SVGElement | null>;
+    getData?         : ()=>Promise<string | null>;
+    downloadTypes?   : DownloadControlsButton[];
     setAnalysisGroups  : () => void;
     openComparisonPage : () => void;
 }
@@ -52,12 +56,7 @@ export interface ChartControls {
 export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     @observable menuOpen = false;
-    @observable downloadPending = {
-        TSV: false,
-        SVG: false,
-        PDF: false,
-        PNG: false
-    };
+    private closeMenuTimeout:number|undefined = undefined;
 
     @computed
     get fileName() {
@@ -66,8 +65,21 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     @autobind
     @action
-    onMenuToggle(isOpen:boolean) {
-        this.menuOpen = isOpen;
+    private openMenu() {
+        this.menuOpen = true;
+        window.clearTimeout(this.closeMenuTimeout);
+        this.closeMenuTimeout = undefined;
+    }
+
+    @autobind
+    @action
+    private closeMenu() {
+        if (!this.closeMenuTimeout) {
+            this.closeMenuTimeout = window.setTimeout(()=>{
+                this.menuOpen = false;
+                this.closeMenuTimeout = undefined;
+            }, 125);
+        }
     }
 
     @computed get active() {
@@ -141,43 +153,6 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
-        if (this.props.download && this.props.download.length > 0) {
-            if (items.length > 0) {
-                items.push(<MenuItem divider={true}/>);
-            }
-            for (const props of this.props.download) {
-                items.push(
-                    <MenuItem
-                        onClick={()=>{
-                            this.downloadPending[props.type] = true;
-                            props.initDownload!().then(data => {
-                                if (data) {
-                                    const fileName = `${this.fileName}.${props.type.substring(0, 3).toLowerCase()}`;
-                                    if (props.type === "PNG") {
-                                        saveSvgAsPng(data, fileName, {backgroundColor:"#ffffff"});
-                                    } else if (typeof data === "string" && data.length > 0) {
-                                        fileDownload(data, fileName);
-                                    } else if (props.type === "PDF" && data) {
-                                        svgToPdfDownload(fileName, data)
-                                    }
-                                }
-                                this.downloadPending[props.type] = false;
-                            }).catch(() => {
-                                // TODO this.triggerDownloadError();
-                                this.downloadPending[props.type] = false;
-                            });
-                        }}
-                    >
-                        {
-                            this.downloadPending[props.type] ?
-                            <i className="fa fa-spinner fa-spin" aria-hidden="true"/> :
-                            `Download ${props.type}`
-                        }
-                    </MenuItem>
-                );
-            }
-        }
-
         return items;
     }
 
@@ -190,6 +165,24 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 </div>
                 {this.active && (
                     <div className={classnames(styles.controls, 'controls')}>
+                        {(this.menuItems.length > 0) && (
+                            <Dropdown
+                                id={"chartMenu"}
+                                open={this.menuOpen}
+                                onMouseEnter={this.openMenu}
+                                onMouseLeave={this.closeMenu}
+                                className={styles.chartMenu}
+                            >
+                                <Dropdown.Toggle noCaret={true} id="btn" bsStyle="none" bsSize="xs" className={styles.menuToggle}>
+                                    <i
+                                        className={classnames("fa fa-xs fa-bars")}
+                                    />
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu>
+                                    {this.menuItems}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        )}
                         <If condition={!!this.props.chartMeta.description}>
                             <DefaultTooltip
                                 trigger={["hover","click"]}
@@ -219,21 +212,27 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             overlay={<span>Delete chart</span>}
                         >
                             <i className={classnames("fa", "fa-times", styles.item, styles.clickable)}
+                               style={{marginRight:4}}
                                aria-hidden="true" onClick={() => this.props.deleteChart()}></i>
                         </DefaultTooltip>
-                        <Dropdown
-                            id={"chartMenu"}
-                            onToggle={this.onMenuToggle}
-                        >
-                            <Dropdown.Toggle id="btn" bsStyle="default" bsSize="xs">
-                                <span>
-                                    <i className="fa fa-xs fa-bars" style={{marginRight:3}}/>
-                                </span>
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu>
-                                {this.menuItems}
-                            </Dropdown.Menu>
-                        </Dropdown>
+                    </div>
+                )}
+                {this.active && (
+                    <div
+                        style={{
+                            position:"absolute",
+                            top:2,
+                            right:2
+                        }}
+                    >
+                        <DownloadControls
+                            filename={this.fileName}
+                            buttons={this.props.downloadTypes}
+                            getSvg={this.props.getSVG}
+                            getData={this.props.getData}
+                            collapse={true}
+                            dontFade={true}
+                        />
                     </div>
                 )}
             </div>
