@@ -422,9 +422,9 @@ export function getEnrichmentBarPlotData(data: { [gene: string]: AlterationEnric
                 if (!acc[groupName]) {
                     acc[groupName] = {};
                 }
-                const displayedGene = gene + (datum.qValue < 0.05 ? '*' : '')
-                acc[groupName][displayedGene] = group.alteredPercentage;
-                usedGenes[displayedGene] = true;
+                const displayedGeneName = gene + (datum.qValue < 0.05 ? '*' : '')
+                acc[groupName][displayedGeneName] = group.alteredPercentage;
+                usedGenes[displayedGeneName] = true;
             });
         }
         return acc;

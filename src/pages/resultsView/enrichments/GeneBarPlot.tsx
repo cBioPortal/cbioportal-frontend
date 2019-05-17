@@ -82,10 +82,8 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
     @autobind
     private getTooltip(datum: any) {
         let geneSymbol = datum.majorCategory as string;
-        //remove * from end of gene symbol if any
-        if (geneSymbol.endsWith("*")) {
-            geneSymbol = geneSymbol.slice(0, -1);
-        }
+        // get rid of a trailing *
+        geneSymbol = geneSymbol.replace(/\*$/,"");
         let geneData = this.geneDataSet[geneSymbol];
         //use groupOrder inorder of sorted groups
         let groupRows = _.map(this.props.groupOrder, groupName => {
