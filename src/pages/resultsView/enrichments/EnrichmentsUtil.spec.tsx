@@ -740,7 +740,7 @@ describe("EnrichmentsUtil", () => {
             assert.deepEqual(getEnrichmentBarPlotData(data, ['ABC']), []);
             //genes present in data
             assert.deepEqual(getEnrichmentBarPlotData(data, ['EGFR']), [
-                { "minorCategory": "altered group", "counts": [{ "majorCategory": "EGFR", "count": 3, "percentage": 100 }] },
+                { "minorCategory": "altered group", "counts": [{ "majorCategory": "EGFR", "count": 75, "percentage": 100 }] },
                 { "minorCategory": "unaltered group", "counts": [{ "majorCategory": "EGFR", "count": 0, "percentage": 0 }] }
             ]);
         });
