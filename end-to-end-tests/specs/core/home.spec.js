@@ -241,7 +241,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All Sequenced Tumors (160)"), 5000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All Sequenced Tumors (160)"), 10000);
 
         // select Adrenocortical Carcinoma
         browser.waitForExist(input, 10000);
@@ -254,7 +254,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
 
         browser.waitForExist(selectedCaseSet_sel);
-        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 5000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 10000);
 
         // Deselect Ampullary Carcinoma
         browser.waitForExist(input, 10000);
@@ -265,7 +265,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation and CNA data (88)"), 5000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation and CNA data (88)"), 10000);
     });
     it('selects the right default case sets in a single->select all filtered->single study selection flow', ()=>{
         // Select Ampullary Carcinoma
@@ -278,7 +278,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All Sequenced Tumors (160)"), 5000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All Sequenced Tumors (160)"), 10000);
 
         // select all TCGA non-provisional
         browser.waitForExist(input, 10000);
@@ -289,7 +289,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.waitUntil(()=>(/All \(\d+\)/.test(browser.getText(selectedCaseSet_sel))), 5000); // since sample #s change across studies, dont depend this test on specific number
+        browser.waitUntil(()=>(/All \(\d+\)/.test(browser.getText(selectedCaseSet_sel))), 10000); // since sample #s change across studies, dont depend this test on specific number
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
@@ -306,7 +306,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 5000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 10000);
 
         // Deselect Ampullary Carcinoma
         browser.waitForExist(input, 10000);
@@ -317,7 +317,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation and CNA data (88)"), 5000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation and CNA data (88)"), 10000);
     });
 });
 

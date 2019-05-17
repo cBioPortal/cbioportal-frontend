@@ -25,7 +25,8 @@ const config = {
             "mobx-utils",
             "d3",
             "datatables.net",
-            "webpack-raphael"
+            "webpack-raphael",
+            "FreeSans.json"
         ]
     },
 
@@ -45,6 +46,10 @@ const config = {
     devtool: sourceMap,
 
     plugins: []
+};
+
+config.resolve = {
+    modules: [path.join("src", "common"), "node_modules"]
 };
 
 config.plugins = [
