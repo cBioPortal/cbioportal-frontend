@@ -9,14 +9,16 @@ import classnames from "classnames";
 import styles from "./DownloadControls.module.scss";
 import {saveSvg, saveSvgAsPng} from "save-svg-as-png";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
+import {types} from "util";
+import {isPromiseLike} from "../../lib/PromiseUtils";
 
 type ButtonSpec = { key:string, content:JSX.Element, onClick:()=>void, disabled?: boolean };
 
-type DownloadControlsButton = "PDF" | "PNG" | "SVG" | "Data";
+export type DownloadControlsButton = "PDF" | "PNG" | "SVG" | "Data";
 
 interface IDownloadControlsProps {
-    getSvg?:()=>SVGElement|null;
-    getData?:()=>string;
+    getSvg?:()=>SVGElement|null|PromiseLike<SVGElement|null>;
+    getData?:()=>string|null|PromiseLike<string|null>;
     filename:string;
     buttons?: DownloadControlsButton[],
     additionalLeftButtons?:ButtonSpec[],
@@ -55,41 +57,55 @@ function makeMenuItem(spec:ButtonSpec) {
 export default class DownloadControls extends React.Component<IDownloadControlsProps, {}> {
     @observable private collapsed = true;
 
+
     @autobind
-    private downloadSvg() {
+    private download(saveMethod:(svg:SVGElement, fileName:string)=>void, fileExtension:string) {
         if (this.props.getSvg) {
-            const svg = this.props.getSvg();
-            if (svg) {
-                saveSvg(svg, `${this.props.filename}.svg`);
+            const result = this.props.getSvg();
+            if (result) {
+                if (isPromiseLike<SVGElement|null>(result)) {
+                    result.then((svg)=>{
+                        if (svg) {
+                            saveMethod(svg, `${this.props.filename}.${fileExtension}`);
+                        }
+                    });
+                } else {
+                    saveSvg(result, `${this.props.filename}.svg`);
+                }
             }
         }
+    }
+
+    @autobind
+    private downloadSvg() {
+        this.download(saveSvg, "svg");
     }
 
     @autobind
     private downloadPng() {
-        if (this.props.getSvg) {
-            const svg = this.props.getSvg();
-            if (svg) {
-                saveSvgAsPng(svg, `${this.props.filename}.png`, {backgroundColor:"#ffffff"});
-            }
-        }
+        this.download((svg, fileName)=>saveSvgAsPng(svg, fileName, {backgroundColor:"#ffffff"}), "png");
     }
 
     @autobind
     private downloadPdf() {
-        if (this.props.getSvg) {
-            const svg = this.props.getSvg();
-            if (svg) {
-                svgToPdfDownload(`${this.props.filename}.pdf`, svg);
-            }
-        }
+        this.download((svg, fileName)=>svgToPdfDownload(fileName, svg), "pdf");
     }
 
     @autobind
     private downloadData() {
         if (this.props.getData) {
-            const data = this.props.getData();
-            fileDownload(data, `${this.props.filename}.txt`);
+            const result = this.props.getData();
+            if (result !== null) {
+                if (isPromiseLike<string|null>(result)) {
+                    result.then(data=>{
+                        if (data) {
+                            fileDownload(data, `${this.props.filename}.txt`);
+                        }
+                    });
+                } else {
+                    fileDownload(result, `${this.props.filename}.txt`);
+                }
+            }
         }
     }
 
