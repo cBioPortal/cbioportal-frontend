@@ -41,6 +41,7 @@ import classNames from "classnames";
 import AppConfig from "appConfig";
 import SocialAuthButton from "../../shared/components/SocialAuthButton";
 import {ServerConfigHelpers} from "../../config/config";
+import { getStudyViewTabId } from './StudyViewUtils';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -70,6 +71,7 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
 @observer
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
     private store: StudyViewPageStore;
+    private enableCustomSelectionInTabs = [StudyViewPageTabKeyEnum.SUMMARY, StudyViewPageTabKeyEnum.CLINICAL_DATA, StudyViewPageTabKeyEnum.CN_SEGMENTS];
     private enableAddChartInTabs = [StudyViewPageTabKeyEnum.SUMMARY, StudyViewPageTabKeyEnum.CLINICAL_DATA];
     private queryReaction:IReactionDisposer;
     @observable showCustomSelectTooltip = false;
@@ -89,7 +91,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     return;
                 }
 
-                this.store.updateCurrentTab(props.routing.location.query.tab);
+                this.store.updateCurrentTab(getStudyViewTabId(getBrowserWindow().globalStores.routing.location.pathname));
                 const newStudyViewFilter:StudyViewURLQuery = _.pick(props.routing.location.query, ['id', 'studyId', 'cancer_study_id', 'filters', 'filterAttributeId', 'filterValues']);
 
                 if (!_.isEqual(newStudyViewFilter, this.studyViewQueryFilter)) {
@@ -111,8 +113,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     }
 
+    componentDidMount() {
+        // make the route as the default tab value
+        this.props.routing.updateRoute({},`study/${this.store.currentTab}`);
+    }
+
     private handleTabChange(id: string) {
-        this.props.routing.updateRoute({tab: id});
+        this.props.routing.updateRoute({},`study/${id}`);
     }
 
     private chartDataPromises = remoteData({
@@ -214,7 +221,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             />
 
                             <div className={styles.mainTabs}>
-                                <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
+                                <MSKTabs id="studyViewTabs" activeTabId={this.store.currentTab}
                                          onTabClick={(id: string) => this.handleTabChange(id)}
                                          className="mainTabs"
                                          unmountOnHide={false}>
@@ -266,8 +273,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                         }
                                     </Observer>
                                     <div id="comparisonGroupManagerContainer" style={{display: 'flex', position:"relative"}}>
-                                        {(this.enableAddChartInTabs.includes(this.store.currentTab))
-                                        && (<span>
+                                        {(this.enableCustomSelectionInTabs.includes(this.store.currentTab))
+                                        && (
                                                 <DefaultTooltip
                                                     visible={this.showCustomSelectTooltip}
                                                     placement={"bottomLeft"}
@@ -300,6 +307,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                             style={{marginLeft: '10px'}}>Custom Selection
                                                     </button>
                                                 </DefaultTooltip>
+                                        )}
+                                        {(this.enableAddChartInTabs.includes(this.store.currentTab))
+                                        && (
                                                 <AddChartButton
                                                     buttonText={this.addChartButtonText}
                                                     store={this.store}
@@ -307,7 +317,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     addChartOverlayClassName='studyViewAddChartOverlay'
                                                     disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
                                                 />
-                                            </span>
                                         )}
                                         {ServerConfigHelpers.sessionServiceIsEnabled() && this.groupsButton}
                                     </div>

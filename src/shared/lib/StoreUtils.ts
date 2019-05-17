@@ -6,7 +6,7 @@ import {
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier, CopyNumberSeg,
     ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, NumericGeneMolecularData, SampleFilter, Gene
 } from "shared/api/generated/CBioPortalAPI";
-import { EnsemblFilter, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
+import {EnsemblFilter, EnsemblTranscript, PostTranslationalModification} from "shared/api/generated/GenomeNexusAPI";
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -97,6 +97,20 @@ export async function fetchPdbAlignmentData(ensemblId: string,
         return [];
     }
 }
+
+export function fetchPtmData(ensemblId: string,
+                             client:GenomeNexusAPI = genomeNexusClient): Promise<PostTranslationalModification[]>
+{
+    if (ensemblId)
+    {
+        return client.fetchPostTranslationalModificationsGET({
+            ensemblTranscriptId: ensemblId});
+    }
+    else {
+        return Promise.resolve([]);
+    }
+}
+
 
 export async function fetchSwissProtAccession(entrezGeneId: number)
 {
