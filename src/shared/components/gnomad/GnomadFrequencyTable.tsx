@@ -84,7 +84,7 @@ export default class GnomadFrequencyTable extends React.Component<IGnomadFrequen
                 />
                 <div style={{fontSize:'x-small',textAlign:"center",paddingTop:5}}>
                     Source: {genomeNexusLink}, which serves
-                    {' '}{myvariantLink}'s {gnomadLink} data.<br />
+                    {' '}{myvariantLink}'s gnomAD data.<br />
                     Latest {gnomadLink} data may differ.
                 </div>
             </div>

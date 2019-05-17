@@ -144,7 +144,7 @@ export default class GnomadColumnFormatter {
                     result = gnomadResult;
                 }
                 
-                const sorted = _.sortBy(Object.values(result).slice(0,7), ['alleleFrequency']).reverse();
+                const sorted = _.sortBy(Object.values(result).slice(0, 8), ['alleleFrequency']).reverse();
                 sorted.push(result["Total"]);
                 // The column will show the total frequency
                 if (result["Total"].alleleFrequency === 0) {
@@ -162,9 +162,14 @@ export default class GnomadColumnFormatter {
                 );
             }
 
-            // if there is no gnomad data, the column would be empty
+            // if there is no gnomad data, the column would show N/A
             else {
-                display = <span></span>;
+                display = 
+                <DefaultTooltip placement="topLeft" overlay={(
+                    <span>Variant has no data in gnomAD.</span>
+                )}>
+                <span>N/A</span>
+                </DefaultTooltip>
             }
 
             content = (
