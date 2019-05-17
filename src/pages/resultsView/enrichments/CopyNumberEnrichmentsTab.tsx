@@ -50,7 +50,6 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                                     count: this.props.store.unalteredSampleKeys.result!.length
                                 }
                             ]}
-                            selectedProfile={this.props.store.selectedEnrichmentCopyNumberProfile}
                             headerName={"Deep Deletion - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
                             store={this.props.store} />
                         <hr />
@@ -68,7 +67,6 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                                     count: this.props.store.unalteredSampleKeys.result!.length
                                 }
                             ]}
-                            selectedProfile={this.props.store.selectedEnrichmentCopyNumberProfile}
                             headerName={"Amplification - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
                             store={this.props.store} />
                     </div>

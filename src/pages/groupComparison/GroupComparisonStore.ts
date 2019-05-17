@@ -42,7 +42,7 @@ import {COLORS, getPatientIdentifiers, pickClinicalDataColors} from "pages/study
 import {
     AlterationEnrichment,
     Group,
-    MolecularProfileCasesGroup
+    MolecularProfileCasesGroupFilter
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import { Session, SessionGroupData } from "../../shared/api/ComparisonGroupClient";
 import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
@@ -498,7 +498,7 @@ export default class GroupComparisonStore {
         fetchData: () => {
             let molecularProfile = this.mutationEnrichmentProfile.result!;
             if (this._activeGroupsOverlapRemoved.result!.length > 1) {
-                let groups: MolecularProfileCasesGroup[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
+                let groups: MolecularProfileCasesGroupFilter[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
                     const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
                         return _.map(study.samples, sampleId => {
                             return {
@@ -528,7 +528,7 @@ export default class GroupComparisonStore {
         await: () => [this.copyNumberEnrichmentProfile, this._activeGroupsOverlapRemoved],
         invoke: async () => {
             let molecularProfile = this.copyNumberEnrichmentProfile.result!;
-            let groups: MolecularProfileCasesGroup[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
+            let groups: MolecularProfileCasesGroupFilter[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
                 const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
                     return _.map(study.samples, sampleId => {
                         return {
@@ -593,7 +593,7 @@ export default class GroupComparisonStore {
     });
 
     private getCopyNumberEnrichmentData(
-        groups:MolecularProfileCasesGroup[],
+        groups:MolecularProfileCasesGroupFilter[],
         copyNumberEventType: "HOMDEL" | "AMP")
     : Promise<AlterationEnrichment[]> {
 
@@ -758,14 +758,14 @@ export default class GroupComparisonStore {
 
     public readonly patientsVennPartition = remoteData({
         await:()=>[
-            this._originalGroups,
+            this._activeGroupsNotOverlapRemoved,
             this.patientToSamplesSet,
             this.patientKeys
         ],
         invoke:()=>{
             const partitionMap = new ComplexKeyGroupsMap<string>();
             const patientToSamplesSet = this.patientToSamplesSet.result!;
-            const groupToPatientKeys = this._originalGroups.result!.reduce((map, group)=>{
+            const groupToPatientKeys = this._activeGroupsNotOverlapRemoved.result!.reduce((map, group)=>{
                 map[group.uid] = _.keyBy(getPatientIdentifiers([group]).map(id=>{
                     return patientToSamplesSet.get({ studyId: id.studyId, patientId: id.patientId })![0].uniquePatientKey;
                 }));
@@ -774,7 +774,7 @@ export default class GroupComparisonStore {
 
             for (const patientKey of this.patientKeys.result!) {
                 const key:any = {};
-                for (const group of this._originalGroups.result!) {
+                for (const group of this._activeGroupsNotOverlapRemoved.result!) {
                     key[group.uid] = patientKey in groupToPatientKeys[group.uid];
                 }
                 partitionMap.add(key, patientKey);

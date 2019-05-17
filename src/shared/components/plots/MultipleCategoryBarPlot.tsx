@@ -18,8 +18,9 @@ import { makePlotData, makeBarSpecs, sortDataByCategory } from "./MultipleCatego
 export interface IMultipleCategoryBarPlotProps {
     svgId?:string;
     domainPadding?:number;
-    horzData:IStringAxisData["data"];
-    vertData:IStringAxisData["data"];
+    horzData?:IStringAxisData["data"];
+    vertData?:IStringAxisData["data"];
+    plotData?: IMultipleCategoryBarPlotData[]
     categoryToColor?:{[cat:string]:string};
     barWidth:number;
     chartBase:number;
@@ -32,6 +33,7 @@ export interface IMultipleCategoryBarPlotProps {
     percentage?:boolean;
     stacked?:boolean;
     ticksCount?:number
+    axisStyle?:any
 }
 
 export interface IMultipleCategoryBarPlotData {
@@ -214,7 +216,13 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     }
 
     @computed get data():IMultipleCategoryBarPlotData[] {
-        return makePlotData(this.props.horzData, this.props.vertData, !!this.props.horizontalBars);
+        let data: IMultipleCategoryBarPlotData[] = [];
+        if (this.props.horzData && this.props.vertData) {
+            data = makePlotData(this.props.horzData, this.props.vertData, !!this.props.horizontalBars);
+        } else if (this.props.plotData) {
+            data = this.props.plotData;
+        }
+        return data;
     }
 
     @computed get maxMajorCount() {
@@ -389,7 +397,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     }
 
     @computed get axisStyle() {
-        return this.props.stacked ? {} : { axis: { stroke: "#b3b3b3" } };
+        return this.props.stacked ? this.props.axisStyle || {} : { axis: { stroke: "#b3b3b3" } };
     }
 
     @computed get horzAxis() {
@@ -547,6 +555,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
             this.getColor,
             this.categoryCoord,
             !!this.props.horizontalBars,
+            !!this.props.stacked,
             !!this.props.percentage
         )
         return barSpecs.map(spec=>(
