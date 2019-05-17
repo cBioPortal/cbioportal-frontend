@@ -142,7 +142,7 @@ describe('oncoprint', function() {
                 browser.pause(100);// wait for oncoprint to sort
                 assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active - 1");
                 // change heatmap profile
-                browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(1); });
+                browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(2); });
                 assert(!browser.isExisting(clusterButtonSelector), "button doesnt exist for profile with no heatmap tracks");
                 browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(0); });
                 assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active - 2");
@@ -219,16 +219,6 @@ describe('oncoprint', function() {
             assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cosmic count annotates inframe mutations");
             assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cosmic count annotates missense mutations");
             assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cosmic count annotates truncating mutations");
-        });
-    });
-
-    describe("other mutation", ()=>{
-        it("should have Other mutations in oncoprint", ()=>{
-            browser.url(CBIOPORTAL_URL+'/results?Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=prad_fhcrc_cnaseq&gene_list=YEATS2&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_fhcrc_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_fhcrc_cna&cancer_study_list=prad_fhcrc');
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
-
-            const legendText = getTextInOncoprintLegend();
-            assert(legendText.indexOf("Other Mutation") > -1);
         });
     });
 
