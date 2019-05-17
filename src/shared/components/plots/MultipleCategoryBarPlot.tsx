@@ -406,6 +406,19 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         return this.props.stacked ? this.props.axisStyle || {} : { axis: { stroke: "#b3b3b3" } };
     }
 
+    @computed get categoryAxisStyle() {
+        let style = this.axisStyle
+        if (!this.props.stacked) {
+            let width = this.categoryCoord(this.data.length) - (this.data.length * this.barSeparation);
+            style = {
+                ...this.axisStyle,
+                ...{ axis: { strokeWidth: 0 } },
+                ...{ ticks: { stroke: "black", size: 1, strokeLinecap: "butt", strokeLinejoin: "butt", strokeWidth: width } }
+            };
+        }
+        return style;
+    }
+
     @computed get horzAxis() {
         // several props below are undefined in horizontal mode, thats because in horizontal mode
         //  this axis is for numbers, not categories
@@ -413,6 +426,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         if (this.props.horizontalBars) {
             label.unshift(`${this.props.countAxisLabel}${this.props.percentage ? " (%)": ""}`);
         }
+        const style = this.props.horizontalBars ? this.axisStyle : this.categoryAxisStyle;
         return (
             <VictoryAxis
                 orientation="bottom"
@@ -428,7 +442,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                                                   textAnchor={this.props.horizontalBars ? undefined : "start"}
                 />}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? 35 : this.biggestCategoryLabelSize + 24}/>}
-                style={this.axisStyle}
+                style={style}
             />
         );
     }
@@ -438,6 +452,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         if (!this.props.horizontalBars) {
             label.push(`${this.props.countAxisLabel}${this.props.percentage ? " (%)": ""}`);
         }
+        const style = !this.props.horizontalBars ? this.axisStyle : this.categoryAxisStyle;
         return (
             <VictoryAxis
                 orientation="left"
@@ -449,7 +464,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 tickCount={this.props.horizontalBars ? undefined : this.numberOfTicks}
                 tickFormat={this.props.horizontalBars ? this.formatCategoryTick : this.formatNumericalTick}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? -1*this.biggestCategoryLabelSize - 24 : -40}/>}
-                style={this.axisStyle}
+                style={style}
             />
         );
     }
