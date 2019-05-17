@@ -10,23 +10,21 @@ import {
     getAlterationRowData,
     getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getFilteredDataByGroups, getGroupColumns
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
-import MiniBarChart from 'pages/resultsView/enrichments/MiniBarChart';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 import CheckedSelect, {Option} from 'shared/components/checkedSelect/CheckedSelect';
+import GeneBarPlot from './GeneBarPlot';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
     groups:{name:string, description:string, nameOfEnrichmentDirection?:string, count:number}[]
     alteredVsUnalteredMode?:boolean;
     headerName: string;
-    selectedProfile:MolecularProfile;
     store?: ResultsViewPageStore;
     showCNAInTable?:boolean;
 }
@@ -162,6 +160,13 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return [];
     }
 
+    @computed get scatterPlotLabels() {
+        if(this.props.groups.length === 2) {
+            return [this.props.groups[0].name, this.props.groups[1].name];
+        }
+        return [];
+    }
+
     @computed get selectedGenesSet() {
         return _.keyBy(this.selectedGenes || []);
     }
@@ -192,22 +197,24 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
         return (
             <div className={styles.Container}>
-                {this.isTwoGroupAnalysis && <div className={styles.ChartsPanel}>
-                    <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
-                                      xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
-                                      xAxisTickValues={[-10, 0, 10]}
-                                      selectedGenesSet={this.selectedGenesSet}
-                                      onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
-                                      onSelectionCleared={this.onSelectionCleared}/>
+                <div className={styles.ChartsPanel}>
+                    {this.isTwoGroupAnalysis && <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
+                        xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
+                        xAxisTickValues={[-10, 0, 10]}
+                        selectedGenesSet={this.selectedGenesSet}
+                        onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
+                        onSelectionCleared={this.onSelectionCleared} />}
 
+                    {this.isTwoGroupAnalysis && <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.group1.name, this.group2.name)}
+                        xGroupName={this.volcanoPlotLabels[1]} yGroupName={this.volcanoPlotLabels[0]} onGeneNameClick={this.onGeneNameClick}
+                        selectedGenesSet={this.selectedGenesSet} onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared} />}
 
-                    <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.group1.name, this.group2.name)}
-                                               xGroupName={this.volcanoPlotLabels[1]} yGroupName={this.volcanoPlotLabels[0]} onGeneNameClick={this.onGeneNameClick}
-                                               selectedGenesSet={this.selectedGenesSet} onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared}/>
-
-                    {this.props.store && <MiniBarChart totalAlteredCount={this.group1.count} totalUnalteredCount={this.group2.count}
-                                                       selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />}
-                </div>}
+                    <GeneBarPlot
+                        data={this.data}
+                        isTwoGroupAnalysis={this.isTwoGroupAnalysis}
+                        groupOrder={this.props.groups.map(group => group.name)}
+                    />
+                </div>
 
                 <div>
                     <div>

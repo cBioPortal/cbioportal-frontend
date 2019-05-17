@@ -13,7 +13,7 @@ import classnames from "classnames";
 import styles from "../resultsView/survival/styles.module.scss";
 import {pluralize} from "../../shared/lib/StringUtils";
 import {blendColors, getExcludedIndexes, getTextColor, joinNames} from "./OverlapUtils";
-import {computeVennJsSizes} from "./VennUtils";
+import {computeVennJsSizes, lossFunction} from "./VennUtils";
 
 const VennJs = require("venn.js");
 
@@ -96,7 +96,9 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
 
         const padding = 20;
 
-        let solution = VennJs.venn(data, {lossFunction:VennJs.lossFunction});
+        let solution = VennJs.venn(data, {
+            lossFunction
+        });
         solution = VennJs.normalizeSolution(solution, Math.PI/2, null);
         const circles = VennJs.scaleSolution(solution, this.props.width, this.props.height, padding);
         const textCenters = VennJs.computeTextCentres(circles, data);
