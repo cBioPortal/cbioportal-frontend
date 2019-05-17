@@ -32,8 +32,10 @@ export interface IMultipleCategoryBarPlotProps {
     legendLocationWidthThreshold?: number;
     percentage?:boolean;
     stacked?:boolean;
-    ticksCount?:number
-    axisStyle?:any
+    ticksCount?:number;
+    axisStyle?:any;
+    countAxisLabel?: string;
+    tooltip?:(datum:any)=> JSX.Element;
 }
 
 export interface IMultipleCategoryBarPlotData {
@@ -50,10 +52,14 @@ const DEFAULT_BOTTOM_PADDING = 10;
 const LEGEND_ITEMS_PER_ROW = 4;
 const BOTTOM_LEGEND_PADDING = 15;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
-const COUNT_AXIS_LABEL = "# samples";
 
 @observer
 export default class MultipleCategoryBarPlot extends React.Component<IMultipleCategoryBarPlotProps, {}> {
+
+    static defaultProps:Partial<IMultipleCategoryBarPlotProps> = {
+        countAxisLabel: "# samples"
+    };
+
     @observable.ref tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;
     private mouseEvents:any = this.makeMouseEvents();
@@ -405,7 +411,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         //  this axis is for numbers, not categories
         const label = [this.props.axisLabelX];
         if (this.props.horizontalBars) {
-            label.unshift(`${COUNT_AXIS_LABEL}${this.props.percentage ? " (%)": ""}`);
+            label.unshift(`${this.props.countAxisLabel}${this.props.percentage ? " (%)": ""}`);
         }
         return (
             <VictoryAxis
@@ -430,7 +436,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     @computed get vertAxis() {
         const label = [this.props.axisLabelY];
         if (!this.props.horizontalBars) {
-            label.push(`${COUNT_AXIS_LABEL}${this.props.percentage ? " (%)": ""}`);
+            label.push(`${this.props.countAxisLabel}${this.props.percentage ? " (%)": ""}`);
         }
         return (
             <VictoryAxis
@@ -573,6 +579,9 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     }
 
     private tooltip(datum:any) {
+        if(this.props.tooltip) {
+            return this.props.tooltip(datum);
+        }
         return (
             <div>
                 <strong>{datum.majorCategory}</strong><br/>
