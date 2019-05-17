@@ -1,4 +1,5 @@
 $fontSize: 11px;
+$iconFontSize: 14px;
 
 .header {
   display: flex;
@@ -23,15 +24,26 @@ $fontSize: 11px;
   padding: 2px;
   position:absolute;
   border-radius:$border-radius-base;
-  right:0;
-  top:0;
+  left:2px;
+  top:2px;
   background:$lightGrey;
 }
 
+.menuToggle {
+  padding:1px !important;
+  line-height:1 !important;
+  font-size:$iconFontSize - 1px !important;
+  margin-left:4px;
+
+  i {
+    font-size: $iconFontSize;
+  }
+}
+
 .item {
-  margin-right:4px;
-  &:first-of-type {
-    margin-left:4px;
+  margin-left:4px;
+  &:last-of-type {
+    margin-right:4px;
   }
 }
 

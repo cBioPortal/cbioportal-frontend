@@ -34,6 +34,7 @@ import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPl
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {getComparisonUrl} from "../../../shared/api/urls";
+import {DownloadControlsButton} from "../../../shared/components/downloadControls/DownloadControls";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -56,7 +57,8 @@ export interface IChartContainerProps {
     studyViewFilters:StudyViewFilter;
     onValueSelection?: any;
     onDataBinSelection?: any;
-    download?: IChartContainerDownloadProps[];
+    getData?:()=>Promise<string|null>;
+    downloadTypes?:DownloadControlsButton[];
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
     onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => void;
@@ -145,10 +147,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         };
     }
 
-    public toSVGDOMNode(): Element {
+    public toSVGDOMNode(): SVGElement {
         if (this.plot) {
             // Get result of plot
-            return this.plot.toSVGDOMNode();
+            return this.plot.toSVGDOMNode() as SVGElement;
         } else {
             return document.createElementNS("http://www.w3.org/2000/svg", "svg");
         }
@@ -450,19 +452,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             (this.props.analysisGroupsSettings.clinicalAttribute.clinicalAttributeId === this.props.chartMeta.clinicalAttribute.clinicalAttributeId);
     }
 
-    @computed get downloadTypes() {
-        return _.reduce(this.props.download || [], (acc, next) => {
-            //when the chart type is table only show TSV in download buttons
-            if (!(this.chartType === ChartTypeEnum.TABLE && _.includes(['SVG', 'PDF'], next.type))) {
-                acc.push({
-                    type: next.type,
-                    initDownload: next.initDownload ? next.initDownload : this.handlers.defaultDownload[next.type]
-                });
-            }
-            return acc;
-        }, [] as IChartContainerDownloadProps[]);
-    }
-
     @computed
     get highlightChart() {
         return this.newlyAdded || this.isAnalysisTarget;
@@ -498,7 +487,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     hideLabel={this.hideLabel}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
-                    download={this.downloadTypes}
+                    getSVG={()=>Promise.resolve(this.toSVGDOMNode())}
+                    getData={this.props.getData}
+                    downloadTypes={this.props.downloadTypes}
                     setAnalysisGroups={this.setAnalysisGroups}
                     openComparisonPage={this.openComparisonPage}
                 />
