@@ -103,7 +103,7 @@ describe('Mutation Table', function() {
             // scroll down to activated "GNOMAD" selection
             browser.scroll(1000, 1000);
             // click "GNOMAD"
-            browser.click('//*[text()="GNOMAD"]');
+            browser.click('//*[text()="gnomAD"]');
             // find frequency
             const frequency = '[data-test2="TCGA-78-7540-01"][data-test="gnomad-column"]';
             browser.waitForExist(frequency, 30000);
@@ -112,8 +112,8 @@ describe('Mutation Table', function() {
                 var textFrequency = browser.getText(frequency);
                 return textFrequency.length >= 1;
             }, 600000, "Frequency data not in Gnoamd column");
-            // check if the column has <0.0001 
-            assert.equal(browser.getText(frequency), '<0.0001');
+            // check if the column has 1.1e-5
+            assert.equal(browser.getText(frequency), '1.1e-5');
             // mouse over the frequency
             browser.moveToObject(frequency,0,0);
             // wait for gnomad table showing up
