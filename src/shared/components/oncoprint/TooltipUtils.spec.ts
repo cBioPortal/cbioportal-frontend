@@ -642,53 +642,53 @@ describe("Oncoprint TooltipUtils", ()=>{
                 }
             });
             it("single genetic alteration in single case - mrna", ()=>{
-                datum.data = [makeMrna({ alterationSubType:"up"})];
+                datum.data = [makeMrna({ alterationSubType:"high"})];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
 
-                datum.data = [makeMrna({ alterationSubType:"up"}), makeMrna({ alterationSubType:"up"})];
+                datum.data = [makeMrna({ alterationSubType:"high"}), makeMrna({ alterationSubType:"high"})];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
 
-                datum.data = [makeMrna({ alterationSubType:"down"})];
+                datum.data = [makeMrna({ alterationSubType:"low"})];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
 
-                datum.data = [makeMrna({ alterationSubType:"down"}), makeMrna({ alterationSubType:"down"})];
+                datum.data = [makeMrna({ alterationSubType:"low"}), makeMrna({ alterationSubType:"low"})];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
             });
             it("single genetic alteration in single case - prot", ()=>{
-                datum.data = [makeProt({ alterationSubType:"up"})];
+                datum.data = [makeProt({ alterationSubType:"high"})];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
 
-                datum.data = [makeProt({ alterationSubType:"up"}), makeProt({ alterationSubType:"up"})];
+                datum.data = [makeProt({ alterationSubType:"high"}), makeProt({ alterationSubType:"high"})];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
 
-                datum.data = [makeProt({ alterationSubType:"down"})];
+                datum.data = [makeProt({ alterationSubType:"low"})];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
 
-                datum.data = [makeProt({ alterationSubType:"down"}), makeProt({ alterationSubType:"down"})];
+                datum.data = [makeProt({ alterationSubType:"low"}), makeProt({ alterationSubType:"low"})];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
             });
             it("single genetic alteration across multiple cases - mutation", ()=>{
@@ -727,30 +727,30 @@ describe("Oncoprint TooltipUtils", ()=>{
                 }
             });
             it("single genetic alteration across multiple cases - mrna", ()=>{
-                datum.data = [makeMrna({ alterationSubType:"up"})];
+                datum.data = [makeMrna({ alterationSubType:"high"})];
                 tooltipOutput = tooltip([datum, datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED\xa0\(2\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(2\)/g)!.length, 1);
 
-                datum.data = [makeMrna({ alterationSubType:"down"})];
+                datum.data = [makeMrna({ alterationSubType:"low"})];
                 tooltipOutput = tooltip([datum, datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED\xa0\(2\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(2\)/g)!.length, 1);
 
                 tooltipOutput = tooltip([emptyDatum, datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED\xa0\(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(1\)/g)!.length, 1);
             });
             it("single genetic alteration across multiple cases - prot", ()=>{
-                datum.data = [makeProt({ alterationSubType:"up"})];
+                datum.data = [makeProt({ alterationSubType:"high"})];
                 tooltipOutput = tooltip([datum, datum, datum, datum, datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED\xa0\(5\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(5\)/g)!.length, 1);
 
-                datum.data = [makeProt({ alterationSubType:"down"})];
+                datum.data = [makeProt({ alterationSubType:"low"})];
                 tooltipOutput = tooltip([datum, datum, datum, datum, datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED\xa0\(5\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(5\)/g)!.length, 1);
             });
             it("multiple alterations of same type in single case - mutation", ()=>{
                 datum.data = [makeMutation({proteinChange:"PC1"}), makeMutation({proteinChange:"PC2"})];
@@ -778,19 +778,19 @@ describe("Oncoprint TooltipUtils", ()=>{
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
             });
             it("multiple alterations of same type in single case - mrna", ()=>{
-                datum.data = [makeMrna({ alterationSubType:"up"}), makeMrna({ alterationSubType:"down"}), makeMrna({ alterationSubType:"up"})];
+                datum.data = [makeMrna({ alterationSubType:"high"}), makeMrna({ alterationSubType:"low"}), makeMrna({ alterationSubType:"high"})];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
             });
             it("multiple alterations of same type in single case - protein", ()=>{
-                datum.data = [makeProt({ alterationSubType:"down"}), makeProt({ alterationSubType:"down"}), makeProt({ alterationSubType:"up"})];
+                datum.data = [makeProt({ alterationSubType:"low"}), makeProt({ alterationSubType:"low"}), makeProt({ alterationSubType:"high"})];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
             });
             it("multiple alterations of same type across multiple cases - mutation", ()=>{
@@ -832,36 +832,36 @@ describe("Oncoprint TooltipUtils", ()=>{
                 assert.equal(tooltipOutput.text().match(/GENE GAIN\xa0\(1\)/g)!.length, 1);
             });
             it("multiple alterations of same type across multiple cases - mrna", ()=>{
-                datum.data = [makeMrna({ alterationSubType:"up"}), makeMrna({ alterationSubType:"down"}), makeMrna({ alterationSubType:"up"})];
+                datum.data = [makeMrna({ alterationSubType:"high"}), makeMrna({ alterationSubType:"low"}), makeMrna({ alterationSubType:"high"})];
                 tooltipOutput = tooltip([datum, datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED\xa0\(4\)/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED\xa0\(2\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(4\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(2\)/g)!.length, 1);
 
                 tooltipOutput = tooltip([datum, datum, emptyDatum, emptyDatum, datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED\xa0\(6\)/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED\xa0\(3\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(6\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(3\)/g)!.length, 1);
             });
             it("multiple alterations of same type across multiple cases - protein", ()=>{
-                datum.data = [makeProt({ alterationSubType:"down"}), makeProt({ alterationSubType:"down"}), makeProt({ alterationSubType:"up"})];
+                datum.data = [makeProt({ alterationSubType:"low"}), makeProt({ alterationSubType:"low"}), makeProt({ alterationSubType:"high"})];
                 tooltipOutput = tooltip([datum, datum, datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED\xa0\(3\)/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED\xa0\(6\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(3\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(6\)/g)!.length, 1);
 
                 tooltipOutput = tooltip([datum, emptyDatum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED\xa0\(1\)/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED\xa0\(2\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(2\)/g)!.length, 1);
             });
             it("multiple alterations of different types in single case", ()=>{
                 datum.data = [
                     makeMutation({proteinChange:"PC1"}), makeMutation({proteinChange:"PC2"}),
                     makeFusion({proteinChange:"fusion1"}), makeFusion({proteinChange:"fusion2"}),
                     makeCna({value:2}),makeCna({value:-2}),
-                    makeMrna({ alterationSubType:"up"}), makeMrna({ alterationSubType:"down"}),
-                    makeProt({ alterationSubType:"down"})
+                    makeMrna({ alterationSubType:"high"}), makeMrna({ alterationSubType:"low"}),
+                    makeProt({ alterationSubType:"low"})
                 ];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
@@ -877,9 +877,9 @@ describe("Oncoprint TooltipUtils", ()=>{
                 assert.equal(tooltipOutput.text().match(/GENE HOMODELETED/g)!.length, 1);
 
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED/g)!.length, 2); // (2 for mrna and protein)
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 2); // (2 for mrna and protein)
 
                 assert.equal(tooltipOutput.text().match(/\(\d+\)/g), null, "no number indicator for single case");
             });
@@ -888,15 +888,15 @@ describe("Oncoprint TooltipUtils", ()=>{
                     makeMutation({proteinChange:"PC1"}), makeMutation({proteinChange:"PC2"}),
                     makeFusion({proteinChange:"fusion1"}), makeFusion({proteinChange:"fusion2"}),
                     makeCna({value:2}),makeCna({value:-2}),
-                    makeMrna({ alterationSubType:"up"}), makeMrna({ alterationSubType:"down"}),
-                    makeProt({ alterationSubType:"down"})
+                    makeMrna({ alterationSubType:"high"}), makeMrna({ alterationSubType:"low"}),
+                    makeProt({ alterationSubType:"low"})
                 ];
                 const datum2 = Object.assign({}, emptyDatum, { data:[
                     makeMutation({proteinChange:"PC1"}),
                     makeFusion({proteinChange:"fusion2"}),
                     makeCna({value:1}),
-                    makeMrna({ alterationSubType:"down"}),
-                    makeProt({ alterationSubType:"up"}), makeProt({ alterationSubType:"down"})
+                    makeMrna({ alterationSubType:"low"}),
+                    makeProt({ alterationSubType:"high"}), makeProt({ alterationSubType:"low"})
                 ]});
                 tooltipOutput = tooltip([datum, datum, emptyDatum, datum, datum2]);
                 assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
@@ -913,10 +913,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                 assert.equal(tooltipOutput.text().match(/GENE HOMODELETED\xa0\(3\)/g)!.length, 1);
 
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED\xa0\(3\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(3\)/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE UPREGULATED\xa0\(1\)/g)!.length, 1);
-                assert.equal(tooltipOutput.text().match(/GENE DOWNREGULATED\xa0\(4\)/g)!.length, 2); // (2 for mrna and protein)
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(4\)/g)!.length, 2); // (2 for mrna and protein)
             });
         });
     });
