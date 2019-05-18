@@ -284,6 +284,10 @@ export class QueryStore {
     // used in when visualizing a shared another user virtual study
     private _defaultSelectedIds: ObservableMap<boolean> = observable.map<boolean>();
 
+    @computed get defaultSelectedIds() {
+        return this._defaultSelectedIds;
+    }
+
     @observable dataTypePriority = {mutation: true, cna: true};
 
     // molecular profile ids

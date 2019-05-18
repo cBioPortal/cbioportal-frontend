@@ -96,9 +96,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             updateChartSampleIdentifierFilter: (uniqueKey:string, cases: SampleIdentifier[], keepCurrent?:boolean) => {
                 this.store.updateChartSampleIdentifierFilter(uniqueKey, cases, keepCurrent);
             },
-            updateSelectedGenes:(query: SingleGeneQuery[], genesInQuery: Gene[])=>{
-                this.store.updateSelectedGenes(query, genesInQuery);
-            },
             updateMutationCountVsCNAFilter:(bounds:RectangleBounds)=>{
                 this.store.setMutationCountVsCNAFilter(bounds);
             },
