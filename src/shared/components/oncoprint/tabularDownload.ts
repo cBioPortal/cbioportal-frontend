@@ -55,12 +55,12 @@ export default function tabularDownload(
         };
     }
     const mrnaMap:any = {
-        'up': 'mRNA High',
-        'down': 'mRNA Low'
+        'high': 'mRNA High',
+        'low': 'mRNA Low'
     };
     const proteinMap:any = {
-        'down': 'Protein Low',
-        'up': 'Protein High'
+        'low': 'Protein Low',
+        'high': 'Protein High'
     };
     const fusionMap:any = {
         'true': 'Fusion'

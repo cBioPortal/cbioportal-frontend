@@ -173,90 +173,92 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                         Select Studies:
                     </SectionHeader>
 
-                    <div>
-                        {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending && !this.store.profiledSamplesCount.isPending) && (
-                            <Observer>
-                                {() => {
-                                    let numSelectedStudies = expr(() => this.store.selectableSelectedStudyIds.length);
-                                    let selectedCountClass = classNames({
-                                        [styles.selectedCount]: true,
-                                        [styles.selectionsExist]: numSelectedStudies > 0
-                                    });
-                                    return (
-                                        <a
-                                            onClick={() => {
-                                                if (numSelectedStudies)
-                                                    this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly;
-                                            }}
-                                        >
-                                            <b>{numSelectedStudies}</b> studies selected
-                                            (<b>{this.store.profiledSamplesCount.result.all}</b> samples)
-                                        </a>
-                                    );
-                                }}
-                            </Observer>
-                        )}
-
-
-                        {(!!(!this.store.forDownloadTab) && !!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending)) && (
-                            <Observer>
-                                {() => {
-                                    let hasSelection = this.store.selectableSelectedStudyIds.length > 0;
-
-                                    if (hasSelection) {
+                    {this.store.selectableStudiesSet.isComplete && (
+                        <div>
+                            {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending && !this.store.profiledSamplesCount.isPending) && (
+                                <Observer>
+                                    {() => {
+                                        let numSelectedStudies = expr(() => this.store.selectableSelectedStudyIds.length);
+                                        let selectedCountClass = classNames({
+                                            [styles.selectedCount]: true,
+                                            [styles.selectionsExist]: numSelectedStudies > 0
+                                        });
                                         return (
-                                            <a data-test='globalDeselectAllStudiesButton' style={{marginLeft: 10}}
-                                               onClick={() => {
-                                                   (hasSelection) ? this.logic.mainView.clearAllSelection() :
-                                                       this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !hasSelection);
-                                               }}>
-                                                Deselect all
+                                            <a
+                                                onClick={() => {
+                                                    if (numSelectedStudies)
+                                                        this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly;
+                                                }}
+                                            >
+                                                <b>{numSelectedStudies}</b> studies selected
+                                                (<b>{this.store.profiledSamplesCount.result.all}</b> samples)
                                             </a>
                                         );
-                                    } else {
-                                        return <span/>;
-                                    }
-                                }}
-                            </Observer>
-                        )}
+                                    }}
+                                </Observer>
+                            )}
 
 
-                        {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
-                            <Observer>
-                                {() => {
+                            {(!!(!this.store.forDownloadTab) && !!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending)) && (
+                                <Observer>
+                                    {() => {
+                                        let hasSelection = this.store.selectableSelectedStudyIds.length > 0;
 
-                                    const studyLimitReached = (this.store.selectableSelectedStudyIds.length > 50);
-                                    const tooltipMessage = studyLimitReached ?
-                                        <span>Too many studies selected for study summary (limit: 50)</span> :
-                                        <span>Open summary of selected studies in a new window.</span>;
+                                        if (hasSelection) {
+                                            return (
+                                                <a data-test='globalDeselectAllStudiesButton' style={{marginLeft: 10}}
+                                                onClick={() => {
+                                                    (hasSelection) ? this.logic.mainView.clearAllSelection() :
+                                                        this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !hasSelection);
+                                                }}>
+                                                    Deselect all
+                                                </a>
+                                            );
+                                        } else {
+                                            return <span/>;
+                                        }
+                                    }}
+                                </Observer>
+                            )}
 
-                                    return (
-                                        <DefaultTooltip
-                                            placement="top"
-                                            overlay={tooltipMessage}
-                                            disabled={!this.store.summaryEnabled}
-                                            mouseEnterDelay={0}
-                                        >
 
-                                            <Button bsSize="xs" disabled={studyLimitReached} bsStyle="primary"
-                                                    className={classNames('btn-primary')}
-                                                    onClick={this.handlers.onSummaryClick}
-                                                    style={{
-                                                        marginLeft: 10,
-                                                        display: this.store.summaryEnabled ? 'inline-block' : 'none',
-                                                        cursor: 'pointer',
-                                                        bgColor: '#3786C2'
-                                                    }}
+                            {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
+                                <Observer>
+                                    {() => {
+
+                                        const studyLimitReached = (this.store.selectableSelectedStudyIds.length > 50);
+                                        const tooltipMessage = studyLimitReached ?
+                                            <span>Too many studies selected for study summary (limit: 50)</span> :
+                                            <span>Open summary of selected studies in a new window.</span>;
+
+                                        return (
+                                            <DefaultTooltip
+                                                placement="top"
+                                                overlay={tooltipMessage}
+                                                disabled={!this.store.summaryEnabled}
+                                                mouseEnterDelay={0}
                                             >
-                                                <i className='ci ci-pie-chart'></i> View summary
-                                            </Button>
-                                        </DefaultTooltip>
-                                    );
-                                }}
-                            </Observer>
-                        )}
 
-                    </div>
+                                                <Button bsSize="xs" disabled={studyLimitReached} bsStyle="primary"
+                                                        className={classNames('btn-primary')}
+                                                        onClick={this.handlers.onSummaryClick}
+                                                        style={{
+                                                            marginLeft: 10,
+                                                            display: this.store.summaryEnabled ? 'inline-block' : 'none',
+                                                            cursor: 'pointer',
+                                                            bgColor: '#3786C2'
+                                                        }}
+                                                >
+                                                    <i className='ci ci-pie-chart'></i> View summary
+                                                </Button>
+                                            </DefaultTooltip>
+                                        );
+                                    }}
+                                </Observer>
+                            )}
+
+                        </div>
+                    )}
 
                     <Observer>
                         {() => {

@@ -10,7 +10,7 @@ import {remoteData} from "shared/api/remoteData";
 import {
     fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
     fetchPfamDomainData, fetchCanonicalTranscriptWithFallback,
-    fetchEnsemblTranscriptsByEnsemblFilter
+    fetchEnsemblTranscriptsByEnsemblFilter, fetchPtmData
 } from "shared/lib/StoreUtils";
 import {
     EnsemblTranscript,
@@ -19,11 +19,11 @@ import {
     VariantAnnotation,
     GenomicLocation,
     TranscriptConsequence,
-    Hotspot
+    Hotspot, PostTranslationalModification
 } from "shared/api/generated/GenomeNexusAPI";
 import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
-import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
+import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments, PDB_IGNORELIST} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 
@@ -32,11 +32,11 @@ import MutationMapperDataStore from "./MutationMapperDataStore";
 import {uniqueGenomicLocations, genomicLocationString, groupMutationsByProteinStartPos} from "shared/lib/MutationUtils";
 import {defaultHotspotFilter, groupHotspotsByMutations} from "shared/lib/CancerHotspotsUtils";
 import {defaultOncoKbIndicatorFilter, groupOncoKbIndicatorDataByMutations} from "shared/lib/OncoKbUtils";
+import {groupPtmDataByPosition, groupPtmDataByTypeAndPosition} from "shared/lib/PtmUtils";
 import { getMutationsToTranscriptId } from "shared/lib/MutationAnnotator";
 import Mutations from "pages/resultsView/mutation/Mutations";
 
 import {IServerConfig} from "config/IAppConfig";
-
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?:boolean
@@ -129,6 +129,37 @@ export default class MutationMapperStore
             // fail silently
         }
     }, []);
+
+    readonly ptmData = remoteData({
+        await: () => [
+            this.mutationData
+        ],
+        invoke: async () => {
+            if (this.activeTranscript) {
+                return fetchPtmData(this.activeTranscript);
+            }
+            else {
+                return [];
+            }
+        },
+        onError: (err: Error) => {
+            // fail silently
+        }
+    }, []);
+
+    readonly ptmDataByProteinPosStart = remoteData<{[pos: number]: PostTranslationalModification[]}>({
+        await: () => [
+            this.ptmData
+        ],
+        invoke: async() => this.ptmData.result ? groupPtmDataByPosition(this.ptmData.result) : {}
+    }, {});
+
+    readonly ptmDataByTypeAndProteinPosStart = remoteData<{[type: string] : {[position: number] : PostTranslationalModification[]}}>({
+        await: () => [
+            this.ptmData
+        ],
+        invoke: async() => this.ptmData.result ? groupPtmDataByTypeAndPosition(this.ptmData.result) : {}
+    }, {});
 
     readonly swissProtId = remoteData({
         invoke: async() => {
@@ -416,7 +447,9 @@ export default class MutationMapperStore
 
     @cached get pdbChainDataStore(): PdbChainDataStore {
         // initialize with sorted merged alignment data
-        return new PdbChainDataStore(this.sortedMergedAlignmentData);
+        return new PdbChainDataStore(this.sortedMergedAlignmentData.filter(
+            // TODO temporary workaround for problematic pdb structures
+            chain => !PDB_IGNORELIST.includes(chain.pdbId.toLowerCase())));
     }
 
     @cached get residueMappingCache()
