@@ -195,7 +195,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Tumors with RPPA data (196)",
+            "Samples with protein data (RPPA) (196)",
             "Initially selected case set should be as specified from URL"
         );
 
@@ -225,7 +225,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Tumors with sequencing and CNA data (212)",
+            "Samples with mutation and CNA data (212)",
             "Now we should be back to default selected case set for this study"
         );
     });
@@ -237,7 +237,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Tumors with RPPA data (196)",
+            "Samples with protein data (RPPA) (196)",
             "Initially selected case set should be as specified from URL"
         );
 
@@ -261,7 +261,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Tumors with sequencing and CNA data (212)",
+            "Samples with mutation and CNA data (212)",
             "Now we should be back to default selected case set for this study"
         );
     });

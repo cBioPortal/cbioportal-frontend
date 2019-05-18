@@ -393,10 +393,10 @@ export function makeGeneticTrackTooltip(
                     case "PROTEIN_LEVEL":
                         let direction = datum.alterationSubType;
                         let array = (molecularAlterationType === "MRNA_EXPRESSION" ? mrna : prot);
-                        if (direction === "up") {
-                            array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "UPREGULATED"});
-                        } else if (direction === "down") {
-                            array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "DOWNREGULATED"});
+                        if (direction === "high") {
+                            array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "HIGH"});
+                        } else if (direction === "low") {
+                            array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "LOW"});
                         }
                         break;
                 }
