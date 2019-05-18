@@ -9,10 +9,13 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {Hotspot} from "shared/api/generated/GenomeNexusAPI";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import CancerHotspots from "shared/components/annotation/CancerHotspots";
+import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
 import {default as Track, TrackProps} from "./Track";
+import {TrackItemSpec} from "./TrackCircle";
 
 
 type HotspotTrackProps = TrackProps & {
+    store: MutationMapperStore;
     hotspotIndex: IHotspotIndex;
 };
 
@@ -51,8 +54,24 @@ export function getHotspotImage() {
 @observer
 export default class HotspotTrack extends React.Component<HotspotTrackProps, {}>
 {
-    constructor(props: HotspotTrackProps) {
-        super(props);
+    @computed get hotspotSpecs(): TrackItemSpec[] {
+        const filteredHotspotsByProteinPosStart = this.props.store.filteredHotspotsByProteinPosStart;
+
+        if(!_.isEmpty(filteredHotspotsByProteinPosStart)) {
+            return _.keys(filteredHotspotsByProteinPosStart)
+                .filter(position => Number(position) >= 0)
+                .map(position => ({
+                    codon: Number(position),
+                    color: "#FF9900",
+                    tooltip: hotspotTooltip(
+                        this.props.store.filteredMutationsByPosition[Number(position)],
+                        this.props.store.indexedHotspotData.result || {},
+                        filteredHotspotsByProteinPosStart[Number(position)])
+                }));
+        }
+        else {
+            return [];
+        }
     }
 
     @computed get trackTitle() {
@@ -75,7 +94,7 @@ export default class HotspotTrack extends React.Component<HotspotTrackProps, {}>
                 xOffset={this.props.xOffset}
                 proteinLength={this.props.proteinLength}
                 trackTitle={this.trackTitle}
-                trackItems={this.props.trackItems}
+                trackItems={this.hotspotSpecs}
                 dataHighlightFilter={(d: Mutation[]) => isHotspot(d[0], this.props.hotspotIndex, defaultHotspotFilter)}
                 dataSelectFilter={(d: Mutation[]) => isHotspot(d[0], this.props.hotspotIndex, defaultHotspotFilter)}
                 idClassPrefix={HOTSPOT_ID_CLASS_PREFIX}

@@ -554,7 +554,7 @@ var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
         }
 
         if (match > 0) {
-            datum.alterationSubType = (direction && (direction > 0)) ? 'up' : 'down';
+            datum.alterationSubType = (direction && (direction > 0)) ? 'high' : 'low';
         }
 
         return match;

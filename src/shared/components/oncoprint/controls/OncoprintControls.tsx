@@ -370,14 +370,13 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     @autobind
     @action
-    private onChangeHeatmapGeneInput(oql:any, genes:any, queryStr:string, status:any) {
+    private onChangeHeatmapGeneInput(oql:any, genes:any, queryStr:string) {
         this.props.handlers.onChangeHeatmapGeneInputValue &&
         this.props.handlers.onChangeHeatmapGeneInputValue(queryStr);
 
         const foundGenes = _.keyBy(genes.found as Gene[], gene=>gene.hugoGeneSymbol.toUpperCase());
 
         this.heatmapGenesReady = (
-            status === "complete" && // validation promise complete
             _.every(oql.query as SingleGeneQuery[], query=>query.gene.toUpperCase() in foundGenes) // all genes valid
         );
     }

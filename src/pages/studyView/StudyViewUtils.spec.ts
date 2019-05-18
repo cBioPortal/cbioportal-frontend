@@ -43,7 +43,11 @@ import {
     showOriginStudiesInSummaryDescription,
     shouldShowChart,
     toFixedDigit,
-    updateGeneQuery, StudyViewFilterWithSampleIdentifierFilters, ChartMeta, ChartMetaDataTypeEnum
+    updateGeneQuery,
+    StudyViewFilterWithSampleIdentifierFilters,
+    ChartMeta,
+    ChartMetaDataTypeEnum,
+    getStudyViewTabId
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -52,6 +56,9 @@ import {
     StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {CancerStudy, ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
+import {
+    StudyViewPageTabKeyEnum
+} from "./StudyViewPageStore";
 import {
     UniqueKey
 } from "./StudyViewUtils";
@@ -72,13 +79,31 @@ describe('StudyViewUtils', () => {
 
     describe('updateGeneQuery', () => {
         it('when gene selected in table', () => {
-            assert.equal(updateGeneQuery([{ gene: 'TP53', alterations: false }], 'TTN'), 'TP53 TTN',);
-            assert.equal(updateGeneQuery([{ gene: 'TP53', alterations: false }, { gene: 'TTN', alterations: false }], 'ALK'), 'TP53 TTN ALK',);
+            assert.deepEqual(updateGeneQuery([{gene: 'TP53', alterations: false}], 'TTN'), [{
+                gene: 'TP53',
+                alterations: false
+            }, {gene: 'TTN', alterations: false}]);
+            assert.deepEqual(updateGeneQuery([{gene: 'TP53', alterations: false}, {
+                gene: 'TTN',
+                alterations: false
+            }], 'ALK'), [{gene: 'TP53', alterations: false}, {gene: 'TTN', alterations: false}, {
+                gene: 'ALK',
+                alterations: false
+            }]);
         });
         it('when gene unselected in table', () => {
-            assert.equal(updateGeneQuery([{ gene: 'TP53', alterations: false }], 'TP53'), '');
-            assert.equal(updateGeneQuery([{ gene: 'TP53', alterations: false }, { gene: 'TTN', alterations: false }], 'TP53'), 'TTN',);
-            assert.equal(updateGeneQuery([{ gene: 'TP53', alterations: false }, { gene: 'TTN', alterations: false }], 'ALK'), 'TP53 TTN ALK',);
+            assert.deepEqual(updateGeneQuery([{gene: 'TP53', alterations: false}], 'TP53'), []);
+            assert.deepEqual(updateGeneQuery([{gene: 'TP53', alterations: false}, {
+                gene: 'TTN',
+                alterations: false
+            }], 'TP53'), [{gene: 'TTN', alterations: false}]);
+            assert.deepEqual(updateGeneQuery([{gene: 'TP53', alterations: false}, {
+                gene: 'TTN',
+                alterations: false
+            }], 'ALK'), [{gene: 'TP53', alterations: false}, {gene: 'TTN', alterations: false}, {
+                gene: 'ALK',
+                alterations: false
+            }]);
         });
     });
 
@@ -2145,4 +2170,14 @@ describe('StudyViewUtils', () => {
             assert.equal(getPositionYByUniqueKey(layoutForPositionTest, 'test'), 1);
         });
     })
+
+    describe("getStudyViewTabId", ()=>{
+        it("gets study view tab id correctly", ()=>{
+            assert.equal(getStudyViewTabId("study"), undefined);
+            assert.equal(getStudyViewTabId("study/"), undefined);
+            assert.equal(getStudyViewTabId("study/asdf"), "asdf" as any);
+            assert.equal(getStudyViewTabId("study/summary"), StudyViewPageTabKeyEnum.SUMMARY);
+            assert.equal(getStudyViewTabId("study/summary/"), StudyViewPageTabKeyEnum.SUMMARY);
+        });
+    });
 });

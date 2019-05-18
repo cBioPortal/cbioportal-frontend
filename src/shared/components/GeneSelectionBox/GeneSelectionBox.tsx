@@ -8,17 +8,15 @@ import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery, SyntaxError } from 'shared/lib/oql/oql-parser';
 import { parseOQLQuery } from 'shared/lib/oql/oqlfilter';
 import { remoteData } from 'shared/api/remoteData';
-import { debounceAsync } from 'mobxpromise';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
-import memoize from 'memoize-weak-decorator';
 import client from "shared/api/cbioportalClientInstance";
-import { getFocusOutText } from './GeneSelectionBoxUtils';
-import GeneSymbolValidator from './GeneSymbolValidator';
-import { bind } from '../../../../node_modules/bind-decorator';
+import {getEmptyGeneValidationResult, getFocusOutText, getOQL} from './GeneSelectionBoxUtils';
+import GeneSymbolValidator, {GeneValidationResult} from './GeneSymbolValidator';
+import autobind from 'autobind-decorator';
 
 export interface IGeneSelectionBoxProps {
     inputGeneQuery?: string;
-    geneQueryErrorDisplayStatus?: DisplayStatus;
+    validateInputGeneQuery?:boolean;
     location?: GeneBoxType;
     callback?: (
         oql: {
@@ -28,175 +26,118 @@ export interface IGeneSelectionBoxProps {
             found: Gene[];
             suggestions: GeneReplacement[];
         },
-        queryStr: string,
-        status: "pending" | "error" | "complete") => void;
+        queryStr: string) => void;
 }
 
-export enum DisplayStatus {
-    UNFOCUSED,
-    SHOULD_FOCUS,
-    FOCUSED
-}
 export enum GeneBoxType {
     DEFAULT,
     STUDY_VIEW_PAGE,
     ONCOPRINT_HEATMAP
 }
 
-function isInteger(str: string) {
-    return Number.isInteger(Number(str));
+export type OQL = {
+    query: SingleGeneQuery[],
+    error?: { start: number, end: number, message: string }
 }
 
 @observer
 export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxProps, {}> {
-    private geneStatusReaction: IReactionDisposer;
+    private disposers: IReactionDisposer[];
+
+    // Need to record the textarea value due to SyntheticEvent restriction due to debounce
+    private currentTextAreaValue = '';
 
     @observable private geneQuery = '';
-    @observable private geneQueryErrorDisplayStatus: DisplayStatus = DisplayStatus.UNFOCUSED;
+    @observable private geneQueryIsValid = true;
+    @observable private queryToBeValidated = '';
     @observable private isFocused = false;
+    @observable private skipGenesValidation = false;
+
+    private readonly textAreaRef:React.RefObject<HTMLTextAreaElement>;
+    private updateQueryToBeValidateDebounce = _.debounce(()=>{
+        this.queryToBeValidated = this.currentTextAreaValue;
+        this.skipGenesValidation = false;
+
+        // When the text is empty, it will be skipped from oql and further no validation will be done.
+        // Need to set the geneQuery here
+        if(this.currentTextAreaValue === '') {
+            this.geneQuery = '';
+            if (this.props.callback) {
+                this.props.callback(getOQL(''), getEmptyGeneValidationResult(), this.geneQuery)
+            }
+        }
+    }, 500);
+
+    public static defaultProps = {
+        validateInputGeneQuery : true
+    };
 
     constructor(props: IGeneSelectionBoxProps) {
         super(props);
         this.geneQuery = this.props.inputGeneQuery || '';
-        this.geneStatusReaction = reaction(() => this.genes.status, status => {
-            this.props.callback && this.props.callback(this.oql, this.genes.result, this.geneQuery, status);
-        });
+        this.queryToBeValidated = this.geneQuery;
+        if(!this.props.validateInputGeneQuery) {
+            this.skipGenesValidation = true;
+        }
+        this.textAreaRef = React.createRef<HTMLTextAreaElement>();
     }
 
-    componentDidMount() {
-        reaction(
-            () => this.props.inputGeneQuery,
-            inputGeneQuery => {
-                if ((inputGeneQuery || '').toUpperCase() !== this.geneQuery.toUpperCase())
-                    this.geneQuery = (inputGeneQuery || '').trim();
-            },
-            { fireImmediately: true }
-        );
+    componentDidMount(): void {
+        this.disposers = [
+            reaction(
+                () => this.props.inputGeneQuery,
+                inputGeneQuery => {
+                    if ((inputGeneQuery || '').toUpperCase() !== this.geneQuery.toUpperCase()) {
+                        if(!this.props.validateInputGeneQuery) {
+                            this.skipGenesValidation = true;
+                        }
+                        this.geneQuery = (inputGeneQuery || '').trim();
+                        this.queryToBeValidated = this.geneQuery;
+                    }
+                    this.updateTextAreaRefValue();
+                }
+            ),
+            reaction(() => this.showFullText, newVal => {
+                this.updateTextAreaRefValue();
+            })
+        ];
     }
 
     componentWillUnmount(): void {
-        this.geneStatusReaction();
+        for (const disposer of this.disposers) {
+            disposer();
+        }
     }
 
-    @bind
+    @autobind
     @action private updateGeneQuery(value: string) {
-        // clear error when gene query is modified
-        this.geneQueryErrorDisplayStatus = DisplayStatus.UNFOCUSED;
         this.geneQuery = value;
+        // at the time gene query is updated, the queryToBeValidated should be set to the same
+        this.queryToBeValidated = value;
+
+        // You want to keep the box open when the gene symbol validator tries to correct your gene query
+        this.isFocused = true;
+
+        // The uncontrolled component value should be updated at the moment the gene query is updated
+        this.updateTextAreaRefValue();
     }
 
-    @computed private get hasErrors() {
-        return !_.isUndefined(this.oql.error) ||
-            this.genes.result.suggestions.length > 0;
-    }
-
-    @computed private get textAreaRef() {
-        if (this.props.geneQueryErrorDisplayStatus === DisplayStatus.SHOULD_FOCUS)
-            return (textArea: HTMLTextAreaElement) => {
-                let { error } = this.oql;
-                if (textArea && error) {
-                    textArea.focus();
-                    textArea.setSelectionRange(error.start, error.end);
-                    this.geneQueryErrorDisplayStatus = DisplayStatus.FOCUSED;
-                }
-            };
-    }
-
-    @computed get oql(): {
-        query: SingleGeneQuery[],
-        error?: { start: number, end: number, message: string }
-    } {
-        try {
-            return {
-                query: this.geneQuery ? parseOQLQuery(this.geneQuery.trim().toUpperCase()) : [],
-                error: undefined
-            };
-        }
-        catch (error) {
-            if (error.name !== 'SyntaxError')
-                return {
-                    query: [],
-                    error: { start: 0, end: 0, message: `Unexpected ${error}` }
-                };
-
-            let {location:{start:{offset}}} = error as SyntaxError;
-            let near, start, end;
-            if (offset === this.geneQuery.length)
-                [near, start, end] = ['after', offset - 1, offset];
-            else if (offset === 0)
-                [near, start, end] = ['before', offset, offset + 1];
-            else
-                [near, start, end] = ['at', offset, offset + 1];
-            let message = `OQL syntax error ${near} selected character; please fix and submit again.`;
-            return {
-                query: [],
-                error: { start, end, message }
-            };
+    private getTextAreaValue() {
+        if (this.showFullText) {
+            return this.geneQuery;
+        } else {
+            return this.getFocusOutValue();
         }
     }
 
-    @computed private get geneIds(): string[] {
-        return this.oql.error ? [] : this.oql.query.map(line => line.gene);
+    @autobind
+    @action
+    updateTextAreaRefValue() {
+        this.textAreaRef.current!.value = this.getTextAreaValue();
     }
 
-    @memoize
-    private async getGeneSuggestions(alias: string): Promise<GeneReplacement> {
-        return {
-            alias,
-            genes: await client.getAllGenesUsingGET({ alias })
-        };
-    }
-
-    private invokeGenesLater = debounceAsync(
-        async (geneIds: string[]): Promise<{ found: Gene[], suggestions: GeneReplacement[] }> => {
-            let [entrezIds, hugoIds] = _.partition(_.uniq(geneIds), isInteger);
-
-            let getEntrezResults = async () => {
-                let found: Gene[];
-                if (entrezIds.length)
-                    found = await client.fetchGenesUsingPOST({ geneIdType: "ENTREZ_GENE_ID", geneIds: entrezIds });
-                else
-                    found = [];
-                let missingIds = _.difference(entrezIds, found.map(gene => gene.entrezGeneId + ''));
-                let removals = missingIds.map(entrezId => ({ alias: entrezId, genes: [] }));
-                let replacements = found.map(gene => ({ alias: gene.entrezGeneId + '', genes: [gene] }));
-                let suggestions = [...removals, ...replacements];
-                return { found, suggestions };
-            };
-
-            let getHugoResults = async () => {
-                let found: Gene[];
-                if (hugoIds.length)
-                    found = await client.fetchGenesUsingPOST({ geneIdType: "HUGO_GENE_SYMBOL", geneIds: hugoIds });
-                else
-                    found = [];
-                let missingIds = _.difference(hugoIds, found.map(gene => gene.hugoGeneSymbol));
-                let suggestions = await Promise.all(missingIds.map(alias => this.getGeneSuggestions(alias)));
-                return { found, suggestions };
-            };
-
-            let [entrezResults, hugoResults] = await Promise.all([getEntrezResults(), getHugoResults()]);
-            return {
-                found: [...entrezResults.found, ...hugoResults.found],
-                suggestions: [...entrezResults.suggestions, ...hugoResults.suggestions]
-            };
-        },
-        500
-    );
-
-    private readonly genes = remoteData({
-        invoke: () => this.invokeGenesLater(this.geneIds),
-        default: { found: [], suggestions: [] }
-    });
-
-    @computed private get placeHolder() {
-        return (this.props.location === GeneBoxType.STUDY_VIEW_PAGE && !this.isFocused) ?
-            'query genes - click to expand' :
-            'Enter HUGO Gene Symbols or Gene Aliases';
-    }
-
-    @computed get focusOutValue() {
-        return getFocusOutText(this.geneIds);
+    private getFocusOutValue() {
+        return getFocusOutText(getOQL(this.geneQuery).query.map(query => query.gene));
     }
 
     @computed private get textAreaClasses() {
@@ -205,7 +146,7 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
         switch (this.props.location) {
             case GeneBoxType.STUDY_VIEW_PAGE:
                 classNames.push(styles.studyView);
-                if (this.isFocused || this.hasErrors) {
+                if (this.isFocused || !this.geneQueryIsValid) {
                     classNames.push(styles.studyViewFocus);
                 }
                 break;
@@ -220,8 +161,22 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
         return classNames;
     }
 
-    @computed private get showValidationBox() {
-        return this.props.location !== GeneBoxType.STUDY_VIEW_PAGE || this.hasErrors || this.isFocused;
+    @computed get showFullText() {
+        return !this.geneQueryIsValid || this.isFocused ||  this.props.location !== GeneBoxType.STUDY_VIEW_PAGE;
+    }
+
+    @autobind
+    @action
+    afterGeneSymbolValidation(validQuery: boolean, validationResult: GeneValidationResult, oql:OQL) {
+        this.geneQueryIsValid = validQuery;
+        // no matter whether the query is valid, we need to sync queryToBeValidated with geneQuery
+        this.geneQuery = this.queryToBeValidated;
+        if (this.props.callback) {
+            this.props.callback(oql, validationResult, this.geneQuery)
+        }
+        if (oql.error !== undefined) {
+            this.textAreaRef.current!.setSelectionRange(oql.error.start, oql.error.end);
+        }
     }
 
     render() {
@@ -236,19 +191,20 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
                     cols={80}
                     placeholder={'Click gene symbols below or enter here'}
                     title="Click gene symbols below or enter here"
-                    value={this.showValidationBox ? this.geneQuery : this.focusOutValue}
-                    onChange={event => this.updateGeneQuery(event.currentTarget.value)}
+                    defaultValue={this.getTextAreaValue()}
+                    onChange={event => {
+                        this.currentTextAreaValue = event.currentTarget.value;
+                        this.updateQueryToBeValidateDebounce();
+                    }}
                     data-test='geneSet'
                 />
 
                 <GeneSymbolValidator
-                    oql={this.oql}
-                    geneQueryErrorDisplayStatus={this.geneQueryErrorDisplayStatus}
-                    geneQuery={this.geneQuery}
-                    genes={this.genes}
+                    geneQuery={this.queryToBeValidated}
+                    skipGeneValidation={this.skipGenesValidation}
                     updateGeneQuery={this.updateGeneQuery}
-                    hideSuccessMessage={this.props.location === GeneBoxType.STUDY_VIEW_PAGE}
-                    hideValidatingMessage={this.props.location === GeneBoxType.STUDY_VIEW_PAGE}
+                    afterValidation={this.afterGeneSymbolValidation}
+                    errorMessageOnly={this.props.location === GeneBoxType.STUDY_VIEW_PAGE}
                 />
 
             </div>
