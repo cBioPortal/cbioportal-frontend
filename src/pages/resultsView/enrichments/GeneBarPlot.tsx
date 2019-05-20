@@ -11,7 +11,7 @@ import _ from "lodash";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from "shared/api/generated/CBioPortalAPI";
-import { getEnrichmentBarPlotData, getGeneListOptions, USER_DEFINED_OPTION } from './EnrichmentsUtil';
+import { getEnrichmentBarPlotData, getGeneListOptions, USER_DEFINED_OPTION, CNA_TO_ALTERATION, AlterationContainerType } from './EnrichmentsUtil';
 import styles from "./frequencyPlotStyles.module.scss";
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
@@ -20,6 +20,8 @@ export interface IGeneBarPlotProps {
     data: AlterationEnrichmentRow[];
     groupOrder?: string[];
     isTwoGroupAnalysis?: boolean;
+    showCNAInTable?: boolean;
+    containerType: AlterationContainerType;
 }
 
 const SVG_ID = "GroupComparisonGeneFrequencyPlot";
@@ -47,7 +49,14 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
     }
 
     @computed get geneDataSet() {
-        return _.keyBy(this.props.data, datum => datum.hugoGeneSymbol);
+        return _.keyBy(this.props.data, datum => {
+            if (this.props.showCNAInTable) {
+                //add copy number alteration type 'amp' or 'del'
+                return datum.hugoGeneSymbol + ' ' + CNA_TO_ALTERATION[datum.value!];
+            } else {
+                return datum.hugoGeneSymbol;
+            }
+        });
     }
 
     @computed get barPlotData() {
@@ -60,6 +69,10 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
             genes = this.defaultOption.value.split(/\s+/g);
         } else {
             genes = this.selectedGenes;
+        }
+        if (this.props.showCNAInTable) {
+            //add copy number alteration type
+            genes = _.flatMap(genes, gene => [gene + ' ' + CNA_TO_ALTERATION[2], gene + ' ' + CNA_TO_ALTERATION[-2]]);
         }
         //add significant genes(geneSymbols with *) to the list
         return _.flatMap(genes, gene => [gene + '*', gene]);
@@ -83,7 +96,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
     private getTooltip(datum: any) {
         let geneSymbol = datum.majorCategory as string;
         // get rid of a trailing *
-        geneSymbol = geneSymbol.replace(/\*$/,"");
+        geneSymbol = geneSymbol.replace(/\*$/, "");
         let geneData = this.geneDataSet[geneSymbol];
         //use groupOrder inorder of sorted groups
         let groupRows = _.map(this.props.groupOrder, groupName => {
@@ -100,7 +113,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
         })
 
         return (<div>
-            <strong>{geneSymbol} Mutation Frequency </strong><br />
+            <strong>{geneSymbol} {this.yAxislabel}</strong><br />
             <table className="table table-bordered">
                 <thead>
                     <tr>
@@ -154,6 +167,10 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
         );
     }
 
+    @computed private get yAxislabel() {
+        return this.props.containerType === AlterationContainerType.MUTATION ? 'Mutation frequency' : 'Copy-number alteration frequency';
+    }
+
     public render() {
         let width: number | undefined;
         if (this.props.isTwoGroupAnalysis) {
@@ -180,7 +197,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                         axisStyle={{ tickLabels: { fontSize: 10 } }}
                         horzCategoryOrder={this.barPlotOrderedGenes}
                         vertCategoryOrder={this.props.groupOrder}
-                        countAxisLabel="percentages"
+                        countAxisLabel={`${this.yAxislabel} (%)`}
                         tooltip={this.getTooltip}
                     />
                 </div>
