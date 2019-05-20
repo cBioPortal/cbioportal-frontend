@@ -177,9 +177,9 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
             width = 600;
         }
         return (
-            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ overflowX:'auto', overflowY:'hidden', flexGrow:1  }}>
+            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ overflow:'auto', overflowY:'hidden', flexGrow:1  }}>
                 {this.toolbar}
-                <div style={{ position: "absolute" }}>
+                <div style={{ position: this.props.isTwoGroupAnalysis ? 'absolute' : 'static' }}>
                     <MultipleCategoryBarPlot
                         svgId={SVG_ID}
                         barWidth={this.props.isTwoGroupAnalysis ? 10 : 20}
