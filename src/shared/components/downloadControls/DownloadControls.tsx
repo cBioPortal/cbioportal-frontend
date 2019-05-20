@@ -25,6 +25,7 @@ interface IDownloadControlsProps {
     additionalRightButtons?:ButtonSpec[]
     dontFade?:boolean;
     collapse?:boolean;
+    collapseButtonGroup?:boolean;
     style?:any;
 }
 
@@ -151,26 +152,44 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
     render() {
         let element:any = null
         if (this.props.collapse) {
-            element = (
-                <div style={Object.assign({ zIndex:10 },this.props.style)}>
+            if (this.props.collapseButtonGroup) {
+                element = (
                     <DefaultTooltip
                         mouseEnterDelay={0}
                         onVisibleChange={this.onTooltipVisibleChange}
                         overlay={<div className={classnames("cbioportal-frontend", styles.downloadControls)} style={{display:"flex", flexDirection:"column"}}>{this.buttonSpecs.map(makeMenuItem)}</div>}
                         placement="bottom"
                     >
-                        <div style={{cursor:"pointer"}}>
-                            <div
-                                key="collapsedIcon"
-                                className={classnames("btn", "btn-default", "btn-xs", {"active":!this.collapsed} )}
-                                style={{pointerEvents:"none"}}
-                            >
-                                <span><i className="fa fa-cloud-download" aria-hidden="true"/></span>
-                            </div>
+                        <div
+                            style={Object.assign({cursor:"pointer"}, this.props.style)}
+                            className={classnames("btn btn-group btn-default btn-xs", {"active":!this.collapsed} )}
+                        >
+                            <i style={{pointerEvents:"none"}} className="fa fa-cloud-download" aria-hidden="true"/>
                         </div>
                     </DefaultTooltip>
-                </div>
-            );
+                );
+            } else {
+                element = (
+                    <div style={Object.assign({ zIndex:10 },this.props.style)}>
+                        <DefaultTooltip
+                            mouseEnterDelay={0}
+                            onVisibleChange={this.onTooltipVisibleChange}
+                            overlay={<div className={classnames("cbioportal-frontend", styles.downloadControls)} style={{display:"flex", flexDirection:"column"}}>{this.buttonSpecs.map(makeMenuItem)}</div>}
+                            placement="bottom"
+                        >
+                            <div style={{cursor:"pointer"}}>
+                                <div
+                                    key="collapsedIcon"
+                                    className={classnames("btn btn-default btn-xs", {"active":!this.collapsed} )}
+                                    style={{pointerEvents:"none"}}
+                                >
+                                    <span><i className="fa fa-cloud-download" aria-hidden="true"/></span>
+                                </div>
+                            </div>
+                        </DefaultTooltip>
+                    </div>
+                );
+            }
         } else {
             element = (
                 <div role="group" className="btn-group chartDownloadButtons" style={this.props.style||{}}>
