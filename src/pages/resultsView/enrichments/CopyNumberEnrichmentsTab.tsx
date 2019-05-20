@@ -9,6 +9,7 @@ import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import autobind from 'autobind-decorator';
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
+import { AlterationContainerType } from './EnrichmentsUtil';
 
 export interface ICopyNumberEnrichmentsTabProps {
     store: ResultsViewPageStore
@@ -51,7 +52,8 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                                 }
                             ]}
                             headerName={"Deep Deletion - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
-                            store={this.props.store} />
+                            store={this.props.store}
+                            containerType={AlterationContainerType.COPY_NUMBER} />
                         <hr />
                         <AlterationEnrichmentContainer data={this.props.store.copyNumberAmpEnrichmentData.result!}
                             groups={[
@@ -68,7 +70,8 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                                 }
                             ]}
                             headerName={"Amplification - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
-                            store={this.props.store} />
+                            store={this.props.store} 
+                            containerType={AlterationContainerType.COPY_NUMBER} />
                     </div>
                 );
         }

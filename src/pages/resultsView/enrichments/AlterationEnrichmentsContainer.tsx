@@ -8,7 +8,7 @@ import styles from "./styles.module.scss";
 import {
     getAlterationScatterData,
     getAlterationRowData,
-    getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getFilteredDataByGroups, getGroupColumns
+    getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getFilteredDataByGroups, getGroupColumns, AlterationContainerType
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
@@ -27,6 +27,7 @@ export interface IAlterationEnrichmentContainerProps {
     headerName: string;
     store?: ResultsViewPageStore;
     showCNAInTable?:boolean;
+    containerType:AlterationContainerType;
 }
 
 @observer
@@ -213,6 +214,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         data={this.data}
                         isTwoGroupAnalysis={this.isTwoGroupAnalysis}
                         groupOrder={this.props.groups.map(group => group.name)}
+                        showCNAInTable={this.props.showCNAInTable}
+                        containerType={this.props.containerType}
                     />
                 </div>
 

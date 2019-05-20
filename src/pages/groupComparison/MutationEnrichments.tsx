@@ -11,6 +11,7 @@ import { MakeMobxView } from "../../shared/components/MobxView";
 import { MakeEnrichmentsTabUI, getNumSamples } from "./GroupComparisonUtils";
 import { remoteData } from "shared/api/remoteData";
 import _ from "lodash";
+import { AlterationContainerType } from "pages/resultsView/enrichments/EnrichmentsUtil";
 
 export interface IMutationEnrichmentsProps {
     store: GroupComparisonStore
@@ -55,6 +56,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                         groups={this.enrichmentAnalysisGroups.result}
                         alteredVsUnalteredMode={false}
                         headerName={this.props.store.mutationEnrichmentProfile.result!.name}
+                        containerType={AlterationContainerType.MUTATION}
                     />
                 </div>
             );
