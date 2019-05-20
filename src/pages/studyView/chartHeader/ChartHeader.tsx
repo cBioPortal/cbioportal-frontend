@@ -109,7 +109,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <i className={classnames("fa", "fa-undo", styles.menuItemIcon, styles.undo)}
                        aria-hidden="true"
                    />
-                    Reset filters in chart
+                    Reset Filters
                 </MenuItem>
             );
         }
@@ -122,7 +122,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <i className={classnames("fa", "fa-table", styles.menuItemIcon)}
                        aria-hidden="true"
                     />
-                    Convert pie chart to table
+                    Show Table
                 </MenuItem>
             );
         }
@@ -135,7 +135,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <i className={classnames("fa", "fa-pie-chart", styles.menuItemIcon)}
                        aria-hidden="true"
                     />
-                    Convert table to pie chart
+                    Show Pie
                 </MenuItem>
             );
         }
@@ -149,7 +149,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                          width={13}
                          style={{marginRight:4}}
                     />
-                    Compare groups
+                    Compare Groups
                 </MenuItem>
             );
         }
