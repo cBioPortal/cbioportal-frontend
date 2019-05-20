@@ -20,9 +20,19 @@ import { IMultipleCategoryBarPlotData } from 'shared/components/plots/MultipleCa
 export type AlterationEnrichmentWithQ = AlterationEnrichment & { logRatio?:number, qValue:number, value?:number /* used for copy number in group comparison */ };
 export type ExpressionEnrichmentWithQ = ExpressionEnrichment & { qValue:number };
 
+export const CNA_TO_ALTERATION:{[cna:number]:string} = {
+    "2": "amp",
+    "-2": "del"
+};
+
 export const USER_DEFINED_OPTION = {
     label: 'User-defined List',
     value: ''
+}
+
+export enum AlterationContainerType {
+    MUTATION="MUTATION",
+    COPY_NUMBER="COPY_NUMBER"
 }
 
 export function PERCENTAGE_IN_headerRender(name:string) {
