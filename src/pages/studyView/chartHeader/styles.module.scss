@@ -18,15 +18,10 @@ $iconFontSize: 14px;
 }
 
 .controls {
-  color: grey;
-  display: flex;
-  align-items: center;
-  padding: 2px;
   position:absolute;
   border-radius:$border-radius-base;
-  left:2px;
-  top:2px;
-  background:$lightGrey;
+  right:-1px;
+  top:-1px;
 }
 
 .menuToggle {
@@ -42,13 +37,11 @@ $iconFontSize: 14px;
 
 .item {
   margin-left:4px;
-  &:last-of-type {
-    margin-right:4px;
-  }
 }
 
 .menuItemIcon {
   margin-right: 7px;
+  margin-left:-10px;
 }
 
 .survivalIcon {
