@@ -106,6 +106,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         if (this.props.chartControls && !!this.props.chartControls.showResetIcon) {
             items.push(
                 <MenuItem onClick={this.props.resetChart}>
+                    <i className={classnames("fa", "fa-undo", styles.menuItemIcon, styles.undo)}
+                       aria-hidden="true"
+                   />
                     Reset filters in chart
                 </MenuItem>
             );
@@ -116,6 +119,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 <MenuItem
                     onClick={() => this.props.changeChartType(ChartTypeEnum.TABLE)}
                 >
+                    <i className={classnames("fa", "fa-table", styles.menuItemIcon)}
+                       aria-hidden="true"
+                    />
                     Convert pie chart to table
                 </MenuItem>
             );
@@ -126,6 +132,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 <MenuItem
                     onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}
                 >
+                    <i className={classnames("fa", "fa-pie-chart", styles.menuItemIcon)}
+                       aria-hidden="true"
+                    />
                     Convert table to pie chart
                 </MenuItem>
             );
@@ -136,10 +145,25 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 <MenuItem
                     onClick={this.props.openComparisonPage}
                 >
-                    Compare samples in these groups
+                    <img src={require("../../../rootImages/compare_vs.png")}
+                         width={13}
+                         style={{marginRight:4}}
+                    />
+                    Compare groups
                 </MenuItem>
             );
         }
+
+        items.push(
+            <MenuItem
+                onClick={this.props.deleteChart}
+            >
+                <i className={classnames("fa", "fa-times", styles.menuItemIcon)}
+                   aria-hidden="true"
+                />
+                Delete Chart
+            </MenuItem>
+        );
 
         return items;
     }
@@ -171,6 +195,66 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 </Dropdown.Menu>
                             </Dropdown>
                         )}
+                        <div role="group" className="btn-group logScaleCheckbox">
+                            <If condition={this.props.chartControls && !!this.props.chartControls.showLogScaleToggle}>
+                                <LabeledCheckbox
+                                    checked={this.props.chartControls && this.props.chartControls.logScaleChecked}
+                                    onChange={event => {
+                                        if (this.props.toggleLogScale) {
+                                            this.props.toggleLogScale();
+                                        }
+                                    }}
+                                >
+                                    <span>Log Scale</span>
+                                </LabeledCheckbox>
+                            </If>
+                        </div>
+                        <If condition={this.props.chartControls && !!this.props.chartControls.showResetIcon}>
+                            <DefaultTooltip
+                                placement={tooltipPosition}
+                                align={tooltipAlign}
+                                overlay={<span>Reset filters in chart</span>}
+                                destroyTooltipOnHide={true}
+                            >
+                                <i className={classnames("fa", "fa-undo", styles.item, styles.clickable, styles.undo)}
+                                   aria-hidden="true" onClick={() => this.props.resetChart()}></i>
+                            </DefaultTooltip>
+                        </If>
+                        <If condition={this.props.chartControls && !!this.props.chartControls.showTableIcon}>
+                            <DefaultTooltip
+                                placement={tooltipPosition}
+                                align={tooltipAlign}
+                                overlay={<span>Convert pie chart to table</span>}
+                            >
+                                <i className={classnames("fa", "fa-table", styles.item, styles.clickable)}
+                                   aria-hidden="true"
+                                   onClick={() => this.props.changeChartType(ChartTypeEnum.TABLE)}></i>
+                            </DefaultTooltip>
+                        </If>
+                        <If condition={this.props.chartControls && !!this.props.chartControls.showPieIcon}>
+                            <DefaultTooltip
+                                placement={tooltipPosition}
+                                align={tooltipAlign}
+                                overlay={<span>Convert table to pie chart</span>}
+                            >
+                                <i className={classnames("fa", "fa-pie-chart", styles.item, styles.clickable)}
+                                   aria-hidden="true"
+                                   onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}></i>
+                            </DefaultTooltip>
+                        </If>
+                        <If condition={this.props.chartControls && this.props.chartControls.showComparisonPageIcon}>
+                            <DefaultTooltip
+                                placement={tooltipPosition}
+                                align={tooltipAlign}
+                                overlay={<span>Compare groups</span>}
+                            >
+                                <img src={require("../../../rootImages/compare_vs.png")}
+                                     width={13}
+                                     style={{marginLeft:4, cursor:"pointer"}}
+                                     onClick={this.props.openComparisonPage}
+                                />
+                            </DefaultTooltip>
+                        </If>
                         <If condition={!!this.props.chartMeta.description}>
                             <DefaultTooltip
                                 trigger={["hover","click"]}
@@ -201,7 +285,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         >
                             <i className={classnames("fa", "fa-times", styles.item, styles.clickable)}
                                style={{marginRight:4}}
-                               aria-hidden="true" onClick={() => this.props.deleteChart()}></i>
+                               aria-hidden="true" onClick={this.props.deleteChart}></i>
                         </DefaultTooltip>
                     </div>
                 )}
