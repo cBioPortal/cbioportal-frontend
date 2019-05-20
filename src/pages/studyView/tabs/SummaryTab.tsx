@@ -81,13 +81,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 this.store.addCNAGeneFilters(genes);
             },
             onDeleteChart: (chartMeta: ChartMeta) => {
-                // reset analysis groups settings if theyre based on this chart
-                if (this.store.analysisGroupsSettings.clinicalAttribute &&
-                        chartMeta.clinicalAttribute &&
-                        chartMeta.clinicalAttribute.clinicalAttributeId === this.store.analysisGroupsSettings.clinicalAttribute.clinicalAttributeId) {
-                    this.store.clearAnalysisGroupsSettings();
-                }
-
                 this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
             },
             onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => {
@@ -132,10 +125,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             onDeleteChart: this.handlers.onDeleteChart,
             isNewlyAdded: this.handlers.isNewlyAdded,
             studyViewFilters: this.store.filters,
-            analysisGroupsPossible:this.store.analysisGroupsPossible,
-            setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grps:ReadonlyArray<AnalysisGroup>)=>{
-                this.store.updateAnalysisGroupsSettings(attribute, grps);
-            },
             analysisGroupsSettings: this.store.analysisGroupsSettings
         };
 

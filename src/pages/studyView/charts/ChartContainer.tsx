@@ -73,10 +73,8 @@ export interface IChartContainerProps {
         chartMeta: ChartMeta,
         clinicalAttributeValues?:{ value:string, color:string }[]
     })=>void;
-    setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
     patientKeysWithNAInSelectedClinicalData?:MobxPromise<string[]>; // patients which have NA values for filtered clinical attributes
-    analysisGroupsPossible?:boolean;
     patientToAnalysisGroup?:MobxPromise<{[uniquePatientKey:string]:string}>;
     sampleToAnalysisGroup?:MobxPromise<{[uniqueSampleKey:string]:string}>;
 }
@@ -181,9 +179,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 break;
             }
         }
-        if (this.analysisGroupsPossible) {
-            controls.showAnalysisGroupsIcon = true;
-        }
         if (this.comparisonPagePossible) {
             controls.showComparisonPageIcon = true;
         }
@@ -198,22 +193,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     changeChartType(chartType: ChartType) {
         this.chartType = chartType;
         this.handlers.onChangeChartType(chartType);
-    }
-
-
-    @computed
-    get analysisGroupsPossible() {
-        return !!this.props.analysisGroupsPossible &&
-            (this.chartType === ChartTypeEnum.PIE_CHART || this.chartType === ChartTypeEnum.TABLE) &&
-            !!this.props.chartMeta.clinicalAttribute;
-    }
-
-    @autobind
-    @action
-    setAnalysisGroups() {
-        if (this.analysisGroupsPossible) {
-            this.props.setAnalysisGroupsSettings(this.props.chartMeta.clinicalAttribute!, this.props.promise.result as ClinicalDataCountWithColor[]);
-        }
     }
 
     @computed
@@ -367,7 +346,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        patientSurvivals={data.patientSurvivals}
                                        patientToAnalysisGroups={data.patientToAnalysisGroups}
                                        analysisGroups={data.analysisGroups}
-                                       analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
                                        naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
                                        showNaPatientsHiddenToggle={this.props.patientKeysWithNAInSelectedClinicalData!.result!.length > 0}
                                        toggleSurvivalHideNAPatients={this.toggleSurvivalHideNAPatients}
@@ -446,15 +424,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return ret;
     }
 
-    @computed get isAnalysisTarget() {
-        return this.props.analysisGroupsSettings.clinicalAttribute &&
-                this.props.chartMeta.clinicalAttribute &&
-            (this.props.analysisGroupsSettings.clinicalAttribute.clinicalAttributeId === this.props.chartMeta.clinicalAttribute.clinicalAttributeId);
-    }
-
     @computed
     get highlightChart() {
-        return this.newlyAdded || this.isAnalysisTarget;
+        return this.newlyAdded;
     }
 
     componentDidMount() {
@@ -490,7 +462,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     getSVG={()=>Promise.resolve(this.toSVGDOMNode())}
                     getData={this.props.getData}
                     downloadTypes={this.props.downloadTypes}
-                    setAnalysisGroups={this.setAnalysisGroups}
                     openComparisonPage={this.openComparisonPage}
                 />
                 <div style={{display: 'flex', flexGrow: 1, margin: 'auto', alignItems: 'center'}}>
