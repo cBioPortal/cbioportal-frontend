@@ -177,10 +177,9 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
             width = 600;
         }
         return (
-            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ width, overflow: "hidden" }}>
-                <ScrollBar style={{ top: -5 }} getScrollEl={this.getScrollPane} />
+            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ overflowX:'auto', overflowY:'hidden', flexGrow:1  }}>
                 {this.toolbar}
-                <div ref={this.assignScrollPaneRef} style={{ position: "relative", display: "inline-block" }}>
+                <div style={{ position: "absolute" }}>
                     <MultipleCategoryBarPlot
                         svgId={SVG_ID}
                         barWidth={this.props.isTwoGroupAnalysis ? 10 : 20}
