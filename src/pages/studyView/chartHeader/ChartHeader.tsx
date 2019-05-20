@@ -38,7 +38,6 @@ export interface IChartHeaderProps {
     getSVG?          : ()=>Promise<SVGElement | null>;
     getData?         : ()=>Promise<string | null>;
     downloadTypes?   : DownloadControlsButton[];
-    setAnalysisGroups  : () => void;
     openComparisonPage : () => void;
 }
 
@@ -46,7 +45,6 @@ export interface ChartControls {
     showResetIcon?      : boolean;
     showTableIcon?      : boolean;
     showPieIcon?        : boolean;
-    showAnalysisGroupsIcon?   : boolean;
     showComparisonPageIcon?   : boolean;
     showLogScaleToggle? : boolean;
     logScaleChecked?    : boolean;
@@ -139,16 +137,6 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     onClick={this.props.openComparisonPage}
                 >
                     Compare samples in these groups
-                </MenuItem>
-            );
-        }
-
-        if (this.props.chartControls && !!this.props.chartControls.showAnalysisGroupsIcon) {
-            items.push(
-                <MenuItem
-                    onClick={this.props.setAnalysisGroups}
-                >
-                    Survival Analysis
                 </MenuItem>
             );
         }
