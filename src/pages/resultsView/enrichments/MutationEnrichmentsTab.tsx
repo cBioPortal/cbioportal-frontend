@@ -8,6 +8,7 @@ import EnrichmentsDataSetDropdown from 'pages/resultsView/enrichments/Enrichment
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import autobind from 'autobind-decorator';
 import ErrorMessage from "../../../shared/components/ErrorMessage";
+import { AlterationContainerType } from './EnrichmentsUtil';
 
 export interface IMutationEnrichmentsTabProps {
     store: ResultsViewPageStore
@@ -48,7 +49,9 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
                                 nameOfEnrichmentDirection: "Mutual exclusivity",
                                 count: this.props.store.unalteredSampleKeys.result!.length
                             }
-                        ]} />
+                        ]}
+                        containerType={AlterationContainerType.MUTATION}
+                        />
                 </div>
             );
         }
