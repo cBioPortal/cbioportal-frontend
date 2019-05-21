@@ -212,8 +212,15 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     overlay={<span>Reset filters in chart</span>}
                                     destroyTooltipOnHide={true}
                                 >
-                                    <i className={classnames("btn btn-xs btn-default", "fa fa-xs", "fa-undo", styles.undo, styles.item, styles.clickable)}
-                                        aria-hidden="true" onClick={() => this.props.resetChart()}/>
+                                    <button
+                                        className={classnames("btn btn-xs btn-default", styles.item)}
+                                        onClick={this.props.resetChart}
+                                    >
+                                        <i
+                                            className={classnames("fa fa-xs", "fa-undo", styles.undo, styles.clickable)}
+                                            aria-hidden="true"
+                                        />
+                                    </button>
                                 </DefaultTooltip>
                             </If>
                             <If condition={this.props.chartControls && !!this.props.chartControls.showTableIcon}>
@@ -222,9 +229,14 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     align={tooltipAlign}
                                     overlay={<span>Convert pie chart to table</span>}
                                 >
-                                    <i className={classnames("btn btn-xs btn-default", "fa fa-xs", "fa-table", styles.item, styles.clickable)}
-                                       aria-hidden="true"
-                                       onClick={() => this.props.changeChartType(ChartTypeEnum.TABLE)}/>
+                                    <button
+                                        className={classnames("btn btn-xs btn-default", styles.item)}
+                                        onClick={() => this.props.changeChartType(ChartTypeEnum.TABLE)}
+                                    >
+                                        <i className={classnames( "fa fa-xs", "fa-table", styles.clickable)}
+                                           aria-hidden="true"
+                                        />
+                                    </button>
                                 </DefaultTooltip>
                             </If>
                             <If condition={this.props.chartControls && !!this.props.chartControls.showPieIcon}>
@@ -233,9 +245,14 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     align={tooltipAlign}
                                     overlay={<span>Convert table to pie chart</span>}
                                 >
-                                    <i className={classnames("btn btn-xs btn-default", "fa fa-xs", "fa-pie-chart", styles.item, styles.clickable)}
-                                       aria-hidden="true"
-                                       onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}></i>
+                                    <button
+                                        className={classnames("btn btn-xs btn-default", styles.item)}
+                                        onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}
+                                    >
+                                        <i className={classnames("fa fa-xs", "fa-pie-chart", styles.clickable)}
+                                           aria-hidden="true"
+                                        />
+                                    </button>
                                 </DefaultTooltip>
                             </If>
                             <If condition={this.props.chartControls && this.props.chartControls.showComparisonPageIcon}>
@@ -244,12 +261,14 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     align={tooltipAlign}
                                     overlay={<span>Compare groups</span>}
                                 >
-                                    <div className="btn btn-xs btn-default">
+                                    <div
+                                        className="btn btn-xs btn-default"
+                                        onClick={this.props.openComparisonPage}
+                                    >
                                         <img
                                             src={require("../../../rootImages/compare_vs.svg")}
                                              width={13}
                                              style={{marginTop:-2}}
-                                             onClick={this.props.openComparisonPage}
                                         />
                                     </div>
                                 </DefaultTooltip>
@@ -262,28 +281,28 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description)}
                                     destroyTooltipOnHide={true}
                                 >
-                                    <i
-                                        className={classnames("btn btn-xs btn-default", "fa fa-xs", "fa-info-circle", styles.item, styles.clickable)}
-                                        aria-hidden="true"
-                                    />
+                                    <div
+                                        className={classnames("btn btn-xs btn-default", styles.item)}
+                                    >
+                                        <i
+                                            className={classnames("fa fa-xs", "fa-info-circle", styles.clickable)}
+                                            aria-hidden="true"
+                                        />
+                                    </div>
                                 </DefaultTooltip>
                             </If>
                             <DefaultTooltip
                                 placement={tooltipPosition}
                                 align={tooltipAlign}
-                                overlay={<span>Move chart</span>}
-                            >
-                                <i className={classnames("btn btn-xs btn-default", "fa fa-xs", "fa-arrows", styles.draggable, styles.item, styles.clickable)}
-                                   aria-hidden="true"
-                                />
-                            </DefaultTooltip>
-                            <DefaultTooltip
-                                placement={tooltipPosition}
-                                align={tooltipAlign}
                                 overlay={<span>Delete chart</span>}
                             >
-                                <i className={classnames("btn btn-xs btn-default", "fa fa-xs", "fa-times", styles.item, styles.clickable)}
-                                   aria-hidden="true" onClick={this.props.deleteChart}></i>
+                                <button
+                                    className={classnames("btn btn-xs btn-default", styles.item)}
+                                    onClick={this.props.deleteChart}
+                                >
+                                    <i className={classnames("fa fa-xs", "fa-times", styles.clickable)}
+                                       aria-hidden="true"></i>
+                                </button>
                             </DefaultTooltip>
                             <DownloadControls
                                 filename={this.fileName}
