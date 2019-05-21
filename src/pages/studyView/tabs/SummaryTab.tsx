@@ -1,5 +1,6 @@
 import * as React from 'react';
 import styles from "./studySummaryTabStyles.module.scss";
+import chartHeaderStyles from "../chartHeader/styles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
 import {observable} from 'mobx';
 import {
@@ -338,7 +339,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                                              layout={this.store.studyViewPageLayoutProps.layout}
                                              margin={[STUDY_VIEW_CONFIG.layout.gridMargin.x, STUDY_VIEW_CONFIG.layout.gridMargin.y]}
                                              useCSSTransforms={false}
-                                             draggableHandle={'.fa-arrows'}
+                                             draggableHandle={`.${chartHeaderStyles.draggable}`}
                                              onLayoutChange={this.handlers.onLayoutChange} >
                                 {this.store.visibleAttributes.map(this.renderAttributeChart)}
                             </ReactGridLayout>
