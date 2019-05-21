@@ -191,8 +191,27 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 {this.active && (
                     <div className={classnames(styles.controls, 'controls')}>
                         <div className="btn-group">
-                            <div role="group" className="btn-group logScaleCheckbox">
-                                <If condition={this.props.chartControls && !!this.props.chartControls.showLogScaleToggle}>
+                            <If condition={!!this.props.chartMeta.description}>
+                                <DefaultTooltip
+                                    mouseEnterDelay={0}
+                                    trigger={["hover"]}
+                                    placement={tooltipPosition}
+                                    align={tooltipAlign}
+                                    overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description)}
+                                    destroyTooltipOnHide={true}
+                                >
+                                    <div
+                                        className={classnames("btn btn-xs btn-default", styles.item)}
+                                    >
+                                        <i
+                                            className={classnames("fa fa-xs", "fa-info-circle", styles.clickable)}
+                                            aria-hidden="true"
+                                        />
+                                    </div>
+                                </DefaultTooltip>
+                            </If>
+                            <If condition={this.props.chartControls && !!this.props.chartControls.showLogScaleToggle}>
+                                <div role="group" className="btn-group logScaleCheckbox">
                                     <LabeledCheckbox
                                         checked={this.props.chartControls && this.props.chartControls.logScaleChecked}
                                         onChange={event => {
@@ -203,8 +222,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     >
                                         <span>Log Scale</span>
                                     </LabeledCheckbox>
-                                </If>
-                            </div>
+                                </div>
+                            </If>
                             <If condition={this.props.chartControls && !!this.props.chartControls.showResetIcon}>
                                 <DefaultTooltip
                                     placement={tooltipPosition}
@@ -269,24 +288,6 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                             src={require("../../../rootImages/compare_vs.svg")}
                                              width={13}
                                              style={{marginTop:-2}}
-                                        />
-                                    </div>
-                                </DefaultTooltip>
-                            </If>
-                            <If condition={!!this.props.chartMeta.description}>
-                                <DefaultTooltip
-                                    trigger={["hover","click"]}
-                                    placement={tooltipPosition}
-                                    align={tooltipAlign}
-                                    overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description)}
-                                    destroyTooltipOnHide={true}
-                                >
-                                    <div
-                                        className={classnames("btn btn-xs btn-default", styles.item)}
-                                    >
-                                        <i
-                                            className={classnames("fa fa-xs", "fa-info-circle", styles.clickable)}
-                                            aria-hidden="true"
                                         />
                                     </div>
                                 </DefaultTooltip>
