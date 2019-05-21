@@ -32,8 +32,10 @@ export interface IMultipleCategoryBarPlotProps {
     legendLocationWidthThreshold?: number;
     percentage?:boolean;
     stacked?:boolean;
-    ticksCount?:number
-    axisStyle?:any
+    ticksCount?:number;
+    axisStyle?:any;
+    countAxisLabel?: string;
+    tooltip?:(datum:any)=> JSX.Element;
 }
 
 export interface IMultipleCategoryBarPlotData {
@@ -50,10 +52,14 @@ const DEFAULT_BOTTOM_PADDING = 10;
 const LEGEND_ITEMS_PER_ROW = 4;
 const BOTTOM_LEGEND_PADDING = 15;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
-const COUNT_AXIS_LABEL = "# samples";
 
 @observer
 export default class MultipleCategoryBarPlot extends React.Component<IMultipleCategoryBarPlotProps, {}> {
+
+    static defaultProps:Partial<IMultipleCategoryBarPlotProps> = {
+        countAxisLabel: "# samples"
+    };
+
     @observable.ref tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;
     private mouseEvents:any = this.makeMouseEvents();
@@ -400,13 +406,27 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         return this.props.stacked ? this.props.axisStyle || {} : { axis: { stroke: "#b3b3b3" } };
     }
 
+    @computed get categoryAxisStyle() {
+        let style = this.axisStyle
+        if (!this.props.stacked) {
+            let width = this.categoryCoord(this.data.length) - (this.data.length * this.barSeparation);
+            style = {
+                ...this.axisStyle,
+                ...{ axis: { strokeWidth: 0 } },
+                ...{ ticks: { stroke: "black", size: 1, strokeLinecap: "butt", strokeLinejoin: "butt", strokeWidth: width } }
+            };
+        }
+        return style;
+    }
+
     @computed get horzAxis() {
         // several props below are undefined in horizontal mode, thats because in horizontal mode
         //  this axis is for numbers, not categories
         const label = [this.props.axisLabelX];
         if (this.props.horizontalBars) {
-            label.unshift(`${COUNT_AXIS_LABEL}${this.props.percentage ? " (%)": ""}`);
+            label.unshift(`${this.props.countAxisLabel}${this.props.percentage ? " (%)": ""}`);
         }
+        const style = this.props.horizontalBars ? this.axisStyle : this.categoryAxisStyle;
         return (
             <VictoryAxis
                 orientation="bottom"
@@ -422,7 +442,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                                                   textAnchor={this.props.horizontalBars ? undefined : "start"}
                 />}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? 35 : this.biggestCategoryLabelSize + 24}/>}
-                style={this.axisStyle}
+                style={style}
             />
         );
     }
@@ -430,8 +450,9 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     @computed get vertAxis() {
         const label = [this.props.axisLabelY];
         if (!this.props.horizontalBars) {
-            label.push(`${COUNT_AXIS_LABEL}${this.props.percentage ? " (%)": ""}`);
+            label.push(`${this.props.countAxisLabel}${this.props.percentage ? " (%)": ""}`);
         }
+        const style = !this.props.horizontalBars ? this.axisStyle : this.categoryAxisStyle;
         return (
             <VictoryAxis
                 orientation="left"
@@ -443,7 +464,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 tickCount={this.props.horizontalBars ? undefined : this.numberOfTicks}
                 tickFormat={this.props.horizontalBars ? this.formatCategoryTick : this.formatNumericalTick}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? -1*this.biggestCategoryLabelSize - 24 : -40}/>}
-                style={this.axisStyle}
+                style={style}
             />
         );
     }
@@ -573,6 +594,9 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     }
 
     private tooltip(datum:any) {
+        if(this.props.tooltip) {
+            return this.props.tooltip(datum);
+        }
         return (
             <div>
                 <strong>{datum.majorCategory}</strong><br/>
