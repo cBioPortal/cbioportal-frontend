@@ -155,11 +155,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @computed
-    get hideLabel() {
-        return this.chartType === ChartTypeEnum.TABLE;
-    }
-
-    @computed
     get chartControls(): ChartControls {
         let controls:Partial<ChartControls> = {};
         switch (this.chartType) {
@@ -304,7 +299,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                     filters={this.props.filters}
                     onUserSelection={this.handlers.onValueSelection}
-                    label={this.props.title}
+                    label={" "}
                     labelDescription={this.props.chartMeta.description}
                     patientAttribute={this.props.chartMeta.patientAttribute}
                     showAddRemoveAllButtons={this.mouseInChart}
@@ -456,7 +451,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     resetChart={this.handlers.resetFilters}
                     deleteChart={this.handlers.onDeleteChart}
                     toggleLogScale={this.handlers.onToggleLogScale}
-                    hideLabel={this.hideLabel}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
                     getSVG={()=>Promise.resolve(this.toSVGDOMNode())}
