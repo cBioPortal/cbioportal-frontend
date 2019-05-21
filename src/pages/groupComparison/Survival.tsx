@@ -67,10 +67,10 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             }
         },
         render:()=>{
+            let content: any = [];
             if (this.props.store._activeGroupsNotOverlapRemoved.result!.length > 10) {
-                return <span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>;
+                content.push(<span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>);
             } else {
-                let content: any = [];
                 switch (this.props.store.overlapStrategy) {
                     case OverlapStrategy.EXCLUDE:
                         content.push(<OverlapExclusionIndicator store={this.props.store} only="patient"/>);
@@ -93,9 +93,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         }
                         break;
                 }
-                content.push(this.survivalUI.component)
-                return content;
+                content.push(this.survivalUI.component);
             }
+            return (<div data-test="ComparisonPageSurvivalTabDiv">
+                {content}
+            </div>);
         },
         renderPending:()=><LoadingIndicator center={true} isLoading={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>,
