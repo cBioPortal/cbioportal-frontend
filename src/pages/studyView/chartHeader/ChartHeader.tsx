@@ -185,7 +185,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         return (
             <div className={classnames(styles.header, 'chartHeader')}
                  style={{position:"relative", height: `${this.props.height}px`, lineHeight: `${this.props.height}px`}}>
-                <div className={styles.name}>
+                <div className={classnames(styles.name, styles.draggable)}>
                     {!this.props.hideLabel && <span className='chartTitle'>{this.props.title}</span>}
                 </div>
                 {this.active && (
@@ -273,9 +273,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 align={tooltipAlign}
                                 overlay={<span>Move chart</span>}
                             >
-                                <i className={classnames("btn btn-xs btn-default", "fa fa-xs", "fa-arrows", styles.item, styles.clickable)}
+                                <i className={classnames("btn btn-xs btn-default", "fa fa-xs", "fa-arrows", styles.draggable, styles.item, styles.clickable)}
                                    aria-hidden="true"
-                                   style={{cursor: 'move'}}/>
+                                />
                             </DefaultTooltip>
                             <DefaultTooltip
                                 placement={tooltipPosition}
