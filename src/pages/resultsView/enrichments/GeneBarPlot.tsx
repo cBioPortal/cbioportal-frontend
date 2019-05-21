@@ -11,15 +11,17 @@ import _ from "lodash";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from "shared/api/generated/CBioPortalAPI";
-import { getEnrichmentBarPlotData, getGeneListOptions, USER_DEFINED_OPTION } from './EnrichmentsUtil';
-import { PlotType, plotTypeOptions } from 'pages/groupComparison/ClinicalData';
+import { getEnrichmentBarPlotData, getGeneListOptions, USER_DEFINED_OPTION, CNA_TO_ALTERATION, AlterationContainerType } from './EnrichmentsUtil';
 import styles from "./frequencyPlotStyles.module.scss";
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
+import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 
 export interface IGeneBarPlotProps {
     data: AlterationEnrichmentRow[];
-    groupOrder?: string[]
-    isTwoGroupAnalysis?: boolean
+    groupOrder?: string[];
+    isTwoGroupAnalysis?: boolean;
+    showCNAInTable?: boolean;
+    containerType: AlterationContainerType;
 }
 
 const SVG_ID = "GroupComparisonGeneFrequencyPlot";
@@ -30,7 +32,6 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
     @observable tooltipModel: any;
     @observable _geneQuery: string | undefined;
     @observable selectedGenes: string[] | undefined;
-    @observable plotType: PlotType = PlotType.Bar;
 
     private scrollPane: HTMLDivElement;
 
@@ -47,8 +48,19 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
         return this.geneListOptions.length > 1 ? this.geneListOptions[1] : this.geneListOptions[0];
     }
 
+    @computed get geneDataSet() {
+        return _.keyBy(this.props.data, datum => {
+            if (this.props.showCNAInTable) {
+                //add copy number alteration type 'amp' or 'del'
+                return datum.hugoGeneSymbol + ' ' + CNA_TO_ALTERATION[datum.value!];
+            } else {
+                return datum.hugoGeneSymbol;
+            }
+        });
+    }
+
     @computed get barPlotData() {
-        return getEnrichmentBarPlotData(this.props.data, this.barPlotOrderedGenes);
+        return getEnrichmentBarPlotData(this.geneDataSet, this.barPlotOrderedGenes);
     }
 
     @computed get barPlotOrderedGenes() {
@@ -58,7 +70,12 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
         } else {
             genes = this.selectedGenes;
         }
-        return genes;
+        if (this.props.showCNAInTable) {
+            //add copy number alteration type
+            genes = _.flatMap(genes, gene => [gene + ' ' + CNA_TO_ALTERATION[2], gene + ' ' + CNA_TO_ALTERATION[-2]]);
+        }
+        //add significant genes(geneSymbols with *) to the list
+        return _.flatMap(genes, gene => [gene + '*', gene]);
     }
 
     @autobind
@@ -76,57 +93,48 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
     }
 
     @autobind
-    @action
-    private onPlotTypeSelect(option: any) {
-        this.plotType = option.value
-    }
+    private getTooltip(datum: any) {
+        let geneSymbol = datum.majorCategory as string;
+        // get rid of a trailing *
+        geneSymbol = geneSymbol.replace(/\*$/, "");
+        let geneData = this.geneDataSet[geneSymbol];
+        //use groupOrder inorder of sorted groups
+        let groupRows = _.map(this.props.groupOrder, groupName => {
+            const group = geneData.groupsSet[groupName];
+            let style: any = {};
+            //bold row corresponding to highlighed bar
+            if (datum.minorCategory === group.name) {
+                style = { fontWeight: "bold" };
+            }
+            return (<tr style={style}>
+                <td>{group.name}</td>
+                <td>{group.alteredPercentage.toFixed(2)}% ({group.alteredCount}/{group.profiledCount})</td>
+            </tr>)
+        })
 
-    @computed get selectedPlotType() {
-        return plotTypeOptions.find(option => option.value === this.plotType);
+        return (<div>
+            <strong>{geneSymbol} {this.yAxislabel}</strong><br />
+            <table className="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">Group</th>
+                        <th scope="col">Percentage Altered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {groupRows}
+                </tbody>
+
+            </table>
+            <strong>p-Value</strong>: {toConditionalPrecision(geneData.pValue, 3, 0.01)}<br />
+            <strong>q-Value</strong>: {toConditionalPrecision(geneData.qValue, 3, 0.01)}
+        </div>)
     }
 
     @computed get toolbar() {
         return (
             <div style={{ zIndex: 10, position: "absolute", top: "10px", right: "10px" }}>
                 <div className={styles.ChartControls}>
-                    <ReactSelect
-                        name="gene-frequency-plot-type"
-                        placeholder={"Plot Type"}
-                        value={this.selectedPlotType}
-                        onChange={this.onPlotTypeSelect}
-                        options={plotTypeOptions}
-                        isClearable={false}
-                        isSearchable={false}
-                        styles={{
-                            container: (provided: any) => ({
-                                ...provided,
-                                height: 22,
-                                minHeight: 22,
-                                width: 175
-                            }),
-                            control: (provided: any) => ({
-                                ...provided,
-                                height: 22,
-                                minHeight: 22
-                            }),
-                            indicatorsContainer: (provided: any) => ({
-                                ...provided,
-                                height: 20
-                            }),
-                            indicatorSeparator: (provided: any) => ({
-                                ...provided,
-                                margin: 0
-                            }),
-                            placeholder: (provided: any) => ({
-                                ...provided,
-                                fontSize: 10
-                            }),
-                            valueContainer: (provided: any) => ({
-                                ...provided,
-                                padding: "0px 8px"
-                            })
-                        }}
-                    />
                     <DefaultTooltip
                         trigger={['click']}
                         destroyTooltipOnHide={false}
@@ -144,7 +152,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                     >
                         <div>
                             <button className="btn btn-default btn-xs" >
-                                Select Genes
+                                Select genes
                             </button>
                         </div>
                     </DefaultTooltip>
@@ -159,18 +167,19 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
         );
     }
 
+    @computed private get yAxislabel() {
+        return this.props.containerType === AlterationContainerType.MUTATION ? 'Mutation frequency' : 'Copy-number alteration frequency';
+    }
+
     public render() {
-        const isPercentage = this.plotType === PlotType.PercentageStackedBar;
-        const isStacked = isPercentage || this.plotType === PlotType.StackedBar;
         let width: number | undefined;
         if (this.props.isTwoGroupAnalysis) {
             width = 600;
         }
         return (
-            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ width, overflow: "hidden" }}>
-                <ScrollBar style={{ top: -5 }} getScrollEl={this.getScrollPane} />
+            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ overflow:'auto', overflowY:'hidden', flexGrow:1  }}>
                 {this.toolbar}
-                <div ref={this.assignScrollPaneRef} style={{ position: "relative", display: "inline-block" }}>
+                <div style={{ position: this.props.isTwoGroupAnalysis ? 'absolute' : 'static' }}>
                     <MultipleCategoryBarPlot
                         svgId={SVG_ID}
                         barWidth={this.props.isTwoGroupAnalysis ? 10 : 20}
@@ -181,12 +190,14 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                         legendLocationWidthThreshold={800}
                         ticksCount={6}
                         horizontalBars={false}
-                        percentage={isPercentage}
-                        stacked={isStacked}
+                        percentage={false}
+                        stacked={false}
                         plotData={this.barPlotData}
                         axisStyle={{ tickLabels: { fontSize: 10 } }}
                         horzCategoryOrder={this.barPlotOrderedGenes}
                         vertCategoryOrder={this.props.groupOrder}
+                        countAxisLabel={`${this.yAxislabel} (%)`}
+                        tooltip={this.getTooltip}
                     />
                 </div>
             </div>
