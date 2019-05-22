@@ -17,6 +17,7 @@ import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import {Dropdown, MenuItem} from "react-bootstrap";
 import Timer = NodeJS.Timer;
 import DownloadControls, {DownloadControlsButton} from "../../../shared/components/downloadControls/DownloadControls";
+import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 
 // there's some incompatiblity with rc-tooltip and study view layout
 // these adjustments force tooltips to open top right because tooltips
@@ -89,17 +90,13 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         if (this.props.chartControls && !!this.props.chartControls.showLogScaleToggle) {
             items.push(
                 <li>
-                    <a className="dropdown-item" href="#">
-                        <LabeledCheckbox
-                            checked={this.props.chartControls && this.props.chartControls.logScaleChecked}
-                            onChange={event => {
-                                if (this.props.toggleLogScale) {
-                                    this.props.toggleLogScale();
-                                }
-                            }}
-                        >
-                            <span>Log Scale</span>
-                        </LabeledCheckbox>
+                    <a className="dropdown-item" href="#" onClick={this.props.toggleLogScale}>
+                        <FlexAlignedCheckbox
+                            checked={!!(this.props.chartControls && this.props.chartControls.logScaleChecked)}
+                            onClick={this.props.toggleLogScale}
+                            label={<span style={{marginTop:-3}}>Log Scale</span>}
+                            style={{ marginTop:1, marginBottom:-3 }}
+                        />
                     </a>
                 </li>
             );
@@ -211,17 +208,13 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 </DefaultTooltip>
                             </If>
                             <If condition={this.props.chartControls && !!this.props.chartControls.showLogScaleToggle}>
-                                <div role="group" className="btn-group logScaleCheckbox">
-                                    <LabeledCheckbox
-                                        checked={this.props.chartControls && this.props.chartControls.logScaleChecked}
-                                        onChange={event => {
-                                            if (this.props.toggleLogScale) {
-                                                this.props.toggleLogScale();
-                                            }
-                                        }}
-                                    >
-                                        <span>Log Scale</span>
-                                    </LabeledCheckbox>
+                                <div role="group" className="btn btn-xs btn-default logScaleCheckbox" onClick={this.props.toggleLogScale}>
+                                    <FlexAlignedCheckbox
+                                        checked={!!(this.props.chartControls && this.props.chartControls.logScaleChecked)}
+                                        onClick={this.props.toggleLogScale}
+                                        label={<span style={{marginTop:-5}}>Log Scale</span>}
+                                        style={{ marginTop:1, marginBottom:-3 }}
+                                    />
                                 </div>
                             </If>
                             <If condition={this.props.chartControls && !!this.props.chartControls.showResetIcon}>
