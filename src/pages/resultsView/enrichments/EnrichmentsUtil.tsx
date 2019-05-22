@@ -25,9 +25,16 @@ export const CNA_TO_ALTERATION:{[cna:number]:string} = {
     "-2": "del"
 };
 
-export const USER_DEFINED_OPTION = {
-    label: 'User-defined List',
-    value: ''
+export enum GeneOptions {
+    USER_DEFINED_OPTION='User-defined List',
+    HIGHEST_FREQUENCY='Genes with highest frequency in any group',
+    AVERAGE_FREQUENCY='Genes with highest average frequency',
+    SIGNIFICANT_P_VALUE='Genes with most significant p-values'
+}
+
+export const USER_DEFINED_OPTION:{label:string, genes:string[]} = {
+    label: GeneOptions.USER_DEFINED_OPTION,
+    genes: []
 }
 
 export enum AlterationContainerType {
@@ -467,12 +474,12 @@ export function getEnrichmentBarPlotData(data: { [gene: string]: AlterationEnric
     });
 }
 
-export function getGeneListOptions(data: AlterationEnrichmentRow[]): { label: string, value: string }[] {
+export function getGeneListOptions(data: AlterationEnrichmentRow[]): { label: string, genes: string[] }[] {
     if (_.isEmpty(data)) {
         return [USER_DEFINED_OPTION];
     }
 
-    let dataSortedByAlteredPercentage = data.sort(function (kv1, kv2) {
+    let dataSortedByAlteredPercentage = _.clone(data).sort(function (kv1, kv2) {
         const t1 = _.reduce(kv1.groupsSet, (acc, next) => {
             acc = next.alteredPercentage > acc ? next.alteredPercentage : acc;
             return acc;
@@ -484,44 +491,29 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[]): { label: st
         return t2 - t1;
     });
 
-    //limit to top 10
-    if (dataSortedByAlteredPercentage.length > 10) {
-        dataSortedByAlteredPercentage = dataSortedByAlteredPercentage.slice(0, 10);
-    }
-
-    let dataSortedByAvgFrequency = data.sort(function (kv1, kv2) {
+    let dataSortedByAvgFrequency = _.clone(data).sort(function (kv1, kv2) {
         const t1 = _.sumBy(_.values(kv1.groupsSet), count => count.alteredPercentage) / _.keys(kv1.groupsSet).length;
         const t2 = _.sumBy(_.values(kv2.groupsSet), count => count.alteredPercentage) / _.keys(kv2.groupsSet).length;
         return t2 - t1;
     });
 
-    //limit to top 10
-    if (dataSortedByAvgFrequency.length > 10) {
-        dataSortedByAvgFrequency = dataSortedByAvgFrequency.slice(0, 10);
-    }
-
-    let dataSortedBypValue = data.sort(function (kv1, kv2) {
+    let dataSortedBypValue = _.clone(data).sort(function (kv1, kv2) {
         return kv1.pValue - kv2.pValue;
     });
-
-    //limit to top 10
-    if (dataSortedBypValue.length > 10) {
-        dataSortedBypValue = dataSortedBypValue.slice(0, 10);
-    }
 
     return [
         USER_DEFINED_OPTION,
         {
-            label: `Top ${dataSortedByAlteredPercentage.length} genes with max frequency in any group`,
-            value: _.map(dataSortedByAlteredPercentage, datum => datum.hugoGeneSymbol).join(' ')
+            label: `Genes with highest frequency in any group`,
+            genes: _.map(dataSortedByAlteredPercentage, datum => datum.hugoGeneSymbol)
         },
         {
-            label: `Top ${dataSortedByAlteredPercentage.length} genes with avg. frequency in any group`,
-            value: _.map(dataSortedByAvgFrequency, datum => datum.hugoGeneSymbol).join(' ')
+            label: `Genes with highest avgerage frequency`,
+            genes: _.map(dataSortedByAvgFrequency, datum => datum.hugoGeneSymbol)
         },
         {
-            label: `Top ${dataSortedByAlteredPercentage.length} genes with significant p-value`,
-            value: _.map(dataSortedBypValue, datum => datum.hugoGeneSymbol).join(' ')
+            label: `Genes with most significant p-value`,
+            genes: _.map(dataSortedBypValue, datum => datum.hugoGeneSymbol)
         }
     ];
 }
