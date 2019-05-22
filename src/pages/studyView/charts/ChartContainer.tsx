@@ -34,6 +34,7 @@ import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPl
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {getComparisonUrl} from "../../../shared/api/urls";
+import {DownloadControlsButton} from "../../../shared/components/downloadControls/DownloadControls";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -56,7 +57,8 @@ export interface IChartContainerProps {
     studyViewFilters:StudyViewFilter;
     onValueSelection?: any;
     onDataBinSelection?: any;
-    download?: IChartContainerDownloadProps[];
+    getData?:()=>Promise<string|null>;
+    downloadTypes?:DownloadControlsButton[];
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
     onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => void;
@@ -71,10 +73,8 @@ export interface IChartContainerProps {
         chartMeta: ChartMeta,
         clinicalAttributeValues?:{ value:string, color:string }[]
     })=>void;
-    setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
     patientKeysWithNAInSelectedClinicalData?:MobxPromise<string[]>; // patients which have NA values for filtered clinical attributes
-    analysisGroupsPossible?:boolean;
     patientToAnalysisGroup?:MobxPromise<{[uniquePatientKey:string]:string}>;
     sampleToAnalysisGroup?:MobxPromise<{[uniqueSampleKey:string]:string}>;
 }
@@ -145,18 +145,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         };
     }
 
-    public toSVGDOMNode(): Element {
+    public toSVGDOMNode(): SVGElement {
         if (this.plot) {
             // Get result of plot
-            return this.plot.toSVGDOMNode();
+            return this.plot.toSVGDOMNode() as SVGElement;
         } else {
             return document.createElementNS("http://www.w3.org/2000/svg", "svg");
         }
-    }
-
-    @computed
-    get hideLabel() {
-        return this.chartType === ChartTypeEnum.TABLE;
     }
 
     @computed
@@ -179,9 +174,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 break;
             }
         }
-        if (this.analysisGroupsPossible) {
-            controls.showAnalysisGroupsIcon = true;
-        }
         if (this.comparisonPagePossible) {
             controls.showComparisonPageIcon = true;
         }
@@ -196,22 +188,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     changeChartType(chartType: ChartType) {
         this.chartType = chartType;
         this.handlers.onChangeChartType(chartType);
-    }
-
-
-    @computed
-    get analysisGroupsPossible() {
-        return !!this.props.analysisGroupsPossible &&
-            (this.chartType === ChartTypeEnum.PIE_CHART || this.chartType === ChartTypeEnum.TABLE) &&
-            !!this.props.chartMeta.clinicalAttribute;
-    }
-
-    @autobind
-    @action
-    setAnalysisGroups() {
-        if (this.analysisGroupsPossible) {
-            this.props.setAnalysisGroupsSettings(this.props.chartMeta.clinicalAttribute!, this.props.promise.result as ClinicalDataCountWithColor[]);
-        }
     }
 
     @computed
@@ -323,7 +299,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                     filters={this.props.filters}
                     onUserSelection={this.handlers.onValueSelection}
-                    label={this.props.title}
+                    label={" "}
                     labelDescription={this.props.chartMeta.description}
                     patientAttribute={this.props.chartMeta.patientAttribute}
                     showAddRemoveAllButtons={this.mouseInChart}
@@ -365,7 +341,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        patientSurvivals={data.patientSurvivals}
                                        patientToAnalysisGroups={data.patientToAnalysisGroups}
                                        analysisGroups={data.analysisGroups}
-                                       analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
                                        naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
                                        showNaPatientsHiddenToggle={this.props.patientKeysWithNAInSelectedClinicalData!.result!.length > 0}
                                        toggleSurvivalHideNAPatients={this.toggleSurvivalHideNAPatients}
@@ -444,28 +419,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return ret;
     }
 
-    @computed get isAnalysisTarget() {
-        return this.props.analysisGroupsSettings.clinicalAttribute &&
-                this.props.chartMeta.clinicalAttribute &&
-            (this.props.analysisGroupsSettings.clinicalAttribute.clinicalAttributeId === this.props.chartMeta.clinicalAttribute.clinicalAttributeId);
-    }
-
-    @computed get downloadTypes() {
-        return _.reduce(this.props.download || [], (acc, next) => {
-            //when the chart type is table only show TSV in download buttons
-            if (!(this.chartType === ChartTypeEnum.TABLE && _.includes(['SVG', 'PDF'], next.type))) {
-                acc.push({
-                    type: next.type,
-                    initDownload: next.initDownload ? next.initDownload : this.handlers.defaultDownload[next.type]
-                });
-            }
-            return acc;
-        }, [] as IChartContainerDownloadProps[]);
-    }
-
     @computed
     get highlightChart() {
-        return this.newlyAdded || this.isAnalysisTarget;
+        return this.newlyAdded;
     }
 
     componentDidMount() {
@@ -495,11 +451,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     resetChart={this.handlers.resetFilters}
                     deleteChart={this.handlers.onDeleteChart}
                     toggleLogScale={this.handlers.onToggleLogScale}
-                    hideLabel={this.hideLabel}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
-                    download={this.downloadTypes}
-                    setAnalysisGroups={this.setAnalysisGroups}
+                    getSVG={()=>Promise.resolve(this.toSVGDOMNode())}
+                    getData={this.props.getData}
+                    downloadTypes={this.props.downloadTypes}
                     openComparisonPage={this.openComparisonPage}
                 />
                 <div style={{display: 'flex', flexGrow: 1, margin: 'auto', alignItems: 'center'}}>
