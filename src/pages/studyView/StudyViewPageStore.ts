@@ -216,7 +216,6 @@ export class StudyViewPageStore {
     private reactionDisposers:IReactionDisposer[] = [];
 
     constructor() {
-        this.reactionDisposers.push(reaction(() => this.filters, () => this.clearAnalysisGroupsSettings())); // whenever any data filters change, reset survival analysis settings
         this.reactionDisposers.push(reaction(() => this.loadingInitialDataForSummaryTab, () => {
             if (!this.loadingInitialDataForSummaryTab) {
                 this.updateChartStats();
@@ -834,9 +833,6 @@ export class StudyViewPageStore {
     public clinicalDataCountPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
     public customChartsPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
 
-    @observable.ref private _analysisGroupsClinicalAttribute:ClinicalAttribute|undefined;
-    @observable.ref private _analysisGroups:ReadonlyArray<AnalysisGroup>|undefined;
-
     private _chartSampleIdentifiersFilterSet =  observable.map<SampleIdentifier[]>();
 
     public customChartFilterSet =  observable.map<string[]>();
@@ -923,18 +919,6 @@ export class StudyViewPageStore {
         this.removeComparisonGroupSelectionFilter();
     }
 
-    @action
-    updateAnalysisGroupsSettings(attribute:ClinicalAttribute, groups:ReadonlyArray<AnalysisGroup>) {
-        this._analysisGroupsClinicalAttribute = attribute;
-        this._analysisGroups = groups;
-    }
-
-    @action
-    clearAnalysisGroupsSettings() {
-        this._analysisGroupsClinicalAttribute = undefined;
-        this._analysisGroups = undefined;
-    }
-
     @autobind
     @action
     toggleWithMutationDataFilter() {
@@ -975,78 +959,51 @@ export class StudyViewPageStore {
 
     @computed
     get analysisGroupsSettings() {
-        if (this._analysisGroupsClinicalAttribute && this._analysisGroups) {
-            return {
-                clinicalAttribute: this._analysisGroupsClinicalAttribute,
-                groups: this._analysisGroups
-            };
-        } else {
-            // analysis groups for selected/unselected
-            // unselected goes on bottom, selected should be rendered on top
-            return {
-                groups: [{
-                    value: UNSELECTED_ANALYSIS_GROUP_VALUE,
-                    color: STUDY_VIEW_CONFIG.colors.theme.unselectedGroup,
-                    legendText: "Unselected patients"
-                },{
-                    value: SELECTED_ANALYSIS_GROUP_VALUE,
-                    // In the initial load when no case selected(the same affect of all cases selected), the curve should be shown as blue instead of red
-                    color: this.chartsAreFiltered ? STUDY_VIEW_CONFIG.colors.theme.selectedGroup : STUDY_VIEW_CONFIG.colors.theme.unselectedGroup,
-                    legendText: "Selected patients"
-                }] as AnalysisGroup[]
-            }
+        // analysis groups for selected/unselected
+        // unselected goes on bottom, selected should be rendered on top
+        return {
+            groups: [{
+                value: UNSELECTED_ANALYSIS_GROUP_VALUE,
+                color: STUDY_VIEW_CONFIG.colors.theme.unselectedGroup,
+                legendText: "Unselected patients"
+            },{
+                value: SELECTED_ANALYSIS_GROUP_VALUE,
+                // In the initial load when no case selected(the same affect of all cases selected), the curve should be shown as blue instead of red
+                color: this.chartsAreFiltered ? STUDY_VIEW_CONFIG.colors.theme.selectedGroup : STUDY_VIEW_CONFIG.colors.theme.unselectedGroup,
+                legendText: "Selected patients"
+            }] as AnalysisGroup[]
         }
     }
 
     readonly sampleToAnalysisGroup = remoteData({
-        await:()=>{
-            if (this.analysisGroupsSettings.clinicalAttribute) {
-                return [this.sampleToClinicalAnalysisGroup];
-            } else {
-                return [this.samples, this.selectedSamples];
-            }
-        },
+        await:()=>[this.samples, this.selectedSamples],
         invoke:()=>{
-            if (this.analysisGroupsSettings.clinicalAttribute) {
-                return Promise.resolve(this.sampleToClinicalAnalysisGroup.result!);
-            } else {
-                const selectedSamplesMap = _.keyBy(this.selectedSamples.result!, s=>s.uniqueSampleKey);
-                return Promise.resolve(_.reduce(this.samples.result!, (map, nextSample)=>{
-                    const sampleKey = nextSample.uniqueSampleKey;
-                    if (sampleKey in selectedSamplesMap) {
-                        map[sampleKey] = SELECTED_ANALYSIS_GROUP_VALUE;
-                    } else {
-                        map[sampleKey] = UNSELECTED_ANALYSIS_GROUP_VALUE;
-                    }
-                    return map;
-                }, {} as {[sampleKey:string]:string}));
-            }
+            const selectedSamplesMap = _.keyBy(this.selectedSamples.result!, s=>s.uniqueSampleKey);
+            return Promise.resolve(_.reduce(this.samples.result!, (map, nextSample)=>{
+                const sampleKey = nextSample.uniqueSampleKey;
+                if (sampleKey in selectedSamplesMap) {
+                    map[sampleKey] = SELECTED_ANALYSIS_GROUP_VALUE;
+                } else {
+                    map[sampleKey] = UNSELECTED_ANALYSIS_GROUP_VALUE;
+                }
+                return map;
+            }, {} as {[sampleKey:string]:string}));
         }
     });
 
     readonly patientToAnalysisGroup = remoteData<{[patientKey:string]:string}>({
-        await:()=>{
-            if (this.analysisGroupsSettings.clinicalAttribute) {
-                return [this.patientToClinicalAnalysisGroup];
-            } else {
-                return [this.samples, this.selectedPatientKeys];
-            }
-        },
+        await:()=>[this.samples, this.selectedPatientKeys],
         invoke:()=>{
-            if (this.analysisGroupsSettings.clinicalAttribute) {
-                return Promise.resolve(this.patientToClinicalAnalysisGroup.result!);
-            } else {
-                const selectedPatientsMap = _.keyBy(this.selectedPatientKeys.result!);
-                return Promise.resolve(_.reduce(this.samples.result!, (map, nextSample)=>{
-                    const patientKey = nextSample.uniquePatientKey;
-                    if (patientKey in selectedPatientsMap) {
-                        map[patientKey] = SELECTED_ANALYSIS_GROUP_VALUE;
-                    } else {
-                        map[patientKey] = UNSELECTED_ANALYSIS_GROUP_VALUE;
-                    }
-                    return map;
-                }, {} as {[patientKey:string]:string}));
-            }
+            const selectedPatientsMap = _.keyBy(this.selectedPatientKeys.result!);
+            return Promise.resolve(_.reduce(this.samples.result!, (map, nextSample)=>{
+                const patientKey = nextSample.uniquePatientKey;
+                if (patientKey in selectedPatientsMap) {
+                    map[patientKey] = SELECTED_ANALYSIS_GROUP_VALUE;
+                } else {
+                    map[patientKey] = UNSELECTED_ANALYSIS_GROUP_VALUE;
+                }
+                return map;
+            }, {} as {[patientKey:string]:string}));
         }
     });
 
@@ -1061,87 +1018,6 @@ export class StudyViewPageStore {
         },
         onError: () => false,
         default: false
-    });
-
-    readonly clinicalAnalysisGroupsData = remoteData({
-        await:()=>[this.selectedSamples],
-        invoke:async()=>{
-            if (this.analysisGroupsSettings.clinicalAttribute !== undefined) {
-                const attr = this.analysisGroupsSettings.clinicalAttribute;
-                const data = await defaultClient.fetchClinicalDataUsingPOST({
-                    clinicalDataType: attr.patientAttribute ? "PATIENT" : "SAMPLE",
-                    clinicalDataMultiStudyFilter:{
-                        attributeIds: [attr.clinicalAttributeId],
-                        identifiers: attr.patientAttribute ?
-                            this.selectedPatients.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
-                            this.selectedSamples.result!.map(p=>({entityId:p.sampleId, studyId:p.studyId}))
-                    },
-                    projection: "SUMMARY"
-                });
-                const ret = data.reduce((map, clinData)=>{
-                    if (attr.patientAttribute) {
-                        map[clinData.uniquePatientKey] = clinData.value;
-                    } else {
-                        map[clinData.uniqueSampleKey] = clinData.value;
-                    }
-                    return map;
-                }, {} as {[caseKey:string]:string});
-                // add NA entries
-                if (attr.patientAttribute) {
-                    for (const patient of this.selectedPatients) {
-                        if (!(patient.uniquePatientKey in ret)) {
-                            ret[patient.uniquePatientKey] = "NA";
-                        }
-                    }
-                } else {
-                    for (const sample of this.selectedSamples.result!) {
-                        if (!(sample.uniqueSampleKey in ret)) {
-                            ret[sample.uniqueSampleKey] = "NA";
-                        }
-                    }
-                }
-                // by the end, there is an entry for every selected patient or selected sample (depending on whether its patient attribute)
-                return {
-                    patientAttribute: attr.patientAttribute,
-                    caseToAnalysisGroup: ret
-                }
-            } else {
-                return new Promise<any>(()=>{}); // stay pending
-            }
-        }
-    });
-
-    readonly patientToClinicalAnalysisGroup = remoteData({
-        await:()=>[this.selectedSamples, this.clinicalAnalysisGroupsData],
-        onError: (error => {}),
-        invoke:()=>{
-            const data = this.clinicalAnalysisGroupsData.result!;
-            if (data.patientAttribute) {
-                return Promise.resolve(data.caseToAnalysisGroup);
-            } else {
-                return Promise.resolve(makePatientToClinicalAnalysisGroup(
-                    this.selectedSamples.result!,
-                    this.clinicalAnalysisGroupsData.result!.caseToAnalysisGroup
-                ));
-            }
-        }
-    });
-
-    readonly sampleToClinicalAnalysisGroup = remoteData({
-        await:()=>[this.selectedSamples, this.clinicalAnalysisGroupsData],
-        onError: (error => {}),
-        invoke:()=>{
-            const data = this.clinicalAnalysisGroupsData.result!;
-            if (!data.patientAttribute) {
-                return Promise.resolve(data.caseToAnalysisGroup);
-            } else {
-                const patientToAnalysisGroup = data.caseToAnalysisGroup;
-                return Promise.resolve(_.reduce(this.selectedSamples.result!, (map, sample)=>{
-                    map[sample.uniqueSampleKey] = patientToAnalysisGroup[sample.uniquePatientKey];
-                    return map;
-                }, {} as {[sampleKey:string]:string}));
-            }
-        }
     });
 
     @autobind
@@ -2969,7 +2845,7 @@ export class StudyViewPageStore {
                     resolve(generateScatterPlotDownloadData(
                         data,
                         this.sampleToAnalysisGroup.result,
-                        this.analysisGroupsSettings.clinicalAttribute,
+                        undefined,
                         this.analysisGroupsSettings.groups as AnalysisGroup[]
                     ));
                 } else {
