@@ -4,7 +4,6 @@ import { observable, action, computed } from 'mobx';
 import DownloadControls from 'shared/components/downloadControls/DownloadControls';
 import autobind from 'autobind-decorator';
 import MultipleCategoryBarPlot from 'shared/components/plots/MultipleCategoryBarPlot';
-import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
 import ReactSelect from "react-select2";
 import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
 import _ from "lodash";
@@ -15,6 +14,8 @@ import { getEnrichmentBarPlotData, getGeneListOptions, USER_DEFINED_OPTION, CNA_
 import styles from "./frequencyPlotStyles.module.scss";
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
+import { FormControl } from 'react-bootstrap';
+import { GeneReplacement } from 'shared/components/query/QueryStore';
 
 export interface IGeneBarPlotProps {
     data: AlterationEnrichmentRow[];
@@ -32,13 +33,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
     @observable tooltipModel: any;
     @observable _geneQuery: string | undefined;
     @observable selectedGenes: string[] | undefined;
-
-    private scrollPane: HTMLDivElement;
-
-    @autobind
-    private getScrollPane() {
-        return this.scrollPane;
-    }
+    @observable label: string | undefined;
 
     @computed get geneListOptions() {
         return getGeneListOptions(this.props.data);
@@ -46,6 +41,10 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
 
     @computed get defaultOption() {
         return this.geneListOptions.length > 1 ? this.geneListOptions[1] : this.geneListOptions[0];
+    }
+
+    @computed get defaultgenes() {
+        return this.defaultOption.genes.slice(0, 10);
     }
 
     @computed get geneDataSet() {
@@ -66,7 +65,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
     @computed get barPlotOrderedGenes() {
         let genes: string[] = [];
         if (!this.selectedGenes) {
-            genes = this.defaultOption.value.split(/\s+/g);
+            genes = this.defaultgenes;
         } else {
             genes = this.selectedGenes;
         }
@@ -78,13 +77,8 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
         return _.flatMap(genes, gene => [gene + '*', gene]);
     }
 
-    @autobind
-    private assignScrollPaneRef(el: HTMLDivElement) {
-        this.scrollPane = el;
-    }
-
     @computed get geneQuery() {
-        return this._geneQuery === undefined ? this.defaultOption.value : this._geneQuery;
+        return this._geneQuery === undefined ? this.defaultgenes.join(' ') : this._geneQuery;
     }
 
     @autobind
@@ -135,6 +129,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
         return (
             <div style={{ zIndex: 10, position: "absolute", top: "10px", right: "10px" }}>
                 <div className={styles.ChartControls}>
+                    <strong>{this.label ? this.label : this.defaultOption.label}</strong>
                     <DefaultTooltip
                         trigger={['click']}
                         destroyTooltipOnHide={false}
@@ -142,10 +137,12 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                             <GenesSelection
                                 options={this.geneListOptions}
                                 selectedValue={this.geneQuery}
-                                onSelectedGenesChange={(value, genes) => {
+                                onSelectedGenesChange={(value, genes, label) => {
                                     this._geneQuery = value;
                                     this.selectedGenes = genes;
-                                }} />
+                                    this.label = label;
+                                }}
+                                defaultNumberOfGenes={10} />
 
                         }
                         placement="bottomLeft"
@@ -172,12 +169,8 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
     }
 
     public render() {
-        let width: number | undefined;
-        if (this.props.isTwoGroupAnalysis) {
-            width = 600;
-        }
         return (
-            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ overflow:'auto', overflowY:'hidden', flexGrow:1  }}>
+            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ overflow: 'auto', overflowY: 'hidden', flexGrow: 1 }}>
                 {this.toolbar}
                 <div style={{ position: this.props.isTwoGroupAnalysis ? 'absolute' : 'static' }}>
                     <MultipleCategoryBarPlot
@@ -185,7 +178,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                         barWidth={this.props.isTwoGroupAnalysis ? 10 : 20}
                         domainPadding={this.props.isTwoGroupAnalysis ? 10 : 20}
                         chartBase={300}
-                        axisLabelX="Genes"
+                        //axisLabelX="Genes"
                         axisLabelY="Group"
                         legendLocationWidthThreshold={800}
                         ticksCount={6}
@@ -206,9 +199,10 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
 }
 
 interface IGeneSelectionProps {
-    options: { label: string, value: string }[];
+    options: { label: string, genes: string[] }[];
     selectedValue: string
-    onSelectedGenesChange: (value: string, orderedGenes: string[]) => void
+    onSelectedGenesChange: (value: string, orderedGenes: string[], label: string) => void;
+    defaultNumberOfGenes: number
 }
 
 @observer
@@ -217,13 +211,32 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     @observable _geneQuery: string | undefined;
     @observable selectedGenes: string[] | undefined;
     @observable selectedGenesHasError = false;
+    @observable private numberOfGenes = this.props.defaultNumberOfGenes;
+    @observable private _selectedGeneListOption: {
+        label: string;
+        value: string;
+        genes: string[];
+    } | undefined
     private genesToPlot: string[] = [];
 
+    @computed get geneListOptions() {
+        return _.map(this.props.options, option => {
+            return {
+                ...option,
+                value: option.genes.join(" ")
+            }
+        });
+    }
+
     @computed get selectedGeneListOption() {
-        if (this.selectedGenes === undefined && this._geneQuery === undefined) {
-            return this.props.options.find(opt => opt.value == this.props.selectedValue);
+        if (this._selectedGeneListOption === undefined) {
+            return this.geneListOptions.find(opt => opt.value.startsWith(this.props.selectedValue));
         }
-        return this.props.options.find(opt => opt.value == this._geneQuery) || USER_DEFINED_OPTION;
+        return this._selectedGeneListOption;
+    }
+
+    @computed get isCustomGeneSelection() {
+        return this.selectedGeneListOption === undefined || this.selectedGeneListOption.label === USER_DEFINED_OPTION.label;
     }
 
     @computed get geneQuery() {
@@ -234,20 +247,64 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     @action
     private onChangeGeneInput(
         oql: { query: SingleGeneQuery[], error?: any },
-        genes: { found: Gene[]; suggestions: any; },
+        genes: { found: Gene[]; suggestions: GeneReplacement[]; },
         queryStr: string
     ) {
         const foundGenes = _.keyBy(genes.found, gene => gene.hugoGeneSymbol.toUpperCase());
         const queriedGenes = _.map(oql.query, query => query.gene.toUpperCase())
-        this.selectedGenesHasError = !_.every(queriedGenes, gene => gene in foundGenes)
+        if (!_.isEmpty(foundGenes) || !_.isEmpty(genes.suggestions)) {
+            this.selectedGenesHasError = !_.every(queriedGenes, gene => gene in foundGenes);
+        }
         if (!this.selectedGenesHasError) {
             this.genesToPlot = queriedGenes
         }
-        this._geneQuery = queryStr
+        if (this.geneQuery !== queryStr) {
+            this._selectedGeneListOption = {
+                ...USER_DEFINED_OPTION,
+                value: ''
+            }
+        }
+        this._geneQuery = queryStr;
     }
 
     @computed get addGenesButtonDisabled() {
         return this.props.selectedValue === this._geneQuery || this.selectedGenesHasError || _.isEmpty(this._geneQuery)
+    }
+
+    @autobind
+    @action
+    private onGeneListOptionChange(option: any) {
+        this._selectedGeneListOption = option
+        if (option.value !== '') {
+            this._geneQuery = option.genes.slice(0, this.numberOfGenes).join(' ');
+        } else {
+            this._geneQuery = '';
+        }
+    }
+
+    @autobind
+    @action
+    private handleTotalInputChange(e: any) {
+        this.numberOfGenes = e.target.value.replace(/[^0-9]/g, '');
+    }
+
+    @autobind
+    @action
+    private handleTotalInputKeyPress(target: any) {
+        if (target.charCode === 13) {
+            if (isNaN(this.numberOfGenes)) {
+                this.numberOfGenes = 0;
+                return;
+            }
+            //removes leading 0s
+            this.numberOfGenes = Number(this.numberOfGenes);
+            if (this.selectedGeneListOption) {
+                let genes = this.selectedGeneListOption.genes;
+                if (genes.length > 0) {
+                    this._geneQuery = genes.slice(0, this.numberOfGenes).join(' ');
+                }
+            }
+        }
     }
 
     public render() {
@@ -256,27 +313,42 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                 {
                     this.props.options.length > 0 && <ReactSelect
                         value={this.selectedGeneListOption}
-                        options={this.props.options}
-                        onChange={(option: any) => this._geneQuery = option ? option.value : ''}
+                        options={this.geneListOptions}
+                        onChange={this.onGeneListOptionChange}
                         isClearable={false}
                         isSearchable={false}
                     />
                 }
-                <br />
-                <GeneSelectionBox
-                    inputGeneQuery={this.geneQuery}
-                    callback={this.onChangeGeneInput}
-                    location={GeneBoxType.ONCOPRINT_HEATMAP}
-                />
-                <button
-                    key="addGenestoBarPlot"
-                    className="btn btn-sm btn-default"
-                    onClick={() => {
-                        this.selectedGenes = this.genesToPlot;
-                        this.props.onSelectedGenesChange(this._geneQuery!, this.genesToPlot);
-                    }}
-                    disabled={this.addGenesButtonDisabled}
-                >Submit</button>
+                {!this.isCustomGeneSelection && <div>
+                    <br />
+                    <div style={{ display: "table-row" }}>
+                        <label style={{ display: "table-cell" }}>Number of Genes: &nbsp;</label>
+                        <FormControl
+                            type="text"
+                            value={this.numberOfGenes}
+                            onChange={this.handleTotalInputChange}
+                            onKeyPress={this.handleTotalInputKeyPress} />
+                    </div>
+                </div>}
+                <div>
+                    <br />
+                    <GeneSelectionBox
+                        inputGeneQuery={this.geneQuery}
+                        validateInputGeneQuery={false}
+                        callback={this.onChangeGeneInput}
+                        location={GeneBoxType.ONCOPRINT_HEATMAP}
+                    />
+                    <button
+                        key="addGenestoBarPlot"
+                        className="btn btn-sm btn-default"
+                        onClick={() => {
+                            this.selectedGenes = this.genesToPlot;
+                            this.props.onSelectedGenesChange(this._geneQuery!, this.genesToPlot, this.selectedGeneListOption!.label);
+                        }}
+                        disabled={this.addGenesButtonDisabled}
+                    >Submit</button>
+                </div>
+
             </div>
         );
     }
