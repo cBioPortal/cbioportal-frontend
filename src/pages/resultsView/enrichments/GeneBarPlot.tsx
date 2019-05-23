@@ -130,7 +130,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
 
     @computed get label() {
         const label = this._label || this.defaultOption.label;
-        return `Showing ${label.charAt(0).toLowerCase()}${label.substring(1)}`;
+        return `${label.charAt(0).toUpperCase()}${label.substring(1)}`;
     }
 
     @computed get toolbar() {
