@@ -251,7 +251,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
         return (
             <div className={styles.Container}>
-                <div className={styles.ChartsPanel} style={{maxWidth:WindowStore.size.width-20}}>
+                <div className={styles.ChartsPanel} style={{maxWidth:WindowStore.size.width-60}}>
                     {this.isTwoGroupAnalysis && <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
                         xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
                         xAxisTickValues={[-10, 0, 10]}
