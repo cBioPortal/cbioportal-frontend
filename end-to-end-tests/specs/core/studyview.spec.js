@@ -267,11 +267,6 @@ describe('study view lgg_tcga study tests', () => {
             browser.waitForVisible(barChart + ' .controls');
             assert(browser.isSelected(barChart + ' .chartHeader .logScaleCheckbox input'));
         });
-
-        it('the survival icon should not be available', () => {
-            browser.waitForVisible(barChart + ' .controls', WAIT_FOR_VISIBLE_TIMEOUT);
-            assert(!browser.isExisting(barChart + ' .controls .survivalIcon'));
-        });
     });
     describe('pie chart', () => {
         describe('chart controls',()=>{
@@ -322,62 +317,6 @@ describe('study view lgg_tcga study tests', () => {
                 const res = browser.checkElement(table);
                 assertScreenShotMatch(res);
             })
-        })
-    });
-    describe('survival', ()=>{
-        describe('chart controls',()=>{
-            it('the survival icon should be available', () => {
-                browser.moveToObject("body", 0, 0);
-                // Check table
-                browser.waitForVisible(table, WAIT_FOR_VISIBLE_TIMEOUT);
-                browser.moveToObject(table);
-                browser.waitUntil(() => {
-                    return browser.isExisting(table + ' .controls');
-                }, 10000);
-                assert(browser.isExisting(table + ' .controls .survivalIcon'));
-
-                // Check pie chart
-                browser.waitForVisible(pieChart, WAIT_FOR_VISIBLE_TIMEOUT);
-                browser.moveToObject(pieChart);
-                browser.waitUntil(() => {
-                    return browser.isExisting(pieChart + ' .controls');
-                }, 10000);
-                assert(browser.isExisting(pieChart + ' .controls .survivalIcon'));
-            });
-
-            it('the survival icon should not be available when the study does not have survival plots visible', () => {
-
-                // we need to move to the top of the page, otherwise the offset of add chart button is calculated wrong
-                browser.moveToObject("body", 0, 0);
-
-                browser.click(ADD_CHART_BUTTON);
-                browser.waitForVisible(ADD_CHART_CLINICAL_TAB, WAIT_FOR_VISIBLE_TIMEOUT);
-                browser.click(ADD_CHART_CLINICAL_TAB);
-
-                browser.setValue("[data-test='fixed-header-table-search-input']", 'survival');
-
-                browser.waitForVisible("[data-test='add-chart-option-overall-survival']", WAIT_FOR_VISIBLE_TIMEOUT);
-                browser.click("[data-test='add-chart-option-overall-survival'] input");
-                browser.click("[data-test='add-chart-option-disease-free-survival'] input");
-                // Close the tooltip
-                browser.click(ADD_CHART_BUTTON);
-
-                // Check table
-                browser.waitForVisible(table, WAIT_FOR_VISIBLE_TIMEOUT);
-                browser.moveToObject(table);
-                browser.waitUntil(() => {
-                    return browser.isExisting(table + ' .controls');
-                }, 10000);
-                assert(!browser.isExisting(table + ' .controls .survivalIcon'));
-
-                // Check pie chart
-                browser.waitForVisible(pieChart, WAIT_FOR_VISIBLE_TIMEOUT);
-                browser.moveToObject(pieChart);
-                browser.waitUntil(() => {
-                    return browser.isExisting(pieChart + ' .controls');
-                }, 10000);
-                assert(!browser.isExisting(pieChart + ' .controls .survivalIcon'));
-            });
         })
     });
 });
