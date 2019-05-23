@@ -9,21 +9,27 @@ import $ from "jquery";
 
 import {DomainSpec} from "./model/DomainSpec";
 import {LollipopSpec} from "./model/LollipopSpec";
+import {MobxCache} from "./model/MobxCache";
 import {Mutation} from "./model/Mutation";
 import {MutationMapperStore} from "./model/MutationMapperStore";
 import {PfamDomain, PfamDomainRange} from "./model/Pfam";
 import {SequenceSpec} from "./model/SequenceSpec";
 import {lollipopLabelText, lollipopLabelTextAnchor} from "./util/LollipopPlotUtils";
+import {getColorForProteinImpactType} from "./util/MutationUtils";
 import {generatePfamDomainColorMap} from "./util/PfamUtils";
+import {initDefaultTrackVisibility} from "./util/TrackUtils";
+import DefaultLollipopPlotLegend from "./DefaultLollipopPlotLegend";
 import LollipopPlot from "./LollipopPlot";
 import LollipopMutationPlotControls from "./LollipopMutationPlotControls";
 import {TrackDataStatus, TrackVisibility} from "./TrackSelector";
-import DefaultLollipopPlotLegend from "./DefaultLollipopPlotLegend";
-import {getColorForProteinImpactType} from "./util/MutationUtils";
+import TrackPanel from "./TrackPanel";
+
+const DEFAULT_PROTEIN_LENGTH = 10;
 
 export interface ILollipopMutationPlotProps
 {
     store: MutationMapperStore;
+    pubMedCache?: MobxCache;
     getLollipopColor?: (mutations: Mutation[]) => string;
     onXAxisOffset?: (offset:number) => void;
     geneWidth: number;
@@ -43,12 +49,18 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     @observable private _yMaxInput:number;
     @observable private legendShown:boolean = false;
     @observable private yMaxInputFocused:boolean = false;
+    @observable private geneXOffset:number;
+    @observable private _trackVisibility: TrackVisibility = initDefaultTrackVisibility();
 
     private handlers:any;
     private divContainer:HTMLDivElement;
 
     @computed private get showControls(): boolean {
         return this.props.autoHideControls ? (this.yMaxInputFocused || this.mouseInPlot) : true;
+    }
+
+    @computed private get trackVisibility(): TrackVisibility {
+        return this.props.trackVisibility || this._trackVisibility;
     }
 
     private lollipopTooltip(mutationsAtPosition:Mutation[], countsByPosition:{[pos: number]: number}):JSX.Element {
@@ -241,7 +253,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
             this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript] &&
             this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].proteinLength) ||
             // Math.round(this.props.store.gene.length / 3);
-            10; // TODO use a constant
+            DEFAULT_PROTEIN_LENGTH;
     }
 
     private sequenceTooltip(): JSX.Element
@@ -329,6 +341,36 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         return this._yMaxInput || this.countRange[1];
     }
 
+
+    @autobind
+    @action
+    private onXAxisOffset(offset: number)
+    {
+        this.geneXOffset = offset;
+
+        if (this.props.onXAxisOffset) {
+            this.props.onXAxisOffset(offset);
+        }
+    }
+
+    @autobind
+    @action
+    protected onTrackVisibilityChange(selectedTrackNames: string[])
+    {
+        if (this.props.onTrackVisibilityChange)
+        {
+            this.props.onTrackVisibilityChange(selectedTrackNames);
+        }
+        else
+        {
+            // clear visibility
+            Object.keys(this.trackVisibility).forEach(trackName => this.trackVisibility[trackName] = 'hidden');
+
+            // reset visibility values for the visible ones
+            selectedTrackNames.forEach(trackName => this.trackVisibility[trackName] = 'visible');
+        }
+    }
+
     render() {
         if (this.props.store.pfamDomainData.isComplete && this.props.store.pfamDomainData.result) {
             return (
@@ -349,9 +391,9 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         onToggleLegend={this.handlers.handleToggleLegend}
                         yMaxSlider={this.yMaxSlider}
                         yMaxInput={this.yMaxInput}
-                        trackVisibility={this.props.trackVisibility}
+                        trackVisibility={this.trackVisibility}
                         trackDataStatus={this.props.trackDataStatus}
-                        onTrackVisibilityChange={this.props.onTrackVisibilityChange}
+                        onTrackVisibilityChange={this.onTrackVisibilityChange}
                         getSVG={this.getSVG}
                     />
                     <Collapse isOpened={this.legendShown}>
@@ -367,7 +409,15 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         hugoGeneSymbol={this.hugoGeneSymbol}
                         xMax={this.proteinLength}
                         yMax={this.yMaxInput}
-                        onXAxisOffset={this.props.onXAxisOffset}
+                        onXAxisOffset={this.onXAxisOffset}
+                    />
+                    <TrackPanel
+                        store={this.props.store}
+                        geneWidth={this.props.geneWidth}
+                        trackVisibility={this.trackVisibility}
+                        pubMedCache={this.props.pubMedCache}
+                        proteinLength={this.proteinLength}
+                        geneXOffset={this.geneXOffset}
                     />
                 </div>
             );

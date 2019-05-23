@@ -16,4 +16,5 @@ declare module '*.svg' {
   export { svgComponent as ReactComponent }
 }
 
+declare module "*.png";
 declare module '*.scss';

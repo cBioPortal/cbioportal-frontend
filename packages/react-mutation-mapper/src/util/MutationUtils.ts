@@ -1,8 +1,6 @@
 // TODO add MutationUtils.specs
 import _ from "lodash";
 
-import {Mutation} from "../model/Mutation";
-import {IProteinImpactTypeColors} from "../model/ProteinImpact";
 import {
     CanonicalMutationType,
     findFirstMostCommonElt,
@@ -10,6 +8,10 @@ import {
     getProteinImpactTypeFromCanonical,
     ProteinImpactType
 } from "cbioportal-frontend-commons";
+
+import {GenomicLocation} from "../model/CancerHotspot";
+import {Mutation} from "../model/Mutation";
+import {IProteinImpactTypeColors} from "../model/ProteinImpact";
 
 // Default Protein Impact Type colors
 export const MUT_COLOR_MISSENSE = '#008000';
@@ -105,4 +107,53 @@ export function getColorForProteinImpactType(mutations: Mutation[],
     } else {
         return "#FF0000"; // we only get here if theres no mutations, which shouldnt happen. red to indicate an error
     }
+}
+
+export function extractGenomicLocation(mutation: Mutation)
+{
+
+    const chromosome = (
+        mutation.chromosome ||
+        // TODO workaround for cbioportal API mutation type,
+        //  we should either remove this condition or add a custom getChromosome(mutation: Mutation) function
+        ((mutation as any).gene && (mutation as any).gene.chromosome)
+    );
+
+    if (chromosome &&
+        mutation.startPosition &&
+        mutation.endPosition &&
+        mutation.referenceAllele &&
+        mutation.variantAllele)
+    {
+        return {
+            chromosome: chromosome.replace("chr", ""),
+            start: mutation.startPosition,
+            end: mutation.endPosition,
+            referenceAllele: mutation.referenceAllele,
+            variantAllele: mutation.variantAllele
+        };
+    }
+    else {
+        return undefined;
+    }
+}
+
+export function genomicLocationString(genomicLocation: GenomicLocation)
+{
+    return `${genomicLocation.chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele},${genomicLocation.variantAllele}`;
+}
+
+export function uniqueGenomicLocations(mutations: Mutation[]): GenomicLocation[]
+{
+    const genomicLocationMap: {[key: string]: GenomicLocation} = {};
+
+    mutations.map((mutation: Mutation) => {
+        const genomicLocation: GenomicLocation|undefined = extractGenomicLocation(mutation);
+
+        if (genomicLocation) {
+            genomicLocationMap[genomicLocationString(genomicLocation)] = genomicLocation;
+        }
+    });
+
+    return _.values(genomicLocationMap);
 }
