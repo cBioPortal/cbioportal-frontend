@@ -205,12 +205,15 @@ export default class GroupComparisonStore {
     });
 
     readonly _originalGroups = remoteData<ComparisonGroup[]>({
-        await:()=>[this._unsortedOriginalGroups],
+        await:()=>[this._session, this._unsortedOriginalGroups],
         invoke:()=>{
             // sort and add ordinals
             let sorted:ComparisonGroup[];
             if (this.dragUidOrder) {
                 const order = stringListToIndexSet(this.dragUidOrder);
+                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>order[g.uid]);
+            } else if (this._session.result!.groupUidOrder) {
+                const order = stringListToIndexSet(this._session.result!.groupUidOrder!);
                 sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>order[g.uid]);
             } else {
                 // sort alphabetically
@@ -328,7 +331,7 @@ export default class GroupComparisonStore {
 
     @autobind
     @action
-    public async saveAndGoToNewSession() {
+    public async saveUnsavedGroupsAndGoToNewSession() {
         if (!this._session.isComplete || this.unsavedGroups.length === 0) {
             return;
         }
@@ -354,6 +357,21 @@ export default class GroupComparisonStore {
             }
         )
         this.unsavedGroups.clear();
+    }
+
+    @autobind
+    @action
+    public async saveDragUidOrderAndGoToNewSession() {
+        if (!this._session.isComplete) {
+            return;
+        }
+
+        // save unsavedGroups to new session, and go to it
+        const newSession = _.cloneDeep(this._session.result!);
+        newSession.groupUidOrder = this.dragUidOrder && this.dragUidOrder.slice();
+
+        const {id } = await comparisonClient.addComparisonSession(newSession);
+        (window as any).routingStore.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
     }
 
     public isGroupSelected(uid:string) {

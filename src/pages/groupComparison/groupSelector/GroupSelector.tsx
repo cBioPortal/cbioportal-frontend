@@ -1,22 +1,10 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {
-    caseCountsInParens,
-    getPatientIdentifiers,
-    getSampleIdentifiers,
-    MissingSamplesMessage
-} from "../GroupComparisonUtils";
 import {MakeMobxView} from "shared/components/MobxView";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "shared/components/ErrorMessage";
 import GroupComparisonStore from "../GroupComparisonStore";
-import classNames from "classnames";
-import styles from '../styles.module.scss';
-import ErrorIcon from "../../../shared/components/ErrorIcon";
-import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import autobind from "autobind-decorator";
-import {action, computed, observable} from "mobx";
-import {SortableContainer, SortableElement} from "react-sortable-hoc";
 import GroupSelectorButton from "./GroupSelectorButton";
 import GroupSelectorButtonList from "./GroupSelectorButtonList";
 
