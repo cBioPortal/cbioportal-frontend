@@ -9,7 +9,7 @@ import {CheckedSelect, Option} from "cbioportal-frontend-commons";
 export type TrackVisibility = {[trackName: string]: 'visible' | 'hidden'};
 export type TrackDataStatus = {[trackName: string]: 'pending' | 'error' | 'complete' | 'empty'}
 
-export enum TrackNames {
+export enum TrackName {
     PDB = "PDB",
     CancerHotspots = "CANCER_HOTSPOTS",
     OncoKB = "ONCO_KB",
@@ -51,38 +51,38 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
                 label: (
                     <span>
                         Cancer Hotspots
-                        {this.isPending(TrackNames.CancerHotspots) && this.loaderIcon()}
+                        {this.isPending(TrackName.CancerHotspots) && this.loaderIcon()}
                     </span>
                 ),
-                value: TrackNames.CancerHotspots
+                value: TrackName.CancerHotspots
             },
             {
                 label: (
                     <span>
                         OncoKB
-                        {this.isPending(TrackNames.OncoKB) && this.loaderIcon()}
+                        {this.isPending(TrackName.OncoKB) && this.loaderIcon()}
                     </span>
                 ),
-                value: TrackNames.OncoKB
+                value: TrackName.OncoKB
             },
             {
                 label: (
                     <span>
                         Post Translational Modifications
-                        {this.isPending(TrackNames.PTM) && this.loaderIcon()}
+                        {this.isPending(TrackName.PTM) && this.loaderIcon()}
                     </span>
                 ),
-                value: TrackNames.PTM
+                value: TrackName.PTM
             },
             {
                 label: (
                     <span>
                         3D Structure
-                        {this.isPending(TrackNames.PDB) && this.loaderIcon()}
+                        {this.isPending(TrackName.PDB) && this.loaderIcon()}
                     </span>
                 ),
-                value: TrackNames.PDB,
-                disabled: this.isDisabled(TrackNames.PDB)
+                value: TrackName.PDB,
+                disabled: this.isDisabled(TrackName.PDB)
             }
         ];
     }

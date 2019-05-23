@@ -1,0 +1,23 @@
+.default-track-tooltip-table {
+    .rt-tbody {
+        line-height: 0.7rem;
+    }
+
+    .-pagination {
+        font-size: 0.65rem;
+
+        .-center {
+            flex-grow: 6;
+        }
+
+        .-pageSizeOptions {
+            display: none;
+        }
+
+        .-pageJump {
+            input {
+                width: 3rem;
+            }
+        }
+    }
+}

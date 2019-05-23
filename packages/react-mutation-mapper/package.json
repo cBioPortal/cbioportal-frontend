@@ -1,6 +1,6 @@
 {
   "name": "react-mutation-mapper",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Generic Mutation Mapper",
   "author": "cBioPortal",
   "license": "GNU Affero General Public License v3.0",
@@ -9,6 +9,7 @@
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
   "typings": "dist/index.d.ts",
+  "styles": "dist/styles.css",
   "engines": {
     "node": ">=8",
     "npm": ">=5"
@@ -23,17 +24,21 @@
     "deploy": "gh-pages -d example/build",
     "updateGenomeNexusAPI": "yarn run fetchGenomeNexusAPI && yarn run buildGenomeNexusAPI",
     "fetchGenomeNexusAPI": "curl https://www.genomenexus.org/v2/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > src/generated/GenomeNexusAPI-docs.json && curl https://www.genomenexus.org/v2/api-docs?group=internal | json | grep -v basePath | grep -v termsOfService | grep -v host > src/generated/GenomeNexusAPIInternal-docs.json",
-    "buildGenomeNexusAPI": "node scripts/generate-api.js src/generated GenomeNexusAPI GenomeNexusAPIInternal"
+    "buildGenomeNexusAPI": "node scripts/generate-api.js src/generated GenomeNexusAPI GenomeNexusAPIInternal",
+    "updateOncoKbAPI": "yarn run fetchOncoKbAPI && yarn run buildOncoKbAPI",
+    "fetchOncoKbAPI": "curl https://www.oncokb.org/api/v1/v2/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > src/generated/OncoKbAPI-docs.json",
+    "buildOncoKbAPI": "node scripts/generate-api.js src/generated OncoKbAPI"
   },
   "dependencies": {
     "autobind-decorator": "^2.4.0",
-    "cbioportal-frontend-commons": "^0.0.6",
+    "cbioportal-frontend-commons": "^0.0.7",
     "classnames": "^2.2.6",
     "jquery": "^3.3.1",
     "lodash": "^4.17.11",
     "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
     "react-collapse": "^4.0.3",
     "react-motion": "^0.5.2",
+    "react-table": "^6.10.0",
     "seamless-immutable": "^7.1.4",
     "superagent": "^5.0.5"
   },
@@ -45,7 +50,7 @@
     "react-dom": "^15.0.0 || ^16.0.0"
   },
   "devDependencies": {
-    "@svgr/rollup": "^2.4.1",
+    "@svgr/rollup": "^4.2.0",
     "@types/chai": "^4.1.7",
     "@types/classnames": "^2.2.7",
     "@types/jest": "^23.1.5",
@@ -55,6 +60,7 @@
     "@types/react": "^16.8.10",
     "@types/react-collapse": "^4.0.2",
     "@types/react-dom": "^16.8.3",
+    "@types/react-table": "^6.8.1",
     "@types/rollup-plugin-commonjs": "^9.2.0",
     "@types/rollup-plugin-node-resolve": "^4.0.0",
     "@types/rollup-plugin-sourcemaps": "^0.4.2",
@@ -72,6 +78,7 @@
     "mocha": "^6.1.4",
     "node-sass": "^4.12.0",
     "path": "^0.12.7",
+    "postcss-url": "^8.0.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-scripts-ts": "^3.1.0",

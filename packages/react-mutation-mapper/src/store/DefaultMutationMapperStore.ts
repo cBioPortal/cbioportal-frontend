@@ -1,18 +1,30 @@
+import autobind from "autobind-decorator";
 import _ from "lodash";
 import {computed, observable} from "mobx";
-import {cached} from "mobxpromise";
+import MobxPromise, {cached} from "mobxpromise";
 
 import {remoteData} from "cbioportal-frontend-commons";
 
+import {AggregatedHotspots, Hotspot, IHotspotIndex} from "../model/CancerHotspot";
 import DataStore from "../model/DataStore";
 import {EnsemblTranscript} from "../model/EnsemblTranscript";
 import {Gene} from "../model/Gene";
 import {Mutation} from "../model/Mutation";
 import MutationMapperStore from "../model/MutationMapperStore";
+import {CancerGene, IndicatorQueryResp, IOncoKbData} from "../model/OncoKb";
 import {PfamDomain, PfamDomainRange} from "../model/Pfam";
+import {PostTranslationalModification} from "../model/PostTranslationalModification";
+import {
+    defaultHotspotFilter,
+    groupCancerHotspotDataByPosition,
+    groupHotspotsByMutations,
+    indexHotspotsData
+} from "../util/CancerHotspotsUtils";
 import {groupMutationsByProteinStartPos} from "../util/MutationUtils";
+import {defaultOncoKbIndicatorFilter, groupOncoKbIndicatorDataByMutations} from "../util/OncoKbUtils";
+import {groupPtmDataByPosition, groupPtmDataByTypeAndPosition} from "../util/PtmUtils";
 import {DefaultMutationMapperDataStore} from "./DefaultMutationMapperDataStore";
-import {DefaultMutationMapperDataFetcher} from "./DefaultMutationMapperDataFetcher";
+import {DefaultMutationMapperDataFetcher, ONCOKB_DEFAULT_DATA} from "./DefaultMutationMapperDataFetcher";
 
 interface DefaultMutationMapperStoreConfig {
     isoformOverrideSource?: string;
@@ -98,10 +110,21 @@ class DefaultMutationMapperStore implements MutationMapperStore
 
     public countUniqueMutations(mutations: Mutation[]): number
     {
+        // assume by default all mutations are unique
+        // child classes need to override this method to have a custom way of counting unique mutations
         return mutations.length;
     }
 
-    readonly swissProtId = remoteData({
+    readonly mutationData = remoteData({
+        await: () => [
+            this.canonicalTranscript
+        ],
+        invoke: async () => {
+            return this.mutations;
+        }
+    }, []);
+
+    readonly swissProtId: MobxPromise<string> = remoteData({
         invoke: async() => {
             // do not try fetching swissprot data for invalid entrez gene ids,
             // just return the default value
@@ -123,7 +146,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
         }
     }, "");
 
-    readonly uniprotId = remoteData({
+    readonly uniprotId: MobxPromise<string | undefined> = remoteData({
         await: () => [
             this.swissProtId
         ],
@@ -140,7 +163,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
         }
     }, "");
 
-    readonly mutationAlignerLinks = remoteData<{[pfamAccession: string]: string}>({
+    readonly mutationAlignerLinks: MobxPromise<{[pfamAccession: string]: string} | undefined> = remoteData({
         await: () => [
             this.canonicalTranscript,
             this.allTranscripts,
@@ -179,7 +202,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
         }))
     }, {});
 
-    readonly pfamDomainData = remoteData<PfamDomain[] | undefined>({
+    readonly pfamDomainData: MobxPromise<PfamDomain[] | undefined> = remoteData({
         await: ()=> [
             this.canonicalTranscript,
             this.transcriptsWithProteinLength
@@ -198,7 +221,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
         }
     }, undefined);
 
-    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
+    readonly canonicalTranscript: MobxPromise<EnsemblTranscript | undefined> = remoteData({
         await: () => [
             this.transcriptsByHugoSymbol
         ],
@@ -215,7 +238,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
         }
     }, undefined);
 
-    readonly allTranscripts = remoteData<EnsemblTranscript[] | undefined>({
+    readonly allTranscripts: MobxPromise<EnsemblTranscript[] | undefined> = remoteData({
         await: () => [
             this.transcriptsByHugoSymbol,
             this.canonicalTranscript
@@ -232,7 +255,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
         }
     }, undefined);
 
-    readonly transcriptsByHugoSymbol = remoteData<EnsemblTranscript[] | undefined>({
+    readonly transcriptsByHugoSymbol: MobxPromise<EnsemblTranscript[] | undefined> = remoteData({
         invoke: async() => {
             if (this.gene) {
                 return this.dataFetcher.fetchEnsemblTranscriptsByEnsemblFilter(
@@ -246,7 +269,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
         }
     }, undefined);
 
-    readonly transcriptsWithProteinLength = remoteData<string[] | undefined>({
+    readonly transcriptsWithProteinLength: MobxPromise<string[] | undefined> = remoteData({
         await: () => [
             this.allTranscripts,
             this.canonicalTranscript
@@ -265,6 +288,153 @@ class DefaultMutationMapperStore implements MutationMapperStore
         }
     }, undefined);
 
+    readonly ptmData: MobxPromise<PostTranslationalModification[]> = remoteData({
+        await: () => [
+            this.mutationData
+        ],
+        invoke: async () => {
+            if (this.activeTranscript) {
+                return this.dataFetcher.fetchPtmData(this.activeTranscript);
+            }
+            else {
+                return [];
+            }
+        },
+        onError: () => {
+            // fail silently
+        }
+    }, []);
+
+    readonly ptmDataByProteinPosStart: MobxPromise<{[pos: number]: PostTranslationalModification[]} | undefined> = remoteData({
+        await: () => [
+            this.ptmData
+        ],
+        invoke: async() => this.ptmData.result ? groupPtmDataByPosition(this.ptmData.result) : {}
+    }, {});
+
+    readonly ptmDataByTypeAndProteinPosStart: MobxPromise<{[type: string] : {[position: number] : PostTranslationalModification[]}} | undefined> = remoteData({
+        await: () => [
+            this.ptmData
+        ],
+        invoke: async() => this.ptmData.result ? groupPtmDataByTypeAndPosition(this.ptmData.result) : {}
+    }, {});
+
+    readonly cancerHotspotsData: MobxPromise<Hotspot[]> = remoteData({
+        await: () => [
+            this.mutationData
+        ],
+        invoke: async () => {
+            if (this.activeTranscript) {
+                // TODO resolve protein start pos if missing
+                return this.dataFetcher.fetchCancerHotspotData(this.activeTranscript);
+            }
+            else {
+                return [];
+            }
+        },
+        onError: () => {
+            // fail silently
+        }
+    }, []);
+
+    readonly cancerHotspotsDataByProteinPosStart: MobxPromise<{[pos: number]: Hotspot[]}> = remoteData({
+        await: () => [
+            this.cancerHotspotsData
+        ],
+        invoke: async() => this.ptmData.result ? groupCancerHotspotDataByPosition(this.cancerHotspotsData.result!) : {}
+    }, {});
+
+    // Hotspots
+    readonly hotspotData: MobxPromise<AggregatedHotspots[]> = remoteData({
+        await:()=>[
+            this.mutationData
+        ],
+        invoke:()=>{
+            return this.dataFetcher.fetchAggregatedHotspotsData(this.mutations);
+        }
+    });
+
+    readonly indexedHotspotData: MobxPromise<IHotspotIndex | undefined> = remoteData({
+        await:()=>[
+            this.hotspotData
+        ],
+        invoke: ()=>Promise.resolve(indexHotspotsData(this.hotspotData))
+    });
+
+    @computed
+    get hotspotsByPosition(): {[pos: number]: Hotspot[]}
+    {
+        if (this.indexedHotspotData.result)
+        {
+            return groupHotspotsByMutations(
+                this.mutationsByPosition, this.indexedHotspotData.result, defaultHotspotFilter);
+        }
+        else {
+            return {};
+        }
+    }
+
+    readonly oncoKbCancerGenes: MobxPromise<CancerGene[] | Error> = remoteData({
+        invoke: () => this.dataFetcher.fetchOncoKbCancerGenes()
+    }, []);
+
+    readonly oncoKbAnnotatedGenes: MobxPromise<{ [entrezGeneId: number]: boolean }> = remoteData({
+        await: () => [this.oncoKbCancerGenes],
+        invoke: () => Promise.resolve(
+            _.reduce(this.oncoKbCancerGenes.result, (map: { [entrezGeneId: number]: boolean }, next: CancerGene) => {
+                if (next.oncokbAnnotated) {
+                    map[next.entrezGeneId] = true;
+                }
+                return map;
+            }, {})
+        )
+    }, {});
+
+    readonly oncoKbData: MobxPromise<IOncoKbData | Error> = remoteData({
+        await: () => [
+            this.mutationData,
+            this.oncoKbAnnotatedGenes
+        ],
+        invoke: () => this.dataFetcher.fetchOncoKbData(
+            this.mutations,
+            this.oncoKbAnnotatedGenes.result!,
+            this.getDefaultTumorType,
+            this.getDefaultEntrezGeneId
+        ),
+        onError: () => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
+    }, ONCOKB_DEFAULT_DATA);
+
+    @computed
+    get oncoKbDataByPosition(): {[pos: number]: IndicatorQueryResp[]}
+    {
+        if (this.oncoKbData.result &&
+            !(this.oncoKbData.result instanceof Error))
+        {
+            return groupOncoKbIndicatorDataByMutations(
+                this.mutationsByPosition,
+                this.oncoKbData.result,
+                this.getDefaultTumorType,
+                this.getDefaultEntrezGeneId,
+                defaultOncoKbIndicatorFilter);
+        }
+        else {
+            return {};
+        }
+    }
+
+    @autobind
+    protected getDefaultTumorType(mutation: Mutation): string {
+        // TODO get actual tumor type for a given mutation (if possible)
+        return mutation ? "Unknown" : "";
+    }
+
+    @autobind
+    protected getDefaultEntrezGeneId(mutation: Mutation): number {
+        // assuming all mutations in this store is for the same gene
+        return mutation ? this.gene.entrezGeneId : 0;
+    }
 }
 
 export default DefaultMutationMapperStore;
