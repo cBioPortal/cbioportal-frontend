@@ -8,7 +8,7 @@ run_database_container() {
     # create local database from with cbioportal db and seed data
     download_db_seed
     docker volume rm MYSQL_DATA_DIR 2> /dev/null || true
-    docker stop $DB_HOST && docker rm $DB_HOST
+    docker stop $DB_HOST  2> /dev/null && docker rm $DB_HOST 2> /dev/null
     docker run -d \
         --name=$DB_HOST \
         --net=$DOCKER_NETWORK_NAME \
@@ -16,14 +16,20 @@ run_database_container() {
         -e MYSQL_USER=$DB_USER \
         -e MYSQL_PASSWORD=$DB_PASSWORD \
         -e MYSQL_DATABASE=$DB_PORTAL_DB_NAME \
-        -p 127.0.0.1:3306:3306 \
         -v "MYSQL_DATA_DIR:/var/lib/mysql/" \
         -v "/tmp/cgds.sql:/docker-entrypoint-initdb.d/cgds.sql:ro" \
         -v "/tmp/seed.sql.gz:/docker-entrypoint-initdb.d/seed_part1.sql.gz:ro" \
         mysql:5.7
 
+    sleeptime=0
+    maxtime=180
     while ! docker run --rm --net=$DOCKER_NETWORK_NAME mysql:5.7 mysqladmin ping -u $DB_USER -p$DB_PASSWORD -h$DB_HOST --silent; do
         echo Waiting for cbioportal database to initialize...
+        sleeptime=$sleeptime+10
+        if (($sleeptime > $maxtime)); then 
+            echo Timeout reached. Terminating test!
+            exit 1
+        fi
         sleep 10
     done
 
@@ -43,7 +49,7 @@ build_cbioportal_image() {
     cd /tmp
     rm -rf cbioportal
     git clone --depth 1 -b $BACKEND_BRANCH_NAME "https://github.com/$BACKEND_ORGANIZATION/cbioportal.git"
-    (docker stop $E2E_CBIOPORTAL_HOST_NAME 2> /dev/null && docker rm $E2E_CBIOPORTAL_HOST_NAME  2> /dev/null) || true 
+    docker stop $E2E_CBIOPORTAL_HOST_NAME 2> /dev/null && docker rm $E2E_CBIOPORTAL_HOST_NAME  2> /dev/null
     cp $TEST_HOME/local_database/docker/Dockerfile cbioportal
     cp $TEST_HOME/local_database/runtime-config/portal.properties cbioportal
     cd cbioportal
@@ -65,11 +71,19 @@ run_cbioportal_container() {
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/local_database/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
         -e CATALINA_OPTS='-Xms2g -Xmx4g' \
-        -p 8081:8080 \
         cbioportal-endtoend-image
     
-    echo Wait 2 minutes for the cBioPortal server to initialize
-    sleep 120
+    sleeptime=0
+    maxtime=180
+    while ! docker run --rm --net=$DOCKER_NETWORK_NAME cbioportal-endtoend-image ping -c 1 "$E2E_CBIOPORTAL_HOST_NAME" &> /dev/null; do
+        echo Waiting for cbioportal to initialize...
+        sleeptime=$sleeptime+10
+        if (($sleeptime > $maxtime)); then 
+            echo Timeout reached. Terminating test!
+            exit 1
+        fi
+        sleep 10
+    done
 
 }
 
@@ -97,16 +111,15 @@ check_jitpack_download_frontend() {
     # curl -s --head $url | head -n 0
     # FRONTEND_COMMIT_HASH_SHORT=$(echo $FRONTEND_COMMIT_HASH | awk '{print substr($0,0,10)}')
     url_short="https://jitpack.io/com/github/$FRONTEND_ORGANIZATION/cbioportal-frontend/$FRONTEND_COMMIT_HASH/cbioportal-frontend-$FRONTEND_COMMIT_HASH.jar"
-    max_wait=1200
-    wait=0
-    cur_time=$(date +%s)
-    while (($wait < $max_wait)); do
+    sleeptime=0
+    maxtime=1200
+    while (($sleeptime < $maxtime)); do
         if !(curl -s --head $url_short | head -n 1 | egrep "HTTP/[0-9.]+ 200"); then
             echo Waiting for jitpack to build the frontend package...
             sleep 10
-            wait=wait+$(date +%s)-cur_time
+            sleeptime=$sleeptime+10
         else
-            wait=max_wait+1
+            sleeptime=maxtime+1
         fi
     done
 
@@ -120,8 +133,8 @@ download_db_seed() {
     # download db schema and seed data
     curdir=$PWD
     cd /tmp
-    curl https://raw.githubusercontent.com/cBioPortal/cbioportal/v2.0.0/db-scripts/src/main/resources/cgds.sql > cgds.sql
-    curl https://raw.githubusercontent.com/cBioPortal/datahub/master/seedDB/seed-cbioportal_hg19_v2.7.3.sql.gz > seed.sql.gz
+    curl $DB_CGDS_URL > cgds.sql
+    curl $DB_SEED_URL > seed.sql.gz
     cd $curdir
 }
 

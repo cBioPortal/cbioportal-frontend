@@ -4,11 +4,10 @@ import sys
 import json
 import requests
 import re
+import os
 
-issue_number=sys.argv[1]
-
-# TODO !!!! change back to cbioportal --> 
-url = "https://api.github.com/repos/thehyve/cbioportal-frontend/pulls/"+issue_number
+issue_number = sys.argv[1]
+url = sys.argv[2].strip('/') + '/' + issue_number
 
 myResponse = requests.get(url)
 
