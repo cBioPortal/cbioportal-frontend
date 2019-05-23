@@ -26,7 +26,7 @@ export const CNA_TO_ALTERATION:{[cna:number]:string} = {
 };
 
 export enum GeneOptions {
-    USER_DEFINED_OPTION='User-defined List',
+    USER_DEFINED_OPTION='User-defined genes',
     HIGHEST_FREQUENCY='Genes with highest frequency in any group',
     AVERAGE_FREQUENCY='Genes with highest average frequency',
     SIGNIFICANT_P_VALUE='Genes with most significant p-values'

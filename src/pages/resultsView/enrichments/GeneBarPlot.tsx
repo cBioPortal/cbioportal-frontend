@@ -27,13 +27,16 @@ export interface IGeneBarPlotProps {
 
 const SVG_ID = "GroupComparisonGeneFrequencyPlot";
 
+const DEFAULT_GENES_COUNT = 10;
+
 @observer
 export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> {
 
     @observable tooltipModel: any;
     @observable _geneQuery: string | undefined;
     @observable selectedGenes: string[] | undefined;
-    @observable label: string | undefined;
+    @observable _label: string | undefined;
+    @observable isGeneSelectionPopupVisible: boolean | undefined = false;
 
     @computed get geneListOptions() {
         return getGeneListOptions(this.props.data);
@@ -44,7 +47,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
     }
 
     @computed get defaultgenes() {
-        return this.defaultOption.genes.slice(0, 10);
+        return this.defaultOption.genes.slice(0, DEFAULT_GENES_COUNT);
     }
 
     @computed get geneDataSet() {
@@ -125,14 +128,23 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
         </div>)
     }
 
+    @computed get label() {
+        const label = this._label || this.defaultOption.label;
+        return `Showing ${label.charAt(0).toLowerCase()}${label.substring(1)}`;
+    }
+
     @computed get toolbar() {
         return (
             <div style={{ zIndex: 10, position: "absolute", top: "10px", right: "10px" }}>
                 <div className={styles.ChartControls}>
-                    <strong>{this.label ? this.label : this.defaultOption.label}</strong>
+                    <strong>{this.label}</strong>
                     <DefaultTooltip
                         trigger={['click']}
                         destroyTooltipOnHide={false}
+                        visible={this.isGeneSelectionPopupVisible}
+                        onVisibleChange={(visible) => {
+                            this.isGeneSelectionPopupVisible = visible;
+                        }}
                         overlay={
                             <GenesSelection
                                 options={this.geneListOptions}
@@ -140,15 +152,15 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                                 onSelectedGenesChange={(value, genes, label) => {
                                     this._geneQuery = value;
                                     this.selectedGenes = genes;
-                                    this.label = label;
+                                    this._label = label;
+                                    this.isGeneSelectionPopupVisible = false;
                                 }}
-                                defaultNumberOfGenes={10} />
-
+                                defaultNumberOfGenes={DEFAULT_GENES_COUNT} />
                         }
                         placement="bottomLeft"
                     >
                         <div>
-                            <button className="btn btn-default btn-xs" >
+                            <button className="btn btn-default btn-xs">
                                 Select genes
                             </button>
                         </div>
@@ -178,8 +190,6 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                         barWidth={this.props.isTwoGroupAnalysis ? 10 : 20}
                         domainPadding={this.props.isTwoGroupAnalysis ? 10 : 20}
                         chartBase={300}
-                        //axisLabelX="Genes"
-                        axisLabelY="Group"
                         legendLocationWidthThreshold={800}
                         ticksCount={6}
                         horizontalBars={false}
@@ -200,13 +210,18 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
 
 interface IGeneSelectionProps {
     options: { label: string, genes: string[] }[];
-    selectedValue: string
+    selectedValue: string;
     onSelectedGenesChange: (value: string, orderedGenes: string[], label: string) => void;
-    defaultNumberOfGenes: number
+    defaultNumberOfGenes: number;
+    maxNumberOfGenes?: number;
 }
 
 @observer
 class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
+
+    static defaultProps: Partial<IGeneSelectionProps> = {
+        maxNumberOfGenes: 100
+    };
 
     @observable _geneQuery: string | undefined;
     @observable selectedGenes: string[] | undefined;
@@ -285,7 +300,10 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     @autobind
     @action
     private handleTotalInputChange(e: any) {
-        this.numberOfGenes = e.target.value.replace(/[^0-9]/g, '');
+        const newCount: number = e.target.value.replace(/[^0-9]/g, '');
+        if (newCount <= this.props.maxNumberOfGenes!) {
+            this.numberOfGenes = newCount;
+        }
     }
 
     @autobind
@@ -307,6 +325,23 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         }
     }
 
+    @autobind
+    @action
+    private onBlur() {
+        if (isNaN(this.numberOfGenes)) {
+            this.numberOfGenes = 0;
+            return;
+        }
+        //removes leading 0s
+        this.numberOfGenes = Number(this.numberOfGenes);
+        if (this.selectedGeneListOption) {
+            let genes = this.selectedGeneListOption.genes;
+            if (genes.length > 0) {
+                this._geneQuery = genes.slice(0, this.numberOfGenes).join(' ');
+            }
+        }
+    }
+
     public render() {
         return (
             <div style={{ width: 300 }}>
@@ -322,12 +357,13 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                 {!this.isCustomGeneSelection && <div>
                     <br />
                     <div style={{ display: "table-row" }}>
-                        <label style={{ display: "table-cell" }}>Number of Genes: &nbsp;</label>
+                        <label style={{ display: "table-cell", whiteSpace: "nowrap" }}>Number of Genes (max. {this.props.maxNumberOfGenes}): &nbsp;</label>
                         <FormControl
                             type="text"
                             value={this.numberOfGenes}
                             onChange={this.handleTotalInputChange}
-                            onKeyPress={this.handleTotalInputKeyPress} />
+                            onKeyPress={this.handleTotalInputKeyPress}
+                            onBlur={this.onBlur} />
                     </div>
                 </div>}
                 <div>
