@@ -448,7 +448,10 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     }
 
     @computed get vertAxis() {
-        const label = [this.props.axisLabelY];
+        const label:string[] = [];
+        if(this.props.axisLabelY) {
+            label.push(this.props.axisLabelY)
+        }
         if (!this.props.horizontalBars) {
             label.push(`${this.props.countAxisLabel}${this.props.percentage ? " (%)": ""}`);
         }
