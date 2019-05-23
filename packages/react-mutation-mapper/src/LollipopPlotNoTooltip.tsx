@@ -1,17 +1,25 @@
 import * as React from 'react';
+import $ from "jquery";
 import {SyntheticEvent} from "react";
+import autobind from "autobind-decorator";
 import _ from "lodash";
+import {observer} from "mobx-react";
+import {computed, action} from "mobx";
+
+import {
+    SVGAxis,
+    Tick,
+    getComponentIndex,
+    unhoverAllComponents
+} from 'cbioportal-frontend-commons';
+
+import {LollipopSpec} from "./model/LollipopSpec";
+import {DomainSpec} from "./model/DomainSpec";
+import {updatePositionHighlightFilters, updatePositionSelectionFilters} from "./util/FilterUtils";
 import Sequence from "./Sequence";
 import Lollipop from "./Lollipop";
 import Domain from "./Domain";
-import {LollipopSpec} from "./model/LollipopSpec";
-import {DomainSpec} from "./model/DomainSpec";
-import {SVGAxis, Tick, getComponentIndex, unhoverAllComponents} from 'cbioportal-frontend-commons';
-import {observer} from "mobx-react";
-import {computed, action} from "mobx";
 import {LollipopPlotProps} from "./LollipopPlot";
-
-import $ from "jquery";
 
 export type LollipopPlotNoTooltipProps = LollipopPlotProps & {
     setHitZone?:(
@@ -41,7 +49,6 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
 
     private svg:SVGElement|undefined;
     private shiftPressed:boolean = false;
-    private handlers:any;
 
     private lollipopZeroHeight = 10;
     private xAxisCandidateTickIntervals = [50, 100, 200, 250, 500, 1000, 2500, 5000, 10000, 25000];
@@ -51,124 +58,137 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
     private geneHeight = 14;
     private domainHeight = 24;
 
-    constructor(props:LollipopPlotNoTooltipProps) {
-        super(props);
-        this.handlers = {
-            ref: (svg:SVGElement)=>{this.svg = svg;},
-            onBackgroundClick:()=>{
-                this.props.dataStore.clearDataSelectFilter();
-                this.props.dataStore.clearSelectedPositions();
-            },
-            onBackgroundMouseMove:()=>{
-                this.props.onBackgroundMouseMove && this.props.onBackgroundMouseMove();
-                // unhover all of the lollipops if mouse hits background
-                this.unhoverAllLollipops();
-            },
-            onLollipopClick:(codon:number)=>{
-                const isSelected = this.props.dataStore.isPositionSelected(codon);
-                if (!this.shiftPressed) {
-                    this.props.dataStore.clearSelectedPositions();
-                }
-                this.props.dataStore.clearDataSelectFilter();
-                this.props.dataStore.setPositionSelected(codon, !isSelected);
-            },
-            onKeyDown:(e: JQueryKeyEventObject)=>{
-                if (e.which === 16) {
-                    this.shiftPressed = true;
-                }
-            },
-            onKeyUp:(e: JQueryKeyEventObject)=>{
-                if (e.which === 16) {
-                    this.shiftPressed = false;
-                }
-            },
-            onMouseOver:(e: SyntheticEvent<any>)=>{
-                // No matter what, unhover all lollipops - if we're hovering one, we'll set it later in this method
-                this.unhoverAllLollipops();
+    @autobind
+    protected ref(svg:SVGElement){
+        this.svg = svg;
+    }
 
-                const target = e.target as SVGElement;
-                const className = target.getAttribute("class") || "";
-                const lollipopIndex: number|null = this.getLollipopIndex(className);
-                let domainIndex: number|null = null;
-                let sequenceIndex: number|null = null;
+    @autobind
+    @action
+    protected onBackgroundClick() {
+        this.props.dataStore.clearSelectionFilters();
+    }
 
-                if (lollipopIndex !== null) {
-                    const lollipopComponent = this.lollipopComponents[lollipopIndex];
-                    if (lollipopComponent) {
-                        lollipopComponent.isHovered = true;
-                        if (this.props.setHitZone) {
-                            this.props.setHitZone(
-                                lollipopComponent.circleHitRect,
-                                lollipopComponent.props.spec.tooltip,
-                                action(()=>{
-                                    this.props.dataStore.clearDataHighlightFilter();
-                                    this.props.dataStore.setPositionHighlighted(lollipopComponent.props.spec.codon, true);
-                                    lollipopComponent.isHovered = true;
-                                }),
-                                action(()=>this.handlers.onLollipopClick(lollipopComponent.props.spec.codon))
-                            );
-                        }
-                    }
-                } else {
-                    domainIndex = this.getDomainIndex(className);
-                }
+    @autobind
+    @action
+    protected onBackgroundMouseMove() {
+        this.props.onBackgroundMouseMove && this.props.onBackgroundMouseMove();
+        // unhover all of the lollipops if mouse hits background
+        this.unhoverAllLollipops();
+    }
 
-                if (domainIndex !== null) {
-                    const domainComponent = this.domainComponents[domainIndex];
-                    if (domainComponent) {
-                        if (this.props.setHitZone) {
-                            this.props.setHitZone(
-                                domainComponent.hitRect,
-                                domainComponent.props.spec.tooltip,
-                                undefined, undefined, undefined,
-                                "auto"
-                            );
-                        }
-                    }
-                }
-                else {
-                    sequenceIndex = this.getSequenceIndex(className);
-                }
+    @autobind
+    @action
+    protected onLollipopClick(codon: number) {
+        updatePositionSelectionFilters(this.props.dataStore, codon, this.shiftPressed);
+    }
 
-                if (sequenceIndex !== null) {
-                    const sequenceComponent = this.sequenceComponents[sequenceIndex];
-                    if (sequenceComponent) {
-                        if (this.props.setHitZone) {
-                            this.props.setHitZone(
-                                sequenceComponent.hitRect,
-                                sequenceComponent.props.spec.tooltip,
-                                undefined, undefined, undefined,
-                                "auto"
-                            );
-                        }
-                    }
-                }
-            },
-            onSVGMouseLeave:(e:SyntheticEvent<any>)=>{
-                const target = e.target as Element;
-                if (target.tagName.toLowerCase() === "svg") {
-                    this.props.onMouseLeave && this.props.onMouseLeave();
+    @autobind
+    @action
+    protected onKeyDown(e: JQueryKeyEventObject) {
+        if (e.which === 16) {
+            this.shiftPressed = true;
+        }
+    }
+
+    @autobind
+    @action
+    protected onKeyUp(e: JQueryKeyEventObject) {
+        if (e.which === 16) {
+            this.shiftPressed = false;
+        }
+    }
+
+    @autobind
+    @action
+    protected onMouseOver(e: SyntheticEvent<any>) {
+        // No matter what, unhover all lollipops - if we're hovering one, we'll set it later in this method
+        this.unhoverAllLollipops();
+
+        const target = e.target as SVGElement;
+        const className = target.getAttribute("class") || "";
+        const lollipopIndex: number|null = this.getLollipopIndex(className);
+        let domainIndex: number|null = null;
+        let sequenceIndex: number|null = null;
+
+        if (lollipopIndex !== null) {
+            const lollipopComponent = this.lollipopComponents[lollipopIndex];
+            if (lollipopComponent) {
+                lollipopComponent.isHovered = true;
+                if (this.props.setHitZone) {
+                    this.props.setHitZone(
+                        lollipopComponent.circleHitRect,
+                        lollipopComponent.props.spec.tooltip,
+                        action(()=>{
+                            updatePositionHighlightFilters(this.props.dataStore,
+                                lollipopComponent.props.spec.codon);
+                            lollipopComponent.isHovered = true;
+                        }),
+                        action(()=>this.onLollipopClick(lollipopComponent.props.spec.codon))
+                    );
                 }
             }
-        };
+        } else {
+            domainIndex = this.getDomainIndex(className);
+        }
+
+        if (domainIndex !== null) {
+            const domainComponent = this.domainComponents[domainIndex];
+            if (domainComponent) {
+                if (this.props.setHitZone) {
+                    this.props.setHitZone(
+                        domainComponent.hitRect,
+                        domainComponent.props.spec.tooltip,
+                        undefined, undefined, undefined,
+                        "auto"
+                    );
+                }
+            }
+        }
+        else {
+            sequenceIndex = this.getSequenceIndex(className);
+        }
+
+        if (sequenceIndex !== null) {
+            const sequenceComponent = this.sequenceComponents[sequenceIndex];
+            if (sequenceComponent) {
+                if (this.props.setHitZone) {
+                    this.props.setHitZone(
+                        sequenceComponent.hitRect,
+                        sequenceComponent.props.spec.tooltip,
+                        undefined, undefined, undefined,
+                        "auto"
+                    );
+                }
+            }
+        }
+    }
+
+    @autobind
+    @action
+    protected onSVGMouseLeave(e:SyntheticEvent<any>) {
+        const target = e.target as Element;
+
+        if (target.tagName.toLowerCase() === "svg") {
+            this.props.onMouseLeave && this.props.onMouseLeave();
+        }
     }
 
     private unhoverAllLollipops() {
         unhoverAllComponents(this.lollipopComponents);
-        this.props.dataStore.clearHighlightedPositions();
+        this.props.dataStore.clearHighlightFilters();
     }
-
 
     componentDidMount() {
         // Make it so that if you hold down shift, you can select more than one lollipop at once
-        $(document).on("keydown",this.handlers.onKeyDown);
-        $(document).on("keyup", this.handlers.onKeyUp);
+        $(document).on("keydown", this.onKeyDown);
+        $(document).on("keyup", this.onKeyUp);
         this.props.onXAxisOffset && this.props.onXAxisOffset(this.geneX);
     }
 
     componentWillUnmount() {
-        $(document).off("keydown",this.handlers.onKeyDown);
-        $(document).off("keyup", this.handlers.onKeyUp);
+        $(document).off("keydown", this.onKeyDown as any);
+        $(document).off("keyup", this.onKeyUp as any);
     }
 
     componentDidUpdate() {
@@ -339,7 +359,8 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
         this.lollipopComponents = {};
         const hoverHeadRadius = 5;
         return this.props.lollipops.map((lollipop:LollipopSpec, i:number)=>{
-            return (<Lollipop
+            return (
+                <Lollipop
                     key={lollipop.codon}
                     ref={(lollipopComponent:Lollipop)=>{ if (lollipopComponent !== null) { this.lollipopComponents[i] = lollipopComponent; } }}
                     x={this.geneX + this.codonToX(lollipop.codon)}
@@ -428,13 +449,13 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
 
     render() {
         return (
-            <div onMouseOver={this.handlers.onMouseOver}>
+            <div onMouseOver={this.onMouseOver}>
                 <svg xmlns="http://www.w3.org/2000/svg"
-                     ref={this.handlers.ref}
+                     ref={this.ref as any}
                      width={this.svgWidth}
                      height={this.svgHeight}
                      className="lollipop-svgnode"
-                     onMouseLeave={this.handlers.onSVGMouseLeave}
+                     onMouseLeave={this.onSVGMouseLeave}
                 >
                     <rect
                         fill="#FFFFFF"
@@ -442,8 +463,8 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                         y={0}
                         width={this.svgWidth}
                         height={this.svgHeight}
-                        onClick={this.handlers.onBackgroundClick}
-                        onMouseMove={this.handlers.onBackgroundMouseMove}
+                        onClick={this.onBackgroundClick}
+                        onMouseMove={this.onBackgroundMouseMove}
                     />
                     {
                         // Originally this had tooltips by having separate segments
