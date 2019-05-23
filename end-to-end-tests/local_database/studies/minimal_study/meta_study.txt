@@ -1,7 +1,7 @@
 type_of_cancer: brca
 cancer_study_identifier: minimal_study
-name: Test study es_0
-description: Minimal study for screenshot test
+name: Minimal study for e2e tests
+description: Minimal study for e2e tests
 citation: None
 pmid: 29625048,29596782,29622463,29617662,29625055,29625050
 groups: PUBLIC;GDAC;SU2C-PI3K

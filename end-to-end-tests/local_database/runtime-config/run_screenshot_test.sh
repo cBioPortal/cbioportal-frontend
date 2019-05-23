@@ -17,7 +17,6 @@ docker run -ti \
     -e SCREENSHOT_DIRECTORY="$SCREENSHOT_DIRECTORY"\
     -e SPEC_FILE_PATTERN="$SPEC_FILE_PATTERN" \
     -e JUNIT_REPORT_PATH="$JUNIT_REPORT_PATH" \
-    -v "/home/pnp300/screenshots/:/cbioportal-frontend/end-to-end-tests/local_database/screenshots" \
     cbioportal:screenshot
 
 cd $CUR_DIR

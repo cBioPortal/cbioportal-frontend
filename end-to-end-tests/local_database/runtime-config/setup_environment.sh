@@ -2,6 +2,24 @@
 
 set -e
 
+# -+-+-+-+-+-+-+ ENVIRONMENTAL VARS +-+-+-+-+-+-+-
+
+# TODO !!!! change back to cbioportal -->
+GITHUB_PR_API_PATH="https://api.github.com/repos/thehyve/cbioportal-frontend/pulls"
+
+echo export E2E_CBIOPORTAL_HOST_NAME=cbioportal
+echo export CBIOPORTAL_URL="http://$E2E_CBIOPORTAL_HOST_NAME:8080/cbioportal"
+echo export DOCKER_NETWORK_NAME=endtoend_localdb_network
+echo export SESSION_SERVICE_HOST_NAME=cbio-session-service
+echo export SCREENSHOT_DIRECTORY=./local_database/screenshots
+echo export JUNIT_REPORT_PATH=./local_database/junit/
+echo export SPEC_FILE_PATTERN=./local_database/specs/**/*.spec.js
+
+echo export DB_CGDS_URL=https://raw.githubusercontent.com/cBioPortal/cbioportal/v2.0.0/db-scripts/src/main/resources/cgds.sql
+echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/master/seedDB/seed-cbioportal_hg19_v2.7.3.sql.gz
+
+# -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
 # evaluate the pull request number. This is sometimes not set by CirclCI 
 if [[ -z "$CIRCLE_PR_NUMBER" ]]; then
     if [[ "$CIRCLE_PULL_REQUEST" =~ \/([0-9]+)$ ]] ; then
@@ -13,7 +31,7 @@ if [[ -z "$CIRCLE_PR_NUMBER" ]]; then
     fi
 fi
 
-python3 get_pullrequest_info.py $CIRCLE_PR_NUMBER
+python3 get_pullrequest_info.py $CIRCLE_PR_NUMBER $GITHUB_PR_API_PATH
 # retrieves
     # FRONTEND_BRANCH_NAME          ->  (e.g. 'superawesome_feature_branch')
     # FRONTEND_COMMIT_HASH          ->  (e.g. '3as8sAs4')
@@ -33,13 +51,5 @@ python3 read_portalproperties.py portal.properties
     # DB_PORTAL_DB_NAME             ->  (e.g. 'endtoend_local_cbiodb')
     # DB_CONNECTION_STRING          ->  (e.g. 'jdbc:mysql://cbiodb-endtoend:3306/')
     # DB_HOST                       ->  (e.g. 'cbiodb-endtoend')
-
-echo export E2E_CBIOPORTAL_HOST_NAME=cbioportal
-echo export CBIOPORTAL_URL="http://$E2E_CBIOPORTAL_HOST_NAME:8080/cbioportal"
-echo export DOCKER_NETWORK_NAME=endtoend_localdb_network
-echo export SESSION_SERVICE_HOST_NAME=cbio-session-service
-echo export SCREENSHOT_DIRECTORY=./local_database/screenshots
-echo export JUNIT_REPORT_PATH=./local_database/junit/
-echo export SPEC_FILE_PATTERN=./local_database/specs/**/*.spec.js
 
 exit 0
