@@ -22,6 +22,7 @@ import CheckedSelect, {Option} from 'shared/components/checkedSelect/CheckedSele
 import {MiniOncoprint} from "shared/components/miniOncoprint/MiniOncoprint";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import GeneBarPlot from './GeneBarPlot';
+import WindowStore from "shared/components/window/WindowStore";
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -250,7 +251,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
         return (
             <div className={styles.Container}>
-                <div className={styles.ChartsPanel}>
+                <div className={styles.ChartsPanel} style={{maxWidth:WindowStore.size.width-20}}>
                     {this.isTwoGroupAnalysis && <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
                         xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
                         xAxisTickValues={[-10, 0, 10]}
