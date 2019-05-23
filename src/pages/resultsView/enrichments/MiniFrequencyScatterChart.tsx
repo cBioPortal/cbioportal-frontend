@@ -184,22 +184,34 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
             <div className="posRelative">
                 <div className="borderedChart inlineBlock" style={{position:"relative"}} onClick={this.onClick}>
                     <VictoryChart containerComponent={this.containerComponent} theme={CBIOPORTAL_VICTORY_THEME}
-                                  domainPadding={20} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}
+                                  domainPadding={{x:[0,20], y:[0,20]}} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}
                     >
                         <VictoryAxis tickValues={[0,25,50,75]} domain={[0,this.plotDomainMax]}
                                      label={this.xLabel}
                                      style={{
-                                        tickLabels: { padding: 5 }, axisLabel: { padding: 20 },
-                                        ticks: { size: 0 }
+                                        tickLabels: { padding: 5 }, axisLabel: { padding: 27 },
+                                        ticks: { size: 3 },
+                                        grid: {
+                                            strokeOpacity: 1,
+                                        }
                                      }}
+                                     crossAxis={false}
+                                     orientation="bottom"
+                                     offsetY={45}
                         />
                         <VictoryAxis tickValues={[0,25,50,75]} domain={[0,this.plotDomainMax]}
                                      dependentAxis={true}
                                      label={this.yLabel}
                                      style={{
-                                         tickLabels: { padding: 5 }, axisLabel: { padding: 20 },
-                                         ticks: { size: 0 }
+                                         tickLabels: { padding: 5 }, axisLabel: { padding: 32 },
+                                         ticks: { size: 3 },
+                                         grid: {
+                                             strokeOpacity: 1,
+                                         }
                                      }}
+                                     crossAxis={false}
+                                     orientation="left"
+                                     offsetX={45}
                         />
                         <VictoryLine
                             style={{
