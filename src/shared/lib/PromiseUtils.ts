@@ -12,3 +12,7 @@ export function addTimeoutToPromise<T>(promise:Promise<T>, ms:number):Promise<T>
         });
     });
 }
+
+export function isPromiseLike<T>(obj:any):obj is PromiseLike<T> {
+    return typeof obj.then === "function";
+}

@@ -35,6 +35,8 @@ import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/Pr
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import MobxPromise from "mobxpromise";
+import {browserHistory} from "react-router";
+import * as JQuery from 'jquery';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -43,10 +45,17 @@ interface IResultsViewOncoprintProps {
     addOnBecomeVisibleListener?:(callback:()=>void)=>void;
 }
 
+export enum SortByUrlParamValue {
+    CASE_ID = "case_id",
+    CASE_LIST = "case_list",
+    NONE = ""
+}
+
 export type SortMode = (
     {type:"data"|"alphabetical"|"caseList", clusteredHeatmapProfile?:undefined} |
     {type:"heatmap", clusteredHeatmapProfile:string}
 );
+
 
 export interface IGenesetExpansionRecord {
     entrezGeneId: number;
@@ -58,6 +67,7 @@ export interface IGenesetExpansionRecord {
 export const SAMPLE_MODE_URL_PARAM = "show_samples";
 export const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
 export const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
+export const ONCOPRINT_SORTBY_URL_PARAM = "oncoprint_sortby";
 
 const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
 
@@ -142,7 +152,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.selectedClinicalAttributeIds.set(attr.clinicalAttributeId, true);
             }
         });
-        
         const self = this;
 
         this.onChangeSelectedClinicalTracks = this.onChangeSelectedClinicalTracks.bind(this);
@@ -168,6 +177,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.onMouseEnter = this.onMouseEnter.bind(this);
         this.onMouseLeave = this.onMouseLeave.bind(this);
 
+        // update URL parameters according to UI events
+        // and trigger a page refresh
         this.urlParamsReaction = reaction(
             ()=>[
                 this.columnMode,
@@ -225,7 +236,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.sortByMutationType;
             },
             get sortByCaseListDisabled() {
-                return !self.props.store.givenSampleOrder.isComplete || !self.props.store.givenSampleOrder.result.length;
+                return ! self.caseListSortPossible;
             },
             get distinguishMutationType() {
                 return self.distinguishMutationType;
@@ -347,6 +358,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 }
             },
         });
+    }
+
+    @computed get caseListSortPossible():boolean {
+        return !!(this.props.store.givenSampleOrder.isComplete && this.props.store.givenSampleOrder.result.length);
     }
 
     @computed get distinguishDrivers() {
@@ -592,6 +607,25 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             const attrIds = paramsMap[CLINICAL_TRACKS_URL_PARAM].split(",");
             attrIds.map((attrId:string)=>this.selectedClinicalAttributeIds.set(attrId, true));
         }
+        if (paramsMap[ONCOPRINT_SORTBY_URL_PARAM]) {
+            const mode = paramsMap[ONCOPRINT_SORTBY_URL_PARAM];
+            switch (mode) {
+                case SortByUrlParamValue.CASE_ID:                                         // sort by sample or patient id (a.k.a. alphabetical)
+                    this.configureSortMode('alphabetical', false, false);
+                    break;
+                case SortByUrlParamValue.CASE_LIST:                                       // sort by order of appearance in case list (when selected on query page)
+                    if (this.caseListSortPossible) {
+                        this.configureSortMode('caseList', false, false);
+                    }
+                    break;
+            }
+        }
+    }
+
+    private configureSortMode(type:'data'|'caseList'|'alphabetical', byMutation:boolean, byDriver:boolean){
+        this.sortMode = {type: type};
+        this.sortByMutationType = byMutation;
+        this.sortByDrivers = byDriver;
     }
 
     @action public sortByData() {

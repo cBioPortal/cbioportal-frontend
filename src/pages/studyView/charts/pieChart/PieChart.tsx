@@ -156,7 +156,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
             ) ? '' : d.count.toLocaleString());
     }
 
-    // We do want to show a bigger pie chart when the height is way smaller than width
+    // We don't want to show a bigger pie chart when the height is way smaller than width
     @computed
     get chartSize() {
         return (this.props.width + this.props.height ) / 2;
@@ -175,7 +175,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 standalone={false}
                 theme={CBIOPORTAL_VICTORY_THEME}
                 containerComponent={<VictoryContainer responsive={false}/>}
-                groupComponent={<g className="studyViewPieChartGroup"/>}
+                groupComponent={<g className="studyViewPieChartGroup" transform="translate(0, -12)"/>}
                 width={this.props.width}
                 height={this.chartSize}
                 labelRadius={this.pieSliceRadius / 3}

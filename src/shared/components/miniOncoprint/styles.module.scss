@@ -1,0 +1,27 @@
+.wrapper {
+
+  > div {
+    display:flex;
+    background:#bbb;
+
+    div {
+      height:2px;
+    }
+
+  }
+
+  .groupRow {
+    div {
+      height:3px;
+    }
+  }
+  .alterationRow {
+    margin-top:3px;
+    div {
+      height:8px;
+    }
+  }
+
+}
+
+
