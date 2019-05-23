@@ -1,5 +1,6 @@
 import * as React from "react";
 import {observer} from "mobx-react";
+import styles from "../styles.module.scss";
 import {SortableContainer} from "react-sortable-hoc";
 
 export interface IGroupSelectorButtonListProps {
@@ -10,7 +11,7 @@ export interface IGroupSelectorButtonListProps {
 class GroupSelectorButtonList extends React.Component<IGroupSelectorButtonListProps, {}> {
     render() {
         return (
-            <div>
+            <div className={styles.groupButtons}>
                 {this.props.buttons}
             </div>
         );
