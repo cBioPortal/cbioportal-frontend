@@ -12,9 +12,9 @@ echo export CBIOPORTAL_URL="http://cbioportal:8080/cbioportal"
 echo export DOCKER_NETWORK_NAME=endtoend_localdb_network
 echo export SESSION_SERVICE_HOST_NAME=cbio-session-service
 echo export SCREENSHOT_IMAGE_NAME=cbio-screenshot
-echo export SCREENSHOT_DIRECTORY=./local_database/screenshots
-echo export JUNIT_REPORT_PATH=./local_database/junit/
-echo export SPEC_FILE_PATTERN=./local_database/specs/**/*.spec.js
+echo export SCREENSHOT_DIRECTORY=./screenshots
+echo export JUNIT_REPORT_PATH=./junit/
+echo export SPEC_FILE_PATTERN=./specs/**/*.spec.js
 
 echo export DB_CGDS_URL=https://raw.githubusercontent.com/cBioPortal/cbioportal/v2.0.0/db-scripts/src/main/resources/cgds.sql
 echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/master/seedDB/seed-cbioportal_hg19_v2.7.3.sql.gz
