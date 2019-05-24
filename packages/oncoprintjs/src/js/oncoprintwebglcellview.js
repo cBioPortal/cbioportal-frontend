@@ -650,6 +650,10 @@ var OncoprintWebGLCellView = (function () {
 	getWebGLContextAndSetUpMatrices(view, model);
 	setUpShaders(view);
     };
+
+    OncoprintWebGLCellView.prototype.clearOverlay = function() {
+    	clearOverlay(this);
+	};
     
     OncoprintWebGLCellView.prototype.getViewportOncoprintSpace = function(model) {
 	var scroll_x = this.scroll_x;

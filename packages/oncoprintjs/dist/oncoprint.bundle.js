@@ -13996,12 +13996,23 @@ var Oncoprint = (function () {
     }
 
     Oncoprint.prototype.destroy = function() {
+        if(this.webgl_unavailable || this.destroyed) {
+            return;
+        }
     	this.cell_view.destroy();
     	this.track_options_view.destroy();
     	this.track_info_view.destroy();
         $(window).off("resize", this.onWindowResize);
         this.destroyed = true;
 	}
+
+	Oncoprint.prototype.clearCellViewOverlay = function() {
+        if(this.webgl_unavailable || this.destroyed) {
+            return;
+        }
+        this.cell_view.clearOverlay();
+	}
+
     
     return Oncoprint;
 })();
@@ -16835,6 +16846,10 @@ var OncoprintWebGLCellView = (function () {
 	getWebGLContextAndSetUpMatrices(view, model);
 	setUpShaders(view);
     };
+
+    OncoprintWebGLCellView.prototype.clearOverlay = function() {
+    	clearOverlay(this);
+	};
     
     OncoprintWebGLCellView.prototype.getViewportOncoprintSpace = function(model) {
 	var scroll_x = this.scroll_x;
