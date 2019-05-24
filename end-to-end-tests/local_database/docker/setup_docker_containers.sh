@@ -150,7 +150,15 @@ run_session_service() {
         thehyve/cbioportal-session-service:cbiov2.1.0
 }
 
-echo Wait for JitPack download of frontend code 
+build_e2e_image() {
+    CUR_DIR=$PWD
+    cp $TEST_HOME/local_database/docker/Dockerfile.screenshottest $PORTAL_SOURCE_DIR
+    cd $PORTAL_SOURCE_DIR
+    docker build -f Dockerfile.screenshottest -t $SCREENSHOT_IMAGE_NAME .
+    cd $CUR_DIR
+}
+
+echo Wait for JitPack download of frontend code
 check_jitpack_download_frontend
 
 echo Build portal image
@@ -167,5 +175,8 @@ run_cbioportal_container
 
 echo Load studies into local database
 load_studies_in_db
+
+echo Build e2e-image
+build_e2e_image 
 
 exit 0
