@@ -178,6 +178,25 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
         this.dragging = true;
     }
 
+    @computed get tickProps() {
+        if (this.plotDomainMax > 40) {
+            return {
+                tickValues: [0,25,50,75]
+            };
+        } else if (this.plotDomainMax > 20) {
+            return {
+                tickValues: [0,10,20,30,40]
+            };
+        } else if (this.plotDomainMax > 10) {
+            return {
+                tickValues: [0,5,10,15,20]
+            };
+        } else {
+            return {
+                tickCount: 4
+            };
+        }
+    }
 
     public render() {
         return (
@@ -186,7 +205,7 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                     <VictoryChart containerComponent={this.containerComponent} theme={CBIOPORTAL_VICTORY_THEME}
                                   domainPadding={{x:[0,20], y:[0,20]}} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}
                     >
-                        <VictoryAxis tickValues={[0,25,50,75]} domain={[0,this.plotDomainMax]}
+                        <VictoryAxis domain={[0,this.plotDomainMax]}
                                      label={this.xLabel}
                                      style={{
                                         tickLabels: { padding: 5 }, axisLabel: { padding: 27 },
@@ -198,8 +217,9 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                                      crossAxis={false}
                                      orientation="bottom"
                                      offsetY={45}
+                                     {...this.tickProps}
                         />
-                        <VictoryAxis tickValues={[0,25,50,75]} domain={[0,this.plotDomainMax]}
+                        <VictoryAxis domain={[0,this.plotDomainMax]}
                                      dependentAxis={true}
                                      label={this.yLabel}
                                      style={{
@@ -212,6 +232,7 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                                      crossAxis={false}
                                      orientation="left"
                                      offsetX={45}
+                                     {...this.tickProps}
                         />
                         <VictoryLine
                             style={{
