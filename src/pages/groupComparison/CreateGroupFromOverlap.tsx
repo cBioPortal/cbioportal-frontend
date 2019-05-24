@@ -184,7 +184,7 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                 <DefaultTooltip
                     trigger={["click"]}
                     overlay={this.enterNameInterface.component}
-                    placement="bottom"
+                    placement="top"
                 >
                     <button
                         className="btn btn-md btn-primary"
