@@ -1322,12 +1322,8 @@ function makeScatterPlotData_profiledReport(
 
 export function getCnaQueries(
     horzSelection:AxisMenuSelection,
-    vertSelection:AxisMenuSelection,
-    cnaDataShown:boolean
+    vertSelection:AxisMenuSelection
 ) {
-    if (!cnaDataShown) {
-        return [];
-    }
     const queries:{entrezGeneId:number}[] = [];
     if (horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && horzSelection.entrezGeneId !== undefined) {
         queries.push({entrezGeneId: horzSelection.entrezGeneId});
