@@ -37,7 +37,7 @@ run_database_container() {
     echo Migrating database schema to most recent version ...
     docker run --rm \
         --net=$DOCKER_NETWORK_NAME \
-        -v "$TEST_HOME/local_database/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+        -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
         cbioportal-endtoend-image \
         python3 /cbioportal/core/src/main/scripts/migrate_db.py -y -p /cbioportal/portal.properties -s /cbioportal/db-scripts/src/main/resources/migration.sql
 }
@@ -50,12 +50,12 @@ build_cbioportal_image() {
     rm -rf cbioportal
     git clone --depth 1 -b $BACKEND_BRANCH_NAME "https://github.com/$BACKEND_ORGANIZATION/cbioportal.git"
     docker stop $E2E_CBIOPORTAL_HOST_NAME 2> /dev/null && docker rm $E2E_CBIOPORTAL_HOST_NAME  2> /dev/null
-    cp $TEST_HOME/local_database/docker/Dockerfile cbioportal
-    cp $TEST_HOME/local_database/runtime-config/portal.properties cbioportal
+    cp $TEST_HOME/docker/Dockerfile cbioportal
+    cp $TEST_HOME/runtime-config/portal.properties cbioportal
     cd cbioportal
     # docker build -f Dockerfile.local -t cbioportal-backend-endtoend .
     docker rm cbioportal-endtoend-image 2> /dev/null || true
-    cp $TEST_HOME/local_database/docker/catalina_server.xml.patch .
+    cp $TEST_HOME/docker/catalina_server.xml.patch .
     docker build -f Dockerfile -t cbioportal-endtoend-image . \
         --build-arg MAVEN_OPTS="-Dfrontend.version=$FRONTEND_COMMIT_HASH -Dfrontend.groupId=$FRONTEND_GROUPID" \
         --build-arg SESSION_SERVICE_HOST_NAME=$SESSION_SERVICE_HOST_NAME
@@ -69,7 +69,7 @@ run_cbioportal_container() {
     docker run -d --restart=always \
         --name=$E2E_CBIOPORTAL_HOST_NAME \
         --net=$DOCKER_NETWORK_NAME \
-        -v "$TEST_HOME/local_database/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+        -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
         -e CATALINA_OPTS='-Xms2g -Xmx4g' \
         cbioportal-endtoend-image
     
@@ -89,11 +89,11 @@ run_cbioportal_container() {
 
 load_studies_in_db() {
 
-    for DIR in $TEST_HOME/local_database/studies/*/; do
+    for DIR in $TEST_HOME/studies/*/; do
         docker run --rm \
             --name=cbioportal-importer \
             --net=$DOCKER_NETWORK_NAME \
-            -v "$TEST_HOME/local_database/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+            -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
             -v "$DIR:/study:ro" \
             cbioportal-endtoend-image \
             python3 /cbioportal/core/src/main/scripts/importer/metaImport.py \
@@ -152,7 +152,7 @@ run_session_service() {
 
 build_e2e_image() {
     CUR_DIR=$PWD
-    cp $TEST_HOME/local_database/docker/Dockerfile.screenshottest $PORTAL_SOURCE_DIR
+    cp $TEST_HOME/docker/Dockerfile.screenshottest $PORTAL_SOURCE_DIR
     cd $PORTAL_SOURCE_DIR
     docker build -f Dockerfile.screenshottest -t $SCREENSHOT_IMAGE_NAME .
     cd $CUR_DIR
