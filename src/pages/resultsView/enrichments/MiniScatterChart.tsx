@@ -124,22 +124,34 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                             />
                         }
                         theme={CBIOPORTAL_VICTORY_THEME}
-                        domainPadding={{ y: [0, 20] }}
+                        domainPadding={{ y: 20 }}
                         height={350}
                         width={350}
                         padding={{ top: 40, bottom: 60, left: 60, right: 40 }}
+                        singleQuadrantDomainPadding={false}
                     >
                         <VictoryAxis tickValues={this.props.xAxisTickValues} domain={[-this.props.xAxisDomain, this.props.xAxisDomain]} 
                             label="Log Ratio" tickFormat={(t: any) => t >= 1000 || t <= -1000 ? `${t/1000}k` : t} style={{
                                 tickLabels: { padding: 20 }, axisLabel: { padding: 40 },
-                                ticks: { size: 0 }
-                            }} />
+                                ticks: { size: 0 },
+                                grid: {
+                                    strokeOpacity: 1,
+                                }
+                            }}
+                            crossAxis={false}
+                            orientation="bottom"
+                            offsetY={60}
+                        />
                         <VictoryAxis label="-log10 p-Value" dependentAxis={true} tickCount={4}
-                            style={{
-                                tickLabels: { padding: 135 },
-                                axisLabel: { padding: 165 },
-                                ticks: { size: 0 }
-                            }} />
+                                    style={{
+                                        tickLabels: { padding: 135 },
+                                        axisLabel: { padding: 165 },
+                                        ticks: { size: 0 },
+                                        grid: {
+                                            strokeOpacity: 1,
+                                        }
+                                    }}
+                        />
                         <VictoryLabel style={axisLabelStyles} text={"← " + this.xAxisLeftLabel} x={60} y={300}/>
                         <VictoryLabel style={axisLabelStyles} text={this.xAxisRightLabel + " →"} textAnchor="end" x={310} y={300}/>
                         <VictoryLabel style={axisLabelStyles} text="Significance →" x={320} y={210} angle={-90}/>
