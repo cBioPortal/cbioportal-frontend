@@ -749,14 +749,14 @@ describe("EnrichmentsUtil", () => {
     describe("#getGeneListOptions()", () => {
         it("returns correct options", () => {
             //empty requests
-            assert.deepEqual(getGeneListOptions([]), [{ "label": "User-defined List", "value": "" }]);
+            assert.deepEqual(getGeneListOptions([]), [{ "label": "User-defined genes", "genes": [] }]);
 
             //non empty requests
             assert.deepEqual(getGeneListOptions(exampleAlterationEnrichmentRowData), [
-                { "label": "User-defined List", "value": "" },
-                { "label": "Top 3 genes with max frequency in any group", "value": "EGFR FBXW4 CAND2" },
-                { "label": "Top 3 genes with avg. frequency in any group", "value": "EGFR FBXW4 CAND2" },
-                { "label": "Top 3 genes with significant p-value", "value": "EGFR FBXW4 CAND2" }
+                { "label": "User-defined genes", "genes": [] },
+                { "label": "Genes with highest frequency in any group", "genes": ["EGFR", "FBXW4", "CAND2"] },
+                { "label": "Genes with highest avgerage frequency", "genes": ["EGFR", "FBXW4", "CAND2"] },
+                { "label": "Genes with most significant p-value", "genes": ["EGFR", "FBXW4", "CAND2"] }
             ]);
 
         });
