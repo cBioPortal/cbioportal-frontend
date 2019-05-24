@@ -1,7 +1,6 @@
 {
   "name": "oncoprintjs",
   "description": "A data visualization for cancer genomic data.",
-  "version":"v1.0.0",
   "types": "./index.d.ts",
   "main": "./dist/oncoprint.bundle.js",
   "scripts": {
