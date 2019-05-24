@@ -1176,12 +1176,23 @@ var Oncoprint = (function () {
     }
 
     Oncoprint.prototype.destroy = function() {
+        if(this.webgl_unavailable || this.destroyed) {
+            return;
+        }
     	this.cell_view.destroy();
     	this.track_options_view.destroy();
     	this.track_info_view.destroy();
         $(window).off("resize", this.onWindowResize);
         this.destroyed = true;
 	}
+
+	Oncoprint.prototype.clearCellViewOverlay = function() {
+        if(this.webgl_unavailable || this.destroyed) {
+            return;
+        }
+        this.cell_view.clearOverlay();
+	}
+
     
     return Oncoprint;
 })();
