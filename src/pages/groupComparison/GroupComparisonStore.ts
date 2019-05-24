@@ -52,6 +52,7 @@ import onMobxPromise from "../../shared/lib/onMobxPromise";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import {GroupComparisonURLQuery} from "./GroupComparisonPage";
 import {AppStore} from "../../AppStore";
+import {stringListToIndexSet} from "../../shared/lib/StringUtils";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples and patients",
@@ -63,10 +64,19 @@ export default class GroupComparisonStore {
     @observable private _currentTabId:GroupComparisonTab|undefined = undefined;
     @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.EXCLUDE;
     @observable private sessionId:string;
+    @observable dragUidOrder:string[]|undefined = undefined;
     private unsavedGroups = observable.shallowArray<SessionGroupData>([]);
 
     constructor(sessionId:string, private appStore:AppStore) {
         this.sessionId = sessionId;
+    }
+
+    @action public updateDragOrder(oldIndex:number, newIndex:number) {
+        if (!this.dragUidOrder) {
+            this.dragUidOrder = this._originalGroups.result!.map(g=>g.uid);
+        }
+        const poppedUid = this.dragUidOrder.splice(oldIndex, 1)[0];
+        this.dragUidOrder.splice(newIndex, 0, poppedUid);
     }
 
     public get isLoggedIn() {
@@ -150,13 +160,12 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly _originalGroups = remoteData<ComparisonGroup[]>({
+    readonly _unsortedOriginalGroups = remoteData<ComparisonGroup[]>({
         await:()=>[this._session, this.sampleSet],
         invoke:()=>{
             // (1) ensure color
             // (2) filter out, and add list of, nonexistent samples
             // (3) add patients
-            // (4) add ordinals
 
             const ret:ComparisonGroup[] = [];
             const sampleSet = this.sampleSet.result!;
@@ -191,11 +200,31 @@ export default class GroupComparisonStore {
                 ret.push(finalizeGroup(false, groupData, index+this._session.result!.groups.length));
             });
 
-            const ordinals = getOrdinals(ret.length, 26);
-            ret.forEach((group, index)=>{
+            return Promise.resolve(ret);
+        }
+    });
+
+    readonly _originalGroups = remoteData<ComparisonGroup[]>({
+        await:()=>[this._session, this._unsortedOriginalGroups],
+        invoke:()=>{
+            // sort and add ordinals
+            let sorted:ComparisonGroup[];
+            if (this.dragUidOrder) {
+                const order = stringListToIndexSet(this.dragUidOrder);
+                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>order[g.uid]);
+            } else if (this._session.result!.groupUidOrder) {
+                const order = stringListToIndexSet(this._session.result!.groupUidOrder!);
+                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>order[g.uid]);
+            } else {
+                // sort alphabetically
+                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>g.name.toLowerCase());
+            }
+
+            const ordinals = getOrdinals(sorted.length, 26);
+            sorted.forEach((group, index)=>{
                 group.nameWithOrdinal = `${ordinals[index]}. ${group.name}`;
             });
-            return Promise.resolve(ret);
+            return Promise.resolve(sorted);
         }
     });
 
@@ -302,7 +331,7 @@ export default class GroupComparisonStore {
 
     @autobind
     @action
-    public async saveAndGoToNewSession() {
+    public async saveUnsavedGroupsAndGoToNewSession() {
         if (!this._session.isComplete || this.unsavedGroups.length === 0) {
             return;
         }
@@ -328,6 +357,21 @@ export default class GroupComparisonStore {
             }
         )
         this.unsavedGroups.clear();
+    }
+
+    @autobind
+    @action
+    public async saveDragUidOrderAndGoToNewSession() {
+        if (!this._session.isComplete) {
+            return;
+        }
+
+        // save unsavedGroups to new session, and go to it
+        const newSession = _.cloneDeep(this._session.result!);
+        newSession.groupUidOrder = this.dragUidOrder && this.dragUidOrder.slice();
+
+        const {id } = await comparisonClient.addComparisonSession(newSession);
+        (window as any).routingStore.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
     }
 
     public isGroupSelected(uid:string) {
