@@ -182,21 +182,36 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
-                        <FlexAlignedCheckbox
-                            checked={this.overExpressedFilter}
-                            onClick={this.toggleOverExpressedFilter}
-                            label={this.group1CheckboxLabel}
-                        />
-                        <FlexAlignedCheckbox
-                            checked={this.underExpressedFilter}
-                            onClick={this.toggleUnderExpressedFilter}
-                            label={this.group2CheckboxLabel}
-                        />
-                        <FlexAlignedCheckbox
-                            checked={this.significanceFilter}
-                            onClick={this.toggleSignificanceFilter}
-                            label="Significant only"
-                        />
+                        <div className={styles.FlexCheckbox}>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={this.overExpressedFilter}
+                                    onClick={this.toggleOverExpressedFilter}
+                                />
+                                {this.group1CheckboxLabel}
+                            </label>
+                        </div>
+                        <div className={styles.FlexCheckbox}>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={this.underExpressedFilter}
+                                    onClick={this.toggleUnderExpressedFilter}
+                                />
+                                {this.group2CheckboxLabel}
+                            </label>
+                        </div>
+                        <div className={styles.FlexCheckbox}>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={this.significanceFilter}
+                                    onClick={this.toggleSignificanceFilter}
+                                />
+                                Significant only
+                            </label>
+                        </div>
                     </div>
                     <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
                                                onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}

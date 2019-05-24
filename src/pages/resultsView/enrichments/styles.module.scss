@@ -84,3 +84,14 @@
         font-weight: bold;
     }
 }
+
+.FlexCheckbox label {
+    font-weight:normal !important;
+    display: flex;
+    align-items: center;
+}
+
+.FlexCheckbox label input {
+    margin-top:1px !important;
+    margin-right:5px !important;
+}
