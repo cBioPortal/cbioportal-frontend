@@ -107,8 +107,9 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     private inputYAxisEl: any;
     private inputXAxisEl: any;
+    private totalCasesMinDefaultValue = 10;
     @observable private tempAltCasesInputValue = 0;
-    @observable private tempTotalCasesInputValue = 0;
+    @observable private tempTotalCasesInputValue = this.totalCasesMin;
     @observable private pngAnchor = '';
     @observable private pdf: { anchor: string; width: number; height: number } = {anchor: '', width: 0, height: 0};
     @observable private showControls = true; // 9/2018 we will always show controls
@@ -116,8 +117,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     @observable public yAxis: 'alt-freq' | 'abs-count' = 'alt-freq';
     @observable private xAxis: 'y-axis' | 'x-axis' = 'y-axis';
     @observable public altCasesValue = 0;
-    @observable public totalCasesValue = 0;
-    @observable public tempTotalCasesValue = 0;
+    @observable public totalCasesValue = this.totalCasesMin;
+    @observable public tempTotalCasesValue = this.totalCasesMin;
     @observable public tempAltCasesValue = 0;
     @observable private viewCountsByCancerSubType = false;
 
@@ -139,10 +140,25 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.setPngAnchor = this.setPngAnchor.bind(this);
     }
 
+    componentDidMount() {
+        // initialize the slider value after min and max computed
+        this.initializeSliderValue();
+    }
+
     private chartComponent:any;
 
     get countsData() {
         return this.props.groupedAlterationData;
+    }
+
+    get groupKeysSorted() {
+        const { dir, sorter } = this.determineSorterAndDirection();
+
+        const groupKeysSorted = _.chain(this.countsData)
+            .keys()
+            .orderBy(sorter, [dir])
+            .value();
+        return groupKeysSorted;
     }
 
     public getYValue(count:number, total:number) {
@@ -176,14 +192,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     @computed
     get chartData(): ICancerSummaryChartData  {
 
-        const { dir, sorter } = this.determineSorterAndDirection();
-
         const representedAlterations: { [alterationType: string]: boolean } = {};
-   
-        const groupKeysSorted = _.chain(this.countsData)
-            .keys()
-            .orderBy(sorter, [dir])
-            .value();
 
         let maxPercentage = 0;
         let maxAbsoluteCount = 0;
@@ -193,7 +202,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
         // for each alteration type stack, we need the collection of different group types
         const retData = _.map(OrderedAlterationLabelMap, (alterationLabel, alterationKey) => {
-            return _.reduce(groupKeysSorted, (memo, groupKey) => {
+            return _.reduce(this.groupKeysSorted, (memo, groupKey) => {
                 // each of these represents a bucket along x-axis (e.g. cancer type or cancer study)
                 const alterationData = this.countsData[groupKey];
 
@@ -261,10 +270,29 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     @computed
+    private get totalCasesMin() {
+        if (this.totalCasesMax > 10) {
+            return this.totalCasesMinDefaultValue;
+        } else {
+            return 0;
+        }
+    }
+
+    @computed
     private get hasAlterations() {
         return _.reduce(this.countsData, (count, alterationData: IAlterationData) => {
             return count + alterationData.alterationTotal;
         }, 0) > 0;
+    }
+
+    @computed
+    private get totalCaseChanged() {
+        return this.totalCasesValue > 0;
+    }
+
+    @computed
+    private get altCaseChanged() {
+        return this.altCasesValue > 0;
     }
 
     private transformLabel(str: string) {
@@ -316,15 +344,19 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         }
     }
 
+    @action
     private handleTotalInputKeyPress(target: any) {
         if (target.charCode === 13) {
             if (isNaN(this.tempTotalCasesInputValue)) {
-                this.tempTotalCasesInputValue = 0;
-                return;
+                this.tempTotalCasesInputValue = this.totalCasesMin;
+            } else if (this.tempTotalCasesInputValue > this.totalCasesMax) {
+                this.tempTotalCasesInputValue = this.totalCasesMax;
+                this.tempTotalCasesValue = this.totalCasesMax;
+            } else {
+                //removes leading 0s
+                this.tempTotalCasesInputValue = Number(this.tempTotalCasesInputValue);
+                this.tempTotalCasesValue = this.tempTotalCasesInputValue;
             }
-            //removes leading 0s
-            this.tempTotalCasesInputValue = Number(this.tempTotalCasesInputValue);
-            this.tempTotalCasesValue = this.tempTotalCasesInputValue;
             this.handleTotalSliderChangeComplete();
         }
     }
@@ -350,13 +382,13 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     // }
 
     @action
-    private clearSliderValue() {
+    private initializeSliderValue() {
         this.tempAltCasesValue = 0;
         this.tempAltCasesInputValue = 0;
         this.altCasesValue = 0;
-        this.tempTotalCasesValue = 0;
-        this.tempTotalCasesInputValue = 0;
-        this.totalCasesValue = 0;
+        this.tempTotalCasesValue = this.totalCasesMin;
+        this.tempTotalCasesInputValue = this.totalCasesMin;
+        this.totalCasesValue = this.totalCasesMin;
     }
 
     public setPngAnchor(href: string) {
@@ -400,7 +432,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                 </div>
                             </div>
                         </td>
-                        <td className="dashed-border-right slider-input">
+                        <td className={classnames(this.totalCaseChanged ? "highlightInput" : "" , "dashed-border-right" , "slider-input")}>
                             <FormControl type="text" value={this.tempTotalCasesInputValue}
                                          data-test="sampleTotalThresholdInput"
                                          onChange={this.handleTotalInputChange}
@@ -439,7 +471,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                 </div>
                             </div>
                         </td>
-                        <td className="dashed-border-right slider-input">
+                        <td className={classnames(this.altCaseChanged ? "highlightInput" : "" , "dashed-border-right" , "slider-input")}>
                             <FormControl type="text" value={this.tempAltCasesInputValue + symbol}
                                          onChange={this.handleAltInputChange}
                                          data-test="alterationThresholdInput"
@@ -465,7 +497,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                         return <Radio
                                             checked={option.value === this.props.groupAlterationsBy}
                                             onChange={(e) => {
-                                                this.clearSliderValue();
+                                                this.initializeSliderValue();
                                                 this.props.handlePivotChange($(e.target).attr("data-value"));
                                             }}
                                             inline
@@ -484,6 +516,12 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                         <div className={classnames("inlineBlock",{hidden: !this.showControls}, 'cancer-summary-secondary-options')}>
                             {/*<button type="button" onClick={this.toggleShowControls} className="close">×</button>*/}
                             {this.controls}
+                        </div>
+
+                        <div className={classnames("alert" , "alert-success", {hidden: !this.totalCaseChanged && !this.altCaseChanged})}>
+                            <span style={{verticalAlign:"middle"}}>
+                                {`${this.chartData.labels.length} of ${this.groupKeysSorted.length} categories (${_.keyBy(GroupByOptions, "value")[this.props.groupAlterationsBy].label}) are shown based on filtering.`}
+                            </span>
                         </div>
 
                         <CancerSummaryChart key={Date.now()}
