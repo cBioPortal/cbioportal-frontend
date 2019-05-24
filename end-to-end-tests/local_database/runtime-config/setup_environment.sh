@@ -8,9 +8,10 @@ set -e
 GITHUB_PR_API_PATH="https://api.github.com/repos/thehyve/cbioportal-frontend/pulls"
 
 echo export E2E_CBIOPORTAL_HOST_NAME=cbioportal
-echo export CBIOPORTAL_URL="http://$E2E_CBIOPORTAL_HOST_NAME:8080/cbioportal"
+echo export CBIOPORTAL_URL="http://cbioportal:8080/cbioportal"
 echo export DOCKER_NETWORK_NAME=endtoend_localdb_network
 echo export SESSION_SERVICE_HOST_NAME=cbio-session-service
+echo export SCREENSHOT_IMAGE_NAME=cbio-screenshot
 echo export SCREENSHOT_DIRECTORY=./local_database/screenshots
 echo export JUNIT_REPORT_PATH=./local_database/junit/
 echo export SPEC_FILE_PATTERN=./local_database/specs/**/*.spec.js

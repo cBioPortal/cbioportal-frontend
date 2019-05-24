@@ -1,3 +1,9 @@
+#!/usr/bin/env bash
+
+set -e 
+set -u # unset variables throw error
+set -o pipefail # pipes fail when partial command fails
+
 cd /cbioportal-frontend
 yarn serveDistLocalDb &
 cd /cbioportal-frontend/end-to-end-tests
