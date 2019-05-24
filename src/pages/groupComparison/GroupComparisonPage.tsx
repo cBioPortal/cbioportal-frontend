@@ -13,11 +13,11 @@ import ProteinEnrichments from "./ProteinEnrichments";
 import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import GroupSelector from "./GroupSelector";
+import GroupSelector from "./groupSelector/GroupSelector";
 import {getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
 import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
-import {computed, IReactionDisposer, reaction} from "mobx";
+import {computed, IReactionDisposer, observable, reaction} from "mobx";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
 import _ from "lodash";
@@ -37,7 +37,7 @@ export type GroupComparisonURLQuery = {
 @inject('routing', 'appStore')
 @observer
 export default class GroupComparisonPage extends React.Component<IGroupComparisonPageProps, {}> {
-    private store:GroupComparisonStore;
+    @observable.ref private store:GroupComparisonStore;
     private queryReaction:IReactionDisposer;
     private pathnameReaction:IReactionDisposer;
     private lastQuery:Partial<GroupComparisonURLQuery>;
@@ -228,7 +228,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         }
     });
 
-    @computed get unsavedWarningHeader() {
+    @computed get unsavedGroupsWarning() {
         const pluralUnsaved = this.store.unsavedGroupNamesWithOrdinal.length > 1;
 
         if (this.store.unsavedGroupNamesWithOrdinal.length > 0) {
@@ -243,7 +243,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     >
                         <button
                             className="btn btn-xs btn-default"
-                            onClick={this.store.saveAndGoToNewSession}
+                            onClick={this.store.saveUnsavedGroupsAndGoToNewSession}
                             style={{marginRight:5}}
                         >
                             Save to new comparison session
@@ -253,6 +253,32 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                             onClick={this.store.clearUnsavedGroups}
                         >
                             Delete {pluralUnsaved ? "them" : "it"}
+                        </button>
+                    </div>
+                </div>
+            );
+        } else {
+            return null;
+        }
+    }
+
+    @computed get unsavedOrderWarning() {
+        if (this.store.dragUidOrder) {
+            return (
+                <div className="alert alert-warning" style={{display:"inline-flex", marginBottom:3}}>
+                    <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
+                    <div style={{maxWidth:500, display:"inline-block", marginRight: 6}}>
+                        Your group order is not saved.
+                    </div>
+                    <div
+                        style={{display:"inline-block"}}
+                    >
+                        <button
+                            className="btn btn-xs btn-default"
+                            onClick={this.store.saveDragUidOrderAndGoToNewSession}
+                            style={{marginRight:5}}
+                        >
+                            Save to new comparison session
                         </button>
                     </div>
                 </div>
@@ -272,7 +298,8 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 <div>
                     <div className={"headBlock"}>
                         {this.studyLink.component}
-                        {this.unsavedWarningHeader}
+                        {this.unsavedGroupsWarning}
+                        {this.unsavedOrderWarning}
                         <div>
                             <div className={styles.headerControls}>
                                 <GroupSelector
