@@ -1,15 +1,13 @@
 import * as React from 'react';
-import * as _ from 'lodash';
-import {inject, observer} from "mobx-react";
+import { observer} from "mobx-react";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
-import {If, Then, Else} from 'react-if';
+
 import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
 import classNames from 'classnames';
 import './styles.scss';
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {action, computed, observable} from "mobx";
-import {QueryStore} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
 import autobind from "autobind-decorator";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
@@ -19,7 +17,6 @@ import AppConfig from "appConfig";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
 import {createQueryStore} from "../../home/HomePage";
 import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
-import {remoteData} from "../../../shared/api/remoteData";
 import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./QuerySummaryUtils";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
