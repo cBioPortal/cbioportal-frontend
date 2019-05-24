@@ -832,6 +832,9 @@ export default class GroupComparisonStore {
             this.activeSamplesNotOverlapRemoved
         ],
         invoke: async () => {
+            if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
+                return false;
+            }
             const filter: ClinicalDataMultiStudyFilter = {
                 attributeIds: SURVIVAL_CHART_ATTRIBUTES,
                 identifiers: this.activeSamplesNotOverlapRemoved.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
