@@ -240,8 +240,9 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         const pluralUnsaved = this.store.unsavedGroupNamesWithOrdinal.length > 1;
 
         if (this.store.unsavedGroupNamesWithOrdinal.length > 0) {
-            return (
-                <div className="alert alert-warning" style={{display:"inline-flex", marginBottom:3}}>
+            return [
+                <br/>,
+                <div className="alert alert-warning" style={{display:"inline-flex", marginBottom:3, marginTop:7}}>
                     <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
                     <div style={{maxWidth:500, display:"inline-block", marginRight: 6}}>
                         {joinNames(this.store.unsavedGroupNamesWithOrdinal, "and")} {pluralUnsaved ? "are" : "is"} not saved. Others visiting this link will not see {pluralUnsaved ? "them" : "it"}.
@@ -264,7 +265,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                         </button>
                     </div>
                 </div>
-            );
+            ];
         } else {
             return null;
         }
