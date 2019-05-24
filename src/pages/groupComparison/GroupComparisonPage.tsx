@@ -40,7 +40,12 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     @observable.ref private store:GroupComparisonStore;
     private queryReaction:IReactionDisposer;
     private pathnameReaction:IReactionDisposer;
+    private unsavedGroupsReaction:IReactionDisposer;
+    private unsavedOrderReaction:IReactionDisposer;
     private lastQuery:Partial<GroupComparisonURLQuery>;
+
+    @observable unsavedOrderWarningDismissed = false;
+    @observable unsavedGroupsWarningDismissed = false;
 
     constructor(props:IGroupComparisonPageProps) {
         super(props);
@@ -77,6 +82,16 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             {fireImmediately: true}
         );
 
+        this.unsavedGroupsReaction = reaction(
+            ()=>this.store.unsavedGroupNamesWithOrdinal,
+            ()=>{ this.unsavedGroupsWarningDismissed = false; }
+        );
+
+        this.unsavedOrderReaction = reaction(
+            ()=>JSON.stringify(this.store.dragUidOrder), // need to touch every element to react to changes bc the array changes in place
+            ()=>{ this.unsavedOrderWarningDismissed = false; }
+        );
+
         (window as any).groupComparisonPage = this;
     }
 
@@ -88,6 +103,8 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     componentWillUnmount() {
         this.queryReaction && this.queryReaction();
         this.pathnameReaction && this.pathnameReaction();
+        this.unsavedGroupsReaction && this.unsavedGroupsReaction();
+        this.unsavedOrderReaction && this.unsavedOrderReaction();
     }
 
     readonly tabs = MakeMobxView({
@@ -239,7 +256,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     @computed get unsavedGroupsWarning() {
         const pluralUnsaved = this.store.unsavedGroupNamesWithOrdinal.length > 1;
 
-        if (this.store.unsavedGroupNamesWithOrdinal.length > 0) {
+        if (this.store.unsavedGroupNamesWithOrdinal.length > 0 && !this.unsavedGroupsWarningDismissed) {
             return (
                 <div className="alert alert-warning" style={{display:"flex", marginBottom:3, marginTop:7}}>
                     <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
@@ -263,6 +280,12 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                             Delete {pluralUnsaved ? "them" : "it"}
                         </button>
                     </div>
+                    <div className="btn btn-xs btn-none"
+                         onClick={()=>{ this.unsavedGroupsWarningDismissed = true; }}
+                         style={{position:"absolute", right:25}}
+                    >
+                        <i className="fa fa-md fa-times"/>
+                    </div>
                 </div>
             );
         } else {
@@ -271,7 +294,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     }
 
     @computed get unsavedOrderWarning() {
-        if (this.store.dragUidOrder) {
+        if (this.store.dragUidOrder && !this.unsavedOrderWarningDismissed) {
             return (
                 <div className="alert alert-warning" style={{display:"flex", marginBottom:3, marginTop:7}}>
                     <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
@@ -288,6 +311,18 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                         >
                             Save to new comparison session
                         </button>
+                        <button
+                            className="btn btn-xs btn-default"
+                            onClick={this.store.clearDragUidOrder}
+                        >
+                            Reset
+                        </button>
+                    </div>
+                    <div className="btn btn-xs btn-none"
+                         onClick={()=>{ this.unsavedOrderWarningDismissed = true; }}
+                         style={{position:"absolute", right:25}}
+                    >
+                        <i className="fa fa-md fa-times"/>
                     </div>
                 </div>
             );

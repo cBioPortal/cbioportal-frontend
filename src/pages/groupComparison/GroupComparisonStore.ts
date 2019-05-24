@@ -79,6 +79,11 @@ export default class GroupComparisonStore {
         this.dragUidOrder.splice(newIndex, 0, poppedUid);
     }
 
+    @autobind
+    @action public clearDragUidOrder() {
+        this.dragUidOrder = undefined;
+    }
+
     public get isLoggedIn() {
         return this.appStore.isLoggedIn;
     }
