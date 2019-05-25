@@ -97,7 +97,9 @@ export function getComparisonUrl(params:Partial<GroupComparisonURLQuery>){
 }
 
 export function redirectToComparisonPage(win:Window, params:Partial<GroupComparisonURLQuery>) {
-    (win as any).routingStore.updateRoute(params, "comparison", true);
+    (win as any).location.href = getComparisonUrl(params);
+
+    //(win as any).routingStore.updateRoute(params, "comparison", true);
 }
 
 export function getComparisonLoadingUrl(params?:Partial<GroupComparisonLoadingParams>) {
