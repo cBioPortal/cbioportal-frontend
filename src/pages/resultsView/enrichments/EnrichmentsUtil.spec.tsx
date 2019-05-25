@@ -759,6 +759,24 @@ describe("EnrichmentsUtil", () => {
                 { "label": "Genes with most significant p-value", "genes": ["EGFR", "FBXW4", "CAND2"] }
             ]);
 
+            //non empty requests
+            let exampleCopyNumberAlterationEnrichmentRowData = _.map(exampleAlterationEnrichmentRowData,rowDatum=>{
+                let value = 2;
+                if(rowDatum.hugoGeneSymbol === "FBXW4") {
+                    value = -2
+                }
+                return {
+                    ...rowDatum,
+                    value
+                }
+            })
+            assert.deepEqual(getGeneListOptions(exampleCopyNumberAlterationEnrichmentRowData, true), [
+                { "label": "User-defined genes", "genes": [] },
+                { "label": "Genes with highest frequency in any group", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
+                { "label": "Genes with highest avgerage frequency", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
+                { "label": "Genes with most significant p-value", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] }
+            ]);
+
         });
     });
 });
