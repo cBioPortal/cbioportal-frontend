@@ -21,8 +21,8 @@ export type AlterationEnrichmentWithQ = AlterationEnrichment & { logRatio?:numbe
 export type ExpressionEnrichmentWithQ = ExpressionEnrichment & { qValue:number };
 
 export const CNA_TO_ALTERATION:{[cna:number]:string} = {
-    "2": "amp",
-    "-2": "del"
+    "2": "AMP",
+    "-2": "HOMDEL"
 };
 
 export enum GeneOptions {
@@ -474,12 +474,23 @@ export function getEnrichmentBarPlotData(data: { [gene: string]: AlterationEnric
     });
 }
 
-export function getGeneListOptions(data: AlterationEnrichmentRow[]): { label: string, genes: string[] }[] {
+export function getGeneListOptions(data: AlterationEnrichmentRow[], includeAlteration?:boolean): { label: string, genes: string[] }[] {
     if (_.isEmpty(data)) {
         return [USER_DEFINED_OPTION];
     }
 
-    let dataSortedByAlteredPercentage = _.clone(data).sort(function (kv1, kv2) {
+    let dataWithOptionName: (AlterationEnrichmentRow & {optionName?:string})[] = data;
+
+    if(includeAlteration) {
+        dataWithOptionName = _.map(dataWithOptionName,datum=>{
+            return {
+                ...datum,
+                optionName: datum.hugoGeneSymbol + `: ${CNA_TO_ALTERATION[datum.value!]}`
+            };
+        });
+    }
+
+    let dataSortedByAlteredPercentage = _.clone(dataWithOptionName).sort(function (kv1, kv2) {
         const t1 = _.reduce(kv1.groupsSet, (acc, next) => {
             acc = next.alteredPercentage > acc ? next.alteredPercentage : acc;
             return acc;
@@ -491,13 +502,13 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[]): { label: st
         return t2 - t1;
     });
 
-    let dataSortedByAvgFrequency = _.clone(data).sort(function (kv1, kv2) {
+    let dataSortedByAvgFrequency = _.clone(dataWithOptionName).sort(function (kv1, kv2) {
         const t1 = _.sumBy(_.values(kv1.groupsSet), count => count.alteredPercentage) / _.keys(kv1.groupsSet).length;
         const t2 = _.sumBy(_.values(kv2.groupsSet), count => count.alteredPercentage) / _.keys(kv2.groupsSet).length;
         return t2 - t1;
     });
 
-    let dataSortedBypValue = _.clone(data).sort(function (kv1, kv2) {
+    let dataSortedBypValue = _.clone(dataWithOptionName).sort(function (kv1, kv2) {
         return kv1.pValue - kv2.pValue;
     });
 
@@ -505,15 +516,15 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[]): { label: st
         USER_DEFINED_OPTION,
         {
             label: `Genes with highest frequency in any group`,
-            genes: _.map(dataSortedByAlteredPercentage, datum => datum.hugoGeneSymbol)
+            genes: _.map(dataSortedByAlteredPercentage, datum => datum.optionName || datum.hugoGeneSymbol)
         },
         {
             label: `Genes with highest avgerage frequency`,
-            genes: _.map(dataSortedByAvgFrequency, datum => datum.hugoGeneSymbol)
+            genes: _.map(dataSortedByAvgFrequency, datum => datum.optionName || datum.hugoGeneSymbol)
         },
         {
             label: `Genes with most significant p-value`,
-            genes: _.map(dataSortedBypValue, datum => datum.hugoGeneSymbol)
+            genes: _.map(dataSortedBypValue, datum => datum.optionName || datum.hugoGeneSymbol)
         }
     ];
 }
