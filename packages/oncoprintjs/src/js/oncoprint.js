@@ -1186,11 +1186,12 @@ var Oncoprint = (function () {
         this.destroyed = true;
 	}
 
-	Oncoprint.prototype.clearCellViewOverlay = function() {
+	Oncoprint.prototype.clearMouseOverEffects = function() {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
         this.cell_view.clearOverlay();
+        this.label_view.highlightTrack(null, this.model);
 	}
 
     

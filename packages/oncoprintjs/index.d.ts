@@ -215,6 +215,7 @@ declare module "oncoprintjs"
         onClipboardChange:(callback:(array:string[])=>void)=>void;
         setTrackCustomOptions:(track_id:TrackId, custom_options?:CustomTrackOption[])=>void;
         setShowTrackSublabels:(show:boolean)=>void;
+        clearMouseOverEffects:()=>void;
 
         constructor(ctr_selector:string, width:number);
         destroy:()=>void;

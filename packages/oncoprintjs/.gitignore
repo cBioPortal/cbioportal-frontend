@@ -45,3 +45,4 @@ Session.vim
 .DS_Store
 src/.DS_Store
 test/.DS_Store
+.idea
