@@ -1,5 +1,5 @@
 var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
-var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
+var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
