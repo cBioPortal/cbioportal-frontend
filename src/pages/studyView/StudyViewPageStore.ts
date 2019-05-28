@@ -555,9 +555,11 @@ export class StudyViewPageStore {
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
+        console.log(this.studyIds);
         const comparisonWindow:any = window.open(getComparisonLoadingUrl({
             phase: LoadingPhase.DOWNLOADING_GROUPS,
-            clinicalAttributeName: params.chartMeta.displayName
+            clinicalAttributeName: params.chartMeta.displayName,
+            origin: this.studyIds.join(",")
         }), "_blank");
 
         // wait until the new window has routingStore available, or its closed
@@ -569,6 +571,16 @@ export class StudyViewPageStore {
             // cancel if the windows already closed
             return;
         }
+
+        const pingInterval = setInterval(()=>{
+            try {
+                if (!comparisonWindow.closed) {
+                    comparisonWindow.ping();
+                }
+            } catch (e) {
+                clearInterval(pingInterval);
+            }
+        }, 500);
 
         // save comparison session, and get id
         let sessionId:string;
@@ -603,6 +615,8 @@ export class StudyViewPageStore {
                     break;
             }
         }
+
+        clearInterval(pingInterval);
 
         if (!comparisonWindow.closed) {
             // redirect window to correct URL
