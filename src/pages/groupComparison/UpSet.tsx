@@ -8,7 +8,7 @@ import autobind from 'autobind-decorator';
 import {ComparisonGroup} from './GroupComparisonUtils';
 import {getTextWidth, truncateWithEllipsis} from 'shared/lib/wrapText';
 import {tickFormatNumeral} from 'shared/components/plots/TickUtils';
-import {getCombinations, joinNames} from './OverlapUtils';
+import {joinNames} from './OverlapUtils';
 import {pluralize} from 'shared/lib/StringUtils';
 import {getPlotDomain} from './UpSetUtils';
 import * as ReactDOM from "react-dom";
@@ -17,10 +17,10 @@ import classnames from "classnames";
 import styles from "../resultsView/survival/styles.module.scss";
 import Timer = NodeJS.Timer;
 
-export interface IUpSetrProps {
+export interface IUpSetProps {
     groups: {
-        uid: string;
-        cases: string[];
+        key:{[uid:string]:boolean},
+        value: string[];
     }[];
     uidToGroup: { [uid: string]: ComparisonGroup };
     svgId?: string;
@@ -35,7 +35,7 @@ const BAR_WIDTH = 10;
 const DEFAULT_SCATTER_DOT_COLOR = "#efefef"
 
 @observer
-export default class UpSet extends React.Component<IUpSetrProps, {}> {
+export default class UpSet extends React.Component<IUpSetProps, {}> {
 
     private container: HTMLDivElement;
     @observable.ref private tooltipModel: any | null = null;
@@ -82,18 +82,28 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
         }];
     }
 
-    @computed get activeGroups() {
-        const usedGroupUids = _.keyBy(this.props.groups.map(group => group.uid));
-        return _.reduce(this.props.uidToGroup, (acc, group, uid) => {
-            if (uid in usedGroupUids) {
-                acc.push(group);
-            }
-            return acc;
-        }, [] as ComparisonGroup[]);
+    @computed get usedGroups() {
+        const usedGroupUids =
+            _.chain(this.groupCombinationSets)
+            .map(g=>g.groups)
+            .flattenDeep()
+            .uniq()
+            .keyBy()
+            .value();
+
+        return _.chain(this.props.uidToGroup)
+            .reduce((acc, group, uid) => {
+                if (uid in usedGroupUids) {
+                    acc.push(group);
+                }
+                return acc;
+            }, [] as ComparisonGroup[])
+            .orderBy(group=>group.nameWithOrdinal,"desc")
+            .value();
     }
 
     @computed get groupLabels() {
-        return _.map(this.activeGroups, group => truncateWithEllipsis(group.nameWithOrdinal, 100, "Arial", "13px"));
+        return _.map(this.usedGroups, group => truncateWithEllipsis(group.nameWithOrdinal, 100, "Arial", "13px"));
     }
 
     private barSeparation() {
@@ -156,8 +166,8 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
 
     @computed get scatterChartExtent() {
         let miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
-        if (this.activeGroups.length > 0) {
-            return this.categoryCoord(this.activeGroups.length - 1) + (2 * (this.categoryAxisDomainPadding())) + miscPadding;
+        if (this.usedGroups.length > 0) {
+            return this.categoryCoord(this.usedGroups.length - 1) + (2 * (this.categoryAxisDomainPadding())) + miscPadding;
         } else {
             return miscPadding;
         }
@@ -174,7 +184,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
 
     @computed get biggestCategoryLabelSize() {
         return Math.max(
-            ..._.map(this.activeGroups, group => getTextWidth(group.nameWithOrdinal, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize + "px"))
+            ..._.map(this.usedGroups, group => getTextWidth(group.nameWithOrdinal, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize + "px"))
         );
     }
 
@@ -209,20 +219,19 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
     }
 
     @computed get groupCombinationSets() {
-        return _.chain(getCombinations(this.props.groups))
-            .filter(combination => combination.cases.length > 0)
-            .map(combination => {
-                return {
-                    ...combination
-                }
-            })
-            .orderBy(x => x.cases.length, 'desc')
-            .value();
+        return _.orderBy(
+            this.props.groups.map(entry=>({
+                groups:Object.keys(entry.key).filter(k=>entry.key[k]),
+                cases: entry.value
+            })),
+            group=>group.cases.length,
+            "desc"
+        );
     }
 
     @computed get scatterData() {
         return _.flatMap(this.groupCombinationSets, (set, index) => {
-            return _.map(this.activeGroups, (group, i) => ({
+            return _.map(this.usedGroups, (group, i) => ({
                 x: this.categoryCoord(index),
                 y: this.categoryCoord(i),
                 fill: _.includes(set.groups, group.uid) ? "#000000" : DEFAULT_SCATTER_DOT_COLOR,
@@ -248,7 +257,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
     }
 
     @computed private get getGroupIntersectionLines() {
-        const activeUids = _.map(this.activeGroups, g => g.uid)
+        const activeUids = _.map(this.usedGroups, g => g.uid)
         return _.flatMap(this.groupCombinationSets, (set, index) => {
             const data = _.map(set.groups, groupUid => {
                 const groupIndex = _.indexOf(activeUids, groupUid);
