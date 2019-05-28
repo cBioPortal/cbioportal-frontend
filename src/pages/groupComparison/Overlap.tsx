@@ -19,6 +19,8 @@ export interface IOverlapProps {
 }
 
 const SVG_ID = "comparison-tab-overlap-svg";
+const SAMPLE_SVG_ID = "comparison-tab-overlap-sample-svg";
+const PATIENT_SVG_ID = "comparison-tab-overlap-patinet-svg";
 
 enum PlotType {
     Upset,
@@ -57,7 +59,29 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     @autobind
     private getSvg() {
-        return document.getElementById(SVG_ID) as SVGElement | null;
+        if (this.plotType.result! === PlotType.Upset) {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg") as SVGElement;
+            let sampleSVGElement = document.getElementById(SAMPLE_SVG_ID) as SVGElement | null
+            const sampleElement = sampleSVGElement!.cloneNode(true) as Element;
+
+            let patienrSVGElement = document.getElementById(PATIENT_SVG_ID) as SVGElement | null
+            const patientElement = patienrSVGElement!.cloneNode(true) as Element;
+
+            const height = $(sampleElement).height() + $(patientElement).height();
+            const width = $(sampleElement).width() + $(patientElement).width();
+
+            $(svg).attr("height", height);
+            $(svg).attr("width", width);
+            $(svg).css({ height, width });
+
+            svg.appendChild(sampleElement)
+
+            //move patient element down by sample element size
+            patientElement.setAttribute("y", `${$(sampleElement).height()}`)
+            svg.appendChild(patientElement)
+            return svg;
+        }
+        return document.getElementById(SVG_ID) as SVGElement | null
     }
 
     readonly plotType = remoteData({
@@ -119,13 +143,22 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             switch (this.plotType.result!) {
                 case PlotType.Upset: {
                     plotElt = (
-                        <UpSet
-                            groups={this.sampleGroupsWithCases.result!}
-                            title="Sample Sets Intersection"
-                            svgId={SVG_ID}
-                            uidToGroup={this.uidToGroup.result!}
-                            caseType="sample"
-                        />)
+                        <div>
+                            <UpSet
+                                groups={this.sampleGroupsWithCases.result!}
+                                title="Sample Sets Intersection"
+                                svgId={SAMPLE_SVG_ID}
+                                uidToGroup={this.uidToGroup.result!}
+                                caseType="sample"
+                            />
+                            <UpSet
+                                groups={this.patientGroupsWithCases.result!}
+                                title="Patient Sets Intersection"
+                                svgId={PATIENT_SVG_ID}
+                                uidToGroup={this.uidToGroup.result!}
+                                caseType="patient"
+                            />
+                        </div>)
                     break;
                 }
                 case PlotType.Venn:
