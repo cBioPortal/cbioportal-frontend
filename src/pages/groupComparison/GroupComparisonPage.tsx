@@ -281,7 +281,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                         </button>
                     </div>
                     <div className="btn btn-xs btn-none"
-                         onClick={()=>{ this.unsavedGroupsWarningDismissed = true; }}
+                         onClick={action(()=>{ this.unsavedGroupsWarningDismissed = true; })}
                          style={{position:"absolute", right:25}}
                     >
                         <i className="fa fa-md fa-times"/>
@@ -319,7 +319,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                         </button>
                     </div>
                     <div className="btn btn-xs btn-none"
-                         onClick={()=>{ this.unsavedOrderWarningDismissed = true; }}
+                         onClick={action(()=>{ this.unsavedOrderWarningDismissed = true; })}
                          style={{position:"absolute", right:25}}
                     >
                         <i className="fa fa-md fa-times"/>
