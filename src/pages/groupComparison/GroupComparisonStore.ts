@@ -8,7 +8,7 @@ import {
     isGroupEmpty,
     ClinicalDataEnrichmentWithQ,
     OverlapFilteredComparisonGroup, getSampleIdentifiers,
-    GroupComparisonTab, getOrdinals
+    GroupComparisonTab, getOrdinals, partitionCasesByGroupMembership
 } from "./GroupComparisonUtils";
 import { remoteData } from "../../shared/api/remoteData";
 import {
@@ -805,6 +805,25 @@ export default class GroupComparisonStore {
         }
     });
 
+    public readonly samplesVennPartition = remoteData({
+        await:()=>[
+            this._activeGroupsNotOverlapRemoved,
+            this.sampleSet,
+            this.samples
+        ],
+        invoke:()=>{
+            const sampleSet = this.sampleSet.result!;
+            return Promise.resolve(
+                partitionCasesByGroupMembership(
+                    this._activeGroupsNotOverlapRemoved.result!,
+                    (group)=>getSampleIdentifiers([group]),
+                    (sampleIdentifier)=>sampleSet.get({ studyId: sampleIdentifier.studyId, sampleId: sampleIdentifier.sampleId })!.uniqueSampleKey,
+                    this.samples.result!.map(s=>s.uniqueSampleKey)
+                ) as { key:{[uid:string]:boolean}, value:string[] }[]
+            );
+        }
+    });
+
     public readonly patientsVennPartition = remoteData({
         await:()=>[
             this._activeGroupsNotOverlapRemoved,
@@ -812,23 +831,15 @@ export default class GroupComparisonStore {
             this.patientKeys
         ],
         invoke:()=>{
-            const partitionMap = new ComplexKeyGroupsMap<string>();
             const patientToSamplesSet = this.patientToSamplesSet.result!;
-            const groupToPatientKeys = this._activeGroupsNotOverlapRemoved.result!.reduce((map, group)=>{
-                map[group.uid] = _.keyBy(getPatientIdentifiers([group]).map(id=>{
-                    return patientToSamplesSet.get({ studyId: id.studyId, patientId: id.patientId })![0].uniquePatientKey;
-                }));
-                return map;
-            }, {} as {[uid:string]:{[uniquePatientKey:string]:any}});
-
-            for (const patientKey of this.patientKeys.result!) {
-                const key:any = {};
-                for (const group of this._activeGroupsNotOverlapRemoved.result!) {
-                    key[group.uid] = patientKey in groupToPatientKeys[group.uid];
-                }
-                partitionMap.add(key, patientKey);
-            }
-            return Promise.resolve(partitionMap.entries());
+            return Promise.resolve(
+                partitionCasesByGroupMembership(
+                    this._activeGroupsNotOverlapRemoved.result!,
+                    (group)=>getPatientIdentifiers([group]),
+                    (patientIdentifier)=>patientToSamplesSet.get({ studyId: patientIdentifier.studyId, patientId: patientIdentifier.patientId })![0].uniquePatientKey,
+                    this.patientKeys.result!
+                ) as { key:{[uid:string]:boolean}, value:string[] }[]
+            );
         }
     });
 
