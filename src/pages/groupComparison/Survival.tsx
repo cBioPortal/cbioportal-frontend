@@ -137,7 +137,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 yLabelTooltip="Survival estimate"
                                 xLabelWithEventTooltip="Time of death"
                                 xLabelWithoutEventTooltip="Time of last observation"
-                                fileName="Overall_Survival" />
+                                fileName="Overall_Survival"
+                                showCurveInTooltip={true}
+                            />
                         </div>
                     </div>
                 );
@@ -164,7 +166,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 yLabelTooltip="Disease-free Estimate"
                                 xLabelWithEventTooltip="Time of Relapse"
                                 xLabelWithoutEventTooltip="Time of Last Observation"
-                                fileName="Disease_Free_Survival" />
+                                fileName="Disease_Free_Survival"
+                                showCurveInTooltip={true}
+                            />
                         </div>
                     </div>
                 );
