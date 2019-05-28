@@ -5,7 +5,8 @@ set -e
 # -+-+-+-+-+-+-+ ENVIRONMENTAL VARS +-+-+-+-+-+-+-
 
 # TODO !!!! change back to cbioportal -->
-GITHUB_PR_API_PATH="https://api.github.com/repos/thehyve/cbioportal-frontend/pulls"
+export GITHUB_PR_API_PATH="https://api.github.com/repos/thehyve/cbioportal-frontend/pulls"
+echo export GITHUB_PR_API_PATH=$GITHUB_PR_API_PATH
 
 echo export E2E_CBIOPORTAL_HOST_NAME=cbioportal
 echo export CBIOPORTAL_URL="http://cbioportal:8080/cbioportal"
