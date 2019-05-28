@@ -625,3 +625,33 @@ export function convertPatientsStudiesAttrToSamples(
         )
     }));
 }
+
+export function partitionCasesByGroupMembership(
+    groupsNotOverlapRemoved:Pick<StudyViewComparisonGroup, "studies"|"uid">[],
+    getCaseIdentifiers:(group:Pick<StudyViewComparisonGroup, "studies"|"uid">)=>any[],
+    getUniqueCaseKey:(caseIdentifier:any)=>string,
+    caseKeys:string[]
+) {
+    // Gives a partition of the given cases into lists based on which groups
+    //  each case is a member of. For example, if there are groups A and B, then
+    //  in the output, there is an entry for cases in A not B, an entry for cases in
+    //  B not A, and an entry for cases in A and B. Note that there are only
+    //  entries in the output for nonempty lists.
+
+    const partitionMap = new ComplexKeyGroupsMap<string>();
+    const groupToCaseKeys = groupsNotOverlapRemoved.reduce((map, group)=>{
+        map[group.uid] = _.keyBy(getCaseIdentifiers(group).map(id=>{
+            return getUniqueCaseKey(id);
+        }));
+        return map;
+    }, {} as {[uid:string]:{[uniqueCaseKey:string]:any}});
+
+    for (const caseKey of caseKeys) {
+        const key:any = {};
+        for (const group of groupsNotOverlapRemoved) {
+            key[group.uid] = caseKey in groupToCaseKeys[group.uid];
+        }
+        partitionMap.add(key, caseKey);
+    }
+    return partitionMap.entries();
+}
