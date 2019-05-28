@@ -28,6 +28,8 @@ export class AppStore {
         });
     }
 
+    @observable private _appReady = false;
+
     @observable siteErrors: SiteError[] = [];
 
     @observable userName:string | undefined;
@@ -61,6 +63,15 @@ export class AppStore {
            err.dismissed = true;
            return err;
         });
+    }
+
+    @action
+    public setAppReady() {
+        this._appReady = true;
+    }
+
+    public get appReady() {
+        return this._appReady;
     }
 
     readonly portalVersion = remoteData<string | undefined>({
