@@ -146,3 +146,16 @@ cd end-to-end-tests
 yarn install
 yarn run test-webdriver-manager
 ```
+
+## Local cBioPortal database for e2e-tests
+To enable e2e-tests on for features that depend on data that are not included in studies served by the public cBioPortal instance, cbioportal-frontend provides the `e2e local database` facility that allows developers to load custom studies used for e2e-tests. CircleCI runs the `e2e local database` tests as a separate job.
+
+Files for the local database e2e tests are located in the `./end-to-end-tests-localdb` directory of cbioportal-frontend. The directory structure of `./end-to-end-tests-localdb` is comparable to that of the `./end-to-end-tests` directory used for e2e tests against public cBioPortal.
+
+### Create new e2e-test
+1. Create junit test file and place in the `./end-to-end-tests-localdb/spec` directory.
+2. [optional] Add a folder with an uncompressed custom study in the `./end-to-end-tests-localdb/studies` directory.
+
+### Notes
+* Example tests (`home.*.spec.js`) and a minimal custom study (`minimal_study`) are included for reference.
+* In order to minimize time of local database e2e tests the size of custom studies should be kept as small as possible,
