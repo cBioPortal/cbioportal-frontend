@@ -8,7 +8,7 @@ import autobind from 'autobind-decorator';
 import {ComparisonGroup} from './GroupComparisonUtils';
 import {getTextWidth, truncateWithEllipsis} from 'shared/lib/wrapText';
 import {tickFormatNumeral} from 'shared/components/plots/TickUtils';
-import {blendColors, getCombinations, joinNames} from './OverlapUtils';
+import {getCombinations, joinNames} from './OverlapUtils';
 import {pluralize} from 'shared/lib/StringUtils';
 import {getPlotDomain} from './UpSetUtils';
 import * as ReactDOM from "react-dom";
@@ -212,10 +212,8 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
         return _.chain(getCombinations(this.props.groups))
             .filter(combination => combination.cases.length > 0)
             .map(combination => {
-                let colors = combination.groups.map(uid => this.props.uidToGroup[uid].color);
                 return {
-                    ...combination,
-                    fill: blendColors(colors)
+                    ...combination
                 }
             })
             .orderBy(x => x.cases.length, 'desc')
@@ -224,13 +222,12 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
 
     @computed get scatterData() {
         return _.flatMap(this.groupCombinationSets, (set, index) => {
-            const {fill, ...setRest} = set;
             return _.map(this.activeGroups, (group, i) => ({
                 x: this.categoryCoord(index),
                 y: this.categoryCoord(i),
-                fill: _.includes(set.groups, group.uid) ? fill : DEFAULT_SCATTER_DOT_COLOR,
+                fill: _.includes(set.groups, group.uid) ? "#000000" : DEFAULT_SCATTER_DOT_COLOR,
                 dontShowTooltip: !_.includes(set.groups, group.uid),
-                ...setRest
+                ...set
             }));
         });
     }
@@ -265,7 +262,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                 <VictoryLine
                     style={{
                         data: {
-                            stroke: set.fill,
+                            stroke: "#000000",
                             strokeWidth: 4,
                             strokeLinecap: "round"
                         },
@@ -399,7 +396,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                                     axisLabelComponent={<VictoryLabel dy={-40} />}
                                 />
                                 <VictoryBar
-                                    style={{ data: { fill: (d: any) => d.fill, width: this.barWidth() } }}
+                                    style={{ data: { fill: "#000000", width: this.barWidth() } }}
                                     data={this.barPlotData}
                                 />
                                 <VictoryBar
