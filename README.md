@@ -158,4 +158,7 @@ Files for the local database e2e tests are located in the `./end-to-end-tests-lo
 
 ### Notes
 * Example tests (`home.*.spec.js`) and a minimal custom study (`minimal_study`) are included for reference.
-* In order to minimize time of local database e2e tests the size of custom studies should be kept as small as possible,
+* In order to minimize time of local database e2e tests the size of custom studies should be kept as small as possible.
+
+!! only PR updates are supported atm
+!! 
