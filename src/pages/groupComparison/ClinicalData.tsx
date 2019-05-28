@@ -103,14 +103,16 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
             return ret;
         },
         render: () => {
+            let content: any = [];
             if (this.props.store.activeGroups.result!.length < 2) {
-                return <span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(this.props.store.activeGroups.result!.length)}</span>;
+                content.push(<span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(this.props.store.activeGroups.result!.length)}</span>);
             } else {
-                let content: any = [];
                 content.push(<OverlapExclusionIndicator store={this.props.store}/>);
                 content.push(this.overlapUI.component)
-                return content;
             }
+            return (<div data-test="ComparisonPageClinicalTabDiv">
+                {content}
+            </div>);
         },
         renderPending: () => <LoadingIndicator isLoading={true} center={true} size={"big"} />
     });
@@ -118,7 +120,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     readonly overlapUI = MakeMobxView({
         await: () => [this.props.store.clinicalDataEnrichmentsWithQValues],
         render: () => {
-            return (<div className="clearfix" style={{ display: "flex", marginTop: 6 }}>
+            return (<div className="clearfix" style={{ display: "flex" }}>
                 <div style={{ width: "600px" }}>
                     <ClinicalDataEnrichmentsTable dataStore={this.tableDataStore} />
                 </div>
@@ -357,7 +359,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                 {!this.showLogScaleControls && (
                     <div className="form-group" style={{display:"flex", alignItems:"center"}}>
                         <label>Plot Type</label>
-                        <div style={{ width: 240, marginLeft:5 }}>
+                        <div style={{ width: 240, marginLeft:5 }} data-test="plotTypeSelector">
                             <ReactSelect
                                 name="discrete-vs-discrete-plot-type"
                                 value={this.plotType}
@@ -375,6 +377,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                             type="checkbox"
                             checked={this.swapAxes}
                             onClick={this.onClickSwapAxes}
+                            data-test="SwapAxes"
                         />Swap Axes
                         </label>
                     {!this.showLogScaleControls && (
@@ -384,6 +387,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                                 name="horizontalBars"
                                 checked={this.horizontalBars}
                                 onClick={this.onClickhorizontalBars}
+                                data-test="HorizontalBars"
                             />Horizontal Bars
                         </label>
                     )}
@@ -393,6 +397,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                                 type="checkbox"
                                 checked={this.logScale}
                                 onClick={this.onClickLogScale}
+                                data-test="logScale"
                             />Log Scale
                         </label>
                     )}
@@ -472,7 +477,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                 }
 
                 return (
-                    <div data-test="ClinicalTabPlotDiv" className="borderedChart posRelative">
+                    <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
                         <ScrollBar style={{ position: 'relative', top: -5 }} getScrollEl={this.getScrollPane} />
                         <Observer>
                             {this.toolbar}
@@ -506,10 +511,6 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     }
 
     public render() {
-        return (
-            <div className="inlineBlock">
-                {this.tabUI.component}
-            </div>
-        )
+        return this.tabUI.component
     }
 }
