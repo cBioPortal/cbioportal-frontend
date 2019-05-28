@@ -44,7 +44,7 @@ describe('Mutation Table', function() {
                 return textValuesWith6.length > 1;
             }, 60000, "Exon data not in Exon column");
             textValuesWith6 = browser.getText('//*[text()="6"]');
-            assert.equal(textValuesWith6.length, 3);
+            assert.equal(textValuesWith6.length, 4);
         });
 
         it('should show more exon number after clicking "Show more"', ()=>{
