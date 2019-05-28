@@ -13,7 +13,7 @@ docker run --rm \
     -e SCREENSHOT_DIRECTORY="$SCREENSHOT_DIRECTORY"\
     -e SPEC_FILE_PATTERN="$SPEC_FILE_PATTERN" \
     -e JUNIT_REPORT_PATH="$JUNIT_REPORT_PATH" \
-    -v "$TEST_HOME/$SCREENSHOT_DIRECTORY:/cbioportal-frontend/end-to-end-tests-localdb/$SCREENSHOT_DIRECTORY" \
+    -v "$PORTAL_SOURCE_DIR:/cbioportal-frontend/" \
     $SCREENSHOT_IMAGE_NAME
 
 cd $CUR_DIR
