@@ -17,7 +17,7 @@ import GroupSelector from "./groupSelector/GroupSelector";
 import {getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
 import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
-import {computed, IReactionDisposer, observable, reaction} from "mobx";
+import {computed, IReactionDisposer, observable, reaction, action} from "mobx";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
 import _ from "lodash";
@@ -76,6 +76,8 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             },
             {fireImmediately: true}
         );
+
+        (window as any).groupComparisonPage = this;
     }
 
     @autobind
@@ -198,6 +200,12 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         } 
     });
 
+    @autobind
+    @action
+    public onOverlapStrategySelect(option:any) {
+        this.store.setOverlapStrategy(option.value);
+    }
+
     readonly overlapStrategySelector = MakeMobxView({
         await:()=>[this.store._selectionInfo],
         render:()=>{
@@ -211,7 +219,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                             name="select overlap strategy"
                             onChange={(option:any|null)=>{
                                 if (option) {
-                                    this.store.setOverlapStrategy(option.value);
+                                    this.onOverlapStrategySelect(option);
                                 }
                             }}
                             options={[
