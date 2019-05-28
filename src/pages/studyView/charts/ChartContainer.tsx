@@ -299,7 +299,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                     filters={this.props.filters}
                     onUserSelection={this.handlers.onValueSelection}
-                    label={" "}
                     labelDescription={this.props.chartMeta.description}
                     patientAttribute={this.props.chartMeta.patientAttribute}
                     showAddRemoveAllButtons={this.mouseInChart}
