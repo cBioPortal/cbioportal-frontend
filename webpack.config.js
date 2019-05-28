@@ -136,7 +136,7 @@ var config = {
 
     plugins: [
         new webpack.DefinePlugin({
-            'VERSION': version, 
+            'VERSION': version,
             'COMMIT': commit,
             'IS_DEV_MODE': isDev,
             'ENV_CBIOPORTAL_URL': isDev && process.env.CBIOPORTAL_URL? JSON.stringify(cleanAndValidateUrl(process.env.CBIOPORTAL_URL)) : '"replace_me_env_cbioportal_url"',
@@ -189,7 +189,10 @@ var config = {
                         "presets": ["@babel/preset-env", "@babel/preset-react"]
                     }
                 }],
-                exclude: /node_modules/
+                exclude: function(modulePath) {
+                    return /node_modules/.test(modulePath) &&
+                        !/igv\.min/.test(modulePath);
+                }
             },
             {
                 test: /\.otf(\?\S*)?$/,
@@ -285,7 +288,6 @@ var config = {
                     {loader: 'imports-loader?define=>false'}
                     ]
             },
-
             {
                 test: /\.js$/,
                 enforce:"pre",
@@ -293,8 +295,8 @@ var config = {
                     loader: "source-map-loader",
                 }],
                 exclude: [
-                    /node_modules\/igv\//g,
-                    /node_modules\/svg2pdf.js\//g
+                    /igv\.min/,
+                    /node_modules\/svg2pdf.js\//
                 ]
             }
 
