@@ -5,7 +5,11 @@ LABEL Description="End-2-end test image for cBioPortal frontend"
 
 USER root
 
-COPY . /cbioportal-frontend
-RUN cd /cbioportal-frontend && npm install --global yarn@1.13.0 && cd end-to-end-tests-localdb && yarn install
+COPY . /cbioportal-frontend/
+
+RUN cd /cbioportal-frontend \
+    && npm install --global yarn@1.13.0 \
+    && cd end-to-end-tests-localdb \
+    && yarn install --frozen-lockfile
 
 CMD /cbioportal-frontend/end-to-end-tests-localdb/docker/screenshottest.sh
