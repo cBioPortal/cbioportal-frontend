@@ -31,7 +31,7 @@ export interface IUpSetrProps {
 const PLOT_DATA_PADDING_PIXELS = 20;
 const DEFAULT_BOTTOM_PADDING = 10;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
-const BAR_WIDTH = 20;
+const BAR_WIDTH = 10;
 const DEFAULT_SCATTER_DOT_COLOR = "#efefef"
 
 @observer
@@ -263,7 +263,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                     style={{
                         data: {
                             stroke: "#000000",
-                            strokeWidth: 4,
+                            strokeWidth: 2,
                             strokeLinecap: "round"
                         },
                     }}
@@ -273,7 +273,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                     style={{
                         data: {
                             strokeOpacity: 0,
-                            strokeWidth: 20,
+                            strokeWidth: 10,
                             strokeLinecap: "round"
                         },
                     }}
@@ -455,7 +455,7 @@ export default class UpSet extends React.Component<IUpSetrProps, {}> {
                                 />
 
                                 <VictoryScatter
-                                    size={10}
+                                    size={this.barWidth()/2}
                                     style={{
                                         data: {
                                             fill: (d: any) => d.fill,
