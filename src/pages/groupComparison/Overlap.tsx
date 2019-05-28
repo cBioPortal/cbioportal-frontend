@@ -151,7 +151,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         await:()=>[this.plot],
         render:()=>(
             <div>
-                <div data-test="ComparisonTabOverlapDiv" className="borderedChart posRelative">
+                <div data-test="ComparisonPageOverlapTabDiv" className="borderedChart posRelative">
                     {this.plotExists && (
                         <DownloadControls
                             getSvg={this.getSvg}
