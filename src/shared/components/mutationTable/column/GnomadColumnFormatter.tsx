@@ -144,8 +144,6 @@ export default class GnomadColumnFormatter {
                     result = gnomadResult;
                 }
                 
-                const sorted = _.sortBy(Object.values(result).slice(0, 8), ['alleleFrequency']).reverse();
-                sorted.push(result["Total"]);
                 // The column will show the total frequency
                 if (result["Total"].alleleFrequency === 0) {
                     display = <span>0</span>
@@ -154,23 +152,35 @@ export default class GnomadColumnFormatter {
                     display = <span>{parseFloat(result["Total"].alleleFrequency.toString()).toExponential(1)}</span>
                 }       
                 
-                overlay = () => (
-                    <span className={styles["gnomad-table"]} data-test='gnomad-table'>
-                        <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl}/>
-                    </span>
-                    
-                );
             }
 
-            // if there is no gnomad data, the column would show N/A
+            // if there is no gnomad data, the column would show 0
             else {
-                display = 
-                <DefaultTooltip placement="topLeft" overlay={(
-                    <span>Variant has no data in gnomAD.</span>
-                )}>
-                <span>N/A</span>
-                </DefaultTooltip>
+
+                Object.keys(PopulationName).map(key => {
+                    result[key] = {
+                        'population': key,
+                        'alleleCount': 0,
+                        'alleleNumber': 0,
+                        'homozygotes': 0,
+                        'alleleFrequency': 0
+                    } as GnomadData;
+                })
+
+                display = <span>0</span>
             }
+
+            // sort by frequency
+            const sorted = _.sortBy(Object.values(result).slice(0, 8), ['alleleFrequency']).reverse();
+            // add the total row at the bottom
+            sorted.push(result["Total"]);
+
+            overlay = () => (
+                <span className={styles["gnomad-table"]} data-test='gnomad-table'>
+                    <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl}/>
+                </span>
+                
+            );
 
             content = (
                 <div className={generalStyles["integer-data"]}>
@@ -196,15 +206,15 @@ export default class GnomadColumnFormatter {
             
         }
 
-            if (status !== null) {
-                // show loading circle
-                if (status === TableCellStatus.LOADING) {
-                    return <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-right"/>;
-                } 
-                else {
-                    return <TableCellStatusIndicator status={status}/>;
-                }
+        if (status !== null) {
+            // show loading circle
+            if (status === TableCellStatus.LOADING) {
+                return <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-right"/>;
+            } 
+            else {
+                return <TableCellStatusIndicator status={status}/>;
             }
+        }
     }
 
     public static getData(genomeNexusData: MyVariantInfoAnnotation | null): MyVariantInfo | null {
