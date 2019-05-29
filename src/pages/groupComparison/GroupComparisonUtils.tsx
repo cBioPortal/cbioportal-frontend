@@ -36,6 +36,7 @@ export type ComparisonGroup = Omit<SessionGroupData, "studies"|"color"> & {
     color:string; // color mandatory here, bc we'll assign one if its missing
     uid:string; // unique in the session
     nameWithOrdinal:string; // for easy disambiguation when groups are abbreviated
+    ordinal:string;
     studies:{ id:string, samples: string[], patients:string[] }[]; // include patients, filter out nonexistent samples
     nonExistentSamples:SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
     savedInSession:boolean;
