@@ -145,15 +145,16 @@ export function caseCountsInParens(
 export function caseCounts(
     numSamples:number,
     numPatients:number,
-    delimiter="/"
+    delimiter="/",
+    infix=" "
 ) {
     if (numSamples === numPatients) {
         const plural = (numSamples !== 1);
-        return `${numSamples} sample${plural ? "s" : ""}${delimiter}patient${plural ? "s" : ""}`;
+        return `${numSamples}${infix}sample${plural ? "s" : ""}${delimiter}patient${plural ? "s" : ""}`;
     } else {
         const pluralSamples = (numSamples !== 1);
         const pluralPatients = (numPatients !== 1);
-        return `${numSamples} sample${pluralSamples ? "s" : ""}${delimiter}${numPatients} patient${pluralPatients ? "s" : ""}`;
+        return `${numSamples}${infix}sample${pluralSamples ? "s" : ""}${delimiter}${numPatients}${infix}patient${pluralPatients ? "s" : ""}`;
     }
 }
 
