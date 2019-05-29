@@ -23,6 +23,7 @@ import {MiniOncoprint} from "shared/components/miniOncoprint/MiniOncoprint";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import GeneBarPlot from './GeneBarPlot';
 import WindowStore from "shared/components/window/WindowStore";
+import './styles.scss';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -243,6 +244,11 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         });
     }
 
+    @computed private get genePlotMaxWidth() {
+        //820 include width of two scatter plots
+        return WindowStore.size.width - (this.isTwoGroupAnalysis ? 820 : 40);
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
@@ -263,13 +269,15 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         xGroupName={this.volcanoPlotLabels[1]} yGroupName={this.volcanoPlotLabels[0]} onGeneNameClick={this.onGeneNameClick}
                         selectedGenesSet={this.selectedGenesSet} onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared} />}
 
-                    <GeneBarPlot
-                        data={this.data}
-                        isTwoGroupAnalysis={this.isTwoGroupAnalysis}
-                        groupOrder={this.props.groups.map(group => group.name)}
-                        showCNAInTable={this.props.showCNAInTable}
-                        containerType={this.props.containerType}
-                    />
+                    <div style={{ maxWidth: this.genePlotMaxWidth }}>
+                        <GeneBarPlot
+                            data={this.data}
+                            isTwoGroupAnalysis={this.isTwoGroupAnalysis}
+                            groupOrder={this.props.groups.map(group => group.name)}
+                            showCNAInTable={this.props.showCNAInTable}
+                            containerType={this.props.containerType}
+                        />
+                    </div>
                 </div>
 
                 <div>
