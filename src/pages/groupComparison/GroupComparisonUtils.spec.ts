@@ -14,7 +14,6 @@ import {
     getOverlappingSamples,
     getPatientIdentifiers,
     getSampleIdentifiers,
-    getStackedBarData,
     getStudyIds,
     getVennPlotData,
     intersectPatients,
@@ -64,48 +63,6 @@ describe('GroupComparisonUtils', () => {
                     "ACA","ACB"
                 ]
             );
-        });
-    });
-
-    describe('getStackedBarData', () => {
-        const uidToGroup = {
-            "1":{
-                uid:"1",
-                name:"1",
-                color:"#990099"
-            } as ComparisonGroup,
-            "2":{
-                uid:"2",
-                name:"2",
-                color:"#0099c6"
-            } as ComparisonGroup
-        };
-        it('when no data', () => {
-            assert.deepEqual(getStackedBarData([], {}), [])
-        });
-
-        it('when there no overlapping groups', () => {
-            assert.deepEqual(getStackedBarData([
-                { uid: '1', cases: ['1-1'] },
-                { uid: '2', cases: ['1-2'] }
-            ], uidToGroup),
-                [
-                    [{ cases: ['1-1'], fill: '#990099', groupName: '1' }],
-                    [{ cases: ['1-2'], fill: '#0099c6', groupName: '2' }]
-                ]);
-        });
-
-        it('when there one or more overlapping groups', () => {
-
-            (expect(getStackedBarData([
-                { uid: '1', cases: ['1-1', '1-2'] },
-                { uid: '2', cases: ['1-1'] }
-            ], uidToGroup))
-                .to.deep as any).equalInAnyOrder([
-                [{ cases: ['1-1'], fill: '#CCCCCC', groupName: 'Overlapping Cases' }],
-                [{ cases: [], fill: '#0099c6', groupName: '2' }],
-                [{ cases: ['1-2'], fill: '#990099', groupName: '1' }]
-            ]);
         });
     });
 
