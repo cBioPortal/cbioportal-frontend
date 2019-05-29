@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import * as React from "react";
 import $ from "jquery";
-import igv from 'igv/dist/igv.esm.js';
+import igv from 'igv/dist/igv.min.js';
 import autobind from "autobind-decorator";
 
 import onNextRenderFrame from "shared/lib/onNextRenderFrame";
