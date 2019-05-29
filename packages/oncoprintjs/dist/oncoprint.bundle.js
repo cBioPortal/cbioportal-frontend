@@ -12918,7 +12918,8 @@ var Oncoprint = (function () {
 				    .css({'position':'absolute', 
 					    'top':'0px', 
 					    'left':'0px'})
-				    .addClass("noselect");
+				    .addClass("noselect")
+				    .addClass('oncoprintjs__cell_overlay_div');
 			    
 	var $track_info_div = $('<div>')
 				.css({'position':'absolute'});
