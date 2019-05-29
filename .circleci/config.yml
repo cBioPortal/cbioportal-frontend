@@ -85,8 +85,6 @@ jobs:
           keys:
           - v2-dependencies-plus-dist-{{ checksum "has_source_changed" }}
           - v2-dependencies-{{ checksum "yarn.lock" }}
-          # fallback to using the latest cache if no exact match is found
-          - v2-dependencies-
       # Download and cache dependencies
       - run: yarn
       - run:
