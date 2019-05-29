@@ -193,6 +193,7 @@ export default class GroupComparisonStore {
                     nonExistentSamples,
                     uid: index.toString(),
                     nameWithOrdinal: "", // fill in later
+                    ordinal: "", // fill in later
                     savedInSession
                 });
             };
@@ -227,7 +228,9 @@ export default class GroupComparisonStore {
 
             const ordinals = getOrdinals(sorted.length, 26);
             sorted.forEach((group, index)=>{
-                group.nameWithOrdinal = `${ordinals[index]}. ${group.name}`;
+                const ordinal = ordinals[index];
+                group.nameWithOrdinal = `(${ordinal}) ${group.name}`;
+                group.ordinal = ordinal;
             });
             return Promise.resolve(sorted);
         }
