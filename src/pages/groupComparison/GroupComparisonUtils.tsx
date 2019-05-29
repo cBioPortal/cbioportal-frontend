@@ -406,13 +406,13 @@ export const SURVIVAL_TOO_MANY_GROUPS_MSG =
 export const DUPLICATE_GROUP_NAME_MSG = "Another group already has this name.";
 
 export const OVERLAP_NOT_ENOUGH_GROUPS_MSG =
-    "We can't show overlap for 1 group. Please select more groups from the Groups section above.";
+    "We need at least 2 groups to show overlap. Please select more groups from the Groups section above.";
 
 export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups:number) {
     if (numSelectedGroups >= 2) {
         return "Due to excluded overlapping cases, there are less than 2 selected nonempty groups - we need at least 2.";
     } else {
-        return "Please select more groups - we need at least 2.";
+        return "We need at least 2 groups to show clinical data enrichments. Please select more groups from the Groups section above.";
     }
 }
 
