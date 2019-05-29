@@ -186,11 +186,11 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
                 <table>
                     <tr>
                         <td>Log ratio > 0</td>
-                        <td>: Over-expressed in {this.props.group1Name}</td>
+                        <td>: Higher expression in {this.props.group1Name}</td>
                     </tr>
                     <tr>
                         <td>Log ratio &lt;= 0</td>
-                        <td>: Under-expressed in {this.props.group1Name}</td>
+                        <td>: Higher expression in {this.props.group2Name}</td>
                     </tr>
                     <tr>
                         <td>q-Value &lt; 0.05</td>
