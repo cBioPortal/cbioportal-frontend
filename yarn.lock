@@ -12743,12 +12743,13 @@ react-draggable@3.x, "react-draggable@^2.2.6 || ^3.0.3":
     classnames "^2.2.5"
     prop-types "^15.6.0"
 
-react-draggable@^2.2.6:
-  version "2.2.6"
-  resolved "https://registry.yarnpkg.com/react-draggable/-/react-draggable-2.2.6.tgz#3a806e10f2da6babfea4136be6510e89b0d76901"
-  integrity sha1-OoBuEPLaa6v+pBNr5lEOibDXaQE=
+react-draggable@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/react-draggable/-/react-draggable-3.3.0.tgz#2ed7ea3f92e7d742d747f9e6324860606cd4d997"
+  integrity sha512-U7/jD0tAW4T0S7DCPK0kkKLyL0z61sC/eqU+NUfDjnq+JtBKaYKDHpsK2wazctiA4alEzCXUnzkREoxppOySVw==
   dependencies:
     classnames "^2.2.5"
+    prop-types "^15.6.0"
 
 react-element-to-jsx-string@^13.0.0:
   version "13.2.0"
