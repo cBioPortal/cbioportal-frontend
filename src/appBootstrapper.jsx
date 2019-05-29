@@ -177,4 +177,5 @@ $(document).ready(async () => {
 
     render();
 
+    stores.appStore.setAppReady();
 });
