@@ -190,19 +190,11 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
         return this.props.containerType === AlterationContainerType.MUTATION ? 'Mutation frequency' : 'Copy-number alteration frequency';
     }
 
-    // figure out maxwidth of chart based on data
-    // note: placement of chart inside constained parents may result in scrolling
-    @computed private get maxWidth(){
-        const geneCount = this.barPlotData[0].counts.length;
-        const groupCount = this.barPlotData.length;
-        return ((groupCount + 1) * geneCount * CHART_BAR_WIDTH) + 350;
-    }
-
     public render() {
         return (
-            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ overflow: 'auto', overflowY: 'hidden', flexGrow: 1, maxWidth:this.maxWidth }}>
+            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ position: "relative", display: "inline-block" }}>
                 {this.toolbar}
-                <div style={{ position: this.props.isTwoGroupAnalysis ? 'absolute' : 'static' }}>
+                <div style={{ overflow: "auto hidden", position: "relative" }} >
                     <MultipleCategoryBarPlot
                         svgId={SVG_ID}
                         barWidth={CHART_BAR_WIDTH}
