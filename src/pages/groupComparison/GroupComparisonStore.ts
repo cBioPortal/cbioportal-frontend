@@ -79,6 +79,11 @@ export default class GroupComparisonStore {
         this.dragUidOrder.splice(newIndex, 0, poppedUid);
     }
 
+    @autobind
+    @action public clearDragUidOrder() {
+        this.dragUidOrder = undefined;
+    }
+
     public get isLoggedIn() {
         return this.appStore.isLoggedIn;
     }
@@ -832,6 +837,9 @@ export default class GroupComparisonStore {
             this.activeSamplesNotOverlapRemoved
         ],
         invoke: async () => {
+            if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
+                return false;
+            }
             const filter: ClinicalDataMultiStudyFilter = {
                 attributeIds: SURVIVAL_CHART_ATTRIBUTES,
                 identifiers: this.activeSamplesNotOverlapRemoved.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
