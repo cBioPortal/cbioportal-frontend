@@ -84,35 +84,6 @@ export function getOrdinals(num:number, base:number) {
     return inNewBase.map(n=>n.map(i=>alphabet[i]).join(""));
 }
 
-export const OVERLAP_GROUP_COLOR = "#CCCCCC";
-
-export function getStackedBarData(groups:{ uid: string, cases:string[] }[], uidToGroup:{[uid:string]:ComparisonGroup}) {
-    const counts = new ComplexKeyCounter();
-    for (const group of groups) {
-        for (const caseId of group.cases) {
-            counts.increment({ caseId });
-        }
-    }
-    const overlappingCases =
-        counts.entries()
-            .filter(e=>(e.value > 1))
-            .map(e=>e.key.caseId as string);
-
-    const ret = groups.map(group=>[{
-        groupName: uidToGroup[group.uid].name,
-        fill: uidToGroup[group.uid].color,
-        cases: _.difference(group.cases, overlappingCases)
-    }]);
-    if (overlappingCases.length > 0) {
-        ret.unshift([{
-            cases: overlappingCases,
-            fill: OVERLAP_GROUP_COLOR,
-            groupName: 'Overlapping Cases'
-        }]);
-    }
-    return ret;
-}
-
 export function getVennPlotData(combinationSets: { groups: string[], cases: string[] }[]) {
     return combinationSets.map(set => {
         return {
