@@ -210,6 +210,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                     orientation={this.legendLocation === "right" ? "vertical" : "horizontal"}
                     itemsPerRow={this.legendLocation === "right" ? undefined : LEGEND_ITEMS_PER_ROW}
                     rowGutter={this.legendLocation === "right" ? undefined : -5}
+                    gutter={30}
                     data={this.legendData}
                     x={this.legendLocation === "right" ? this.sideLegendX : 0}
                     y={this.legendLocation === "right" ? 100 : this.svgHeight-this.bottomLegendHeight}
