@@ -59,6 +59,7 @@ export interface ISurvivalChartProps {
     disableZoom?: boolean;
     styleOpts?: any; // see victory styles, and styleOptsDefaultProps for examples
     className?: string;
+    showCurveInTooltip?:boolean;
 }
 
 // Start to down sampling when there are more than 1000 dots in the plot.
@@ -189,11 +190,12 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         // map through groups and generate plot data for each
         return _.mapValues(this.sortedGroupedSurvivals, (survivals, group)=>{
             const estimates = this.estimates[group];
+            const groupName = this.analysisGroupsMap[group].legendText;
             return {
                 numOfCases: survivals.length,
                 line: getLineData(survivals, estimates),
-                scatterWithOpacity: getScatterDataWithOpacity(survivals, estimates),
-                scatter: getScatterData(survivals, estimates)
+                scatterWithOpacity: getScatterDataWithOpacity(survivals, estimates, groupName),
+                scatter: getScatterData(survivals, estimates, groupName)
             };
         });
     }
@@ -224,6 +226,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         this.tooltipMouseLeave = this.tooltipMouseLeave.bind(this);
     }
 
+
+    @computed get analysisGroupsMap() {
+        return _.keyBy(this.props.analysisGroups, g=>g.value);
+    }
 
     @computed get logRankTestPVal(): number | null {
         if (this.analysisGroupsWithData.length === 2) {
@@ -302,7 +308,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         const data = [];
         for (const group of this.analysisGroupsWithData) {
             data.push({
-                scatterData:getScatterData(this.sortedGroupedSurvivals[group.value], this.estimates[group.value]),
+                scatterData:getScatterData(this.sortedGroupedSurvivals[group.value], this.estimates[group.value], group.value),
                 title: group.legendText !== undefined ? group.legendText : group.value
             });
         }
@@ -501,6 +507,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                             onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                             <div>
                                 Patient ID: <a href={getPatientViewUrl(this.tooltipModel.datum.studyId, this.tooltipModel.datum.patientId)} target="_blank">{this.tooltipModel.datum.patientId}</a><br />
+                                {!!this.props.showCurveInTooltip && [
+                                    `Curve: ${this.tooltipModel.datum.group}`,
+                                    <br/>
+                                ]}
                                 {this.props.yLabelTooltip}: {(this.tooltipModel.datum.y).toFixed(2)}%<br />
                                 {this.tooltipModel.datum.status ? this.props.xLabelWithEventTooltip :
                                     this.props.xLabelWithoutEventTooltip}
