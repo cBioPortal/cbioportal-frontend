@@ -64,7 +64,9 @@ export function getTextColor(
 ) {
     const colors = ["black", "white"];
     let colorIndex = 1;
-    if (d3.hsl(backgroundColor).l > 0.179) {
+    const rgb = d3.rgb(backgroundColor);
+    const luminance = 0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b;
+    if (luminance > 186) {
         // if luminance is high, use black text
         // https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color
         colorIndex = 0;
