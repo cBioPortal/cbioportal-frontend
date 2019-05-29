@@ -28,14 +28,14 @@ export default class GroupComparisonLoading extends React.Component<IGroupCompar
         switch (query.phase) {
             case LoadingPhase.DOWNLOADING_GROUPS:
                 if (query.clinicalAttributeName) {
-                    ret.push(<div>Loading each subgroup of <span style={{whiteSpace:"nowrap"}}>{query.clinicalAttributeName}..</span></div>);
+                    ret.push(<div>Loading each subgroup of <span style={{whiteSpace:"nowrap"}}>{query.clinicalAttributeName}...</span></div>);
                 } else {
-                    ret.push(<div>Creating groups..</div>);
+                    ret.push(<div>Creating groups...</div>);
                 }
                 break;
             case LoadingPhase.CREATING_SESSION:
                 ret.push(<div>Groups loaded.</div>);
-                ret.push(<div>Creating comparison session..</div>);
+                ret.push(<div>Creating comparison session...</div>);
                 break;
             default:
                 ret.push(<div>Redirecting you to the Comparison page...</div>);
