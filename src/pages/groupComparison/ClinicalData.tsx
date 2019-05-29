@@ -105,7 +105,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         render: () => {
             let content: any = [];
             if (this.props.store.activeGroups.result!.length < 2) {
-                content.push(<span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(this.props.store.activeGroups.result!.length)}</span>);
+                content.push(<span>{CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(this.props.store._activeGroupsNotOverlapRemoved.result!.length)}</span>);
             } else {
                 content.push(<OverlapExclusionIndicator store={this.props.store}/>);
                 content.push(this.overlapUI.component)
