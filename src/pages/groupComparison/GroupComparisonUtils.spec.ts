@@ -1302,7 +1302,7 @@ describe('GroupComparisonUtils', () => {
         });
     });
 
-    describe("partitionCases", ()=>{
+    describe("partitionCasesByGroupMembership", ()=>{
         const getCaseIdentifiers = (group:any)=>{
             return getSampleIdentifiers([group]);
         }
