@@ -55,17 +55,19 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 if (this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE && partitionGroupUids.length > 1) {
                     // dont show the overlap curves if we're excluding overlapping cases
                 } else {
-                    const name = partitionGroupUids.map(uid=>uidToGroup[uid].nameWithOrdinal).join(", ");
-                    const value = partitionGroupUids.join(",");
-                    for (const patientKey of entry.value) {
-                        patientToAnalysisGroups[patientKey] = [value];
+                    if (partitionGroupUids.length > 0) {
+                        const name = partitionGroupUids.map(uid => uidToGroup[uid].nameWithOrdinal).join(", ");
+                        const value = partitionGroupUids.join(",");
+                        for (const patientKey of entry.value) {
+                            patientToAnalysisGroups[patientKey] = [value];
+                        }
+                        analysisGroups.push({
+                            name,
+                            color: blendColors(partitionGroupUids.map(uid => uidToGroup[uid].color)),
+                            value,
+                            legendText: name
+                        });
                     }
-                    analysisGroups.push({
-                        name,
-                        color: blendColors(partitionGroupUids.map(uid=>uidToGroup[uid].color)),
-                        value,
-                        legendText: name
-                    });
                 }
             }
             return Promise.resolve({
