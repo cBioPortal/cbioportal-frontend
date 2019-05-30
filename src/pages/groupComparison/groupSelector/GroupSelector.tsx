@@ -65,6 +65,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                         position:"relative"
                     }}>
                         <strong style={{marginRight:5}}>Groups: </strong>
+                        <span style={{fontSize:10, marginRight:3}}>(drag to reorder)</span>
                         <GroupSelectorButtonList
                             buttons={buttons}
                             axis="xy"
