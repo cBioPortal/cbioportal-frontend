@@ -34,6 +34,47 @@ const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const BAR_WIDTH = 10;
 const DEFAULT_SCATTER_DOT_COLOR = "#efefef"
 
+interface TickLabelProps {
+    getGroup:(tick:number)=>ComparisonGroup;
+    // given by victory:
+    text?:number; // coordinate
+    x?:number;
+    y?:number;
+    verticalAnchor?:string;
+    textAnchor?:string;
+    angle?:string;
+    transform?:string;
+    style?:any;
+    events?:any;
+}
+class TickLabel extends React.Component<TickLabelProps,any>{
+
+    render() {
+        const {getGroup, text, x, y, textAnchor, ...props} = this.props;
+        const group = getGroup(text!);
+        const label = truncateWithEllipsis(group.nameWithOrdinal, 100, "Arial", "13px");
+        return (
+            <g>
+                <VictoryLabel
+                    {...props}
+                    text={label}
+                    x={x!-10}
+                    y={y!}
+                    textAnchor="end"
+                />
+                <rect
+                    x={x!-5}
+                    y={y!-5}
+                    width={10}
+                    height={10}
+                    fill={group.color}
+                />
+            </g>
+        );
+    }
+
+}
+
 @observer
 export default class UpSet extends React.Component<IUpSetProps, {}> {
 
@@ -103,7 +144,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     @computed get groupLabels() {
-        return _.map(this.usedGroups, group => truncateWithEllipsis(group.nameWithOrdinal, 100, "Arial", "13px"));
+        return _.map(this.usedGroups, group => group.uid);
     }
 
     private barSeparation() {
@@ -216,6 +257,13 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     @autobind
     private categoryCoord(index: number) {
         return index * (this.barWidth() + this.barSeparation()); // half box + separation + half box
+    }
+
+    @autobind
+    private getGroupFromCategoryCoord(coord:number) {
+        const index = coord / (this.barWidth() + this.barSeparation());
+        const uid = this.usedGroups[index].uid;
+        return this.props.uidToGroup[uid];
     }
 
     @computed get groupCombinationSets() {
@@ -405,7 +453,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     orientation="left"
                                     offsetX={50}
                                     dependentAxis
-                                    label={"Intersection count"}
+                                    label={"Overlap count"}
                                     tickFormat={this.formatNumericalTick}
                                     style={{
                                         grid: {
@@ -462,8 +510,8 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     offsetX={50}
                                     dependentAxis
                                     crossAxis={false}
-                                    tickFormat={this.groupTick}
                                     tickValues={this.groupTickValues}
+                                    tickLabelComponent={<TickLabel getGroup={this.getGroupFromCategoryCoord}/>}
                                     style={{
                                         axis: { strokeWidth: 0 },
                                         ticks: { size: 0, strokeWidth: 0 },

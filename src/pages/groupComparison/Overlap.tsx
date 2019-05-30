@@ -161,17 +161,17 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                         <div style={{display:`${this.areUpsetPlotsSidebySide ? "flex" : "block"}`}}>
                             <UpSet
                                 groups={this.props.store.samplesVennPartition.result!}
-                                title="Sample Sets Intersection"
+                                title="Samples overlap"
                                 uidToGroup={this.uidToGroup.result!}
                                 caseType="sample"
                             />
                             <UpSet
                                 groups={this.props.store.patientsVennPartition.result!}
-                                title="Patient Sets Intersection"
+                                title="Patients overlap"
                                 uidToGroup={this.uidToGroup.result!}
                                 caseType="patient"
                             />
-                        </div>)
+                        </div>);
                     break;
                 }
                 case PlotType.Venn:
