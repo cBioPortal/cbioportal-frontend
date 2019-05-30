@@ -278,7 +278,7 @@
     "swagger-js-codegen": "git+https://github.com/cBioPortal/swagger-js-codegen.git#0362f4a1e2d116ad6dffc36e4b57cdfbc93956cf",
     "tslint": "^5.2.0",
     "tslint-react": "^2.3.0",
-    "webpack-dev-server": "^2.9.7",
+    "webpack-dev-server": "^3.1.11",
     "yargs": "^6.6.0"
   }
 }
