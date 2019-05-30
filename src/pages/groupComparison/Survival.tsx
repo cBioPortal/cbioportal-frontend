@@ -85,7 +85,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 // dont bother loading data for and computing UI if its not valid situation for it
                 return [this.props.store._activeGroupsNotOverlapRemoved];
             } else {
-                return [this.props.store._activeGroupsNotOverlapRemoved, this.survivalUI, this.props.store._selectionInfo];
+                return [this.props.store._activeGroupsNotOverlapRemoved, this.survivalUI, this.props.store.overlapComputations];
             }
         },
         render:()=>{
@@ -98,7 +98,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         content.push(<OverlapExclusionIndicator store={this.props.store} only="patient"/>);
                         break;
                     case OverlapStrategy.INCLUDE:
-                        const selectionInfo = this.props.store._selectionInfo.result!;
+                        const selectionInfo = this.props.store.overlapComputations.result!;
                         if (selectionInfo.overlappingPatients.length > 0) {
                             content.push(
                                 <div className={`alert alert-info`}>
@@ -131,7 +131,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.overallPatientSurvivals,
             this.props.store.diseaseFreePatientSurvivals,
             this.analysisGroupsComputations,
-            this.props.store._selectionInfo
+            this.props.store.overlapComputations
         ],
         render:()=>{
             let content: any = [];
