@@ -5,11 +5,13 @@ import $ from "jquery";
 import "./styles.scss";
 import {observer} from "mobx-react";
 
+export const TOOLTIP_MOUSE_ENTER_DELAY = 0.5;
+
 export type DefaultTooltipProps = RCTooltip.Props & { disabled?:boolean, getTooltipContainer?:()=>Element };
 @observer
 export default class DefaultTooltip extends React.Component<DefaultTooltipProps, {}> {
     static readonly defaultProps = {
-        mouseEnterDelay: 0.5,
+        mouseEnterDelay: TOOLTIP_MOUSE_ENTER_DELAY,
         mouseLeaveDelay: 0.05,
         arrowContent: <div className="rc-tooltip-arrow-inner"/>,
         onPopupAlign:setArrowLeft
