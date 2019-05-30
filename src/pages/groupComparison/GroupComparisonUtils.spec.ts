@@ -20,7 +20,7 @@ import {
     intersectPatients,
     intersectSamples,
     isGroupEmpty,
-    OverlapFilteredComparisonGroup,
+    OverlapFilteredComparisonGroup, partitionCasesByGroupMembership,
     sortDataIntoQuartiles,
     unionPatients,
     unionSamples
@@ -1299,6 +1299,124 @@ describe('GroupComparisonUtils', () => {
                     patients:["1","2","3","4"]
                 }]);
             });
+        });
+    });
+
+    describe("partitionCasesByGroupMembership", ()=>{
+        const getCaseIdentifiers = (group:any)=>{
+            return getSampleIdentifiers([group]);
+        }
+        const getUniqueCaseKey = (id:any)=>{
+            return id.studyId+"+"+id.sampleId;
+        };
+        const groups = [{
+            uid:"group0",
+            studies:[{
+                id:"study1",
+                samples:["1", "2", "3"],
+                patients:["1", "2", "3"]
+            },
+                {
+                    id:"study2",
+                    samples:["1","2"],
+                    patients:["1","2"]
+                }]
+        },{
+            uid:"group1",
+            studies:[{
+                id:"study1",
+                samples:["2"],
+                patients:["2"]
+            },
+                {
+                    id:"study2",
+                    samples:["1"],
+                    patients:["1"]
+                },
+                {
+                    id:"study3",
+                    samples:["1","2","3","4"],
+                    patients:["1","2","3","4"]
+                }]
+        },{
+            uid:"group2",
+            studies:[{
+                id:"study1",
+                samples:["1","3","4"],
+                patients:["1","3","4"]
+            }]
+        }, {
+            uid:"group3",
+            studies:[{
+                id:"study1",
+                samples:["1","2","3"],
+                patients:["1","2","3"]
+            }]
+        }];
+        it("partitions empty list properly", ()=>{
+            assertDeepEqualInAnyOrder(
+                partitionCasesByGroupMembership(groups, getCaseIdentifiers, getUniqueCaseKey, []),
+                []
+            );
+        });
+        it("partitions a list of cases properly", ()=>{
+            assertDeepEqualInAnyOrder(
+                partitionCasesByGroupMembership(groups, getCaseIdentifiers, getUniqueCaseKey, [
+                    "study1+1","study1+2","study1+3","study1+4",
+                    "study2+1","study2+2",
+                    "study3+1","study3+2","study3+3","study3+4",
+                ]),
+                [{
+                    key:{
+                        group0:true,
+                        group1:false,
+                        group2:true,
+                        group3:true
+                    },
+                    value:["study1+1", "study1+3"]
+                },{
+                    key:{
+                        group0:true,
+                        group1:true,
+                        group2:false,
+                        group3:true
+                    },
+                    value:["study1+2"]
+                },{
+                    key:{
+                        group0:false,
+                        group1:false,
+                        group2:true,
+                        group3:false
+                    },
+                    value:["study1+4"]
+                },{
+                    key:{
+                        group0:true,
+                        group1:true,
+                        group2:false,
+                        group3:false
+                    },
+                    value:["study2+1"]
+                },
+                {
+                    key:{
+                        group0: true,
+                        group1:false,
+                        group2:false,
+                        group3:false
+                    },
+                    value:["study2+2"]
+                },{
+                    key:{
+                        group0:false,
+                        group1:true,
+                        group2:false,
+                        group3:false
+                    },
+                    value:["study3+1","study3+2","study3+3","study3+4"]
+                }]
+            )
         });
     });
 });
