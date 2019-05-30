@@ -196,6 +196,10 @@ describe('GroupComparisonUtils', () => {
                 caseCounts(0,0),
                 "0 samples/patients"
             );
+            assert.equal(
+                caseCounts(0,0, "+", " overlapping "),
+                "0 overlapping samples+patients"
+            );
         });
         it("1 patients and samples", ()=>{
             assert.equal(
@@ -225,6 +229,10 @@ describe('GroupComparisonUtils', () => {
             assert.equal(
                 caseCounts(2,0),
                 "2 samples/0 patients"
+            );
+            assert.equal(
+                caseCounts(2,0, " and ", " overlapping "),
+                "2 overlapping samples and 0 overlapping patients"
             );
         });
         it("0 samples and nonzero patients", ()=>{
