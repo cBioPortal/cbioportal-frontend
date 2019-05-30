@@ -150,9 +150,9 @@ export default class GnomadColumnFormatter {
                 sorted.push(result["Total"]);
                 
                 // The column will show the total frequency
-                // Column will be blank if the total frequency is 0, but still have the tooltip to show the gnomad table (since gnomad data is still available)
+                // Column will show 0 if the total frequency is 0, still has the tooltip to show the gnomad table (since gnomad data is still available)
                 if (result["Total"].alleleFrequency === 0) {
-                    display = <span style={{height: '100%', width: '100%', display: 'block', overflow: 'hidden'}}>&nbsp;</span>
+                    display = <span>0</span>
                 }
                 else {
                     display = <span>{parseFloat(result["Total"].alleleFrequency.toString()).toExponential(1)}</span>
