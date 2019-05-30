@@ -241,23 +241,74 @@ export default class GroupComparisonStore {
         overlappingSamples:SampleIdentifier[],
         overlappingPatients:PatientIdentifier[],
         overlappingSamplesSet:ComplexKeySet,
-        overlappingPatientsSet:ComplexKeySet
+        overlappingPatientsSet:ComplexKeySet,
+        existOverlappingSamples:boolean,
+        existOverlappingPatients:boolean,
+        excludedFromAnalysis:{[uid:string]:ComparisonGroup}
     }>({
         await:()=>[this._originalGroups],
         invoke:()=>{
-            // no overlap filter
-            const groups = this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid));
-            const overlappingSamples = getOverlappingSamples(groups);
-            const overlappingPatients = getOverlappingPatients(groups);
-            const overlappingSamplesSet = new ComplexKeySet();
-            const overlappingPatientsSet = new ComplexKeySet();
-            for (const sample of overlappingSamples) {
-                overlappingSamplesSet.add({ studyId: sample.studyId, sampleId: sample.sampleId });
+            let groups:ComparisonGroup[] = this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid));
+            let overlappingSamples:SampleIdentifier[] = [];
+            let overlappingPatients:PatientIdentifier[] = [];
+            let overlappingSamplesSet = new ComplexKeySet();
+            let overlappingPatientsSet = new ComplexKeySet();
+            let removedGroups:{[uid:string]:ComparisonGroup} = {};
+            let existOverlappingSamples = false;
+            let existOverlappingPatients = false;
+
+
+            if (groups.length > 0) {
+                while(true) {
+                    overlappingSamples = getOverlappingSamples(groups);
+                    overlappingPatients = getOverlappingPatients(groups);
+                    existOverlappingSamples = existOverlappingSamples || overlappingSamples.length > 0;
+                    existOverlappingPatients = existOverlappingPatients || overlappingPatients.length > 0;
+                    overlappingSamplesSet = new ComplexKeySet();
+                    overlappingPatientsSet = new ComplexKeySet();
+                    for (const sample of overlappingSamples) {
+                        overlappingSamplesSet.add({ studyId: sample.studyId, sampleId: sample.sampleId });
+                    }
+                    for (const patient of overlappingPatients) {
+                        overlappingPatientsSet.add({ studyId: patient.studyId, patientId: patient.patientId });
+                    }
+
+                    const [emptyGroups, nonEmptyGroups] =
+                        _.partition(
+                            getOverlapFilteredGroups(groups, { overlappingSamplesSet, overlappingPatientsSet }),
+                            group=>isGroupEmpty(group)
+                        );
+
+                    // remove one group at a time
+                    if (emptyGroups.length > 0) {
+                        const lastEmptyGroup = emptyGroups.pop()!;
+                        removedGroups[lastEmptyGroup.uid] = lastEmptyGroup;
+                    }
+
+                    if (nonEmptyGroups.length === groups.length) {
+                        // no group has been removed this round, so we've reached stable state
+                        break;
+                    } else {
+                        // otherwise, keep iterating
+                        groups = groups.filter(g=>!(g.uid in removedGroups));
+                    }
+                }
             }
-            for (const patient of overlappingPatients) {
-                overlappingPatientsSet.add({ studyId: patient.studyId, patientId: patient.patientId });
-            }
-            return Promise.resolve({groups, overlappingSamples, overlappingPatients, overlappingSamplesSet, overlappingPatientsSet});
+
+            const sortOrder = stringListToIndexSet(this._originalGroups.result!.map(g=>g.uid));
+            let groupsInSortOrder = getOverlapFilteredGroups(groups, { overlappingSamplesSet, overlappingPatientsSet }).concat(_.values(removedGroups));
+            groupsInSortOrder = _.sortBy(groupsInSortOrder, g=>sortOrder[g.uid]);
+            console.log(groupsInSortOrder.map(g=>g.nameWithOrdinal));
+            return Promise.resolve({
+                groups:groupsInSortOrder,
+                overlappingSamples,
+                overlappingPatients,
+                overlappingSamplesSet,
+                overlappingPatientsSet,
+                existOverlappingSamples,
+                existOverlappingPatients,
+                excludedFromAnalysis:removedGroups
+            });
         }
     });
 
@@ -285,12 +336,7 @@ export default class GroupComparisonStore {
 
     readonly _originalGroupsOverlapRemoved = remoteData<ComparisonGroup[]>({
         await:()=>[this.overlapComputations, this._originalGroups],
-        invoke:()=>{
-            const selectionInfo = this.overlapComputations.result!;
-            let ret:ComparisonGroup[];
-                ret = getOverlapFilteredGroups(this._originalGroups.result!, selectionInfo);
-            return Promise.resolve(ret);
-        }
+        invoke:()=>Promise.resolve(this.overlapComputations.result!.groups)
     });
 
     readonly _activeGroupsOverlapRemoved = remoteData<ComparisonGroup[]>({
@@ -299,6 +345,19 @@ export default class GroupComparisonStore {
     });
 
     readonly _activeGroupsNotOverlapRemoved = remoteData({
+        await:()=>[this._originalGroups, this.overlapComputations],
+        invoke:()=>{
+            let excludedGroups = this.overlapComputations.result!.excludedFromAnalysis;
+            if (this.overlapStrategy === OverlapStrategy.INCLUDE) {
+                excludedGroups = {};
+            }
+            return Promise.resolve(
+                this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid) && !(group.uid in excludedGroups))
+            );
+        }
+    });
+
+    readonly _selectedGroups = remoteData({
         await:()=>[this._originalGroups],
         invoke:()=>Promise.resolve(this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid)))
     });
@@ -798,25 +857,6 @@ export default class GroupComparisonStore {
                 }
             }
             return Promise.resolve(sampleKeyToGroups);
-        }
-    });
-
-    public readonly samplesVennPartition = remoteData({
-        await:()=>[
-            this._activeGroupsNotOverlapRemoved,
-            this.sampleSet,
-            this.activeSamplesNotOverlapRemoved
-        ],
-        invoke:()=>{
-            const sampleSet = this.sampleSet.result!;
-            return Promise.resolve(
-                partitionCasesByGroupMembership(
-                    this._activeGroupsNotOverlapRemoved.result!,
-                    (group)=>getSampleIdentifiers([group]),
-                    (sampleIdentifier)=>sampleSet.get({ studyId: sampleIdentifier.studyId, sampleId: sampleIdentifier.sampleId })!.uniqueSampleKey,
-                    this.activeSamplesNotOverlapRemoved.result!.map(s=>s.uniqueSampleKey)
-                ) as { key:{[uid:string]:boolean}, value:string[] }[]
-            );
         }
     });
 

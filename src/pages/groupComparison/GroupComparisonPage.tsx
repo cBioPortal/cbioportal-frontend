@@ -209,8 +209,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     readonly overlapStrategySelector = MakeMobxView({
         await:()=>[this.store.overlapComputations],
         render:()=>{
-            if (this.store.overlapComputations.result!.overlappingSamples.length === 0 &&
-                this.store.overlapComputations.result!.overlappingPatients.length === 0) {
+            if (!this.store.overlapComputations.result!.existOverlappingSamples && !this.store.overlapComputations.result!.existOverlappingPatients) {
                 return null;
             } else {
                 return (
