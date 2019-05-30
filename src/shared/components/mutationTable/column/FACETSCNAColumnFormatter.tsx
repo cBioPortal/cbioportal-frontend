@@ -239,6 +239,7 @@ export default class FACETSCNAColumnFormatter {
         let cnaDataValue = null;
         if (facetsCNAData === "NA") {
             cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, "NA", wgd);
+            return cnaDataValue
         } else {
             cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, mutation.totalCopyNumber, wgd);
         }
@@ -276,24 +277,28 @@ export default class FACETSCNAColumnFormatter {
 
     public static getFacetsCNAIcon(cnaNumber:string, color:string, opacity:number, wgd:null|string, textcolor:string) {
       let size = 9;
-      let shadowOpacity = 0
-      let strokeWidth = 0
-      let facetsCNAIconRectangle = <rect width='12' height='12' rx='15%' ry='15%' fill={color} opacity={opacity}/>
+      let cnaTextValue = cnaNumber;
+      let fillColor = color;
+      let wgdStringSVG = null;
 
-      if (wgd === "WGD" && cnaNumber !== "NA") {
-        shadowOpacity = 0.5
-        strokeWidth = 0
+      if (cnaNumber == "NA") {
+        cnaTextValue = ""
       }
 
+      if (wgd === "WGD" && cnaNumber !== "NA") {
+        wgdStringSVG = <svg>
+                          <text x='6' y='3' dominantBaseline='middle' fontWeight='bold' textAnchor='middle' fontSize='5' fill='black'>WGD</text>
+                       </svg>
+      }
+      let facetsCNAIconRectangle = <rect width='12' height='12' rx='15%' ry='15%' fill={fillColor} opacity={opacity}/>
+
       return (
-          <svg width='17' height='17' className='case-label-header'>
-              <g transform="translate(5,5)">
-                <rect width='12' height='12' rx='15%' ry='15%' fill={color} opacity={shadowOpacity}/>
-              </g>
-              <g transform="translate(2,2)">
-                facetsCNAIconRectangle = <rect width='12' height='12' rx='15%' ry='15%' stroke='black' strokeWidth={strokeWidth} fill={color} opacity={opacity}/>
+          <svg width='17' height='18' className='case-label-header'>
+              {wgdStringSVG}
+              <g transform="translate(0,6)">
+                {facetsCNAIconRectangle}
                 <svg>
-                  <text x='6' y='6.5' dominantBaseline='middle' textAnchor='middle' fontSize={size} fill={textcolor}>{cnaNumber}</text>
+                  <text x='6' y='6.5' dominantBaseline='middle' textAnchor='middle' fontSize={size} fill={textcolor}>{cnaTextValue}</text>
                 </svg>
               </g>
           </svg>
