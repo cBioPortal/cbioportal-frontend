@@ -14,7 +14,6 @@ import {getSampleIdentifiers, OVERLAP_NOT_ENOUGH_GROUPS_MSG} from "./GroupCompar
 import {remoteData} from "../../shared/api/remoteData";
 import UpSet from './UpSet';
 import * as ReactDOM from 'react-dom';
-import { getCombinations } from './OverlapUtils';
 
 export interface IOverlapProps {
     store: GroupComparisonStore
@@ -138,12 +137,18 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     // whether to display sample and patient sets intersection charts side by side
     @computed get areUpsetPlotsSidebySide() {
-        return (getCombinations(this.sampleGroupsWithCases.result!).length + getCombinations(this.patientGroupsWithCases.result!).length) <= 30;
+        if (this.props.store.samplesVennPartition.isComplete && this.props.store.patientsVennPartition.isComplete) {
+            return this.props.store.samplesVennPartition.result!.length + this.props.store.patientsVennPartition.result!.length <= 30;
+        } else {
+            return true;
+        }
     }
 
     readonly plot = MakeMobxView({
         await:()=>[
             this.plotType,
+            this.props.store.samplesVennPartition,
+            this.props.store.patientsVennPartition,
             this.sampleGroupsWithCases,
             this.patientGroupsWithCases,
             this.uidToGroup
@@ -155,13 +160,13 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                     plotElt = (
                         <div style={{display:`${this.areUpsetPlotsSidebySide ? "flex" : "block"}`}}>
                             <UpSet
-                                groups={this.sampleGroupsWithCases.result!}
+                                groups={this.props.store.samplesVennPartition.result!}
                                 title="Sample Sets Intersection"
                                 uidToGroup={this.uidToGroup.result!}
                                 caseType="sample"
                             />
                             <UpSet
-                                groups={this.patientGroupsWithCases.result!}
+                                groups={this.props.store.patientsVennPartition.result!}
                                 title="Patient Sets Intersection"
                                 uidToGroup={this.uidToGroup.result!}
                                 caseType="patient"
