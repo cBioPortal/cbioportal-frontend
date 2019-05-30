@@ -6,7 +6,7 @@
     "title": "cBioPortal web API [Beta]",
     "contact": {
       "name": "cBioPortal",
-      "url": "http://www.cbioportal.org",
+      "url": "https://www.cbioportal.org",
       "email": "cbioportal@googlegroups.com"
     },
     "license": {
@@ -842,7 +842,7 @@
           {
             "name": "molecularProfileId",
             "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
+            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
             "required": true,
             "type": "string"
           },
