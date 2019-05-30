@@ -85,6 +85,10 @@ loader:'sass-resources-loader',
 
 var config = {
 
+    stats: {
+        colors:true
+    },
+
     entry: [
         `babel-polyfill`,
         `${path.join(src, 'appBootstrapper.jsx')}`
@@ -514,6 +518,12 @@ if (isDev || isTest) {
 
 }
 
+// reduce logging to optize netlify build
+if (process.env.BUILD_REPORT_ERRORS_ONLY === "true") {
+    config.stats = 'errors-only'
+};
+
+
 //config.entry.push('bootstrap-loader');
 // END BOOTSTRAP LOADER
 
@@ -538,5 +548,8 @@ if (isTest) {
     config.resolve.alias.sinon = 'sinon/pkg/sinon';
 }
 // End Testing
+
+
+
 
 module.exports = config;
