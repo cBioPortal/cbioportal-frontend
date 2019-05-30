@@ -32,7 +32,7 @@ const PLOT_DATA_PADDING_PIXELS = 20;
 const DEFAULT_BOTTOM_PADDING = 10;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const BAR_WIDTH = 20;
-const DEFAULT_SCATTER_DOT_COLOR = "#bec2cb"
+const DEFAULT_SCATTER_DOT_COLOR = "#efefef"
 
 @observer
 export default class UpSet extends React.Component<IUpSetrProps, {}> {
