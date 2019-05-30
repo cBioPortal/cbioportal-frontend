@@ -812,7 +812,7 @@ export default class GroupComparisonStore {
         await:()=>[
             this._activeGroupsNotOverlapRemoved,
             this.sampleSet,
-            this.samples
+            this.activeSamplesNotOverlapRemoved
         ],
         invoke:()=>{
             const sampleSet = this.sampleSet.result!;
@@ -821,7 +821,7 @@ export default class GroupComparisonStore {
                     this._activeGroupsNotOverlapRemoved.result!,
                     (group)=>getSampleIdentifiers([group]),
                     (sampleIdentifier)=>sampleSet.get({ studyId: sampleIdentifier.studyId, sampleId: sampleIdentifier.sampleId })!.uniqueSampleKey,
-                    this.samples.result!.map(s=>s.uniqueSampleKey)
+                    this.activeSamplesNotOverlapRemoved.result!.map(s=>s.uniqueSampleKey)
                 ) as { key:{[uid:string]:boolean}, value:string[] }[]
             );
         }
@@ -831,7 +831,7 @@ export default class GroupComparisonStore {
         await:()=>[
             this._activeGroupsNotOverlapRemoved,
             this.patientToSamplesSet,
-            this.patientKeys
+            this.activePatientKeysNotOverlapRemoved
         ],
         invoke:()=>{
             const patientToSamplesSet = this.patientToSamplesSet.result!;
@@ -840,7 +840,7 @@ export default class GroupComparisonStore {
                     this._activeGroupsNotOverlapRemoved.result!,
                     (group)=>getPatientIdentifiers([group]),
                     (patientIdentifier)=>patientToSamplesSet.get({ studyId: patientIdentifier.studyId, patientId: patientIdentifier.patientId })![0].uniquePatientKey,
-                    this.patientKeys.result!
+                    this.activePatientKeysNotOverlapRemoved.result!
                 ) as { key:{[uid:string]:boolean}, value:string[] }[]
             );
         }
