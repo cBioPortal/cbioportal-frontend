@@ -12,7 +12,9 @@ class GroupSelectorButtonList extends React.Component<IGroupSelectorButtonListPr
     render() {
         return (
             <div className={styles.groupButtons}>
-                {this.props.buttons}
+                <div>
+                    {this.props.buttons}
+                </div>
             </div>
         );
     }
