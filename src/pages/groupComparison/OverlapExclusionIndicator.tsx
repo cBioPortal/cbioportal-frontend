@@ -35,22 +35,22 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                         count = selectionInfo.overlappingPatients.length;
                     }
                     const plural = (count !== 1);
-                    caseCountsSummary = `${count} ${this.props.only}${plural ? "s" : ""}`;
+                    caseCountsSummary = `${count} overlapping ${this.props.only}${plural ? "s" : ""}`;
                     break;
                 default:
-                    caseCountsSummary = caseCounts(selectionInfo.overlappingSamples.length, selectionInfo.overlappingPatients.length, " and ");
+                    caseCountsSummary = caseCounts(selectionInfo.overlappingSamples.length, selectionInfo.overlappingPatients.length, " and ", " overlapping ");
                     break;
             }
             switch (this.props.store.overlapStrategy) {
                 case OverlapStrategy.INCLUDE:
                     iconClass = "fa-exclamation-triangle";
                     alertClass = "alert-warning";
-                    message = `Your selected groups overlap in ${caseCountsSummary}.`;
+                    message = `The selected groups contain ${caseCountsSummary}.`;
                     break;
                 case OverlapStrategy.EXCLUDE:
                     iconClass = "fa-check";
                     alertClass = "alert-success";
-                    message = `Overlapping ${caseCountsSummary} have been excluded from analysis.`;
+                    message = `${caseCountsSummary} are excluded from this analysis.`;
                     break;
             }
 
