@@ -143,44 +143,39 @@ export default class GnomadColumnFormatter {
                     })
                     result = gnomadResult;
                 }
+
+                // sort by frequency
+                const sorted = _.sortBy(Object.values(result).slice(0, 8), ['alleleFrequency']).reverse();
+                // add the total row at the bottom
+                sorted.push(result["Total"]);
                 
                 // The column will show the total frequency
+                // Column will be blank if the total frequency is 0, but still have the tooltip to show the gnomad table (since gnomad data is still available)
                 if (result["Total"].alleleFrequency === 0) {
-                    display = <span>0</span>
+                    display = <span style={{height: '100%', width: '100%', display: 'block', overflow: 'hidden'}}>&nbsp;</span>
                 }
                 else {
                     display = <span>{parseFloat(result["Total"].alleleFrequency.toString()).toExponential(1)}</span>
-                }       
+                }
+
+                overlay = () => (
+                    <span className={styles["gnomad-table"]} data-test='gnomad-table'>
+                        <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl}/>
+                    </span>
                 
+                );
             }
 
-            // if there is no gnomad data, the column would show 0
+            // if there is no gnomad data, the column will be blank, and have a tooltip to indicate this variant has no data in gnomad
             else {
-
-                Object.keys(PopulationName).map(key => {
-                    result[key] = {
-                        'population': key,
-                        'alleleCount': 0,
-                        'alleleNumber': 0,
-                        'homozygotes': 0,
-                        'alleleFrequency': 0
-                    } as GnomadData;
-                })
-
-                display = <span>0</span>
+                display = 
+                <DefaultTooltip
+                    placement="topRight"
+                    overlay={(<span>Variant has no data in gnomAD.</span>)}
+                >
+                    <span style={{height: '100%', width: '100%', display: 'block', overflow: 'hidden'}}>&nbsp;</span>
+                </DefaultTooltip>
             }
-
-            // sort by frequency
-            const sorted = _.sortBy(Object.values(result).slice(0, 8), ['alleleFrequency']).reverse();
-            // add the total row at the bottom
-            sorted.push(result["Total"]);
-
-            overlay = () => (
-                <span className={styles["gnomad-table"]} data-test='gnomad-table'>
-                    <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl}/>
-                </span>
-                
-            );
 
             content = (
                 <div className={generalStyles["integer-data"]}>
@@ -193,7 +188,7 @@ export default class GnomadColumnFormatter {
                 content = (
                     <DefaultTooltip
                         overlay={overlay}
-                        placement="topLeft"
+                        placement="topRight"
                         trigger={['hover', 'focus']}
                         destroyTooltipOnHide={true}
                     >
@@ -201,9 +196,7 @@ export default class GnomadColumnFormatter {
                     </DefaultTooltip>
                 );
             }
-
-            return content;
-            
+            return content;  
         }
 
         if (status !== null) {
