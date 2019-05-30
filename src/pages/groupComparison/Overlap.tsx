@@ -2,7 +2,7 @@ import * as React from 'react';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {observer} from "mobx-react";
 import GroupComparisonStore from './GroupComparisonStore';
-import {observable} from 'mobx';
+import {observable, computed} from 'mobx';
 import Venn from './OverlapVenn';
 import _ from "lodash";
 import autobind from 'autobind-decorator';
@@ -13,6 +13,8 @@ import ErrorMessage from "../../shared/components/ErrorMessage";
 import {getSampleIdentifiers, OVERLAP_NOT_ENOUGH_GROUPS_MSG} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import UpSet from './UpSet';
+import * as ReactDOM from 'react-dom';
+import { getCombinations } from './OverlapUtils';
 
 export interface IOverlapProps {
     store: GroupComparisonStore
@@ -57,7 +59,34 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     @autobind
     private getSvg() {
-        return document.getElementById(SVG_ID) as SVGElement | null;
+        if (this.plotType.result! === PlotType.Upset) {
+            let node = ReactDOM.findDOMNode(this);
+
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg") as SVGElement;
+            const childSVGs = $(node!).find('svg')
+            const sampleElement = childSVGs[0].cloneNode(true) as Element;
+            const patientElement = childSVGs[1].cloneNode(true) as Element;
+            $(node!).find('svg')
+
+            const height = $(sampleElement).height() + $(patientElement).height();
+            const width = $(sampleElement).width() + $(patientElement).width();
+
+            $(svg).attr("height", height);
+            $(svg).attr("width", width);
+            $(svg).css({ height, width });
+
+            svg.appendChild(sampleElement)
+            //move patient element down by sample element size
+            if (this.areUpsetPlotsSidebySide) {
+                patientElement.setAttribute("x", `${$(sampleElement).width()}`);
+            } else {
+                patientElement.setAttribute("y", `${$(sampleElement).height()}`);
+            }
+
+            svg.appendChild(patientElement);
+            return svg;
+        }
+        return document.getElementById(SVG_ID) as SVGElement | null
     }
 
     readonly plotType = remoteData({
@@ -107,6 +136,11 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         invoke:()=>Promise.resolve(_.keyBy(this.props.store._activeGroupsNotOverlapRemoved.result!, group=>group.uid))
     });
 
+    // whether to display sample and patient sets intersection charts side by side
+    @computed get areUpsetPlotsSidebySide() {
+        return (getCombinations(this.sampleGroupsWithCases.result!).length + getCombinations(this.patientGroupsWithCases.result!).length) <= 30;
+    }
+
     readonly plot = MakeMobxView({
         await:()=>[
             this.plotType,
@@ -119,13 +153,20 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             switch (this.plotType.result!) {
                 case PlotType.Upset: {
                     plotElt = (
-                        <UpSet
-                            groups={this.sampleGroupsWithCases.result!}
-                            title="Sample Sets Intersection"
-                            svgId={SVG_ID}
-                            uidToGroup={this.uidToGroup.result!}
-                            caseType="sample"
-                        />)
+                        <div style={{display:`${this.areUpsetPlotsSidebySide ? "flex" : "block"}`}}>
+                            <UpSet
+                                groups={this.sampleGroupsWithCases.result!}
+                                title="Sample Sets Intersection"
+                                uidToGroup={this.uidToGroup.result!}
+                                caseType="sample"
+                            />
+                            <UpSet
+                                groups={this.patientGroupsWithCases.result!}
+                                title="Patient Sets Intersection"
+                                uidToGroup={this.uidToGroup.result!}
+                                caseType="patient"
+                            />
+                        </div>)
                     break;
                 }
                 case PlotType.Venn:
