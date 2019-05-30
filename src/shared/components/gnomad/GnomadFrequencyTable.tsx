@@ -28,13 +28,25 @@ export default class GnomadFrequencyTable extends React.Component<IGnomadFrequen
             </td>,
             <td>
                 <DefaultTooltip placement="top" overlay={(
-                    <span>Number of individuals</span>
+                    <span>Number of times any allele has been observed at this position in the population</span>
                 )}>
                     <span>Allele Number</span>
                 </DefaultTooltip>
             </td>,
-            <td>Number of Homozygotes</td>,
-            <td>Allele Frequency</td>
+            <td>
+                <DefaultTooltip placement="top" overlay={(
+                    <span>Number of individuals carrying this allele in both copies</span>
+                )}>
+                    <span>Number of Homozygotes</span>
+                </DefaultTooltip>
+            </td>,
+            <td>
+                <DefaultTooltip placement="top" overlay={(
+                    <span>Proportion of the population with this allele</span>
+                )}>
+                    <span>Allele Frequency</span>
+                </DefaultTooltip>
+            </td>
 
         ];
     }
