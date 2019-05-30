@@ -9,7 +9,7 @@ import {ComparisonGroup} from './GroupComparisonUtils';
 import {getTextWidth, truncateWithEllipsis} from 'shared/lib/wrapText';
 import {tickFormatNumeral} from 'shared/components/plots/TickUtils';
 import {joinNames} from './OverlapUtils';
-import {pluralize} from 'shared/lib/StringUtils';
+import {capitalize, pluralize} from 'shared/lib/StringUtils';
 import {getPlotDomain} from './UpSetUtils';
 import * as ReactDOM from "react-dom";
 import {Popover} from "react-bootstrap";
@@ -326,8 +326,18 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     private tooltip(datum: any) {
-        const includedGroupNames = _.map(datum.groups as string[], groupUid => this.props.uidToGroup[groupUid].nameWithOrdinal);
+        const getName = (groupUid:string) => this.props.uidToGroup[groupUid].nameWithOrdinal;
+        const includedGroupNames = _.map(datum.groups as string[], getName);
+        const excludedGroupNames = _.difference(this.usedGroups.map(g=>g.uid), datum.groups as string[]).map(getName);
         const casesCount = datum.cases.length;
+
+        return (
+            <div style={{width:300, whiteSpace:"normal"}}>
+                {capitalize(this.props.caseType)}s in {joinNames(includedGroupNames, "and")}
+                {(excludedGroupNames.length > 0) && <span>, but not in {joinNames(excludedGroupNames, "or")}</span>}&nbsp;
+                ({casesCount} {pluralize(this.props.caseType, casesCount)}).
+            </div>
+        );
         return (
             <div style={{ maxWidth: 300, whiteSpace: "normal" }}>
                 {joinNames(includedGroupNames, "and")}:&nbsp;{`${casesCount} ${pluralize(this.props.caseType, casesCount)}`}
