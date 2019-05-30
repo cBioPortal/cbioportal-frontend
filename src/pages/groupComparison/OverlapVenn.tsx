@@ -85,17 +85,12 @@ export default class Venn extends React.Component<IVennProps, {}> {
     }
 
     @computed get legendData() {
-        const usedGroups = _.keyBy(this.props.sampleGroups.map(group=>group.uid));
-        const legendData:any[] = [];
-        _.forEach(this.props.uidToGroup, (group) => {
-            if (group.uid in usedGroups) {
-                legendData.push({
-                    name: truncateWithEllipsis(group.nameWithOrdinal, 100, "Arial", "13px"),
-                    symbol: { fill: group.color, strokeOpacity:0, type:"square", size: 6 }
-                });
+        return this.props.sampleGroups.map(sampleGroup=>{
+            return {
+                name: truncateWithEllipsis(this.props.uidToGroup[sampleGroup.uid].nameWithOrdinal, 100, "Arial", "13px"),
+                symbol: { fill: this.props.uidToGroup[sampleGroup.uid].color, strokeOpacity:0, type:"square", size: 6 }
             }
         });
-        return legendData;
     }
 
     @computed get vennPlotAreaWidth() {
