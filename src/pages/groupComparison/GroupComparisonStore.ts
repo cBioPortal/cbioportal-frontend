@@ -7,8 +7,9 @@ import {
     getStudyIds,
     isGroupEmpty,
     ClinicalDataEnrichmentWithQ,
-    OverlapFilteredComparisonGroup, getSampleIdentifiers,
-    GroupComparisonTab, getOrdinals, partitionCasesByGroupMembership, defaultGroupOrder
+    getSampleIdentifiers,
+    GroupComparisonTab, getOrdinals, partitionCasesByGroupMembership,
+    defaultGroupOrder
 } from "./GroupComparisonUtils";
 import { remoteData } from "../../shared/api/remoteData";
 import {
@@ -235,7 +236,7 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly _selectionInfo = remoteData<{
+    readonly overlapComputations = remoteData<{
         groups:ComparisonGroup[],
         overlappingSamples:SampleIdentifier[],
         overlappingPatients:PatientIdentifier[],
@@ -260,16 +261,13 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly availableGroups = remoteData<OverlapFilteredComparisonGroup[]>({
+    readonly availableGroups = remoteData<ComparisonGroup[]>({
         await:()=>[this._originalGroups, this._originalGroupsOverlapRemoved],
         invoke:()=>{
-            let ret:OverlapFilteredComparisonGroup[];
+            let ret:ComparisonGroup[];
             switch (this.overlapStrategy) {
                 case OverlapStrategy.INCLUDE:
-                    ret = this._originalGroups.result!.map(group=>Object.assign({}, group, {
-                        hasOverlappingSamples: false,
-                        hasOverlappingPatients: false
-                    }));
+                    ret = this._originalGroups.result!;
                     break;
                 case OverlapStrategy.EXCLUDE:
                 default:
@@ -280,22 +278,22 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly activeGroups = remoteData<OverlapFilteredComparisonGroup[]>({
+    readonly activeGroups = remoteData<ComparisonGroup[]>({
         await:()=>[this.availableGroups],
         invoke:()=>Promise.resolve(this.availableGroups.result!.filter(group=>this.isGroupSelected(group.uid) && !isGroupEmpty(group)))
     });
 
-    readonly _originalGroupsOverlapRemoved = remoteData<OverlapFilteredComparisonGroup[]>({
-        await:()=>[this._selectionInfo, this._originalGroups],
+    readonly _originalGroupsOverlapRemoved = remoteData<ComparisonGroup[]>({
+        await:()=>[this.overlapComputations, this._originalGroups],
         invoke:()=>{
-            const selectionInfo = this._selectionInfo.result!;
-            let ret:OverlapFilteredComparisonGroup[];
+            const selectionInfo = this.overlapComputations.result!;
+            let ret:ComparisonGroup[];
                 ret = getOverlapFilteredGroups(this._originalGroups.result!, selectionInfo);
             return Promise.resolve(ret);
         }
     });
 
-    readonly _activeGroupsOverlapRemoved = remoteData<OverlapFilteredComparisonGroup[]>({
+    readonly _activeGroupsOverlapRemoved = remoteData<ComparisonGroup[]>({
         await:()=>[this._originalGroupsOverlapRemoved],
         invoke:()=>Promise.resolve(this._originalGroupsOverlapRemoved.result!.filter(group=>this.isGroupSelected(group.uid) && !isGroupEmpty(group)))
     });
@@ -708,10 +706,6 @@ export default class GroupComparisonStore {
     @computed get clinicalTabGrey() {
         // grey out if active groups is less than 2
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2);
-    }
-
-    @computed get hasOverlappingSamplesInActiveGroups() {
-        return getOverlappingSamples(this.activeGroups.result!).length > 0;
     }
     
     @computed get copyNumberTabGrey() {

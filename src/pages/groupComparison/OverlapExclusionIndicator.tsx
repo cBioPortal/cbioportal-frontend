@@ -11,10 +11,10 @@ export interface IOverlapExclusionIndicatorProps {
 @observer
 export default class OverlapExclusionIndicator extends React.Component<IOverlapExclusionIndicatorProps, {}> {
     render() {
-        if (!this.props.store._selectionInfo.isComplete) {
+        if (!this.props.store.overlapComputations.isComplete) {
             return null;
         } else {
-            const selectionInfo = this.props.store._selectionInfo.result!;
+            const selectionInfo = this.props.store.overlapComputations.result!;
             if ((selectionInfo.overlappingPatients.length === 0 && selectionInfo.overlappingSamples.length === 0) ||
                 (this.props.only === "sample" && selectionInfo.overlappingSamples.length === 0) ||
                 (this.props.only === "patient" && selectionInfo.overlappingPatients.length === 0)) {
