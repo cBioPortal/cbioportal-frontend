@@ -78,6 +78,10 @@ loader:'sass-resources-loader',
 
 var config = {
 
+    stats: {
+        colors:true
+    },
+
     entry: [
         `babel-polyfill`,
         `${path.join(src, 'appBootstrapper.jsx')}`
@@ -121,7 +125,7 @@ var config = {
 
     plugins: [
         new webpack.DefinePlugin({
-            'VERSION': version, 
+            'VERSION': version,
             'COMMIT': commit,
             'IS_DEV_MODE': isDev,
             'ENV_CBIOPORTAL_URL': isDev && process.env.CBIOPORTAL_URL? JSON.stringify(cleanAndValidateUrl(process.env.CBIOPORTAL_URL)) : '"replace_me_env_cbioportal_url"',
@@ -500,6 +504,12 @@ if (isDev || isTest) {
 
 }
 
+// reduce logging to optize netlify build
+if (process.env.BUILD_REPORT_ERRORS_ONLY === "true") {
+    config.stats = 'errors-only'
+};
+
+
 //config.entry.push('bootstrap-loader');
 // END BOOTSTRAP LOADER
 
@@ -526,5 +536,8 @@ if (isTest) {
     config.resolve.alias.sinon = 'sinon/pkg/sinon';
 }
 // End Testing
+
+
+
 
 module.exports = config;
