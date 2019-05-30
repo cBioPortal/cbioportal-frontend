@@ -1984,7 +1984,7 @@ export default class CBioPortalAPIInternal {
      * Fetch copy number enrichments in a molecular profile
      * @method
      * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
-     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_gistic
      * @param {string} copyNumberEventType - Type of the copy number event
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
      * @param {} enrichmentFilter - List of altered and unaltered Sample/Patient IDs
@@ -2049,7 +2049,7 @@ export default class CBioPortalAPIInternal {
      * Fetch copy number enrichments in a molecular profile
      * @method
      * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
-     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_gistic
      * @param {string} copyNumberEventType - Type of the copy number event
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
      * @param {} enrichmentFilter - List of altered and unaltered Sample/Patient IDs
