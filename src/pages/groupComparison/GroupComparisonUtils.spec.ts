@@ -3,7 +3,7 @@ import {
     caseCounts,
     caseCountsInParens,
     ComparisonGroup,
-    convertPatientsStudiesAttrToSamples,
+    convertPatientsStudiesAttrToSamples, defaultGroupOrder,
     excludePatients,
     excludeSamples,
     finalizeStudiesAttr,
@@ -34,6 +34,29 @@ import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/Compl
 chai.use(deepEqualInAnyOrder);
 
 describe('GroupComparisonUtils', () => {
+    describe("defaultGroupOrder", ()=>{
+        it("empty", ()=>{
+            assert.deepEqual(defaultGroupOrder([]), []);
+        });
+        it("one group", ()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"yo"}]), [{name:"yo"}]);
+        });
+        it("one group NA", ()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"nA"}]), [{name:"nA"}]);
+        });
+        it("two groups", ()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"HI"},{name:"Adam"}]), [{name:"Adam"},{name:"HI"}]);
+        });
+        it("two groups including NA - NA sorts to end", ()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"NA"},{name:"zebra"}]), [{name:"zebra"},{name:"NA"}]);
+        });
+        it("three groups",()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"hI"},{name:"abra"},{name:"zebra"}]), [{name:"abra"},{name:"hI"}, {name:"zebra"}]);
+        });
+        it("four groups including NA - NA sorts to end",()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"hI"},{name:"nA"},{name:"Na"}, {name:"zebra"}]), [{name:"hI"}, {name:"zebra"},{name:"nA"},{name:"Na"}]);
+        });
+    });
     describe("getOrdinals", ()=>{
         it("correct values", ()=>{
             assert.deepEqual(
