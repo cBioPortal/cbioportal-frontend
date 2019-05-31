@@ -52,6 +52,9 @@ export type OverlapFilteredComparisonGroup = ComparisonGroup & {
     hasOverlappingSamples:boolean; // whether the group has had samples filtered out because they overlapped in the selection
     hasOverlappingPatients:boolean; // whether the group has had patients filtered out because they overlapped in the selection
 }
+
+export const MAX_GROUPS_IN_WORKSPACE = 5;
+
 export type ClinicalDataEnrichmentWithQ = ClinicalDataEnrichment & { qValue:number };
 
 export type CopyNumberEnrichment = AlterationEnrichmentWithQ & { value:number };

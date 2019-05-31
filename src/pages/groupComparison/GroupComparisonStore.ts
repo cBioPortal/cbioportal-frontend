@@ -8,7 +8,8 @@ import {
     isGroupEmpty,
     ClinicalDataEnrichmentWithQ,
     OverlapFilteredComparisonGroup, getSampleIdentifiers,
-    GroupComparisonTab, getOrdinals, partitionCasesByGroupMembership, defaultGroupOrder
+    GroupComparisonTab, getOrdinals, partitionCasesByGroupMembership,
+    defaultGroupOrder, MAX_GROUPS_IN_WORKSPACE
 } from "./GroupComparisonUtils";
 import { remoteData } from "../../shared/api/remoteData";
 import {
@@ -21,7 +22,7 @@ import {
     SampleFilter,
     SampleIdentifier
 } from "../../shared/api/generated/CBioPortalAPI";
-import { action, computed, observable } from "mobx";
+import {action, computed, observable, ObservableMap} from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
 import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import _ from "lodash";
@@ -65,6 +66,7 @@ export default class GroupComparisonStore {
     @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.EXCLUDE;
     @observable private sessionId:string;
     @observable dragUidOrder:string[]|undefined = undefined;
+    @observable.ref _isGroupInWorkspace:{[uid:string]:boolean} = {};
     private unsavedGroups = observable.shallowArray<SessionGroupData>([]);
 
     constructor(sessionId:string, private appStore:AppStore) {
@@ -86,6 +88,16 @@ export default class GroupComparisonStore {
 
     public get isLoggedIn() {
         return this.appStore.isLoggedIn;
+    }
+
+    @autobind
+    @action
+    public setWorkspaceGroups(map:ObservableMap<boolean>) {
+        this._isGroupInWorkspace = map.toJS();
+    }
+
+    private isGroupInWorkspace(uid:string) {
+        return !!this._isGroupInWorkspace[uid];
     }
 
     public addUnsavedGroup(group:SessionGroupData, saveToUser:boolean) {
@@ -165,14 +177,14 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly _unsortedOriginalGroups = remoteData<ComparisonGroup[]>({
+    private readonly _allOriginalGroups = remoteData<ComparisonGroup[]>({
         await:()=>[this._session, this.sampleSet],
         invoke:()=>{
             // (1) ensure color
             // (2) filter out, and add list of, nonexistent samples
             // (3) add patients
 
-            const ret:ComparisonGroup[] = [];
+            let ret:ComparisonGroup[] = [];
             const sampleSet = this.sampleSet.result!;
 
             let defaultGroupColors = pickClinicalDataColors(
@@ -206,32 +218,64 @@ export default class GroupComparisonStore {
                 ret.push(finalizeGroup(false, groupData, index+this._session.result!.groups.length));
             });
 
+            // sort
+            ret =  defaultGroupOrder(ret);
+
             return Promise.resolve(ret);
         }
     });
 
     readonly _originalGroups = remoteData<ComparisonGroup[]>({
-        await:()=>[this._session, this._unsortedOriginalGroups],
+        await:()=>[this._session, this.workspaceGroupsPartition],
         invoke:()=>{
-            // sort and add ordinals
-            let sorted:ComparisonGroup[];
+            // sort by drag order, and add ordinals
+            // first select groups in workspace
+            let ret:ComparisonGroup[] = this.workspaceGroupsPartition.result!.inWorkspace;
             if (this.dragUidOrder) {
                 const order = stringListToIndexSet(this.dragUidOrder);
-                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>order[g.uid]);
+                ret = _.sortBy(ret, g=>order[g.uid]);
             } else if (this._session.result!.groupUidOrder) {
                 const order = stringListToIndexSet(this._session.result!.groupUidOrder!);
-                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>order[g.uid]);
-            } else {
-                sorted = defaultGroupOrder(this._unsortedOriginalGroups.result!);
+                ret = _.sortBy(ret, g=>order[g.uid]);
             }
 
-            const ordinals = getOrdinals(sorted.length, 26);
-            sorted.forEach((group, index)=>{
+            const ordinals = getOrdinals(ret.length, 26);
+            ret.forEach((group, index)=>{
                 const ordinal = ordinals[index];
                 group.nameWithOrdinal = `(${ordinal}) ${group.name}`;
                 group.ordinal = ordinal;
             });
-            return Promise.resolve(sorted);
+            return Promise.resolve(ret);
+        }
+    });
+
+    readonly workspaceGroupsPartition = remoteData({
+        await:()=>[this._allOriginalGroups],
+        invoke:()=>{
+            // start with all those that have been manually chosen
+            const workspaceGroups:ComparisonGroup[] = [];
+            for (const g of this._allOriginalGroups.result!) {
+                if (this.isGroupInWorkspace(g.uid)) {
+                    workspaceGroups.push(g)
+                }
+            };
+            // if none have been manually chosen, then manually fill out the first 5
+            if (workspaceGroups.length === 0) {
+                for (const group of this._allOriginalGroups.result!) {
+                    if (workspaceGroups.length >= MAX_GROUPS_IN_WORKSPACE) {
+                        break;
+                    }
+                    workspaceGroups.push(group);
+                }
+            }
+            const workspaceMap = _.keyBy(workspaceGroups, g=>g.uid);
+            // collect every other group
+            const partition = _.partition(this._allOriginalGroups.result!, g=>(g.uid in workspaceMap));
+            return Promise.resolve({
+                inWorkspace: partition[0],
+                notInWorkspace: partition[1],
+                all:this._allOriginalGroups.result!
+            });
         }
     });
 
