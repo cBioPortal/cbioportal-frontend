@@ -318,6 +318,7 @@ export function getOverlapFilteredGroups(
 export function MakeEnrichmentsTabUI(
     getStore:()=>GroupComparisonStore,
     getEnrichmentsUI:()=>MobxViewAlwaysComponent,
+    enrichmentType:string,
     multiGroupAnalysisPossible?:boolean
 ) {
     return MakeMobxView({
@@ -343,7 +344,7 @@ export function MakeEnrichmentsTabUI(
                     </span>
                 );
             } else if (store.activeStudyIds.result!.length > 1) {
-                return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG("protein")}</span>;
+                return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentType)}</span>;
             } else {
                 const content:any = [];
                 content.push(<OverlapExclusionIndicator store={store} only="sample"/>);
