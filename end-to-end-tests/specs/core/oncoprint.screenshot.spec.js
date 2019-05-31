@@ -3,17 +3,11 @@ var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStor
 var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
 var setInputText = require('./../specUtils').setInputText;
 var waitForNumberOfStudyCheckboxes = require('./../specUtils').waitForNumberOfStudyCheckboxes;
+var checkOncoprintElement = require('./../specUtils').checkOncoprintElement;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
 const ONCOPRINT_TIMEOUT = 60000;
-
-function checkOncoprintElement(selector) {
-    browser.execute(function() {
-        frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
-    });
-    return browser.checkElement(selector || "#oncoprintDiv", { hide:['.dropdown-menu', ".oncoprintjs__track_options__dropdown", ".oncoprintjs__cell_overlay_div"] });
-}
 
 describe("oncoprint screenshot tests", function() {
     it("coadread_tcga_pub with clinical and heatmap tracks", function(){
