@@ -14,6 +14,7 @@ import {getSampleIdentifiers, OVERLAP_NOT_ENOUGH_GROUPS_MSG} from "./GroupCompar
 import {remoteData} from "../../shared/api/remoteData";
 import UpSet from './UpSet';
 import * as ReactDOM from 'react-dom';
+import WindowStore from 'shared/components/window/WindowStore';
 
 export interface IOverlapProps {
     store: GroupComparisonStore
@@ -67,20 +68,24 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             const patientElement = childSVGs[1].cloneNode(true) as Element;
             $(node!).find('svg')
 
-            const height = $(sampleElement).height() + $(patientElement).height();
-            const width = $(sampleElement).width() + $(patientElement).width();
-
-            $(svg).attr("height", height);
-            $(svg).attr("width", width);
-            $(svg).css({ height, width });
+            let height = 0;
+            let width = 0;
 
             svg.appendChild(sampleElement)
             //move patient element down by sample element size
             if (this.areUpsetPlotsSidebySide) {
                 patientElement.setAttribute("x", `${$(sampleElement).width()}`);
+                height = Math.max($(sampleElement).height(), $(patientElement).height());
+                width = $(sampleElement).width() + $(patientElement).width();
             } else {
                 patientElement.setAttribute("y", `${$(sampleElement).height()}`);
+                height = $(sampleElement).height() + $(patientElement).height();
+                width = Math.max($(sampleElement).width(), $(patientElement).width());
             }
+
+            $(svg).attr("height", height);
+            $(svg).attr("width", width);
+            $(svg).css({ height, width });
 
             svg.appendChild(patientElement);
             return svg;
@@ -138,10 +143,14 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     // whether to display sample and patient sets intersection charts side by side
     @computed get areUpsetPlotsSidebySide() {
         if (this.props.store.samplesVennPartition.isComplete && this.props.store.patientsVennPartition.isComplete) {
-            return this.props.store.samplesVennPartition.result!.length + this.props.store.patientsVennPartition.result!.length <= 30;
+            return this.props.store.samplesVennPartition.result!.length + this.props.store.patientsVennPartition.result!.length <= 100;
         } else {
             return true;
         }
+    }
+
+    @computed private get maxWidth() {
+        return WindowStore.size.width - 80;
     }
 
     readonly plot = MakeMobxView({
@@ -158,19 +167,28 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             switch (this.plotType.result!) {
                 case PlotType.Upset: {
                     plotElt = (
-                        <div style={{display:`${this.areUpsetPlotsSidebySide ? "flex" : "block"}`}}>
-                            <UpSet
-                                groups={this.props.store.samplesVennPartition.result!}
-                                title="Sample Sets Intersection"
-                                uidToGroup={this.uidToGroup.result!}
-                                caseType="sample"
-                            />
-                            <UpSet
-                                groups={this.props.store.patientsVennPartition.result!}
-                                title="Patient Sets Intersection"
-                                uidToGroup={this.uidToGroup.result!}
-                                caseType="patient"
-                            />
+                        <div style={{ display: `${this.areUpsetPlotsSidebySide ? "flex" : "block"}`, maxWidth: this.maxWidth, overflow: "auto hidden" }} >
+                            <div>
+                                <div style={{ textAlign: "center", position: this.areUpsetPlotsSidebySide ? "relative" : "absolute", width: "100%" }}>
+                                    <strong style={{ fontFamily: "Verdana,Arial,sans-serif" }}>Sample Sets Intersection</strong>
+                                </div>
+                                <UpSet
+                                    groups={this.props.store.samplesVennPartition.result!}
+                                    uidToGroup={this.uidToGroup.result!}
+                                    caseType="sample"
+                                />
+                            </div>
+
+                            <div>
+                                <div style={{ textAlign: "center", position: this.areUpsetPlotsSidebySide ? "relative" : "absolute", width: "100%" }}>
+                                    <strong style={{ fontFamily: "Verdana,Arial,sans-serif" }}>Sample Sets Intersection</strong>
+                                </div>
+                                <UpSet
+                                    groups={this.props.store.patientsVennPartition.result!}
+                                    uidToGroup={this.uidToGroup.result!}
+                                    caseType="patient"
+                                />
+                            </div>
                         </div>)
                     break;
                 }
@@ -194,27 +212,25 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     });
 
     readonly overlapUI = MakeMobxView({
-        await:()=>[this.plot],
-        render:()=>(
-            <div>
-                <div data-test="ComparisonPageOverlapTabDiv" className="borderedChart posRelative">
-                    {this.plotExists && (
-                        <DownloadControls
-                            getSvg={this.getSvg}
-                            filename={'overlap'}
-                            dontFade={true}
-                            style={{ position: 'absolute', right: 10, top: 10 }}
-                            collapse={true}
-                        />
-                    )}
-                    <div style={{ position: "relative", display: "inline-block" }}>
-                        {this.plot.component}
-                    </div>
+        await: () => [this.plot],
+        render: () => (
+            <div data-test="ComparisonPageOverlapTabDiv" className="borderedChart posRelative">
+                {this.plotExists && (
+                    <DownloadControls
+                        getSvg={this.getSvg}
+                        filename={'overlap'}
+                        dontFade={true}
+                        style={{ position: 'absolute', right: 10, top: 10 }}
+                        collapse={true}
+                    />
+                )}
+                <div style={{ position: "relative", display: "inline-block" }}>
+                    {this.plot.component}
                 </div>
             </div>
         ),
-        renderPending:()=><LoadingIndicator isLoading={true} centerRelativeToContainer={true} size="big"/>,
-        renderError:()=><ErrorMessage/>
+        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true} size="big" />,
+        renderError: () => <ErrorMessage />
     });
 
 
