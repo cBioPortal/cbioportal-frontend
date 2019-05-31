@@ -71,6 +71,7 @@ import {getTablePlotDownloadData} from "../../../shared/components/plots/TablePl
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import MultipleCategoryBarPlot from "../../../shared/components/plots/MultipleCategoryBarPlot";
 import {STUDY_VIEW_CONFIG} from "../../studyView/StudyViewConfig";
+import {RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 
 enum EventKey {
     horz_logScale,
@@ -1421,7 +1422,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     svgId={SVG_ID}
                                     horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
                                     vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
-                                    categoryToColor={STUDY_VIEW_CONFIG.colors.reservedValue}
+                                    categoryToColor={RESERVED_CLINICAL_VALUE_COLORS}
                                     horzCategoryOrder={(this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder}
                                     vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
                                     barWidth={20}

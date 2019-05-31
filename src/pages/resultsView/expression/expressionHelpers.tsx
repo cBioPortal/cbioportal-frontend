@@ -14,7 +14,7 @@ import {
 import {
     MUT_COLOR_FUSION, MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC
-} from "../../../shared/components/oncoprint/geneticrules";
+} from "shared/lib/Colors";
 import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../../shared/api/urls";
