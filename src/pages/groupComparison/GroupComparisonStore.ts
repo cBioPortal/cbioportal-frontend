@@ -8,7 +8,7 @@ import {
     isGroupEmpty,
     ClinicalDataEnrichmentWithQ,
     OverlapFilteredComparisonGroup, getSampleIdentifiers,
-    GroupComparisonTab, getOrdinals, partitionCasesByGroupMembership
+    GroupComparisonTab, getOrdinals, partitionCasesByGroupMembership, defaultGroupOrder
 } from "./GroupComparisonUtils";
 import { remoteData } from "../../shared/api/remoteData";
 import {
@@ -222,8 +222,7 @@ export default class GroupComparisonStore {
                 const order = stringListToIndexSet(this._session.result!.groupUidOrder!);
                 sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>order[g.uid]);
             } else {
-                // sort alphabetically
-                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>g.name.toLowerCase());
+                sorted = defaultGroupOrder(this._unsortedOriginalGroups.result!);
             }
 
             const ordinals = getOrdinals(sorted.length, 26);
