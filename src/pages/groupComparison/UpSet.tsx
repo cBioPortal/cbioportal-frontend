@@ -403,7 +403,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     orientation="left"
                                     offsetX={50}
                                     dependentAxis
-                                    label={"Intersection count"}
+                                    label={"Overlap count"}
                                     tickFormat={this.formatNumericalTick}
                                     style={{
                                         grid: {
