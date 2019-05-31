@@ -134,6 +134,13 @@ function pasteToElement(elementSelector, text){
 
 }
 
+function checkOncoprintElement(selector) {
+    browser.execute(function() {
+        frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
+    });
+    return browser.checkElement(selector || "#oncoprintDiv", { hide:[".qtip", '.dropdown-menu', ".oncoprintjs__track_options__dropdown", ".oncoprintjs__cell_overlay_div"] });
+}
+
 
 module.exports = {
     waitForOncoprint: waitForOncoprint,
@@ -151,7 +158,8 @@ module.exports = {
     setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen,
     getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements,
     setInputText: setInputText,
-    pasteToElement: pasteToElement
+    pasteToElement: pasteToElement,
+    checkOncoprintElement: checkOncoprintElement
 };
 
 
