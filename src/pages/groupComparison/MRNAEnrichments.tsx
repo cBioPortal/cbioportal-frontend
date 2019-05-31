@@ -21,7 +21,7 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
         this.props.store.setMRNAEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mRNA");
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
