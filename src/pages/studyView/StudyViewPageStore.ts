@@ -2169,22 +2169,6 @@ export class StudyViewPageStore {
             return acc
         }, _chartMetaSet);
 
-
-        _.reduce(this.survivalPlots, (acc: { [id: string]: ChartMeta }, survivalPlot) => {
-            acc[survivalPlot.id] = {
-                uniqueKey: survivalPlot.id,
-                chartType: this.chartsType.get(survivalPlot.id)!,
-                dataType: getChartMetaDataType(survivalPlot.id),
-                patientAttribute:true,
-                dimension: this.chartsDimension[survivalPlot.id]!,
-                displayName: survivalPlot.title,
-                priority: getDefaultPriorityByUniqueKey(survivalPlot.id),
-                renderWhenDataChange: false,
-                description: ''
-            };
-            return acc;
-        }, _chartMetaSet);
-
         if (!_.isEmpty(this.mutationProfiles.result!)) {
             _chartMetaSet[UniqueKey.MUTATED_GENES_TABLE] = {
                 uniqueKey: UniqueKey.MUTATED_GENES_TABLE,
@@ -2337,23 +2321,6 @@ export class StudyViewPageStore {
         });
 
         const cancerTypeIds = _.uniq(this.queriedPhysicalStudies.result.map(study => study.cancerTypeId));
-
-        this.chartsType.set(UniqueKey.OVERALL_SURVIVAL, ChartTypeEnum.SURVIVAL);
-        this.chartsDimension[UniqueKey.OVERALL_SURVIVAL] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL];
-        if (osStatusFlag && osMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.OVERALL_SURVIVAL) !== 0) {
-            // hide OVERALL_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
-            if (cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
-                this.changeChartVisibility(UniqueKey.OVERALL_SURVIVAL, true);
-            }
-        }
-        this.chartsType.set(UniqueKey.DISEASE_FREE_SURVIVAL, ChartTypeEnum.SURVIVAL);
-        this.chartsDimension[UniqueKey.DISEASE_FREE_SURVIVAL] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL];
-        if (dfsStatusFlag && dfsMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.DISEASE_FREE_SURVIVAL) !== 0) {
-            // hide DISEASE_FREE_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
-            if (cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
-                this.changeChartVisibility(UniqueKey.DISEASE_FREE_SURVIVAL, true);
-            }
-        }
 
         this.chartsType.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, ChartTypeEnum.SCATTER);
         this.chartsDimension[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER];
@@ -3162,7 +3129,6 @@ export class StudyViewPageStore {
     readonly clinicalDataWithCount = remoteData<ClinicalDataCountSet>({
         await: () => [
             this.molecularProfileSampleCounts,
-            this.survivalPlotData,
             this.clinicalAttributeIdToClinicalAttribute,
             this.clinicalAttributesCounts,
             this.cancerStudiesData,
@@ -3181,12 +3147,6 @@ export class StudyViewPageStore {
                         }
                         return map;
                     }, {});
-
-                _.each(this.survivalPlotData.result, (survivalPlot) => {
-                    if (survivalPlot.id in this.chartMetaSet) {
-                        ret[survivalPlot.id] = survivalPlot.alteredGroup.length;
-                    }
-                });
 
                 if (UniqueKey.CANCER_STUDIES in this.chartMetaSet) {
                     ret[UniqueKey.CANCER_STUDIES] = _.sumBy(this.cancerStudiesData.result, data => data.count);
