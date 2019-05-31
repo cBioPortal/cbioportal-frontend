@@ -154,49 +154,49 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
 
     @computed get toolbar() {
         return (
-            <div>
-                <div style={{ zIndex: 10, position: "absolute", top: "10px", left: "10px" }}>
-                    <div className={styles.ChartControls}>
+            <React.Fragment>
+                <div style={{ zIndex: 10, position: "absolute", top: "10px", left: "90px" }}>
                         <strong>{ this._label || this.defaultOption.label}</strong>
-                        <DefaultTooltip
-                            trigger={['click']}
-                            destroyTooltipOnHide={false}
-                            visible={this.isGeneSelectionPopupVisible}
-                            onVisibleChange={(visible) => {
-                                this.isGeneSelectionPopupVisible = visible;
-                            }}
-                            overlay={
-                                <GenesSelection
-                                    options={this.geneListOptions}
-                                    selectedValue={this.geneQuery}
-                                    onSelectedGenesChange={(value, genes, label) => {
-                                        this._geneQuery = value;
-                                        this.selectedGenes = genes;
-                                        this._label = label;
-                                        this.isGeneSelectionPopupVisible = false;
-                                    }}
-                                    defaultNumberOfGenes={DEFAULT_GENES_COUNT}
-                                    containerType={this.props.containerType} />
-                            }
-                            placement="bottomLeft"
-                        >
-                            <div>
-                                <button className="btn btn-default btn-xs">
-                                    Select genes
-                                </button>
-                            </div>
-                        </DefaultTooltip>
-                    </div>
                 </div>
                 <div style={{ zIndex: 10, position: "absolute", top: "10px", right: "10px" }}>
-                    <DownloadControls
-                        getSvg={this.getSvg}
-                        filename={SVG_ID}
-                        dontFade={true}
-                        collapse={true}
-                    />
+                    <div className={styles.ChartControls}>
+                        <DefaultTooltip
+                                trigger={['click']}
+                                destroyTooltipOnHide={false}
+                                visible={this.isGeneSelectionPopupVisible}
+                                onVisibleChange={(visible) => {
+                                    this.isGeneSelectionPopupVisible = visible;
+                                }}
+                                overlay={
+                                    <GenesSelection
+                                        options={this.geneListOptions}
+                                        selectedValue={this.geneQuery}
+                                        onSelectedGenesChange={(value, genes, label) => {
+                                            this._geneQuery = value;
+                                            this.selectedGenes = genes;
+                                            this._label = label;
+                                            this.isGeneSelectionPopupVisible = false;
+                                        }}
+                                        defaultNumberOfGenes={DEFAULT_GENES_COUNT}
+                                        containerType={this.props.containerType} />
+                                }
+                                placement="bottomLeft"
+                            >
+                                <div>
+                                    <button className="btn btn-default btn-xs">
+                                        Select genes
+                                    </button>
+                                </div>
+                        </DefaultTooltip>
+                        <DownloadControls
+                            getSvg={this.getSvg}
+                            filename={SVG_ID}
+                            dontFade={true}
+                            collapse={true}
+                        />
+                    </div>
                 </div>
-            </div>
+            </React.Fragment>
         );
     }
 
