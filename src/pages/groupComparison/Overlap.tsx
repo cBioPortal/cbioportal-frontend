@@ -168,27 +168,18 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 case PlotType.Upset: {
                     plotElt = (
                         <div style={{ display: `${this.areUpsetPlotsSidebySide ? "flex" : "block"}`, maxWidth: this.maxWidth, overflow: "auto hidden" }} >
-                            <div>
-                                <div style={{ textAlign: "center", position: this.areUpsetPlotsSidebySide ? "relative" : "absolute", width: "100%" }}>
-                                    <strong style={{ fontFamily: "Verdana,Arial,sans-serif" }}>Sample Sets Intersection</strong>
-                                </div>
-                                <UpSet
-                                    groups={this.props.store.samplesVennPartition.result!}
-                                    uidToGroup={this.uidToGroup.result!}
-                                    caseType="sample"
-                                />
-                            </div>
-
-                            <div>
-                                <div style={{ textAlign: "center", position: this.areUpsetPlotsSidebySide ? "relative" : "absolute", width: "100%" }}>
-                                    <strong style={{ fontFamily: "Verdana,Arial,sans-serif" }}>Sample Sets Intersection</strong>
-                                </div>
-                                <UpSet
-                                    groups={this.props.store.patientsVennPartition.result!}
-                                    uidToGroup={this.uidToGroup.result!}
-                                    caseType="patient"
-                                />
-                            </div>
+                            <UpSet
+                                groups={this.props.store.samplesVennPartition.result!}
+                                uidToGroup={this.uidToGroup.result!}
+                                caseType="sample"
+                                title="Samples overlap"
+                            />
+                            <UpSet
+                                groups={this.props.store.patientsVennPartition.result!}
+                                uidToGroup={this.uidToGroup.result!}
+                                caseType="patient"
+                                title="Patients overlap"
+                            />
                         </div>)
                     break;
                 }
