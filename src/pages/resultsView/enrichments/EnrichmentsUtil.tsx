@@ -58,18 +58,12 @@ export function STAT_IN_headerRender(stat:string, name:string) {
     );
 }
 
-export function calculateAlterationTendency(logOddsRatio: number): string {
-    return logOddsRatio > 0 ? "Co-occurrence" : "Mutual exclusivity";
-}
-
 export function calculateExpressionTendency(logOddsRatio: number): string {
     return logOddsRatio > 0 ? "Over-expressed" : "Under-expressed";
 }
 
-export function calculateGenericTendency(
-    logOddsRatio:number, group1Name:string, group2Name:string
-) {
-    return <EllipsisTextTooltip style={{display:"inline-block"}} text={logOddsRatio > 0 ? group1Name: group2Name} shownWidth={100}/>;
+export function formatAlterationTendency(text: string) {
+    return <EllipsisTextTooltip style={{ display: "inline-block" }} text={text} shownWidth={100} />;
 }
 
 export function formatPercentage(group: string, data: AlterationEnrichmentRow): string {
@@ -136,22 +130,29 @@ export function getExpressionScatterData(expressionEnrichments: ExpressionEnrich
 export function getAlterationRowData(
     alterationEnrichments: AlterationEnrichmentWithQ[],
     queryGenes: string[],
-    calculateLogRatio: boolean,
-    group1Name: string,
-    group2Name: string): AlterationEnrichmentRow[] {
+    groups: { name: string, nameOfEnrichmentDirection?: string }[]): AlterationEnrichmentRow[] {
     return alterationEnrichments.map(alterationEnrichment => {
-        let groupsSetWithPercentages = _.mapValues(_.keyBy(alterationEnrichment.counts, count => count.name), datum => {
+        let countsWithAlteredPercentage = _.map(alterationEnrichment.counts, datum => {
             return {
                 ...datum,
-                alteredPercentage: (datum.alteredCount / datum.profiledCount)*100
+                alteredPercentage: (datum.alteredCount / datum.profiledCount) * 100
             }
-        });
+        })
+        let groupsSetWithPercentages = _.keyBy(countsWithAlteredPercentage, count => count.name);
+        let enrichedGroup = '';
         let logRatio: number | undefined = undefined;
-        if (calculateLogRatio) {
-            let group1Data = groupsSetWithPercentages[group1Name];
-            let group2Data = groupsSetWithPercentages[group2Name];
+        if (groups.length === 2) {
+            let group1Data = groupsSetWithPercentages[groups[0].name];
+            let group2Data = groupsSetWithPercentages[groups[1].name];
             logRatio = Math.log2(group1Data.alteredPercentage / group2Data.alteredPercentage);
+            let group1Name = groups[0].nameOfEnrichmentDirection || groups[0].name;
+            let group2Name = groups[1].nameOfEnrichmentDirection || groups[1].name;
+            enrichedGroup = logRatio > 0 ? group1Name : group2Name;
+        } else {
+            countsWithAlteredPercentage.sort((a, b) => b.alteredPercentage - a.alteredPercentage);
+            enrichedGroup = countsWithAlteredPercentage[0].name;
         }
+        
         return {
             checked: queryGenes.includes(alterationEnrichment.hugoGeneSymbol),
             disabled: queryGenes.includes(alterationEnrichment.hugoGeneSymbol),
@@ -162,7 +163,8 @@ export function getAlterationRowData(
             qValue: alterationEnrichment.qValue,
             value: alterationEnrichment.value,
             groupsSet: groupsSetWithPercentages,
-            logRatio
+            logRatio,
+            enrichedGroup : enrichedGroup
         };
     });
 }
@@ -376,6 +378,23 @@ export function pickProteinEnrichmentProfiles(profiles:MolecularProfile[]) {
 export function getGroupColumns(groups: { name: string, description: string }[], alteredVsUnalteredMode?: boolean): AlterationEnrichmentTableColumn[] {
     let columns: AlterationEnrichmentTableColumn[] = [];
 
+    let enrichedGroupColum: AlterationEnrichmentTableColumn = {
+        name: alteredVsUnalteredMode ? AlterationEnrichmentTableColumnType.TENDENCY : (groups.length === 2 ? AlterationEnrichmentTableColumnType.ENRICHED : AlterationEnrichmentTableColumnType.MOST_ENRICHED),
+        render: (d: AlterationEnrichmentRow) => <div className={classNames(styles.Tendency, { [styles.Significant]: (d.qValue < 0.05) })}>
+            {alteredVsUnalteredMode ? d.enrichedGroup : formatAlterationTendency(d.enrichedGroup)}
+        </div>,
+        filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
+            d.enrichedGroup.toUpperCase().includes(filterStringUpper),
+        sortBy: (d: AlterationEnrichmentRow) => d.enrichedGroup,
+        download: (d: AlterationEnrichmentRow) => d.enrichedGroup,
+        tooltip: <span>The group with the highest alteration frequency</span>
+    }
+
+    //minimum 2 group are required for enrichment analysis
+    if (groups.length < 2) {
+        return []
+    }
+
     if (groups.length === 2) {
         let group1 = groups[0];
         let group2 = groups[1];
@@ -386,33 +405,25 @@ export function getGroupColumns(groups: { name: string, description: string }[],
             sortBy: (d: AlterationEnrichmentRow) => Number(d.logRatio),
             download: (d: AlterationEnrichmentRow) => formatLogOddsRatio(d.logRatio!)
         });
-        columns.push({
-            name: alteredVsUnalteredMode ? AlterationEnrichmentTableColumnType.TENDENCY : AlterationEnrichmentTableColumnType.ENRICHED,
-            render: (d: AlterationEnrichmentRow) => <div className={classNames(styles.Tendency, { [styles.Significant]: (d.qValue < 0.05) })}>
-                {alteredVsUnalteredMode ? calculateAlterationTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), group1.name, group2.name)}
-            </div>,
-            tooltip:
-                <table>
-                    <tr>
-                        <td>Log ratio > 0</td>
-                        <td>: Enriched in {group1.name}</td>
-                    </tr>
-                    <tr>
-                        <td>Log ratio &lt;= 0</td>
-                        <td>: Enriched in {group2.name}</td>
-                    </tr>
-                    <tr>
-                        <td>q-Value &lt; 0.05</td>
-                        <td>: Significant association</td>
-                    </tr>
-                </table>,
-            filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
-                calculateAlterationTendency(Number(d.logRatio)).toUpperCase().includes(filterStringUpper),
-            sortBy: (d: AlterationEnrichmentRow) => calculateAlterationTendency(Number(d.logRatio)),
-            download: (d: AlterationEnrichmentRow) => calculateAlterationTendency(Number(d.logRatio))
-        });
+
+        enrichedGroupColum.tooltip =
+            (<table>
+                <tr>
+                    <td>Log ratio > 0</td>
+                    <td>: Enriched in {group1.name}</td>
+                </tr>
+                <tr>
+                    <td>Log ratio &lt;= 0</td>
+                    <td>: Enriched in {group2.name}</td>
+                </tr>
+                <tr>
+                    <td>q-Value &lt; 0.05</td>
+                    <td>: Significant association</td>
+                </tr>
+            </table>)
     }
-    groups.forEach(group=>{
+    columns.push(enrichedGroupColum);
+    groups.forEach(group => {
         columns.push({
             name: group.name,
             headerRender: PERCENTAGE_IN_headerRender,
