@@ -56,6 +56,12 @@ export type ClinicalDataEnrichmentWithQ = ClinicalDataEnrichment & { qValue:numb
 
 export type CopyNumberEnrichment = AlterationEnrichmentWithQ & { value:number };
 
+export function defaultGroupOrder<T extends Pick<ComparisonGroup, "name">>(groups:T[]) {
+    // sort alphabetically, except NA goes last
+    const isNA = _.partition(groups, g=>(g.name.toLowerCase() === "na"));
+    return _.sortBy(isNA[1], g=>g.name.toLowerCase()).concat(isNA[0]);
+}
+
 const alphabet = "-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 export function getOrdinals(num:number, base:number) {
