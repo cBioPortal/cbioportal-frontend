@@ -16,7 +16,6 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { FormControl } from 'react-bootstrap';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
-import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 
 export interface IGeneBarPlotProps {
     data: AlterationEnrichmentRow[];
@@ -31,6 +30,8 @@ const SVG_ID = "GroupComparisonGeneFrequencyPlot";
 const DEFAULT_GENES_COUNT = 10;
 
 const CHART_BAR_WIDTH = 10;
+
+const ALLOWED_CNA_TYPES = ["AMP", "HOMDEL"];
 
 @observer
 export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> {
@@ -80,8 +81,16 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                     if (geneWithAlteration.alterations === false) {
                         return [geneWithAlteration.gene + ': AMP', geneWithAlteration.gene + ': HOMDEL'];
                     }
-                    //slice(0, -1) to remove suffix ;
-                    return [unparseOQLQueryLine(geneWithAlteration).slice(0, -1)];
+
+                    const geneKeys: string[] = []
+                    _.each(geneWithAlteration.alterations, alteration => {
+                        if (alteration.alteration_type === "cna" &&
+                            alteration.constr_rel === "=" &&
+                            ALLOWED_CNA_TYPES.includes(alteration.constr_val!)) {
+                            geneKeys.push(geneWithAlteration.gene + ": " + alteration.constr_val)
+                        }
+                    });
+                    return geneKeys;
                 })
             } else {
                 genes = this.selectedGenes.map(geneWithAlteration => geneWithAlteration.gene);
@@ -165,7 +174,8 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                                     this._label = label;
                                     this.isGeneSelectionPopupVisible = false;
                                 }}
-                                defaultNumberOfGenes={DEFAULT_GENES_COUNT} />
+                                defaultNumberOfGenes={DEFAULT_GENES_COUNT}
+                                containerType={this.props.containerType} />
                         }
                         placement="bottomLeft"
                     >
@@ -190,19 +200,11 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
         return this.props.containerType === AlterationContainerType.MUTATION ? 'Mutation frequency' : 'Copy-number alteration frequency';
     }
 
-    // figure out maxwidth of chart based on data
-    // note: placement of chart inside constained parents may result in scrolling
-    @computed private get maxWidth(){
-        const geneCount = this.barPlotData[0].counts.length;
-        const groupCount = this.barPlotData.length;
-        return ((groupCount + 1) * geneCount * CHART_BAR_WIDTH) + 350;
-    }
-
     public render() {
         return (
-            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ overflow: 'auto', overflowY: 'hidden', flexGrow: 1, maxWidth:this.maxWidth }}>
+            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ position: "relative", display: "inline-block" }}>
                 {this.toolbar}
-                <div style={{ position: this.props.isTwoGroupAnalysis ? 'absolute' : 'static' }}>
+                <div style={{ overflow: "auto hidden", position: "relative" }} >
                     <MultipleCategoryBarPlot
                         svgId={SVG_ID}
                         barWidth={CHART_BAR_WIDTH}
@@ -232,6 +234,7 @@ interface IGeneSelectionProps {
     onSelectedGenesChange: (value: string, orderedGenes: SingleGeneQuery[], label: string) => void;
     defaultNumberOfGenes: number;
     maxNumberOfGenes?: number;
+    containerType: AlterationContainerType;
 }
 
 @observer
@@ -249,7 +252,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         value: string;
         genes: string[];
     } | undefined
-    private genesToPlot: SingleGeneQuery[] = [];
+    @observable.ref genesToPlot: SingleGeneQuery[] = [];
 
     @computed get geneListOptions() {
         return _.map(this.props.options, option => {
@@ -301,8 +304,27 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         this._geneQuery = queryStr;
     }
 
+    @computed get hasUnsupportedOQL() {
+        const geneWithUnsupportedOql = _.find(this.genesToPlot, gene => {
+            if (gene.alterations && gene.alterations.length > 0) {
+                if (this.props.containerType === AlterationContainerType.COPY_NUMBER) {
+                    let unsupportedAlteration = _.find(gene.alterations, alteration => {
+                        return (alteration.alteration_type !== 'cna' ||
+                            alteration.constr_rel !== "=" ||
+                            !ALLOWED_CNA_TYPES.includes(alteration.constr_val!));
+                    })
+                    return unsupportedAlteration !== undefined
+                }
+                // return true if container type in mutation
+                return true;
+            }
+            return false;
+        });
+        return geneWithUnsupportedOql !== undefined;
+    }
+
     @computed get addGenesButtonDisabled() {
-        return this.props.selectedValue === this._geneQuery || this.selectedGenesHasError || _.isEmpty(this._geneQuery)
+        return this.hasUnsupportedOQL || this.props.selectedValue === this._geneQuery || this.selectedGenesHasError || _.isEmpty(this._geneQuery)
     }
 
     @autobind
@@ -393,6 +415,16 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                         callback={this.onChangeGeneInput}
                         location={GeneBoxType.ONCOPRINT_HEATMAP}
                     />
+                    {
+                        this.hasUnsupportedOQL &&
+                        <strong style={{
+                            display: "block",
+                        }}>
+                            <span style={{ color: "#a71111" }}>
+                                {`OQL ${this.props.containerType === AlterationContainerType.MUTATION ? "" : "except AMP and HOMDEL"} is not allowed`}
+                            </span>
+                        </strong>
+                    }
                     <button
                         key="addGenestoBarPlot"
                         className="btn btn-sm btn-default"
