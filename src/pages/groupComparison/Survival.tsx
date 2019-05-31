@@ -87,7 +87,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             marginRight:5
                                         }}
                                     />
-                                    Overlapping patients are graphed in multiple-group curves below.
+                                    Overlapping patients (n={selectionInfo.overlappingPatients.length}) are plotted as distinct groups below.
                                 </div>
                             );
                         }

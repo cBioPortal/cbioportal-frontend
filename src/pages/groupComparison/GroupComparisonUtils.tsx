@@ -36,6 +36,7 @@ export type ComparisonGroup = Omit<SessionGroupData, "studies"|"color"> & {
     color:string; // color mandatory here, bc we'll assign one if its missing
     uid:string; // unique in the session
     nameWithOrdinal:string; // for easy disambiguation when groups are abbreviated
+    ordinal:string;
     studies:{ id:string, samples: string[], patients:string[] }[]; // include patients, filter out nonexistent samples
     nonExistentSamples:SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
     savedInSession:boolean;
@@ -145,15 +146,16 @@ export function caseCountsInParens(
 export function caseCounts(
     numSamples:number,
     numPatients:number,
-    delimiter="/"
+    delimiter="/",
+    infix=" "
 ) {
     if (numSamples === numPatients) {
         const plural = (numSamples !== 1);
-        return `${numSamples} sample${plural ? "s" : ""}${delimiter}patient${plural ? "s" : ""}`;
+        return `${numSamples}${infix}sample${plural ? "s" : ""}${delimiter}patient${plural ? "s" : ""}`;
     } else {
         const pluralSamples = (numSamples !== 1);
         const pluralPatients = (numPatients !== 1);
-        return `${numSamples} sample${pluralSamples ? "s" : ""}${delimiter}${numPatients} patient${pluralPatients ? "s" : ""}`;
+        return `${numSamples}${infix}sample${pluralSamples ? "s" : ""}${delimiter}${numPatients}${infix}patient${pluralPatients ? "s" : ""}`;
     }
 }
 
@@ -406,13 +408,13 @@ export const SURVIVAL_TOO_MANY_GROUPS_MSG =
 export const DUPLICATE_GROUP_NAME_MSG = "Another group already has this name.";
 
 export const OVERLAP_NOT_ENOUGH_GROUPS_MSG =
-    "We can't show overlap for 1 group. Please select more groups from the Groups section above.";
+    "We need at least 2 groups to show overlap. Please select more groups from the Groups section above.";
 
 export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups:number) {
     if (numSelectedGroups >= 2) {
         return "Due to excluded overlapping cases, there are less than 2 selected nonempty groups - we need at least 2.";
     } else {
-        return "Please select more groups - we need at least 2.";
+        return "We need at least 2 groups to show clinical data enrichments. Please select more groups from the Groups section above.";
     }
 }
 
@@ -623,4 +625,34 @@ export function convertPatientsStudiesAttrToSamples(
             })
         )
     }));
+}
+
+export function partitionCasesByGroupMembership(
+    groupsNotOverlapRemoved:Pick<StudyViewComparisonGroup, "studies"|"uid">[],
+    getCaseIdentifiers:(group:Pick<StudyViewComparisonGroup, "studies"|"uid">)=>any[],
+    getUniqueCaseKey:(caseIdentifier:any)=>string,
+    caseKeys:string[]
+) {
+    // Gives a partition of the given cases into lists based on which groups
+    //  each case is a member of. For example, if there are groups A and B, then
+    //  in the output, there is an entry for cases in A not B, an entry for cases in
+    //  B not A, and an entry for cases in A and B. Note that there are only
+    //  entries in the output for nonempty lists.
+
+    const partitionMap = new ComplexKeyGroupsMap<string>();
+    const groupToCaseKeys = groupsNotOverlapRemoved.reduce((map, group)=>{
+        map[group.uid] = _.keyBy(getCaseIdentifiers(group).map(id=>{
+            return getUniqueCaseKey(id);
+        }));
+        return map;
+    }, {} as {[uid:string]:{[uniqueCaseKey:string]:any}});
+
+    for (const caseKey of caseKeys) {
+        const key:any = {};
+        for (const group of groupsNotOverlapRemoved) {
+            key[group.uid] = caseKey in groupToCaseKeys[group.uid];
+        }
+        partitionMap.add(key, caseKey);
+    }
+    return partitionMap.entries();
 }

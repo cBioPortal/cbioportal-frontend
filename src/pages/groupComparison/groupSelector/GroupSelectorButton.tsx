@@ -13,6 +13,7 @@ import ErrorIcon from "../../../shared/components/ErrorIcon";
 import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import {Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {SortableElement} from "react-sortable-hoc";
+import {getTextColor} from "../OverlapUtils";
 
 export interface IGroupSelectorButtonProps {
     onClick:(uid:string)=>void;
@@ -28,21 +29,30 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
         const selected = this.props.isSelected(group.uid);
         const sampleIdentifiers = getSampleIdentifiers([group]);
         const patientIdentifiers = getPatientIdentifiers(sampleIdentifiers, this.props.sampleSet);
+
         return (
             <button
-                className={classNames('btn btn-xs', 'btn-primary', { [styles.buttonUnselected]:!selected})}
+                className={classNames('btn btn-xs', { [styles.buttonUnselected]:!selected})}
                 onClick={()=>this.props.onClick(group.uid)}
+                style={{
+                    backgroundColor: group.color
+                }}
             >
-            <span style={{display:"flex", alignItems:"center"}}>
-                {
-                    selected ?  <i className={'fa fa-check'}></i> : <i className={'fa fa-minus'}></i>
-                }
-                &nbsp;
-                <EllipsisTextTooltip style={{display:"inline-block"}} text={group.nameWithOrdinal} shownWidth={100}/>
-                &nbsp;
-                {caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
-                {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
-            </span>
+                <span style={{display:"flex", alignItems:"center"}}>
+                    <EllipsisTextTooltip
+                        style={{
+                            display:"inline-block",
+                            color:getTextColor(group.color)
+                        }}
+                        text={group.nameWithOrdinal}
+                        shownWidth={100}
+                    />
+                    &nbsp;
+                    <span style={{color:getTextColor(group.color)}}>
+                        {caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
+                    </span>
+                    {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
+                </span>
             </button>
         );
     }
