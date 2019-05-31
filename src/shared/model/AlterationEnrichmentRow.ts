@@ -10,5 +10,6 @@ export interface AlterationEnrichmentRow {
     pValue: number;
     qValue: number;
     value?:number; // for copy number, used in group comparison
-    groupsSet:{[id:string]:CountSummary & {alteredPercentage:number}}
+    groupsSet:{[id:string]:CountSummary & {alteredPercentage:number}};
+    enrichedGroup:string;
 }
