@@ -25,7 +25,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
         this.props.store.setMutationEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, true);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mutation", true);
 
     private readonly enrichmentAnalysisGroups = remoteData({
         await:()=>[this.props.store._activeGroupsOverlapRemoved],
