@@ -31,7 +31,9 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
 
     @autobind
     private onSortEnd(params:any) {
-        this.props.store.updateDragOrder(params.oldIndex, params.newIndex);
+        if (params.oldIndex !== params.newIndex)
+            this.props.store.updateDragOrder(params.oldIndex, params.newIndex);
+
         this.dragging = false;
     }
 
@@ -65,6 +67,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                         position:"relative"
                     }}>
                         <strong style={{marginRight:5}}>Groups: </strong>
+                        <span style={{fontSize:12, marginRight:3}}>(drag to reorder)</span>
                         <GroupSelectorButtonList
                             buttons={buttons}
                             axis="xy"

@@ -118,68 +118,51 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             this.store.survivalClinicalDataExists,
         ],
         render:()=>{
-            if (this.store.activeGroups.result!.length === 0) {
-                let message;
-                if (this.store._activeGroupsNotOverlapRemoved.result!.length > 0) {
-                    message = "Since overlapping cases are excluded, all of your selected groups are empty.";
-                } else {
-                    message = "To get started, select groups from the Groups section above.";
+            return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.setTabId} className="primaryTabs mainTabs">
+                <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
+                    <Overlap store={this.store}/>
+                </MSKTab>
+                {
+                    this.store.showSurvivalTab &&
+                    <MSKTab id={GroupComparisonTab.SURVIVAL} linkText="Survival"
+                            anchorClassName={this.store.survivalTabGrey ? "greyedOut" : ""}
+                    >
+                        <Survival store={this.store}/>
+                    </MSKTab>
                 }
-                return <div style={{display:"flex", justifyContent:"center", alignItems:"center"}}>{message}</div>;
-            } else if ((this.store.mutationEnrichmentProfiles.result!.length > 0) ||
-                (this.store.copyNumberEnrichmentProfiles.result!.length > 0) ||
-                (this.store.mRNAEnrichmentProfiles.result!.length > 0) ||
-                (this.store.proteinEnrichmentProfiles.result!.length > 0) ||
-                this.store.showSurvivalTab
-            ) {
-                return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.setTabId} className="primaryTabs mainTabs">
-                    <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
-                        <Overlap store={this.store}/>
+                <MSKTab id={GroupComparisonTab.CLINICAL} linkText="Clinical"
+                    anchorClassName={this.store.clinicalTabGrey ? "greyedOut" : ""}>
+                    <ClinicalData store={this.store}/>
+                </MSKTab>
+                {this.store.mutationEnrichmentProfiles.result!.length > 0 && (
+                    <MSKTab id={GroupComparisonTab.MUTATIONS} linkText="Mutations"
+                        anchorClassName={this.store.mutationsTabGrey ? "greyedOut" : ""}
+                    >
+                        <MutationEnrichments store={this.store}/>
                     </MSKTab>
-                    {
-                        this.store.showSurvivalTab &&
-                        <MSKTab id={GroupComparisonTab.SURVIVAL} linkText="Survival"
-                                anchorClassName={this.store.survivalTabGrey ? "greyedOut" : ""}
-                        >
-                            <Survival store={this.store}/>
-                        </MSKTab>
-                    }
-                    <MSKTab id={GroupComparisonTab.CLINICAL} linkText="Clinical"
-                        anchorClassName={this.store.clinicalTabGrey ? "greyedOut" : ""}>
-                        <ClinicalData store={this.store}/>
+                )}
+                {this.store.copyNumberEnrichmentProfiles.result!.length > 0 && (
+                    <MSKTab id={GroupComparisonTab.CNA} linkText="Copy-number"
+                        anchorClassName={this.store.copyNumberTabGrey ? "greyedOut" : ""}
+                    >
+                        <CopyNumberEnrichments store={this.store}/>
                     </MSKTab>
-                    {this.store.mutationEnrichmentProfiles.result!.length > 0 && (
-                        <MSKTab id={GroupComparisonTab.MUTATIONS} linkText="Mutations"
-                            anchorClassName={this.store.mutationsTabGrey ? "greyedOut" : ""}
-                        >
-                            <MutationEnrichments store={this.store}/>
-                        </MSKTab>
-                    )}
-                    {this.store.copyNumberEnrichmentProfiles.result!.length > 0 && (
-                        <MSKTab id={GroupComparisonTab.CNA} linkText="Copy-number"
-                            anchorClassName={this.store.copyNumberTabGrey ? "greyedOut" : ""}
-                        >
-                            <CopyNumberEnrichments store={this.store}/>
-                        </MSKTab>
-                    )}
-                    {this.store.mRNAEnrichmentProfiles.result!.length > 0 && (
-                        <MSKTab id={GroupComparisonTab.MRNA} linkText="mRNA"
-                            anchorClassName={this.store.mRNATabGrey ? "greyedOut" : ""}
-                        >
-                            <MRNAEnrichments store={this.store}/>
-                        </MSKTab>
-                    )}
-                    {this.store.proteinEnrichmentProfiles.result!.length > 0 && (
-                        <MSKTab id={GroupComparisonTab.PROTEIN} linkText="Protein"
-                            anchorClassName={this.store.proteinTabGrey ? "greyedOut" : ""}
-                        >
-                            <ProteinEnrichments store={this.store}/>
-                        </MSKTab>
-                    )}
-                </MSKTabs>;
-            } else {
-                return <span>No data.</span>;
-            }
+                )}
+                {this.store.mRNAEnrichmentProfiles.result!.length > 0 && (
+                    <MSKTab id={GroupComparisonTab.MRNA} linkText="mRNA"
+                        anchorClassName={this.store.mRNATabGrey ? "greyedOut" : ""}
+                    >
+                        <MRNAEnrichments store={this.store}/>
+                    </MSKTab>
+                )}
+                {this.store.proteinEnrichmentProfiles.result!.length > 0 && (
+                    <MSKTab id={GroupComparisonTab.PROTEIN} linkText="Protein"
+                        anchorClassName={this.store.proteinTabGrey ? "greyedOut" : ""}
+                    >
+                        <ProteinEnrichments store={this.store}/>
+                    </MSKTab>
+                )}
+            </MSKTabs>;
         },
         renderPending:()=><LoadingIndicator center={true} isLoading={true}  size={"big"} />,
         renderError:()=><ErrorMessage/>
