@@ -21,7 +21,7 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
         this.props.store.setProteinEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "protein");
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[

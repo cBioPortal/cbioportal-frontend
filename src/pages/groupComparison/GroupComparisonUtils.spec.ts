@@ -3,7 +3,7 @@ import {
     caseCounts,
     caseCountsInParens,
     ComparisonGroup,
-    convertPatientsStudiesAttrToSamples,
+    convertPatientsStudiesAttrToSamples, defaultGroupOrder,
     excludePatients,
     excludeSamples,
     finalizeStudiesAttr,
@@ -14,7 +14,6 @@ import {
     getOverlappingSamples,
     getPatientIdentifiers,
     getSampleIdentifiers,
-    getStackedBarData,
     getStudyIds,
     getVennPlotData,
     intersectPatients,
@@ -35,6 +34,29 @@ import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/Compl
 chai.use(deepEqualInAnyOrder);
 
 describe('GroupComparisonUtils', () => {
+    describe("defaultGroupOrder", ()=>{
+        it("empty", ()=>{
+            assert.deepEqual(defaultGroupOrder([]), []);
+        });
+        it("one group", ()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"yo"}]), [{name:"yo"}]);
+        });
+        it("one group NA", ()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"nA"}]), [{name:"nA"}]);
+        });
+        it("two groups", ()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"HI"},{name:"Adam"}]), [{name:"Adam"},{name:"HI"}]);
+        });
+        it("two groups including NA - NA sorts to end", ()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"NA"},{name:"zebra"}]), [{name:"zebra"},{name:"NA"}]);
+        });
+        it("three groups",()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"hI"},{name:"abra"},{name:"zebra"}]), [{name:"abra"},{name:"hI"}, {name:"zebra"}]);
+        });
+        it("four groups including NA - NA sorts to end",()=>{
+            assert.deepEqual(defaultGroupOrder([{name:"hI"},{name:"nA"},{name:"Na"}, {name:"zebra"}]), [{name:"hI"}, {name:"zebra"},{name:"nA"},{name:"Na"}]);
+        });
+    });
     describe("getOrdinals", ()=>{
         it("correct values", ()=>{
             assert.deepEqual(
@@ -64,48 +86,6 @@ describe('GroupComparisonUtils', () => {
                     "ACA","ACB"
                 ]
             );
-        });
-    });
-
-    describe('getStackedBarData', () => {
-        const uidToGroup = {
-            "1":{
-                uid:"1",
-                name:"1",
-                color:"#990099"
-            } as ComparisonGroup,
-            "2":{
-                uid:"2",
-                name:"2",
-                color:"#0099c6"
-            } as ComparisonGroup
-        };
-        it('when no data', () => {
-            assert.deepEqual(getStackedBarData([], {}), [])
-        });
-
-        it('when there no overlapping groups', () => {
-            assert.deepEqual(getStackedBarData([
-                { uid: '1', cases: ['1-1'] },
-                { uid: '2', cases: ['1-2'] }
-            ], uidToGroup),
-                [
-                    [{ cases: ['1-1'], fill: '#990099', groupName: '1' }],
-                    [{ cases: ['1-2'], fill: '#0099c6', groupName: '2' }]
-                ]);
-        });
-
-        it('when there one or more overlapping groups', () => {
-
-            (expect(getStackedBarData([
-                { uid: '1', cases: ['1-1', '1-2'] },
-                { uid: '2', cases: ['1-1'] }
-            ], uidToGroup))
-                .to.deep as any).equalInAnyOrder([
-                [{ cases: ['1-1'], fill: '#CCCCCC', groupName: 'Overlapping Cases' }],
-                [{ cases: [], fill: '#0099c6', groupName: '2' }],
-                [{ cases: ['1-2'], fill: '#990099', groupName: '1' }]
-            ]);
         });
     });
 
