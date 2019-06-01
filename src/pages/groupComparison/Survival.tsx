@@ -9,6 +9,7 @@ import {SURVIVAL_TOO_MANY_GROUPS_MSG} from "./GroupComparisonUtils";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {blendColors} from "./OverlapUtils";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
+import _ from "lodash";
 
 export interface ISurvivalProps {
     store: GroupComparisonStore
@@ -26,26 +27,47 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.uidToGroup
         ],
         invoke: () => {
+            const orderedActiveGroupUidSet = _.reduce(this.props.store._activeGroupsNotOverlapRemoved.result!, (acc, next, index) => {
+                acc[next.uid] = index;
+                return acc;
+            }, {} as { [id: string]: number });
             const partition = this.props.store.patientsVennPartition.result!;
+
+            // ascending sort partition bases on number of groups in each parition.
+            // if they are equal then sort based on the give order of groups
+            partition.sort((a, b) => {
+                const aUids = Object.keys(a.key).filter(uid=>a.key[uid]);
+                const bUids = Object.keys(b.key).filter(uid=>b.key[uid]);
+                if (aUids.length !== bUids.length) {
+                    return aUids.length - bUids.length;
+                }
+                const aCount = _.sumBy(aUids, uid=>orderedActiveGroupUidSet[uid])
+                const bCount = _.sumBy(bUids, uid=>orderedActiveGroupUidSet[uid])
+                return aCount - bCount;
+            });
             const uidToGroup = this.props.store.uidToGroup.result!;
             const analysisGroups = [];
             const patientToAnalysisGroups:{[patientKey:string]:string[]} = {};
             for (const entry of partition) {
                 const partitionGroupUids = Object.keys(entry.key).filter(uid=>entry.key[uid]);
+                // sort by give order of groups
+                partitionGroupUids.sort((a, b) => orderedActiveGroupUidSet[a] - orderedActiveGroupUidSet[b]);
                 if (this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE && partitionGroupUids.length > 1) {
                     // dont show the overlap curves if we're excluding overlapping cases
                 } else {
-                    const name = partitionGroupUids.map(uid=>uidToGroup[uid].nameWithOrdinal).join(", ");
-                    const value = partitionGroupUids.join(",");
-                    for (const patientKey of entry.value) {
-                        patientToAnalysisGroups[patientKey] = [value];
+                    if (partitionGroupUids.length > 0) {
+                        const name = partitionGroupUids.map(uid => uidToGroup[uid].nameWithOrdinal).join(", ");
+                        const value = partitionGroupUids.join(",");
+                        for (const patientKey of entry.value) {
+                            patientToAnalysisGroups[patientKey] = [value];
+                        }
+                        analysisGroups.push({
+                            name,
+                            color: blendColors(partitionGroupUids.map(uid => uidToGroup[uid].color)),
+                            value,
+                            legendText: name
+                        });
                     }
-                    analysisGroups.push({
-                        name,
-                        color: blendColors(partitionGroupUids.map(uid=>uidToGroup[uid].color)),
-                        value,
-                        legendText: name
-                    });
                 }
             }
             return Promise.resolve({

@@ -7,6 +7,7 @@ var waitForNetworkQuiet = require('./../specUtils').waitForNetworkQuiet;
 var sessionServiceIsEnabled = require('./../specUtils').sessionServiceIsEnabled;
 var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
 var pasteToElement = require('./../specUtils').pasteToElement;
+var checkOncoprintElement = require('./../specUtils').checkOncoprintElement;
 
 const TIMEOUT = 6000;
 
@@ -20,7 +21,7 @@ describe("oncoprinter screenshot tests", function() {
         browser.click(".oncoprinterSubmit");
         waitForOncoprint(TIMEOUT);
 
-        var res = browser.checkElement('div#oncoprintDiv', { hide:['.qtip'] } );
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
     it("oncoprinter example data, then set gene order, including all genes", function() {
@@ -36,7 +37,7 @@ describe("oncoprinter screenshot tests", function() {
         browser.click(".oncoprinterSubmit");
         waitForOncoprint(TIMEOUT);
 
-        var res = browser.checkElement('div#oncoprintDiv', { hide:['.qtip'] } );
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
     it("oncoprinter example data, then set gene order, not including all genes", function() {
@@ -52,7 +53,7 @@ describe("oncoprinter screenshot tests", function() {
         browser.click(".oncoprinterSubmit");
         waitForOncoprint(TIMEOUT);
 
-        var res = browser.checkElement('div#oncoprintDiv', { hide:['.qtip'] } );
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
     it("oncoprinter example data, then set sample order, including all samples", function() {
@@ -73,7 +74,7 @@ describe("oncoprinter screenshot tests", function() {
         browser.click(".oncoprinterSubmit");
         waitForOncoprint(TIMEOUT);
 
-        var res = browser.checkElement('div#oncoprintDiv', { hide:['.qtip'] } );
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
     it("oncoprinter example data, then set sample order, not including all samples", function() {
@@ -89,7 +90,7 @@ describe("oncoprinter screenshot tests", function() {
         browser.click(".oncoprinterSubmit");
         waitForOncoprint(TIMEOUT);
 
-        var res = browser.checkElement('div#oncoprintDiv', { hide:['.qtip'] } );
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
     it("oncoprinter example data, start by set gene order, then set sample order", function() {
@@ -106,7 +107,7 @@ describe("oncoprinter screenshot tests", function() {
         browser.click(".oncoprinterSubmit");
         waitForOncoprint(TIMEOUT);
 
-        var res = browser.checkElement('div#oncoprintDiv', { hide:['.qtip'] } );
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
     it("oncoprinter example data, start by set sample order, then set gene order", function() {
@@ -124,7 +125,7 @@ describe("oncoprinter screenshot tests", function() {
         browser.click(".oncoprinterSubmit");
         waitForOncoprint(TIMEOUT);
 
-        var res = browser.checkElement('div#oncoprintDiv', { hide:['.qtip'] } );
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
     it("oncoprinter example data, dont color by mutation type", function() {
@@ -138,7 +139,7 @@ describe("oncoprinter screenshot tests", function() {
         waitForOncoprint(TIMEOUT);
         setOncoprintMutationsMenuOpen(false); // get it out of the way for screenshot
 
-        var res = browser.checkElement('div#oncoprintDiv', { hide:['.qtip'] } );
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
     it("oncoprinter example data, dont color by driver vs VUS", function() {
@@ -152,7 +153,7 @@ describe("oncoprinter screenshot tests", function() {
         waitForOncoprint(TIMEOUT);
         setOncoprintMutationsMenuOpen(false); // get it out of the way for screenshot
 
-        var res = browser.checkElement('div#oncoprintDiv', { hide:['.qtip'] } );
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
     it("oncoprinter example data, hide VUS", function() {
@@ -166,7 +167,7 @@ describe("oncoprinter screenshot tests", function() {
         waitForOncoprint(TIMEOUT);
         setOncoprintMutationsMenuOpen(false); // get it out of the way for screenshot
 
-        var res = browser.checkElement('div#oncoprintDiv', { hide:['.qtip'] } );
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
 });
