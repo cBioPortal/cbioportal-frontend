@@ -24,7 +24,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
         this.props.store.setCopyNumberEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, true);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "copy-number", true);
 
     private readonly enrichmentAnalysisGroups = remoteData({
         await:()=>[this.props.store._activeGroupsOverlapRemoved],
