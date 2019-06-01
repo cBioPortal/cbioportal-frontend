@@ -85,9 +85,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     @computed get usedGroups() {
         const usedGroupUids =
             _.chain(this.groupCombinationSets)
-            .map(g=>g.groups)
-            .flattenDeep()
-            .uniq()
+            .flatMap(g=>g.groups)
             .keyBy()
             .value();
 
@@ -405,7 +403,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     orientation="left"
                                     offsetX={50}
                                     dependentAxis
-                                    label={"Intersection count"}
+                                    label={"Overlap count"}
                                     tickFormat={this.formatNumericalTick}
                                     style={{
                                         grid: {
