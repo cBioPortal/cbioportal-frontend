@@ -72,9 +72,22 @@ export default class GroupComparisonStore {
     @observable private sessionId:string;
     @observable dragNameOrder:string[]|undefined = undefined;
     private _unsavedGroups = observable.shallowArray<SessionGroupData>([]);
+    private deletedGroupNames = observable.shallowMap<string>();
 
     constructor(sessionId:string, private appStore:AppStore) {
         this.sessionId = sessionId;
+    }
+
+    @action public deleteGroup(name:string) {
+        this.deletedGroupNames.set(name, name);
+    }
+
+    @computed get existsDeletedGroup() {
+        return this.deletedGroupNames.keys().length > 0;
+    }
+
+    private isGroupDeleted(name:string) {
+        return this.deletedGroupNames.has(name);
     }
 
     @action public updateDragOrder(oldIndex:number, newIndex:number) {
@@ -83,11 +96,6 @@ export default class GroupComparisonStore {
         }
         const poppedUid = this.dragNameOrder.splice(oldIndex, 1)[0];
         this.dragNameOrder.splice(newIndex, 0, poppedUid);
-    }
-
-    @autobind
-    @action public clearDragNameOrder() {
-        this.dragNameOrder = undefined;
     }
 
     public get isLoggedIn() {
@@ -193,7 +201,7 @@ export default class GroupComparisonStore {
             // (2) filter out, and add list of, nonexistent samples
             // (3) add patients
 
-            const ret:ComparisonGroup[] = [];
+            let ret:ComparisonGroup[] = [];
             const sampleSet = this.sampleSet.result!;
 
             let defaultGroupColors = pickClinicalDataColors(
@@ -212,7 +220,7 @@ export default class GroupComparisonStore {
                     color,
                     studies,
                     nonExistentSamples,
-                    uid: index.toString(),
+                    uid: groupData.name,
                     nameWithOrdinal: "", // fill in later
                     ordinal: "", // fill in later
                     savedInSession
@@ -227,6 +235,8 @@ export default class GroupComparisonStore {
                 ret.push(finalizeGroup(false, groupData, index+this._session.result!.groups.length));
             });
 
+            // filter out deleted groups
+            ret = ret.filter(g=>!this.isGroupDeleted(g.name));
             return Promise.resolve(ret);
         }
     });
@@ -349,21 +359,24 @@ export default class GroupComparisonStore {
 
     @autobind
     @action
-    public async saveUnsavedGroupsAndGoToNewSession() {
-        if (!this._session.isComplete || this._unsavedGroups.length === 0) {
-            return;
-        }
-
-        // save _unsavedGroups to new session, and go to it
+    public async saveUnsavedChangesAndGoToNewSession() {
         const newSession = _.cloneDeep(this._session.result!);
-        newSession.groups.push(...this._unsavedGroups);
+        if (this._unsavedGroups.length > 0) {
+            newSession.groups.push(...this._unsavedGroups);
+        }
+        if (this.dragNameOrder) {
+            newSession.groupNameOrder = this.dragNameOrder.slice(); // get rid of mobx baggage with .slice()
+        }
+        newSession.groups = newSession.groups.filter(g=>!this.isGroupDeleted(g.name));
 
-        const {id } = await comparisonClient.addComparisonSession(newSession);
+        const {id} = await comparisonClient.addComparisonSession(newSession);
         (window as any).routingStore.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
     }
 
     @autobind
-    @action public clearUnsavedGroups() {
+    @action
+    public clearUnsavedChanges() {
+        // clear unsaved groups
         onMobxPromise(
             this.availableGroups,
             availableGroups=>{
@@ -373,23 +386,14 @@ export default class GroupComparisonStore {
                     }
                 }
             }
-        )
+        );
         this._unsavedGroups.clear();
-    }
 
-    @autobind
-    @action
-    public async saveDragNameOrderAndGoToNewSession() {
-        if (!this._session.isComplete) {
-            return;
-        }
+        // clear drag order
+        this.dragNameOrder = undefined;
 
-        // save _unsavedGroups to new session, and go to it
-        const newSession = _.cloneDeep(this._session.result!);
-        newSession.groupNameOrder = this.dragNameOrder && this.dragNameOrder.slice(); // get rid of mobx baggage
-
-        const {id } = await comparisonClient.addComparisonSession(newSession);
-        (window as any).routingStore.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
+        // restore deleted groups
+        this.deletedGroupNames.clear();
     }
 
     @autobind

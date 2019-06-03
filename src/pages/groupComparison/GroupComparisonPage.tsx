@@ -41,12 +41,10 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     @observable.ref private store:GroupComparisonStore;
     private queryReaction:IReactionDisposer;
     private pathnameReaction:IReactionDisposer;
-    private unsavedGroupsReaction:IReactionDisposer;
-    private unsavedOrderReaction:IReactionDisposer;
+    private unsavedChangesReaction:IReactionDisposer;
     private lastQuery:Partial<GroupComparisonURLQuery>;
 
-    @observable unsavedOrderWarningDismissed = false;
-    @observable unsavedGroupsWarningDismissed = false;
+    @observable unsavedChangesWarningDismissed = false;
 
     constructor(props:IGroupComparisonPageProps) {
         super(props);
@@ -83,14 +81,12 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             {fireImmediately: true}
         );
 
-        this.unsavedGroupsReaction = reaction(
-            ()=>this.store.unsavedGroups,
-            ()=>{ this.unsavedGroupsWarningDismissed = false; }
-        );
-
-        this.unsavedOrderReaction = reaction(
-            ()=>JSON.stringify(this.store.dragNameOrder), // need to touch every element to react to changes bc the array changes in place
-            ()=>{ this.unsavedOrderWarningDismissed = false; }
+        this.unsavedChangesReaction = reaction(
+            ()=>[
+                this.store.unsavedGroups,
+                JSON.stringify(this.store.dragNameOrder), // need to touch every element to react to changes bc the array changes in place
+            ],
+            ()=>{ this.unsavedChangesWarningDismissed = false; }
         );
 
         (window as any).groupComparisonPage = this;
@@ -104,8 +100,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     componentWillUnmount() {
         this.queryReaction && this.queryReaction();
         this.pathnameReaction && this.pathnameReaction();
-        this.unsavedGroupsReaction && this.unsavedGroupsReaction();
-        this.unsavedOrderReaction && this.unsavedOrderReaction();
+        this.unsavedChangesReaction && this.unsavedChangesReaction();
     }
 
     readonly tabs = MakeMobxView({
@@ -237,82 +232,81 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         }
     });
 
-    @computed get unsavedGroupsWarning() {
-        const pluralUnsaved = this.store.unsavedGroups.length > 1;
+    @computed get unsavedChangesWarning() {
+        if (this.unsavedChangesWarningDismissed) {
+            return null;
+        }
 
-        if (this.store.unsavedGroups.length > 0 && !this.unsavedGroupsWarningDismissed) {
-            return (
-                <div className="alert alert-warning" style={{display:"flex", marginBottom:3, marginTop:7}}>
+        const warnings:any[] = [];
+
+        if (this.store.unsavedGroups.length > 0) {
+            const pluralUnsaved = this.store.unsavedGroups.length > 1;
+            warnings.push(
+                <div>
                     <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
-                    <div style={{maxWidth:500, display:"inline-block", marginRight: 6}}>
+                    <span>
                         {joinGroupNames(this.store.unsavedGroups, "and")} {pluralUnsaved ? "are" : "is"} not saved. Others visiting this link will not see {pluralUnsaved ? "them" : "it"}.
-                    </div>
-                    <div
-                        style={{display:"inline-block"}}
-                    >
-                        <button
-                            className="btn btn-xs btn-default"
-                            onClick={this.store.saveUnsavedGroupsAndGoToNewSession}
-                            style={{marginRight:5}}
-                        >
-                            Save to new comparison session
-                        </button>
-                        <button
-                            className="btn btn-xs btn-default"
-                            onClick={this.store.clearUnsavedGroups}
-                        >
-                            Delete {pluralUnsaved ? "them" : "it"}
-                        </button>
-                    </div>
-                    <div className="btn btn-xs btn-none"
-                         onClick={action(()=>{ this.unsavedGroupsWarningDismissed = true; })}
-                         style={{position:"absolute", right:25}}
-                    >
-                        <i className="fa fa-md fa-times"/>
-                    </div>
+                    </span>
                 </div>
             );
-        } else {
-            return null;
         }
-    }
 
-    @computed get unsavedOrderWarning() {
-        if (this.store.dragNameOrder && !this.unsavedOrderWarningDismissed) {
-            return (
-                <div className="alert alert-warning" style={{display:"flex", marginBottom:3, marginTop:7}}>
+        if (this.store.dragNameOrder) {
+            warnings.push(
+                <div>
                     <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
-                    <div style={{maxWidth:500, display:"inline-block", marginRight: 6}}>
+                    <span>
                         Your group order is not saved.
-                    </div>
-                    <div
-                        style={{display:"inline-block"}}
-                    >
-                        <button
-                            className="btn btn-xs btn-default"
-                            onClick={this.store.saveDragNameOrderAndGoToNewSession}
-                            style={{marginRight:5}}
-                        >
-                            Save to new comparison session
-                        </button>
-                        <button
-                            className="btn btn-xs btn-default"
-                            onClick={this.store.clearDragNameOrder}
-                        >
-                            Reset
-                        </button>
-                    </div>
-                    <div className="btn btn-xs btn-none"
-                         onClick={action(()=>{ this.unsavedOrderWarningDismissed = true; })}
-                         style={{position:"absolute", right:25}}
-                    >
-                        <i className="fa fa-md fa-times"/>
-                    </div>
+                    </span>
                 </div>
             );
-        } else {
+        }
+
+        if (this.store.existsDeletedGroup) {
+            warnings.push(
+                <div>
+                    <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
+                    <span>
+                        Your deleted groups are not saved.
+                    </span>
+                </div>
+            );
+        }
+
+        if (warnings.length === 0) {
             return null;
         }
+
+        return (
+            <div className="alert alert-warning" style={{display:"flex", marginBottom:3, marginTop:7, alignItems:"center"}}>
+                <div style={{maxWidth:500, display:"inline-block", marginRight: 20}}>
+                    {warnings}
+                </div>
+                <div
+                    style={{display:"inline-block"}}
+                >
+                    <button
+                        className="btn btn-xs btn-default"
+                        onClick={this.store.saveUnsavedChangesAndGoToNewSession}
+                        style={{marginRight:5}}
+                    >
+                        Save to new comparison session
+                    </button>
+                    <button
+                        className="btn btn-xs btn-default"
+                        onClick={this.store.clearUnsavedChanges}
+                    >
+                        Clear changes
+                    </button>
+                </div>
+                <div className="btn btn-xs btn-none"
+                     onClick={action(()=>{ this.unsavedChangesWarningDismissed = true; })}
+                     style={{position:"absolute", right:25}}
+                >
+                    <i className="fa fa-md fa-times"/>
+                </div>
+            </div>
+        );
     }
 
     render() {
@@ -325,8 +319,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 <div>
                     <div className={"headBlock"}>
                         {this.studyLink.component}
-                        {this.unsavedGroupsWarning}
-                        {this.unsavedOrderWarning}
+                        {this.unsavedChangesWarning}
                         <div>
                             <div className={styles.headerControls}>
                                 <GroupSelector
