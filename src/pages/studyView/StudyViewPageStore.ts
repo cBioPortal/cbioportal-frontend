@@ -109,7 +109,7 @@ import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {
     finalizeStudiesAttr,
-    getSampleIdentifiers,
+    getSampleIdentifiers, MAX_GROUPS_IN_SESSION,
     sortDataIntoQuartiles,
     StudyViewComparisonGroup
 } from "../groupComparison/GroupComparisonUtils";
@@ -483,7 +483,7 @@ export class StudyViewPageStore {
 
     private createStringAttributeComparisonSession(
         clinicalAttribute:ClinicalAttribute,
-        clinicalAttributeValues:{ value:string, color?:string}[],
+        clinicalAttributeValues:ClinicalDataCountWithColor[],
         statusCallback:(phase:LoadingPhase)=>void
     ) {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
@@ -524,18 +524,29 @@ export class StudyViewPageStore {
                             return lcValue;
                         });
                     }
+
                     statusCallback(LoadingPhase.CREATING_SESSION);
-                    // create groups using data
-                    const groups = _.map(lcValueToSampleIdentifiers, (sampleIdentifiers, lcValue)=>{
-                        const value = lcValueToValue[lcValue];
-                        return {
-                            name: value,
-                            description: "",
-                            studies: getStudiesAttr(sampleIdentifiers),
-                            origin: this.studyIds,
-                            color: lcValueToColor[lcValue].color,
-                        };
-                    });
+
+                    // create groups using data - up to MAX_GROUPS_IN_SESSION - ordered by size
+                    const groups:SessionGroupData[] = [];
+                    const sortedAttrVals = _.sortBy(clinicalAttributeValues, attrVal=>-attrVal.count);
+                    for (const attrVal of sortedAttrVals) {
+                        if (groups.length >= MAX_GROUPS_IN_SESSION) {
+                            break;
+                        }
+
+                        const lcValue = attrVal.value.toLowerCase();
+                        const sampleIdentifiers = lcValueToSampleIdentifiers[lcValue];
+                        if (sampleIdentifiers && sampleIdentifiers.length > 0) {
+                            groups.push({
+                                name: attrVal.value,
+                                description: "",
+                                studies: getStudiesAttr(sampleIdentifiers),
+                                origin: this.studyIds,
+                                color: lcValueToColor[lcValue].color,
+                            });
+                        }
+                    }
                     // create session and get id
                     const {id} = await comparisonClient.addComparisonSession({
                         groups,
@@ -551,7 +562,7 @@ export class StudyViewPageStore {
     @autobind
     public async openComparisonPage(params:{
         chartMeta: ChartMeta,
-        clinicalAttributeValues?: {value:string, color:string}[]
+        clinicalAttributeValues?: ClinicalDataCountWithColor[]
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
@@ -572,6 +583,8 @@ export class StudyViewPageStore {
             return;
         }
 
+        // set up ping by which the new window can infer whether the study view window has been closed, and
+        //  show an error accordingly
         const pingInterval = setInterval(()=>{
             try {
                 if (!comparisonWindow.closed) {
