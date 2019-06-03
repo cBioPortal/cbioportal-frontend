@@ -31,7 +31,8 @@ export enum AlterationEnrichmentTableColumnType {
     Q_VALUE="Q_VALUE",
     LOG_RATIO="Log Ratio",
     TENDENCY="Tendency",
-    ENRICHED="Enriched in"
+    ENRICHED="Enriched in",
+    MOST_ENRICHED="Most enriched in"
 }
 
 const cnaToAlteration:{[cna:number]:string} = {
