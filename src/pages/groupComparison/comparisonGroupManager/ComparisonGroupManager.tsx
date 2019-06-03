@@ -7,7 +7,7 @@ import autobind from "autobind-decorator";
 import {
     DUPLICATE_GROUP_NAME_MSG,
     getDefaultGroupName,
-    getSampleIdentifiers,
+    getSampleIdentifiers, MAX_GROUPS_IN_SESSION,
     StudyViewComparisonGroup
 } from "../GroupComparisonUtils";
 import {getComparisonLoadingUrl, redirectToComparisonPage} from "../../../shared/api/urls";
@@ -253,11 +253,24 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     private get compareButton() {
         if (this.props.store.comparisonGroups.isComplete) {
             // only show if there are enough groups to possibly compare (i.e. 2)
-            const tooltipText = this.props.store.comparisonGroups.result.length >=2 ? "Open a comparison session with selected groups" : "Create at least two groups to open a comparison session";
+            const numSelectedGroups = getSelectedGroups(this.props.store.comparisonGroups.result, this.props.store).length;
+            const wrongNumberOfGroups = numSelectedGroups > MAX_GROUPS_IN_SESSION || numSelectedGroups < 2;
+
+            let tooltipText = "";
+            if (this.props.store.comparisonGroups.result.length >=2) {
+                if (wrongNumberOfGroups) {
+                    tooltipText = `Select between 2 and ${MAX_GROUPS_IN_SESSION} groups to enable comparison.`;
+                } else {
+                    tooltipText = "Open a comparison session with selected groups";
+                }
+            } else {
+                tooltipText = "Create at least two groups to open a comparison session";
+            }
+
             return (
                 <DefaultTooltip overlay={tooltipText}>
                     <button className="btn btn-sm btn-primary"
-                            disabled={getSelectedGroups(this.props.store.comparisonGroups.result, this.props.store).length < 2}
+                            disabled={wrongNumberOfGroups}
                             onClick={async()=>{
                                 // open window before the first `await` call - this makes it a synchronous window.open,
                                 //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
