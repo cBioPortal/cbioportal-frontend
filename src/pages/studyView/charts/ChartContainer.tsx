@@ -216,12 +216,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 case ChartTypeEnum.TABLE:
                     this.props.openComparisonPage({
                         chartMeta: this.props.chartMeta,
-                        clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]).map(d=>{
-                            return {
-                                value: d.value,
-                                color: d.color
-                            }
-                        }),
+                        clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]),
                     });
                     break;
                 case ChartTypeEnum.BAR_CHART:
