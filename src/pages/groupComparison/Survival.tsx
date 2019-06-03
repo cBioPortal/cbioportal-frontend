@@ -56,7 +56,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     // dont show the overlap curves if we're excluding overlapping cases
                 } else {
                     if (partitionGroupUids.length > 0) {
-                        const name = partitionGroupUids.map(uid => uidToGroup[uid].nameWithOrdinal).join(", ");
+                        const name = `Only ${partitionGroupUids.map(uid => uidToGroup[uid].nameWithOrdinal).join(", ")}`;
                         const value = partitionGroupUids.join(",");
                         for (const patientKey of entry.value) {
                             patientToAnalysisGroups[patientKey] = [value];
