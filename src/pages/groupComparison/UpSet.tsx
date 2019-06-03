@@ -326,13 +326,12 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     private tooltip(datum: any) {
         const getName = (groupUid:string) => this.props.uidToGroup[groupUid].nameWithOrdinal;
         const includedGroupNames = _.map(datum.groups as string[], getName);
-        const excludedGroupNames = _.difference(this.usedGroups.map(g=>g.uid), datum.groups as string[]).map(getName);
         const casesCount = datum.cases.length;
 
         return (
             <div style={{width:300, whiteSpace:"normal"}}>
-                {capitalize(this.props.caseType)}s in {joinNames(includedGroupNames, "and")}
-                {(excludedGroupNames.length > 0) && <span>, but not in {joinNames(excludedGroupNames, "or")}</span>}&nbsp;
+                {capitalize(this.props.caseType)}s only in {joinNames(includedGroupNames, "and")}
+                &nbsp;
                 ({casesCount} {pluralize(this.props.caseType, casesCount)}).
             </div>
         );
