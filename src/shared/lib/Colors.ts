@@ -48,6 +48,7 @@ export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     positive: CLI_YES_COLOR,
     diseasefree: CLI_YES_COLOR,
     tumorfree: CLI_YES_COLOR,
+    living: CLI_YES_COLOR,
 
     false: CLI_NO_COLOR,
     no: CLI_NO_COLOR,
@@ -56,6 +57,7 @@ export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     progressed: CLI_NO_COLOR,
     'recurred/progressed': CLI_NO_COLOR,
     withtumor: CLI_NO_COLOR,
+    deceased: CLI_NO_COLOR,
 
     female: CLI_FEMALE_COLOR,
     f: CLI_FEMALE_COLOR,
