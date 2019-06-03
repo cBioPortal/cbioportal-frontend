@@ -45,7 +45,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
         } else {
             const numChecked = this.workspaceSelectionBuffer.entries().filter(e=>e[1]).length;
             if (numChecked > MAX_GROUPS_IN_WORKSPACE) {
-                return `At most ${MAX_GROUPS_IN_WORKSPACE} groups are allowed in workspace. Please deselect ${numChecked - MAX_GROUPS_IN_WORKSPACE}.`;
+                return `At most ${MAX_GROUPS_IN_WORKSPACE} groups are allowed in group comparisons. Please deselect ${numChecked - MAX_GROUPS_IN_WORKSPACE}.`;
             } else if (numChecked < 2) {
                 return "Please select at least two groups to compare.";
             }
@@ -152,7 +152,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                                     backdrop="static"
                                 >
                                     <Modal.Header>
-                                        <Modal.Title>Select Workspace Groups</Modal.Title>
+                                        <Modal.Title>Choose Groups</Modal.Title>
                                     </Modal.Header>
                                     <Modal.Body>
                                         <WorkspaceGroupTable
