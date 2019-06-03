@@ -266,15 +266,11 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
         }
 
         const includedGroupUids = this.tooltipModel.combination.map(groupIndex=>this.props.groups[groupIndex].uid);
-        const excludedGroupUids = getExcludedIndexes(this.tooltipModel.combination, this.props.groups.length)
-                                    .map(groupIndex=>this.props.groups[groupIndex].uid);
-
         const includedGroupNames = includedGroupUids.map(uid=>this.props.uidToGroup[uid].nameWithOrdinal);
-        const excludedGroupNames = excludedGroupUids.map(uid=>this.props.uidToGroup[uid].nameWithOrdinal);
         return (
             <div style={{width:300, whiteSpace:"normal"}}>
-                This area {this.tooltipModel.numCases === 0 ? "would contain" : "contains"} {this.props.caseType}s which are in {joinNames(includedGroupNames, "and")}
-                {(excludedGroupNames.length > 0) && <span>, but are not in {joinNames(excludedGroupNames, "or")}</span>}&nbsp;
+                This area {this.tooltipModel.numCases === 0 ? "would contain" : "contains"} {this.props.caseType}s which are only in {joinNames(includedGroupNames, "and")}
+                &nbsp;
                 ({this.tooltipModel.numCases} {pluralize(this.props.caseType, this.tooltipModel.numCases)}).
                 {(this.tooltipModel.numCases > 0) && [
                     <br/>,
