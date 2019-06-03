@@ -30,6 +30,13 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
     }
 
     @autobind
+    private onClickDelete(groupName:string) {
+        if (!this.dragging) {
+            this.props.store.deleteGroup(groupName);
+        }
+    }
+
+    @autobind
     private onSortEnd(params:any) {
         if (params.oldIndex !== params.newIndex)
             this.props.store.updateDragOrder(params.oldIndex, params.newIndex);
@@ -61,6 +68,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                         <GroupSelectorButton
                             isSelected={this.isSelected}
                             onClick={this.onClick}
+                            onClickDelete={this.onClickDelete}
                             sampleSet={this.props.store.sampleSet.result!}
                             group={group}
                             index={index}
