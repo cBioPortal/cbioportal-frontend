@@ -58,6 +58,8 @@ export function defaultGroupOrder<T extends Pick<ComparisonGroup, "name">>(group
     return _.sortBy(isNA[1], g=>g.name.toLowerCase()).concat(isNA[0]);
 }
 
+export const MAX_GROUPS_IN_SESSION = 20;
+
 const alphabet = "-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 export function getOrdinals(num:number, base:number) {
