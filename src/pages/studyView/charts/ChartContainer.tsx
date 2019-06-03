@@ -35,6 +35,7 @@ import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {getComparisonUrl} from "../../../shared/api/urls";
 import {DownloadControlsButton} from "../../../shared/components/downloadControls/DownloadControls";
+import {MAX_GROUPS_IN_SESSION} from "../../groupComparison/GroupComparisonUtils";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -214,10 +215,17 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             switch (this.props.chartMeta.chartType) {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
-                    this.props.openComparisonPage({
-                        chartMeta: this.props.chartMeta,
-                        clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]),
-                    });
+                    const values = (this.props.promise.result! as ClinicalDataCountWithColor[]);
+                    let openSession = true;
+                    if (values.length > MAX_GROUPS_IN_SESSION) {
+                        openSession = confirm(`Group comparisons are limited to ${MAX_GROUPS_IN_SESSION}. Click OK to create a comparison of the 20 largest groups. Or, you can click to select fewer groups in this chart to compare.`);
+                    }
+                    if (openSession) {
+                        this.props.openComparisonPage({
+                            chartMeta: this.props.chartMeta,
+                            clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]),
+                        });
+                    }
                     break;
                 case ChartTypeEnum.BAR_CHART:
                     this.props.openComparisonPage({
