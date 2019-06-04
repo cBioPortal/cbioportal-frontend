@@ -298,7 +298,6 @@ export default class GroupComparisonStore {
             const sortOrder = stringListToIndexSet(this._originalGroups.result!.map(g=>g.uid));
             let groupsInSortOrder = getOverlapFilteredGroups(groups, { overlappingSamplesSet, overlappingPatientsSet }).concat(_.values(removedGroups));
             groupsInSortOrder = _.sortBy(groupsInSortOrder, g=>sortOrder[g.uid]);
-            console.log(groupsInSortOrder.map(g=>g.nameWithOrdinal));
             return Promise.resolve({
                 groups:groupsInSortOrder,
                 overlappingSamples,
