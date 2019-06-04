@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import {MakeMobxView} from "shared/components/MobxView";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "shared/components/ErrorMessage";
-import GroupComparisonStore from "../GroupComparisonStore";
+import GroupComparisonStore, {OverlapStrategy} from "../GroupComparisonStore";
 import autobind from "autobind-decorator";
 import GroupSelectorButton from "./GroupSelectorButton";
 import GroupSelectorButtonList from "./GroupSelectorButtonList";
@@ -45,21 +45,29 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
     readonly tabUI = MakeMobxView({
         await:()=>[
             this.props.store._originalGroups,
-            this.props.store.sampleSet
+            this.props.store.sampleSet,
+            this.props.store.overlapComputations
         ],
         render:()=>{
             if (this.props.store._originalGroups.result!.length === 0) {
                 return null;
             } else {
-                const buttons = this.props.store._originalGroups.result!.map((group, index)=>(
-                    <GroupSelectorButton
-                        isSelected={this.isSelected}
-                        onClick={this.onClick}
-                        sampleSet={this.props.store.sampleSet.result!}
-                        group={group}
-                        index={index}
-                    />
-                ));
+                const buttons = this.props.store._originalGroups.result!.map((group, index)=>{
+                    const excludedFromAnalysis =
+                        this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE &&
+                        (group.uid in this.props.store.overlapComputations.result!.excludedFromAnalysis);
+
+                    return (
+                        <GroupSelectorButton
+                            isSelected={this.isSelected}
+                            onClick={this.onClick}
+                            sampleSet={this.props.store.sampleSet.result!}
+                            group={group}
+                            index={index}
+                            excludedFromAnalysis={excludedFromAnalysis}
+                        />
+                    );
+                });
                 return (
                     <div style={{
                         display:"flex",
