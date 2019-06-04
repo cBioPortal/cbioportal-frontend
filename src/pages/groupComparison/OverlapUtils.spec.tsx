@@ -8,7 +8,7 @@ import {
     getStudiesAttrForPatientOverlapGroup,
     getStudiesAttrForSampleOverlapGroup,
     getTextColor,
-    joinNames
+    joinGroupNames
 } from "./OverlapUtils";
 import {assertDeepEqualInAnyOrder} from "../../shared/lib/SpecUtils";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
@@ -69,25 +69,22 @@ describe("OverlapUtils", () => {
         });
     });
 
-    describe("joinNames", ()=>{
+    describe("joinGroupNames", ()=>{
         it("gives right result for several numbers of names", ()=>{
-            expect(joinNames([], "conj")).toEqualJSX(
+            expect(joinGroupNames([], "conj")).toEqualJSX(
                 <span></span>
             );
-            expect(joinNames(["nameA"], "and")).toEqualJSX(
-                <strong>nameA</strong>
+            expect(joinGroupNames([{name:"nameA", ordinal:"1"}], "and")).toEqualJSX(
+                <span>(<strong>1</strong>)&nbsp;nameA</span>
             );
-            expect(joinNames(["nameA", "nameB"], "and")).toEqualJSX(
-                <span><strong>nameA</strong> and <strong>nameB</strong></span>
+            expect(joinGroupNames([{name:"nameA", ordinal:"1"}, {name:"nameB", ordinal:"B"}], "and")).toEqualJSX(
+                <span><span>(<strong>1</strong>)&nbsp;nameA</span> and <span>(<strong>B</strong>)&nbsp;nameB</span></span>
             );
-            expect(joinNames(["nameA", "nameB", "nameC"], "and")).toEqualJSX(
-                <span><strong>nameA</strong>, <strong>nameB</strong>, and <strong>nameC</strong></span>
+            expect(joinGroupNames([{name:"nameA", ordinal:"1"}, {name:"nameB", ordinal:"2"}, {name:"nameC", ordinal:"3"}], "and")).toEqualJSX(
+                <span><span>(<strong>1</strong>)&nbsp;nameA</span>, <span>(<strong>2</strong>)&nbsp;nameB</span>, and <span>(<strong>3</strong>)&nbsp;nameC</span></span>
             );
-            expect(joinNames(["nameA", "nameB", "nameC", "nameD"], "and")).toEqualJSX(
-                <span><strong>nameA</strong>, <strong>nameB</strong>, <strong>nameC</strong>, and <strong>nameD</strong></span>
-            );
-            expect(joinNames(["nameA", "nameB", "nameC", "nameD", "nameE"], "and")).toEqualJSX(
-                <span><strong>nameA</strong>, <strong>nameB</strong>, <strong>nameC</strong>, <strong>nameD</strong>, and <strong>nameE</strong></span>
+            expect(joinGroupNames([{name:"nameA", ordinal:"1"}, {name:"nameB", ordinal:"2"}, {name:"nameC", ordinal:"3"}, {name:"nameD", ordinal:"4"}], "and")).toEqualJSX(
+                <span><span>(<strong>1</strong>)&nbsp;nameA</span>, <span>(<strong>2</strong>)&nbsp;nameB</span>, <span>(<strong>3</strong>)&nbsp;nameC</span>, and <span>(<strong>4</strong>)&nbsp;nameD</span></span>
             );
         });
     });

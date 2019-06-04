@@ -12,7 +12,7 @@ import {Popover} from "react-bootstrap";
 import classnames from "classnames";
 import styles from "../resultsView/survival/styles.module.scss";
 import {pluralize} from "../../shared/lib/StringUtils";
-import {blendColors, getExcludedIndexes, getTextColor, joinNames} from "./OverlapUtils";
+import {blendColors, getExcludedIndexes, getTextColor, joinGroupNames} from "./OverlapUtils";
 import {computeVennJsSizes, lossFunction} from "./VennUtils";
 
 const VennJs = require("venn.js");
@@ -264,19 +264,14 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
         if (!this.tooltipModel) {
             return null;
         }
-
         const includedGroupUids = this.tooltipModel.combination.map(groupIndex=>this.props.groups[groupIndex].uid);
-        const includedGroupNames = includedGroupUids.map(uid=>this.props.uidToGroup[uid].nameWithOrdinal);
+        const includedGroups = includedGroupUids.map(uid=>this.props.uidToGroup[uid]);
+
         return (
             <div style={{width:300, whiteSpace:"normal"}}>
-                This area {this.tooltipModel.numCases === 0 ? "would contain" : "contains"} {this.props.caseType}s which are only in {joinNames(includedGroupNames, "and")}
-                &nbsp;
-                ({this.tooltipModel.numCases} {pluralize(this.props.caseType, this.tooltipModel.numCases)}).
-                {(this.tooltipModel.numCases > 0) && [
-                    <br/>,
-                    <br/>,
-                    <strong>Click to select this region.</strong>
-                ]}
+                <strong>{this.tooltipModel.numCases} {pluralize(this.props.caseType, this.tooltipModel.numCases)}</strong>
+                <br/>
+                in only {joinGroupNames(includedGroups, "and")}.
             </div>
         );
     }
