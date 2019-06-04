@@ -119,7 +119,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         break;
                     case OverlapStrategy.INCLUDE:
                         const selectionInfo = this.props.store.overlapComputations.result!;
-                        if (selectionInfo.overlappingPatients.length > 0) {
+                        if (selectionInfo.totalPatientOverlap > 0) {
                             content.push(
                                 <div className={`alert alert-info`}>
                                     <i
@@ -129,7 +129,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             marginRight:5
                                         }}
                                     />
-                                    Overlapping patients (n={selectionInfo.overlappingPatients.length}) are plotted as distinct groups below.
+                                    Overlapping patients (n={selectionInfo.totalPatientOverlap}) are plotted as distinct groups below.
                                 </div>
                             );
                         }

@@ -254,39 +254,47 @@ export default class GroupComparisonStore {
 
     readonly overlapComputations = remoteData<{
         groups:ComparisonGroup[],
+        excludedFromAnalysis:{[uid:string]:ComparisonGroup}
+        // samples and patients which are removed from analysis groups
+        // does not include those from groups excluded from analysis
         overlappingSamples:SampleIdentifier[],
         overlappingPatients:PatientIdentifier[],
         overlappingSamplesSet:ComplexKeySet,
         overlappingPatientsSet:ComplexKeySet,
-        existOverlappingSamples:boolean,
-        existOverlappingPatients:boolean,
-        excludedFromAnalysis:{[uid:string]:ComparisonGroup}
+        // total counts, including those from groups excluded from analysis
+        totalSampleOverlap:number,
+        totalPatientOverlap:number,
     }>({
         await:()=>[this._originalGroups],
         invoke:()=>{
             let groups:ComparisonGroup[] = this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid));
+
+            const totalSampleOverlap = new ComplexKeySet();
+            const totalPatientOverlap = new ComplexKeySet();
+
             let overlappingSamples:SampleIdentifier[] = [];
             let overlappingPatients:PatientIdentifier[] = [];
             let overlappingSamplesSet = new ComplexKeySet();
             let overlappingPatientsSet = new ComplexKeySet();
             let removedGroups:{[uid:string]:ComparisonGroup} = {};
-            let existOverlappingSamples = false;
-            let existOverlappingPatients = false;
-
 
             if (groups.length > 0) {
                 while(true) {
                     overlappingSamples = getOverlappingSamples(groups);
                     overlappingPatients = getOverlappingPatients(groups);
-                    existOverlappingSamples = existOverlappingSamples || overlappingSamples.length > 0;
-                    existOverlappingPatients = existOverlappingPatients || overlappingPatients.length > 0;
                     overlappingSamplesSet = new ComplexKeySet();
                     overlappingPatientsSet = new ComplexKeySet();
+                    let sampleId;
                     for (const sample of overlappingSamples) {
-                        overlappingSamplesSet.add({ studyId: sample.studyId, sampleId: sample.sampleId });
+                        sampleId = { studyId: sample.studyId, sampleId: sample.sampleId };
+                        overlappingSamplesSet.add(sampleId);
+                        totalSampleOverlap.add(sampleId);
                     }
+                    let patientId;
                     for (const patient of overlappingPatients) {
-                        overlappingPatientsSet.add({ studyId: patient.studyId, patientId: patient.patientId });
+                        patientId = { studyId: patient.studyId, patientId: patient.patientId };
+                        overlappingPatientsSet.add(patientId);
+                        totalPatientOverlap.add(patientId);
                     }
 
                     const [emptyGroups, nonEmptyGroups] =
@@ -320,8 +328,8 @@ export default class GroupComparisonStore {
                 overlappingPatients,
                 overlappingSamplesSet,
                 overlappingPatientsSet,
-                existOverlappingSamples,
-                existOverlappingPatients,
+                totalSampleOverlap:totalSampleOverlap.keys().length,
+                totalPatientOverlap:totalPatientOverlap.keys().length,
                 excludedFromAnalysis:removedGroups
             });
         }

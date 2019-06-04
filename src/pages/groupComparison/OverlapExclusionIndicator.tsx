@@ -8,6 +8,7 @@ import {joinGroupNames} from "./OverlapUtils";
 export interface IOverlapExclusionIndicatorProps {
     store:GroupComparisonStore;
     only?:"sample"|"patient"
+    overlapTabMode?:boolean;
 }
 
 @observer
@@ -17,9 +18,9 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
             return null;
         } else {
             const selectionInfo = this.props.store.overlapComputations.result!;
-            if ((!selectionInfo.existOverlappingSamples && !selectionInfo.existOverlappingPatients) ||
-                (this.props.only === "sample" && !selectionInfo.existOverlappingSamples) ||
-                (this.props.only === "patient" && !selectionInfo.existOverlappingPatients)) {
+            if ((!selectionInfo.totalSampleOverlap && !selectionInfo.totalPatientOverlap) ||
+                (this.props.only === "sample" && !selectionInfo.totalSampleOverlap) ||
+                (this.props.only === "patient" && !selectionInfo.totalPatientOverlap)) {
                 return null;
             }
 
@@ -97,7 +98,8 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                         message = (
                             <span>
                                 {caseCountsSummary}
-                                {` are excluded from this analysis.`}
+                                {` are excluded from `}
+                                {!this.props.overlapTabMode ? `this analysis.` : `analysis in other tabs.`}
                             </span>
                         );
                     }
@@ -105,7 +107,12 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                     if (excludedGroups.length > 0) {
                         excludedGroupsSummary = (
                             <span>
-                                {joinGroupNames(excludedGroups, "and")} {excludedGroups.length === 1 ? "is" : "are"} completely overlapping with other selected groups, so {excludedGroups.length === 1 ? "has" : "have"} been excluded from this analysis.
+                                {joinGroupNames(excludedGroups, "and")}&nbsp;{excludedGroups.length === 1 ? "is" : "are"}
+                                {` completely overlapping with other selected groups, so `}
+                                {this.props.overlapTabMode ?
+                                    `${excludedGroups.length === 1 ? "is" : "are"} excluded from analysis in other tabs.` :
+                                    `${excludedGroups.length === 1 ? "has" : "have"} been excluded from this analysis.`
+                                }
                             </span>
                         );
                     }
@@ -114,27 +121,43 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
 
             return (
                 <div className={`alert ${alertClass}`}>
-                    {excludedGroupsSummary && [
-                        <i
-                            className={`fa fa-md ${iconClass}`}
-                            style={{
-                                color: "#000000",
-                                marginRight:5
-                            }}
-                        />,
-                        excludedGroupsSummary,
-                        <br/>
-                    ]}
-                    {message && [
-                        <i
-                            className={`fa fa-md ${iconClass}`}
-                            style={{
-                                color: "#000000",
-                                marginRight:5
-                            }}
-                        />,
-                        message
-                    ]}
+                    {this.props.overlapTabMode &&
+                    (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE) && (
+                        <div style={{marginBottom:15}}>
+                            <i
+                                className={`fa fa-md fa-exclamation-triangle`}
+                                style={{
+                                    color: "#000000",
+                                    marginRight:5
+                                }}
+                            />
+                            <span>Overlapping samples and patients are included for analyses in all tabs.</span>
+                        </div>
+                    )}
+                    {excludedGroupsSummary && (
+                        <div>
+                            <i
+                                className={`fa fa-md ${iconClass}`}
+                                style={{
+                                    color: "#000000",
+                                    marginRight:5
+                                }}
+                            />
+                            {excludedGroupsSummary}
+                        </div>
+                    )}
+                    {message && (
+                        <div>
+                            <i
+                                className={`fa fa-md ${iconClass}`}
+                                style={{
+                                    color: "#000000",
+                                    marginRight:5
+                                }}
+                            />
+                            {message}
+                        </div>
+                    )}
                 </div>
             );
         }
