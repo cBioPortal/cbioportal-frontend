@@ -15,6 +15,7 @@ import {getStudiesAttrForPatientOverlapGroup, getStudiesAttrForSampleOverlapGrou
 import {Checkbox} from "react-bootstrap";
 import InfoIcon from "../../shared/components/InfoIcon";
 import FlexAlignedCheckbox from "../../shared/components/FlexAlignedCheckbox";
+import {serializeEvent} from "shared/lib/tracking";
 
 export interface ICreateGroupFromOverlapProps {
     store:GroupComparisonStore;
@@ -189,6 +190,7 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                     <button
                         className="btn btn-md btn-primary"
                         disabled={this.props.includedRegions.length === 0}
+                        data-event={serializeEvent({action:'createGroupFromVenn',label:'', category:'groupComparison' })}
                     >
                         Create Group From Selected Diagram Areas
                     </button>

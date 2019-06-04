@@ -54,6 +54,7 @@ import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/Compl
 import {GroupComparisonURLQuery} from "./GroupComparisonPage";
 import {AppStore} from "../../AppStore";
 import {stringListToIndexSet} from "../../shared/lib/StringUtils";
+import {trackEvent} from "shared/lib/tracking";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples and patients",
@@ -132,6 +133,21 @@ export default class GroupComparisonStore {
     readonly _session = remoteData<Session>({
         invoke:()=>{
             return comparisonClient.getComparisonSession(this.sessionId);
+        },
+        onResult(data:Session){
+            try {
+                const studies = _.chain(data.groups).flatMap(group => group.studies).map((study=>study.id)).uniq().value();
+                trackEvent({
+                               category: 'groupComparison',
+                               action: 'comparisonSessionViewed',
+                               label: studies.join(',') + ',',
+                               fieldsObject:{
+                                   metric1:data.groups.length
+                               }
+                           });
+            } catch (ex) {
+                throw("Failure to track comparisonSessionViewed");
+            }
         }
     });
 
@@ -736,7 +752,7 @@ export default class GroupComparisonStore {
         getSelectedProfile:()=>this.proteinEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any mRNA profiles
         fetchData:()=>{
             // assumes single study for now
-            if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.proteinEnrichmentProfile.result) {            
+            if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.proteinEnrichmentProfile.result) {
                 return internalClient.fetchExpressionEnrichmentsUsingPOST({
                     molecularProfileId: this.proteinEnrichmentProfile.result.molecularProfileId,
                     enrichmentType: "SAMPLE",
@@ -765,7 +781,7 @@ export default class GroupComparisonStore {
         // grey out if active groups is less than 2
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2);
     }
-    
+
     @computed get copyNumberTabGrey() {
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
         || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study;
