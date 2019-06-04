@@ -10,11 +10,16 @@ import DownloadControls from 'shared/components/downloadControls/DownloadControl
 import {MakeMobxView} from "../../shared/components/MobxView";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import {getSampleIdentifiers, OVERLAP_NOT_ENOUGH_GROUPS_MSG} from "./GroupComparisonUtils";
+import {
+    getSampleIdentifiers,
+    OVERLAP_NOT_ENOUGH_GROUPS_MSG,
+    partitionCasesByGroupMembership
+} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import UpSet from './UpSet';
 import * as ReactDOM from 'react-dom';
 import WindowStore from 'shared/components/window/WindowStore';
+import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
 
 export interface IOverlapProps {
     store: GroupComparisonStore
@@ -38,16 +43,16 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     readonly tabUI = MakeMobxView({
         await:()=>{
-            if (this.props.store._activeGroupsNotOverlapRemoved.isComplete &&
-                this.props.store._activeGroupsNotOverlapRemoved.result.length < 2) {
+            if (this.props.store._selectedGroups.isComplete &&
+                this.props.store._selectedGroups.result.length < 2) {
                 // dont bother loading data for and computing overlap if not enough groups for it
-                return [this.props.store._activeGroupsNotOverlapRemoved];
+                return [this.props.store._selectedGroups];
             } else {
-                return [this.props.store._activeGroupsNotOverlapRemoved, this.overlapUI];
+                return [this.props.store._selectedGroups, this.overlapUI];
             }
         },
         render:()=>{
-            if (this.props.store._activeGroupsNotOverlapRemoved.result!.length < 2) {
+            if (this.props.store._selectedGroups.result!.length < 2) {
                 return <span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
                 return this.overlapUI.component;
@@ -94,19 +99,19 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     }
 
     readonly plotType = remoteData({
-        await:()=>[this.props.store._activeGroupsNotOverlapRemoved],
-        invoke:async()=>(this.props.store._activeGroupsNotOverlapRemoved.result!.length > 3 ? PlotType.Upset : PlotType.Venn)
+        await:()=>[this.props.store._selectedGroups],
+        invoke:async()=>(this.props.store._selectedGroups.result!.length > 3 ? PlotType.Upset : PlotType.Venn)
     });
 
 
     public readonly sampleGroupsWithCases = remoteData({
         await: () => [
-            this.props.store._activeGroupsNotOverlapRemoved,
+            this.props.store._selectedGroups,
             this.props.store.sampleSet,
         ],
         invoke: () => {
             const sampleSet = this.props.store.sampleSet.result!;
-            const groupsWithSamples = _.map(this.props.store._activeGroupsNotOverlapRemoved.result, group => {
+            const groupsWithSamples = _.map(this.props.store._selectedGroups.result, group => {
                 let samples = getSampleIdentifiers([group]).map(sampleIdentifier => sampleSet.get({studyId: sampleIdentifier.studyId, sampleId: sampleIdentifier.sampleId}));
                 return {
                     uid: group.uid,
@@ -119,12 +124,12 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     public readonly patientGroupsWithCases = remoteData({
         await: () => [
-            this.props.store._activeGroupsNotOverlapRemoved,
+            this.props.store._selectedGroups,
             this.props.store.sampleSet,
         ],
         invoke: () => {
             const sampleSet = this.props.store.sampleSet.result!;
-            const groupsWithPatients = _.map(this.props.store._activeGroupsNotOverlapRemoved.result, group => {
+            const groupsWithPatients = _.map(this.props.store._selectedGroups.result, group => {
                 let samples = getSampleIdentifiers([group]).map(sampleIdentifier => sampleSet.get({studyId: sampleIdentifier.studyId, sampleId: sampleIdentifier.sampleId}));
                 return {
                     uid: group.uid,
@@ -135,15 +140,67 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         }
     }, []);
 
+    private activeSamples = remoteData({
+        await:()=>[
+            this.props.store._selectedGroups,
+            this.props.store.sampleSet,
+        ],
+        invoke:()=>{
+            const sampleSet = this.props.store.sampleSet.result!;
+            const activeSampleIdentifiers = getSampleIdentifiers(this.props.store._selectedGroups.result!);
+            const activeSamples = activeSampleIdentifiers
+                .map(sampleIdentifier=>sampleSet.get(sampleIdentifier)!);
+            return Promise.resolve(activeSamples);
+        }
+    });
+
+    private readonly samplesVennPartition = remoteData({
+        await:()=>[
+            this.props.store._selectedGroups,
+            this.props.store.sampleSet,
+            this.activeSamples
+        ],
+        invoke:()=>{
+            const sampleSet = this.props.store.sampleSet.result!;
+            return Promise.resolve(
+                partitionCasesByGroupMembership(
+                    this.props.store._selectedGroups.result!,
+                    (group)=>getSampleIdentifiers([group]),
+                    (sampleIdentifier)=>sampleSet.get({ studyId: sampleIdentifier.studyId, sampleId: sampleIdentifier.sampleId })!.uniqueSampleKey,
+                    this.activeSamples.result!.map(s=>s.uniqueSampleKey)
+                ) as { key:{[uid:string]:boolean}, value:string[] }[]
+            );
+        }
+    });
+
+    private readonly patientsVennPartition = remoteData({
+        await:()=>[
+            this.props.store._selectedGroups,
+            this.props.store.patientToSamplesSet,
+            this.activeSamples
+        ],
+        invoke:()=>{
+            const patientToSamplesSet = this.props.store.patientToSamplesSet.result!;
+            return Promise.resolve(
+                partitionCasesByGroupMembership(
+                    this.props.store._selectedGroups.result!,
+                    (group)=>getPatientIdentifiers([group]),
+                    (patientIdentifier)=>patientToSamplesSet.get({ studyId: patientIdentifier.studyId, patientId: patientIdentifier.patientId })![0].uniquePatientKey,
+                    _.uniq(this.activeSamples.result!.map(s=>s.uniquePatientKey))
+                ) as { key:{[uid:string]:boolean}, value:string[] }[]
+            );
+        }
+    });
+
     readonly uidToGroup = remoteData({
-        await:()=>[this.props.store._activeGroupsNotOverlapRemoved],
-        invoke:()=>Promise.resolve(_.keyBy(this.props.store._activeGroupsNotOverlapRemoved.result!, group=>group.uid))
+        await:()=>[this.props.store._selectedGroups],
+        invoke:()=>Promise.resolve(_.keyBy(this.props.store._selectedGroups.result!, group=>group.uid))
     });
 
     // whether to display sample and patient sets intersection charts side by side
     @computed get areUpsetPlotsSidebySide() {
-        if (this.props.store.samplesVennPartition.isComplete && this.props.store.patientsVennPartition.isComplete) {
-            return this.props.store.samplesVennPartition.result!.length + this.props.store.patientsVennPartition.result!.length <= 100;
+        if (this.samplesVennPartition.isComplete && this.patientsVennPartition.isComplete) {
+            return this.samplesVennPartition.result!.length + this.patientsVennPartition.result!.length <= 100;
         } else {
             return true;
         }
@@ -156,8 +213,8 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     readonly plot = MakeMobxView({
         await:()=>[
             this.plotType,
-            this.props.store.samplesVennPartition,
-            this.props.store.patientsVennPartition,
+            this.samplesVennPartition,
+            this.patientsVennPartition,
             this.sampleGroupsWithCases,
             this.patientGroupsWithCases,
             this.uidToGroup
@@ -169,13 +226,13 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                     plotElt = (
                         <div style={{ display: `${this.areUpsetPlotsSidebySide ? "flex" : "block"}`, maxWidth: this.maxWidth, overflow: "auto hidden" }} >
                             <UpSet
-                                groups={this.props.store.samplesVennPartition.result!}
+                                groups={this.samplesVennPartition.result!}
                                 uidToGroup={this.uidToGroup.result!}
                                 caseType="sample"
                                 title="Samples overlap"
                             />
                             <UpSet
-                                groups={this.props.store.patientsVennPartition.result!}
+                                groups={this.patientsVennPartition.result!}
                                 uidToGroup={this.uidToGroup.result!}
                                 caseType="patient"
                                 title="Patients overlap"
