@@ -35,7 +35,7 @@ import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCase
 import {AppStore} from "../../AppStore";
 import ActionButtons from "./studyPageHeader/ActionButtons";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
-import {GACustomFieldsEnum, trackEvent} from "../../shared/lib/tracking";
+import {GACustomFieldsEnum, serializeEvent, trackEvent} from "../../shared/lib/tracking";
 import ComparisonGroupManager from "../groupComparison/comparisonGroupManager/ComparisonGroupManager";
 import classNames from "classnames";
 import AppConfig from "appConfig";
@@ -64,8 +64,6 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
     }
 
 }
-
-
 
 @inject('routing', 'appStore')
 @observer
@@ -188,6 +186,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         data-test="groups-button"
                         aria-pressed={this.showGroupsTooltip}
                         style={{marginLeft: '10px'}}
+                        data-event={serializeEvent({action:'openGroupManagement',label:'', category:'groupComparison' })}
                 >Groups {String.fromCharCode(9662)/*small solid down triangle*/}</button>
             </DefaultTooltip>
         );

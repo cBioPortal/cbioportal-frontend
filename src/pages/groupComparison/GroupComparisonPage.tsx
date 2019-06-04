@@ -24,6 +24,7 @@ import _ from "lodash";
 import ClinicalData from "./ClinicalData";
 import ReactSelect from "react-select2";
 import {joinNames} from "./OverlapUtils";
+import {trackEvent} from "shared/lib/tracking";
 
 export interface IGroupComparisonPageProps {
     routing:any;
@@ -197,12 +198,13 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 ret = studyHeader;
             }
             return ret;
-        } 
+        }
     });
 
     @autobind
     @action
     public onOverlapStrategySelect(option:any) {
+        trackEvent({ category:'groupComparison', action:'setOverlapStrategy', label:option.value});
         this.store.setOverlapStrategy(option.value);
     }
 
