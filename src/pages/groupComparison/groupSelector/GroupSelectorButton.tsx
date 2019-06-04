@@ -13,7 +13,7 @@ import ErrorIcon from "../../../shared/components/ErrorIcon";
 import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import {Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {SortableElement} from "react-sortable-hoc";
-import {getTextColor} from "../OverlapUtils";
+import {getTextColor, renderGroupNameWithOrdinal} from "../OverlapUtils";
 import DefaultTooltip, {TOOLTIP_MOUSE_ENTER_DELAY} from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import * as ReactDOM from "react-dom";
 import {Popover, Overlay} from "react-bootstrap";
@@ -93,7 +93,7 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                             display:"inline-block",
                             color:getTextColor(group.color)
                         }}
-                        text={group.nameWithOrdinal}
+                        text={renderGroupNameWithOrdinal(group)}
                         shownWidth={100}
                     />
                     &nbsp;
