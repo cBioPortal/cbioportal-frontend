@@ -23,6 +23,9 @@ export interface IGeneBarPlotProps {
     isTwoGroupAnalysis?: boolean;
     showCNAInTable?: boolean;
     containerType: AlterationContainerType;
+    categoryToColor?: {
+        [id: string]: string;
+    };
 }
 
 const SVG_ID = "GroupComparisonGeneFrequencyPlot";
@@ -225,6 +228,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                         vertCategoryOrder={this.props.groupOrder}
                         countAxisLabel={`${this.yAxislabel} (%)`}
                         tooltip={this.getTooltip}
+                        categoryToColor={this.props.categoryToColor}
                     />
                 </div>
             </div>
