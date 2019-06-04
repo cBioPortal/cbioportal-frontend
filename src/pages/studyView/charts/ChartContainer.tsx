@@ -36,6 +36,7 @@ import LoadingIndicator from "../../../shared/components/loadingIndicator/Loadin
 import {getComparisonUrl} from "../../../shared/api/urls";
 import {DownloadControlsButton} from "../../../shared/components/downloadControls/DownloadControls";
 import {MAX_GROUPS_IN_SESSION} from "../../groupComparison/GroupComparisonUtils";
+import {Modal} from "react-bootstrap";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -56,6 +57,7 @@ export interface IChartContainerProps {
     promise: MobxPromise<any>;
     filters: any;
     studyViewFilters:StudyViewFilter;
+    setComparisonConfirmationModal:StudyViewPageStore["setComparisonConfirmationModal"];
     onValueSelection?: any;
     onDataBinSelection?: any;
     getData?:()=>Promise<string|null>;
@@ -215,16 +217,33 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             switch (this.props.chartMeta.chartType) {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
+                    const openComparison = ()=>this.props.openComparisonPage({
+                        chartMeta: this.props.chartMeta,
+                        clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]),
+                    });
                     const values = (this.props.promise.result! as ClinicalDataCountWithColor[]);
-                    let openSession = true;
                     if (values.length > MAX_GROUPS_IN_SESSION) {
-                        openSession = confirm(`Group comparisons are limited to ${MAX_GROUPS_IN_SESSION}. Click OK to create a comparison of the 20 largest groups. Or, you can click to select fewer groups in this chart to compare.`);
-                    }
-                    if (openSession) {
-                        this.props.openComparisonPage({
-                            chartMeta: this.props.chartMeta,
-                            clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]),
+                        this.props.setComparisonConfirmationModal((hideModal)=>{
+                            return (
+                                <Modal show={true} onHide={()=>{}} backdrop="static">
+                                    <Modal.Body>
+                                        Group comparisons are limited to 20 groups.
+                                        Click OK to compare the 20 largest groups in this chart.
+                                        Or, select up to 20 specific groups in the chart to compare.
+                                    </Modal.Body>
+                                    <Modal.Footer>
+                                        <button className="btn btn-md btn-primary" onClick={()=>{ openComparison(); hideModal(); }}>
+                                            OK
+                                        </button>
+                                        <button className="btn btn-md btn-default" onClick={hideModal}>
+                                            Cancel
+                                        </button>
+                                    </Modal.Footer>
+                                </Modal>
+                            );
                         });
+                    } else {
+                        openComparison();
                     }
                     break;
                 case ChartTypeEnum.BAR_CHART:

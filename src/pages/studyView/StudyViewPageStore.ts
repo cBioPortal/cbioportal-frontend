@@ -253,6 +253,17 @@ export class StudyViewPageStore {
         }
     }
 
+    @observable.ref private _comparisonConfirmationModal:JSX.Element|null = null;
+    public get comparisonConfirmationModal() {
+        return this._comparisonConfirmationModal;
+    }
+    @autobind
+    @action
+    public setComparisonConfirmationModal(getModal:((hideModal:()=>void)=>JSX.Element)) {
+        this._comparisonConfirmationModal = getModal(()=>{this._comparisonConfirmationModal = null; });
+        console.log(this.comparisonConfirmationModal);
+    }
+
     // <comparison groups code>
     private _selectedComparisonGroups = observable.shallowMap<boolean>();
     private _comparisonGroupsMarkedForDeletion = observable.shallowMap<boolean>();

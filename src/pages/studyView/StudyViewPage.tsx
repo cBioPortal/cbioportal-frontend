@@ -201,6 +201,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     this.showCustomSelectTooltip = false;
                 }
             }}>
+                {this.store.comparisonConfirmationModal}
                 {this.store.unknownQueriedIds.isComplete &&
                 this.store.unknownQueriedIds.result.length > 0 && (
                     <Alert bsStyle="danger">
