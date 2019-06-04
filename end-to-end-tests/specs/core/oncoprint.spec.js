@@ -222,8 +222,7 @@ describe('oncoprint', function() {
         });
     });
 
-    //TODO: this should be fixed to function with the latest version of ovarian serous cystadenocarcinoma tcga nature 2011 (imported)
-    describe.skip("germline mutation", ()=>{
+    describe("germline mutation", ()=>{
 
         it('should sort germline mutation in study ov_tcga_pub', () => {
 
@@ -287,7 +286,7 @@ describe('oncoprint', function() {
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText("#oncoprintDiv");
             assert(legendText.indexOf("Germline Mutation") === -1, "now, there are no germline mutations");
-            assert(oncoprintDivText.indexOf("3%") > -1, "now, 3% altered");
+            assert(oncoprintDivText.indexOf("4%") > -1, "now, 4% altered");
 
             setOncoprintMutationsMenuOpen(true);
             browser.waitForVisible(hideGermlineButton, 1000);
@@ -481,7 +480,7 @@ describe('oncoprint', function() {
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText("#oncoprintDiv");
             assert(legendText.indexOf("Germline Mutation") === -1, "now, there are no germline mutations");
-            assert(oncoprintDivText.indexOf("3%") > -1, "now, 3% altered");
+            assert(oncoprintDivText.indexOf("4%") > -1, "now, 4% altered");
 
             setOncoprintMutationsMenuOpen(true);
             browser.waitForVisible(hideGermlineButton, 1000);
