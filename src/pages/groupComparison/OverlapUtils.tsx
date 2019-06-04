@@ -39,7 +39,7 @@ export function joinGroupNames(groups:Pick<ComparisonGroup, "name"|"ordinal">[],
         case 0:
             return <span></span>;
         case 1:
-            return <span>{names[0]}</span>;
+            return names[0];
         case 2:
             return <span>{names[0]} {conj} {names[1]}</span>;
         default:
