@@ -33,7 +33,8 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                 return {
                     name:group.nameWithOrdinal,
                     description:`Number (percentage) of samples in ${group.nameWithOrdinal} that have the listed alteration in the listed gene.`,
-                    count: getNumSamples(group)
+                    count: getNumSamples(group),
+                    color: group.color
                 }
             })
             return Promise.resolve(groups);
