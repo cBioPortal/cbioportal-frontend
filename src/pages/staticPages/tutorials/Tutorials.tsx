@@ -56,6 +56,13 @@ export default class Tutorials extends React.Component<{}, {}> {
                 src="https://docs.google.com/presentation/d/1U39xgVujtBodwW20qIfcGu4E5n2zzaKkl2KmzzHqj4A/embed?startfalse&loop=false&delayms=60000"
                 frameBorder="0" width="720" height="434"
                 allowFullScreen={true}></iframe>
+            <hr />
+
+            <h2 id={"group-comparison"}>Tutorial #6: Group Comparison</h2>
+            <iframe
+                src="https://docs.google.com/presentation/d/1P2boDph8IfpvjxoxDj_496CLHGtshzJnbbZhszPsmf4/embed?startfalse&loop=false&delayms=60000"
+                frameBorder="0" width="720" height="434"
+                allowFullScreen={true}></iframe>
             
 
         </PageLayout>
