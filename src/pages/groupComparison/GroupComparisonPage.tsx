@@ -215,7 +215,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 return null;
             } else {
                 return (
-                    <div style={{width:355, zIndex:20}}>
+                    <div style={{minWidth:355, width:355, zIndex:20}}>
                         <ReactSelect
                             name="select overlap strategy"
                             onChange={(option:any|null)=>{
