@@ -11,7 +11,7 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import _ from "lodash";
-import {getStudiesAttrForPatientOverlapGroup, getStudiesAttrForSampleOverlapGroup, joinNames} from "./OverlapUtils";
+import {getStudiesAttrForPatientOverlapGroup, getStudiesAttrForSampleOverlapGroup, joinGroupNames} from "./OverlapUtils";
 import {Checkbox} from "react-bootstrap";
 import InfoIcon from "../../shared/components/InfoIcon";
 import FlexAlignedCheckbox from "../../shared/components/FlexAlignedCheckbox";
@@ -34,13 +34,9 @@ function getRegionSummary(
     uidToGroup:{[uid:string]:ComparisonGroup},
     caseType:"sample"|"patient"
 ) {
-    const includedNames = region.map(uid=>uidToGroup[uid].nameWithOrdinal);
-    const excludedNames = _.difference(allGroupsInVenn, region).map(uid=>uidToGroup[uid].nameWithOrdinal);
+    const includedGroups = region.map(uid=>uidToGroup[uid]);
 
-    let ret = <span>{caseType[0].toUpperCase()}{caseType.substring(1)}s in {joinNames(includedNames, "and")}</span>;
-    if (excludedNames.length > 0) {
-        ret = <span>{ret}, but not in {joinNames(excludedNames, "or")}</span>;
-    }
+    let ret = <span>{caseType[0].toUpperCase()}{caseType.substring(1)}s only in {joinGroupNames(includedGroups, "and")}</span>;
     ret = <span>{ret}.</span>;
 
     return ret;

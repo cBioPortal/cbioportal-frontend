@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import GroupComparisonStore, {OverlapStrategy} from "./GroupComparisonStore";
 import {caseCounts} from "./GroupComparisonUtils";
 import _ from "lodash";
-import {joinNames} from "./OverlapUtils";
+import {joinGroupNames} from "./OverlapUtils";
 
 export interface IOverlapExclusionIndicatorProps {
     store:GroupComparisonStore;
@@ -24,8 +24,8 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
             }
 
             let caseCountsSummary:any = "";
-            const includedGroupNames = selectionInfo.groups.filter(g=>!(g.uid in selectionInfo.excludedFromAnalysis)).map(g=>g.nameWithOrdinal);
-            const groupsAreExcluded = includedGroupNames.length < selectionInfo.groups.length;
+            const includedGroups = selectionInfo.groups.filter(g=>!(g.uid in selectionInfo.excludedFromAnalysis));
+            const groupsAreExcluded = includedGroups.length < selectionInfo.groups.length;
 
             switch (this.props.only) {
                 case "sample":
@@ -42,7 +42,7 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                             {`${count} overlapping ${this.props.only}${plural ? "s" : ""}`}
                             {groupsAreExcluded && [
                                 ` between `,
-                                joinNames(includedGroupNames, "and"),
+                                joinGroupNames(includedGroups, "and"),
                                 "."
                             ]}
                         </span>
@@ -54,7 +54,7 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                             {`${caseCounts(selectionInfo.overlappingSamples.length, selectionInfo.overlappingPatients.length, " and ", " overlapping ")}`}
                             {groupsAreExcluded && [
                                 ` between `,
-                                joinNames(includedGroupNames, "and"),
+                                joinGroupNames(includedGroups, "and"),
                                 "."
                             ]}
                         </span>
@@ -63,7 +63,7 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
             }
 
             let excludedGroupsSummary:any = "";
-            const excludedGroupNames = selectionInfo.groups.filter(g=>(g.uid in selectionInfo.excludedFromAnalysis)).map(g=>g.nameWithOrdinal);
+            const excludedGroups = selectionInfo.groups.filter(g=>(g.uid in selectionInfo.excludedFromAnalysis));
             let iconClass;
             let alertClass;
             let message:any = "";
@@ -81,10 +81,10 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                         );
                     }
 
-                    if (excludedGroupNames.length > 0) {
+                    if (excludedGroups.length > 0) {
                         excludedGroupsSummary = (
                             <span>
-                                {joinNames(excludedGroupNames, "and")} {excludedGroupNames.length === 1 ? "is" : "are"} completely overlapping with other selected groups.
+                                {joinGroupNames(excludedGroups, "and")} {excludedGroups.length === 1 ? "is" : "are"} completely overlapping with other selected groups.
                             </span>
                         );
                     }
@@ -102,10 +102,10 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                         );
                     }
 
-                    if (excludedGroupNames.length > 0) {
+                    if (excludedGroups.length > 0) {
                         excludedGroupsSummary = (
                             <span>
-                                {joinNames(excludedGroupNames, "and")} {excludedGroupNames.length === 1 ? "is" : "are"} completely overlapping with other selected groups, so {excludedGroupNames.length === 1 ? "has" : "have"} been excluded from this analysis.
+                                {joinGroupNames(excludedGroups, "and")} {excludedGroups.length === 1 ? "is" : "are"} completely overlapping with other selected groups, so {excludedGroups.length === 1 ? "has" : "have"} been excluded from this analysis.
                             </span>
                         );
                     }
@@ -125,7 +125,7 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                         excludedGroupsSummary,
                         <br/>
                     ]}
-                    {[
+                    {message && [
                         <i
                             className={`fa fa-md ${iconClass}`}
                             style={{
