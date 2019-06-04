@@ -27,7 +27,7 @@ import './styles.scss';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
-    groups: { name: string, description: string, nameOfEnrichmentDirection?: string, count: number, color?: string }[]
+    groups: { name: string, description: string, nameOfEnrichmentDirection?: string, count: number, color?: string }[];
     alteredVsUnalteredMode?:boolean;
     headerName: string;
     store?: ResultsViewPageStore;
@@ -125,8 +125,13 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
                               const groups = _.map(data.groupsSet);
 
-                              const group1 = groups[0];
-                              const group2 = groups[1];
+                              // we want to order groups according to order in prop.groups
+                              const group1 = groups.find((group)=>group.name===this.props.groups[0].name)!;
+                              const group2 = groups.find((group)=>group.name===this.props.groups[1].name)!;
+
+                              if (!group1 || !group2) {
+                                  throw("No matching groups in Alteration Overlap Cell");
+                              }
 
                               const totalUniqueSamples = group1.profiledCount + group2.profiledCount;
 
@@ -167,6 +172,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                                           group1Unaltered={group1Unaltered}
                                           group1Altered={group1Altered}
                                           group2Altered={group2Altered}
+                                          group1Color={this.props.groups[0].color}
+                                          group2Color={this.props.groups[1].color}
                                           width={150}
                                       />
                                   </div>
