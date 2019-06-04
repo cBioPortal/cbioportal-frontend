@@ -588,8 +588,8 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         }
         return (
             <div>
-                <strong>{datum.majorCategory}</strong><br/>
-                <strong>{datum.minorCategory}</strong>:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}&nbsp;({datum.percentage}%)
+                <span>{datum.majorCategory}</span><br/>
+                <strong>{datum.minorCategory}:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}&nbsp;({datum.percentage}%)</strong>
             </div>
         );
     }
