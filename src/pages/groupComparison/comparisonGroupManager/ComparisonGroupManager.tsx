@@ -12,7 +12,6 @@ import {
 } from "../GroupComparisonUtils";
 import {getComparisonLoadingUrl, redirectToComparisonPage} from "../../../shared/api/urls";
 import styles from "../styles.module.scss";
-import ReactSelect from "react-select";
 import {remoteData} from "../../../shared/api/remoteData";
 import {addSamplesParameters, getGroupParameters, getSelectedGroups} from "./ComparisonGroupManagerUtils";
 import comparisonClient from "../../../shared/api/comparisonGroupClientInstance";
@@ -24,7 +23,7 @@ import {sleepUntil} from "../../../shared/lib/TimeUtils";
 import {LoadingPhase} from "../GroupComparisonLoading";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import _ from "lodash";
-import {UniqueKey} from "../../studyView/StudyViewUtils";
+import {serializeEvent} from "shared/lib/tracking";
 
 export interface IComparisonGroupManagerProps {
     store:StudyViewPageStore;
@@ -271,6 +270,13 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                 <DefaultTooltip overlay={tooltipText}>
                     <button className="btn btn-sm btn-primary"
                             disabled={wrongNumberOfGroups}
+                            data-event={
+                                serializeEvent({
+                                                   action:'createCustomComparisonSession',
+                                                   label:this.props.store.comparisonGroups.result.length.toString(),
+                                                   category:'groupComparison'
+                                               })
+                            }
                             onClick={async()=>{
                                 // open window before the first `await` call - this makes it a synchronous window.open,
                                 //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
@@ -382,6 +388,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
             contents = (
                 <button
                     className="btn btn-sm btn-primary"
+                    data-event={serializeEvent({action:'createCustomGroup',label:'', category:'groupComparison' })}
                     onClick={this.showAddGroupPanel}
                     disabled={!selectedSamples || !this.props.store.entrezGeneIdToGene.isComplete}
                     style={{width:"100%"}}
