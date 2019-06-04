@@ -9,6 +9,7 @@ export interface IOverlapExclusionIndicatorProps {
     store:GroupComparisonStore;
     only?:"sample"|"patient"
     overlapTabMode?:boolean;
+    survivalTabMode?:boolean;
 }
 
 @observer
@@ -68,18 +69,37 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
             let iconClass;
             let alertClass;
             let message:any = "";
+
+            const existOverlapping =
+                (!this.props.only && (selectionInfo.overlappingSamples.length > 0 || selectionInfo.overlappingPatients.length > 0)) ||
+                (this.props.only === "sample" && selectionInfo.overlappingSamples.length > 0) ||
+                (this.props.only === "patient" && selectionInfo.overlappingPatients.length > 0);
+
             switch (this.props.store.overlapStrategy) {
                 case OverlapStrategy.INCLUDE:
-                    iconClass = "fa-exclamation-triangle";
-                    alertClass = "alert-warning";
+                    if (this.props.survivalTabMode) {
+                        iconClass = "fa-info-circle";
+                        alertClass = "alert-info";
 
-                    if (selectionInfo.overlappingSamples.length > 0 || selectionInfo.overlappingPatients.length > 0) {
-                        message = (
-                            <span>
-                                {groupsAreExcluded ? `There are ` : `The selected groups contain `}
-                                {caseCountsSummary}
-                            </span>
-                        );
+                        if (selectionInfo.totalPatientOverlap > 0) {
+                            message = (
+                                <span>
+                                    Overlapping patients (n={selectionInfo.totalPatientOverlap}) are plotted as distinct groups below.
+                                </span>
+                            );
+                        }
+                    } else {
+                        iconClass = "fa-exclamation-triangle";
+                        alertClass = "alert-warning";
+
+                        if (existOverlapping) {
+                            message = (
+                                <span>
+                                    {groupsAreExcluded ? `There are ` : `The selected groups contain `}
+                                    {caseCountsSummary}
+                                </span>
+                            );
+                        }
                     }
 
                     if (excludedGroups.length > 0) {
@@ -94,11 +114,15 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                     iconClass = "fa-info-circle";
                     alertClass = "alert-info";
 
-                    if (selectionInfo.overlappingSamples.length > 0 || selectionInfo.overlappingPatients.length > 0) {
+                    if (existOverlapping) {
+                        const singular = (
+                            (this.props.only === "sample" && selectionInfo.overlappingSamples.length === 1) ||
+                            (this.props.only === "patient" && selectionInfo.overlappingPatients.length === 1)
+                        );
                         message = (
                             <span>
                                 {caseCountsSummary}
-                                {` are excluded from `}
+                                {` ${singular ? "is" : "are"} excluded from `}
                                 {!this.props.overlapTabMode ? `this analysis.` : `analysis in other tabs.`}
                             </span>
                         );
