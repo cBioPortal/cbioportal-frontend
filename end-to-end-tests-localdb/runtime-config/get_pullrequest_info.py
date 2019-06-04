@@ -44,7 +44,7 @@ if(myResponse.ok):
       "export PULL_REQUEST_STATE="+ pr_state +"\n"
       "export FRONTEND_GROUPID="+ frontend_group_id +"\n"
       "export FRONTEND_BASE_BRANCH="+ frontend_base_branch_name +"\n"
-      "export BACKEND_USER="+ backend_user +"\n"
+      "export BACKEND_PROJECT_USERNAME="+ backend_user +"\n"
       "export BACKEND_BRANCH="+ backend_branch_name)
 
 else:

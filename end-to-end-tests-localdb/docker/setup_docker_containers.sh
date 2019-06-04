@@ -48,7 +48,7 @@ build_cbioportal_image() {
     
     cd /tmp
     rm -rf cbioportal
-    git clone --depth 1 -b $BACKEND_BRANCH "https://github.com/$BACKEND_USER/cbioportal.git"
+    git clone --depth 1 -b $BACKEND_BRANCH "https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git"
     docker stop $E2E_CBIOPORTAL_HOST_NAME 2> /dev/null && docker rm $E2E_CBIOPORTAL_HOST_NAME  2> /dev/null
     cp $TEST_HOME/docker/Dockerfile cbioportal
     cp $TEST_HOME/runtime-config/portal.properties cbioportal
@@ -57,7 +57,7 @@ build_cbioportal_image() {
     docker rm cbioportal-endtoend-image 2> /dev/null || true
     cp $TEST_HOME/docker/catalina_server.xml.patch .
     docker build -f Dockerfile -t cbioportal-endtoend-image . \
-        --build-arg MAVEN_OPTS="-Dfrontend.version=$CIRCLE_SHA1 -Dfrontend.groupId=$FRONTEND_GROUPID" \
+        --build-arg MAVEN_OPTS="-Dfrontend.version=$FRONTEND_SHA1_SHORT -Dfrontend.groupId=$FRONTEND_GROUPID" \
         --build-arg SESSION_SERVICE_HOST_NAME=$SESSION_SERVICE_HOST_NAME
 
     cd $curdir
@@ -106,16 +106,16 @@ load_studies_in_db() {
 
 check_jitpack_download_frontend() {
     # check whether jitpack versions for the frontend exist
-    # url="https://jitpack.io/com/github/$CIRCLE_PROJECT_USERNAME/cbioportal-frontend/$CIRCLE_SHA1/cbioportal-frontend-$CIRCLE_SHA1.jar"
+    # url="https://jitpack.io/com/github/$FRONTEND_PROJECT_USERNAME/cbioportal-frontend/$FRONTEND_SHA1/cbioportal-frontend-$FRONTEND_SHA1.jar"
     # # trigger build
     # curl -s --head $url | head -n 0
-    # FRONTEND_COMMIT_HASH_SHORT=$(echo $CIRCLE_SHA1 | awk '{print substr($0,0,10)}')
-    url_short="https://jitpack.io/com/github/$CIRCLE_PROJECT_USERNAME/cbioportal-frontend/$CIRCLE_SHA1/cbioportal-frontend-$CIRCLE_SHA1.jar"
+    FRONTEND_SHA1_SHORT=$(echo $FRONTEND_SHA1 | awk '{print substr($0,0,10)}')
+    url_short="https://jitpack.io/com/github/$FRONTEND_PROJECT_USERNAME/cbioportal-frontend/$FRONTEND_SHA1_SHORT/cbioportal-frontend-$FRONTEND_SHA1_SHORT.jar"
     sleeptime=0
     maxtime=1200
     while (($sleeptime < $maxtime)); do
         if !(curl -s --head $url_short | head -n 1 | egrep "HTTP/[0-9.]+ 200"); then
-            echo Waiting for jitpack to build the frontend package...
+            echo "Waiting... ($url_short)"
             sleep 10
             sleeptime=$sleeptime+10
         else
@@ -124,7 +124,7 @@ check_jitpack_download_frontend() {
     done
 
     if !(curl -s --head $url_short | head -n 1 | egrep "HTTP/[0-9.]+ 200"); then
-        echo "Could not find frontend .jar (version: $CIRCLE_SHA1, org: $CIRCLE_PROJECT_USERNAME) at jitpack (url: $url_short)"
+        echo "Could not find frontend .jar (version: $FRONTEND_SHA1, org: $FRONTEND_PROJECT_USERNAME) at jitpack (url: $url_short)"
         exit 1
     fi
 }

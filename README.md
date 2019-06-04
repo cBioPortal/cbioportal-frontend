@@ -152,6 +152,18 @@ To enable e2e-tests on for features that depend on data that are not included in
 
 Files for the local database e2e tests are located in the `./end-to-end-tests-localdb` directory of cbioportal-frontend. The directory structure of `./end-to-end-tests-localdb` is comparable to that of the `./end-to-end-tests` directory used for e2e tests against public cBioPortal.
 
+### Setting the cbioportal-backend version 
+For e2e-testing against a local database the version of the cbioportal backend must be known. Depending on the running context (see table below) cbioportal backend version must, may or may not be passed using the `BACKEND` environmental variable.
+The value of the `BACKEND` variable must be formatted as `<BACKEND_GITHUB_USER>:<BACKEND_BRANCH>`. For example, when the /env/custom.sh file contains `export BACKEND=thehyve:uwe7872A` this is interpreted as a requirement for the commit `uwe7872A` of the _github.com/thehyve/cbioportal_ repository.
+
+Requirement for setting the BACKEND variable depends on the context of the job:
+| **context**             | **BACKEND var** | **comments** |
+|------------------------ | ----------------- | ------------ |
+| local                   | required        ||
+| CircleCI                | required        | |
+| CircleCI+pull request   | optional        | 1. When specified, GitHub PR must be of 'draft' state (prevents merge of branches that require a non-accepted backend version).<br>2. When not-specified, backend branch will mirror frontend branch (rc frontend vs. rc backend) |
+
+
 ### Create new e2e-test
 1. Create junit test file and place in the `./end-to-end-tests-localdb/spec` directory.
 2. [optional] Add a folder with an uncompressed custom study in the `./end-to-end-tests-localdb/studies` directory.
