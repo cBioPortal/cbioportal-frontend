@@ -4,7 +4,7 @@ import LazyMobXTable, { Column } from "../../../shared/components/lazyMobXTable/
 import { observer } from "mobx-react";
 import {computed, observable} from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
-import {calculateExpressionTendency, calculateGenericTendency, STAT_IN_headerRender} from "./EnrichmentsUtil";
+import {calculateExpressionTendency, formatAlterationTendency, STAT_IN_headerRender} from "./EnrichmentsUtil";
 import { formatLogOddsRatio, formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
@@ -180,7 +180,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.TENDENCY] = {
             name: this.props.mutexTendency ? "Tendency" : "Enriched in",
             render: (d: ExpressionEnrichmentRow) => <div className={classNames(styles.Tendency, {[styles.Significant]:(d.qValue < 0.05)})}>
-                {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : calculateGenericTendency(Number(d.logRatio), this.props.group1Name, this.props.group2Name)}
+                {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : formatAlterationTendency(Number(d.logRatio) > 0 ? this.props.group1Name : this.props.group2Name)}
                 </div>,
             tooltip: 
                 <table>
