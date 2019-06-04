@@ -75,7 +75,7 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                     if (selectionInfo.overlappingSamples.length > 0 || selectionInfo.overlappingPatients.length > 0) {
                         message = (
                             <span>
-                                {`There are `}
+                                {groupsAreExcluded ? `There are ` : `The selected groups contain `}
                                 {caseCountsSummary}
                             </span>
                         );
