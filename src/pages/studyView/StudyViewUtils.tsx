@@ -1248,7 +1248,7 @@ export function pickClinicalAttrColorsByIndex(data: ClinicalDataCount[],
 
     return _.reduce(data, (acc: { [id: string]: string }, slice) => {
         if (!isNAClinicalValue(slice.value) && !getClinicalAttrFixedColor(slice.value)) {
-            acc[slice.value] = availableColors[colorIndex];
+            acc[slice.value] = availableColors[colorIndex % availableColors.length];
             colorIndex++;
         }
         return acc;
