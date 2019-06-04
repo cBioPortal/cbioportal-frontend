@@ -16,6 +16,7 @@ import { AlterationEnrichmentTableColumn, AlterationEnrichmentTableColumnType } 
 import styles from "./styles.module.scss";
 import classNames from "classnames";
 import { IMultipleCategoryBarPlotData } from 'shared/components/plots/MultipleCategoryBarPlot';
+import {getTextColor} from "../../groupComparison/OverlapUtils";
 
 export type AlterationEnrichmentWithQ = AlterationEnrichment & { logRatio?:number, qValue:number, value?:number /* used for copy number in group comparison */ };
 export type ExpressionEnrichmentWithQ = ExpressionEnrichment & { qValue:number };
@@ -375,14 +376,27 @@ export function pickProteinEnrichmentProfiles(profiles:MolecularProfile[]) {
     return filterAndSortProfiles(protProfiles);
 }
 
-export function getGroupColumns(groups: { name: string, description: string }[], alteredVsUnalteredMode?: boolean): AlterationEnrichmentTableColumn[] {
+export function getGroupColumns(groups: { name: string, description: string, color?:string }[], alteredVsUnalteredMode?: boolean): AlterationEnrichmentTableColumn[] {
     let columns: AlterationEnrichmentTableColumn[] = [];
+    const nameToGroup = _.keyBy(groups, g=>g.name);
 
     let enrichedGroupColum: AlterationEnrichmentTableColumn = {
-        name: alteredVsUnalteredMode ? AlterationEnrichmentTableColumnType.TENDENCY : (groups.length === 2 ? AlterationEnrichmentTableColumnType.ENRICHED : AlterationEnrichmentTableColumnType.MOST_ENRICHED),
-        render: (d: AlterationEnrichmentRow) => <div className={classNames(styles.Tendency, { [styles.Significant]: (d.qValue < 0.05) })}>
-            {alteredVsUnalteredMode ? d.enrichedGroup : formatAlterationTendency(d.enrichedGroup)}
-        </div>,
+        name: alteredVsUnalteredMode ? AlterationEnrichmentTableColumnType.TENDENCY :
+            (groups.length === 2 ? AlterationEnrichmentTableColumnType.ENRICHED : AlterationEnrichmentTableColumnType.MOST_ENRICHED),
+        render: (d: AlterationEnrichmentRow) => {
+            const groupColor = nameToGroup[d.enrichedGroup].color;
+            return (
+                <div
+                    className={classNames(styles.Tendency, { [styles.Significant]: (d.qValue < 0.05), [styles.ColoredBackground]:!!groupColor })}
+                    style={{
+                        backgroundColor: groupColor,
+                        color:groupColor && getTextColor(groupColor)
+                    }}
+                >
+                    {alteredVsUnalteredMode ? d.enrichedGroup : formatAlterationTendency(d.enrichedGroup)}
+                </div>
+            );
+        },
         filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
             d.enrichedGroup.toUpperCase().includes(filterStringUpper),
         sortBy: (d: AlterationEnrichmentRow) => d.enrichedGroup,

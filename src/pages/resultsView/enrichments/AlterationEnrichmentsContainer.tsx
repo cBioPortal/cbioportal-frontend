@@ -27,7 +27,13 @@ import './styles.scss';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
-    groups: { name: string, description: string, nameOfEnrichmentDirection?: string, count: number, color?: string }[];
+    groups:{
+        name:string,
+        description:string,
+        nameOfEnrichmentDirection?:string,
+        count:number,
+        color?:string
+    }[]
     alteredVsUnalteredMode?:boolean;
     headerName: string;
     store?: ResultsViewPageStore;
@@ -119,67 +125,67 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         const cols =  getGroupColumns(this.props.groups, this.props.alteredVsUnalteredMode);
         if (this.isTwoGroupAnalysis) {
             cols.push({
-                          name: 'Alteration Overlap',
-                          headerRender: () => <span>Co-occurrence Pattern</span>,
-                          render: (data) => {
+            name: 'Alteration Overlap',
+            headerRender: () => <span>Co-occurrence Pattern</span>,
+            render: (data) => {
 
-                              const groups = _.map(data.groupsSet);
+                const groups = _.map(data.groupsSet);
 
-                              // we want to order groups according to order in prop.groups
-                              const group1 = groups.find((group)=>group.name===this.props.groups[0].name)!;
-                              const group2 = groups.find((group)=>group.name===this.props.groups[1].name)!;
+                  // we want to order groups according to order in prop.groups
+                  const group1 = groups.find((group)=>group.name===this.props.groups[0].name)!;
+                  const group2 = groups.find((group)=>group.name===this.props.groups[1].name)!;
 
-                              if (!group1 || !group2) {
-                                  throw("No matching groups in Alteration Overlap Cell");
-                              }
+                  if (!group1 || !group2) {
+                      throw("No matching groups in Alteration Overlap Cell");
+                  }
 
-                              const totalUniqueSamples = group1.profiledCount + group2.profiledCount;
+                const totalUniqueSamples = group1.profiledCount + group2.profiledCount;
 
-                              const group1Width = (group1.profiledCount/totalUniqueSamples)*100;
-                              const group2Width = 100 - group1Width;
-                              const group1Unaltered = ((group1.profiledCount - group1.alteredCount)/ totalUniqueSamples) * 100;
-                              const group1Altered = (group1.alteredCount / totalUniqueSamples) * 100;
-                              const group2Altered = (group2.alteredCount / totalUniqueSamples) * 100;
+                const group1Width = (group1.profiledCount/totalUniqueSamples)*100;
+                const group2Width = 100 - group1Width;
+                const group1Unaltered = ((group1.profiledCount - group1.alteredCount)/ totalUniqueSamples) * 100;
+                const group1Altered = (group1.alteredCount / totalUniqueSamples) * 100;
+                const group2Altered = (group2.alteredCount / totalUniqueSamples) * 100;
 
-                              const alterationLanguage = this.props.showCNAInTable ? 'copy number alterations' : 'mutations'
+                const alterationLanguage = this.props.showCNAInTable ? 'copy number alterations' : 'mutations'
 
-                              const overlay = ()=>{
-                                  return (<div>
-                                      <h3>{data.hugoGeneSymbol} {alterationLanguage} in:</h3>
-                                      <table className={'table table-striped'}>
-                                          <tbody>
-                                          <tr>
-                                              <td><strong>{group1.name}: </strong></td>
-                                              <td>{group1.alteredCount} of {group1.profiledCount} of samples ({numeral(group1.alteredPercentage).format('0.0')}%)</td>
-                                          </tr>
-                                          <tr>
-                                              <td><strong>{group2.name}: </strong></td>
-                                              <td>{group2.alteredCount} of {group2.profiledCount} of samples ({numeral(group2.alteredPercentage).format('0.0')}%)
-                                              </td>
-                                          </tr>
-                                          </tbody>
+                const overlay = ()=>{
+                    return (<div>
+                        <h3>{data.hugoGeneSymbol} {alterationLanguage} in:</h3>
+                        <table className={'table table-striped'}>
+                            <tbody>
+                            <tr>
+                                <td><strong>{group1.name}: </strong></td>
+                                <td>{group1.alteredCount} of {group1.profiledCount} of samples ({numeral(group1.alteredPercentage).format('0.0')}%)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{group2.name}: </strong></td>
+                                <td>{group2.alteredCount} of {group2.profiledCount} of samples ({numeral(group2.alteredPercentage).format('0.0')}%)
+                                </td>
+                            </tr>
+                            </tbody>
 
-                                      </table>
+                        </table>
 
-                                  </div>);
-                              };
+                    </div>);
+                };
 
-                              return <DefaultTooltip destroyTooltipOnHide={true}  trigger={['hover']} overlay={overlay}>
-                                  <div className={'inlineBlock'} style={{padding:'3px 0'}}>
-                                      <MiniOncoprint
-                                          group1Width={group1Width}
-                                          group2Width={group2Width}
-                                          group1Unaltered={group1Unaltered}
-                                          group1Altered={group1Altered}
-                                          group2Altered={group2Altered}
-                                          group1Color={this.props.groups[0].color}
-                                          group2Color={this.props.groups[1].color}
-                                          width={150}
-                                      />
-                                  </div>
-                              </DefaultTooltip>;
-                          },
-                      });
+                  return <DefaultTooltip destroyTooltipOnHide={true}  trigger={['hover']} overlay={overlay}>
+                      <div className={'inlineBlock'} style={{padding:'3px 0'}}>
+                          <MiniOncoprint
+                              group1Width={group1Width}
+                              group2Width={group2Width}
+                              group1Unaltered={group1Unaltered}
+                              group1Altered={group1Altered}
+                              group2Altered={group2Altered}
+                              group1Color={this.props.groups[0].color}
+                              group2Color={this.props.groups[1].color}
+                              width={150}
+                          />
+                      </div>
+                  </DefaultTooltip>;
+              },
+          });
         }
 
 
