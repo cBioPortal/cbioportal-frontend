@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { calculateAlterationTendency, calculateExpressionTendency,
+import { calculateExpressionTendency,
     formatPercentage, getAlterationScatterData, getExpressionScatterData,
     getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData, 
     getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels, getFilteredDataByGroups, getGroupColumns, getEnrichmentBarPlotData, getGeneListOptions
@@ -85,7 +85,8 @@ const exampleAlterationEnrichmentRowData = [
         "logRatio": Infinity,
         "pValue": 0.00003645111904935468,
         "qValue": 0.2521323904643863,
-        "value":undefined
+        "value":undefined,
+        "enrichedGroup":"altered group"
     },
     {
         "checked": false,
@@ -110,7 +111,8 @@ const exampleAlterationEnrichmentRowData = [
         "logRatio": Infinity,
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061,
-        "value":undefined
+        "value":undefined,
+        "enrichedGroup":"altered group"
     }, 
     {
         "checked": false,
@@ -135,7 +137,8 @@ const exampleAlterationEnrichmentRowData = [
         "logRatio": Infinity,
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061,
-        "value":undefined
+        "value":undefined,
+        "enrichedGroup":"altered group"
     }
 ];
 
@@ -373,19 +376,6 @@ const exampleMolecularData = [
 ]
 
 describe("EnrichmentsUtil", () => {
-    describe("#calculateAlterationTendency()", () => {
-        it("returns Co-occurrence for 5", () => {
-            assert.equal(calculateAlterationTendency(5), "Co-occurrence");
-        });
-
-        it("returns Mutual exclusivity for 0", () => {
-            assert.equal(calculateAlterationTendency(0), "Mutual exclusivity");
-        });
-
-        it("returns Mutual exclusivity for -3", () => {
-            assert.equal(calculateAlterationTendency(-3), "Mutual exclusivity");
-        });
-    });
 
     describe("#calculateExpressionTendency()", () => {
         it("returns Over-expressed for 3", () => {
@@ -459,11 +449,11 @@ describe("EnrichmentsUtil", () => {
 
     describe("#getAlterationRowData()", () => {
         it("returns empty array for empty array", () => {
-            assert.deepEqual(getAlterationRowData([], [], false, "", ""), []);
+            assert.deepEqual(getAlterationRowData([], [], []), []);
         });
 
         it("returns correct row data", () => {
-            assert.deepEqual(getAlterationRowData(exampleAlterationEnrichments, ["EGFR"], true, "altered group", "unaltered group"), exampleAlterationEnrichmentRowData as any);
+            assert.deepEqual(getAlterationRowData(exampleAlterationEnrichments, ["EGFR"], [{name:"altered group"}, {name:"unaltered group"}]), exampleAlterationEnrichmentRowData as any);
         });
     });
 
@@ -550,6 +540,7 @@ describe("EnrichmentsUtil", () => {
                     "logRatio": Infinity,
                     "pValue": 0.0015673981191222392,
                     "qValue": 0.9385345997286061,
+                    "enrichedGroup": "altered group",
                     "value":undefined
                 }
             ]);
@@ -722,10 +713,10 @@ describe("EnrichmentsUtil", () => {
     describe("#getGroupColumns()", () => {
         it("returns correct group columns", () => {
             assert.deepEqual(getGroupColumns([]),[]);
-            assert.deepEqual(_.map(getGroupColumns([{name:"altered group", description:""}]),datum=>datum.name),['altered group']);
+            assert.deepEqual(_.map(getGroupColumns([{name:"altered group", description:""}]),datum=>datum.name),[]);
             assert.deepEqual(_.map(getGroupColumns([{name:"altered group", description:""},{name:"unaltered group", description:""}], true),datum=>datum.name),["Log Ratio", "Tendency", "altered group", "unaltered group"]);
             assert.deepEqual(_.map(getGroupColumns([{name:"group1", description:""},{name:"group2", description:""}]),datum=>datum.name),["Log Ratio", "Enriched in", "group1", "group2"]);
-            assert.deepEqual(_.map(getGroupColumns([{name:"group1", description:""},{name:"group2", description:""}, {name:"group3", description:""}]),datum=>datum.name),["group1", "group2", "group3"]);
+            assert.deepEqual(_.map(getGroupColumns([{name:"group1", description:""},{name:"group2", description:""}, {name:"group3", description:""}]),datum=>datum.name),["Most enriched in", "group1", "group2", "group3"]);
         });
     });
 
