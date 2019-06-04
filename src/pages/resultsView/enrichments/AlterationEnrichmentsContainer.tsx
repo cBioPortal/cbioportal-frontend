@@ -27,7 +27,7 @@ import './styles.scss';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
-    groups:{name:string, description:string, nameOfEnrichmentDirection?:string, count:number}[]
+    groups: { name: string, description: string, nameOfEnrichmentDirection?: string, count: number, color?: string }[]
     alteredVsUnalteredMode?:boolean;
     headerName: string;
     store?: ResultsViewPageStore;
@@ -251,6 +251,15 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return WindowStore.size.width - (this.isTwoGroupAnalysis ? 820 : 40);
     }
 
+    @computed private get categoryToColor() {
+        return _.reduce(this.props.groups, (acc, next) => {
+            if (next.color) {
+                acc[next.name] = next.color;
+            }
+            return acc;
+        }, {} as { [id: string]: string });
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
@@ -278,6 +287,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             groupOrder={this.props.groups.map(group => group.name)}
                             showCNAInTable={this.props.showCNAInTable}
                             containerType={this.props.containerType}
+                            categoryToColor={this.categoryToColor}
                         />
                     </div>
                 </div>
