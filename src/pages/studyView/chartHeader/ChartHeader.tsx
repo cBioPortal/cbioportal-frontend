@@ -18,6 +18,7 @@ import {Dropdown, MenuItem} from "react-bootstrap";
 import Timer = NodeJS.Timer;
 import DownloadControls, {DownloadControlsButton} from "../../../shared/components/downloadControls/DownloadControls";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
+import {serializeEvent} from "shared/lib/tracking";
 
 // there's some incompatiblity with rc-tooltip and study view layout
 // these adjustments force tooltips to open top right because tooltips
@@ -150,6 +151,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 <li>
                     <a className="dropdown-item" href="#"
                         onClick={this.props.openComparisonPage}
+
                     >
                         <img src={require("../../../rootImages/compare_vs.svg")}
                              width={13}
@@ -276,6 +278,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     <div
                                         className="btn btn-xs btn-default"
                                         onClick={this.props.openComparisonPage}
+                                        data-event={serializeEvent({action:'createComparisonSessionFromChart',label:this.props.title, category:'groupComparison' })}
                                     >
                                         <img
                                             src={require("../../../rootImages/compare_vs.svg")}
