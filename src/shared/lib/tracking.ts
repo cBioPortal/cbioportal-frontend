@@ -3,11 +3,10 @@ import AppConfig from "appConfig";
 import getBrowserWindow from "./getBrowserWindow";
 import * as _ from 'lodash';
 import {log} from "./consoleLog";
-import {ResultsViewPageStore} from "../../pages/resultsView/ResultsViewPageStore";
 import {StudyViewPageStore} from "../../pages/studyView/StudyViewPageStore";
 
 export type GAEvent = {
-  category:"studyPage"|"resultsView"|"quickSearch"|"download";
+  category:"studyPage"|"resultsView"|"quickSearch"|"download"|"groupComparison";
   action:string;
   label?:string|string[];
   fieldsObject?:{ [key:string]:string|number; }
