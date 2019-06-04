@@ -11,6 +11,7 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {
+    CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
     getSampleIdentifiers,
     OVERLAP_NOT_ENOUGH_GROUPS_MSG,
     partitionCasesByGroupMembership
@@ -20,6 +21,7 @@ import UpSet from './UpSet';
 import * as ReactDOM from 'react-dom';
 import WindowStore from 'shared/components/window/WindowStore';
 import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
+import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 
 export interface IOverlapProps {
     store: GroupComparisonStore
@@ -52,11 +54,17 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             }
         },
         render:()=>{
+            const content:any[] = [];
+
             if (this.props.store._selectedGroups.result!.length < 2) {
-                return <span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>;
+                content.push(<span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>);
             } else {
-                return this.overlapUI.component;
+                content.push(<OverlapExclusionIndicator overlapTabMode={true} store={this.props.store}/>);
+                content.push(this.overlapUI.component);
             }
+            return (<div data-test="ComparisonPageOverlapTabDiv">
+                {content}
+            </div>);
         },
         renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>
