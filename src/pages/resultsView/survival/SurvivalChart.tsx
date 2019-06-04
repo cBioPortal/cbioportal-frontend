@@ -249,7 +249,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
             for (const grp of this.analysisGroupsWithData) {
                 data.push({
                     name: !!grp.legendText ? grp.legendText : grp.value,
-                    symbol: { fill: grp.color, type: "square" }
+                    symbol: { fill: grp.color, strokeOpacity:0, type:"square", size: 6 }
                 });
             }
         }
@@ -275,7 +275,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     @computed get legendDataForDownload() {
         const data: any = this.analysisGroupsWithData.map(grp => ({
             name: !!grp.legendText ? grp.legendText : grp.value,
-            symbol: { fill: grp.color, type: "square" }
+            symbol: { fill: grp.color, strokeOpacity:0, type:"square", size: 6 }
         }));
 
         // add an indicator in case NA is excluded
