@@ -25,17 +25,22 @@ export function getExcludedIndexes(combination:number[], numGroupsTotal:number) 
     return excl;
 }
 
-export function joinNames(names:string[], conj:string) {
+export function joinGroupNames(groups:Pick<ComparisonGroup, "name"|"ordinal">[], conj:string) {
+    const names = groups.map(group=>(
+        <span>
+            (<strong>{group.ordinal}</strong>)&nbsp;{group.name}
+        </span>
+    ));
     switch (names.length) {
         case 0:
             return <span></span>;
         case 1:
-            return <strong>{names[0]}</strong>;
+            return <span>{names[0]}</span>;
         case 2:
-            return <span><strong>{names[0]}</strong> {conj} <strong>{names[1]}</strong></span>;
+            return <span>{names[0]} {conj} {names[1]}</span>;
         default:
             const beforeConj = names.slice(0, names.length-1);
-            return <span>{beforeConj.map(name=>[<strong>{name}</strong>,", "])}{conj} <strong>{names[names.length-1]}</strong></span>;
+            return <span>{beforeConj.map(name=>[name,", "])}{conj} {names[names.length-1]}</span>;
     }
 }
 
