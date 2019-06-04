@@ -65,7 +65,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @computed get data(): AlterationEnrichmentRow[] {
-        return getAlterationRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.isTwoGroupAnalysis, this.group1.name, this.group2.name);
+        return getAlterationRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.props.groups);
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {
@@ -201,6 +201,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
         if(this.isTwoGroupAnalysis) {
             columns.push(this.props.alteredVsUnalteredMode ? AlterationEnrichmentTableColumnType.TENDENCY : AlterationEnrichmentTableColumnType.ENRICHED);
+        } else {
+            columns.push(AlterationEnrichmentTableColumnType.MOST_ENRICHED)
         }
 
         return columns;
