@@ -22,29 +22,70 @@ echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/mas
 
 # -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
-# evaluate the pull request number. This is sometimes not set by CirclCI 
-if [[ -z "$CIRCLE_PR_NUMBER" ]]; then
-    if [[ "$CIRCLE_PULL_REQUEST" =~ \/([0-9]+)$ ]] ; then
-        CIRCLE_PR_NUMBER=${BASH_REMATCH[1]}
-        echo export CIRCLE_PR_NUMBER=${BASH_REMATCH[1]}
+# Notes on BACKEND
+# For e2e testing against a local database the version of the cbioportal backend should be known
+# The cbioportal backend version is passed as the BACKEND environmental variable.
+# BACKEND variable is formatted as <BACKEND_GITHUB_USER>:<BACKEND_BRANCH> (e.g. BACKEND=cbioportal:rc)
+
+parse_custom_backend_var() {
+    # Parse BRACKEND environmental variable when provided by custom.sh
+    # this must occur after PR evaluation because this possibly overwrites
+    # variables extracted from the PR.
+    if [[ $BACKEND =~ ([^\s]+):([^\s]+) ]]; then
+        echo export BACKEND_USER=${BASH_REMATCH[1]}
+        echo export BACKEND_BRANCH=${BASH_REMATCH[2]}
     else
-        echo "Error: could not identify pull request number (CIRCLE_PULL_REQUEST: '$CIRCLE_PULL_REQUEST')."
+        echo Error: could not parse BACKEND variable from custom.sh. Expected format: <BACKEND_GITHUB_USER>:<BACKEND_BRANCH> (e.g. 'cbioportal:rc')
         exit 1
     fi
-fi
+}
 
-python3 get_pullrequest_info.py $CIRCLE_PR_NUMBER $GITHUB_PR_API_PATH
-# retrieves
-    # FRONTEND_BRANCH_NAME          ->  (e.g. 'superawesome_feature_branch')
-    # FRONTEND_COMMIT_HASH          ->  (e.g. '3as8sAs4')
-    # FRONTEND_ORGANIZATION         ->  (e.g. 'thehyve')
-    # FRONTEND_REPO_NAME            ->  (e.g. 'cbioportal-frontend')
-    # FRONTEND_BASE_BRANCH_NAME     ->  (e.g. 'rc')
-    # FRONTEND_BASE_COMMIT_HASH     ->  (e.g. '34hh9jad')
-    # FRONTEND_BASE_ORGANIZATION    ->  (e.g. 'cbioportal')
-    # FRONTEND_BASE_REPO_NAME       ->  (e.g. 'cbioportal-frontend)
-    # BACKEND_ORGANIZATION          ->  (e.g. 'cbioportal')
-    # BACKEND_BRANCH_NAME           ->  (e.g. 'rc')
+# Check whether running in CircleCI environment
+if [[ $CIRCLECI ]]; then
+
+    # Check whether running in context of a pull request
+    # by extracting the pull request number
+    if [[ "$CIRCLE_PULL_REQUEST" =~ \/([0-9]+)$ ]] ; then
+        CIRCLE_PR_NUMBER=$F{BASH_REMATCH[1]}
+        echo export CIRCLE_PR_NUMBER=${BASH_REMATCH[1]}
+        python3 get_pullrequest_info.py $CIRCLE_PR_NUMBER $GITHUB_PR_API_PATH
+        # retrieves
+            # PULL_REQUEST_STATE        ->  (e.g. 'draft')
+            # FRONTEND_REPO_NAME        ->  (e.g. 'cbioportal-frontend')
+            # FRONTEND_BASE_BRANCH      ->  (e.g. 'rc')
+            # FRONTEND_BASE_SHA1        ->  (e.g. '34hh9jad')
+            # FRONTEND_BASE_USER        ->  (e.g. 'cbioportal')
+            # FRONTEND_BASE_REPO_NAME   ->  (e.g. 'cbioportal-frontend)
+            # BACKEND_USER              ->  (e.g. 'cbioportal')
+            # BACKEND_BRANCH            ->  (e.g. 'rc')
+        
+        # Check whether the pull request is of 'draft' state when BACKEND is specified in custom.sh 
+        # This requirement ensures that only pull requests against a accepted backend are merged
+        if [[ -n $BACKEND ]] && [[ $PULL_REQUEST_STATE != "draft" ]]; then
+            echo "Error: `BACKEND` parameter defined in custom.sh, but pull request state is not 'draft'"
+            echo "Remove `BACKEND` parameter from custom.sh or change the pull request into a draft pull request."
+        fi
+
+    # Check whether custom BACKEND environmental var is defined (required when running outside context of a pull request on CircleCI)
+    if [[ -z $BACKEND ]]; then
+        if [[ -z $CIRCLE_PR_NUMBER ]]; then
+            echo Error: BACKEND environmental variable not set in /env/custom.sh. This is required when running outside context of a pull request.
+            exit 1
+        fi
+    else
+        parse_custom_backend_var
+    fi
+
+
+else
+    # When not running in CircleCI environment, check whether custom BACKEND environmental var is defined (required when running outside CircleCI context)
+    if [[ -z $BACKEND ]]; then
+        echo Error: BACKEND environmental variable not set in /env/custom.sh. This is required when running outside CircleCI environment.
+        exit 1
+    else
+        parse_custom_backend_var
+    fi
+fi
 
 python3 read_portalproperties.py portal.properties
 # retrieves

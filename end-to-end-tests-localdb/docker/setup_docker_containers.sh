@@ -48,7 +48,7 @@ build_cbioportal_image() {
     
     cd /tmp
     rm -rf cbioportal
-    git clone --depth 1 -b $BACKEND_BRANCH_NAME "https://github.com/$BACKEND_ORGANIZATION/cbioportal.git"
+    git clone --depth 1 -b $BACKEND_BRANCH "https://github.com/$BACKEND_USER/cbioportal.git"
     docker stop $E2E_CBIOPORTAL_HOST_NAME 2> /dev/null && docker rm $E2E_CBIOPORTAL_HOST_NAME  2> /dev/null
     cp $TEST_HOME/docker/Dockerfile cbioportal
     cp $TEST_HOME/runtime-config/portal.properties cbioportal
@@ -106,11 +106,11 @@ load_studies_in_db() {
 
 check_jitpack_download_frontend() {
     # check whether jitpack versions for the frontend exist
-    # url="https://jitpack.io/com/github/$FRONTEND_ORGANIZATION/cbioportal-frontend/$FRONTEND_COMMIT_HASH/cbioportal-frontend-$FRONTEND_COMMIT_HASH.jar"
+    # url="https://jitpack.io/com/github/$FRONTEND_USER/cbioportal-frontend/$FRONTEND_COMMIT_HASH/cbioportal-frontend-$FRONTEND_COMMIT_HASH.jar"
     # # trigger build
     # curl -s --head $url | head -n 0
     # FRONTEND_COMMIT_HASH_SHORT=$(echo $FRONTEND_COMMIT_HASH | awk '{print substr($0,0,10)}')
-    url_short="https://jitpack.io/com/github/$FRONTEND_ORGANIZATION/cbioportal-frontend/$FRONTEND_COMMIT_HASH/cbioportal-frontend-$FRONTEND_COMMIT_HASH.jar"
+    url_short="https://jitpack.io/com/github/$FRONTEND_USER/cbioportal-frontend/$FRONTEND_COMMIT_HASH/cbioportal-frontend-$FRONTEND_COMMIT_HASH.jar"
     sleeptime=0
     maxtime=1200
     while (($sleeptime < $maxtime)); do
@@ -124,7 +124,7 @@ check_jitpack_download_frontend() {
     done
 
     if !(curl -s --head $url_short | head -n 1 | egrep "HTTP/[0-9.]+ 200"); then
-        echo "Could not find frontend .jar (version: $FRONTEND_COMMIT_HASH, org: $FRONTEND_ORGANIZATION) at jitpack (url: $url_short)"
+        echo "Could not find frontend .jar (version: $FRONTEND_COMMIT_HASH, org: $FRONTEND_USER) at jitpack (url: $url_short)"
         exit 1
     fi
 }

@@ -1,1 +1,1 @@
-export CBIOPORTAL_URL="http://localhost:8081/cbioportal/"
+export BACKEND=cbioportal:rc

@@ -181,10 +181,9 @@ jobs:
       - run:
           name: setup environment
           command: |
+              source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
               cd $TEST_HOME/runtime-config && \
-              ./setup_environment.sh && eval "$(./setup_environment.sh)" && \
-              cd $TEST_HOME/runtime-config && \
-              python3 check_pullrequest_draft_state.py $CIRCLE_PR_NUMBER $GITHUB_PR_API_PATH
+              ./setup_environment.sh && eval "$(./setup_environment.sh)"
       - run:
           name: create docker network
           command: |
