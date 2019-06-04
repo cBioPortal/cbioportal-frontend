@@ -261,7 +261,6 @@ export class StudyViewPageStore {
     @action
     public setComparisonConfirmationModal(getModal:((hideModal:()=>void)=>JSX.Element)) {
         this._comparisonConfirmationModal = getModal(()=>{this._comparisonConfirmationModal = null; });
-        console.log(this.comparisonConfirmationModal);
     }
 
     // <comparison groups code>
