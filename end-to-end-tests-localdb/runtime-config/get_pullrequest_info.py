@@ -42,15 +42,8 @@ if(myResponse.ok):
 
     print(
       "export PULL_REQUEST_STATE="+ pr_state +"\n"
-      # "export FRONTEND_BRANCH="+ frontend_branch_name +"\n"
-      # "export FRONTEND_SHA1"+ frontend_commit_hash +"\n"
-      # "export FRONTEND_USER="+ FRONTEND_USER +"\n"
-      # "export FRONTEND_REPO_NAME="+ frontend_repo_name +"\n"
       "export FRONTEND_GROUPID="+ frontend_group_id +"\n"
       "export FRONTEND_BASE_BRANCH="+ frontend_base_branch_name +"\n"
-      "export FRONTEND_BASE_SHA1="+ frontend_base_sha1 +"\n"
-      "export FRONTEND_BASE_USER="+ frontend_base_user +"\n"
-      "export FRONTEND_BASE_REPO_NAME="+ frontend_base_repo_name +"\n"
       "export BACKEND_USER="+ backend_user +"\n"
       "export BACKEND_BRANCH="+ backend_branch_name)
 
