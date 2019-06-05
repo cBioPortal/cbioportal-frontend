@@ -113,28 +113,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             if (this.props.store._activeGroupsNotOverlapRemoved.result!.length > 10) {
                 content.push(<span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>);
             } else {
-                switch (this.props.store.overlapStrategy) {
-                    case OverlapStrategy.EXCLUDE:
-                        content.push(<OverlapExclusionIndicator store={this.props.store} only="patient"/>);
-                        break;
-                    case OverlapStrategy.INCLUDE:
-                        const selectionInfo = this.props.store.overlapComputations.result!;
-                        if (selectionInfo.overlappingPatients.length > 0) {
-                            content.push(
-                                <div className={`alert alert-info`}>
-                                    <i
-                                        className={`fa fa-md fa-info-circle`}
-                                        style={{
-                                            color: "#000000",
-                                            marginRight:5
-                                        }}
-                                    />
-                                    Overlapping patients (n={selectionInfo.overlappingPatients.length}) are plotted as distinct groups below.
-                                </div>
-                            );
-                        }
-                        break;
-                }
+                content.push(<OverlapExclusionIndicator store={this.props.store} only="patient" survivalTabMode={true}/>);
                 content.push(this.survivalUI.component);
             }
             return (<div data-test="ComparisonPageSurvivalTabDiv">
