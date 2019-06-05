@@ -16,6 +16,7 @@ import {Popover} from "react-bootstrap";
 import classnames from "classnames";
 import styles from "../resultsView/survival/styles.module.scss";
 import Timer = NodeJS.Timer;
+import WindowStore from "../../shared/components/window/WindowStore";
 
 export interface IUpSetProps {
     groups: {
@@ -25,7 +26,7 @@ export interface IUpSetProps {
     uidToGroup: { [uid: string]: ComparisonGroup };
     svgId?: string;
     title?: string;
-    caseType: "sample" | "patient"
+    caseType: "sample" | "patient";
 };
 
 const PLOT_DATA_PADDING_PIXELS = 20;
@@ -323,7 +324,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
         return this.barChartHeight() - 100;
     }
 
-    private tooltip(datum: any) {
+    private tooltipFunction(datum: any) {
         const includedGroups = _.map(datum.groups as string[], uid=>this.props.uidToGroup[uid]);
         const casesCount = datum.cases.length;
 
@@ -334,6 +335,31 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                 in only {joinGroupNames(includedGroups, "and")}.
             </div>
         );
+    }
+
+    @computed get tooltipComponent() {
+        if (!this.tooltipModel) {
+            return null;
+        } else {
+            const maxWidth = 400;
+            let tooltipPlacement = (this.mousePosition.x > WindowStore.size.width-maxWidth ? "left" : "right");
+            return (ReactDOM as any).createPortal(
+                <Popover
+                    arrowOffsetTop={17}
+                    className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)}
+                    positionLeft={this.mousePosition.x+(tooltipPlacement === "left" ? -8 : 8)}
+                    positionTop={this.mousePosition.y-17}
+                    style={{
+                        transform: (tooltipPlacement === "left" ? "translate(-100%,0%)" : undefined),
+                        maxWidth
+                    }}
+                    placement={tooltipPlacement}
+                >
+                    {this.tooltipFunction(this.tooltipModel.datum || this.tooltipModel.data[0])}
+                </Popover>,
+                document.body
+            );
+        }
     }
 
     @autobind private onMouseMove(e:React.MouseEvent<any>) {
@@ -492,19 +518,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                 <Observer>
                     {this.getChart}
                 </Observer>
-                {!!this.tooltipModel && (
-                    (ReactDOM as any).createPortal(
-                        <Popover
-                            arrowOffsetTop={17}
-                            className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)}
-                            positionLeft={this.mousePosition.x+8}
-                            positionTop={this.mousePosition.y-17}
-                        >
-                            {this.tooltip(this.tooltipModel.datum || this.tooltipModel.data[0])}
-                        </Popover>,
-                        document.body
-                    )
-                )}
+                {this.tooltipComponent}
             </div>
         );
     }
