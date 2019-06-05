@@ -30,6 +30,8 @@ export interface IExpressionEnrichmentContainerProps {
     group2Name?:string;
     group1Description?:string;
     group2Description?:string;
+    group1Color?:string;
+    group2Color?:string;
     alteredVsUnalteredMode?:boolean;
     store?: ResultsViewPageStore;
 }
@@ -218,6 +220,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                                                mutexTendency={this.props.alteredVsUnalteredMode}
                                                group1Description={this.props.group1Description!}
                                                group2Description={this.props.group2Description!}
+                                               group1Color={this.props.group1Color}
+                                               group2Color={this.props.group2Color}
                                                checkedGenes={this.props.store ? this.checkedGenes : undefined}
                     />
                 </div>
