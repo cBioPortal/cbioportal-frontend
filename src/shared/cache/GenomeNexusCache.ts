@@ -12,9 +12,7 @@ export type GenomeNexusCacheDataType = CacheData<VariantAnnotation>;
 
 export function fetch(queries: Mutation[]):Promise<VariantAnnotation[]> {
     if (queries.length > 0) {
-
-        return fetchVariantAnnotationsByMutation(queries, ["annotation_summary", "mutation_assessor", "my_variant_info"], AppConfig.serverConfig.isoformOverrideSource);
-
+        return fetchVariantAnnotationsByMutation(queries, ["annotation_summary", "mutation_assessor"], AppConfig.serverConfig.isoformOverrideSource);
     } else {
         return Promise.resolve([]);
     }
