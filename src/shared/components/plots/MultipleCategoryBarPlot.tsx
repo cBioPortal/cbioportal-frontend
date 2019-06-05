@@ -16,6 +16,8 @@ import { makePlotData, makeBarSpecs, sortDataByCategory } from "./MultipleCatego
 import * as ReactDOM from "react-dom";
 import { Popover } from "react-bootstrap";
 import classnames from "classnames";
+import WindowStore from "../window/WindowStore";
+import styles from "../../../pages/resultsView/survival/styles.module.scss";
 
 export interface IMultipleCategoryBarPlotProps {
     svgId?:string;
@@ -582,7 +584,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         ));
     }
 
-    private tooltip(datum:any) {
+    private tooltipFunction(datum:any) {
         if(this.props.tooltip) {
             return this.props.tooltip(datum);
         }
@@ -592,6 +594,31 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 <strong>{datum.minorCategory}:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}&nbsp;({datum.percentage}%)</strong>
             </div>
         );
+    }
+
+    @computed get tooltipComponent() {
+        if (!this.tooltipModel) {
+            return null;
+        } else {
+            const maxWidth = 400;
+            let tooltipPlacement = (this.mousePosition.x > WindowStore.size.width-maxWidth ? "left" : "right");
+            return (ReactDOM as any).createPortal(
+                <Popover
+                    arrowOffsetTop={17}
+                    className={classnames("cbioportal-frontend", "cbioTooltip")}
+                    positionLeft={this.mousePosition.x+(tooltipPlacement === "left" ? -8 : 8)}
+                    positionTop={this.mousePosition.y-17}
+                    style={{
+                        transform: (tooltipPlacement === "left" ? "translate(-100%,0%)" : undefined),
+                        maxWidth
+                    }}
+                    placement={tooltipPlacement}
+                >
+                    {this.tooltipFunction(this.tooltipModel.datum || this.tooltipModel.data[0])}
+                </Popover>,
+                document.body
+            );
+        }
     }
 
     @computed get chartEtl() {
@@ -682,19 +709,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 <Observer>
                     {this.getChart}
                 </Observer>
-                {!!this.tooltipModel && (
-                    (ReactDOM as any).createPortal(
-                        <Popover
-                            arrowOffsetTop={17}
-                            className={classnames("cbioportal-frontend", "cbioTooltip")}
-                            positionLeft={this.mousePosition.x + 8}
-                            positionTop={this.mousePosition.y - 17}
-                        >
-                            {this.tooltip(this.tooltipModel.datum || this.tooltipModel.data[0])}
-                        </Popover>,
-                        document.body
-                    )
-                )}
+                {this.tooltipComponent}
             </div>
         );
     }
