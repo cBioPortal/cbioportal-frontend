@@ -32,6 +32,7 @@ import {STUDY_VIEW_CONFIG} from "pages/studyView/StudyViewConfig";
 import ReactSelect from "react-select";
 import {MakeMobxView} from "shared/components/MobxView";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
+import {RESERVED_CLINICAL_VALUE_COLORS} from "../../shared/lib/Colors";
 
 export interface IClinicalDataProps {
     store: GroupComparisonStore
@@ -339,7 +340,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         return _.reduce(this.props.store.uidToGroup.result!, (acc, next) => {
             acc[next.nameWithOrdinal] = next.color;
             return acc;
-        }, STUDY_VIEW_CONFIG.colors.reservedValue);
+        }, RESERVED_CLINICAL_VALUE_COLORS);
     }
 
     @observable plotType: PlotType = PlotType.PercentageStackedBar;
