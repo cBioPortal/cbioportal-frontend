@@ -601,15 +601,35 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
             return null;
         } else {
             const maxWidth = 400;
-            let tooltipPlacement = (this.mousePosition.x > WindowStore.size.width-maxWidth ? "left" : "right");
+            let tooltipPlacement = "";
+            let dx = 0;
+            let dy = 0;
+            let transform = "";
+            if (this.props.horizontalBars) {
+                tooltipPlacement = "bottom";
+                dy = 10;
+                transform = "translate(-50%,0%)";
+            } else {
+                dy = -17;
+
+                if (this.mousePosition.x > WindowStore.size.width-maxWidth) {
+                    tooltipPlacement = "left";
+                    dx = -8;
+                    transform = "translate(-100%,0%)";
+                } else {
+                    tooltipPlacement = "right";
+                    dx = 8;
+                }
+            }
+
             return (ReactDOM as any).createPortal(
                 <Popover
-                    arrowOffsetTop={17}
+                    arrowOffsetTop={-dy}
                     className={classnames("cbioportal-frontend", "cbioTooltip")}
-                    positionLeft={this.mousePosition.x+(tooltipPlacement === "left" ? -8 : 8)}
-                    positionTop={this.mousePosition.y-17}
+                    positionLeft={this.mousePosition.x + dx}
+                    positionTop={this.mousePosition.y + dy}
                     style={{
-                        transform: (tooltipPlacement === "left" ? "translate(-100%,0%)" : undefined),
+                        transform,
                         maxWidth
                     }}
                     placement={tooltipPlacement}
