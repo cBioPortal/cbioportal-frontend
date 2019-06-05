@@ -384,7 +384,10 @@ export function getGroupColumns(groups: { name: string, description: string, col
         name: alteredVsUnalteredMode ? AlterationEnrichmentTableColumnType.TENDENCY :
             (groups.length === 2 ? AlterationEnrichmentTableColumnType.ENRICHED : AlterationEnrichmentTableColumnType.MOST_ENRICHED),
         render: (d: AlterationEnrichmentRow) => {
-            const groupColor = nameToGroup[d.enrichedGroup].color;
+            let groupColor = undefined;
+            if (!alteredVsUnalteredMode) {
+                groupColor = nameToGroup[d.enrichedGroup].color;
+            }
             return (
                 <div
                     className={classNames(styles.Tendency, { [styles.Significant]: (d.qValue < 0.05), [styles.ColoredBackground]:!!groupColor })}
