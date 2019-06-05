@@ -14,6 +14,7 @@ import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
 import {getTextWidth} from "../../../../shared/lib/wrapText";
+import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 
 export interface IPieChartProps {
     width: number;
@@ -99,7 +100,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     get fill() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
-                return STUDY_VIEW_CONFIG.colors.na;
+                return DEFAULT_NA_COLOR;
             }
             return d.color;
         };
