@@ -20,7 +20,9 @@ import {
     PatientIdentifier,
     Sample,
     SampleFilter,
-    SampleIdentifier
+    SampleIdentifier,
+    ClinicalAttribute,
+    CancerStudy
 } from "../../shared/api/generated/CBioPortalAPI";
 import { action, computed, observable } from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
@@ -56,6 +58,7 @@ import {AppStore} from "../../AppStore";
 import {stringListToIndexSet} from "../../shared/lib/StringUtils";
 import {trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
+import { ISurvivalDescription } from "pages/resultsView/survival/SurvivalDescriptionTable";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples and patients",
@@ -946,6 +949,17 @@ export default class GroupComparisonStore {
         }
     }, []);
 
+    readonly activeStudiesClinicalAttributes = remoteData<ClinicalAttribute[]>({
+        await: () => [
+            this.activeStudyIds
+        ],
+        invoke: () => {
+            return client.fetchClinicalAttributesUsingPOST({
+                studyIds:this.activeStudyIds.result!
+            });
+        }
+    }, []);
+
     readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<{ [key: string]: ClinicalData[] }>({
         await: () => [
             this.survivalClinicalData,
@@ -1029,4 +1043,58 @@ export default class GroupComparisonStore {
             return Promise.resolve(sortedByPvalue as ClinicalDataEnrichmentWithQ[]);
         }
     }, []);
+
+    readonly activeStudyIdToStudy = remoteData({
+        await: ()=>[
+            this.studies,
+            this.activeStudyIds
+        ],
+        invoke:()=>Promise.resolve(_.keyBy(_.filter(this.studies.result, (study) => this.activeStudyIds.result!.includes(study.studyId)), x=>x.studyId))
+    }, {});
+
+    readonly overallSurvivalDescriptions = remoteData({
+        await:() => [
+            this.activeStudiesClinicalAttributes,
+            this.activeStudyIdToStudy
+        ],
+        invoke: () => {
+            const overallSurvivalClinicalAttributeId = 'OS_STATUS';
+            const clinicalAttributeMap = _.groupBy(this.activeStudiesClinicalAttributes.result, "clinicalAttributeId");
+            const result : ISurvivalDescription[] = [];
+            const studyIdToStudy : {[studyId:string]:CancerStudy} = this.activeStudyIdToStudy.result;
+            if (clinicalAttributeMap && clinicalAttributeMap[overallSurvivalClinicalAttributeId] && clinicalAttributeMap[overallSurvivalClinicalAttributeId].length > 0) {
+                clinicalAttributeMap[overallSurvivalClinicalAttributeId].forEach((attr) => {
+                    result.push({
+                            studyName: studyIdToStudy[attr.studyId].name,
+                            description: attr.description
+                    } as ISurvivalDescription);
+                });
+                return Promise.resolve(result);
+            }
+            return Promise.resolve([]);
+        }
+    });
+
+    readonly diseaseFreeSurvivalDescriptions = remoteData({
+        await:() => [
+            this.activeStudiesClinicalAttributes,
+            this.activeStudyIdToStudy
+        ],
+        invoke: () => {
+            const diseaseFreeSurvivalClinicalAttributeId = 'DFS_STATUS';
+            const clinicalAttributeMap = _.groupBy(this.activeStudiesClinicalAttributes.result, "clinicalAttributeId");
+            const result : ISurvivalDescription[] = [];
+            const studyIdToStudy : {[studyId:string]:CancerStudy} = this.activeStudyIdToStudy.result;
+            if (clinicalAttributeMap && clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId] && clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId].length > 0) {
+                clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId].forEach((attr) => {
+                    result.push({
+                            studyName: studyIdToStudy[attr.studyId].name,
+                            description: attr.description
+                    } as ISurvivalDescription);
+                });
+                return Promise.resolve(result);
+            }
+            return Promise.resolve([]);
+        }
+    });
 }

@@ -9,8 +9,13 @@ import {SURVIVAL_TOO_MANY_GROUPS_MSG} from "./GroupComparisonUtils";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {blendColors} from "./OverlapUtils";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
-import _ from "lodash";
 import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import classnames from 'classnames';
+import styles from "./styles.module.scss";
+import { ClinicalData, ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
+import _ from 'lodash';
+import SurvivalDescriptionTable from 'pages/resultsView/survival/SurvivalDescriptionTable';
 
 export interface ISurvivalProps {
     store: GroupComparisonStore
@@ -21,6 +26,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     private overallSurvivalTitleText = 'Overall Survival Kaplan-Meier Estimate';
     private diseaseFreeSurvivalTitleText = 'Disease/Progression-free Kaplan-Meier Estimate';
+    private multipleDescriptionWarningMessageWithoutTooltip = "The survival data on patients from different cohorts may have been defined by ";
+    private multipleDescriptionWarningMessageWithTooltip = "different criteria.";
+    private differentDescriptionExistMessage = "Different descriptions of survival data were used for different studies.";
 
     public readonly analysisGroupsComputations = remoteData({
         await: () => [
@@ -129,6 +137,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         await:()=>[
             this.props.store.overallPatientSurvivals,
             this.props.store.diseaseFreePatientSurvivals,
+            this.props.store.overallSurvivalDescriptions,
+            this.props.store.diseaseFreeSurvivalDescriptions,
+            this.props.store.activeStudiesClinicalAttributes,
             this.analysisGroupsComputations,
             this.props.store.overlapComputations
         ],
@@ -138,11 +149,35 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             let diseaseFreeNotAvailable: boolean = false;
             const analysisGroups = this.analysisGroupsComputations.result!.analysisGroups;
             const patientToAnalysisGroups = this.analysisGroupsComputations.result!.patientToAnalysisGroups;
+            const overallSurvivalDescription = this.props.store.overallSurvivalDescriptions && this.props.store.overallSurvivalDescriptions.result!.length == 1 ? this.props.store.overallSurvivalDescriptions.result![0].description : "";
+            const diseaseFreeSurvivalDescription = this.props.store.diseaseFreeSurvivalDescriptions && this.props.store.diseaseFreeSurvivalDescriptions.result!.length == 1 ? this.props.store.diseaseFreeSurvivalDescriptions.result![0].description : "";
 
             if (this.props.store.overallPatientSurvivals.result!.length > 0) {
+                if (this.props.store.overallSurvivalDescriptions && this.props.store.overallSurvivalDescriptions.result!.length > 1) {
+                    let messageBeforeTooltip = this.multipleDescriptionWarningMessageWithoutTooltip;
+                    const uniqDescriptions = _.uniq(_.map(this.props.store.overallSurvivalDescriptions.result!, (d) => d.description));
+                    if (uniqDescriptions.length > 1) {
+                        messageBeforeTooltip = `${this.differentDescriptionExistMessage} ${messageBeforeTooltip}`;
+                    }
+                    content.push(
+                        <div className={"tabMessageContainer"}>
+                            <div className={"alert alert-warning"} role="alert">
+                                {messageBeforeTooltip}
+                                <DefaultTooltip
+                                    placement="bottom"
+                                    overlay={(<SurvivalDescriptionTable survivalDescriptionData = {this.props.store.overallSurvivalDescriptions.result!}/>)}
+                                >
+                                    <a href="javascript:void(0)">
+                                        {this.multipleDescriptionWarningMessageWithTooltip}
+                                    </a>
+                                </DefaultTooltip>
+                            </div>
+                        </div>
+                    );
+                }
                 content.push(
                     <div style={{marginBottom:40}}>
-                        <h4 className='forceHeaderStyle h4'>{this.overallSurvivalTitleText}</h4>
+                        <h4 className='forceHeaderStyle h4'>{overallSurvivalDescription ? `${this.overallSurvivalTitleText} (${overallSurvivalDescription})` : this.overallSurvivalTitleText}</h4>
                         <div style={{width: '920px'}}>
                             <SurvivalChart
                                 className='borderedChart'
@@ -169,9 +204,31 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             }
 
             if (this.props.store.diseaseFreePatientSurvivals.result!.length > 0) {
+                if (this.props.store.diseaseFreeSurvivalDescriptions && this.props.store.diseaseFreeSurvivalDescriptions.result!.length > 1) {
+                    let messageBeforeTooltip = this.multipleDescriptionWarningMessageWithoutTooltip;
+                    const uniqDescriptions = _.uniq(_.map(this.props.store.diseaseFreeSurvivalDescriptions.result!, (d) => d.description));
+                    if (uniqDescriptions.length > 1) {
+                        messageBeforeTooltip = `${this.differentDescriptionExistMessage} ${messageBeforeTooltip}`;
+                    }
+                    content.push(
+                        <div className={"tabMessageContainer"}>
+                            <div className={"alert alert-warning"} role="alert">
+                                {messageBeforeTooltip}
+                                <DefaultTooltip
+                                    placement="bottom"
+                                    overlay={(<SurvivalDescriptionTable survivalDescriptionData = {this.props.store.diseaseFreeSurvivalDescriptions.result!}/>)}
+                                >
+                                    <a href="javascript:void(0)">
+                                        {this.multipleDescriptionWarningMessageWithTooltip}
+                                    </a>
+                                </DefaultTooltip>
+                            </div>
+                        </div>
+                    );
+                }
                 content.push(
                     <div>
-                        <h4 className='forceHeaderStyle h4'>{ this.diseaseFreeSurvivalTitleText }</h4>
+                        <h4 className='forceHeaderStyle h4'>{diseaseFreeSurvivalDescription ? `${this.diseaseFreeSurvivalTitleText} (${diseaseFreeSurvivalDescription})` : this.diseaseFreeSurvivalTitleText}</h4>
                         <div style={{width: '920px'}}>
                             <SurvivalChart
                                 className='borderedChart'
