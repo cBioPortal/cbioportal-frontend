@@ -10,6 +10,7 @@ import ErrorMessage from "../../shared/components/ErrorMessage";
 import {blendColors} from "./OverlapUtils";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import _ from "lodash";
+import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
 
 export interface ISurvivalProps {
     store: GroupComparisonStore
@@ -23,8 +24,10 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     public readonly analysisGroupsComputations = remoteData({
         await: () => [
+            this.props.store.activeGroups,
             this.props.store.patientsVennPartition,
-            this.props.store.uidToGroup
+            this.props.store.uidToGroup,
+            this.props.store.patientToSamplesSet
         ],
         invoke: () => {
             const orderedActiveGroupUidSet = _.reduce(this.props.store._activeGroupsNotOverlapRemoved.result!, (acc, next, index) => {
@@ -48,13 +51,12 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             const uidToGroup = this.props.store.uidToGroup.result!;
             const analysisGroups = [];
             const patientToAnalysisGroups:{[patientKey:string]:string[]} = {};
-            for (const entry of partition) {
-                const partitionGroupUids = Object.keys(entry.key).filter(uid=>entry.key[uid]);
-                // sort by give order of groups
-                partitionGroupUids.sort((a, b) => orderedActiveGroupUidSet[a] - orderedActiveGroupUidSet[b]);
-                if (this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE && partitionGroupUids.length > 1) {
-                    // dont show the overlap curves if we're excluding overlapping cases
-                } else {
+
+            if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE) {
+                for (const entry of partition) {
+                    const partitionGroupUids = Object.keys(entry.key).filter(uid=>entry.key[uid]);
+                    // sort by give order of groups
+                    partitionGroupUids.sort((a, b) => orderedActiveGroupUidSet[a] - orderedActiveGroupUidSet[b]);
                     if (partitionGroupUids.length > 0) {
                         const name = `Only ${partitionGroupUids.map(uid => uidToGroup[uid].nameWithOrdinal).join(", ")}`;
                         const value = partitionGroupUids.join(",");
@@ -67,6 +69,24 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             value,
                             legendText: name
                         });
+                    }
+                }
+            } else {
+                const patientToSamplesSet = this.props.store.patientToSamplesSet.result!;
+                for (const group of this.props.store.activeGroups.result!) {
+                    const name = group.nameWithOrdinal;
+                    analysisGroups.push({
+                        name,
+                        color: group.color,
+                        value: group.uid,
+                        legendText: name
+                    });
+                    const patientIdentifiers = getPatientIdentifiers([group]);
+                    for (const identifier of patientIdentifiers) {
+                        const samples = patientToSamplesSet.get({ studyId: identifier.studyId, patientId: identifier.patientId });
+                        if (samples && samples.length) {
+                            patientToAnalysisGroups[samples[0].uniquePatientKey] = [group.uid];
+                        }
                     }
                 }
             }
@@ -85,7 +105,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 // dont bother loading data for and computing UI if its not valid situation for it
                 return [this.props.store._activeGroupsNotOverlapRemoved];
             } else {
-                return [this.props.store._activeGroupsNotOverlapRemoved, this.survivalUI, this.props.store._selectionInfo];
+                return [this.props.store._activeGroupsNotOverlapRemoved, this.survivalUI, this.props.store.overlapComputations];
             }
         },
         render:()=>{
@@ -93,28 +113,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             if (this.props.store._activeGroupsNotOverlapRemoved.result!.length > 10) {
                 content.push(<span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>);
             } else {
-                switch (this.props.store.overlapStrategy) {
-                    case OverlapStrategy.EXCLUDE:
-                        content.push(<OverlapExclusionIndicator store={this.props.store} only="patient"/>);
-                        break;
-                    case OverlapStrategy.INCLUDE:
-                        const selectionInfo = this.props.store._selectionInfo.result!;
-                        if (selectionInfo.overlappingPatients.length > 0) {
-                            content.push(
-                                <div className={`alert alert-info`}>
-                                    <i
-                                        className={`fa fa-md fa-info-circle`}
-                                        style={{
-                                            color: "#000000",
-                                            marginRight:5
-                                        }}
-                                    />
-                                    Overlapping patients (n={selectionInfo.overlappingPatients.length}) are plotted as distinct groups below.
-                                </div>
-                            );
-                        }
-                        break;
-                }
+                content.push(<OverlapExclusionIndicator store={this.props.store} only="patient" survivalTabMode={true}/>);
                 content.push(this.survivalUI.component);
             }
             return (<div data-test="ComparisonPageSurvivalTabDiv">
@@ -131,7 +130,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.overallPatientSurvivals,
             this.props.store.diseaseFreePatientSurvivals,
             this.analysisGroupsComputations,
-            this.props.store._selectionInfo
+            this.props.store.overlapComputations
         ],
         render:()=>{
             let content: any = [];

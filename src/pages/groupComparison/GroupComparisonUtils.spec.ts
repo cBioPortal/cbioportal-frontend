@@ -19,7 +19,7 @@ import {
     intersectPatients,
     intersectSamples,
     isGroupEmpty,
-    OverlapFilteredComparisonGroup, partitionCasesByGroupMembership,
+    partitionCasesByGroupMembership,
     sortDataIntoQuartiles,
     unionPatients,
     unionSamples
@@ -327,11 +327,10 @@ describe('GroupComparisonUtils', () => {
 
     describe("getOverlapFilteredGroups", ()=>{
 
-        function makeGroup(params:Partial<OverlapFilteredComparisonGroup>) {
+        function makeGroup(params:Partial<ComparisonGroup>) {
             return Object.assign({
                 description:"",
-                origin:[],
-                studyViewFilter:{} as any
+                origin:[]
             }, params) as any;
         }
 
@@ -360,9 +359,7 @@ describe('GroupComparisonUtils', () => {
                     uid:"uid1",
                     nonExistentSamples:[
                         { studyId:"study1", sampleId:"ne1"},{studyId:"study1", sampleId:"ne2"},{studyId:"study1", sampleId:"ne3"}
-                    ],
-                    hasOverlappingSamples:true,
-                    hasOverlappingPatients:true
+                    ]
                 })]);
         });
 
@@ -408,9 +405,7 @@ describe('GroupComparisonUtils', () => {
                     uid:"uid1",
                     nonExistentSamples:[
                         { studyId:"study1", sampleId:"ne1"},{studyId:"study1", sampleId:"ne2"},{studyId:"study1", sampleId:"ne3"}
-                    ],
-                    hasOverlappingSamples:true,
-                    hasOverlappingPatients:true
+                    ]
                 }),
                     makeGroup({
                         name: "group2",
@@ -419,9 +414,7 @@ describe('GroupComparisonUtils', () => {
                         uid:"uid2",
                         nonExistentSamples:[
                             { studyId:"study2", sampleId:"ne1"},{studyId:"study2", sampleId:"ne2"}
-                        ],
-                        hasOverlappingSamples:true,
-                        hasOverlappingPatients:false
+                        ]
                     }),
                     makeGroup({
                         name: "group3",
@@ -430,9 +423,7 @@ describe('GroupComparisonUtils', () => {
                         uid:"uid3",
                         nonExistentSamples:[
                             { studyId:"study3", sampleId:"ne1"},{studyId:"study4", sampleId:"ne2"},{studyId:"study6", sampleId:"ne3"}
-                        ],
-                        hasOverlappingSamples:false,
-                        hasOverlappingPatients:true
+                        ]
                     })
                 ]);
         });

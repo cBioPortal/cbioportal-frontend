@@ -48,10 +48,6 @@ export type StudyViewComparisonGroup = Omit<GroupData, "studies"|"color"> & {
     nonExistentSamples:SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
 };
 
-export type OverlapFilteredComparisonGroup = ComparisonGroup & {
-    hasOverlappingSamples:boolean; // whether the group has had samples filtered out because they overlapped in the selection
-    hasOverlappingPatients:boolean; // whether the group has had patients filtered out because they overlapped in the selection
-}
 export type ClinicalDataEnrichmentWithQ = ClinicalDataEnrichment & { qValue:number };
 
 export type CopyNumberEnrichment = AlterationEnrichmentWithQ & { value:number };
@@ -61,6 +57,8 @@ export function defaultGroupOrder<T extends Pick<ComparisonGroup, "name">>(group
     const isNA = _.partition(groups, g=>(g.name.toLowerCase() === "na"));
     return _.sortBy(isNA[1], g=>g.name.toLowerCase()).concat(isNA[0]);
 }
+
+export const MAX_GROUPS_IN_SESSION = 20;
 
 const alphabet = "-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -286,26 +284,14 @@ export function getOverlapFilteredGroups(
     const overlappingPatientsSet = info.overlappingPatientsSet;
 
     return groups.map(group=>{
-        let hasOverlappingSamples = false;
-        let hasOverlappingPatients = false;
         const studies = [];
         for (const study of group.studies) {
             const studyId = study.id;
             const nonOverlappingSamples = study.samples.filter(sampleId=>{
-                if (overlappingSamplesSet.has({studyId, sampleId})) {
-                    hasOverlappingSamples = true;
-                    return false;
-                } else {
-                    return true;
-                }
+                return !(overlappingSamplesSet.has({studyId, sampleId}));
             });
             const nonOverlappingPatients = study.patients.filter(patientId=>{
-                if (overlappingPatientsSet.has({studyId, patientId})) {
-                    hasOverlappingPatients = true;
-                    return false;
-                } else {
-                    return true;
-                }
+                return !(overlappingPatientsSet.has({studyId, patientId}));
             });
             if (nonOverlappingSamples.length > 0 || nonOverlappingPatients.length > 0) {
                 studies.push({
@@ -316,7 +302,7 @@ export function getOverlapFilteredGroups(
             }
         }
         return Object.assign({}, group, {
-            studies, hasOverlappingSamples, hasOverlappingPatients
+            studies
         });
     });
 }

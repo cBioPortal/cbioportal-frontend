@@ -34,7 +34,8 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                 return {
                     name:group.nameWithOrdinal,
                     description:`Number (percentage) of samples in ${group.nameWithOrdinal} that have a mutation in the listed gene.`,
-                    count: getNumSamples(group)
+                    count: getNumSamples(group),
+                    color: group.color
                 }
             })
             return Promise.resolve(groups);
