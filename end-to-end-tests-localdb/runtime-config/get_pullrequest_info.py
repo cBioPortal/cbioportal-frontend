@@ -6,8 +6,7 @@ import requests
 import re
 import os
 
-issue_number = sys.argv[1]
-url = sys.argv[2].strip('/') + '/' + issue_number
+url = sys.argv[1]
 
 myResponse = requests.get(url)
 
