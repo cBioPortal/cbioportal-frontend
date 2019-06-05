@@ -12,8 +12,10 @@ import Timer = NodeJS.Timer;
 import {tickFormatNumeral} from "./TickUtils";
 import {makeUniqueColorGetter} from "./PlotUtils";
 import {stringListToIndexSet} from "../../lib/StringUtils";
-import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import { makePlotData, makeBarSpecs, sortDataByCategory } from "./MultipleCategoryBarPlotUtils";
+import * as ReactDOM from "react-dom";
+import { Popover } from "react-bootstrap";
+import classnames from "classnames";
 
 export interface IMultipleCategoryBarPlotProps {
     svgId?:string;
@@ -61,10 +63,10 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     };
 
     @observable.ref tooltipModel:any|null = null;
-    @observable pointHovered:boolean = false;
     private mouseEvents:any = this.makeMouseEvents();
     private legendClassName:string = `stacked-bar-plot-legend-${Math.random()}`;
     @observable computedLegendWidth = 0;
+    @observable mousePosition = { x:0, y:0 };
 
     @observable.ref private container:HTMLDivElement;
 
@@ -90,9 +92,6 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     }
 
     private makeMouseEvents() {
-        let disappearTimeout:Timer | null = null;
-        const disappearDelayMs = 250;
-
         return [{
             target: "data",
             eventHandlers: {
@@ -102,14 +101,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                             target: "data",
                             mutation: (props: any) => {
                                 this.tooltipModel = props;
-                                this.pointHovered = true;
-
-                                if (disappearTimeout !== null) {
-                                    clearTimeout(disappearTimeout);
-                                    disappearTimeout = null;
-                                }
-
-                                return { active: true };
+                                return null;
                             }
                         }
                     ];
@@ -119,15 +111,8 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                         {
                             target: "data",
                             mutation: () => {
-                                if (disappearTimeout !== null) {
-                                    clearTimeout(disappearTimeout);
-                                }
-
-                                disappearTimeout = setTimeout(()=>{
-                                    this.pointHovered = false;
-                                }, disappearDelayMs);
-
-                                return { active: false };
+                                this.tooltipModel = null;
+                                return null;
                             }
                         }
                     ];
@@ -603,8 +588,8 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         }
         return (
             <div>
-                <strong>{datum.majorCategory}</strong><br/>
-                <strong>{datum.minorCategory}</strong>:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}&nbsp;({datum.percentage}%)
+                <span>{datum.majorCategory}</span><br/>
+                <strong>{datum.minorCategory}:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}&nbsp;({datum.percentage}%)</strong>
             </div>
         );
     }
@@ -639,6 +624,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                         width={this.svgWidth}
                         role="img"
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
+                        onMouseMove={this.onMouseMove}
                     >
                         <g
                             transform={`translate(${this.leftPadding}, ${this.topPadding})`}
@@ -669,27 +655,9 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         }
     }
 
-    @autobind
-    private getTooltip() {
-        if (this.container && this.tooltipModel) {
-            const countAxisOffset = (this.tooltipModel.y + this.tooltipModel.y0)/2;
-            const categoryAxisOffset = this.tooltipModel.x;
-            return (
-                <ScatterPlotTooltip
-                    placement={this.props.horizontalBars ? "bottom" : "right"}
-                    container={this.container}
-                    targetHovered={this.pointHovered}
-                    targetCoords={{
-                        x: (this.categoryAxis === "x" ? categoryAxisOffset : countAxisOffset) + this.leftPadding,
-                        y: (this.categoryAxis === "y" ? categoryAxisOffset : countAxisOffset) + this.topPadding
-                    }}
-                    overlay={this.tooltip(this.tooltipModel.datum)}
-                    arrowOffsetTop={20}
-                />
-            );
-        } else {
-            return <span></span>;
-        }
+    @autobind private onMouseMove(e:React.MouseEvent<any>) {
+        this.mousePosition.x = e.pageX;
+        this.mousePosition.y = e.pageY;
     }
 
     private updateLegendWidth() {
@@ -714,9 +682,19 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 <Observer>
                     {this.getChart}
                 </Observer>
-                <Observer>
-                    {this.getTooltip}
-                </Observer>
+                {!!this.tooltipModel && (
+                    (ReactDOM as any).createPortal(
+                        <Popover
+                            arrowOffsetTop={17}
+                            className={classnames("cbioportal-frontend", "cbioTooltip")}
+                            positionLeft={this.mousePosition.x + 8}
+                            positionTop={this.mousePosition.y - 17}
+                        >
+                            {this.tooltip(this.tooltipModel.datum || this.tooltipModel.data[0])}
+                        </Popover>,
+                        document.body
+                    )
+                )}
             </div>
         );
     }

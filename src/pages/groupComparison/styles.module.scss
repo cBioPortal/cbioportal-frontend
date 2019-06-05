@@ -49,8 +49,20 @@
     display:inline-block;
 
     .buttonUnselected {
-        filter: grayscale(1);
-        opacity: 0.35;
+        //filter: grayscale(1);
+        //opacity: 0.35;
+        background-color:rgba(0,0,0,0) !important;
+        border: 1px solid #c3c3c3;
+
+        span {
+            color:black !important;
+        }
+    }
+
+    .buttonExcludedFromAnalysis {
+        background-color:#dddddd !important;
+        color:white !important;
+        text-decoration: line-through solid black !important;
     }
 
     i {

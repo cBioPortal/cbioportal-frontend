@@ -9,6 +9,7 @@ interface IMiniOncoprint {
     group2Altered:number;
     group1Color?:string;
     group2Color?:string;
+    alterationColor?:string;
     height?:number;
     width:number;
 }
@@ -18,8 +19,8 @@ export const MiniOncoprint: React.SFC<IMiniOncoprint> = (props) => {
 
     return <div className={styles.wrapper} style={{width:props.width}}>
         <div className={styles.groupRow}>
-            <div style={{ width:`${props.group1Width}%`, background: '#3786C2'}}></div>
-            <div style={{ width:`${props.group2Width}%`, background: '#bbb'}}></div>
+            <div style={{ width:`${props.group1Width}%`, background: props.group1Color}}></div>
+            <div style={{ width:`${props.group2Width}%`, background: props.group2Color}}></div>
         </div>
         <div className={styles.alterationRow}>
             <div style={{ width:`${props.group1Unaltered}%`, background: 'transparent'}}></div>
