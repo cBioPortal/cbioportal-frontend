@@ -31,17 +31,19 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
             this.props.store.enrichmentsGroup2
         ],
         render:()=>{
-            const group1Name = this.props.store.enrichmentsGroup1.result!.nameWithOrdinal;
-            const group2Name = this.props.store.enrichmentsGroup2.result!.nameWithOrdinal;
+            const group1 = this.props.store.enrichmentsGroup1.result!;
+            const group2 = this.props.store.enrichmentsGroup2.result!;
             return (
                 <div data-test="GroupComparisonProteinEnrichments">
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.proteinEnrichmentProfiles} onChange={this.onChangeProfile}
                                                 selectedValue={this.props.store.proteinEnrichmentProfile.result!.molecularProfileId}/>
                     <ExpressionEnrichmentContainer data={this.props.store.proteinEnrichmentData.result!}
-                                                   group1Name={group1Name}
-                                                   group2Name={group2Name}
-                                                   group1Description={`samples in ${group1Name}.`}
-                                                   group2Description={`samples in ${group2Name}.`}
+                                                   group1Name={group1.nameWithOrdinal}
+                                                   group2Name={group2.nameWithOrdinal}
+                                                   group1Description={`samples in ${group1.nameWithOrdinal}.`}
+                                                   group2Description={`samples in ${group2.nameWithOrdinal}.`}
+                                                   group1Color={group1.color}
+                                                   group2Color={group2.color}
                                                    selectedProfile={this.props.store.proteinEnrichmentProfile.result!}
                                                    alteredVsUnalteredMode={false}
                     />
