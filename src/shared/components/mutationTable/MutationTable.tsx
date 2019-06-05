@@ -37,6 +37,7 @@ import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {ILazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
 import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import generalStyles from "./column/styles.module.scss";
@@ -61,6 +62,7 @@ export interface IMutationTableProps {
     pubMedCache?:PubMedCache;
     mutationCountCache?:MutationCountCache;
     genomeNexusCache?:GenomeNexusCache;
+    genomeNexusMyVariantInfoCache?:GenomeNexusMyVariantInfoCache
     mutSigData?:IMutSigData;
     enableOncoKb?: boolean;
     enableMyCancerGenome?: boolean;
@@ -537,9 +539,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         
         this._columns[MutationTableColumnType.GNOMAD] = {
             name: "gnomAD",
-            render: (d:Mutation[]) => GnomadColumnFormatter.renderFunction(d, this.props.genomeNexusCache as GenomeNexusCache),
-            sortBy: (d:Mutation[]) => GnomadColumnFormatter.getSortValue(d, this.props.genomeNexusCache as GenomeNexusCache),
-            download: (d:Mutation[]) => GnomadColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
+            render: (d:Mutation[]) => GnomadColumnFormatter.renderFunction(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+            sortBy: (d:Mutation[]) => GnomadColumnFormatter.getSortValue(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+            download: (d:Mutation[]) => GnomadColumnFormatter.download(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
             tooltip: (<span><a href="https://gnomad.broadinstitute.org/">gnomAD</a> population allele frequencies. 
             Overall population allele frequency is shown. Hover over a frequency to see the frequency for each specific population.</span>),
             defaultSortDirection: "desc",
