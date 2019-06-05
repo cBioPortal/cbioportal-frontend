@@ -89,7 +89,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         );
 
         this.unsavedOrderReaction = reaction(
-            ()=>JSON.stringify(this.store.dragUidOrder), // need to touch every element to react to changes bc the array changes in place
+            ()=>JSON.stringify(this.store.dragNameOrder), // need to touch every element to react to changes bc the array changes in place
             ()=>{ this.unsavedOrderWarningDismissed = false; }
         );
 
@@ -278,7 +278,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     }
 
     @computed get unsavedOrderWarning() {
-        if (this.store.dragUidOrder && !this.unsavedOrderWarningDismissed) {
+        if (this.store.dragNameOrder && !this.unsavedOrderWarningDismissed) {
             return (
                 <div className="alert alert-warning" style={{display:"flex", marginBottom:3, marginTop:7}}>
                     <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
@@ -290,14 +290,14 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     >
                         <button
                             className="btn btn-xs btn-default"
-                            onClick={this.store.saveDragUidOrderAndGoToNewSession}
+                            onClick={this.store.saveDragNameOrderAndGoToNewSession}
                             style={{marginRight:5}}
                         >
                             Save to new comparison session
                         </button>
                         <button
                             className="btn btn-xs btn-default"
-                            onClick={this.store.clearDragUidOrder}
+                            onClick={this.store.clearDragNameOrder}
                         >
                             Reset
                         </button>
