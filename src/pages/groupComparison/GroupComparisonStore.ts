@@ -238,10 +238,10 @@ export default class GroupComparisonStore {
             let sorted:ComparisonGroup[];
             if (this.dragNameOrder) {
                 const order = stringListToIndexSet(this.dragNameOrder);
-                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>ifndef(order[g.name], Number.POSITIVE_INFINITY));
+                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifndef<number>(order[g.name], Number.POSITIVE_INFINITY));
             } else if (this._session.result!.groupNameOrder) {
                 const order = stringListToIndexSet(this._session.result!.groupNameOrder!);
-                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>ifndef(order[g.name], Number.POSITIVE_INFINITY));
+                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifndef<number>(order[g.name], Number.POSITIVE_INFINITY));
             } else {
                 sorted = defaultGroupOrder(this._unsortedOriginalGroups.result!);
             }
