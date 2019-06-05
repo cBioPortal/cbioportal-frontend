@@ -109,4 +109,57 @@ describe("group comparison page screenshot tests", function () {
         assertScreenShotMatch(res);
     });
 
+    it("group comparison page mutation enrichments tab several groups", function() {
+        browser.click('.tabAnchor_mutations');
+        browser.waitForVisible('div[data-test="GroupComparisonMutationEnrichments"]', 10000);
+        browser.moveToObject("body", 0, 0);
+        var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+
+    it("group comparison page cna enrichments tab several groups", function() {
+        browser.click('.tabAnchor_cna');
+        browser.waitForVisible('div[data-test="GroupComparisonCopyNumberEnrichments"]', 10000);
+        browser.moveToObject("body", 0, 0);
+        var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+
+    it("group comparison page mutation enrichments tab two groups", function() {
+        // deselect two groups
+        browser.click('button[data-test="groupSelectorButtonA"]');
+        browser.waitForExist('button[data-test="groupSelectorButtonD"]', 10000);
+        browser.click('button[data-test="groupSelectorButtonD"]');
+        // go back to mutations tab
+        browser.waitForExist('.tabAnchor_mutations', 10000);
+        browser.click('.tabAnchor_mutations');
+        browser.waitForVisible('div[data-test="GroupComparisonMutationEnrichments"]', 10000);
+        browser.moveToObject("body", 0, 0);
+        var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+
+    it("group comparison page cna enrichments tab two groups", function() {
+        browser.click('.tabAnchor_cna');
+        browser.waitForVisible('div[data-test="GroupComparisonCopyNumberEnrichments"]', 10000);
+        browser.moveToObject("body", 0, 0);
+        var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+
+    it("group comparison page mrna enrichments tab two groups", function() {
+        browser.click('.tabAnchor_mrna');
+        browser.waitForVisible('div[data-test="GroupComparisonMRNAEnrichments"]', 10000);
+        browser.moveToObject("body", 0, 0);
+        var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+
+    it("group comparison page protein enrichments tab two groups", function() {
+        browser.click('.tabAnchor_protein');
+        browser.waitForVisible('div[data-test="GroupComparisonProteinEnrichments"]', 10000);
+        browser.moveToObject("body", 0, 0);
+        var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+        assertScreenShotMatch(res);
+    });
 });
