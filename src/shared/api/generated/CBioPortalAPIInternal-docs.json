@@ -1054,6 +1054,74 @@
         }
       }
     },
+    "/molecular-profiles/{molecularProfileId}/copy-number-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Copy Number Enrichments"
+        ],
+        "summary": "Fetch copy number enrichments in a molecular profile",
+        "operationId": "fetchCopyNumberEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "copyNumberEventType",
+            "in": "query",
+            "description": "Type of the copy number event",
+            "required": false,
+            "type": "string",
+            "default": "HOMDEL",
+            "enum": [
+              "HOMDEL",
+              "AMP"
+            ]
+          },
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "enrichmentFilter",
+            "description": "List of altered and unaltered Sample/Patient IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EnrichmentFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationEnrichment"
+              }
+            }
+          }
+        }
+      }
+    },
     "/molecular-profiles/{molecularProfileId}/expression-enrichments/fetch": {
       "post": {
         "tags": [

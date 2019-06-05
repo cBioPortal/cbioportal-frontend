@@ -2570,6 +2570,122 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    fetchCopyNumberEnrichmentsUsingPOSTURL(parameters: {
+        'molecularProfileId': string,
+        'copyNumberEventType' ? : "HOMDEL" | "AMP",
+        'enrichmentType' ? : "SAMPLE" | "PATIENT",
+        'enrichmentFilter': EnrichmentFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/molecular-profiles/{molecularProfileId}/copy-number-enrichments/fetch';
+
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
+        if (parameters['copyNumberEventType'] !== undefined) {
+            queryParameters['copyNumberEventType'] = parameters['copyNumberEventType'];
+        }
+
+        if (parameters['enrichmentType'] !== undefined) {
+            queryParameters['enrichmentType'] = parameters['enrichmentType'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch copy number enrichments in a molecular profile
+     * @method
+     * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_gistic
+     * @param {string} copyNumberEventType - Type of the copy number event
+     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
+     * @param {} enrichmentFilter - List of altered and unaltered Sample/Patient IDs
+     */
+    fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters: {
+        'molecularProfileId': string,
+        'copyNumberEventType' ? : "HOMDEL" | "AMP",
+        'enrichmentType' ? : "SAMPLE" | "PATIENT",
+        'enrichmentFilter': EnrichmentFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/molecular-profiles/{molecularProfileId}/copy-number-enrichments/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
+
+            if (parameters['molecularProfileId'] === undefined) {
+                reject(new Error('Missing required  parameter: molecularProfileId'));
+                return;
+            }
+
+            if (parameters['copyNumberEventType'] !== undefined) {
+                queryParameters['copyNumberEventType'] = parameters['copyNumberEventType'];
+            }
+
+            if (parameters['enrichmentType'] !== undefined) {
+                queryParameters['enrichmentType'] = parameters['enrichmentType'];
+            }
+
+            if (parameters['enrichmentFilter'] !== undefined) {
+                body = parameters['enrichmentFilter'];
+            }
+
+            if (parameters['enrichmentFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: enrichmentFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch copy number enrichments in a molecular profile
+     * @method
+     * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_gistic
+     * @param {string} copyNumberEventType - Type of the copy number event
+     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
+     * @param {} enrichmentFilter - List of altered and unaltered Sample/Patient IDs
+     */
+    fetchCopyNumberEnrichmentsUsingPOST(parameters: {
+            'molecularProfileId': string,
+            'copyNumberEventType' ? : "HOMDEL" | "AMP",
+            'enrichmentType' ? : "SAMPLE" | "PATIENT",
+            'enrichmentFilter': EnrichmentFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < AlterationEnrichment >
+        > {
+            return this.fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchExpressionEnrichmentsUsingPOSTURL(parameters: {
         'molecularProfileId': string,
         'enrichmentType' ? : "SAMPLE" | "PATIENT",

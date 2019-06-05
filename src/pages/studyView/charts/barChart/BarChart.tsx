@@ -18,6 +18,7 @@ import {
 } from "../../StudyViewUtils";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import {getTextDiagonal, getTextHeight, getTextWidth} from "../../../../shared/lib/wrapText";
+import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 
 export interface IBarChartProps {
     data: DataBin[];
@@ -211,7 +212,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                             data: {
                                 fill: (d: BarDatum) =>
                                     (this.isDataBinSelected(d.dataBin, this.props.filters) || this.props.filters.length === 0) ?
-                                        STUDY_VIEW_CONFIG.colors.theme.primary : STUDY_VIEW_CONFIG.colors.na
+                                        STUDY_VIEW_CONFIG.colors.theme.primary : DEFAULT_NA_COLOR
                             }
                         }}
                         data={this.barData}
