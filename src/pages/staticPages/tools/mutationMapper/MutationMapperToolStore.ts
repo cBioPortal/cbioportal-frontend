@@ -21,6 +21,7 @@ import {IHotspotIndex} from "shared/model/CancerHotspots";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
@@ -259,6 +260,10 @@ export default class MutationMapperToolStore
         return new GenomeNexusCache();
     }
 
+    @cached get genomeNexusMyVariantInfoCache() {
+        return new GenomeNexusMyVariantInfoCache();
+    }
+
     @cached get pdbHeaderCache() {
         return new PdbHeaderCache();
     }
@@ -268,7 +273,7 @@ export default class MutationMapperToolStore
     }
 
     @cached get downloadDataFetcher() {
-        return new MutationTableDownloadDataFetcher(this.mutations, undefined, () => this.genomeNexusCache);
+        return new MutationTableDownloadDataFetcher(this.mutations, undefined, () => this.genomeNexusCache, () => this.genomeNexusMyVariantInfoCache);
     }
 
     @action public clearCriticalErrors() {
