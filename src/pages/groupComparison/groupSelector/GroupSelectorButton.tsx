@@ -86,6 +86,7 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                 style={{
                     backgroundColor: group.color
                 }}
+                data-test={`groupSelectorButton${group.ordinal}`}
             >
                 <span style={{display:"flex", alignItems:"center"}}>
                     <EllipsisTextTooltip
