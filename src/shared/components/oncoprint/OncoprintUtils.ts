@@ -42,6 +42,7 @@ import {
 } from "../../api/generated/CBioPortalAPI";
 import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {STUDY_VIEW_CONFIG} from "../../../pages/studyView/StudyViewConfig";
+import {getClinicalValueColor, RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IGeneHeatmapTrackSpec[];
@@ -245,7 +246,7 @@ export function getClinicalTrackRuleSetParams(track:ClinicalTrackSpec) {
             params = {
                 type: 'categorical',
                 category_key: "attr_val",
-                category_to_color: STUDY_VIEW_CONFIG.colors.reservedValue
+                category_to_color: RESERVED_CLINICAL_VALUE_COLORS
             };
             break;
     }

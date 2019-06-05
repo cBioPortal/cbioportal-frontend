@@ -15,6 +15,7 @@ import {PillTag} from "../../shared/components/PillTag/PillTag";
 import {GroupLogic} from "./filters/groupLogic/GroupLogic";
 import classnames from 'classnames';
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {DEFAULT_NA_COLOR, MUT_COLOR_MISSENSE} from "shared/lib/Colors";
 import {
     caseCounts,
     getNumPatients,
@@ -175,7 +176,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                             const hugoGeneSymbol = this.props.getSelectedGene(entrezGene);
                             return <PillTag
                                 content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoGeneSymbol}
-                                backgroundColor={STUDY_VIEW_CONFIG.colors.mutatedGene}
+                                backgroundColor={MUT_COLOR_MISSENSE}
                                 onDelete={() => this.props.removeGeneFilter(entrezGene)}
                             />
                         })}
@@ -194,7 +195,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                         components={filter.alterations.map(filter => {
                             const hugoGeneSymbol = this.props.getSelectedGene(filter.entrezGeneId);
                             let tagColor = getCNAColorByAlteration(filter.alteration);
-                            tagColor = tagColor === undefined ? STUDY_VIEW_CONFIG.colors.na : tagColor;
+                            tagColor = tagColor === undefined ? DEFAULT_NA_COLOR : tagColor;
                             return <PillTag
                                 content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoGeneSymbol}
                                 backgroundColor={tagColor}
