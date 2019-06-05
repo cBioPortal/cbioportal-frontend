@@ -8,7 +8,7 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 import {MyVariantInfo, MyVariantInfoAnnotation, Gnomad, AlleleCount, AlleleNumber, Homozygotes, AlleleFrequency} from 'shared/api/generated/GenomeNexusAPI';
-import GenomeNexusCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusCache";
+import GenomeNexusMyVariantInfoCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusMyVariantInfoCache";
 import GnomadFrequencyTable from 'shared/components/gnomad/GnomadFrequencyTable';
 
 export type GnomadData = {
@@ -68,8 +68,8 @@ export function frequencyOutput(frequency: number) {
 export default class GnomadColumnFormatter {
 
     public static renderFunction(data: Mutation[],
-                                 genomeNexusCache: GenomeNexusCache | undefined) {
-        const genomeNexusCacheData = GnomadColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
+                                 genomeNexusMyVariantInfoCache: GenomeNexusMyVariantInfoCache | undefined) {
+        const genomeNexusCacheData = GnomadColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusMyVariantInfoCache);
         return (
             <div>
                 <span data-test='gnomad-column' data-test2={data[0].sampleId}>{GnomadColumnFormatter.getGnomadDataViz(genomeNexusCacheData)}</span>
@@ -77,8 +77,7 @@ export default class GnomadColumnFormatter {
         );
     }
 
-    private static getGenomeNexusDataFromCache(data: Mutation[], cache: GenomeNexusCache | undefined): GenomeNexusCacheDataType | null {
-        
+    private static getGenomeNexusDataFromCache(data: Mutation[], cache: GenomeNexusMyVariantInfoCache | undefined): GenomeNexusCacheDataType | null {    
         if (data.length === 0 || !cache) {
             return null;
         }
@@ -250,8 +249,8 @@ export default class GnomadColumnFormatter {
         }
     }
 
-    public static getSortValue(data: Mutation[], genomeNexusCache: GenomeNexusCache): number | null {
-        const genomeNexusCacheData = GnomadColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
+    public static getSortValue(data: Mutation[], genomeNexusMyVariantInfoCache: GenomeNexusMyVariantInfoCache): number | null {
+        const genomeNexusCacheData = GnomadColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusMyVariantInfoCache);
         if (genomeNexusCacheData && genomeNexusCacheData.data) {
             let gnomadData = GnomadColumnFormatter.getData(genomeNexusCacheData.data.my_variant_info);
 
@@ -279,9 +278,9 @@ export default class GnomadColumnFormatter {
 
     }
 
-    public static download(data: Mutation[], genomeNexusCache: GenomeNexusCache): string
+    public static download(data: Mutation[], genomeNexusMyVariantInfoCache: GenomeNexusMyVariantInfoCache): string
     {
-        const genomeNexusCacheData = GnomadColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
+        const genomeNexusCacheData = GnomadColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusMyVariantInfoCache);
 
         if (genomeNexusCacheData && genomeNexusCacheData.data) {
             let gnomadData = GnomadColumnFormatter.getData(genomeNexusCacheData.data.my_variant_info);

@@ -7,6 +7,7 @@ import CancerTypeColumnFormatter from "shared/components/mutationTable/column/Ca
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
 import { Mutation } from "shared/api/generated/CBioPortalAPI";
 import ExonColumnFormatter from "shared/components/mutationTable/column/ExonColumnFormatter";
+import GnomadColumnFormatter from "shared/components/mutationTable/column/GnomadColumnFormatter";
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
