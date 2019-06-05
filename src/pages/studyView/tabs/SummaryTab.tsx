@@ -126,7 +126,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             onDeleteChart: this.handlers.onDeleteChart,
             isNewlyAdded: this.handlers.isNewlyAdded,
             studyViewFilters: this.store.filters,
-            analysisGroupsSettings: this.store.analysisGroupsSettings
+            analysisGroupsSettings: this.store.analysisGroupsSettings,
+            setComparisonConfirmationModal: this.store.setComparisonConfirmationModal
         };
 
         switch (chartMeta.chartType) {

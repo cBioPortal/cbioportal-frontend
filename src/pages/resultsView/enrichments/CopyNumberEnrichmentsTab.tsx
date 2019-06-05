@@ -10,6 +10,7 @@ import autobind from 'autobind-decorator';
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import { AlterationContainerType } from './EnrichmentsUtil';
+import {makeUniqueColorGetter} from "shared/components/plots/PlotUtils";
 
 export interface ICopyNumberEnrichmentsTabProps {
     store: ResultsViewPageStore
@@ -17,6 +18,8 @@ export interface ICopyNumberEnrichmentsTabProps {
 
 @observer
 export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumberEnrichmentsTabProps, {}> {
+
+    private uniqueColorGetter = makeUniqueColorGetter();
 
     @autobind
     private onProfileChange(molecularProfile: MolecularProfile) {
@@ -43,12 +46,14 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                                     name: "Altered group",
                                     description: "Number (percentage) of samples that have alterations in the query gene(s) that also have a deep deletion in the listed gene.",
                                     nameOfEnrichmentDirection: "Co-occurrence",
-                                    count: this.props.store.alteredSampleKeys.result!.length
+                                    count: this.props.store.alteredSampleKeys.result!.length,
+                                    color: this.uniqueColorGetter()
                                 }, {
                                     name: "Unaltered group",
                                     description: "Number (percentage) of samples that do not have alterations in the query gene(s) that have a deep deletion in the listed gene.",
                                     nameOfEnrichmentDirection: "Mutual exclusivity",
-                                    count: this.props.store.unalteredSampleKeys.result!.length
+                                    count: this.props.store.unalteredSampleKeys.result!.length,
+                                    color: this.uniqueColorGetter()
                                 }
                             ]}
                             headerName={"Deep Deletion - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
@@ -70,7 +75,7 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                                 }
                             ]}
                             headerName={"Amplification - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
-                            store={this.props.store} 
+                            store={this.props.store}
                             containerType={AlterationContainerType.COPY_NUMBER} />
                     </div>
                 );

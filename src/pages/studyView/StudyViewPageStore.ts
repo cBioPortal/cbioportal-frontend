@@ -109,7 +109,7 @@ import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {
     finalizeStudiesAttr,
-    getSampleIdentifiers,
+    getSampleIdentifiers, MAX_GROUPS_IN_SESSION,
     sortDataIntoQuartiles,
     StudyViewComparisonGroup
 } from "../groupComparison/GroupComparisonUtils";
@@ -251,6 +251,16 @@ export class StudyViewPageStore {
         for (const disposer of this.reactionDisposers) {
             disposer();
         }
+    }
+
+    @observable.ref private _comparisonConfirmationModal:JSX.Element|null = null;
+    public get comparisonConfirmationModal() {
+        return this._comparisonConfirmationModal;
+    }
+    @autobind
+    @action
+    public setComparisonConfirmationModal(getModal:((hideModal:()=>void)=>JSX.Element)) {
+        this._comparisonConfirmationModal = getModal(()=>{this._comparisonConfirmationModal = null; });
     }
 
     // <comparison groups code>
@@ -483,7 +493,7 @@ export class StudyViewPageStore {
 
     private createStringAttributeComparisonSession(
         clinicalAttribute:ClinicalAttribute,
-        clinicalAttributeValues:{ value:string, color?:string}[],
+        clinicalAttributeValues:ClinicalDataCountWithColor[],
         statusCallback:(phase:LoadingPhase)=>void
     ) {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
@@ -524,18 +534,29 @@ export class StudyViewPageStore {
                             return lcValue;
                         });
                     }
+
                     statusCallback(LoadingPhase.CREATING_SESSION);
-                    // create groups using data
-                    const groups = _.map(lcValueToSampleIdentifiers, (sampleIdentifiers, lcValue)=>{
-                        const value = lcValueToValue[lcValue];
-                        return {
-                            name: value,
-                            description: "",
-                            studies: getStudiesAttr(sampleIdentifiers),
-                            origin: this.studyIds,
-                            color: lcValueToColor[lcValue].color,
-                        };
-                    });
+
+                    // create groups using data - up to MAX_GROUPS_IN_SESSION - ordered by size
+                    const groups:SessionGroupData[] = [];
+                    const sortedAttrVals = _.sortBy(clinicalAttributeValues, attrVal=>-attrVal.count);
+                    for (const attrVal of sortedAttrVals) {
+                        if (groups.length >= MAX_GROUPS_IN_SESSION) {
+                            break;
+                        }
+
+                        const lcValue = attrVal.value.toLowerCase();
+                        const sampleIdentifiers = lcValueToSampleIdentifiers[lcValue];
+                        if (sampleIdentifiers && sampleIdentifiers.length > 0) {
+                            groups.push({
+                                name: attrVal.value,
+                                description: "",
+                                studies: getStudiesAttr(sampleIdentifiers),
+                                origin: this.studyIds,
+                                color: lcValueToColor[lcValue].color,
+                            });
+                        }
+                    }
                     // create session and get id
                     const {id} = await comparisonClient.addComparisonSession({
                         groups,
@@ -551,7 +572,7 @@ export class StudyViewPageStore {
     @autobind
     public async openComparisonPage(params:{
         chartMeta: ChartMeta,
-        clinicalAttributeValues?: {value:string, color:string}[]
+        clinicalAttributeValues?: ClinicalDataCountWithColor[]
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
@@ -572,6 +593,8 @@ export class StudyViewPageStore {
             return;
         }
 
+        // set up ping by which the new window can infer whether the study view window has been closed, and
+        //  show an error accordingly
         const pingInterval = setInterval(()=>{
             try {
                 if (!comparisonWindow.closed) {
@@ -2169,22 +2192,6 @@ export class StudyViewPageStore {
             return acc
         }, _chartMetaSet);
 
-
-        _.reduce(this.survivalPlots, (acc: { [id: string]: ChartMeta }, survivalPlot) => {
-            acc[survivalPlot.id] = {
-                uniqueKey: survivalPlot.id,
-                chartType: this.chartsType.get(survivalPlot.id)!,
-                dataType: getChartMetaDataType(survivalPlot.id),
-                patientAttribute:true,
-                dimension: this.chartsDimension[survivalPlot.id]!,
-                displayName: survivalPlot.title,
-                priority: getDefaultPriorityByUniqueKey(survivalPlot.id),
-                renderWhenDataChange: false,
-                description: ''
-            };
-            return acc;
-        }, _chartMetaSet);
-
         if (!_.isEmpty(this.mutationProfiles.result!)) {
             _chartMetaSet[UniqueKey.MUTATED_GENES_TABLE] = {
                 uniqueKey: UniqueKey.MUTATED_GENES_TABLE,
@@ -2337,23 +2344,6 @@ export class StudyViewPageStore {
         });
 
         const cancerTypeIds = _.uniq(this.queriedPhysicalStudies.result.map(study => study.cancerTypeId));
-
-        this.chartsType.set(UniqueKey.OVERALL_SURVIVAL, ChartTypeEnum.SURVIVAL);
-        this.chartsDimension[UniqueKey.OVERALL_SURVIVAL] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL];
-        if (osStatusFlag && osMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.OVERALL_SURVIVAL) !== 0) {
-            // hide OVERALL_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
-            if (cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
-                this.changeChartVisibility(UniqueKey.OVERALL_SURVIVAL, true);
-            }
-        }
-        this.chartsType.set(UniqueKey.DISEASE_FREE_SURVIVAL, ChartTypeEnum.SURVIVAL);
-        this.chartsDimension[UniqueKey.DISEASE_FREE_SURVIVAL] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL];
-        if (dfsStatusFlag && dfsMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.DISEASE_FREE_SURVIVAL) !== 0) {
-            // hide DISEASE_FREE_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
-            if (cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
-                this.changeChartVisibility(UniqueKey.DISEASE_FREE_SURVIVAL, true);
-            }
-        }
 
         this.chartsType.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, ChartTypeEnum.SCATTER);
         this.chartsDimension[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER];
@@ -3162,7 +3152,6 @@ export class StudyViewPageStore {
     readonly clinicalDataWithCount = remoteData<ClinicalDataCountSet>({
         await: () => [
             this.molecularProfileSampleCounts,
-            this.survivalPlotData,
             this.clinicalAttributeIdToClinicalAttribute,
             this.clinicalAttributesCounts,
             this.cancerStudiesData,
@@ -3181,12 +3170,6 @@ export class StudyViewPageStore {
                         }
                         return map;
                     }, {});
-
-                _.each(this.survivalPlotData.result, (survivalPlot) => {
-                    if (survivalPlot.id in this.chartMetaSet) {
-                        ret[survivalPlot.id] = survivalPlot.alteredGroup.length;
-                    }
-                });
 
                 if (UniqueKey.CANCER_STUDIES in this.chartMetaSet) {
                     ret[UniqueKey.CANCER_STUDIES] = _.sumBy(this.cancerStudiesData.result, data => data.count);

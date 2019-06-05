@@ -23,7 +23,8 @@ import {AppStore} from "../../AppStore";
 import _ from "lodash";
 import ClinicalData from "./ClinicalData";
 import ReactSelect from "react-select2";
-import {joinNames} from "./OverlapUtils";
+import {joinGroupNames} from "./OverlapUtils";
+import {trackEvent} from "shared/lib/tracking";
 
 export interface IGroupComparisonPageProps {
     routing:any;
@@ -83,7 +84,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         );
 
         this.unsavedGroupsReaction = reaction(
-            ()=>this.store.unsavedGroupNamesWithOrdinal,
+            ()=>this.store.unsavedGroups,
             ()=>{ this.unsavedGroupsWarningDismissed = false; }
         );
 
@@ -197,24 +198,24 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 ret = studyHeader;
             }
             return ret;
-        } 
+        }
     });
 
     @autobind
     @action
     public onOverlapStrategySelect(option:any) {
+        trackEvent({ category:'groupComparison', action:'setOverlapStrategy', label:option.value});
         this.store.setOverlapStrategy(option.value);
     }
 
     readonly overlapStrategySelector = MakeMobxView({
-        await:()=>[this.store._selectionInfo],
+        await:()=>[this.store.overlapComputations],
         render:()=>{
-            if (this.store._selectionInfo.result!.overlappingSamples.length === 0 &&
-                this.store._selectionInfo.result!.overlappingPatients.length === 0) {
+            if (!this.store.overlapComputations.result!.totalSampleOverlap && !this.store.overlapComputations.result!.totalPatientOverlap) {
                 return null;
             } else {
                 return (
-                    <div style={{width:355, zIndex:20}}>
+                    <div style={{minWidth:355, width:355, zIndex:20}}>
                         <ReactSelect
                             name="select overlap strategy"
                             onChange={(option:any|null)=>{
@@ -237,14 +238,14 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     });
 
     @computed get unsavedGroupsWarning() {
-        const pluralUnsaved = this.store.unsavedGroupNamesWithOrdinal.length > 1;
+        const pluralUnsaved = this.store.unsavedGroups.length > 1;
 
-        if (this.store.unsavedGroupNamesWithOrdinal.length > 0 && !this.unsavedGroupsWarningDismissed) {
+        if (this.store.unsavedGroups.length > 0 && !this.unsavedGroupsWarningDismissed) {
             return (
                 <div className="alert alert-warning" style={{display:"flex", marginBottom:3, marginTop:7}}>
                     <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
                     <div style={{maxWidth:500, display:"inline-block", marginRight: 6}}>
-                        {joinNames(this.store.unsavedGroupNamesWithOrdinal, "and")} {pluralUnsaved ? "are" : "is"} not saved. Others visiting this link will not see {pluralUnsaved ? "them" : "it"}.
+                        {joinGroupNames(this.store.unsavedGroups, "and")} {pluralUnsaved ? "are" : "is"} not saved. Others visiting this link will not see {pluralUnsaved ? "them" : "it"}.
                     </div>
                     <div
                         style={{display:"inline-block"}}
