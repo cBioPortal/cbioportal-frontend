@@ -1014,6 +1014,9 @@ export default class GroupComparisonStore {
             } else {
                 return Promise.resolve([]);
             }
+        },
+        onError:()=>{
+            // suppress failsafe error handler
         }
     }, []);
 
@@ -1027,6 +1030,9 @@ export default class GroupComparisonStore {
                 (sortedByPvalue[index] as ClinicalDataEnrichmentWithQ).qValue = qValue;
             });
             return Promise.resolve(sortedByPvalue as ClinicalDataEnrichmentWithQ[]);
+        },
+        onError:()=>{
+            // suppress failsafe error handler
         }
     }, []);
 }
