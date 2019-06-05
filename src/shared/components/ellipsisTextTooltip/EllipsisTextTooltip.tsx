@@ -7,7 +7,7 @@ import $ from "jquery";
 import autobind from "autobind-decorator";
 
 @observer
-export default class EllipsisTextTooltip extends React.Component<{ text:string; style?:any; shownWidth?:number, hideTooltip?:boolean },{}> {
+export default class EllipsisTextTooltip extends React.Component<{ text:any; style?:any; shownWidth?:number, hideTooltip?:boolean },{}> {
 
     @observable tooltipVisible = false;
 

@@ -83,6 +83,13 @@
     &.Significant {
         font-weight: bold;
     }
+
+    &.ColoredBackground {
+        border-radius:3px;
+        padding:1px 5px 1px 5px;
+        display:inline-block;
+        line-height:1.4;
+    }
 }
 
 .FlexCheckbox label {
