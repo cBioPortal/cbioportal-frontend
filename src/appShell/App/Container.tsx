@@ -1,10 +1,8 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import UnsupportedBrowserModal from "shared/components/unsupportedBrowserModal/UnsupportedBrowserModal";
 
 import '../../globalStyles/prefixed-global.scss';
 import PortalHeader from "./PortalHeader";
-import PortalFooter from "./PortalFooter";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import {observer} from "mobx-react";
 
@@ -14,6 +12,7 @@ import Helmet from "react-helmet";
 import {computed} from "mobx";
 import { If, Else, Then } from 'react-if';
 import ErrorScreen from "./ErrorScreen";
+import UserMessager from "shared/components/userMessager/UserMessage";
 
 interface IContainerProps {
     location: Location;
@@ -55,6 +54,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                     </Helmet>
 
                     <div className="pageTopContainer">
+                        <UserMessager />
                         <div className="contentWidth">
                             <PortalHeader appStore={this.appStore}/>
                         </div>
