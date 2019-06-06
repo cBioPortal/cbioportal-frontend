@@ -44,7 +44,8 @@ describe('Mutation Table', function() {
                 return textValuesWith6.length > 1;
             }, 60000, "Exon data not in Exon column");
             textValuesWith6 = browser.getText('//*[text()="6"]');
-            assert.equal(textValuesWith6.length, 3);
+            // 3 values from Exon column + 1 value from #Mut in Sample column
+            assert.equal(textValuesWith6.length, 4);
         });
 
         it('should show more exon number after clicking "Show more"', ()=>{
@@ -53,6 +54,7 @@ describe('Mutation Table', function() {
             // check if 6 exact matches for 6 appear
             browser.waitUntil(() => {
                 textValuesWith6 = browser.getText('//*[text()="6"]');
+                // 4 values from Exon column + 1 value from #Mut in Sample column + 1 value from COSMIC column
                 return textValuesWith6.length === 6;
             }, 20000, "Exon data not in Exon column after clikcing show more button");
         });
