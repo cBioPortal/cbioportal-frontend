@@ -220,22 +220,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return columns;
     }
 
-    @computed get volcanoPlotLabels() {
-        if(this.props.groups.length === 2) {
-            let label1 = this.props.groups[0].nameOfEnrichmentDirection || this.props.groups[0].name;
-            let label2 = this.props.groups[1].nameOfEnrichmentDirection || this.props.groups[1].name;
-            return [label2, label1];
-        }
-        return [];
-    }
-
-    @computed get scatterPlotLabels() {
-        if(this.props.groups.length === 2) {
-            return [this.props.groups[0].name, this.props.groups[1].name];
-        }
-        return [];
-    }
-
     @computed get selectedGenesSet() {
         return _.keyBy(this.selectedGenes || []);
     }
@@ -281,16 +265,31 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return (
             <div className={styles.Container}>
                 <div className={styles.ChartsPanel} style={{maxWidth:WindowStore.size.width-60}}>
-                    {this.isTwoGroupAnalysis && <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
-                        xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={15}
-                        xAxisTickValues={[-10, 0, 10]}
-                        selectedGenesSet={this.selectedGenesSet}
-                        onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
-                        onSelectionCleared={this.onSelectionCleared} />}
+                    {this.isTwoGroupAnalysis &&
+                        <MiniScatterChart
+                            data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
+                            xAxisLeftLabel={this.group2.nameOfEnrichmentDirection || this.group2.name}
+                            xAxisRightLabel={this.group1.nameOfEnrichmentDirection || this.group1.name}
+                            xAxisDomain={15}
+                            xAxisTickValues={[-10, 0, 10]}
+                            selectedGenesSet={this.selectedGenesSet}
+                            onGeneNameClick={this.onGeneNameClick}
+                            onSelection={this.onSelection}
+                            onSelectionCleared={this.onSelectionCleared}
+                        />
+                    }
 
-                    {this.isTwoGroupAnalysis && <MiniFrequencyScatterChart data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.group1.name, this.group2.name)}
-                        xGroupName={this.volcanoPlotLabels[1]} yGroupName={this.volcanoPlotLabels[0]} onGeneNameClick={this.onGeneNameClick}
-                        selectedGenesSet={this.selectedGenesSet} onSelection={this.onSelection} onSelectionCleared={this.onSelectionCleared} />}
+                    {this.isTwoGroupAnalysis &&
+                        <MiniFrequencyScatterChart
+                            data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.group1.name, this.group2.name)}
+                            xGroupName={this.group1.name}
+                            yGroupName={this.group2.name}
+                            onGeneNameClick={this.onGeneNameClick}
+                            selectedGenesSet={this.selectedGenesSet}
+                            onSelection={this.onSelection}
+                            onSelectionCleared={this.onSelectionCleared}
+                        />
+                    }
 
                     <div style={{ maxWidth: this.genePlotMaxWidth }}>
                         <GeneBarPlot
