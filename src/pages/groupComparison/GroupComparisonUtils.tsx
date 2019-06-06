@@ -1,5 +1,5 @@
 import {MobxPromise} from 'mobxpromise/dist/src/MobxPromise';
-import {PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
+import {ClinicalData, PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 import {
     ClinicalDataEnrichment,
@@ -450,23 +450,24 @@ export function MissingSamplesMessage(
     );
 }
 
-export function sortDataIntoQuartiles<D>(
-    groupedByValue:{[value:number]:D[]},
-    inclusiveQuartileTops:[number, number, number] // assumed sorted ascending, and distinct
+export function getQuartiles<D extends {value:string}>(
+    data:D[]
 ) {
-    const quartileGroups:[D[], D[], D[], D[]] = [[],[],[],[]];
-    _.forEach(groupedByValue, (dataWithValue:D[], value:string)=>{
-        let q = 0;
-        let v = parseFloat(value);
-        while (v > inclusiveQuartileTops[q]) {
-            q += 1;
-            if (q > 2) {
-                break;
-            }
-        }
-        quartileGroups[q] = quartileGroups[q].concat(dataWithValue);
-    });
-    return quartileGroups;
+    data = _.chain(data)
+        .filter(d=>!isNaN(d.value as any))
+        .sortBy(d=>parseFloat(d.value))
+        .value();
+
+    const quarterLength = data.length / 4;
+    const quartileLimits = [0, Math.floor(quarterLength), Math.floor(2*quarterLength), Math.floor(3*quarterLength), data.length];
+    const quartiles:D[][] = [];
+    for (const i of [0,1,2,3]) {
+        const newQuartile = data.slice(quartileLimits[i], quartileLimits[i+1]);
+        if (newQuartile.length > 0)
+            // handle edge case for small amounts of data where some quartile ranges might be empty
+            quartiles.push(newQuartile);
+    }
+    return quartiles;
 }
 
 export function intersectSamples(
