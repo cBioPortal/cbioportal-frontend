@@ -176,6 +176,7 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
                         onMouseOut={region.numCases > 0 ? regionMouseOut : undefined}
                         onMouseMove={this.regionHoverHandlers({combination:comb, numCases: region.numCases })}
                         onClick={region.numCases > 0 ? this.regionClickHandlers({ combination: comb }) : undefined}
+                        data-test={region.color + this.props.caseType + "ComparisonGroupRegionRect"}
                     />
                 </g>
             );
