@@ -110,7 +110,7 @@ import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {
     finalizeStudiesAttr,
     getSampleIdentifiers, MAX_GROUPS_IN_SESSION,
-    sortDataIntoQuartiles,
+    getQuartiles,
     StudyViewComparisonGroup
 } from "../groupComparison/GroupComparisonUtils";
 import {getSelectedGroups, getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
@@ -362,20 +362,7 @@ export class StudyViewPageStore {
                         }
                     });
 
-                    // get quartiles of data
-                    data = _.chain(data)
-                        .filter(d=>!isNaN(d.value as any))
-                        .sortBy(d=>parseFloat(d.value))
-                        .value();
-
-                    const quarterLength = data.length / 4;
-                    const quartileLimits = [0, Math.floor(quarterLength), Math.floor(2*quarterLength), Math.floor(3*quarterLength), data.length];
-                    const quartiles:ClinicalData[][] = [];
-                    for (const i of [0,1,2,3]) {
-                        const newQuartile = data.slice(quartileLimits[i], quartileLimits[i+1]);
-                        if (newQuartile.length > 0)
-                            quartiles.push(newQuartile);
-                    }
+                    const quartiles:ClinicalData[][] = getQuartiles(data);
                     // create groups using data
                     let patientToSamples:{[uniquePatientKey:string]:SampleIdentifier[]} = {};
                     if (clinicalAttribute.patientAttribute) {
@@ -385,12 +372,13 @@ export class StudyViewPageStore {
                         let studies;
                         if (clinicalAttribute.patientAttribute) {
                             studies = getStudiesAttr(
-                                _.flattenDeep<any>(
-                                    quartile.map(d=>{
-                                        return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }))
-                                    })
-                                ) as SampleIdentifier[]
-                            )
+                                _.flatMapDeep(
+                                    quartile,
+                                    (d:ClinicalData)=>{
+                                        return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }));
+                                    }
+                                )
+                            );
                         } else {
                             studies = getStudiesAttr(quartile.map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
                         }
