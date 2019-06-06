@@ -447,8 +447,9 @@ export class StudyViewPageStore {
                     // create session and get id
                     const {id} = await comparisonClient.addComparisonSession({
                         groups,
-                        clinicalAttributeName:clinicalAttribute.displayName,
-                        origin:this.studyIds
+                        clinicalAttributeName:`Quartiles of ${clinicalAttribute.displayName}`,
+                        origin:this.studyIds,
+                        groupNameOrder: groups.map(g=>g.name)
                     });
                     return resolve(id);
                 }

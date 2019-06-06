@@ -20,7 +20,9 @@ import {
     PatientIdentifier,
     Sample,
     SampleFilter,
-    SampleIdentifier
+    SampleIdentifier,
+    ClinicalAttribute,
+    CancerStudy
 } from "../../shared/api/generated/CBioPortalAPI";
 import { action, computed, observable } from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
@@ -55,6 +57,8 @@ import {GroupComparisonURLQuery} from "./GroupComparisonPage";
 import {AppStore} from "../../AppStore";
 import {stringListToIndexSet} from "../../shared/lib/StringUtils";
 import {trackEvent} from "shared/lib/tracking";
+import ifndef from "../../shared/lib/ifndef";
+import { ISurvivalDescription } from "pages/resultsView/survival/SurvivalDescriptionTable";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples and patients",
@@ -66,7 +70,7 @@ export default class GroupComparisonStore {
     @observable private _currentTabId:GroupComparisonTab|undefined = undefined;
     @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.EXCLUDE;
     @observable private sessionId:string;
-    @observable dragUidOrder:string[]|undefined = undefined;
+    @observable dragNameOrder:string[]|undefined = undefined;
     private _unsavedGroups = observable.shallowArray<SessionGroupData>([]);
 
     constructor(sessionId:string, private appStore:AppStore) {
@@ -74,16 +78,16 @@ export default class GroupComparisonStore {
     }
 
     @action public updateDragOrder(oldIndex:number, newIndex:number) {
-        if (!this.dragUidOrder) {
-            this.dragUidOrder = this._originalGroups.result!.map(g=>g.uid);
+        if (!this.dragNameOrder) {
+            this.dragNameOrder = this._originalGroups.result!.map(g=>g.name);
         }
-        const poppedUid = this.dragUidOrder.splice(oldIndex, 1)[0];
-        this.dragUidOrder.splice(newIndex, 0, poppedUid);
+        const poppedUid = this.dragNameOrder.splice(oldIndex, 1)[0];
+        this.dragNameOrder.splice(newIndex, 0, poppedUid);
     }
 
     @autobind
-    @action public clearDragUidOrder() {
-        this.dragUidOrder = undefined;
+    @action public clearDragNameOrder() {
+        this.dragNameOrder = undefined;
     }
 
     public get isLoggedIn() {
@@ -232,12 +236,12 @@ export default class GroupComparisonStore {
         invoke:()=>{
             // sort and add ordinals
             let sorted:ComparisonGroup[];
-            if (this.dragUidOrder) {
-                const order = stringListToIndexSet(this.dragUidOrder);
-                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>order[g.uid]);
-            } else if (this._session.result!.groupUidOrder) {
-                const order = stringListToIndexSet(this._session.result!.groupUidOrder!);
-                sorted = _.sortBy(this._unsortedOriginalGroups.result!, g=>order[g.uid]);
+            if (this.dragNameOrder) {
+                const order = stringListToIndexSet(this.dragNameOrder);
+                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifndef<number>(order[g.name], Number.POSITIVE_INFINITY));
+            } else if (this._session.result!.groupNameOrder) {
+                const order = stringListToIndexSet(this._session.result!.groupNameOrder!);
+                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifndef<number>(order[g.name], Number.POSITIVE_INFINITY));
             } else {
                 sorted = defaultGroupOrder(this._unsortedOriginalGroups.result!);
             }
@@ -448,14 +452,14 @@ export default class GroupComparisonStore {
 
     @autobind
     @action
-    public async saveDragUidOrderAndGoToNewSession() {
+    public async saveDragNameOrderAndGoToNewSession() {
         if (!this._session.isComplete) {
             return;
         }
 
         // save _unsavedGroups to new session, and go to it
         const newSession = _.cloneDeep(this._session.result!);
-        newSession.groupUidOrder = this.dragUidOrder && this.dragUidOrder.slice();
+        newSession.groupNameOrder = this.dragNameOrder && this.dragNameOrder.slice(); // get rid of mobx baggage
 
         const {id } = await comparisonClient.addComparisonSession(newSession);
         (window as any).routingStore.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
@@ -945,6 +949,17 @@ export default class GroupComparisonStore {
         }
     }, []);
 
+    readonly activeStudiesClinicalAttributes = remoteData<ClinicalAttribute[]>({
+        await: () => [
+            this.activeStudyIds
+        ],
+        invoke: () => {
+            return client.fetchClinicalAttributesUsingPOST({
+                studyIds:this.activeStudyIds.result!
+            });
+        }
+    }, []);
+
     readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<{ [key: string]: ClinicalData[] }>({
         await: () => [
             this.survivalClinicalData,
@@ -1013,6 +1028,9 @@ export default class GroupComparisonStore {
             } else {
                 return Promise.resolve([]);
             }
+        },
+        onError:()=>{
+            // suppress failsafe error handler
         }
     }, []);
 
@@ -1026,6 +1044,63 @@ export default class GroupComparisonStore {
                 (sortedByPvalue[index] as ClinicalDataEnrichmentWithQ).qValue = qValue;
             });
             return Promise.resolve(sortedByPvalue as ClinicalDataEnrichmentWithQ[]);
+        },
+        onError:()=>{
+            // suppress failsafe error handler
         }
     }, []);
+
+    readonly activeStudyIdToStudy = remoteData({
+        await: ()=>[
+            this.studies,
+            this.activeStudyIds
+        ],
+        invoke:()=>Promise.resolve(_.keyBy(_.filter(this.studies.result, (study) => this.activeStudyIds.result!.includes(study.studyId)), x=>x.studyId))
+    }, {});
+
+    readonly overallSurvivalDescriptions = remoteData({
+        await:() => [
+            this.activeStudiesClinicalAttributes,
+            this.activeStudyIdToStudy
+        ],
+        invoke: () => {
+            const overallSurvivalClinicalAttributeId = 'OS_STATUS';
+            const clinicalAttributeMap = _.groupBy(this.activeStudiesClinicalAttributes.result, "clinicalAttributeId");
+            const result : ISurvivalDescription[] = [];
+            const studyIdToStudy : {[studyId:string]:CancerStudy} = this.activeStudyIdToStudy.result;
+            if (clinicalAttributeMap && clinicalAttributeMap[overallSurvivalClinicalAttributeId] && clinicalAttributeMap[overallSurvivalClinicalAttributeId].length > 0) {
+                clinicalAttributeMap[overallSurvivalClinicalAttributeId].forEach((attr) => {
+                    result.push({
+                            studyName: studyIdToStudy[attr.studyId].name,
+                            description: attr.description
+                    } as ISurvivalDescription);
+                });
+                return Promise.resolve(result);
+            }
+            return Promise.resolve([]);
+        }
+    });
+
+    readonly diseaseFreeSurvivalDescriptions = remoteData({
+        await:() => [
+            this.activeStudiesClinicalAttributes,
+            this.activeStudyIdToStudy
+        ],
+        invoke: () => {
+            const diseaseFreeSurvivalClinicalAttributeId = 'DFS_STATUS';
+            const clinicalAttributeMap = _.groupBy(this.activeStudiesClinicalAttributes.result, "clinicalAttributeId");
+            const result : ISurvivalDescription[] = [];
+            const studyIdToStudy : {[studyId:string]:CancerStudy} = this.activeStudyIdToStudy.result;
+            if (clinicalAttributeMap && clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId] && clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId].length > 0) {
+                clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId].forEach((attr) => {
+                    result.push({
+                            studyName: studyIdToStudy[attr.studyId].name,
+                            description: attr.description
+                    } as ISurvivalDescription);
+                });
+                return Promise.resolve(result);
+            }
+            return Promise.resolve([]);
+        }
+    });
 }
