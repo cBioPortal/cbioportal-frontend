@@ -124,17 +124,19 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                         placeholder="Enter a group name.."
                         value={this.inputGroupName}
                         onChange={this.onChangeInputGroupName}
+                        data-test={this.props.caseType + "GroupNameInputField"}
                     />
                     <button
                         className="btn btm-sm btn-primary"
                         disabled={this.inputGroupName.length === 0 || this.isDuplicateName}
                         onClick={this.submit}
+                        data-test={this.props.caseType + "GroupNameSubmitButton"}
                     >
                         Submit
                     </button>
                 </div>
                 { this.isDuplicateName && (
-                    <div style={{marginTop:4}}>
+                    <div style={{marginTop:4}} data-test={this.props.caseType + "DuplicateGroupNameMessage"}>
                         {DUPLICATE_GROUP_NAME_MSG}
                     </div>
                 )}
@@ -183,6 +185,7 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                         className="btn btn-md btn-primary"
                         disabled={this.props.includedRegions.length === 0}
                         data-event={serializeEvent({action:'createGroupFromVenn',label:'', category:'groupComparison' })}
+                        data-test={this.props.caseType + "GroupComparisonVennDiagramCreateGroupButton"}
                     >
                         Create Group From Selected Diagram Areas
                     </button>
