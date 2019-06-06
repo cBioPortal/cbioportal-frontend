@@ -56,7 +56,7 @@ import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/Compl
 import {GroupComparisonURLQuery} from "./GroupComparisonPage";
 import {AppStore} from "../../AppStore";
 import {stringListToIndexSet} from "../../shared/lib/StringUtils";
-import {trackEvent} from "shared/lib/tracking";
+import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import { ISurvivalDescription } from "pages/resultsView/survival/SurvivalDescriptionTable";
 
@@ -146,7 +146,7 @@ export default class GroupComparisonStore {
                                action: 'comparisonSessionViewed',
                                label: studies.join(',') + ',',
                                fieldsObject:{
-                                   metric1:data.groups.length
+                                   [GACustomFieldsEnum.GroupCount]:data.groups.length
                                }
                            });
             } catch (ex) {
