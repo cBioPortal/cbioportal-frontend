@@ -17,7 +17,6 @@ import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
-import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 import CheckedSelect, {Option} from 'shared/components/checkedSelect/CheckedSelect';
 import {MiniOncoprint} from "shared/components/miniOncoprint/MiniOncoprint";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
@@ -321,11 +320,14 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                                 value={this.selectedValues}
                             />
                         </div>
-                        <FlexAlignedCheckbox
-                            checked={this.significanceFilter}
-                            onClick={this.toggleSignificanceFilter}
-                            label="Significant only"
-                        />
+                        <label className="checkbox-inline">
+                            <input
+                                type="checkbox"
+                                checked={this.significanceFilter}
+                                onClick={this.toggleSignificanceFilter}
+                                data-test="SwapAxes"
+                            />Significant only
+                        </label>
                     </div>
                     <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
                                                checkedGenes={this.props.store ? this.checkedGenes : undefined}
