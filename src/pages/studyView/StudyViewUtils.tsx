@@ -24,6 +24,7 @@ import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./Stud
 import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
 import MobxPromise from 'mobxpromise';
 import {getTextWidth} from "../../shared/lib/wrapText";
+import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
 import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
 
 
@@ -969,7 +970,7 @@ export function getCNAByAlteration(alteration: number) {
 
 export function getCNAColorByAlteration(alteration: number):string|undefined {
     if ([-2, 2].includes(alteration))
-        return alteration === -2 ? STUDY_VIEW_CONFIG.colors.deletion : STUDY_VIEW_CONFIG.colors.amplification;
+        return alteration === -2 ? CNA_COLOR_HOMDEL : CNA_COLOR_AMP;
     return undefined;
 }
 
@@ -1208,16 +1209,11 @@ export function getQValue(qvalue: number):string {
     }
 }
 
-export function getClinicalAttrFixedColor(value: string): string
-{
-    return STUDY_VIEW_CONFIG.colors.reservedValue[value.replace(/\s/g, '').toUpperCase()];
-}
-
 export function pickClinicalAttrFixedColors(data: ClinicalDataCount[]): {[attribute: string]: string}
 {
     return _.reduce(data, (acc: { [id: string]: string }, slice) => {
         // pick a fixed color if predefined
-        const fixed = isNAClinicalValue(slice.value) ? STUDY_VIEW_CONFIG.colors.na : getClinicalAttrFixedColor(slice.value);
+        const fixed = isNAClinicalValue(slice.value) ? DEFAULT_NA_COLOR : getClinicalValueColor(slice.value);
 
         if (fixed) {
             // update the map
@@ -1247,7 +1243,7 @@ export function pickClinicalAttrColorsByIndex(data: ClinicalDataCount[],
     let colorIndex = 0;
 
     return _.reduce(data, (acc: { [id: string]: string }, slice) => {
-        if (!isNAClinicalValue(slice.value) && !getClinicalAttrFixedColor(slice.value)) {
+        if (!isNAClinicalValue(slice.value) && !getClinicalValueColor(slice.value)) {
             acc[slice.value] = availableColors[colorIndex % availableColors.length];
             colorIndex++;
         }
