@@ -12,7 +12,7 @@ import {stringListToSet} from "./StringUtils";
 import {
     MUT_COLOR_INFRAME, MUT_COLOR_MISSENSE, MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC
-} from "../components/oncoprint/geneticrules";
+} from "shared/lib/Colors";
 import {AlterationTypeConstants, AnnotatedExtendedAlteration} from "../../pages/resultsView/ResultsViewPageStore";
 
 export interface IProteinImpactTypeColors

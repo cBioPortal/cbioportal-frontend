@@ -66,8 +66,9 @@ import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import {VirtualStudy} from 'shared/model/VirtualStudy';
-import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {ChartTypeEnum} from "./StudyViewConfig";
 import {MobxPromise} from "mobxpromise";
+import {DEFAULT_NA_COLOR, RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
@@ -1144,43 +1145,57 @@ describe('StudyViewUtils', () => {
                 "count": 16
             },
             {
-                "value": "maybe",
+                "value": "WHY",
                 "count": 46
             },
             {
-                "value": "WHY",
+                "value": "weather",
+                "count": 36
+            },
+            {
+                "value": "is",
+                "count": 36
+            },
+            {
+                "value": "so",
+                "count": 36
+            },
+            {
+                "value": "hot",
                 "count": 36
             }
         ];
 
         it ('picks predefined colors for known clinical attribute values', () => {
             const colors = pickClinicalDataColors(clinicalDataCountWithFixedValues);
-
-            assert.equal(colors["TRUE"], "#109618");
-            assert.equal(colors["FALSE"], "#DC3912");
-            assert.equal(colors["NA"], "#CCCCCC");
+            assert.equal(colors["TRUE"], RESERVED_CLINICAL_VALUE_COLORS.true);
+            assert.equal(colors["FALSE"], RESERVED_CLINICAL_VALUE_COLORS.false);
+            assert.equal(colors["NA"], RESERVED_CLINICAL_VALUE_COLORS.na);
         });
 
         it ('picks predefined colors for known clinical attribute values in mixed letter case', () => {
             const colors = pickClinicalDataColors(clinicalDataCountWithFixedMixedCaseValues);
 
-            assert.equal(colors["Yes"], "#109618");
-            assert.equal(colors["No"], "#DC3912");
-            assert.equal(colors["Na"], "#CCCCCC");
-            assert.equal(colors["Male"], "#2986E2");
-            assert.equal(colors["F"], "#DC3912");
+            assert.equal(colors["Yes"], RESERVED_CLINICAL_VALUE_COLORS.yes);
+            assert.equal(colors["No"], RESERVED_CLINICAL_VALUE_COLORS.no);
+            assert.equal(colors["Na"], RESERVED_CLINICAL_VALUE_COLORS.na);
+            assert.equal(colors["Male"], RESERVED_CLINICAL_VALUE_COLORS.male);
+            assert.equal(colors["F"], RESERVED_CLINICAL_VALUE_COLORS.f);
         });
 
         it ('does not pick already picked colors again for non-fixed values', () => {
-            const availableColors = ["#66AA00", "#666666", "#2986E2", "#CCCCCC", "#DC3912", "#f88508", "#109618"]
+            const availableColors = ["#66AA00", "#666666", "#2986E2", RESERVED_CLINICAL_VALUE_COLORS.na, RESERVED_CLINICAL_VALUE_COLORS.no, "#f88508", RESERVED_CLINICAL_VALUE_COLORS.yes, "#f88507"];
 
             const colors = pickClinicalDataColors(clinicalDataCountWithBothFixedAndOtherValues, availableColors);
 
-            assert.equal(colors["Yes"], "#109618");
-            assert.equal(colors["NO"], "#DC3912");
-            assert.equal(colors["na"], "#CCCCCC");
-            assert.equal(colors["maybe"], "#66AA00");
-            assert.equal(colors["WHY"], "#666666");
+            assert.equal(colors["Yes"], RESERVED_CLINICAL_VALUE_COLORS.yes);
+            assert.equal(colors["NO"], RESERVED_CLINICAL_VALUE_COLORS.no);
+            assert.equal(colors["na"], RESERVED_CLINICAL_VALUE_COLORS.na);
+            assert.equal(colors["WHY"], "#66AA00");
+            assert.equal(colors["weather"], "#666666");
+            assert.equal(colors["is"], "#2986E2");
+            assert.equal(colors["so"], "#f88508");
+            assert.equal(colors["hot"], "#f88507");
         });
     });
 
@@ -1790,7 +1805,7 @@ describe('StudyViewUtils', () => {
             }]);
             assert.equal(result.length, 2);
             assert.equal(result[0].value, 'Stage I');
-            assert.equal(result[1].color, STUDY_VIEW_CONFIG.colors.na);
+            assert.equal(result[1].color, DEFAULT_NA_COLOR);
         });
 
         it('Test the reserved value', () => {
@@ -1802,8 +1817,8 @@ describe('StudyViewUtils', () => {
                 value: 'F'
             }]);
             assert.equal(result.length, 2);
-            assert.equal(result[0].color, STUDY_VIEW_CONFIG.colors.reservedValue.MALE);
-            assert.equal(result[1].color, STUDY_VIEW_CONFIG.colors.reservedValue.F);
+            assert.equal(result[0].color, RESERVED_CLINICAL_VALUE_COLORS.male);
+            assert.equal(result[1].color, RESERVED_CLINICAL_VALUE_COLORS.f);
         });
     });
 
