@@ -13,6 +13,7 @@ import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import classNames from "classnames";
+import {getTextColor} from "../../groupComparison/OverlapUtils";
 
 export interface IExpressionEnrichmentTableProps {
     columns?: ExpressionEnrichmentTableColumnType[];
@@ -26,6 +27,8 @@ export interface IExpressionEnrichmentTableProps {
     group2Name:string;
     group1Description:string;
     group2Description:string;
+    group1Color?:string;
+    group2Color?:string;
     mutexTendency?:boolean;
 }
 
@@ -179,9 +182,28 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
 
         columns[ExpressionEnrichmentTableColumnType.TENDENCY] = {
             name: this.props.mutexTendency ? "Tendency" : "Enriched in",
-            render: (d: ExpressionEnrichmentRow) => <div className={classNames(styles.Tendency, {[styles.Significant]:(d.qValue < 0.05)})}>
-                {this.props.mutexTendency ? calculateExpressionTendency(Number(d.logRatio)) : formatAlterationTendency(Number(d.logRatio) > 0 ? this.props.group1Name : this.props.group2Name)}
-                </div>,
+            render: (d: ExpressionEnrichmentRow) => {
+                let groupColor = undefined;
+                const significant = d.qValue < 0.05;
+                const group1Enriched = Number(d.logRatio) > 0;
+                if (!this.props.mutexTendency && significant) {
+                    groupColor = group1Enriched ? this.props.group1Color : this.props.group2Color;
+                }
+                return (
+                    <div
+                        className={classNames(styles.Tendency, { [styles.Significant]: significant, [styles.ColoredBackground]:!!groupColor })}
+                        style={{
+                            backgroundColor: groupColor,
+                            color:groupColor && getTextColor(groupColor)
+                        }}
+                    >
+                        {this.props.mutexTendency ?
+                            calculateExpressionTendency(Number(d.logRatio)) :
+                            formatAlterationTendency(group1Enriched ? this.props.group1Name : this.props.group2Name)
+                        }
+                    </div>
+                );
+            },
             tooltip: 
                 <table>
                     <tr>

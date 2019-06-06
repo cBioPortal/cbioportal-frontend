@@ -158,7 +158,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
     @computed get toolbar() {
         return (
             <React.Fragment>
-                <div style={{ zIndex: 10, position: "absolute", top: "10px", left: "90px" }}>
+                <div style={{ zIndex: 10, position: "absolute", top: "10px", left: "15px" }}>
                         <strong>{ this._label || this.defaultOption.label}</strong>
                 </div>
                 <div style={{ zIndex: 10, position: "absolute", top: "10px", right: "10px" }}>

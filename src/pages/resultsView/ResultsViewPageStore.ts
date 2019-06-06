@@ -147,6 +147,7 @@ import {
 import { SURVIVAL_CHART_ATTRIBUTES } from "./survival/SurvivalChart";
 import sessionServiceClient from "../../shared/api/sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
+import { ISurvivalDescription } from "./survival/SurvivalDescriptionTable";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -3092,4 +3093,50 @@ export class ResultsViewPageStore {
     @action clearErrors() {
         this.ajaxErrors = [];
     }
+
+    readonly overallSurvivalDescriptions = remoteData({
+        await:() => [
+            this.clinicalAttributes,
+            this.studyIdToStudy
+        ],
+        invoke: () => {
+            const overallSurvivalClinicalAttributeId = 'OS_STATUS';
+            const clinicalAttributeMap = _.groupBy(this.clinicalAttributes.result, "clinicalAttributeId");
+            const result : ISurvivalDescription[] = [];
+            const studyIdToStudy : {[studyId:string]:CancerStudy} = this.studyIdToStudy.result;
+            if (clinicalAttributeMap && clinicalAttributeMap[overallSurvivalClinicalAttributeId] && clinicalAttributeMap[overallSurvivalClinicalAttributeId].length > 0) {
+                clinicalAttributeMap[overallSurvivalClinicalAttributeId].forEach((attr) => {
+                    result.push({
+                            studyName: studyIdToStudy[attr.studyId].name,
+                            description: attr.description
+                    } as ISurvivalDescription);
+                });
+                return Promise.resolve(result);
+            }
+            return Promise.resolve([]);
+        }
+    });
+
+    readonly diseaseFreeSurvivalDescriptions = remoteData({
+        await:() => [
+            this.clinicalAttributes,
+            this.studyIdToStudy
+        ],
+        invoke: () => {
+            const diseaseFreeSurvivalClinicalAttributeId = 'DFS_STATUS';
+            const clinicalAttributeMap = _.groupBy(this.clinicalAttributes.result, "clinicalAttributeId");
+            const result : ISurvivalDescription[] = [];
+            const studyIdToStudy : {[studyId:string]:CancerStudy} = this.studyIdToStudy.result;
+            if (clinicalAttributeMap && clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId] && clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId].length > 0) {
+                clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId].forEach((attr) => {
+                    result.push({
+                            studyName: studyIdToStudy[attr.studyId].name,
+                            description: attr.description
+                    } as ISurvivalDescription);
+                });
+                return Promise.resolve(result);
+            }
+            return Promise.resolve([]);
+        }
+    });
 }
