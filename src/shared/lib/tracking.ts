@@ -115,7 +115,8 @@ export enum GACustomFieldsEnum {
   StudyCount = "metric2",
   Genes = "dimension2",
   VirtualStudy = "dimension3",
-  StudyId = "dimension4"
+  StudyId = "dimension4",
+  GroupCount= "metric3"
 };
 
 
