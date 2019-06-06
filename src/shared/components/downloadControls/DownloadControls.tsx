@@ -71,7 +71,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
                         }
                     });
                 } else {
-                    saveSvg(result, `${this.props.filename}.svg`);
+                    saveMethod(result, `${this.props.filename}.${fileExtension}`);
                 }
             }
         }
