@@ -12,7 +12,7 @@ import {
     getOverlapFilteredGroups,
     getOverlappingPatients,
     getOverlappingSamples,
-    getPatientIdentifiers,
+    getPatientIdentifiers, getQuartiles,
     getSampleIdentifiers,
     getStudyIds,
     getVennPlotData,
@@ -20,7 +20,6 @@ import {
     intersectSamples, IOverlapComputations,
     isGroupEmpty,
     partitionCasesByGroupMembership,
-    sortDataIntoQuartiles,
     unionPatients,
     unionSamples
 } from './GroupComparisonUtils';
@@ -34,7 +33,7 @@ import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/Compl
 chai.use(deepEqualInAnyOrder);
 
 describe('GroupComparisonUtils', () => {
-    describe.only("getOverlapComputations", ()=>{
+    describe("getOverlapComputations", ()=>{
         function assertEqualOverlapComputations(
             expected:IOverlapComputations<Pick<ComparisonGroup, "studies"|"uid">>,
             actual:IOverlapComputations<Pick<ComparisonGroup, "studies"|"uid">>
@@ -1504,60 +1503,46 @@ describe('GroupComparisonUtils', () => {
         });
     });
 
-    describe("sortDataIntoQuartiles", ()=>{
-        it("sorts data into quartiles when theres only one value per quartile", ()=>{
-            assert.deepEqual(sortDataIntoQuartiles(
-                {
-                    3: [{id:"a"}, {id:"b"}, {id:"c"}],
-                    50:[{id:"e"}],
-                    60:[{id:"f"}],
-                    82:[{id:"g"}, {id:"h"}],
-                },
-                [25, 50, 75]
-            ),
-                [
-                    [{id:"a"}, {id:"b"}, {id:"c"}],
-                    [{id:"e"}],
-                    [{id:"f"}],
-                    [{id:"g"}, {id:"h"}]
-                ]
+    describe("getQuartiles", ()=>{
+        it("gets quartiles of 1,2,3, and 4 values", ()=>{
+            const vals = [0,1,2,3].map(x=>({ value:x.toString() }));
+            assert.deepEqual(
+                getQuartiles(vals.slice(0,1)),
+                [[vals[0]]]
+            );
+            assert.deepEqual(
+                getQuartiles(vals.slice(0,2)),
+                [[vals[0]],[vals[1]]]
+            );
+            assert.deepEqual(
+                getQuartiles(vals.slice(0,3)),
+                [[vals[0]],[vals[1]], [vals[2]]]
+            );
+            assert.deepEqual(
+                getQuartiles(vals),
+                [[vals[0]],[vals[1]], [vals[2]], [vals[3]]]
             );
         });
-        it("sorts data into quartiles when theres various values per quartile", ()=>{
-            assert.deepEqual(sortDataIntoQuartiles(
-                {
-                    3: [{id:"a"}, {id:"b"}, {id:"c"}],
-                    4: [{id:"d"}, {id:"e"}, {id:"f"}],
-                    5: [{id:"g"}, {id:"h"}, {id:"i"}],
-                    6: [{id:"j"}, {id:"k"}, {id:"l"}],
-                    51: [{id:"m"}, {id:"n"}, {id:"o"}],
-                    60:[{id:"p"}],
-                    62: [{id:"q"}, {id:"r"}, {id:"s"}],
-                    75: [{id:"t"}, {id:"u"}, {id:"v"}],
-                    82:[{id:"w"}, {id:"x"}],
-                    90:[{id:"y"}, {id:"z"}],
-                },
-                [25, 50, 75]
-                ),
-                [
-                    [
-                        {id:"a"}, {id:"b"}, {id:"c"},
-                        {id:"d"}, {id:"e"}, {id:"f"},
-                        {id:"g"}, {id:"h"}, {id:"i"},
-                        {id:"j"}, {id:"k"}, {id:"l"}
-                    ],
-                    [],
-                    [
-                        {id:"m"}, {id:"n"}, {id:"o"},
-                        {id:"p"}, {id:"q"}, {id:"r"},
-                        {id:"s"}, {id:"t"}, {id:"u"},
-                        {id:"v"}
-                    ],
-                    [
-                        {id:"w"}, {id:"x"}, {id:"y"},
-                        {id:"z"}
-                    ]
-                ]
+        it("gets quartiles of 12,13,14,15 values", ()=>{
+            const vals = [];
+            for (let i=0; i<15; i++) {
+                vals.push({ value: i.toString() });
+            }
+            assert.deepEqual(
+                getQuartiles(vals.slice(0, 12)),
+                [vals.slice(0,3), vals.slice(3,6), vals.slice(6,9), vals.slice(9,12)]
+            );
+            assert.deepEqual(
+                getQuartiles(vals.slice(0, 13)),
+                [vals.slice(0,3), vals.slice(3,6), vals.slice(6,9), vals.slice(9,13)]
+            );
+            assert.deepEqual(
+                getQuartiles(vals.slice(0, 14)),
+                [vals.slice(0,3), vals.slice(3,7), vals.slice(7,10), vals.slice(10,14)]
+            );
+            assert.deepEqual(
+                getQuartiles(vals.slice(0, 15)),
+                [vals.slice(0,3), vals.slice(3,7), vals.slice(7,11), vals.slice(11,15)]
             );
         });
     });
