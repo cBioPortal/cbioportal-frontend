@@ -9,7 +9,7 @@ import {
     ClinicalDataEnrichmentWithQ,
     getSampleIdentifiers,
     GroupComparisonTab, getOrdinals, partitionCasesByGroupMembership,
-    defaultGroupOrder
+    defaultGroupOrder, getOverlapComputations, IOverlapComputations
 } from "./GroupComparisonUtils";
 import { remoteData } from "../../shared/api/remoteData";
 import {
@@ -56,7 +56,7 @@ import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/Compl
 import {GroupComparisonURLQuery} from "./GroupComparisonPage";
 import {AppStore} from "../../AppStore";
 import {stringListToIndexSet} from "../../shared/lib/StringUtils";
-import {trackEvent} from "shared/lib/tracking";
+import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import { ISurvivalDescription } from "pages/resultsView/survival/SurvivalDescriptionTable";
 
@@ -146,7 +146,7 @@ export default class GroupComparisonStore {
                                action: 'comparisonSessionViewed',
                                label: studies.join(',') + ',',
                                fieldsObject:{
-                                   metric1:data.groups.length
+                                   [GACustomFieldsEnum.GroupCount]:data.groups.length
                                }
                            });
             } catch (ex) {
@@ -256,86 +256,13 @@ export default class GroupComparisonStore {
         }
     });
 
-    readonly overlapComputations = remoteData<{
-        groups:ComparisonGroup[],
-        excludedFromAnalysis:{[uid:string]:ComparisonGroup}
-        // samples and patients which are removed from analysis groups
-        // does not include those from groups excluded from analysis
-        overlappingSamples:SampleIdentifier[],
-        overlappingPatients:PatientIdentifier[],
-        overlappingSamplesSet:ComplexKeySet,
-        overlappingPatientsSet:ComplexKeySet,
-        // total counts, including those from groups excluded from analysis
-        totalSampleOverlap:number,
-        totalPatientOverlap:number,
-    }>({
+    readonly overlapComputations = remoteData<IOverlapComputations<ComparisonGroup>>({
         await:()=>[this._originalGroups],
         invoke:()=>{
-            let groups:ComparisonGroup[] = this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid));
-
-            const totalSampleOverlap = new ComplexKeySet();
-            const totalPatientOverlap = new ComplexKeySet();
-
-            let overlappingSamples:SampleIdentifier[] = [];
-            let overlappingPatients:PatientIdentifier[] = [];
-            let overlappingSamplesSet = new ComplexKeySet();
-            let overlappingPatientsSet = new ComplexKeySet();
-            let removedGroups:{[uid:string]:ComparisonGroup} = {};
-
-            if (groups.length > 0) {
-                while(true) {
-                    overlappingSamples = getOverlappingSamples(groups);
-                    overlappingPatients = getOverlappingPatients(groups);
-                    overlappingSamplesSet = new ComplexKeySet();
-                    overlappingPatientsSet = new ComplexKeySet();
-                    let sampleId;
-                    for (const sample of overlappingSamples) {
-                        sampleId = { studyId: sample.studyId, sampleId: sample.sampleId };
-                        overlappingSamplesSet.add(sampleId);
-                        totalSampleOverlap.add(sampleId);
-                    }
-                    let patientId;
-                    for (const patient of overlappingPatients) {
-                        patientId = { studyId: patient.studyId, patientId: patient.patientId };
-                        overlappingPatientsSet.add(patientId);
-                        totalPatientOverlap.add(patientId);
-                    }
-
-                    const [emptyGroups, nonEmptyGroups] =
-                        _.partition(
-                            getOverlapFilteredGroups(groups, { overlappingSamplesSet, overlappingPatientsSet }),
-                            group=>isGroupEmpty(group)
-                        );
-
-                    // remove one group at a time
-                    if (emptyGroups.length > 0) {
-                        const lastEmptyGroup = emptyGroups.pop()!;
-                        removedGroups[lastEmptyGroup.uid] = lastEmptyGroup;
-                    }
-
-                    if (nonEmptyGroups.length === groups.length) {
-                        // no group has been removed this round, so we've reached stable state
-                        break;
-                    } else {
-                        // otherwise, keep iterating
-                        groups = groups.filter(g=>!(g.uid in removedGroups));
-                    }
-                }
-            }
-
-            const sortOrder = stringListToIndexSet(this._originalGroups.result!.map(g=>g.uid));
-            let groupsInSortOrder = getOverlapFilteredGroups(groups, { overlappingSamplesSet, overlappingPatientsSet }).concat(_.values(removedGroups));
-            groupsInSortOrder = _.sortBy(groupsInSortOrder, g=>sortOrder[g.uid]);
-            return Promise.resolve({
-                groups:groupsInSortOrder,
-                overlappingSamples,
-                overlappingPatients,
-                overlappingSamplesSet,
-                overlappingPatientsSet,
-                totalSampleOverlap:totalSampleOverlap.keys().length,
-                totalPatientOverlap:totalPatientOverlap.keys().length,
-                excludedFromAnalysis:removedGroups
-            });
+            return Promise.resolve(getOverlapComputations(
+                this._originalGroups.result!,
+                this.isGroupSelected
+            ));
         }
     });
 
@@ -465,11 +392,12 @@ export default class GroupComparisonStore {
         (window as any).routingStore.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
     }
 
+    @autobind
     public isGroupSelected(uid:string) {
         if (!this._selectedGroupIds.has(uid)) {
             return true; // selected by default, until user toggles and thus adds a value to the map
         } else {
-            return this._selectedGroupIds.get(uid);
+            return !!this._selectedGroupIds.get(uid);
         }
     }
 

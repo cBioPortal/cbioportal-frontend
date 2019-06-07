@@ -54,7 +54,7 @@ export function serializeEvent(gaEvent:GAEvent){
 
 function sendToLoggly(){
     // temporary
-    if (window.location.hostname==="www.cbioportal.org" && !window.navigator.webdriver) {
+    if (window.location.hostname==="www.cbioportal.org" && !isWebdriver()) {
         const LOGGLY_TOKEN = "b7a422a1-9878-49a2-8a30-2a8d5d33518f";
         $.ajax({
             url:`//logs-01.loggly.com/inputs/${LOGGLY_TOKEN}.gif`,
@@ -63,6 +63,10 @@ function sendToLoggly(){
             }
         });
     }
+}
+
+export function isWebdriver(){
+    return window.navigator.webdriver;
 }
 
 export function embedGoogleAnalytics(ga_code:string){
@@ -115,7 +119,8 @@ export enum GACustomFieldsEnum {
   StudyCount = "metric2",
   Genes = "dimension2",
   VirtualStudy = "dimension3",
-  StudyId = "dimension4"
+  StudyId = "dimension4",
+  GroupCount= "metric3"
 };
 
 
