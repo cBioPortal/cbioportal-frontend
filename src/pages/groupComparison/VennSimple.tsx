@@ -78,9 +78,11 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
 
     private regionHoverHandlers = MemoizedHandlerFactory(
         (e:React.MouseEvent<any>, params:{ combination:number[], numCases:number}) => {
-            this.tooltipModel = params;
-            this.mousePosition.x = e.pageX;
-            this.mousePosition.y = e.pageY;
+            if (params.numCases > 0) {
+                this.tooltipModel = params;
+                this.mousePosition.x = e.pageX;
+                this.mousePosition.y = e.pageY;
+            }
         }
     );
 
@@ -161,7 +163,10 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
             </clipPath>
         ));
 
-        return _.flattenDeep<any>((clipPaths as any).concat(this.regions.map(region=>{
+        const nonZeroClipPathContents:any[] = [];
+        const nonZeroClipPathId = `${this.props.uid}_nonzero_areas`;
+
+        const elements = _.flattenDeep<any>(this.regions.map(region=>{
 
             // FOR EACH REGION: generate the filled area, and the "# cases" text for it
             // Each region is specified by the combination of groups corresponding to it
@@ -177,7 +182,7 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
                         y="0"
                         height={this.props.height}
                         width={this.props.width}
-                        fill={region.color}
+                        fill={region.numCases > 0 ? region.color : "#ffffff" /* This makes empty intersection regions white */}
                         style={{ cursor: region.numCases > 0 ? "pointer" : "default" }}
                         data-default-fill={region.color}
                         data-hover-fill={d3.hsl(region.color).brighter(1).rgb()}
@@ -195,9 +200,12 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
                     </g>
                 );
             }
+            if (region.numCases > 0) {
+                nonZeroClipPathContents.push(hoverArea);
+            }
 
             return [hoverArea];
-        })).concat(_.sortBy(this.regions.filter(r=>r.combination.length === 1), r=>-r.vennJsSize).map(r=>{
+        }).concat(_.sortBy(this.regions.filter(r=>r.combination.length === 1), r=>-r.vennJsSize).map(r=>{
             // draw the outlines of the circles
             const uid = this.props.groups[r.combination[0]].uid;
             return (
@@ -250,6 +258,37 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
                 </text>
             ];
         })));
+
+        return (
+            <>
+                <filter id="whiteFilter">
+                    <feColorMatrix in="SourceGraphic"
+                                   type="matrix"
+                                   values="0 0 0 0 1
+                                            0 0 0 0 1
+                                            0 0 0 0 1
+                                            0 0 0 1 0"
+                    />
+                </filter>
+                <mask id={nonZeroClipPathId}>
+                    {/* This mask makes empty non-intersection regions white */}
+                    <rect
+                        x="0"
+                        y="0"
+                        height={this.props.height}
+                        width={this.props.width}
+                        fill="black"
+                    />
+                    <g filter={`url(#whiteFilter)`}>
+                        {nonZeroClipPathContents}
+                    </g>
+                </mask>
+                {clipPaths}
+                <g mask={`url(#${nonZeroClipPathId})`}>
+                    {elements}
+                </g>
+            </>
+        );
     }
 
     @autobind private resetSelection() {
