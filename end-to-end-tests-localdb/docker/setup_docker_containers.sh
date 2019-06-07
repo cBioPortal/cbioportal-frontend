@@ -3,6 +3,7 @@
 set -e 
 set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
+shopt -s nullglob # allows files and dir globs to be null - needed in 'for ... do' loops that should not run when no files/dirs are detected by expansion
 
 run_database_container() {
     # create local database from with cbioportal db and seed data
@@ -89,7 +90,42 @@ run_cbioportal_container() {
 
 load_studies_in_db() {
 
-    for DIR in $TEST_HOME/studies/*/; do
+
+
+    # import study_es_0 gene panels
+    docker run --rm \
+        --name=cbioportal-importer \
+        --net=$DOCKER_NETWORK_NAME \
+        -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+        cbioportal-endtoend-image \
+        sh -c 'cd /cbioportal/core/src/main/scripts; for FILE in /cbioportal/core/src/test/scripts/test_data/study_es_0/data_gene_panel_testpanel*.txt; do ./importGenePanel.pl --data $FILE; done'
+   
+    # import study_es_0
+    docker run --rm \
+        --name=cbioportal-importer \
+        --net=$DOCKER_NETWORK_NAME \
+        -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+        cbioportal-endtoend-image \
+        python3 /cbioportal/core/src/main/scripts/importer/metaImport.py \
+        --url_server "http://$E2E_CBIOPORTAL_HOST_NAME:8080/cbioportal" \
+        --study_directory /cbioportal/core/src/test/scripts/test_data/study_es_0 \
+        --override_warning
+
+    # import custom studies
+    for DIR in "$TEST_HOME"/studies/*/; do
+
+        # import study gene panels
+        for FILE in "$DIR"/data_gene_panel_*.txt; do
+            docker run --rm \
+                --name=cbioportal-importer \
+                --net=$DOCKER_NETWORK_NAME \
+                -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+                -v "$FILE:/gene_panel_data.txt:ro" \
+                cbioportal-endtoend-image \
+                sh -c 'cd /cbioportal/core/src/main/scripts; ./importGenePanel.pl --data /gene_panel_data.txt'
+        done
+
+        # import study
         docker run --rm \
             --name=cbioportal-importer \
             --net=$DOCKER_NETWORK_NAME \

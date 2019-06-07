@@ -194,5 +194,7 @@ Making e2e-tests follows the current procedure for the e2e-tests:
 2. [Optional] Add a folder with an uncompressed custom study in the `./end-to-end-tests-localdb/studies` directory.
 
 ### Notes
+* Study_es_0 is imported by default.
+* For automatic import of gene panel seed data, file names must adhere to `data_gene_panel*\.txt' pattern.  
 * Example tests (`home.*.spec.js`) and a minimal custom study (`minimal_study`) are included for reference.
 * In order to minimize time of local database e2e tests the size of custom studies should be kept as small as possible.
