@@ -1,6 +1,7 @@
 import {
     Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
-    Mutation, Patient, Sample, CancerStudy, ClinicalAttribute
+    Mutation, Patient, Sample, CancerStudy, ClinicalAttribute, PatientIdentifier,
+    PatientFilter
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action, computed} from "mobx";
 import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
@@ -80,17 +81,20 @@ export const initializeCustomDriverAnnotationSettings = action((
     report:CustomDriverAnnotationReport,
     mutationAnnotationSettings:any,
     enableCustomTiers:boolean,
-    enableOncoKbAndHotspotsIfNoCustomAnnotations:boolean
+    enableOncoKb:boolean,
+    enableHotspots:boolean
 )=>{
     // initialize keys with all available tiers
     for (const tier of report.tiers) {
         mutationAnnotationSettings.driverTiers.set(tier, enableCustomTiers);
     }
 
-    if (enableOncoKbAndHotspotsIfNoCustomAnnotations && !report.hasBinary && !report.tiers.length) {
-        // enable hotspots and oncokb if there are no custom annotations
-        mutationAnnotationSettings.hotspots = true;
+    if (enableOncoKb) {
         mutationAnnotationSettings.oncoKb = true;
+    }
+
+    if (enableHotspots) {
+        mutationAnnotationSettings.hotspots = true;
     }
 });
 
@@ -449,13 +453,19 @@ export function getMultipleGeneResultKey(groupedOql: MergedTrackLineFilterOutput
 }
 
 export function makeEnrichmentDataPromise<T extends {hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
-    store:ResultsViewPageStore,
+    store?:ResultsViewPageStore,
     await: MobxPromise_await,
     getSelectedProfile:()=>MolecularProfile|undefined,
     fetchData:()=>Promise<T[]>
 }):MobxPromise<(T & {qValue:number})[]> {
     return remoteData({
-        await: ()=>params.await().concat([params.store.selectedMolecularProfiles]),
+        await: ()=>{
+            const ret = params.await();
+            if (params.store) {
+                ret.push(params.store.selectedMolecularProfiles);
+            }
+            return ret;
+        },
         invoke:async()=>{
             const profile = params.getSelectedProfile();
             if (profile) {
@@ -463,7 +473,7 @@ export function makeEnrichmentDataPromise<T extends {hugoGeneSymbol:string, pVal
 
                 // filter out query genes, if looking at a queried profile
                 // its important that we filter out *before* calculating Q values
-                if (params.store.selectedMolecularProfiles.result!
+                if (params.store && params.store.selectedMolecularProfiles.result!
                         .findIndex(x=>x.molecularProfileId === profile.molecularProfileId) > -1) {
                     const queryGenes = _.keyBy(params.store.hugoGeneSymbols, x=>x.toUpperCase());
                     data = data.filter(d=>!(d.hugoGeneSymbol.toUpperCase() in queryGenes));
@@ -485,4 +495,21 @@ export function makeEnrichmentDataPromise<T extends {hugoGeneSymbol:string, pVal
 
 function sortEnrichmentData(data: any[]): any[] {
     return _.sortBy(data, ["pValue", "hugoGeneSymbol"]);
+}
+
+export function fetchPatients(samples:Sample[]) {
+    let patientKeyToPatientIdentifier:{[uniquePatientKey:string]:PatientIdentifier} = {};
+    for (const sample of samples) {
+        patientKeyToPatientIdentifier[sample.uniquePatientKey] = {
+            patientId: sample.patientId,
+            studyId: sample.studyId
+        };
+    }
+    const patientFilter = {
+        uniquePatientKeys: _.uniq(samples.map((sample:Sample)=>sample.uniquePatientKey))
+    } as PatientFilter;
+
+    return client.fetchPatientsUsingPOST({
+        patientFilter
+    });
 }

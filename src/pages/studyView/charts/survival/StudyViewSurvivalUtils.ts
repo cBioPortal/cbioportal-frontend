@@ -1,6 +1,6 @@
 import {PatientSurvival} from "../../../../shared/model/PatientSurvival";
 import {IChartContainerProps} from "../ChartContainer";
-import {AnalysisGroup} from "../../StudyViewPageStore";
+import {AnalysisGroup} from "../../StudyViewUtils";
 import _ from "lodash";
 
 export function makeSurvivalChartData(
@@ -18,8 +18,10 @@ export function makeSurvivalChartData(
         });
     }
 
+    let patientToAnalysisGroups = _.mapValues(patientToAnalysisGroup, group => [group])
+
     return {
-        patientToAnalysisGroup, patientSurvivals, analysisGroups
+        patientToAnalysisGroups, patientSurvivals, analysisGroups
     };
 }
 

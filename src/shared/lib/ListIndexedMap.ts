@@ -45,6 +45,14 @@ export default class ListIndexedMap<KE extends KeyElementType, R> {
         return !!this.getEntry(key);
     }
 
+    public static from<T>(objs:T[], key:(t:T)=>string[]):ListIndexedMap<string, T> {
+        const map = new ListIndexedMap<string, T>();
+        for (const o of objs) {
+            map.set(o, ...key(o));
+        }
+        return map;
+    }
+
     private getEntry(key:KE[]):Entry<KE, R>|undefined {
         return this.getFolder(key).find(entry => _.isEqual(entry.key, key));
     }
@@ -53,6 +61,34 @@ export default class ListIndexedMap<KE extends KeyElementType, R> {
         const folderKey = getFolderKey(key);
         this.map[folderKey] = this.map[folderKey] || [];
         return this.map[folderKey];
+    }
+}
+
+export class ListIndexedSet {
+    private map:ListIndexedMap<string, boolean> = new ListIndexedMap<string, boolean>();
+
+    public static from<T>(objs:T[], key:(t:T)=>string[]):ListIndexedSet {
+        const set = new ListIndexedSet();
+        for (const o of objs) {
+            set.add(...key(o));
+        }
+        return set;
+    }
+
+    public add(...key:string[]) {
+        this.map.set(true, ...key);
+    }
+
+    public delete(...key:string[]) {
+        this.map.set(false, ...key);
+    }
+
+    public has(...key:string[]) {
+        return !!this.map.get(...key);
+    }
+
+    public clear() {
+        this.map = new ListIndexedMap<string, boolean>();
     }
 }
 
