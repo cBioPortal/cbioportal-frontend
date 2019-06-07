@@ -1,9 +1,11 @@
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var MiniCssExtractPlugin = require('mini-css-extract-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var WebpackFailPlugin = require('webpack-fail-plugin');
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+var TerserPlugin = require('terser-webpack-plugin');
+
 
 var commit = '"unknown"';
 var version = '"unknown"';
@@ -63,6 +65,11 @@ const css = join(src, 'styles');
 const fontPath = 'reactapp/[hash].[ext]';
 const imgPath = 'reactapp/images/[hash].[ext]';
 
+const babelCacheFolder = process.env.BABEL_CACHE_FOLDER || false;
+
+// we don't need sourcemaps on circleci
+const sourceMap = process.env.DISABLE_SOURCEMAP ? "" : "source-map";
+
 var routeComponentRegex = /routes\/([^\/]+\/?[^\/]+).js$/;
 
 var sassResourcesLoader =  {
@@ -93,6 +100,14 @@ var config = {
        // cssFilename: 'reactapp/app.css',
        // hash: false,
         publicPath: '/',
+    },
+
+    optimization: {
+        minimizer: [
+            new TerserPlugin({
+                parallel: !process.env.NO_PARALLEL,
+            }),
+        ],
     },
 
     resolve: {
@@ -155,7 +170,11 @@ var config = {
                 test: /\.tsx?$/,
                 use: [
                     {
-                        loader: "babel-loader"
+                        loader: "babel-loader",
+                        options: {
+                            "presets": ["@babel/preset-env", "@babel/preset-react"],
+                            "cacheDirectory": babelCacheFolder
+                        },
                     },
                     {
                         loader: "ts-loader",
@@ -163,16 +182,20 @@ var config = {
                             transpileOnly: (isDev || isTest)
                         }
                     }
-                ]
+                ],
+                exclude: /node_modules/
             },
             {
                 test: /\.(js|jsx|babel)$/,
                 use: [{
-                    loader: "babel-loader"
+                    loader: "babel-loader",
+                    options: {
+                        "presets": ["@babel/preset-env", "@babel/preset-react"]
+                    }
                 }],
                 exclude: function(modulePath) {
                     return /node_modules/.test(modulePath) &&
-                        !/node_modules\/igv\/dist/.test(modulePath);
+                        !/igv\.min/.test(modulePath);
                 }
             },
             {
@@ -269,7 +292,6 @@ var config = {
                     {loader: 'imports-loader?define=>false'}
                     ]
             },
-
             {
                 test: /\.js$/,
                 enforce:"pre",
@@ -277,8 +299,8 @@ var config = {
                     loader: "source-map-loader",
                 }],
                 exclude: [
-                    /node_modules\/igv\//g,
-                    /node_modules\/svg2pdf.js\//g
+                    /igv\.min/,
+                    /node_modules\/svg2pdf.js\//
                 ]
             }
 
@@ -299,7 +321,8 @@ var config = {
         https:false,
         host:'localhost',
         headers: {"Access-Control-Allow-Origin": "*"},
-        stats:'errors-only'
+        stats:'errors-only',
+        disableHostCheck: true,
     },
 
 
@@ -330,7 +353,7 @@ const defines =
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new ExtractTextPlugin({
+    new MiniCssExtractPlugin({
         filename:'reactapp/styles.css',
         allChunks: true
     }),
@@ -340,8 +363,6 @@ config.plugins = [
     })
 ].concat(config.plugins);
 // END ENV variables
-
-//config.module.loaders.push.apply(this);
 
 // include jquery when we load boostrap-sass
 config.module.rules.push(
@@ -358,16 +379,15 @@ config.module.rules.push(
 
 if (isDev) {
     //add for testwriter
-    config.module.rules.push(
-        {
-            test: /\.ts|tsx/,
-            use:[{loader: 'testwriter'}]
-        }
-    );
-    config.entry.push(`${path.join(src, 'testWriter.js')}`);
+    // config.module.rules.push(
+    //     {
+    //         test: /\.ts|tsx/,
+    //         use:[{loader: 'testwriter'}]
+    //     }
+    // );
+    // config.entry.push(`${path.join(src, 'testWriter.js')}`);
 
     config.plugins.push(
-        new webpack.NamedModulesPlugin(),
         new webpack.HotModuleReplacementPlugin()
     );
 
@@ -375,7 +395,7 @@ if (isDev) {
 
 if (isDev || isTest) {
 
-    config.devtool = 'source-map';
+    config.devtool = sourceMap;
 
     // in dev we don't want to load the twitter widget b/c it can block load of site
     config.resolve.alias['react-twitter-widgets'] = join(src, 'shared/Empty.tsx');
@@ -437,28 +457,29 @@ if (isDev || isTest) {
 } else {
 
 
-    config.devtool = 'source-map',
+    config.devtool = sourceMap,
         config.output.publicPath = '/';
 
     // css modules for any scss matching test
     config.module.rules.push(
         {
             test: /\.module\.scss$/,
-            use: ExtractTextPlugin.extract({
-                fallback:'style-loader',
-                use:[
-                    {
-                        loader: 'css-loader',
-                        options:{
-                            modules:true,
-                            importLoaders:2,
-                            localIdentName:'[name]__[local]__[hash:base64:5]'
-                        }
+            use: [
+                {
+                    loader: MiniCssExtractPlugin.loader,
+                    options: {
+                        fallback: 'style-loader'
                     },
-                    'sass-loader',
-                    sassResourcesLoader
-                ]
-            })
+                },
+                {
+                    loader: 'css-loader',
+                    options: {
+                        modules:true
+                    }
+                },
+                'sass-loader',
+                sassResourcesLoader
+            ]
         }
     );
 
@@ -466,40 +487,33 @@ if (isDev || isTest) {
         {
             test: /\.scss$/,
             exclude: /\.module\.scss/,
-            use: ExtractTextPlugin.extract({
-                fallback:'style-loader',
-                use:[
-                    'css-loader',
-                    'sass-loader',
-                    sassResourcesLoader
-                ]
-            })
+            use: [
+                {
+                    loader: MiniCssExtractPlugin.loader,
+                    options: {
+                        fallback: 'style-loader'
+                    },
+                },
+                'css-loader',
+                'sass-loader',
+                sassResourcesLoader
+            ]
         }
     );
 
     config.module.rules.push(
         {
             test: /\.css/,
-            loader: ExtractTextPlugin.extract({
-                fallback:'style-loader',
-                use:'css-loader'
-            })
+            use: [
+                {
+                    loader: MiniCssExtractPlugin.loader,
+                    options: {
+                        fallback: 'style-loader'
+                    },
+                },
+                'css-loader'
+            ]
         }
-    );
-
-    config.plugins.push(
-        new webpack.DefinePlugin({
-            'process.env': {
-                'NODE_ENV': `"${process.env.NODE_ENV || 'production'}"`
-            }
-        }),
-        new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false
-            },
-            sourceMap: true,
-            comments: false
-        })
     );
 
 }
@@ -512,8 +526,6 @@ if (process.env.BUILD_REPORT_ERRORS_ONLY === "true") {
 
 //config.entry.push('bootstrap-loader');
 // END BOOTSTRAP LOADER
-
-config.entry.push('font-awesome-webpack');
 
 // Roots
 config.resolve.modules = [

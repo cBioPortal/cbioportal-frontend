@@ -2,7 +2,7 @@ import AppConfig from "appConfig";
 import {StudyView} from "../../config/IAppConfig";
 import {Layout} from 'react-grid-layout';
 import * as _ from 'lodash';
-import {ChartType} from "./StudyViewPageStore";
+import {ChartType} from "./StudyViewUtils";
 
 export type StudyViewColor = {
     theme: StudyViewColorTheme

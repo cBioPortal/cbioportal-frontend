@@ -54,3 +54,15 @@ export function unescapeTabDelimited(str: string): string
 {
     return str.replace(/\\t/g, "\t").replace(/\\n/g, "\n");
 }
+
+export function pluralize(base:string, num:number, pluralSuffix="s") {
+    return `${base}${num === 1 ? "" : pluralSuffix}`;
+}
+
+export function capitalize(str:string) {
+    if (str.length === 0) {
+        return str;
+    } else {
+        return str[0].toLocaleUpperCase() + str.slice(1);
+    }
+}

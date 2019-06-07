@@ -1,13 +1,16 @@
 import * as React from 'react';
-import { observer } from "mobx-react";
+import {Observer, observer} from "mobx-react";
 import { VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, VictoryScatter } from 'victory';
-import { observable, action } from 'mobx';
+import {observable, action, computed} from 'mobx';
 import { Popover } from 'react-bootstrap';
 import CBIOPORTAL_VICTORY_THEME, {axisLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { formatLogOddsRatio } from "shared/lib/FormatUtils";
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
 import DownloadControls from 'shared/components/downloadControls/DownloadControls';
 import autobind from 'autobind-decorator';
+import SelectionComponent from "./SelectionComponent";
+import HoverablePoint from "./HoverablePoint";
+import {getTextWidth, truncateWithEllipsis} from "../../../shared/lib/wrapText";
 
 export interface IMiniScatterChartProps {
     data: any[];
@@ -18,6 +21,7 @@ export interface IMiniScatterChartProps {
     onGeneNameClick: (hugoGeneSymbol: string, entrezGeneId: number) => void;
     onSelection: (hugoGeneSymbols: string[]) => void;
     onSelectionCleared: () => void;
+    selectedGenesSet:{[hugoGeneSymbol:string]:any};
 }
 
 @observer
@@ -25,7 +29,8 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
 
     @observable tooltipModel: any;
     @observable private svgContainer: any;
-    
+    private dragging = false;
+
     @autobind
     @action private svgRef(svgContainer:SVGElement|null) {
         this.svgContainer = (svgContainer && svgContainer.children) ? svgContainer.children[0] : null;
@@ -35,71 +40,139 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
         this.props.onSelection(points[0].data.map((d:any) => d.hugoGeneSymbol));
     }
 
-    private handleSelectionCleared(props: any) {
+    @autobind private handleSelectionCleared() {
         if (this.tooltipModel) {
-            this.props.onGeneNameClick(this.tooltipModel.datum.hugoGeneSymbol, this.tooltipModel.datum.entrezGeneId);
+            this.props.onGeneNameClick(this.tooltipModel.hugoGeneSymbol, this.tooltipModel.entrezGeneId);
         }
         this.props.onSelectionCleared();
     }
 
-    public render() {
+    @autobind @action private onGenePointMouseOver(datum:any, x:number, y:number) {
+        this.tooltipModel = datum;
+        this.tooltipModel.x = x;
+        this.tooltipModel.y = y;
+    }
 
-        const events = [{
-            target: "data",
-            eventHandlers: {
-                onMouseOver: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props: any) => {
-                                this.tooltipModel = props;
-                                return {
-                                    datum: Object.assign({}, props.datum, {hovered: true})
-                                };
-                            }
-                        }
-                    ];
-                },
-                onMouseOut: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props: any) => {
-                                this.tooltipModel = null;
-                                return {
-                                    datum: Object.assign({}, props.datum, {hovered: false})
-                                };
-                            }
-                        }
-                    ];
-                }
-            }
-        }];
+    @autobind @action private onGenePointMouseOut() {
+        this.tooltipModel = null;
+    }
+
+
+    @autobind private getTooltip() {
+        if (this.tooltipModel) {
+            return (
+                <Popover
+                    className={"cbioTooltip"} positionLeft={this.tooltipModel.x + 15}
+                         positionTop={this.tooltipModel.y - 33}>
+                    Gene: {this.tooltipModel.hugoGeneSymbol}<br/>
+                    Log Ratio: {formatLogOddsRatio(this.tooltipModel.logRatio)}<br/>
+                    p-Value: {toConditionalPrecision(this.tooltipModel.pValue, 3, 0.01)}<br/>
+                    q-Value: {toConditionalPrecision(this.tooltipModel.qValue, 3, 0.01)}
+                </Popover>
+            );
+        } else {
+            return <span/>;
+        }
+    }
+
+    @autobind private onClick() {
+        if (!this.dragging) {
+            this.handleSelectionCleared();
+        }
+        this.dragging = false;
+    }
+
+    @autobind private onSelectionComponentRender() {
+        this.dragging = true;
+    }
+
+    private get totalLabelWidths() {
+        return getTextWidth(this.props.xAxisLeftLabel, "Arial", "13px") +
+            getTextWidth(this.props.xAxisRightLabel, "Arial", "13px");
+    }
+
+    @computed get xAxisLeftLabel() {
+        if (this.totalLabelWidths > 200) {
+            return truncateWithEllipsis(this.props.xAxisLeftLabel, 90, "Arial", "13px");
+        } else {
+            return this.props.xAxisLeftLabel;
+        }
+    }
+
+    @computed get xAxisRightLabel() {
+        if (this.totalLabelWidths > 180) {
+            return truncateWithEllipsis(this.props.xAxisRightLabel, 90, "Arial", "13px");
+        } else {
+            return this.props.xAxisRightLabel;
+        }
+    }
+
+    public render() {
 
         return (
             <div className="posRelative">
-                <div className="borderedChart inlineBlock" style={{position:"relative"}}>
-                    <VictoryChart containerComponent={<VictorySelectionContainer containerRef={this.svgRef}
-                        onSelection={(points: any, bounds: any, props: any) => this.handleSelection(points, bounds, props)} responsive={false}
-                        onSelectionCleared={(props:any) => this.handleSelectionCleared(props)}/>} theme={CBIOPORTAL_VICTORY_THEME}
-                        domainPadding={{ y: [0, 20] }} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}>
+                <div className="borderedChart inlineBlock" style={{position:"relative"}} onClick={this.onClick}>
+                    <VictoryChart
+                        containerComponent={
+                            <VictorySelectionContainer
+                                containerRef={this.svgRef}
+                                activateSelectedData={false}
+                                onSelection={(points: any, bounds: any, props: any) => this.handleSelection(points, bounds, props)}
+                                responsive={false}
+                                onSelectionCleared={this.handleSelectionCleared}
+                                selectionComponent={<SelectionComponent onRender={this.onSelectionComponentRender}/>}
+                            />
+                        }
+                        theme={CBIOPORTAL_VICTORY_THEME}
+                        domainPadding={{ y: 20 }}
+                        height={350}
+                        width={350}
+                        padding={{ top: 40, bottom: 60, left: 60, right: 40 }}
+                        singleQuadrantDomainPadding={false}
+                    >
                         <VictoryAxis tickValues={this.props.xAxisTickValues} domain={[-this.props.xAxisDomain, this.props.xAxisDomain]} 
                             label="Log Ratio" tickFormat={(t: any) => t >= 1000 || t <= -1000 ? `${t/1000}k` : t} style={{
                                 tickLabels: { padding: 20 }, axisLabel: { padding: 40 },
-                                ticks: { size: 0 }
-                            }} />
+                                ticks: { size: 0 },
+                                grid: {
+                                    strokeOpacity: 1,
+                                }
+                            }}
+                            crossAxis={false}
+                            orientation="bottom"
+                            offsetY={60}
+                        />
                         <VictoryAxis label="-log10 p-Value" dependentAxis={true} tickCount={4}
-                            style={{
-                                tickLabels: { padding: 135 },
-                                axisLabel: { padding: 165 },
-                                ticks: { size: 0 }
-                            }} />
-                        <VictoryLabel style={axisLabelStyles} text={"← " + this.props.xAxisLeftLabel} x={60} y={300}/>
-                        <VictoryLabel style={axisLabelStyles} text={this.props.xAxisRightLabel + " →"} x={200} y={300}/>
+                                    style={{
+                                        tickLabels: { padding: 135 },
+                                        axisLabel: { padding: 165 },
+                                        ticks: { size: 0 },
+                                        grid: {
+                                            strokeOpacity: 1,
+                                        }
+                                    }}
+                        />
+                        <VictoryLabel style={axisLabelStyles} text={"← " + this.xAxisLeftLabel} x={60} y={300}/>
+                        <VictoryLabel style={axisLabelStyles} text={this.xAxisRightLabel + " →"} textAnchor="end" x={310} y={300}/>
                         <VictoryLabel style={axisLabelStyles} text="Significance →" x={320} y={210} angle={-90}/>
-                        <VictoryScatter style={{ data: { fill: (d:any, active: any) => active ? "#FE9929" : 
-                            d.qValue < 0.05 ? "#58ACFA" : "#D3D3D3", fillOpacity: 0.4 } }} 
-                            data={this.props.data} symbol="circle" size={(d: any) => d.hovered ? 10 : 3} events={events} />
+                        <VictoryScatter style={{ data: { fillOpacity: 0.4 } }}
+                            data={this.props.data}
+                            dataComponent={
+                                <HoverablePoint
+                                    onMouseOver={this.onGenePointMouseOver}
+                                    onMouseOut={this.onGenePointMouseOut}
+                                    fill={(datum:any)=>{
+                                        if (datum.hugoGeneSymbol in this.props.selectedGenesSet) {
+                                            return "#FE9929";
+                                        } else if (datum.qValue < 0.05) {
+                                            return "#58ACFA";
+                                        } else {
+                                            return "#D3D3D3";
+                                        }
+                                    }}
+                                />
+                            }
+                        />
                     </VictoryChart>
                     <DownloadControls
                         getSvg={() => this.svgContainer}
@@ -109,15 +182,9 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                         style={{position:"absolute", top:10, right:10, zIndex:0}}
                     />
                 </div>
-                {this.tooltipModel &&
-                    <Popover className={"cbioTooltip"} positionLeft={this.tooltipModel.x + 15}
-                        positionTop={this.tooltipModel.y - 33}>
-                        Gene: {this.tooltipModel.datum.hugoGeneSymbol}<br/>
-                        Log Ratio: {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}<br/>
-                        p-Value: {toConditionalPrecision(this.tooltipModel.datum.pValue, 3, 0.01)}<br/>
-                        q-Value: {toConditionalPrecision(this.tooltipModel.datum.qValue, 3, 0.01)}
-                    </Popover>
-                }
+                <Observer>
+                    {this.getTooltip}
+                </Observer>
             </div>
         );
     }

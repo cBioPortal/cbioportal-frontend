@@ -49,9 +49,11 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
                                  className={classNames(styles.color, spinnerStyles)}
                                  style={{display: 'inline-block'}}
                                  name="line-scale-pulse-out"/>
+                        <div className={styles.progressUI}>
                         {
                             this.props.children
                         }
+                        </div>
                     </div>
                 </Then>
             </If>

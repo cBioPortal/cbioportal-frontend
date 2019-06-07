@@ -1,0 +1,96 @@
+:global(.msk-tabs .tabAnchor.greyedOut) {
+    color: #afafaf;
+}
+
+:global(.btn-group) > :global(.btn.noMarginLeft) {
+    margin-left:0px !important;
+}
+
+.comparisonGroupManager {
+    .groupCheckboxes {
+        margin-top:4px;
+        max-height:350px;
+        width:100%;
+        overflow:auto;
+        padding:3px;
+
+        :global(div.checkbox) {
+            margin-bottom:0px;
+            margin-top:0px;
+        }
+
+        .markedForDeletion {
+            color:#888888;
+            text-decoration:line-through black;
+            display:flex;
+            flex-direction:row;
+            justify-content:space-between;
+        }
+
+        .groupRow:nth-of-type(even) {
+            background-color: #f9f9f9;
+        }
+    }
+
+    .noGroupsMessage {
+
+    }
+
+    :global(input.form-control) {
+        font-size:12px;
+        height:36px;
+    }
+}
+
+.groupButtons {
+    button {
+        margin:2px !important;
+    }
+    display:inline-block;
+
+    .buttonUnselected {
+        //filter: grayscale(1);
+        //opacity: 0.35;
+        background-color:rgba(0,0,0,0) !important;
+        border: 1px solid #c3c3c3;
+
+        span {
+            color:black !important;
+        }
+    }
+
+    .buttonExcludedFromAnalysis {
+        background-color:#dddddd !important;
+        color:white !important;
+        text-decoration: line-through solid black !important;
+    }
+
+    i {
+        width:15px;
+    }
+}
+
+
+
+
+.groupLineItemActionButtons {
+    > span {
+        margin-left:5px;
+        i {
+            color:$brand-primary;
+            &:hover {
+                color:darken($brand-primary,10%)
+            }
+        }
+    }
+}
+
+
+
+.headerControls {
+    display:flex;
+    align-items:center;
+    > div {
+      margin-right:30px;
+    }
+}

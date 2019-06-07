@@ -9,20 +9,23 @@ import classnames from "classnames";
 import styles from "./DownloadControls.module.scss";
 import {saveSvg, saveSvgAsPng} from "save-svg-as-png";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
+import {types} from "util";
+import {isPromiseLike} from "../../lib/PromiseUtils";
 
 type ButtonSpec = { key:string, content:JSX.Element, onClick:()=>void, disabled?: boolean };
 
-type DownloadControlsButton = "PDF" | "PNG" | "SVG" | "Data";
+export type DownloadControlsButton = "PDF" | "PNG" | "SVG" | "Data";
 
 interface IDownloadControlsProps {
-    getSvg?:()=>SVGElement|null;
-    getData?:()=>string;
+    getSvg?:()=>SVGElement|null|PromiseLike<SVGElement|null>;
+    getData?:()=>string|null|PromiseLike<string|null>;
     filename:string;
     buttons?: DownloadControlsButton[],
     additionalLeftButtons?:ButtonSpec[],
     additionalRightButtons?:ButtonSpec[]
     dontFade?:boolean;
     collapse?:boolean;
+    collapseButtonGroup?:boolean;
     style?:any;
 }
 
@@ -55,41 +58,55 @@ function makeMenuItem(spec:ButtonSpec) {
 export default class DownloadControls extends React.Component<IDownloadControlsProps, {}> {
     @observable private collapsed = true;
 
+
     @autobind
-    private downloadSvg() {
+    private download(saveMethod:(svg:SVGElement, fileName:string)=>void, fileExtension:string) {
         if (this.props.getSvg) {
-            const svg = this.props.getSvg();
-            if (svg) {
-                saveSvg(svg, `${this.props.filename}.svg`);
+            const result = this.props.getSvg();
+            if (result) {
+                if (isPromiseLike<SVGElement|null>(result)) {
+                    result.then((svg)=>{
+                        if (svg) {
+                            saveMethod(svg, `${this.props.filename}.${fileExtension}`);
+                        }
+                    });
+                } else {
+                    saveMethod(result, `${this.props.filename}.${fileExtension}`);
+                }
             }
         }
+    }
+
+    @autobind
+    private downloadSvg() {
+        this.download(saveSvg, "svg");
     }
 
     @autobind
     private downloadPng() {
-        if (this.props.getSvg) {
-            const svg = this.props.getSvg();
-            if (svg) {
-                saveSvgAsPng(svg, `${this.props.filename}.png`, {backgroundColor:"#ffffff"});
-            }
-        }
+        this.download((svg, fileName)=>saveSvgAsPng(svg, fileName, {backgroundColor:"#ffffff"}), "png");
     }
 
     @autobind
     private downloadPdf() {
-        if (this.props.getSvg) {
-            const svg = this.props.getSvg();
-            if (svg) {
-                svgToPdfDownload(`${this.props.filename}.pdf`, svg);
-            }
-        }
+        this.download((svg, fileName)=>svgToPdfDownload(fileName, svg), "pdf");
     }
 
     @autobind
     private downloadData() {
         if (this.props.getData) {
-            const data = this.props.getData();
-            fileDownload(data, `${this.props.filename}.txt`);
+            const result = this.props.getData();
+            if (result !== null) {
+                if (isPromiseLike<string|null>(result)) {
+                    result.then(data=>{
+                        if (data) {
+                            fileDownload(data, `${this.props.filename}.txt`);
+                        }
+                    });
+                } else {
+                    fileDownload(result, `${this.props.filename}.txt`);
+                }
+            }
         }
     }
 
@@ -135,26 +152,44 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
     render() {
         let element:any = null
         if (this.props.collapse) {
-            element = (
-                <div style={Object.assign({ zIndex:10 },this.props.style)}>
+            if (this.props.collapseButtonGroup) {
+                element = (
                     <DefaultTooltip
                         mouseEnterDelay={0}
                         onVisibleChange={this.onTooltipVisibleChange}
                         overlay={<div className={classnames("cbioportal-frontend", styles.downloadControls)} style={{display:"flex", flexDirection:"column"}}>{this.buttonSpecs.map(makeMenuItem)}</div>}
                         placement="bottom"
                     >
-                        <div style={{cursor:"pointer"}}>
-                            <div
-                                key="collapsedIcon"
-                                className={classnames("btn", "btn-default", "btn-xs", {"active":!this.collapsed} )}
-                                style={{pointerEvents:"none"}}
-                            >
-                                <span><i className="fa fa-cloud-download" aria-hidden="true"/></span>
-                            </div>
+                        <div
+                            style={Object.assign({cursor:"pointer"}, this.props.style)}
+                            className={classnames("btn btn-group btn-default btn-xs", {"active":!this.collapsed} )}
+                        >
+                            <i style={{pointerEvents:"none"}} className="fa fa-cloud-download" aria-hidden="true"/>
                         </div>
                     </DefaultTooltip>
-                </div>
-            );
+                );
+            } else {
+                element = (
+                    <div style={Object.assign({ zIndex:10 },this.props.style)}>
+                        <DefaultTooltip
+                            mouseEnterDelay={0}
+                            onVisibleChange={this.onTooltipVisibleChange}
+                            overlay={<div className={classnames("cbioportal-frontend", styles.downloadControls)} style={{display:"flex", flexDirection:"column"}}>{this.buttonSpecs.map(makeMenuItem)}</div>}
+                            placement="bottom"
+                        >
+                            <div style={{cursor:"pointer"}}>
+                                <div
+                                    key="collapsedIcon"
+                                    className={classnames("btn btn-default btn-xs", {"active":!this.collapsed} )}
+                                    style={{pointerEvents:"none"}}
+                                >
+                                    <span><i className="fa fa-cloud-download" aria-hidden="true"/></span>
+                                </div>
+                            </div>
+                        </DefaultTooltip>
+                    </div>
+                );
+            }
         } else {
             element = (
                 <div role="group" className="btn-group chartDownloadButtons" style={this.props.style||{}}>

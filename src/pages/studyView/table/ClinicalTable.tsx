@@ -4,7 +4,7 @@ import {action, computed, observable, toJS, reaction, IReactionDisposer} from "m
 import autobind from 'autobind-decorator';
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
-import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
+import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewUtils";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
 import {
@@ -126,7 +126,13 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
             )
         },
         headerRender: () => {
-            return <div className={styles.ellipsisText}>{this.firstColumnName}</div>
+            const style:any = {};
+            let text = this.firstColumnName;
+            if (!this.props.label) {
+                style.opacity = 0;
+                text = ".";
+            }
+            return <div style={style} className={styles.ellipsisText}>{text}</div>
         },
         tooltip: getClinicalAttributeOverlay(this.firstColumnName, this.props.labelDescription ? this.props.labelDescription : ''),
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().includes(filterStringUpper)),
