@@ -169,8 +169,8 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                 }
                 {!this.props.selectedGeneHugo &&
                     <div className="borderedChart inlineBlock">
-                        <div className="text-center" style={{width:350, height:350, display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            Click on a gene in table to render plots here.
+                        <div className="text-center" style={{ width: 350, height: 350, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            Click on a gene in the table to render this plot.
                         </div>
                     </div>
                 }
