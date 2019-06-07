@@ -66,12 +66,17 @@ build_cbioportal_image() {
 
 run_cbioportal_container() {
 
+    # stop cbioportal container if running
+   (docker stop $E2E_CBIOPORTAL_HOST_NAME && docker rm $E2E_CBIOPORTAL_HOST_NAME) || true
+
     # start cbioportal
+    # port 8081 opened for development in Local context
     docker run -d --restart=always \
         --name=$E2E_CBIOPORTAL_HOST_NAME \
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
         -e CATALINA_OPTS='-Xms2g -Xmx4g' \
+        -p 8081:8080 \
         cbioportal-endtoend-image
     
     sleeptime=0
@@ -90,8 +95,6 @@ run_cbioportal_container() {
 
 load_studies_in_db() {
 
-
-
     # import study_es_0 gene panels
     docker run --rm \
         --name=cbioportal-importer \
@@ -99,7 +102,15 @@ load_studies_in_db() {
         -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
         cbioportal-endtoend-image \
         sh -c 'cd /cbioportal/core/src/main/scripts; for FILE in /cbioportal/core/src/test/scripts/test_data/study_es_0/data_gene_panel_testpanel*.txt; do ./importGenePanel.pl --data $FILE; done'
-   
+
+    # import study_es_0 gene sets
+    docker run --rm \
+        --name=cbioportal-importer \
+        --net=$DOCKER_NETWORK_NAME \
+        -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+        cbioportal-endtoend-image \
+        sh -c 'cd /cbioportal/core/src/main/scripts; yes yes | ./importGenesetData.pl --data ../../test/resources/genesets/study_es_0_genesets.gmt \ --new-version msigdb_6.1 --supp ../../test/resources/genesets/study_es_0_supp-genesets.txt;  yes yes | ./importGenesetHierarchy.pl --data ../../test/resources/genesets/study_es_0_tree.yaml'
+
     # import study_es_0
     docker run --rm \
         --name=cbioportal-importer \
@@ -114,18 +125,6 @@ load_studies_in_db() {
     # import custom studies
     for DIR in "$TEST_HOME"/studies/*/; do
 
-        # import study gene panels
-        for FILE in "$DIR"/data_gene_panel_*.txt; do
-            docker run --rm \
-                --name=cbioportal-importer \
-                --net=$DOCKER_NETWORK_NAME \
-                -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
-                -v "$FILE:/gene_panel_data.txt:ro" \
-                cbioportal-endtoend-image \
-                sh -c 'cd /cbioportal/core/src/main/scripts; ./importGenePanel.pl --data /gene_panel_data.txt'
-        done
-
-        # import study
         docker run --rm \
             --name=cbioportal-importer \
             --net=$DOCKER_NETWORK_NAME \
@@ -211,6 +210,9 @@ run_cbioportal_container
 
 echo Load studies into local database
 load_studies_in_db
+
+echo Restart cbioportal container
+run_cbioportal_container
 
 echo Build e2e-image
 build_e2e_image 

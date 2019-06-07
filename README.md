@@ -195,6 +195,8 @@ Making e2e-tests follows the current procedure for the e2e-tests:
 
 ### Notes
 * Study_es_0 is imported by default.
-* For automatic import of gene panel seed data, file names must adhere to `data_gene_panel*\.txt' pattern.  
+* Gene panel and gene set matrix data of custom studies must comply with gene panel/sets imported as part of study_es_0.
+* Custom seed data for gene panels and gene sets cannot be   is not.
 * Example tests (`home.*.spec.js`) and a minimal custom study (`minimal_study`) are included for reference.
 * In order to minimize time of local database e2e tests the size of custom studies should be kept as small as possible.
+* When developing in _Local_ context port 8081 can be used to access the cbioportal instance ('http://localhost:8081/cbioportal').
