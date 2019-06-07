@@ -268,6 +268,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 { tiers: [] } as any,
                 mutationAnnotationSettings,
                 false,
+                false,
                 false
             );
 
@@ -285,6 +286,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 { tiers: ["a","b","c"] } as any,
                 mutationAnnotationSettings,
                 enableCustomTiers,
+                false,
                 false
             );
 
@@ -296,6 +298,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 { tiers: ["a","b","c"] } as any,
                 mutationAnnotationSettings,
                 enableCustomTiers,
+                false,
                 false
             );
 
@@ -312,6 +315,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 {hasBinary: false, tiers: []} as any,
                 mutationAnnotationSettings,
                 false,
+                true,
                 true
             );
 
@@ -329,6 +333,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 {hasBinary: true, tiers: []} as any,
                 mutationAnnotationSettings,
                 false,
+                true,
                 true
             );
             assert.isFalse(mutationAnnotationSettings.hotspots);
@@ -337,6 +342,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 {hasBinary: false, tiers: ["a"]} as any,
                 mutationAnnotationSettings,
                 false,
+                true,
                 true
             );
             assert.isFalse(mutationAnnotationSettings.hotspots);
@@ -352,7 +358,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 {hasBinary: true, tiers: []} as any,
                 mutationAnnotationSettings,
                 false,
-                true
+                false,
+                false
             );
             assert.isFalse(mutationAnnotationSettings.hotspots);
             assert.isFalse(mutationAnnotationSettings.oncoKb);

@@ -94,6 +94,7 @@ export function makeBarSpecs(
     getColor:(minorCategory:string)=>string,
     categoryCoord:(categoryIndex:number)=>number,
     horizontalBars:boolean,
+    stacked:boolean,
     percentage:boolean
 ):{
     fill: string,
@@ -101,8 +102,8 @@ export function makeBarSpecs(
 }[] // one bar spec per minor category, in correct order - either specified, or alphabetical 
 {
     data = sortDataByCategory(data, d=>d.minorCategory, minorCategoryOrder);
-    // for vertical bars, reverse order, to put first on top
-    if (!horizontalBars) {
+    // reverse the order of stacked or horizontal bars
+    if ((!horizontalBars && stacked) || (horizontalBars && !stacked)) {
         data = _.reverse(data);
     }
     return data.map(({ minorCategory, counts })=>{

@@ -15,6 +15,17 @@ button:active, button:focus, div:focus, div:active {
   outline: none !important;
 }
 
+
+
+.form-group {
+  margin-bottom:5px;
+
+  label {
+    font-size:12px;
+    margin-bottom:2px;
+  }
+}
+
 .posRelative {
   position:relative;
 }
@@ -23,6 +34,12 @@ button:active, button:focus, div:focus, div:active {
 .btn-default {
   background-image: linear-gradient(to bottom,#fff 0,#eee 100%) !important;
   color:$text-color !important;
+}
+
+.btn.noBorderRadius {
+  -webkit-border-radius: 0 !important;
+  -moz-border-radius: 0 !important;
+  border-radius: 0 !important;
 }
 
 a {
@@ -37,7 +54,6 @@ a:hover {
 .pipeSeperator {
   margin:0 8px;
 }
-
 
 /* Buttons */
 
@@ -123,18 +139,18 @@ th.reactable-header-sort-asc:after {
 
 }
 
-
-
-
 .secondaryNavigation {
 
   > div, > ul {
     border-bottom:none !important;
-    box-shadow:0px 1px 2px 0px rgba(0,0,0,0.08);
     margin-top:-19px;
     padding-left:20px;
-    margin-right:-20px;
     margin-left:-20px;
+  }
+
+  > ul, > div {
+    margin-right:-20px;
+    box-shadow:0px 1px 2px 0px rgba(0,0,0,0.08);
   }
 
   li {
@@ -209,6 +225,8 @@ th.reactable-header-sort-asc:after {
     position:relative;
     z-index:1;
 
+    background:$main-bg !important;
+
     display:flex;
 
     > li {
@@ -238,7 +256,7 @@ th.reactable-header-sort-asc:after {
     background:#fff;
     border-top:1px solid #ddd;
     margin-top:-1px;
-    min-height:500px;
+    min-height:50px;
     position:relative;
 
     .tabLoader {
@@ -324,7 +342,13 @@ th.reactable-header-sort-asc:after {
 }
 
 .subhead-dark #mainColumn {
-  background:$main-bg !important;
+
+}
+
+.headBlock {
+  padding:$gutterWidth $gutterWidth 10px $gutterWidth;
+  background:$main-bg;
+  margin-top:-$gutterWidth;
 }
 
 #mainColumn {
@@ -444,8 +468,13 @@ h3 {
   }
 }
 
+.mainContainer {
+  display:flex;
+  flex-direction:column;
+
+}
+
 .contentWidth {
-  margin:0 auto;
   display:flex;
   justify-content:space-between;
   padding-left:20px;
@@ -454,7 +483,7 @@ h3 {
   #mainColumn {
     flex:1;
     padding-left:0;
-    min-height:500px;
+    min-height:80vh;
   }
 
   &.noMargin {

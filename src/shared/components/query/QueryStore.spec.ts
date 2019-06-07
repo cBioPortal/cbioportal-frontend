@@ -51,10 +51,7 @@ describe("QueryStore", ()=>{
                     ]
                 }
                 ],
-                "filters": {
-                "patients": {},
-                "samples": {}
-                },
+                "studyViewFilter":{},
                 "origin": [
                 "test_study"
                 ]

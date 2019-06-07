@@ -44,6 +44,9 @@ import {
     shouldShowChart,
     toFixedDigit,
     updateGeneQuery,
+    StudyViewFilterWithSampleIdentifierFilters,
+    ChartMeta,
+    ChartMetaDataTypeEnum,
     getStudyViewTabId
 } from 'pages/studyView/StudyViewUtils';
 import {
@@ -54,12 +57,11 @@ import {
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {CancerStudy, ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
 import {
-    ChartMeta,
-    ChartMetaDataTypeEnum,
-    StudyViewFilterWithSampleIdentifierFilters,
-    UniqueKey,
     StudyViewPageTabKeyEnum
 } from "./StudyViewPageStore";
+import {
+    UniqueKey
+} from "./StudyViewUtils";
 import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';

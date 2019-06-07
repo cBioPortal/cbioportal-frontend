@@ -66,3 +66,12 @@ export function wrapText(text:string, maxWidth:number, fontFamily:string, fontSi
         return ret;
     }
 }
+
+export function truncateWithEllipsis(text:string, maxWidth:number, fontFamily:string, fontSize:string):string {
+    const wrapped = splitTextByWidth(text, maxWidth, fontFamily, fontSize);
+    if (wrapped.length > 1) {
+        return wrapped[0]+"...";
+    } else {
+        return wrapped[0];
+    }
+}

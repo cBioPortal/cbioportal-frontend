@@ -4,8 +4,6 @@ import {observer} from "mobx-react";
 import {ChildButton, MainButton, Menu} from 'react-mfb';
 import 'react-mfb/mfb.css';
 import {
-    ChartMetaDataTypeEnum, ChartType,
-    ClinicalDataCountSet,
     NewChart,
     StudyViewPageStore, StudyViewPageTabKey,
     StudyViewPageTabKeyEnum
@@ -15,12 +13,17 @@ import * as _ from 'lodash';
 import AddChartByType from "./addChartByType/AddChartByType";
 import {remoteData} from "../../../shared/api/remoteData";
 import CustomCaseSelection from "./customCaseSelection/CustomCaseSelection";
-import {calculateClinicalDataCountFrequency, getOptionsByChartMetaDataType} from "../StudyViewUtils";
+import {
+    calculateClinicalDataCountFrequency, ChartMetaDataTypeEnum, ChartType,
+    ClinicalDataCountSet,
+    getOptionsByChartMetaDataType
+} from "../StudyViewUtils";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import {ChartTypeEnum, ChartTypeNameEnum} from "../StudyViewConfig";
 import InfoBanner from "../infoBanner/InfoBanner";
 import {GAEvent, serializeEvent, trackEvent} from "../../../shared/lib/tracking";
+import classNames from "classnames";
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore,
@@ -39,6 +42,12 @@ export interface IAddChartButtonProps extends IAddChartTabsProps {
 
 
 export enum TabKeysEnum {
+    CUSTOM_DATA = 'Custom_Data',
+    CLINICAL = 'Clinical',
+    GENOMIC = 'Genomic'
+}
+
+export enum TabNamesEnum {
     CUSTOM_DATA = 'Custom Data',
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic'
@@ -225,7 +234,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                      onTabClick={this.updateActiveId}
                      className="addChartTabs mainTabs">
 
-                <MSKTab key={0} id={TabKeysEnum.CLINICAL} linkText={TabKeysEnum.CLINICAL}
+                <MSKTab key={0} id={TabKeysEnum.CLINICAL} linkText={TabNamesEnum.CLINICAL}
                         hide={this.props.disableClinicalTab}>
                     <AddChartByType options={this.clinicalDataOptions}
                                     freqPromise={this.getClinicalDataCount}
@@ -234,7 +243,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     onToggleOption={this.onToggleOption}
                     />
                 </MSKTab>
-                <MSKTab key={1} id={TabKeysEnum.GENOMIC} linkText={TabKeysEnum.GENOMIC}
+                <MSKTab key={1} id={TabKeysEnum.GENOMIC} linkText={TabNamesEnum.GENOMIC}
                         hide={this.props.disableGenomicTab}>
                     <AddChartByType options={this.genomicDataOptions}
                                     freqPromise={this.getGenomicDataCount}
@@ -242,7 +251,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     onClearAll={this.onClearAll}
                                     onToggleOption={this.onToggleOption}/>
                 </MSKTab>
-                <MSKTab key={2} id={TabKeysEnum.CUSTOM_DATA} linkText={TabKeysEnum.CUSTOM_DATA}
+                <MSKTab key={2} id={TabKeysEnum.CUSTOM_DATA} linkText={TabNamesEnum.CUSTOM_DATA}
                         hide={this.props.disableCustomTab}>
                     <CustomCaseSelection
                         allSamples={this.props.store.samples.result}
@@ -266,11 +275,18 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
 @observer
 export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
+    @observable open = false;
+
+    @autobind
+    private onClick(evt:any) {
+        evt.stopPropagation();
+        this.open = !this.open;
+    }
 
     render() {
         return (
             <DefaultTooltip
-                trigger={["click"]}
+                visible={this.open}
                 placement={"bottomRight"}
                 destroyTooltipOnHide={true}
                 overlay={() => <AddChartTabs store={this.props.store}
@@ -281,10 +297,12 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                                              disableCustomTab={this.props.disableCustomTab}/>}
                 overlayClassName={this.props.addChartOverlayClassName}
             >
-                <button className='btn btn-primary btn-sm'
+                <button className={classNames('btn btn-primary btn-sm', {"active":this.open})}
                         style={{marginLeft: '10px'}}
                         data-event={serializeEvent({ category:"studyPage", action:"addChartMenuOpen", label:this.props.store.studyIds.join(",")})}
-                        data-test="add-charts-button">{this.props.buttonText}</button>
+                        data-test="add-charts-button"
+                        onClick={this.onClick}
+                >{this.props.buttonText}</button>
             </DefaultTooltip>
         )
     }
