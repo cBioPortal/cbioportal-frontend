@@ -243,9 +243,10 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
     });
 
     private readonly groupSampleDataPromise = remoteData({
-        await: () => [this.props.store.sampleKeyToActiveGroups, this.props.store.uidToGroup],
+        await: () => [this.props.store.sampleKeyToActiveGroups, this.props.store.uidToGroup, this.props.store._originalGroups],
         invoke: async () => {
-            const axisData: IAxisData = { data: [], datatype: "string" };
+            const categoryOrder = _.map(this.props.store._originalGroups.result!, group => group.nameWithOrdinal);
+            const axisData = { data: [], datatype: "string", categoryOrder } as IAxisData;
             const uidToGroup = this.props.store.uidToGroup.result!;
             if (this.highlightedRow) {
                 const axisData_Data = axisData.data;

@@ -46,3 +46,4 @@ declare module 'react-select';
 declare module 'pluralize';
 declare module 'svg2pdf.js';
 declare module 'jspdf-yworks';
+declare module 'reactour';
