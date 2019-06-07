@@ -1,9 +1,10 @@
 $fontSize: 11px;
+$iconFontSize: 14px;
 
 .header {
   display: flex;
   align-items: center;
-  padding: 0 2px;
+  border-radius:$border-radius-base;
   font-size: $fontSize;
 }
 
@@ -14,23 +15,39 @@ $fontSize: 11px;
   text-overflow: ellipsis;
   text-align: center !important;
   font-weight: bold;
+  background:#f5f5f5;
+  border-radius:$border-radius-base;
+}
+
+.draggable {
+  cursor: move;
 }
 
 .controls {
-  flex-shrink: 0;
-  color: grey;
-  display: flex;
-  align-items: baseline;
-  padding: 2px;
   position:absolute;
   border-radius:$border-radius-base;
-  right:0;
-  background:$lightGrey;
+  right:-1px;
+  top:-1px;
+}
+
+.menuToggle {
+  padding:1px !important;
+  line-height:1 !important;
+  font-size:$iconFontSize - 1px !important;
+  margin-left:4px;
+
+  i {
+    font-size: $iconFontSize;
+  }
 }
 
 .item {
-  margin: 0 0 0 3px;
-  font-size: $fontSize + 1px;
+  margin-left:4px;
+}
+
+.menuItemIcon {
+  margin-right: 7px;
+  margin-left:-10px;
 }
 
 .survivalIcon {

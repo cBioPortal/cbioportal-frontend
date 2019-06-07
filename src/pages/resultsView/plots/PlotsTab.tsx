@@ -775,16 +775,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     readonly cnaPromise = remoteData({
-        await:()=>{
-            const queries = getCnaQueries(this.horzSelection, this.vertSelection, this.cnaDataShown);
-            if (queries.length > 0) {
-                return this.props.store.annotatedCnaCache.getAll(queries);
-            } else {
-                return [];
-            }
-        },
+        await:()=>this.props.store.annotatedCnaCache.getAll(
+            getCnaQueries(this.horzSelection, this.vertSelection)
+        ),
         invoke:()=>{
-            const queries = getCnaQueries(this.horzSelection, this.vertSelection, this.cnaDataShown);
+            const queries = getCnaQueries(this.horzSelection, this.vertSelection);
             if (queries.length > 0) {
                 return Promise.resolve(_.flatten(this.props.store.annotatedCnaCache.getAll(queries).map(p=>p.result!)));
             } else {
@@ -1090,8 +1085,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             /> Apply Log Scale
                         </label></div>
                     )}
-                    {(axisSelection.dataType !== GENESET_DATA_TYPE) && (<div className="form-group" style={{opacity:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 0 : 1)}}>
-                        <label className="label-text">Gene</label>
+                    {(axisSelection.dataType !== GENESET_DATA_TYPE) && (<div className="form-group" style={{display:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 'none' : 'block')}}>
+                        <label>Gene</label>
                         <div style={{display:"flex"}}>
                             <ReactSelect
                                 name={`${vertical ? "v" : "h"}-gene-selector`}
@@ -1136,9 +1131,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             return <span></span>;
         }
         return (
-            <div>
-                <hr/>
-                <h4>Utilities</h4>
+            <div style={{marginTop:10}}>
                 <div>
                     {showSearchOptions && (<div>
                         <div className="form-group">
@@ -1220,8 +1213,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         {this.getHorizontalAxisMenu}
                     </Observer>
                 </div>
-                <div style={{ textAlign:'center'}}>
-                    <button className="btn btn-default" data-test="swapHorzVertButton" onClick={this.swapHorzVertSelections}><i className="fa fa-arrow-up"></i> Swap Axes <i className="fa fa-arrow-down"></i></button>
+                <div className={"swapAxes"}>
+                    <button className="btn btn-link btn-xs" data-test="swapHorzVertButton" onClick={this.swapHorzVertSelections}><i className="fa fa-arrow-up"></i> Swap Axes <i className="fa fa-arrow-down"></i></button>
                 </div>
                 <div className="axisBlock">
                     <Observer>
@@ -1301,7 +1294,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
                             data: this.mutationPromise.result!
                         } : undefined,
-                        this.cnaDataShown ? {
+                        this.cnaDataExists.result ? {
                             molecularProfileIds: _.values(this.props.store.studyToMolecularProfileDiscrete.result!).map(p=>p.molecularProfileId),
                             data: this.cnaPromise.result!
                         }: undefined
@@ -1354,7 +1347,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
                             data: this.mutationPromise.result!
                         } : undefined,
-                        this.cnaDataShown ? {
+                        this.cnaDataExists.result ? {
                             molecularProfileIds: _.values(this.props.store.studyToMolecularProfileDiscrete.result!).map(p=>p.molecularProfileId),
                             data: this.cnaPromise.result!
                         }: undefined
@@ -1517,6 +1510,36 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     <div>
                         <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
                             <ScrollBar style={{position:'relative', top:-5}} getScrollEl={this.getScrollPane} />
+                            <div style={{textAlign:"center", position:"relative", zIndex:1, top:-5, marginBottom:"-20px", minWidth: this.mutationDataCanBeShown && this.cnaDataCanBeShown ? 600 : 0}}>
+                                <div style={{display:"inline-block"}}>
+                                    {this.mutationDataCanBeShown && (
+                                        <div className="checkbox color-samples-toolbar-elt"><label>
+                                            <input
+                                                data-test="ViewMutationType"
+                                                type="checkbox"
+                                                name="utilities_viewMutationType"
+                                                value={EventKey.utilities_viewMutationType}
+                                                checked={this.viewMutationType}
+                                                onClick={this.onInputClick}
+                                                disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
+                                            /> Color Samples By Mutation Type *
+                                        </label></div>
+                                    )}
+                                    {this.cnaDataCanBeShown && (
+                                        <div className="checkbox color-samples-toolbar-elt"><label>
+                                            <input
+                                                data-test="ViewCopyNumber"
+                                                type="checkbox"
+                                                name="utilities_viewCopyNumber"
+                                                value={EventKey.utilities_viewCopyNumber}
+                                                checked={this.viewCopyNumber}
+                                                onClick={this.onInputClick}
+                                                disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
+                                            /> Color Samples By Copy Number Alteration
+                                        </label></div>
+                                    )}
+                                </div>
+                            </div>
                             {this.plotExists && (
                                 <DownloadControls
                                     getSvg={this.getSvg}
@@ -1532,42 +1555,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     collapse={true}
                                 />
                             )}
-                                <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>
+                            <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>
                                 {plotElt}
-                                </div>
-                                {showSampleColoringOptions && (
-                        <div>
-                            <label style={{marginBottom:0}}>Color Samples By</label>
-                            <div style={{marginLeft:14, marginTop:-4}}>
-                                {this.mutationDataCanBeShown && (
-                                    <div className="checkbox"><label>
-                                        <input
-                                            data-test="ViewMutationType"
-                                            type="checkbox"
-                                            name="utilities_viewMutationType"
-                                            value={EventKey.utilities_viewMutationType}
-                                            checked={this.viewMutationType}
-                                            onClick={this.onInputClick}
-                                            disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
-                                        /> Mutation Type *
-                                    </label></div>
-                                )}
-                                {this.cnaDataCanBeShown && (
-                                    <div className="checkbox"><label>
-                                        <input
-                                            data-test="ViewCopyNumber"
-                                            type="checkbox"
-                                            name="utilities_viewCopyNumber"
-                                            value={EventKey.utilities_viewCopyNumber}
-                                            checked={this.viewCopyNumber}
-                                            onClick={this.onInputClick}
-                                            disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
-                                        /> Copy Number Alteration
-                                    </label></div>
-                                )}
                             </div>
-                        </div>
-                    )}
                         </div>
                         {this.mutationDataCanBeShown && (
                             <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>

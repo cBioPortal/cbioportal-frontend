@@ -12,14 +12,19 @@ import Timer = NodeJS.Timer;
 import {tickFormatNumeral} from "./TickUtils";
 import {makeUniqueColorGetter} from "./PlotUtils";
 import {stringListToIndexSet} from "../../lib/StringUtils";
-import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import { makePlotData, makeBarSpecs, sortDataByCategory } from "./MultipleCategoryBarPlotUtils";
+import * as ReactDOM from "react-dom";
+import { Popover } from "react-bootstrap";
+import classnames from "classnames";
+import WindowStore from "../window/WindowStore";
+import styles from "../../../pages/resultsView/survival/styles.module.scss";
 
 export interface IMultipleCategoryBarPlotProps {
     svgId?:string;
     domainPadding?:number;
-    horzData:IStringAxisData["data"];
-    vertData:IStringAxisData["data"];
+    horzData?:IStringAxisData["data"];
+    vertData?:IStringAxisData["data"];
+    plotData?: IMultipleCategoryBarPlotData[]
     categoryToColor?:{[cat:string]:string};
     barWidth:number;
     chartBase:number;
@@ -31,6 +36,10 @@ export interface IMultipleCategoryBarPlotProps {
     legendLocationWidthThreshold?: number;
     percentage?:boolean;
     stacked?:boolean;
+    ticksCount?:number;
+    axisStyle?:any;
+    countAxisLabel?: string;
+    tooltip?:(datum:any)=> JSX.Element;
 }
 
 export interface IMultipleCategoryBarPlotData {
@@ -47,15 +56,19 @@ const DEFAULT_BOTTOM_PADDING = 10;
 const LEGEND_ITEMS_PER_ROW = 4;
 const BOTTOM_LEGEND_PADDING = 15;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
-const COUNT_AXIS_LABEL = "# samples";
 
 @observer
 export default class MultipleCategoryBarPlot extends React.Component<IMultipleCategoryBarPlotProps, {}> {
+
+    static defaultProps:Partial<IMultipleCategoryBarPlotProps> = {
+        countAxisLabel: "# samples"
+    };
+
     @observable.ref tooltipModel:any|null = null;
-    @observable pointHovered:boolean = false;
     private mouseEvents:any = this.makeMouseEvents();
     private legendClassName:string = `stacked-bar-plot-legend-${Math.random()}`;
     @observable computedLegendWidth = 0;
+    @observable mousePosition = { x:0, y:0 };
 
     @observable.ref private container:HTMLDivElement;
 
@@ -81,9 +94,6 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     }
 
     private makeMouseEvents() {
-        let disappearTimeout:Timer | null = null;
-        const disappearDelayMs = 250;
-
         return [{
             target: "data",
             eventHandlers: {
@@ -93,14 +103,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                             target: "data",
                             mutation: (props: any) => {
                                 this.tooltipModel = props;
-                                this.pointHovered = true;
-
-                                if (disappearTimeout !== null) {
-                                    clearTimeout(disappearTimeout);
-                                    disappearTimeout = null;
-                                }
-
-                                return { active: true };
+                                return null;
                             }
                         }
                     ];
@@ -110,15 +113,8 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                         {
                             target: "data",
                             mutation: () => {
-                                if (disappearTimeout !== null) {
-                                    clearTimeout(disappearTimeout);
-                                }
-
-                                disappearTimeout = setTimeout(()=>{
-                                    this.pointHovered = false;
-                                }, disappearDelayMs);
-
-                                return { active: false };
+                                this.tooltipModel = null;
+                                return null;
                             }
                         }
                     ];
@@ -201,6 +197,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                     orientation={this.legendLocation === "right" ? "vertical" : "horizontal"}
                     itemsPerRow={this.legendLocation === "right" ? undefined : LEGEND_ITEMS_PER_ROW}
                     rowGutter={this.legendLocation === "right" ? undefined : -5}
+                    gutter={30}
                     data={this.legendData}
                     x={this.legendLocation === "right" ? this.sideLegendX : 0}
                     y={this.legendLocation === "right" ? 100 : this.svgHeight-this.bottomLegendHeight}
@@ -213,7 +210,13 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
     }
 
     @computed get data():IMultipleCategoryBarPlotData[] {
-        return makePlotData(this.props.horzData, this.props.vertData, !!this.props.horizontalBars);
+        let data: IMultipleCategoryBarPlotData[] = [];
+        if (this.props.horzData && this.props.vertData) {
+            data = makePlotData(this.props.horzData, this.props.vertData, !!this.props.horizontalBars);
+        } else if (this.props.plotData) {
+            data = this.props.plotData;
+        }
+        return data;
     }
 
     @computed get maxMajorCount() {
@@ -292,7 +295,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
 
     @computed get chartDomainPadding() {
         return {
-            [this.countAxis]:this.countAxisDomainPadding,
+            [this.countAxis]: this.props.percentage ? 0 : this.countAxisDomainPadding,
             [this.categoryAxis]:this.categoryAxisDomainPadding + this.additionalPadding
         };
     }
@@ -364,6 +367,10 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         return tickFormatNumeral(t, ticks);
     }
 
+    @computed get numberOfTicks(){
+        return this.props.ticksCount !== undefined ? this.props.ticksCount : NUM_AXIS_TICKS;
+    }
+
     @computed get zeroCountOffset() {
         let addOffset = false;
         for (const d of this.data) {
@@ -379,12 +386,25 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         if (this.props.stacked) {
             return 0;
         } else {
-            return addOffset ? (0.01 * (this.maxMajorCount / NUM_AXIS_TICKS)) : 0;
+            return addOffset ? (0.01 * (this.maxMajorCount / this.numberOfTicks)) : 0;
         }
     }
 
     @computed get axisStyle() {
-        return this.props.stacked ? {} : { axis: { stroke: "#b3b3b3" } };
+        return this.props.stacked ? this.props.axisStyle || {} : { axis: { stroke: "#b3b3b3" } };
+    }
+
+    @computed get categoryAxisStyle() {
+        let style = this.axisStyle
+        if (!this.props.stacked) {
+            let width = this.categoryCoord(this.data.length) - (this.data.length * this.barSeparation);
+            style = {
+                ...this.axisStyle,
+                ...{ axis: { strokeWidth: 0 } },
+                ...{ ticks: { stroke: "black", size: 1, strokeLinecap: "butt", strokeLinejoin: "butt", strokeWidth: width } }
+            };
+        }
+        return style;
     }
 
     @computed get horzAxis() {
@@ -392,8 +412,9 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         //  this axis is for numbers, not categories
         const label = [this.props.axisLabelX];
         if (this.props.horizontalBars) {
-            label.unshift(`${COUNT_AXIS_LABEL}${this.props.percentage ? " (%)": ""}`);
+            label.unshift(`${this.props.countAxisLabel}${this.props.percentage ? " (%)": ""}`);
         }
+        const style = this.props.horizontalBars ? this.axisStyle : this.categoryAxisStyle;
         return (
             <VictoryAxis
                 orientation="bottom"
@@ -402,23 +423,27 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 label={label}
 
                 tickValues={this.props.horizontalBars ? undefined: this.categoryTickValues}
-                tickCount={this.props.horizontalBars ? NUM_AXIS_TICKS: undefined }
+                tickCount={this.props.horizontalBars ? this.numberOfTicks: undefined }
                 tickFormat={this.props.horizontalBars ? this.formatNumericalTick : this.formatCategoryTick}
                 tickLabelComponent={<VictoryLabel angle={this.props.horizontalBars ? undefined : CATEGORY_LABEL_HORZ_ANGLE}
                                                   verticalAnchor={this.props.horizontalBars ? undefined : "start"}
                                                   textAnchor={this.props.horizontalBars ? undefined : "start"}
                 />}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? 35 : this.biggestCategoryLabelSize + 24}/>}
-                style={this.axisStyle}
+                style={style}
             />
         );
     }
 
     @computed get vertAxis() {
-        const label = [this.props.axisLabelY];
-        if (!this.props.horizontalBars) {
-            label.push(`${COUNT_AXIS_LABEL}${this.props.percentage ? " (%)": ""}`);
+        const label:string[] = [];
+        if(this.props.axisLabelY) {
+            label.push(this.props.axisLabelY)
         }
+        if (!this.props.horizontalBars) {
+            label.push(`${this.props.countAxisLabel}${this.props.percentage ? " (%)": ""}`);
+        }
+        const style = !this.props.horizontalBars ? this.axisStyle : this.categoryAxisStyle;
         return (
             <VictoryAxis
                 orientation="left"
@@ -427,10 +452,10 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 label={label}
                 dependentAxis={true}
                 tickValues={this.props.horizontalBars ? this.categoryTickValues : undefined}
-                tickCount={this.props.horizontalBars ? undefined : NUM_AXIS_TICKS}
+                tickCount={this.props.horizontalBars ? undefined : this.numberOfTicks}
                 tickFormat={this.props.horizontalBars ? this.formatCategoryTick : this.formatNumericalTick}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? -1*this.biggestCategoryLabelSize - 24 : -40}/>}
-                style={this.axisStyle}
+                style={style}
             />
         );
     }
@@ -542,6 +567,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
             this.getColor,
             this.categoryCoord,
             !!this.props.horizontalBars,
+            !!this.props.stacked,
             !!this.props.percentage
         )
         return barSpecs.map(spec=>(
@@ -558,13 +584,61 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         ));
     }
 
-    private tooltip(datum:any) {
+    private tooltipFunction(datum:any) {
+        if(this.props.tooltip) {
+            return this.props.tooltip(datum);
+        }
         return (
             <div>
-                <strong>{datum.majorCategory}</strong><br/>
-                <strong>{datum.minorCategory}</strong>:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}&nbsp;({datum.percentage}%)
+                <span>{datum.majorCategory}</span><br/>
+                <strong>{datum.minorCategory}:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}&nbsp;({datum.percentage}%)</strong>
             </div>
         );
+    }
+
+    @computed get tooltipComponent() {
+        if (!this.tooltipModel) {
+            return null;
+        } else {
+            const maxWidth = 400;
+            let tooltipPlacement = "";
+            let dx = 0;
+            let dy = 0;
+            let transform = "";
+            if (this.props.horizontalBars) {
+                tooltipPlacement = "bottom";
+                dy = 10;
+                transform = "translate(-50%,0%)";
+            } else {
+                dy = -17;
+
+                if (this.mousePosition.x > WindowStore.size.width-maxWidth) {
+                    tooltipPlacement = "left";
+                    dx = -8;
+                    transform = "translate(-100%,0%)";
+                } else {
+                    tooltipPlacement = "right";
+                    dx = 8;
+                }
+            }
+
+            return (ReactDOM as any).createPortal(
+                <Popover
+                    arrowOffsetTop={-dy}
+                    className={classnames("cbioportal-frontend", "cbioTooltip")}
+                    positionLeft={this.mousePosition.x + dx}
+                    positionTop={this.mousePosition.y + dy}
+                    style={{
+                        transform,
+                        maxWidth
+                    }}
+                    placement={tooltipPlacement}
+                >
+                    {this.tooltipFunction(this.tooltipModel.datum || this.tooltipModel.data[0])}
+                </Popover>,
+                document.body
+            );
+        }
     }
 
     @computed get chartEtl() {
@@ -597,6 +671,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                         width={this.svgWidth}
                         role="img"
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
+                        onMouseMove={this.onMouseMove}
                     >
                         <g
                             transform={`translate(${this.leftPadding}, ${this.topPadding})`}
@@ -627,27 +702,9 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
         }
     }
 
-    @autobind
-    private getTooltip() {
-        if (this.container && this.tooltipModel) {
-            const countAxisOffset = (this.tooltipModel.y + this.tooltipModel.y0)/2;
-            const categoryAxisOffset = this.tooltipModel.x;
-            return (
-                <ScatterPlotTooltip
-                    placement={this.props.horizontalBars ? "bottom" : "right"}
-                    container={this.container}
-                    targetHovered={this.pointHovered}
-                    targetCoords={{
-                        x: (this.categoryAxis === "x" ? categoryAxisOffset : countAxisOffset) + this.leftPadding,
-                        y: (this.categoryAxis === "y" ? categoryAxisOffset : countAxisOffset) + this.topPadding
-                    }}
-                    overlay={this.tooltip(this.tooltipModel.datum)}
-                    arrowOffsetTop={20}
-                />
-            );
-        } else {
-            return <span></span>;
-        }
+    @autobind private onMouseMove(e:React.MouseEvent<any>) {
+        this.mousePosition.x = e.pageX;
+        this.mousePosition.y = e.pageY;
     }
 
     private updateLegendWidth() {
@@ -672,9 +729,7 @@ export default class MultipleCategoryBarPlot extends React.Component<IMultipleCa
                 <Observer>
                     {this.getChart}
                 </Observer>
-                <Observer>
-                    {this.getTooltip}
-                </Observer>
+                {this.tooltipComponent}
             </div>
         );
     }

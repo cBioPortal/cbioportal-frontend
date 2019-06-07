@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Provider} from 'mobx-react';
-import {Router, useRouterHistory} from 'react-router';
-import {createHistory} from 'history'
-import {syncHistoryWithStore} from 'mobx-react-router';
+import { Provider } from 'mobx-react';
+import { Router, useRouterHistory } from 'react-router';
+import { createHistory } from 'history'
+import { syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import {
     fetchServerConfig,
@@ -19,11 +19,11 @@ import makeRoutes from './routes';
 import * as _ from 'lodash';
 import $ from 'jquery';
 import * as superagent from 'superagent';
-import {buildCBioPortalPageUrl} from './shared/api/urls';
+import { getHost, buildCBioPortalPageUrl } from './shared/api/urls';
 import AppConfig from "appConfig";
 import browser from 'bowser';
-import {setNetworkListener} from './shared/lib/ajaxQuiet';
-import {initializeTracking} from "shared/lib/tracking";
+import { setNetworkListener } from './shared/lib/ajaxQuiet';
+import { initializeTracking } from "shared/lib/tracking";
 import superagentCache from 'superagent-cache';
 import getBrowserWindow from "shared/lib/getBrowserWindow";
 import {AppStore} from "./AppStore";
@@ -46,6 +46,8 @@ __webpack_public_path__ = AppConfig.frontendUrl;
 if (!window.hasOwnProperty("$")) {
     window.$ = $;
 }
+
+
 
 if (!window.hasOwnProperty("jQuery")) {
     window.jQuery = $;
@@ -175,4 +177,5 @@ $(document).ready(async () => {
 
     render();
 
+    stores.appStore.setAppReady();
 });

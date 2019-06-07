@@ -5,7 +5,6 @@ import { observable, computed } from 'mobx';
 import ExpressionEnrichmentTable from 'pages/resultsView/enrichments/ExpressionEnrichmentsTable';
 import { ExpressionEnrichment } from 'shared/api/generated/CBioPortalAPIInternal';
 import styles from "./styles.module.scss";
-import { Button, FormControl, FormGroup, Form, ControlLabel, Checkbox } from 'react-bootstrap';
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import {
     ExpressionEnrichmentWithQ,
@@ -20,15 +19,33 @@ import MiniBoxPlot from 'pages/resultsView/enrichments/MiniBoxPlot';
 import * as _ from "lodash";
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
+import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
+import classNames from 'classnames';
 
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];
     selectedProfile: MolecularProfile;
-    store: ResultsViewPageStore;
+    group1Name?:string;
+    group2Name?:string;
+    group1Description?:string;
+    group2Description?:string;
+    group1Color?:string;
+    group2Color?:string;
+    alteredVsUnalteredMode?:boolean;
+    store?: ResultsViewPageStore;
 }
 
 @observer
 export default class ExpressionEnrichmentContainer extends React.Component<IExpressionEnrichmentContainerProps, {}> {
+
+    static defaultProps:Partial<IExpressionEnrichmentContainerProps> = {
+        group1Name: "Altered group",
+        group2Name: "Unaltered group",
+        group1Description: "samples that have alterations in the query gene(s).",
+        group2Description: "samples that do not have alterations in the query gene(s).",
+        alteredVsUnalteredMode:true
+    };
 
     @observable overExpressedFilter: boolean = true;
     @observable underExpressedFilter: boolean = true;
@@ -36,11 +53,11 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     @observable.shallow checkedGenes: string[] = [];
     @observable clickedGeneHugo: string;
     @observable clickedGeneEntrez: number;
-    @observable selectedGenes: string[]|null;
+    @observable.ref selectedGenes: string[]|null;
     @observable.ref highlightedRow:ExpressionEnrichmentRow|undefined;
 
     @computed get data(): ExpressionEnrichmentRow[] {
-        return getExpressionRowData(this.props.data, this.props.store.hugoGeneSymbols);
+        return getExpressionRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
     }
 
     @computed get filteredData(): ExpressionEnrichmentRow[] {
@@ -102,13 +119,41 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         }
     );
 
+    @computed get volcanoPlotLabels() {
+        if (this.props.alteredVsUnalteredMode) {
+            return ["Under-expressed", "Over-expressed"];
+        } else {
+            return [this.props.group2Name!, this.props.group1Name!];
+        }
+    }
+
+    @computed get group1CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Over-expressed";
+        } else {
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group1Name!} shownWidth={100}/></span>;
+        }
+    }
+
+    @computed get group2CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Under-expressed";
+        } else {
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group2Name!} shownWidth={100}/></span>;
+        }
+    }
+
+    @computed get selectedGenesSet() {
+        return _.keyBy(this.selectedGenes || []);
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
             return <div className={'alert alert-info'}>No data/result available</div>;
         }
 
-        const data: any[] = getExpressionScatterData(this.data, this.props.store.hugoGeneSymbols);
+        const data: any[] = getExpressionScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
         const maxData:any = _.maxBy(data, (d) => {
             return Math.ceil(Math.abs(d.x));
         });
@@ -120,38 +165,69 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
 
         return (
             <div className={styles.Container}>
-                <div className={styles.LeftColumn}>
-                    <MiniScatterChart data={data} 
-                        xAxisLeftLabel="Under-expressed" xAxisRightLabel="Over-expressed" xAxisDomain={Math.ceil(Math.abs(maxData.x))} 
-                        xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
-                        onSelectionCleared={this.onSelectionCleared}/>
-                    <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez} 
-                        selectedProfile={this.props.selectedProfile} queryGenes={this.props.store.hugoGeneSymbols} 
-                        selectedGeneQValue={selectedGeneQValue} store={this.props.store}/>
+
+                <div className={styles.ChartsPanel}>
+                    <MiniScatterChart data={data}
+                                      selectedGenesSet={this.selectedGenesSet}
+                                      xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={Math.ceil(Math.abs(maxData.x))}
+                                      xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
+                                      onSelectionCleared={this.onSelectionCleared}/>
+                    { this.props.store && <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez}
+                                                       selectedProfile={this.props.selectedProfile} queryGenes={this.props.store.hugoGeneSymbols}
+                                                       selectedGeneQValue={selectedGeneQValue} store={this.props.store}/>}
                 </div>
+
                 <div className={styles.TableContainer}>
                     <div>
                         <h3>{this.props.selectedProfile.name}</h3>
-                        <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />
+                        { this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
-                        <Checkbox checked={this.overExpressedFilter}
-                            onChange={this.toggleOverExpressedFilter}>
-                            Over-expressed
-                        </Checkbox>
-                        <Checkbox checked={this.underExpressedFilter}
-                            onChange={this.toggleUnderExpressedFilter}>
-                            Under-expressed
-                        </Checkbox>
-                        <Checkbox checked={this.significanceFilter}
-                            onChange={this.toggleSignificanceFilter}>
-                            Significant only
-                        </Checkbox>
+                        <div className={styles.FlexCheckbox}>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={this.overExpressedFilter}
+                                    onClick={this.toggleOverExpressedFilter}
+                                />
+                                {this.group1CheckboxLabel}
+                            </label>
+                        </div>
+                        <div className={styles.FlexCheckbox}>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={this.underExpressedFilter}
+                                    onClick={this.toggleUnderExpressedFilter}
+                                />
+                                {this.group2CheckboxLabel}
+                            </label>
+                        </div>
+                        <div className={styles.FlexCheckbox}>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={this.significanceFilter}
+                                    onClick={this.toggleSignificanceFilter}
+                                />
+                                Significant only
+                            </label>
+                        </div>
                     </div>
-                    <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} onGeneNameClick={this.onGeneNameClick}
-                        dataStore={this.dataStore}/>
+                    <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
+                                               onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}
+                                               mutexTendency={this.props.alteredVsUnalteredMode}
+                                               group1Description={this.props.group1Description!}
+                                               group2Description={this.props.group2Description!}
+                                               group1Color={this.props.group1Color}
+                                               group2Color={this.props.group2Color}
+                                               checkedGenes={this.props.store ? this.checkedGenes : undefined}
+                    />
                 </div>
+
+
+
             </div>
         );
     }

@@ -4,19 +4,31 @@ import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import styles from "./styles.module.scss";
 import {ClinicalDataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
-import {ChartMeta, StudyViewFilterWithSampleIdentifierFilters, UniqueKey} from 'pages/studyView/StudyViewPageStore';
-import {getCNAColorByAlteration, intervalFiltersDisplayValue} from 'pages/studyView/StudyViewUtils';
+import {UniqueKey} from 'pages/studyView/StudyViewUtils';
+import {
+    ChartMeta,
+    getCNAColorByAlteration, getPatientIdentifiers,
+    getSelectedGroupNames,
+    intervalFiltersDisplayValue, StudyViewFilterWithSampleIdentifierFilters
+} from 'pages/studyView/StudyViewUtils';
 import {PillTag} from "../../shared/components/PillTag/PillTag";
 import {GroupLogic} from "./filters/groupLogic/GroupLogic";
 import classnames from 'classnames';
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {DEFAULT_NA_COLOR, MUT_COLOR_MISSENSE} from "shared/lib/Colors";
+import {
+    caseCounts,
+    getNumPatients,
+    getNumSamples, getSampleIdentifiers,
+    StudyViewComparisonGroup
+} from "../groupComparison/GroupComparisonUtils";
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     customChartsFilter: {[key:string]:string[]};
     getSelectedGene: (entrezGeneId: number) => string|undefined;
     numberOfSelectedSamplesInCustomSelection: number;
+    comparisonGroupSelection:StudyViewComparisonGroup[];
     attributesMetaSet: { [id: string]: ChartMeta };
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
@@ -29,6 +41,7 @@ export interface IUserSelectionsProps {
     removeWithMutationDataFilter: () => void;
     removeWithCNADataFilter: () => void;
     removeCustomSelectionFilter: () => void,
+    removeComparisonGroupSelectionFilter: ()=>void,
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters: () => void
 }
@@ -36,10 +49,6 @@ export interface IUserSelectionsProps {
 
 @observer
 export default class UserSelections extends React.Component<IUserSelectionsProps, {}> {
-
-    constructor(props: IUserSelectionsProps) {
-        super(props);
-    }
 
     @computed
     get showFilters() {
@@ -61,6 +70,24 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                             content={`${this.props.numberOfSelectedSamplesInCustomSelection} sample${this.props.numberOfSelectedSamplesInCustomSelection > 1 ? 's' : ''}`}
                             backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
                             onDelete={() => this.props.removeCustomSelectionFilter()}
+                        />
+                    ]}
+                    operation={':'}
+                    group={false}/></div>);
+        }
+
+        // Show the filter for the comparison group selection
+        if (this.props.comparisonGroupSelection.length > 0) {
+            const numSamples = getSampleIdentifiers(this.props.comparisonGroupSelection).length;
+            const numPatients = getPatientIdentifiers(this.props.comparisonGroupSelection).length;
+            components.push(<div className={styles.parentGroupLogic}>
+                <GroupLogic
+                    components={[
+                        <span className={styles.filterClinicalAttrName}>{getSelectedGroupNames(this.props.comparisonGroupSelection)}</span>,
+                        <PillTag
+                            content={caseCounts(numSamples, numPatients)}
+                            backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                            onDelete={() => this.props.removeComparisonGroupSelectionFilter()}
                         />
                     ]}
                     operation={':'}

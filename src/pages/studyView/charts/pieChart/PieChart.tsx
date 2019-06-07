@@ -8,7 +8,7 @@ import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
 import autobind from 'autobind-decorator';
-import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
+import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewUtils";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
@@ -157,7 +157,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
             ) ? '' : d.count.toLocaleString());
     }
 
-    // We do want to show a bigger pie chart when the height is way smaller than width
+    // We don't want to show a bigger pie chart when the height is way smaller than width
     @computed
     get chartSize() {
         return (this.props.width + this.props.height ) / 2;
@@ -176,7 +176,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 standalone={false}
                 theme={CBIOPORTAL_VICTORY_THEME}
                 containerComponent={<VictoryContainer responsive={false}/>}
-                groupComponent={<g className="studyViewPieChartGroup"/>}
+                groupComponent={<g className="studyViewPieChartGroup" transform="translate(0, -12)"/>}
                 width={this.props.width}
                 height={this.chartSize}
                 labelRadius={this.pieSliceRadius / 3}

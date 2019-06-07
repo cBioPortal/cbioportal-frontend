@@ -5,7 +5,7 @@ import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import {action, computed, observable} from 'mobx';
 import {ButtonGroup, Modal, Radio} from 'react-bootstrap';
-import {ClinicalDataType, ClinicalDataTypeEnum, NewChart} from "../../StudyViewPageStore";
+import {NewChart} from "../../StudyViewPageStore";
 import {
     DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, CodeEnum,
     parseContent,
@@ -15,6 +15,7 @@ import {
 import autobind from 'autobind-decorator';
 import Collapse from "react-collapse";
 import {serializeEvent} from "../../../../shared/lib/tracking";
+import {ClinicalDataType, ClinicalDataTypeEnum} from "../../StudyViewUtils";
 
 export interface ICustomCaseSelectionProps {
     allSamples: Sample[];
