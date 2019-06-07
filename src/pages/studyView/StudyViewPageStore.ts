@@ -110,7 +110,7 @@ import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {
     finalizeStudiesAttr,
     getSampleIdentifiers, MAX_GROUPS_IN_SESSION,
-    sortDataIntoQuartiles,
+    getQuartiles,
     StudyViewComparisonGroup
 } from "../groupComparison/GroupComparisonUtils";
 import {getSelectedGroups, getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
@@ -353,8 +353,8 @@ export class StudyViewPageStore {
             onMobxPromise(this.selectedSamples,
                 async (selectedSamples)=>{
                     // get clinical data for the given attribute
-                    const entityIdKey = (clinicalAttribute.patientAttribute ? "patientId" : "sampleId")
-                    const data = await client.fetchClinicalDataUsingPOST({
+                    const entityIdKey = (clinicalAttribute.patientAttribute ? "patientId" : "sampleId");
+                    let data = await client.fetchClinicalDataUsingPOST({
                         clinicalDataType: clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE",
                         clinicalDataMultiStudyFilter: {
                             attributeIds: [clinicalAttribute.clinicalAttributeId],
@@ -362,88 +362,36 @@ export class StudyViewPageStore {
                         }
                     });
 
-                    // sort values
-                    // group into halves, thirds, or fourths, depending on how many distinct values there are
-                    const numericalData = data.filter(d=>!isNaN(d.value as any));
-                    const groupedByValue = _.groupBy(numericalData, d=>parseFloat(d.value));
-                    const distinctValues = _.sortBy(Object.keys(groupedByValue).map(v=>parseFloat(v)));
-
-                    statusCallback(LoadingPhase.CREATING_SESSION);
+                    const quartiles:ClinicalData[][] = getQuartiles(data);
                     // create groups using data
-                    let groups:SessionGroupData[];
                     let patientToSamples:{[uniquePatientKey:string]:SampleIdentifier[]} = {};
                     if (clinicalAttribute.patientAttribute) {
                         patientToSamples = _.groupBy(selectedSamples, s=>s.uniquePatientKey);
                     }
-                    switch (distinctValues.length) {
-                        case 1:
-                        case 2:
-                        case 3:
-                        case 4:
-                            groups = distinctValues.map(value=>{
-                                let studies;
-                                if (clinicalAttribute.patientAttribute) {
-                                    studies = getStudiesAttr(
-                                        _.flattenDeep<any>(
-                                            groupedByValue[value.toString()].map(d=>{
-                                                return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }))
-                                            })
-                                        ) as SampleIdentifier[]
-                                    )
-                                } else {
-                                    studies = getStudiesAttr(groupedByValue[value.toString()].map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
-                                }
-                                return {
-                                    name: value.toString(),
-                                    description: "",
-                                    studies,
-                                    origin: this.studyIds,
-                                };
-                            });
-                            break;
-                        default:
-                            // set up groups for quartiles
-                            // first, get the limit for each quartile
-                            const quartileTops = jStat.quartiles(distinctValues) as [number, number, number];
-
-                            // now group samples into each quartile group
-                            const quartileGroups = sortDataIntoQuartiles(
-                                groupedByValue,
-                                quartileTops
+                    const groups = quartiles.map(quartile=>{
+                        let studies;
+                        if (clinicalAttribute.patientAttribute) {
+                            studies = getStudiesAttr(
+                                _.flatMapDeep(
+                                    quartile,
+                                    (d:ClinicalData)=>{
+                                        return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }));
+                                    }
+                                )
                             );
+                        } else {
+                            studies = getStudiesAttr(quartile.map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
+                        }
+                        const range = [quartile[0].value, quartile[quartile.length-1].value];
+                        return {
+                            name: `${range[0]}-${range[1]}`,
+                            description: "",
+                            studies,
+                            origin: this.studyIds,
+                        };
+                    });
 
-                            // add last element for processing
-                            quartileTops.push(distinctValues[distinctValues.length - 1]);
-
-                            groups = quartileGroups.map((dataInGroup, index)=>{
-                                let range:[number,number] = [0,0];
-                                if (index === 0) {
-                                    range = [distinctValues[0], quartileTops[0]];
-                                } else {
-                                    range = [quartileTops[index-1], quartileTops[index]];
-                                }
-                                let studies;
-                                if (clinicalAttribute.patientAttribute) {
-                                    studies = getStudiesAttr(
-                                        _.flattenDeep<any>(
-                                            dataInGroup.map(d=>{
-                                                return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }))
-                                            })
-                                        ) as SampleIdentifier[]
-                                    )
-                                } else {
-                                    studies = getStudiesAttr(dataInGroup.map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
-                                }
-                                return {
-                                    name: `${range[0]}-${range[1]}`,
-                                    description: "",
-                                    studies,
-                                    origin: this.studyIds,
-                                };
-                            });
-                            break;
-                    }
-
+                    statusCallback(LoadingPhase.CREATING_SESSION);
                     // create session and get id
                     const {id} = await comparisonClient.addComparisonSession({
                         groups,

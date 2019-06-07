@@ -1,5 +1,5 @@
 import {MobxPromise} from 'mobxpromise/dist/src/MobxPromise';
-import {PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
+import {ClinicalData, PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 import {
     ClinicalDataEnrichment,
@@ -19,6 +19,7 @@ import {MakeMobxView, MobxViewAlwaysComponent} from "../../shared/components/Mob
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
+import {stringListToIndexSet} from "../../shared/lib/StringUtils";
 
 export enum GroupComparisonTab {
     OVERLAP = "overlap",
@@ -272,13 +273,13 @@ export function finalizeStudiesAttr(
     };
 }
 
-export function getOverlapFilteredGroups(
-    groups:ComparisonGroup[],
+export function getOverlapFilteredGroups<T extends Pick<ComparisonGroup, "studies">>(
+    groups:T[],
     info:{
         overlappingSamplesSet:ComplexKeySet,
         overlappingPatientsSet:ComplexKeySet
     }
-) {
+):T[] {
     // filter out overlap
     const overlappingSamplesSet = info.overlappingSamplesSet;
     const overlappingPatientsSet = info.overlappingPatientsSet;
@@ -449,23 +450,24 @@ export function MissingSamplesMessage(
     );
 }
 
-export function sortDataIntoQuartiles<D>(
-    groupedByValue:{[value:number]:D[]},
-    inclusiveQuartileTops:[number, number, number] // assumed sorted ascending, and distinct
+export function getQuartiles<D extends {value:string}>(
+    data:D[]
 ) {
-    const quartileGroups:[D[], D[], D[], D[]] = [[],[],[],[]];
-    _.forEach(groupedByValue, (dataWithValue:D[], value:string)=>{
-        let q = 0;
-        let v = parseFloat(value);
-        while (v > inclusiveQuartileTops[q]) {
-            q += 1;
-            if (q > 2) {
-                break;
-            }
-        }
-        quartileGroups[q] = quartileGroups[q].concat(dataWithValue);
-    });
-    return quartileGroups;
+    data = _.chain(data)
+        .filter(d=>!isNaN(d.value as any))
+        .sortBy(d=>parseFloat(d.value))
+        .value();
+
+    const quarterLength = data.length / 4;
+    const quartileLimits = [0, Math.floor(quarterLength), Math.floor(2*quarterLength), Math.floor(3*quarterLength), data.length];
+    const quartiles:D[][] = [];
+    for (const i of [0,1,2,3]) {
+        const newQuartile = data.slice(quartileLimits[i], quartileLimits[i+1]);
+        if (newQuartile.length > 0)
+            // handle edge case for small amounts of data where some quartile ranges might be empty
+            quartiles.push(newQuartile);
+    }
+    return quartiles;
 }
 
 export function intersectSamples(
@@ -619,4 +621,86 @@ export function partitionCasesByGroupMembership(
         partitionMap.add(key, caseKey);
     }
     return partitionMap.entries();
+}
+
+export interface IOverlapComputations<T extends Pick<ComparisonGroup, "studies"|"uid">> {
+    groups:T[];
+    overlappingSamples:SampleIdentifier[];
+    overlappingPatients:PatientIdentifier[];
+    overlappingSamplesSet:ComplexKeySet;
+    overlappingPatientsSet:ComplexKeySet;
+    totalSampleOverlap:number;
+    totalPatientOverlap:number;
+    excludedFromAnalysis:{[uid:string]:true}
+}
+
+export function getOverlapComputations<T extends Pick<ComparisonGroup, "studies"|"uid">>(
+    groups:T[],
+    isGroupSelected:(uid:string)=>boolean
+):IOverlapComputations<T> {
+    let filteredGroups:T[] = groups.filter(group=>isGroupSelected(group.uid));
+
+    const totalSampleOverlap = new ComplexKeySet();
+    const totalPatientOverlap = new ComplexKeySet();
+
+    let overlappingSamples:SampleIdentifier[] = [];
+    let overlappingPatients:PatientIdentifier[] = [];
+    let overlappingSamplesSet = new ComplexKeySet();
+    let overlappingPatientsSet = new ComplexKeySet();
+    let removedGroups:{[uid:string]:T} = {};
+
+    if (filteredGroups.length > 0) {
+        while(true) {
+            overlappingSamples = getOverlappingSamples(filteredGroups);
+            overlappingPatients = getOverlappingPatients(filteredGroups);
+            overlappingSamplesSet = new ComplexKeySet();
+            overlappingPatientsSet = new ComplexKeySet();
+            let sampleId;
+            for (const sample of overlappingSamples) {
+                sampleId = { studyId: sample.studyId, sampleId: sample.sampleId };
+                overlappingSamplesSet.add(sampleId);
+                totalSampleOverlap.add(sampleId);
+            }
+            let patientId;
+            for (const patient of overlappingPatients) {
+                patientId = { studyId: patient.studyId, patientId: patient.patientId };
+                overlappingPatientsSet.add(patientId);
+                totalPatientOverlap.add(patientId);
+            }
+
+            const [emptyGroups, nonEmptyGroups] =
+                _.partition(
+                    getOverlapFilteredGroups(filteredGroups, { overlappingSamplesSet, overlappingPatientsSet }),
+                    group=>isGroupEmpty(group)
+                );
+
+            // remove one group at a time
+            if (emptyGroups.length > 0) {
+                const lastEmptyGroup = emptyGroups.pop()!;
+                removedGroups[lastEmptyGroup.uid] = lastEmptyGroup;
+            }
+
+            if (nonEmptyGroups.length === filteredGroups.length) {
+                // no group has been removed this round, so we've reached stable state
+                break;
+            } else {
+                // otherwise, keep iterating
+                filteredGroups = filteredGroups.filter(g=>!(g.uid in removedGroups));
+            }
+        }
+    }
+
+    const sortOrder = stringListToIndexSet(groups.map(g=>g.uid));
+    let groupsInSortOrder = getOverlapFilteredGroups(filteredGroups, { overlappingSamplesSet, overlappingPatientsSet }).concat(_.values(removedGroups));
+    groupsInSortOrder = _.sortBy(groupsInSortOrder, g=>sortOrder[g.uid]);
+    return {
+        groups:groupsInSortOrder,
+        overlappingSamples,
+        overlappingPatients,
+        overlappingSamplesSet,
+        overlappingPatientsSet,
+        totalSampleOverlap:totalSampleOverlap.keys().length,
+        totalPatientOverlap:totalPatientOverlap.keys().length,
+        excludedFromAnalysis:_.mapValues(removedGroups, g=>true as true)
+    };
 }

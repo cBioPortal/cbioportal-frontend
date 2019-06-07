@@ -8,19 +8,18 @@ import {
     excludeSamples,
     finalizeStudiesAttr,
     getNumPatients,
-    getNumSamples, getOrdinals,
+    getNumSamples, getOrdinals, getOverlapComputations,
     getOverlapFilteredGroups,
     getOverlappingPatients,
     getOverlappingSamples,
-    getPatientIdentifiers,
+    getPatientIdentifiers, getQuartiles,
     getSampleIdentifiers,
     getStudyIds,
     getVennPlotData,
     intersectPatients,
-    intersectSamples,
+    intersectSamples, IOverlapComputations,
     isGroupEmpty,
     partitionCasesByGroupMembership,
-    sortDataIntoQuartiles,
     unionPatients,
     unionSamples
 } from './GroupComparisonUtils';
@@ -34,6 +33,651 @@ import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/Compl
 chai.use(deepEqualInAnyOrder);
 
 describe('GroupComparisonUtils', () => {
+    describe("getOverlapComputations", ()=>{
+        function assertEqualOverlapComputations(
+            expected:IOverlapComputations<Pick<ComparisonGroup, "studies"|"uid">>,
+            actual:IOverlapComputations<Pick<ComparisonGroup, "studies"|"uid">>
+        ) {
+            assertDeepEqualInAnyOrder(expected.groups, actual.groups, "groups");
+            assertDeepEqualInAnyOrder(expected.overlappingSamples, actual.overlappingSamples, "overlappingSamples");
+            assertDeepEqualInAnyOrder(expected.overlappingPatients, actual.overlappingPatients, "overlappingPatients");
+            assertDeepEqualInAnyOrder(expected.overlappingSamplesSet.keys(), actual.overlappingSamplesSet.keys(), "overlappingSamplesSet");
+            assertDeepEqualInAnyOrder(expected.overlappingPatientsSet.keys(), actual.overlappingPatientsSet.keys(), "overlappingPatientsSet");
+            assert.equal(expected.totalSampleOverlap, actual.totalSampleOverlap, "totalSampleOverlap");
+            assert.equal(expected.totalPatientOverlap, actual.totalPatientOverlap, "totalPatientOverlap");
+            assert.deepEqual(expected.excludedFromAnalysis, actual.excludedFromAnalysis, "excludedFromAnalysis");
+        }
+        function isGroupSelected(uid:string) {
+            return true;
+        }
+        it("empty", ()=>{
+            assertEqualOverlapComputations(
+                getOverlapComputations([], isGroupSelected),
+                {
+                    groups:[],
+                    overlappingSamples:[],
+                    overlappingPatients:[],
+                    overlappingSamplesSet: new ComplexKeySet(),
+                    overlappingPatientsSet: new ComplexKeySet(),
+                    totalSampleOverlap: 0,
+                    totalPatientOverlap: 0,
+                    excludedFromAnalysis: {}
+                }
+            );
+        });
+        it("one group", ()=>{
+            const group0 = {
+                uid:"group0",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2", "3"],
+                        patients:["1", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            assertEqualOverlapComputations(
+                getOverlapComputations([group0], isGroupSelected),
+                {
+                    groups:[group0],
+                    overlappingSamples:[],
+                    overlappingPatients:[],
+                    overlappingSamplesSet: new ComplexKeySet(),
+                    overlappingPatientsSet: new ComplexKeySet(),
+                    totalSampleOverlap: 0,
+                    totalPatientOverlap: 0,
+                    excludedFromAnalysis: {}
+                }
+            );
+        });
+        it("two disjoint groups", ()=>{
+            const group0 = {
+                uid:"group0",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2", "3"],
+                        patients:["1", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            const group1 = {
+                uid:"group1",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["4", "5", "6"],
+                        patients:["4", "5", "6"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["3","4"],
+                        patients:["3","4"]
+                    }
+                ]
+            };
+            assertEqualOverlapComputations(
+                getOverlapComputations([group1, group0], isGroupSelected),
+                {
+                    groups:[group0, group1],
+                    overlappingSamples:[],
+                    overlappingPatients:[],
+                    overlappingSamplesSet: new ComplexKeySet(),
+                    overlappingPatientsSet: new ComplexKeySet(),
+                    totalSampleOverlap: 0,
+                    totalPatientOverlap: 0,
+                    excludedFromAnalysis: {}
+                }
+            );
+        });
+        it("two overlapping groups", ()=>{
+            const group0 = {
+                uid:"group0",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2", "3"],
+                        patients:["1", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            const group1 = {
+                uid:"group1",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "5", "6"],
+                        patients:["4", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["3","2"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            assertEqualOverlapComputations(
+                getOverlapComputations([group1, group0], isGroupSelected),
+                {
+                    groups:[{
+                        uid:"group0",
+                        studies:[
+                            {
+                                id: "study1",
+                                samples:["2","3"],
+                                patients:["1"]
+                            },
+                            {
+                                id:"study2",
+                                samples:["1"],
+                                patients:[]
+                            }
+                        ]
+                    },{
+                        uid:"group1",
+                        studies:[
+                            {
+                                id:"study1",
+                                samples:["5", "6"],
+                                patients:["4"]
+                            },
+                            {
+                                id:"study2",
+                                samples:["3"],
+                                patients:[]
+                            }
+                        ]
+                    }],
+                    overlappingSamples:[{studyId:"study1", sampleId:"1"}, {studyId:"study2", sampleId:"2"}],
+                    overlappingPatients:[
+                        {studyId:"study1", patientId:"2"}, {studyId:"study1", patientId:"3"},
+                        {studyId:"study2", patientId:"1"}, {studyId:"study2", patientId:"2"}
+                    ],
+                    overlappingSamplesSet: ComplexKeySet.from([{studyId:"study1", sampleId:"1"}, {studyId:"study2", sampleId:"2"}]),
+                    overlappingPatientsSet: ComplexKeySet.from([
+                            {studyId:"study1", patientId:"2"}, {studyId:"study1", patientId:"3"},
+                            {studyId:"study2", patientId:"1"}, {studyId:"study2", patientId:"2"}
+                        ]),
+                    totalSampleOverlap: 2,
+                    totalPatientOverlap: 4,
+                    excludedFromAnalysis: {}
+                }
+            );
+        });
+        it("one group containing another group", ()=>{
+            const group0 = {
+                uid:"group0",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2", "3"],
+                        patients:["1", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            const group1 = {
+                uid:"group1",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2"],
+                        patients:["2", "3"]
+                    }
+                ]
+            };
+            assertEqualOverlapComputations(
+                getOverlapComputations([group1, group0], isGroupSelected),
+                {
+                    groups:[group0,{
+                        uid:"group1",
+                        studies:[]
+                    }],
+                    overlappingSamples:[],
+                    overlappingPatients:[],
+                    overlappingSamplesSet: ComplexKeySet.from([]),
+                    overlappingPatientsSet: ComplexKeySet.from([]),
+                    totalSampleOverlap: 2,
+                    totalPatientOverlap: 2,
+                    excludedFromAnalysis: {group1:true}
+                }
+            );
+        });
+        it("one group containing two other overlapping groups", ()=>{
+            const group0 = {
+                uid:"group0",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2", "3"],
+                        patients:["1", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            const group1 = {
+                uid:"group1",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2"],
+                        patients:["2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1"],
+                        patients:["1"]
+                    }
+                ]
+            };
+            const group2 = {
+                uid:"group2",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["2"],
+                        patients:["1","2"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["2"],
+                        patients:["1"]
+                    }
+                ]
+            };
+            assertEqualOverlapComputations(
+                getOverlapComputations([group2, group1, group0], isGroupSelected),
+                {
+                    groups:[group0,
+                        {
+                            uid:"group1",
+                            studies:[]
+                        },
+                        {
+                            uid:"group2",
+                            studies:[]
+                        }
+                    ],
+                    overlappingSamples:[],
+                    overlappingPatients:[],
+                    overlappingSamplesSet: ComplexKeySet.from([]),
+                    overlappingPatientsSet: ComplexKeySet.from([]),
+                    totalSampleOverlap: 4,
+                    totalPatientOverlap: 4,
+                    excludedFromAnalysis: {group1:true, group2:true}
+                }
+            );
+        });
+        it("A contains B contains C", ()=>{
+            const group0 = {
+                uid:"group0",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2", "3"],
+                        patients:["1", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            const group1 = {
+                uid:"group1",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2"],
+                        patients:["2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1"],
+                        patients:["1"]
+                    }
+                ]
+            };
+            const group2 = {
+                uid:"group2",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["2"],
+                        patients:["3"]
+                    },
+                ]
+            };
+            assertEqualOverlapComputations(
+                getOverlapComputations([group2, group1, group0], isGroupSelected),
+                {
+                    groups:[group0,
+                        {
+                            uid:"group1",
+                            studies:[]
+                        },
+                        {
+                            uid:"group2",
+                            studies:[]
+                        }
+                    ],
+                    overlappingSamples:[],
+                    overlappingPatients:[],
+                    overlappingSamplesSet: ComplexKeySet.from([]),
+                    overlappingPatientsSet: ComplexKeySet.from([]),
+                    totalSampleOverlap: 3,
+                    totalPatientOverlap: 3,
+                    excludedFromAnalysis: {group1:true, group2:true}
+                }
+            );
+        });
+        it("one group containing two disjoint groups", ()=>{
+            const group0 = {
+                uid:"group0",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2", "3"],
+                        patients:["1", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2","3"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            const group1 = {
+                uid:"group1",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1"],
+                        patients:["2"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1"],
+                        patients:["1"]
+                    }
+                ]
+            };
+            const group2 = {
+                uid:"group2",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["3"],
+                        patients:["1"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["3"],
+                        patients:["2"]
+                    }
+                ]
+            };
+            assertEqualOverlapComputations(
+                getOverlapComputations([group2, group1, group0], isGroupSelected),
+                {
+                    groups:[group0,
+                        {
+                            uid:"group1",
+                            studies:[]
+                        },
+                        {
+                            uid:"group2",
+                            studies:[]
+                        }
+                    ],
+                    overlappingSamples:[],
+                    overlappingPatients:[],
+                    overlappingSamplesSet: ComplexKeySet.from([]),
+                    overlappingPatientsSet: ComplexKeySet.from([]),
+                    totalSampleOverlap: 4,
+                    totalPatientOverlap: 4,
+                    excludedFromAnalysis: {group1:true, group2:true}
+                }
+            );
+        });
+        it("two disjoint groups together covering one group", ()=>{
+            const group0 = {
+                uid:"group0",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2", "3"],
+                        patients:["1", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2","3"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            const group1 = {
+                uid:"group1",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1","2","5"],
+                        patients:["1","2","7"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1"],
+                        patients:["1"]
+                    }
+                ]
+            };
+            const group2 = {
+                uid:"group2",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["3","4"],
+                        patients:["3","4"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["2","3"],
+                        patients:["2"]
+                    }
+                ]
+            };
+            assertEqualOverlapComputations(
+                getOverlapComputations([group2, group1, group0], isGroupSelected),
+                {
+                    groups:[{
+                        uid: "group0",
+                        studies:[]
+                    }, group1, group2],
+                    overlappingSamples:[],
+                    overlappingPatients:[],
+                    overlappingSamplesSet: ComplexKeySet.from([]),
+                    overlappingPatientsSet: ComplexKeySet.from([]),
+                    totalSampleOverlap: 6,
+                    totalPatientOverlap: 5,
+                    excludedFromAnalysis: {group0:true}
+                }
+            );
+        });
+        it("two overlapping groups together covering one group", ()=>{
+            const group0 = {
+                uid:"group0",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2", "3"],
+                        patients:["1", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2","3"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            const group1 = {
+                uid:"group1",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1","2","4"],
+                        patients:["1","2","7"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1"],
+                        patients:["1"]
+                    }
+                ]
+            };
+            const group2 = {
+                uid:"group2",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["3","4"],
+                        patients:["3","4"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2","3"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            assertEqualOverlapComputations(
+                getOverlapComputations([group2, group1, group0], isGroupSelected),
+                {
+                    groups:[{
+                        uid: "group0",
+                        studies:[]
+                    }, {
+                        uid:"group1",
+                        studies:[
+                            {
+                                id:"study1",
+                                samples:["1","2"],
+                                patients:["1", "2","7"]
+                            }
+                        ]
+                    },{
+                        uid:"group2",
+                        studies:[
+                            {
+                                id:"study1",
+                                samples:["3"],
+                                patients:["3","4"]
+                            },
+                            {
+                                id:"study2",
+                                samples:["2","3"],
+                                patients:["2"]
+                            }
+                        ]
+                    }],
+                    overlappingSamples:[
+                        { studyId:"study1", sampleId:"4"}, { studyId: "study2", sampleId:"1"}
+                    ],
+                    overlappingPatients:[
+                        { studyId:"study2", patientId:"1"}
+                    ],
+                    overlappingSamplesSet: ComplexKeySet.from([{ studyId:"study1", sampleId:"4"}, { studyId: "study2", sampleId:"1"}]),
+                    overlappingPatientsSet: ComplexKeySet.from([{ studyId:"study2", patientId:"1"}]),
+                    totalSampleOverlap: 7,
+                    totalPatientOverlap: 5,
+                    excludedFromAnalysis: {group0:true}
+                }
+            );
+        });
+        it("three disjoint groups", ()=>{
+            const group0 = {
+                uid:"group0",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["1", "2", "3"],
+                        patients:["1", "2", "3"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["1","2"],
+                        patients:["1","2"]
+                    }
+                ]
+            };
+            const group1 = {
+                uid:"group1",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["4", "5", "6"],
+                        patients:["4", "5", "6"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["3","4"],
+                        patients:["3","4"]
+                    }
+                ]
+            };
+            const group2 = {
+                uid:"group2",
+                studies:[
+                    {
+                        id:"study1",
+                        samples:["7","8"],
+                        patients:["8"]
+                    },
+                    {
+                        id:"study2",
+                        samples:["5"],
+                        patients:["5","6"]
+                    }
+                ]
+            };
+            assertEqualOverlapComputations(
+                getOverlapComputations([group1, group0, group2], isGroupSelected),
+                {
+                    groups:[group0, group1, group2],
+                    overlappingSamples:[],
+                    overlappingPatients:[],
+                    overlappingSamplesSet: new ComplexKeySet(),
+                    overlappingPatientsSet: new ComplexKeySet(),
+                    totalSampleOverlap: 0,
+                    totalPatientOverlap: 0,
+                    excludedFromAnalysis: {}
+                }
+            );
+        });
+    });
     describe("defaultGroupOrder", ()=>{
         it("empty", ()=>{
             assert.deepEqual(defaultGroupOrder([]), []);
@@ -859,60 +1503,46 @@ describe('GroupComparisonUtils', () => {
         });
     });
 
-    describe("sortDataIntoQuartiles", ()=>{
-        it("sorts data into quartiles when theres only one value per quartile", ()=>{
-            assert.deepEqual(sortDataIntoQuartiles(
-                {
-                    3: [{id:"a"}, {id:"b"}, {id:"c"}],
-                    50:[{id:"e"}],
-                    60:[{id:"f"}],
-                    82:[{id:"g"}, {id:"h"}],
-                },
-                [25, 50, 75]
-            ),
-                [
-                    [{id:"a"}, {id:"b"}, {id:"c"}],
-                    [{id:"e"}],
-                    [{id:"f"}],
-                    [{id:"g"}, {id:"h"}]
-                ]
+    describe("getQuartiles", ()=>{
+        it("gets quartiles of 1,2,3, and 4 values", ()=>{
+            const vals = [0,1,2,3].map(x=>({ value:x.toString() }));
+            assert.deepEqual(
+                getQuartiles(vals.slice(0,1)),
+                [[vals[0]]]
+            );
+            assert.deepEqual(
+                getQuartiles(vals.slice(0,2)),
+                [[vals[0]],[vals[1]]]
+            );
+            assert.deepEqual(
+                getQuartiles(vals.slice(0,3)),
+                [[vals[0]],[vals[1]], [vals[2]]]
+            );
+            assert.deepEqual(
+                getQuartiles(vals),
+                [[vals[0]],[vals[1]], [vals[2]], [vals[3]]]
             );
         });
-        it("sorts data into quartiles when theres various values per quartile", ()=>{
-            assert.deepEqual(sortDataIntoQuartiles(
-                {
-                    3: [{id:"a"}, {id:"b"}, {id:"c"}],
-                    4: [{id:"d"}, {id:"e"}, {id:"f"}],
-                    5: [{id:"g"}, {id:"h"}, {id:"i"}],
-                    6: [{id:"j"}, {id:"k"}, {id:"l"}],
-                    51: [{id:"m"}, {id:"n"}, {id:"o"}],
-                    60:[{id:"p"}],
-                    62: [{id:"q"}, {id:"r"}, {id:"s"}],
-                    75: [{id:"t"}, {id:"u"}, {id:"v"}],
-                    82:[{id:"w"}, {id:"x"}],
-                    90:[{id:"y"}, {id:"z"}],
-                },
-                [25, 50, 75]
-                ),
-                [
-                    [
-                        {id:"a"}, {id:"b"}, {id:"c"},
-                        {id:"d"}, {id:"e"}, {id:"f"},
-                        {id:"g"}, {id:"h"}, {id:"i"},
-                        {id:"j"}, {id:"k"}, {id:"l"}
-                    ],
-                    [],
-                    [
-                        {id:"m"}, {id:"n"}, {id:"o"},
-                        {id:"p"}, {id:"q"}, {id:"r"},
-                        {id:"s"}, {id:"t"}, {id:"u"},
-                        {id:"v"}
-                    ],
-                    [
-                        {id:"w"}, {id:"x"}, {id:"y"},
-                        {id:"z"}
-                    ]
-                ]
+        it("gets quartiles of 12,13,14,15 values", ()=>{
+            const vals = [];
+            for (let i=0; i<15; i++) {
+                vals.push({ value: i.toString() });
+            }
+            assert.deepEqual(
+                getQuartiles(vals.slice(0, 12)),
+                [vals.slice(0,3), vals.slice(3,6), vals.slice(6,9), vals.slice(9,12)]
+            );
+            assert.deepEqual(
+                getQuartiles(vals.slice(0, 13)),
+                [vals.slice(0,3), vals.slice(3,6), vals.slice(6,9), vals.slice(9,13)]
+            );
+            assert.deepEqual(
+                getQuartiles(vals.slice(0, 14)),
+                [vals.slice(0,3), vals.slice(3,7), vals.slice(7,10), vals.slice(10,14)]
+            );
+            assert.deepEqual(
+                getQuartiles(vals.slice(0, 15)),
+                [vals.slice(0,3), vals.slice(3,7), vals.slice(7,11), vals.slice(11,15)]
             );
         });
     });

@@ -35,13 +35,15 @@ import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCase
 import {AppStore} from "../../AppStore";
 import ActionButtons from "./studyPageHeader/ActionButtons";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
-import {GACustomFieldsEnum, serializeEvent, trackEvent} from "../../shared/lib/tracking";
+import {GACustomFieldsEnum, isWebdriver, serializeEvent, trackEvent} from "../../shared/lib/tracking";
 import ComparisonGroupManager from "../groupComparison/comparisonGroupManager/ComparisonGroupManager";
 import classNames from "classnames";
 import AppConfig from "appConfig";
 import SocialAuthButton from "../../shared/components/SocialAuthButton";
 import {ServerConfigHelpers} from "../../config/config";
 import { getStudyViewTabId } from './StudyViewUtils';
+import InfoBeacon from "shared/components/infoBeacon/InfoBeacon";
+import {WrappedTour} from "shared/components/wrappedTour/WrappedTour";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -155,40 +157,54 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     @computed
     get groupsButton() {
         return (
-            <DefaultTooltip
-                visible={this.showGroupsTooltip}
-                trigger={["click"]}
-                placement="bottomLeft"
-                destroyTooltipOnHide={true}
-                onPopupAlign={(tooltipEl: any)=>{
-                    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
-                    arrowEl.style.right = '10px';
-                }}
-                onVisibleChange={visible=>{ this.showGroupsTooltip = !!visible; }}
-                getTooltipContainer={()=>document.getElementById("comparisonGroupManagerContainer")!}
-                overlay={
-                    <div style={{width: 350}}>
-                        {this.props.appStore.isLoggedIn ?
-                            <ComparisonGroupManager store={this.store} /> :
-                            (<span>
-                                Please log in to use the custom groups feature to save and compare sub-cohorts.
-                                <If condition={AppConfig.serverConfig.authenticationMethod === "social_auth"}>
-                                    <div className={"text-center"} style={{padding:20}}>
-                                        <SocialAuthButton appStore={this.props.appStore}/>
-                                    </div>
-                                </If>
-                            </span>)
-                        }
-                    </div>
-                }
-            >
-                <button className={classNames('btn btn-primary btn-xs', {active:this.showGroupsTooltip})}
-                        data-test="groups-button"
-                        aria-pressed={this.showGroupsTooltip}
-                        style={{marginLeft: '10px'}}
-                        data-event={serializeEvent({action:'openGroupManagement',label:'', category:'groupComparison' })}
-                >Groups {String.fromCharCode(9662)/*small solid down triangle*/}</button>
-            </DefaultTooltip>
+            <>
+                <If condition={!isWebdriver()}>
+                    <InfoBeacon
+                        top={-15}
+                        right={45}
+                        interaction={'mouseover'}
+                        color={'green'}
+                        id={'groupComparison1'}
+                    >
+                        <WrappedTour/>
+                    </InfoBeacon>
+                </If>
+                <DefaultTooltip
+                    visible={this.showGroupsTooltip}
+                    trigger={["click"]}
+                    placement="bottomLeft"
+                    destroyTooltipOnHide={true}
+                    onPopupAlign={(tooltipEl: any)=>{
+                        const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
+                        arrowEl.style.right = '10px';
+                    }}
+                    onVisibleChange={visible=>{ this.showGroupsTooltip = !!visible; }}
+                    getTooltipContainer={()=>document.getElementById("comparisonGroupManagerContainer")!}
+                    overlay={
+                        <div style={{width: 350}}>
+                            {this.props.appStore.isLoggedIn ?
+                                <ComparisonGroupManager store={this.store} /> :
+                                (<span>
+                                    Please log in to use the custom groups feature to save and compare sub-cohorts.
+                                    <If condition={AppConfig.serverConfig.authenticationMethod === "social_auth"}>
+                                        <div className={"text-center"} style={{padding:20}}>
+                                            <SocialAuthButton appStore={this.props.appStore}/>
+                                        </div>
+                                    </If>
+                                </span>)
+                            }
+                        </div>
+                    }
+                >
+                    <button className={classNames('btn btn-primary btn-xs', {active:this.showGroupsTooltip})}
+                            id={"groupManagementButton"}
+                            data-test="groups-button"
+                            aria-pressed={this.showGroupsTooltip}
+                            style={{marginLeft: '10px'}}
+                            data-event={serializeEvent({action:'openGroupManagement',label:'', category:'groupComparison' })}
+                    >Groups {String.fromCharCode(9662)/*small solid down triangle*/}</button>
+                </DefaultTooltip>
+            </>
         );
     }
 
@@ -274,7 +290,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     </Observer>
                                     <div id="comparisonGroupManagerContainer" style={{display: 'flex', position:"relative"}}>
                                         {(this.enableCustomSelectionInTabs.includes(this.store.currentTab))
-                                        && (
+                                        && (<>
                                                 <DefaultTooltip
                                                     visible={this.showCustomSelectTooltip}
                                                     placement={"bottomLeft"}
@@ -307,6 +323,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                             style={{marginLeft: '10px'}}>Custom Selection
                                                     </button>
                                                 </DefaultTooltip>
+                                            </>
                                         )}
                                         {(this.enableAddChartInTabs.includes(this.store.currentTab))
                                         && (
@@ -341,3 +358,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         </PageLayout>
     }
 }
+
+
+
