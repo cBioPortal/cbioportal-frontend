@@ -171,7 +171,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
             <DefaultTooltip
                 mouseEnterDelay={0}
                 placement="top"
-                overlay={<div>This study may share samples with another selected study.</div>}
+                overlay={<div>This study has overlapping data with another selected study.</div>}
             >
                 <i className="fa fa-exclamation-triangle"></i>
             </DefaultTooltip>
