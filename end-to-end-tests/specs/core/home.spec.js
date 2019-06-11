@@ -218,7 +218,7 @@ describe('case set selection in front page query form', function(){
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
-    it.only('selects the default case set for single study selections', ()=>{
+    it('selects the default case set for single study selections', ()=>{
         var input = ".autosuggest input[type=text]";
         browser.waitForExist(input, 10000);
         setInputText(input, 'ovarian nature 2011');
