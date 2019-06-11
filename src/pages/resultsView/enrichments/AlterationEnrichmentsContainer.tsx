@@ -183,7 +183,18 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                           />
                       </div>
                   </DefaultTooltip>;
-              },
+            },
+            tooltip:
+                <table>
+                    <tr>
+                        <td>Upper row</td>
+                        <td>: Samples colored according to group.</td>
+                    </tr>
+                    <tr>
+                        <td>Lower row</td>
+                        <td>: Samples with {this.props.showCNAInTable ? 'the listed alteration' : 'a mutation'} in the listed gene are highlighted.</td>
+                    </tr>
+                </table>,
           });
         }
 
