@@ -183,17 +183,17 @@ describe("enrichments tab screenshot tests", function() {
 });
 
 
-describe('result page tabs, loading from session id', function(){
-    before(function(){
-        // only run these tests if session service is enabled
-        if (sessionServiceIsEnabled() === false) {
-            this.skip();
-        }
-
-        var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
-        goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(15000);
-    });
-
-    runResultsTestSuite('session');
-});
+// describe('result page tabs, loading from session id', function(){
+//     before(function(){
+//         // only run these tests if session service is enabled
+//         if (sessionServiceIsEnabled() === false) {
+//             this.skip();
+//         }
+//
+//         var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
+//         goToUrlAndSetLocalStorage(url);
+//         waitForOncoprint(15000);
+//     });
+//
+//     runResultsTestSuite('session');
+// });
