@@ -20,7 +20,7 @@ var searchInputSelector = ".autosuggest input[type=text]";
 
 describe('cross cancer query', function() {
 
-    this.retries(2);
+    //this.retries(2);
 
     it('should show cross cancer bar chart with TP53 in title when selecting multiple studies and querying for TP53', function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
@@ -51,7 +51,7 @@ describe('cross cancer query', function() {
 });
 
 describe('single study query', function() {
-    this.retries(1);
+    //this.retries(1);
 
     describe('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
@@ -104,7 +104,7 @@ describe('single study query', function() {
     });
 
     describe('enrichments', function() {
-        //this.retries(3)
+        ////this.retries(3)
 
         it('should show mutations plot', function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
@@ -116,7 +116,7 @@ describe('single study query', function() {
 });
 
 describe("results page", function() {
-    this.retries(1);
+    //this.retries(1);
 
     describe("tab hiding", function() {
         it("should hide coexpression and cn segment tabs in a query without any data for those tabs", ()=>{
@@ -180,7 +180,7 @@ describe("results page", function() {
 describe('case set selection in modify query form', function(){
     var selectedCaseSet_sel = 'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
-    this.retries(2);
+    //this.retries(2);
 
     beforeEach(function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
@@ -269,7 +269,7 @@ describe('case set selection in modify query form', function(){
 
 describe('genetic profile selection in modify query form', function(){
 
-    this.retries(2);
+    //this.retries(2);
 
     beforeEach(function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=chol_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=chol_tcga_all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=chol_tcga_gistic&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=chol_tcga_rppa_Zscores`;

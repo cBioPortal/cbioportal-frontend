@@ -94,7 +94,7 @@ describe("oncoprint screenshot tests", function() {
 });
 
 describe("sorting", function(){
-    this.retries(0);
+    //this.retries(0);
     function getNthTrackOptionsElements(n) {
         // n is one-indexed
 

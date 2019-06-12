@@ -33,7 +33,7 @@ describe.skip("merged tracks", ()=>{
 
 describe('oncoprint', function() {
 
-    this.retries(1);
+    //this.retries(1);
 
     describe("initialization from URL parameters", ()=>{
         it("should start in patient mode if URL parameter show_samples=false or not specified", ()=>{

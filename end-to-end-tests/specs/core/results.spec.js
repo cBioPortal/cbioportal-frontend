@@ -9,7 +9,7 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
 describe('Results Page', function() {
 
-    //this.retries(2);
+    ////this.retries(2);
 
     before(function(){
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);

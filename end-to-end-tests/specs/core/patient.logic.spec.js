@@ -19,7 +19,7 @@ var searchInputSelector = ".autosuggest input[type=text]";
 
 describe('patient page', function(){
 
-    this.retries(2);
+    //this.retries(2);
     before(()=>{
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
