@@ -81,7 +81,7 @@ describe('study laml_tcga tests', () => {
 
         // Pause a bit time to let the page render the charts
         browser.pause();
-        const res = browser.checkElement('#mainColumn');
+        const res = browser.checkElement('#mainColumn', {hide:['.chartHeader .controls'] });
         assertScreenShotMatch(res);
     });
 
