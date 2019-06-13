@@ -5,6 +5,7 @@ import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochber
 import Combinatorics from 'js-combinatorics';
 import Dictionary = _.Dictionary;
 import * as _ from 'lodash';
+import { SampleAlteredMap } from '../ResultsViewPageStoreUtils';
 
 export enum AlteredStatus {
     UNPROFILED = "unprofiled",
@@ -172,4 +173,16 @@ export function formatLogOddsRatio(logOddsRatio: number): string {
         return ">3";
     }
     return logOddsRatio.toFixed(3);
+}
+
+export function getSampleAlteredFilteredMap(isSampleAlteredMap: SampleAlteredMap): SampleAlteredMap {
+    const filteredMap : SampleAlteredMap = {};
+    _.forIn(isSampleAlteredMap, (alteredStatus, trackOql) => {
+        if (alteredStatus && alteredStatus.length > 0) {
+            if (alteredStatus.filter((status) => status != AlteredStatus.UNPROFILED).length > 0) {
+                filteredMap[trackOql] = alteredStatus;
+            }
+        }
+    });
+    return filteredMap;
 }
