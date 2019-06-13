@@ -263,7 +263,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
                 },
                 render: (data: CopyNumberCountByGeneWithCancerGene) => {
-                    return getFreqColumnRender(data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanels, this.toggleModal)
+                    return getFreqColumnRender('cna', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanels, this.toggleModal)
                 },
                 sortBy: (data: CopyNumberCountByGeneWithCancerGene) =>
                     (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100,
