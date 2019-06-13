@@ -20,11 +20,12 @@ import {
     groupHotspotsByMutations,
     indexHotspotsData
 } from "../util/CancerHotspotsUtils";
+import {ONCOKB_DEFAULT_DATA} from "../util/DataFetcherUtils";
 import {groupMutationsByProteinStartPos} from "../util/MutationUtils";
 import {defaultOncoKbIndicatorFilter, groupOncoKbIndicatorDataByMutations} from "../util/OncoKbUtils";
 import {groupPtmDataByPosition, groupPtmDataByTypeAndPosition} from "../util/PtmUtils";
 import {DefaultMutationMapperDataStore} from "./DefaultMutationMapperDataStore";
-import {DefaultMutationMapperDataFetcher, ONCOKB_DEFAULT_DATA} from "./DefaultMutationMapperDataFetcher";
+import {DefaultMutationMapperDataFetcher} from "./DefaultMutationMapperDataFetcher";
 
 interface DefaultMutationMapperStoreConfig {
     isoformOverrideSource?: string;
@@ -128,7 +129,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
         invoke: async() => {
             // do not try fetching swissprot data for invalid entrez gene ids,
             // just return the default value
-            if (this.gene.entrezGeneId < 1) {
+            if (!this.gene.entrezGeneId || this.gene.entrezGeneId < 1) {
                 return "";
             }
 
@@ -433,7 +434,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
     @autobind
     protected getDefaultEntrezGeneId(mutation: Mutation): number {
         // assuming all mutations in this store is for the same gene
-        return mutation ? this.gene.entrezGeneId : 0;
+        return this.gene.entrezGeneId || (mutation.gene && mutation.gene.entrezGeneId) || 0;
     }
 }
 
