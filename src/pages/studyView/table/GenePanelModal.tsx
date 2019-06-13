@@ -20,8 +20,7 @@ export const GenePanelList: React.FunctionComponent<IGenePanelTooltipProps> = ({
 }) => {
     if (genePanels.length > 0) {
         return (
-            <span>
-                <br />
+            <span style={{maxWidth: 400}}>
                 Gene panels:{" "}
                 {genePanels.map((panel, i) => [
                     i > 0 && ", ",
