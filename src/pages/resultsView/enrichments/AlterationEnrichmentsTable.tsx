@@ -11,6 +11,7 @@ import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
+import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'shared/lib/Colors';
 
 export interface IAlterationEnrichmentTableProps {
     visibleOrderedColumnNames?: string[];
@@ -36,8 +37,8 @@ export enum AlterationEnrichmentTableColumnType {
 }
 
 const cnaToAlteration:{[cna:number]:string} = {
-    "2": "Amplification",
-    "-2": "Deep Deletion"
+    "2": "Amp",
+    "-2": "DeepDel"
 };
 
 export type AlterationEnrichmentTableColumn = Column<AlterationEnrichmentRow> & { order?: number, shouldExclude?: () => boolean };
@@ -109,7 +110,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.ALTERATION] = {
             name: "Alteration",
-            render: (d: AlterationEnrichmentRow) => <span>{cnaToAlteration[d.value!]}</span>,
+            render: (d: AlterationEnrichmentRow) => <span style={{ color: d.value! === 2 ? CNA_COLOR_AMP : CNA_COLOR_HOMDEL }}>{cnaToAlteration[d.value!]}</span>,
             tooltip: <span>Copy number alteration</span>,
             filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
                 cnaToAlteration[d.value!].toUpperCase().includes(filterStringUpper),
