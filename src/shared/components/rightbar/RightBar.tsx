@@ -150,6 +150,9 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
                         <li>
                             <Link to="/study?id=5c26a970e4b05228701f9fa9">Histone mutations across cancer types</Link>
                         </li>
+                        <li>
+                            <Link to="/comparison/mutations?sessionId=5cf89323e4b0ab413787436c">Comparison of primary and metastatic prostate cancer</Link>
+                        </li>
                     </ul>
                 </div>
             );
