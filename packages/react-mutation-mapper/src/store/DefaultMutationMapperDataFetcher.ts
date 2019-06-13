@@ -13,6 +13,16 @@ import {EnsemblTranscript} from "../model/EnsemblTranscript";
 import {Mutation} from "../model/Mutation";
 import {CancerGene, IOncoKbData} from "../model/OncoKb";
 import {PostTranslationalModification} from "../model/PostTranslationalModification";
+import {
+    DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
+    DEFAULT_MY_GENE_URL_TEMPLATE,
+    DEFAULT_UNIPROT_ID_URL_TEMPLATE,
+    getUrl,
+    initGenomeNexusClient,
+    initGenomeNexusInternalClient,
+    initOncoKbClient,
+    ONCOKB_DEFAULT_DATA
+} from "../util/DataFetcherUtils";
 import {uniqueGenomicLocations} from "../util/MutationUtils";
 
 export interface MutationMapperDataFetcherConfig {
@@ -21,19 +31,6 @@ export interface MutationMapperDataFetcherConfig {
     mutationAlignerUrlTemplate?: string;
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
-}
-
-const DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE = "https://www.cbioportal.org/getMutationAligner.json?pfamAccession=<%= pfamDomainId %>";
-const DEFAULT_MY_GENE_URL_TEMPLATE = "https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot";
-const DEFAULT_UNIPROT_ID_URL_TEMPLATE = "https://www.uniprot.org/uniprot/?query=accession:<%= swissProtAccession %>&format=tab&columns=entry+name";
-const DEFAULT_GENOME_NEXUS_URL = "https://www.genomenexus.org/";
-const DEFAULT_ONCO_KB_URL = "https://www.oncokb.org/";
-export const ONCOKB_DEFAULT_DATA: IOncoKbData = {
-    indicatorMap : {}
-};
-
-function getUrl(urlTemplate: string, templateVariables: any) {
-    return _.template(urlTemplate)(templateVariables);
 }
 
 export class DefaultMutationMapperDataFetcher
@@ -48,14 +45,9 @@ export class DefaultMutationMapperDataFetcher
         genomeNexusInternalClient?: GenomeNexusAPIInternal,
         oncoKbClient?: OncoKbAPI
     ) {
-        this.genomeNexusClient = genomeNexusClient ||
-            new GenomeNexusAPI(config.genomeNexusUrl || DEFAULT_GENOME_NEXUS_URL);
-
-        this.genomeNexusInternalClient = genomeNexusInternalClient ||
-            new GenomeNexusAPIInternal(config.genomeNexusUrl || DEFAULT_GENOME_NEXUS_URL);
-
-        this.oncoKbClient = oncoKbClient ||
-            new OncoKbAPI(config.oncoKbUrl || DEFAULT_ONCO_KB_URL);
+        this.genomeNexusClient = genomeNexusClient || initGenomeNexusClient(config.genomeNexusUrl);
+        this.genomeNexusInternalClient = genomeNexusInternalClient || initGenomeNexusInternalClient(config.genomeNexusUrl);
+        this.oncoKbClient = oncoKbClient || initOncoKbClient(config.oncoKbUrl);
     }
 
     public async fetchSwissProtAccession(entrezGeneId: number)

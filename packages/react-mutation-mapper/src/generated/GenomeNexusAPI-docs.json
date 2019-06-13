@@ -939,7 +939,7 @@
           "ptm-controller"
         ],
         "summary": "Retrieves PTM entries by Ensembl Transcript IDs",
-        "operationId": "fetchPostTransactionalModificationsByPtmFilterPOST",
+        "operationId": "fetchPostTranslationalModificationsByPtmFilterPOST",
         "consumes": [
           "application/json"
         ],
@@ -995,6 +995,162 @@
     }
   },
   "definitions": {
+    "AlleleCount": {
+      "type": "object",
+      "required": [
+        "ac",
+        "ac_afr",
+        "ac_amr",
+        "ac_asj",
+        "ac_eas",
+        "ac_fin",
+        "ac_nfe",
+        "ac_oth",
+        "ac_sas"
+      ],
+      "properties": {
+        "ac": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ac_afr": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ac_amr": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ac_asj": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ac_eas": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ac_fin": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ac_nfe": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ac_oth": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ac_sas": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "AlleleFrequency": {
+      "type": "object",
+      "required": [
+        "af",
+        "af_afr",
+        "af_amr",
+        "af_asj",
+        "af_eas",
+        "af_fin",
+        "af_nfe",
+        "af_oth",
+        "af_sas"
+      ],
+      "properties": {
+        "af": {
+          "type": "number",
+          "format": "double"
+        },
+        "af_afr": {
+          "type": "number",
+          "format": "double"
+        },
+        "af_amr": {
+          "type": "number",
+          "format": "double"
+        },
+        "af_asj": {
+          "type": "number",
+          "format": "double"
+        },
+        "af_eas": {
+          "type": "number",
+          "format": "double"
+        },
+        "af_fin": {
+          "type": "number",
+          "format": "double"
+        },
+        "af_nfe": {
+          "type": "number",
+          "format": "double"
+        },
+        "af_oth": {
+          "type": "number",
+          "format": "double"
+        },
+        "af_sas": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "AlleleNumber": {
+      "type": "object",
+      "required": [
+        "an",
+        "an_afr",
+        "an_amr",
+        "an_asj",
+        "an_eas",
+        "an_fin",
+        "an_nfe",
+        "an_oth",
+        "an_sas"
+      ],
+      "properties": {
+        "an": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "an_afr": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "an_amr": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "an_asj": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "an_eas": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "an_fin": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "an_nfe": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "an_oth": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "an_sas": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
     "Alleles": {
       "type": "object",
       "properties": {
@@ -1474,6 +1630,27 @@
         }
       }
     },
+    "Gnomad": {
+      "type": "object",
+      "properties": {
+        "alleleCount": {
+          "description": "ac",
+          "$ref": "#/definitions/AlleleCount"
+        },
+        "alleleFrequency": {
+          "description": "af",
+          "$ref": "#/definitions/AlleleFrequency"
+        },
+        "alleleNumber": {
+          "description": "an",
+          "$ref": "#/definitions/AlleleNumber"
+        },
+        "homozygotes": {
+          "description": "hom",
+          "$ref": "#/definitions/Homozygotes"
+        }
+      }
+    },
     "Hg19": {
       "type": "object",
       "properties": {
@@ -1516,6 +1693,58 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Homozygotes": {
+      "type": "object",
+      "required": [
+        "hom",
+        "hom_afr",
+        "hom_amr",
+        "hom_asj",
+        "hom_eas",
+        "hom_fin",
+        "hom_nfe",
+        "hom_oth",
+        "hom_sas"
+      ],
+      "properties": {
+        "hom": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hom_afr": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hom_amr": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hom_asj": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hom_eas": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hom_fin": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hom_nfe": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hom_oth": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hom_sas": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -1592,6 +1821,31 @@
         "start": {
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "IntergenicConsequences": {
+      "type": "object",
+      "required": [
+        "consequenceTerms",
+        "impact",
+        "variantAllele"
+      ],
+      "properties": {
+        "impact": {
+          "type": "string",
+          "description": "impact"
+        },
+        "variantAllele": {
+          "type": "string",
+          "description": "variant_allele"
+        },
+        "consequenceTerms": {
+          "type": "array",
+          "description": "consequence_terms",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1769,6 +2023,14 @@
         "dbsnp": {
           "description": "dbsnp",
           "$ref": "#/definitions/Dbsnp"
+        },
+        "gnomadExome": {
+          "description": "gnomad_exome",
+          "$ref": "#/definitions/Gnomad"
+        },
+        "gnomadGenome": {
+          "description": "gnomad_genome",
+          "$ref": "#/definitions/Gnomad"
         },
         "hgvs": {
           "type": "string",
@@ -2128,6 +2390,7 @@
       "type": "object",
       "required": [
         "id",
+        "intergenic_consequences",
         "variant"
       ],
       "properties": {
@@ -2166,6 +2429,13 @@
           "type": "string",
           "description": "Variant id"
         },
+        "intergenic_consequences": {
+          "type": "array",
+          "description": "intergenicConsequences",
+          "items": {
+            "$ref": "#/definitions/IntergenicConsequences"
+          }
+        },
         "most_severe_consequence": {
           "type": "string",
           "description": "Most severe consequence"
@@ -2179,7 +2449,7 @@
           "$ref": "#/definitions/MyVariantInfoAnnotation"
         },
         "ptms": {
-          "description": "Post Transactional Modifications",
+          "description": "Post Translational Modifications",
           "$ref": "#/definitions/PtmAnnotation"
         },
         "seq_region_name": {

@@ -823,6 +823,35 @@
   resolved "https://registry.yarnpkg.com/@emotion/utils/-/utils-0.8.2.tgz#576ff7fb1230185b619a75d258cbc98f0867a8dc"
   integrity sha512-rLu3wcBWH4P5q1CGoSSH/i9hrXs7SlbRLkoq9IGuoPYNGQvDJ3pt/wmOM+XgYjIDRMVIdkUWt0RsfzF50JfnCw==
 
+"@sinonjs/commons@^1", "@sinonjs/commons@^1.0.2", "@sinonjs/commons@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@sinonjs/commons/-/commons-1.4.0.tgz#7b3ec2d96af481d7a0321252e7b1c94724ec5a78"
+  integrity sha512-9jHK3YF/8HtJ9wCAbG+j8cD0i0+ATS9A7gXFqS36TblLPNy6rEEc+SB0imo91eCboGaBYGV/MT1/br/J+EE7Tw==
+  dependencies:
+    type-detect "4.0.8"
+
+"@sinonjs/formatio@^3.1.0", "@sinonjs/formatio@^3.2.1":
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/@sinonjs/formatio/-/formatio-3.2.1.tgz#52310f2f9bcbc67bdac18c94ad4901b95fde267e"
+  integrity sha512-tsHvOB24rvyvV2+zKMmPkZ7dXX6LSLKZ7aOtXY6Edklp0uRcgGpOsQTTGTcWViFyx4uhWc6GV8QdnALbIbIdeQ==
+  dependencies:
+    "@sinonjs/commons" "^1"
+    "@sinonjs/samsam" "^3.1.0"
+
+"@sinonjs/samsam@^3.1.0", "@sinonjs/samsam@^3.3.1":
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/@sinonjs/samsam/-/samsam-3.3.1.tgz#e88c53fbd9d91ad9f0f2b0140c16c7c107fe0d07"
+  integrity sha512-wRSfmyd81swH0hA1bxJZJ57xr22kC07a1N4zuIL47yTS04bDk6AoCkczcqHEjcRPmJ+FruGJ9WBQiJwMtIElFw==
+  dependencies:
+    "@sinonjs/commons" "^1.0.2"
+    array-from "^2.1.1"
+    lodash "^4.17.11"
+
+"@sinonjs/text-encoding@^0.7.1":
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/@sinonjs/text-encoding/-/text-encoding-0.7.1.tgz#8da5c6530915653f3a1f38fd5f101d8c3f8079c5"
+  integrity sha512-+iTbntw2IZPb/anVDbypzfQa+ay64MW0Zo8aJ8gZPWMMK6/OubMVb6lUPMagqjOPnmtauXnFCACVl3O7ogjeqQ==
+
 "@svgr/babel-plugin-add-jsx-attribute@^4.2.0":
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/@svgr/babel-plugin-add-jsx-attribute/-/babel-plugin-add-jsx-attribute-4.2.0.tgz#dadcb6218503532d6884b210e7f3c502caaa44b1"
@@ -1054,6 +1083,11 @@
   version "7.1.9"
   resolved "https://registry.yarnpkg.com/@types/seamless-immutable/-/seamless-immutable-7.1.9.tgz#489448482c80349da5503b5f7ab6b11e76af0870"
   integrity sha512-EUhpgABPQ+jFiDsipwBUIFjEnd4rtFAPa574zUux9zzp6nZwoQ2pRZdVF9NNG5aPxpZEe+TygSYq7iNahwzFGA==
+
+"@types/sinon@^7.0.12":
+  version "7.0.12"
+  resolved "https://registry.yarnpkg.com/@types/sinon/-/sinon-7.0.12.tgz#18412939ae45b225bd38715a25c1040cbad80f42"
+  integrity sha512-fo0MWpVPSUrnZZhp9wyu+hhI3VJ9+Jhs+PWrokBTg3d2ryNPDOAWF1csIhQuYWBTn7KdZzXpRgpX2o6cwOlPWg==
 
 "@types/sizzle@*":
   version "2.3.2"
@@ -1384,6 +1418,11 @@ array-flatten@^2.1.0:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/array-flatten/-/array-flatten-2.1.2.tgz#24ef80a28c1a893617e2149b0c6d0d788293b099"
   integrity sha512-hNfzcOV8W4NdualtqBFPyVO+54DSJuZGY9qT4pRroB6S9e3iiido2ISIC5h9R2sPJ8H3FHCIiEnsv1lPXO3KtQ==
+
+array-from@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/array-from/-/array-from-2.1.1.tgz#cfe9d8c26628b9dc5aecc62a9f5d8f1f352c1195"
+  integrity sha1-z+nYwmYoudxa7MYqn12PHzUsEZU=
 
 array-includes@^3.0.3:
   version "3.0.3"
@@ -2957,10 +2996,10 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-cbioportal-frontend-commons@^0.0.7:
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.7.tgz#ecd7a2db121d8795941c5a58a513279c9d444eb9"
-  integrity sha512-aP2YRsTKJE/YqABq2PTTykf6n+XRCjAadelQ14OG6LjtOmDs4mp93iVRG/qJoB20HDWFTSKsmn3WcUpxoSrMJQ==
+cbioportal-frontend-commons@^0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.8.tgz#066ff8cbb3c7790315bcb75c26cbec965dadf110"
+  integrity sha512-sko83VHDlsJgVIKyguVgQHk1IYuUKU7Ju+yve6YYfMPYp4FHLrmQvILas3TNbm+XdEUcoD0tK6hJddt7s54F6w==
   dependencies:
     autobind-decorator "^2.1.0"
     babel-polyfill "^6.22.0"
@@ -4209,7 +4248,7 @@ detect-port-alt@1.1.6:
     address "^1.0.1"
     debug "^2.6.0"
 
-diff@3.5.0, diff@^3.2.0:
+diff@3.5.0, diff@^3.2.0, diff@^3.5.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.5.0.tgz#800c0dd1e0a8bfbc95835c202ad220fe317e5a12"
   integrity sha512-A46qtFgd+g7pDZinpnwiRJtxbC1hpgf0uzP3iG89scHk0AUC7A1TGxf5OiiOUv/JMZR8GOt8hL900hV0bOy5xA==
@@ -7149,6 +7188,11 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
+just-extend@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/just-extend/-/just-extend-4.0.2.tgz#f3f47f7dfca0f989c55410a7ebc8854b07108afc"
+  integrity sha512-FrLwOgm+iXrPV+5zDU6Jqu4gCRXbWEQg2O3SKONsWE4w7AXFRkryS53bpWdaL9cNol+AmR3AEYz6kn+o0fCPnw==
+
 killable@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/killable/-/killable-1.0.1.tgz#4c8ce441187a061c7474fb87ca08e2a638194892"
@@ -7471,6 +7515,11 @@ loglevel@^1.4.1:
   version "1.6.1"
   resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.6.1.tgz#e0fc95133b6ef276cdc8887cdaf24aa6f156f8fa"
   integrity sha1-4PyVEztu8nbNyIh82vJKpvFW+Po=
+
+lolex@^4.0.1, lolex@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/lolex/-/lolex-4.1.0.tgz#ecdd7b86539391d8237947a3419aa8ac975f0fe1"
+  integrity sha512-BYxIEXiVq5lGIXeVHnsFzqa1TxN5acnKnPCdlZSpzm8viNEOhiigupA4vTQ9HEFQ6nLTQ9wQOgBknJgzUYQ9Aw==
 
 longest@^1.0.1:
   version "1.0.1"
@@ -8041,6 +8090,17 @@ nice-try@^1.0.4:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/nice-try/-/nice-try-1.0.5.tgz#a3378a7696ce7d223e88fc9b764bd7ef1089e366"
   integrity sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
+
+nise@^1.4.10:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/nise/-/nise-1.5.0.tgz#d03ea0e6c1b75c638015aa3585eddc132949a50d"
+  integrity sha512-Z3sfYEkLFzFmL8KY6xnSJLRxwQwYBjOXi/24lb62ZnZiGA0JUzGGTI6TBIgfCSMIDl9Jlu8SRmHNACLTemDHww==
+  dependencies:
+    "@sinonjs/formatio" "^3.1.0"
+    "@sinonjs/text-encoding" "^0.7.1"
+    just-extend "^4.0.2"
+    lolex "^4.1.0"
+    path-to-regexp "^1.7.0"
 
 no-case@^2.2.0:
   version "2.3.2"
@@ -8720,7 +8780,7 @@ path-to-regexp@0.1.7:
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-0.1.7.tgz#df604178005f522f15eb4490e7247a1bfaa67f8c"
   integrity sha1-32BBeABfUi8V60SQ5yR6G/qmf4w=
 
-path-to-regexp@^1.0.1:
+path-to-regexp@^1.0.1, path-to-regexp@^1.7.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-1.7.0.tgz#59fde0f435badacba103a84e9d3bc64e96b9937d"
   integrity sha1-Wf3g9DW62suhA6hOnTvGTpa5k30=
@@ -10896,6 +10956,19 @@ simple-swizzle@^0.2.2:
   dependencies:
     is-arrayish "^0.3.1"
 
+sinon@^7.3.2:
+  version "7.3.2"
+  resolved "https://registry.yarnpkg.com/sinon/-/sinon-7.3.2.tgz#82dba3a6d85f6d2181e1eca2c10d8657c2161f28"
+  integrity sha512-thErC1z64BeyGiPvF8aoSg0LEnptSaWE7YhdWWbWXgelOyThent7uKOnnEh9zBxDbKixtr5dEko+ws1sZMuFMA==
+  dependencies:
+    "@sinonjs/commons" "^1.4.0"
+    "@sinonjs/formatio" "^3.2.1"
+    "@sinonjs/samsam" "^3.3.1"
+    diff "^3.5.0"
+    lolex "^4.0.1"
+    nise "^1.4.10"
+    supports-color "^5.5.0"
+
 slash@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/slash/-/slash-1.0.0.tgz#c41f2f6c39fc16d1cd17ad4b5d896114ae470d55"
@@ -11418,7 +11491,7 @@ supports-color@^4.2.1:
   dependencies:
     has-flag "^2.0.0"
 
-supports-color@^5.1.0, supports-color@^5.3.0, supports-color@^5.4.0:
+supports-color@^5.1.0, supports-color@^5.3.0, supports-color@^5.4.0, supports-color@^5.5.0:
   version "5.5.0"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-5.5.0.tgz#e2e69a44ac8772f78a1ec0b35b689df6530efc8f"
   integrity sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow==
@@ -11867,7 +11940,7 @@ type-check@~0.3.2:
   dependencies:
     prelude-ls "~1.1.2"
 
-type-detect@^4.0.0, type-detect@^4.0.5:
+type-detect@4.0.8, type-detect@^4.0.0, type-detect@^4.0.5:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/type-detect/-/type-detect-4.0.8.tgz#7646fb5f18871cfbb7749e69bd39a6388eb7450c"
   integrity sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==

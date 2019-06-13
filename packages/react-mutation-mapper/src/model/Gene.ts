@@ -1,4 +1,4 @@
 export type Gene = {
     hugoGeneSymbol: string;
-    entrezGeneId: number;
+    entrezGeneId?: number;
 };

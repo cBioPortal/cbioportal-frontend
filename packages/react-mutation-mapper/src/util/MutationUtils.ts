@@ -109,14 +109,13 @@ export function getColorForProteinImpactType(mutations: Mutation[],
     }
 }
 
-export function extractGenomicLocation(mutation: Mutation)
+export function extractGenomicLocation(mutation: Partial<Mutation>)
 {
-
     const chromosome = (
         mutation.chromosome ||
         // TODO workaround for cbioportal API mutation type,
         //  we should either remove this condition or add a custom getChromosome(mutation: Mutation) function
-        ((mutation as any).gene && (mutation as any).gene.chromosome)
+        (mutation.gene && (mutation as any).gene.chromosome)
     );
 
     if (chromosome &&
@@ -143,11 +142,11 @@ export function genomicLocationString(genomicLocation: GenomicLocation)
     return `${genomicLocation.chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele},${genomicLocation.variantAllele}`;
 }
 
-export function uniqueGenomicLocations(mutations: Mutation[]): GenomicLocation[]
+export function uniqueGenomicLocations(mutations: Partial<Mutation>[]): GenomicLocation[]
 {
     const genomicLocationMap: {[key: string]: GenomicLocation} = {};
 
-    mutations.map((mutation: Mutation) => {
+    mutations.map((mutation: Partial<Mutation>) => {
         const genomicLocation: GenomicLocation|undefined = extractGenomicLocation(mutation);
 
         if (genomicLocation) {
