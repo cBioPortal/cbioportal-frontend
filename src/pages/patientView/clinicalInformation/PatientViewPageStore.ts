@@ -23,6 +23,7 @@ import {
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
@@ -767,6 +768,10 @@ export class PatientViewPageStore {
 
     @cached get genomeNexusCache() {
         return new GenomeNexusCache();
+    }
+
+    @cached get genomeNexusMyVariantInfoCache() {
+        return new GenomeNexusMyVariantInfoCache();
     }
 
     @cached get pubMedCache() {

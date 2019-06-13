@@ -12,6 +12,7 @@ import {
 import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import MutationMapperStore, {IMutationMapperStoreConfig} from "shared/components/mutationMapper/MutationMapperStore";
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
@@ -35,6 +36,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
                 getMutations:()=>Mutation[],
                 private getMutationCountCache: ()=>MutationCountCache,
                 private getGenomeNexusCache: ()=>GenomeNexusCache,
+                private getGenomeNexusMyVariantInfoCache: ()=>GenomeNexusMyVariantInfoCache,
                 private getDiscreteCNACache: ()=>DiscreteCNACache,
                 public studyToMolecularProfileDiscrete: {[studyId:string]:MolecularProfile},
                 public studyIdToStudy:MobxPromise<{[studyId:string]:CancerStudy}>,
@@ -99,6 +101,8 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
     }, undefined);
 
     @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
-        return new MutationTableDownloadDataFetcher(this.mutationData, this.studyToMolecularProfileDiscrete, this.getGenomeNexusCache, this.getMutationCountCache, this.getDiscreteCNACache);
+        return new MutationTableDownloadDataFetcher(this.mutationData, this.studyToMolecularProfileDiscrete, this.getGenomeNexusCache, this.getGenomeNexusMyVariantInfoCache, this.getMutationCountCache, this.getDiscreteCNACache);
     }
+
+    
 }
