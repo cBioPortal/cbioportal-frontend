@@ -22,11 +22,13 @@ class WdioTestRailReporter extends events.EventEmitter {
             this.report.tests.push(data.data);
         });
 
+        this.on('test:pending', (data) => {
+            this.report.tests.push({test:data});
+        });
+
         this.on('end',()=>{
 
             const strReport = JSON.stringify(this.report);
-
-            const report =
 
             fs.writeFileSync(`${config.reporterOptions.custom.outputDir}/customReportJSONP.js`,  `jsonpCallback(${strReport});`, (err) => {
                 if (err) console.log(err);
