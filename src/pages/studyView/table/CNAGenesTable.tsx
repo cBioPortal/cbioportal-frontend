@@ -28,7 +28,7 @@ import {
 import { SortDirection } from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import { DEFAULT_SORTING_COLUMN } from "../StudyViewConfig";
 import { GenePanelModal, GenePanelList } from "./GenePanelModal";
-import {getGeneColumnHeaderRender} from "pages/studyView/TableUtils";
+import {getFreqColumnRender, getGeneColumnHeaderRender} from "pages/studyView/TableUtils";
 import {GeneCell} from "pages/studyView/table/GeneCell";
 import {IMutatedGenesTablePros} from "pages/studyView/table/MutatedGenesTable";
 
@@ -263,29 +263,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
                 },
                 render: (data: CopyNumberCountByGeneWithCancerGene) => {
-                    const addTotalProfiledOverlay = () => (
-                        <span>
-                            # of samples profiled for mutations in this gene:{" "}
-                            {data.numberOfSamplesProfiled.toLocaleString()}
-                            <GenePanelList
-                                genePanels={data.matchingGenePanels}
-                                toggleModal={this.toggleModal}
-                            />
-                        </span>
-                    );
-                    return (
-                        <DefaultTooltip
-                            placement="right"
-                            overlay={addTotalProfiledOverlay}
-                            destroyTooltipOnHide={true}
-                        >
-                            <span>
-                                {getFrequencyStr(
-                                    (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100
-                                )}
-                            </span>
-                        </DefaultTooltip>
-                    );
+                    return getFreqColumnRender('cna', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanels, this.toggleModal)
                 },
                 sortBy: (data: CopyNumberCountByGeneWithCancerGene) =>
                     (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100,
