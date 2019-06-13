@@ -1,0 +1,24 @@
+.gnomad-table {
+    max-width: 470px;
+    display: block;
+    text-align: right;
+    // bold last row
+    tr:last-child {
+      font-weight: bold;
+    }
+    // first column(population column) no break line, and left align
+    table tr td:first-child {
+        white-space: nowrap;
+        text-align: left;
+    }
+    // left align first header(population)
+    th:first-child {
+        text-align: left;
+    }
+    thead {
+        border-bottom: 2px solid #ddd;
+    }
+}
+.link {
+    text-align: left;
+}
