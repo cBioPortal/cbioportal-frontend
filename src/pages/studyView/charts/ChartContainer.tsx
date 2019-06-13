@@ -69,8 +69,10 @@ export interface IChartContainerProps {
     logScaleChecked?:boolean;
     showLogScaleToggle?:boolean;
     selectedGenes?:any;
+    cancerGenes:number[];
     onGeneSelect?:any;
     isNewlyAdded: (uniqueKey: string) => boolean;
+    cancerGeneFilterEnabled: boolean,
 
     openComparisonPage:(params:{
         chartMeta: ChartMeta,
@@ -337,6 +339,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onUserSelection={this.handlers.updateGeneFilters}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
+                        cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
                     />
                 );
             }
@@ -351,6 +354,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onUserSelection={this.handlers.updateCNAGeneFilters}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
+                        cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
                     />
                 );
             }
