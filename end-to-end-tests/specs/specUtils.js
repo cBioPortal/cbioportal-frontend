@@ -108,6 +108,13 @@ function toStudyViewClinicalDataTab() {
     }
 }
 
+function removeAllStudyViewFilters() {
+    const clearAllFilter = "[data-test='clear-all-filters']";
+    if (browser.isVisible(clearAllFilter)) {
+        browser.click(clearAllFilter);
+    }
+}
+
 function waitForStudyViewSelectedInfo() {
     browser.waitForVisible("[data-test='selected-info']", 5000);
     // pause to wait the animation finished
@@ -152,6 +159,7 @@ module.exports = {
     getTextInOncoprintLegend: getTextInOncoprintLegend,
     toStudyViewSummaryTab: toStudyViewSummaryTab,
     toStudyViewClinicalDataTab: toStudyViewClinicalDataTab,
+    removeAllStudyViewFilters: removeAllStudyViewFilters,
     waitForStudyViewSelectedInfo: waitForStudyViewSelectedInfo,
     getTextFromElement: getTextFromElement,
     getNumberOfStudyViewCharts: getNumberOfStudyViewCharts,
