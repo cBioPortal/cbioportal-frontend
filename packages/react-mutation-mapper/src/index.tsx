@@ -18,13 +18,16 @@ export {DataStore} from "./model/DataStore";
 export {DomainSpec} from "./model/DomainSpec";
 export {IProteinImpactTypeColors} from "./model/ProteinImpact";
 export {LollipopSpec} from "./model/LollipopSpec";
+export {Mutation} from "./model/Mutation";
 export {RemoteData} from "./model/RemoteData";
 export {SequenceSpec} from "./model/SequenceSpec";
 export {HotspotFilter} from "./model/HotspotFilter";
 export {OncoKbFilter} from "./model/OncoKbFilter";
 
 export * from "./util/CancerHotspotsUtils";
+export * from "./util/DataFetcherUtils";
 export * from "./util/FilterUtils";
+export * from "./util/MutationAnnotator";
 export {
     MUTATION_TYPE_PRIORITY,
     countMutationsByProteinChange,
@@ -36,7 +39,6 @@ export {
     defaultOncoKbFilter,
     groupOncoKbIndicatorDataByMutations
 } from "./util/OncoKbUtils";
-export * from "./util/ProteinChangeUtils";
 export * from "./util/TrackUtils";
 
 export {default as DefaultMutationMapperDataFetcher} from "./store/DefaultMutationMapperDataFetcher";

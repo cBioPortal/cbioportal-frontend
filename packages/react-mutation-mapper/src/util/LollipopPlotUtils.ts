@@ -4,7 +4,8 @@ import {Mutation} from "../model/Mutation";
 import {countMutationsByProteinChange} from "./MutationUtils";
 
 export function lollipopLabelText(mutationsAtPosition: Mutation[], size?: number): string {
-    const mutationCountsByProteinChange = countMutationsByProteinChange(mutationsAtPosition);
+    const mutationCountsByProteinChange = countMutationsByProteinChange(mutationsAtPosition)
+        .filter(c => c.proteinChange !== undefined);
 
     // only pick specified number of protein change values
     const proteinChanges = mutationCountsByProteinChange
@@ -23,7 +24,7 @@ export function lollipopLabelText(mutationsAtPosition: Mutation[], size?: number
     }
 
     // remove longest common starting substring from all protein change values
-    const proteinChangesTrimmed = proteinChanges.map((s:string) => s.substring(startStr.length));
+    const proteinChangesTrimmed = proteinChanges.map(p => p.substring(startStr.length));
 
     // construct label (sorted by protein change count, not alphabetically)
     let label = startStr + proteinChangesTrimmed.join("/");

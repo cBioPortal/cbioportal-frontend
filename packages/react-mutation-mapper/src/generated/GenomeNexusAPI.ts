@@ -1,6 +1,66 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type AlleleCount = {
+    'ac': number
+
+        'ac_afr': number
+
+        'ac_amr': number
+
+        'ac_asj': number
+
+        'ac_eas': number
+
+        'ac_fin': number
+
+        'ac_nfe': number
+
+        'ac_oth': number
+
+        'ac_sas': number
+
+};
+export type AlleleFrequency = {
+    'af': number
+
+        'af_afr': number
+
+        'af_amr': number
+
+        'af_asj': number
+
+        'af_eas': number
+
+        'af_fin': number
+
+        'af_nfe': number
+
+        'af_oth': number
+
+        'af_sas': number
+
+};
+export type AlleleNumber = {
+    'an': number
+
+        'an_afr': number
+
+        'an_amr': number
+
+        'an_asj': number
+
+        'an_eas': number
+
+        'an_fin': number
+
+        'an_nfe': number
+
+        'an_oth': number
+
+        'an_sas': number
+
+};
 export type Alleles = {
     'allele': string
 
@@ -191,6 +251,16 @@ export type GenomicLocation = {
         'variantAllele': string
 
 };
+export type Gnomad = {
+    'alleleCount': AlleleCount
+
+        'alleleFrequency': AlleleFrequency
+
+        'alleleNumber': AlleleNumber
+
+        'homozygotes': Homozygotes
+
+};
 export type Hg19 = {
     'end': number
 
@@ -207,6 +277,26 @@ export type Hgvs = {
     'coding': Array < string >
 
         'genomic': Array < string >
+
+};
+export type Homozygotes = {
+    'hom': number
+
+        'hom_afr': number
+
+        'hom_amr': number
+
+        'hom_asj': number
+
+        'hom_eas': number
+
+        'hom_fin': number
+
+        'hom_nfe': number
+
+        'hom_oth': number
+
+        'hom_sas': number
 
 };
 export type Hotspot = {
@@ -240,6 +330,14 @@ export type IntegerRange = {
     'end': number
 
         'start': number
+
+};
+export type IntergenicConsequences = {
+    'impact': string
+
+        'variantAllele': string
+
+        'consequenceTerms': Array < string >
 
 };
 export type MutationAssessor = {
@@ -322,6 +420,10 @@ export type MyVariantInfo = {
         'cosmic': Cosmic
 
         'dbsnp': Dbsnp
+
+        'gnomadExome': Gnomad
+
+        'gnomadGenome': Gnomad
 
         'hgvs': string
 
@@ -491,6 +593,8 @@ export type VariantAnnotation = {
         'hotspots': HotspotAnnotation
 
         'id': string
+
+        'intergenic_consequences': Array < IntergenicConsequences >
 
         'most_severe_consequence': string
 
@@ -2409,7 +2513,7 @@ export default class GenomeNexusAPI {
                 return response.body;
             });
         };
-    fetchPostTransactionalModificationsByPtmFilterPOSTURL(parameters: {
+    fetchPostTranslationalModificationsByPtmFilterPOSTURL(parameters: {
         'ptmFilter': PtmFilter,
         $queryParameters ? : any
     }): string {
@@ -2429,10 +2533,10 @@ export default class GenomeNexusAPI {
     /**
      * Retrieves PTM entries by Ensembl Transcript IDs
      * @method
-     * @name GenomeNexusAPI#fetchPostTransactionalModificationsByPtmFilterPOST
+     * @name GenomeNexusAPI#fetchPostTranslationalModificationsByPtmFilterPOST
      * @param {} ptmFilter - List of Ensembl transcript IDs. For example ["ENST00000420316", "ENST00000646891", "ENST00000371953"]
      */
-    fetchPostTransactionalModificationsByPtmFilterPOSTWithHttpInfo(parameters: {
+    fetchPostTranslationalModificationsByPtmFilterPOSTWithHttpInfo(parameters: {
         'ptmFilter': PtmFilter,
         $queryParameters ? : any,
         $domain ? : string
@@ -2473,16 +2577,16 @@ export default class GenomeNexusAPI {
     /**
      * Retrieves PTM entries by Ensembl Transcript IDs
      * @method
-     * @name GenomeNexusAPI#fetchPostTransactionalModificationsByPtmFilterPOST
+     * @name GenomeNexusAPI#fetchPostTranslationalModificationsByPtmFilterPOST
      * @param {} ptmFilter - List of Ensembl transcript IDs. For example ["ENST00000420316", "ENST00000646891", "ENST00000371953"]
      */
-    fetchPostTransactionalModificationsByPtmFilterPOST(parameters: {
+    fetchPostTranslationalModificationsByPtmFilterPOST(parameters: {
             'ptmFilter': PtmFilter,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < PostTranslationalModification >
         > {
-            return this.fetchPostTransactionalModificationsByPtmFilterPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.fetchPostTranslationalModificationsByPtmFilterPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
