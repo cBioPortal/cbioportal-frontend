@@ -127,6 +127,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             isNewlyAdded: this.handlers.isNewlyAdded,
             studyViewFilters: this.store.filters,
             analysisGroupsSettings: this.store.analysisGroupsSettings,
+            cancerGeneFilterEnabled: this.store.oncokbCancerGeneFilterEnabled,
             setComparisonConfirmationModal: this.store.setComparisonConfirmationModal
         };
 
