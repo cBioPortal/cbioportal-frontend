@@ -46,10 +46,10 @@ export function getCancerGeneFilterToggleIcon(isFilteredByCancerGeneList:boolean
     return <span data-test='cancer-gene-filter' className={classnames(styles.cancerGeneIcon, styles.displayFlex)} style={{color: isFilteredByCancerGeneList ? ICON_FILTER_ON : ICON_FILTER_OFF}}><i className='fa fa-filter'></i></span>;
 }
 
-export function getFreqColumnRender(numberOfSamplesProfiled: number, numberOfAlteredCases: number, matchingGenePanels: GenePanel[], toggleModal: (panelName: string, genes: GenePanelToGene[]) => void) {
+export function getFreqColumnRender(type: 'mutation' | 'cna', numberOfSamplesProfiled: number, numberOfAlteredCases: number, matchingGenePanels: GenePanel[], toggleModal: (panelName: string, genes: GenePanelToGene[]) => void) {
     const addTotalProfiledOverlay = () => (
         <span style={{display: 'flex', flexDirection: 'column'}}>
-            <span>{`# of samples profiled for mutations in this gene: ${numberOfSamplesProfiled.toLocaleString()}`}</span>
+            <span>{`# of samples profiled for ${type === 'mutation' ? 'mutations' : 'copy number alterations'} in this gene: ${numberOfSamplesProfiled.toLocaleString()}`}</span>
             <GenePanelList
                 genePanels={matchingGenePanels}
                 toggleModal={toggleModal}
