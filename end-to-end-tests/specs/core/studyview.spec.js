@@ -27,7 +27,7 @@ const CANCER_GENE_FILTER_ICON="[data-test='cancer-gene-filter']";
 
 const WAIT_FOR_VISIBLE_TIMEOUT = 30000;
 
-const hide = '.chartHeader .controls';
+const hide = ['.chartHeader .controls'];
 
 describe('study laml_tcga tests', () => {
     before(() => {
@@ -86,7 +86,7 @@ describe('study laml_tcga tests', () => {
 
         // Pause a bit time to let the page render the charts
         browser.pause();
-        const res = browser.checkElement('#mainColumn', {hide:['.chartHeader .controls'] });
+        const res = browser.checkElement('#mainColumn', { hide });
         assertScreenShotMatch(res);
     });
 
