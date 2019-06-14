@@ -42,11 +42,11 @@ export const DEFAULT_UNKNOWN_COLOR = DARK_GREY;
 // const CLI_NO_COLOR = "#DC3912";
 
 // Colorblind safe version. http://colorbrewer2.org/#type=qualitative&scheme=Dark2&n=3
-const CLI_YES_COLOR = "#1b9e77";
-const CLI_NO_COLOR = "#d95f02";
+export const CLI_YES_COLOR = "#1b9e77";
+export const CLI_NO_COLOR = "#d95f02";
 
-const CLI_FEMALE_COLOR = '#E0699E';
-const CLI_MALE_COLOR = '#2986E2';
+export const CLI_FEMALE_COLOR = '#E0699E';
+export const CLI_MALE_COLOR = '#2986E2';
 
 export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     true: CLI_YES_COLOR,
