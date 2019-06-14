@@ -3,8 +3,8 @@ var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch
 
 var assert = require('assert');
 var expect = require('chai').expect;
-var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('./../specUtils').waitForNetworkQuiet;
+var goToUrlAndSetLocalStorage = require('../specUtils').goToUrlAndSetLocalStorage;
+var waitForNetworkQuiet = require('../specUtils').waitForNetworkQuiet;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -94,7 +94,7 @@ describe('Mutation Table', function() {
         });
 
         it('should show the gnomad table after mouse over the frequency in gnomad column', ()=>{
-    
+
             browser.waitForText('//*[text()="TCGA-78-7540-01"]',60000);
             // show the gnomad column
             browser.scroll(1000, 0);
@@ -120,7 +120,7 @@ describe('Mutation Table', function() {
             browser.waitForExist('[data-test="gnomad-table"]', 300000);
             // check if the first allele number appears
             let count = browser.getText('//*[text()[contains(.,"23986")]]');
-            assert.ok(count.length > 0);            
+            assert.ok(count.length > 0);
         });
 
     });
