@@ -148,19 +148,6 @@ jobs:
       SPEC_FILE_PATTERN: ./specs/core/**/*.spec.js
     <<: *run_e2e_and_save_artifacts
 
-  e2e_need_fixing:
-    <<: *defaults
-    environment:
-        SPEC_FILE_PATTERN: ./specs/need-fixing/**/*.spec.js
-    <<: *run_e2e_and_save_artifacts
-
-  e2e_genome_nexus:
-    <<: *defaults
-    environment:
-      SPEC_FILE_PATTERN: ./specs/genome-nexus/**/*.spec.js
-    <<: *run_e2e_and_save_artifacts
-
-
 workflows:
     version: 2
     install_and_test:
@@ -174,12 +161,6 @@ workflows:
                     - install
             - api_sync:
                   requires:
-                    - install
-            - e2e_genome_nexus:
-                requires:
-                    - install
-            - e2e_need_fixing:
-                requires:
                     - install
     nightly:
        triggers:
@@ -201,9 +182,4 @@ workflows:
            - end_to_end_tests:
                requires:
                    - install
-           - e2e_genome_nexus:
-               requires:
-                   - install
-           - e2e_need_fixing:
-               requires:
-                   - install
+
