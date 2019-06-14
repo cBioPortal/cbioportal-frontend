@@ -56,7 +56,7 @@ describe('Mutation Table', function() {
                 textValuesWith6 = browser.getText('//*[text()="6"]');
                 // 4 values from Exon column + 1 value from #Mut in Sample column + 1 value from COSMIC column
                 return textValuesWith6.length === 6;
-            }, 20000, "Exon data not in Exon column after clikcing show more button");
+            }, 60000, "Exon data not in Exon column after clikcing show more button");
         });
 
         it('should show the HGVSc data after adding the HGVSc column', ()=>{
@@ -69,7 +69,7 @@ describe('Mutation Table', function() {
             browser.waitUntil(() => {
                 var hgvscValues = browser.getText('//*[text()[contains(.,"ENST00000269305.4:c.817C>T")]]');
                 return hgvscValues.length > 0;
-            }, 20000, "HGVSc values not in hgvs column");
+            }, 60000, "HGVSc values not in hgvs column");
         });
 
         it('should show more HGVSc data after clicking "Show more"', ()=>{
@@ -79,8 +79,50 @@ describe('Mutation Table', function() {
             browser.waitUntil(() => {
                 var hgvscValues = browser.getText('//*[text()[contains(.,"C>T")]]');
                 return hgvscValues.length > 0;
-            }, 20000, "HGVSc values not in hgvs column after clicking show more button");
+            }, 60000, "HGVSc values not in hgvs column after clicking show more button");
         });
+    });
+
+    describe('try getting GNOMAD from genome nexus', ()=>{
+        before(()=>{
+            var url = `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&case_set_id=nsclc_tcga_broad_2016_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations&tab_index=tab_visualize`;
+
+            goToUrlAndSetLocalStorage(url);
+            // mutations table should be visiable after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",300000);
+        });
+
+        it('should show the gnomad table after mouse over the frequency in gnomad column', ()=>{
+    
+            browser.waitForText('//*[text()="TCGA-78-7540-01"]',60000);
+            // show the gnomad column
+            browser.scroll(1000, 0);
+            // click on column button
+            browser.click("button*=Columns");
+            // scroll down to activated "GNOMAD" selection
+            browser.scroll(1000, 1000);
+            // click "GNOMAD"
+            browser.click('//*[text()="gnomAD"]');
+            // find frequency
+            const frequency = '[data-test2="TCGA-78-7540-01"][data-test="gnomad-column"]';
+            browser.waitForExist(frequency, 60000);
+            // wait for gnomad frequency show in the column
+            browser.waitUntil(() => {
+                var textFrequency = browser.getText(frequency);
+                return textFrequency.length >= 1;
+            }, 600000, "Frequency data not in Gnoamd column");
+            // check if the column has 1.1e-5
+            assert.equal(browser.getText(frequency), '1.1e-5');
+            // mouse over the frequency
+            browser.moveToObject(frequency,0,0);
+            // wait for gnomad table showing up
+            browser.waitForExist('[data-test="gnomad-table"]', 300000);
+            // check if the first allele number appears
+            let count = browser.getText('//*[text()[contains(.,"23986")]]');
+            assert.ok(count.length > 0);            
+        });
+
     });
 
 });
