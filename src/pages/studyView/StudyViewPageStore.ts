@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
+import oncoKBClient from "shared/api/oncokbClientInstance";
 import {action, computed, IReactionDisposer, observable, ObservableMap, reaction, toJS} from "mobx";
 import {
     ClinicalDataBinCountFilter,
@@ -119,6 +120,7 @@ import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import jStat from 'jStat'
+import {CancerGene, Gene as OncokbGene} from "../../shared/api/generated/OncoKbAPI";
 
 
 export enum StudyViewPageTabKeyEnum {
@@ -211,6 +213,17 @@ export type StatusMessage = {
     status: 'success' | 'warning' | 'danger' | 'info',
     message: string
 };
+
+type OncokbCancerGene = {
+    oncokbAnnotated: boolean;
+    oncokbOncogene: boolean;
+    oncokbTumorSuppressorGene: boolean;
+    isCancerGene: boolean;
+};
+
+export type MutationCountByGeneWithCancerGene = MutationCountByGene & OncokbCancerGene;
+
+export type CopyNumberCountByGeneWithCancerGene = CopyNumberCountByGene & OncokbCancerGene;
 
 export class StudyViewPageStore {
     private reactionDisposers:IReactionDisposer[] = [];
@@ -2023,6 +2036,62 @@ export class StudyViewPageStore {
         }
     }, []);
 
+    readonly oncokbCancerGenes = remoteData<CancerGene[]>({
+        await: () => [],
+        invoke: async () => {
+            return oncoKBClient.utilsCancerGeneListGetUsingGET({});
+        },
+        onError: (error => {
+        }),
+        default: []
+    });
+
+    readonly oncokbGenes = remoteData<OncokbGene[]>({
+        await: () => [],
+        invoke: async () => {
+            return oncoKBClient.genesGetUsingGET({});
+        },
+        onError: (error => {
+        }),
+        default: []
+    });
+
+    readonly oncokbCancerGeneEntrezGeneIds = remoteData<number[]>({
+        await: () => [this.oncokbCancerGenes],
+        invoke: async () => {
+            return this.oncokbCancerGenes.result.map(gene => gene.entrezGeneId);
+        },
+        default: []
+    });
+
+    readonly oncokbAnnotatedGeneEntrezGeneIds = remoteData<number[]>({
+        await: () => [this.oncokbCancerGenes],
+        invoke: async () => {
+            return this.oncokbCancerGenes.result.filter(gene => gene.oncokbAnnotated).map(gene => gene.entrezGeneId);
+        },
+        default: []
+    });
+
+    readonly oncokbOncogeneEntrezGeneIds = remoteData<number[]>({
+        await: () => [this.oncokbGenes],
+        invoke: async () => {
+            return this.oncokbGenes.result.filter(gene => gene.oncogene).map(gene => gene.entrezGeneId);
+        },
+        default: []
+    });
+
+    readonly oncokbTumorSuppressorGeneEntrezGeneIds = remoteData<number[]>({
+        await: () => [this.oncokbGenes],
+        invoke: async () => {
+            return this.oncokbGenes.result.filter(gene => gene.tsg).map(gene => gene.entrezGeneId);
+        },
+        default: []
+    });
+
+    @computed get oncokbCancerGeneFilterEnabled() {
+        return !this.oncokbCancerGenes.isError && !this.oncokbGenes.isError;
+    }
+
     @computed get isSingleVirtualStudyPageWithoutFilter() {
         return (this.filteredPhysicalStudies.result.length + this.filteredVirtualStudies.result.length) === 1 && this.filteredVirtualStudies.result.length > 0 && !this.chartsAreFiltered;
     }
@@ -2150,7 +2219,7 @@ export class StudyViewPageStore {
                 dimension: this.chartsDimension[UniqueKey.MUTATED_GENES_TABLE]!,
                 displayName: 'Mutated Genes',
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.MUTATED_GENES_TABLE),
-                renderWhenDataChange: true,
+                renderWhenDataChange: false,
                 description: ''
             };
         }
@@ -2163,7 +2232,7 @@ export class StudyViewPageStore {
                 chartType: this.chartsType.get(UniqueKey.CNA_GENES_TABLE)!,
                 dimension: this.chartsDimension[UniqueKey.CNA_GENES_TABLE]!,
                 displayName: 'CNA Genes',
-                renderWhenDataChange: true,
+                renderWhenDataChange: false,
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.CNA_GENES_TABLE),
                 description: ''
             };
@@ -2617,29 +2686,52 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly mutatedGeneData = remoteData<MutatedGenesData>({
-        await: () => [this.mutationProfiles],
+    readonly mutatedGeneData = remoteData<MutationCountByGeneWithCancerGene[]>({
+        await: () => this.oncokbCancerGeneFilterEnabled ?
+            [this.mutationProfiles, this.oncokbAnnotatedGeneEntrezGeneIds, this.oncokbOncogeneEntrezGeneIds, this.oncokbTumorSuppressorGeneEntrezGeneIds, this.oncokbCancerGeneEntrezGeneIds] :
+            [this.mutationProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result!)) {
                 // TODO: get data for all profiles
-                return internalClient.fetchMutatedGenesUsingPOST({
+                let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST({
                     studyViewFilter: this.filters
+                });
+                return mutatedGenes.map(item => {
+                    return {
+                        ...item,
+                        oncokbAnnotated: this.oncokbCancerGeneFilterEnabled ? this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        oncokbOncogene: this.oncokbCancerGeneFilterEnabled ? this.oncokbOncogeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        oncokbTumorSuppressorGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        isCancerGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbCancerGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false
+                    };
                 });
             } else {
                 return [];
             }
         },
-        onError: (error => {}),
+        onError: (error => {
+        }),
         default: []
     });
 
-    readonly cnaGeneData = remoteData<CNAGenesData>({
-        await:()=>[this.cnaProfiles],
+    readonly cnaGeneData = remoteData<CopyNumberCountByGeneWithCancerGene[]>({
+        await: () => this.oncokbCancerGeneFilterEnabled ?
+            [this.cnaProfiles, this.oncokbAnnotatedGeneEntrezGeneIds, this.oncokbOncogeneEntrezGeneIds, this.oncokbTumorSuppressorGeneEntrezGeneIds, this.oncokbCancerGeneEntrezGeneIds] :
+            [this.mutationProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.cnaProfiles.result)) {
                 // TODO: get data for all profiles
-                return internalClient.fetchCNAGenesUsingPOST({
+                let cnaGenes = await internalClient.fetchCNAGenesUsingPOST({
                     studyViewFilter: this.filters
+                });
+                return cnaGenes.map(item => {
+                    return {
+                        ...item,
+                        oncokbAnnotated: this.oncokbCancerGeneFilterEnabled ? this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        oncokbOncogene: this.oncokbCancerGeneFilterEnabled ? this.oncokbOncogeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        oncokbTumorSuppressorGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        isCancerGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbCancerGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                    };
                 });
             } else {
                 return [];
@@ -2858,14 +2950,23 @@ export class StudyViewPageStore {
 
     public async getMutatedGenesDownloadData() {
         if (this.mutatedGeneData.result) {
-            let data = [['Gene', 'MutSig(Q-value)', '# Mut', '#', 'Freq'].join('\t')];
-            _.each(this.mutatedGeneData.result, function (record: MutationCountByGene) {
-                data.push([
+            let header = ['Gene', 'MutSig(Q-value)', '# Mut', '#', 'Freq'];
+            if(this.oncokbCancerGeneFilterEnabled) {
+                header.push('Is Cancer Gene (source: OncoKB)');
+            }
+            let data = [header.join('\t')];
+            _.each(this.mutatedGeneData.result, (record: MutationCountByGeneWithCancerGene) => {
+                let rowData = [
                     record.hugoGeneSymbol,
                     record.qValue === undefined ? '' : getQValue(record.qValue),
-                    record.totalCount, 
+                    record.totalCount,
                     record.numberOfAlteredCases,
-                    getFrequencyStr(record.numberOfAlteredCases / record.numberOfSamplesProfiled * 100)].join("\t"));
+                    getFrequencyStr(record.numberOfAlteredCases / record.numberOfSamplesProfiled * 100)
+                ];
+                if (this.oncokbCancerGeneFilterEnabled) {
+                    rowData.push(this.oncokbCancerGeneFilterEnabled ? (record.isCancerGene ? 'Yes' : 'No') : 'NA');
+                }
+                data.push(rowData.join("\t"));
             });
             return data.join("\n");
         } else
@@ -2874,13 +2975,22 @@ export class StudyViewPageStore {
 
     public async getGenesCNADownloadData() {
         if (this.cnaGeneData.result) {
-            let data = [['Gene', 'Gistic(Q-value)', 'Cytoband', 'CNA', '#', 'Freq'].join('\t')];
-            _.each(this.cnaGeneData.result, function (record: CopyNumberCountByGene) {
-                data.push([
+            let header = ['Gene', 'Gistic(Q-value)', 'Cytoband', 'CNA', '#', 'Freq'];
+            if (this.oncokbCancerGeneFilterEnabled) {
+                header.push('Is Cancer Gene (source: OncoKB)');
+            }
+            let data = [header.join('\t')];
+            _.each(this.cnaGeneData.result, (record: CopyNumberCountByGeneWithCancerGene) => {
+                let rowData = [
                     record.hugoGeneSymbol,
                     record.qValue === undefined ? '' : getQValue(record.qValue),
                     record.cytoband, getCNAByAlteration(record.alteration),
-                    record.numberOfAlteredCases, getFrequencyStr(record.numberOfAlteredCases / record.numberOfSamplesProfiled * 100)].join("\t"));
+                    record.numberOfAlteredCases, getFrequencyStr(record.numberOfAlteredCases / record.numberOfSamplesProfiled * 100)
+                ];
+                if (this.oncokbCancerGeneFilterEnabled) {
+                    rowData.push(this.oncokbCancerGeneFilterEnabled ? (record.isCancerGene ? 'Yes' : 'No') : 'NA');
+                }
+                data.push(rowData.join("\t"));
             });
             return data.join("\n");
         } else

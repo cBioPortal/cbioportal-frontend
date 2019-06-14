@@ -10,11 +10,12 @@ import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import DiscreteCNACache from "../../../shared/cache/DiscreteCNACache";
 import { If, Then, Else } from 'react-if';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import { getTrackPairsCountText, getData, getFilteredData } from "./MutualExclusivityUtil";
+import { getTrackPairsCountText, getData, getFilteredData, AlteredStatus, getSampleAlteredFilteredMap } from "./MutualExclusivityUtil";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import { OQLLineFilterOutput } from "../../../shared/lib/oql/oqlfilter";
 import MobxPromise from "mobxpromise";
 import {SampleAlteredMap} from "../ResultsViewPageStoreUtils";
+import Pluralize from 'pluralize';
 
 export interface IMutualExclusivityTabProps {
     store?:ResultsViewPageStore;
@@ -36,12 +37,30 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
     }
 
     @computed get data(): MutualExclusivity[] {
-        return getData(this.props.isSampleAlteredMap.result!);
+        return getData(this.isSampleAlteredFilteredMap);
     }
 
     @computed get filteredData(): MutualExclusivity[] {
         return getFilteredData(this.data, this.mutualExclusivityFilter, this.coOccurenceFilter,
             this.significantPairsFilter);
+    }
+
+    @computed get isSampleAlteredFilteredMap(): SampleAlteredMap {
+        return getSampleAlteredFilteredMap(this.props.isSampleAlteredMap.result!);
+    }
+
+    @computed get filteredTrackOqls(): string[] {
+        return _.difference(Object.keys(this.props.isSampleAlteredMap.result!), Object.keys(this.isSampleAlteredFilteredMap));
+    }
+    
+    @computed get filteredTrackOqlsMessage(): string {
+        if (this.filteredTrackOqls.length == 1) {
+            return `${this.filteredTrackOqls[0]} is not profiled in any queried samples and therefore is excluded from this analysis.`;
+        } else if (this.filteredTrackOqls.length > 1) {
+            return `${this.filteredTrackOqls.slice(0, -1).join(', ')} and ${this.filteredTrackOqls.slice(-1)} are not profiled in any queried samples and therefore are excluded from this analysis.`
+        } else {
+            return "";
+        }
     }
 
     private mutualExclusivityFilterChange() {
@@ -60,16 +79,19 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
         if (this.props.isSampleAlteredMap.isPending) {
             return <Loader isLoading={true} />
         } else if (this.props.isSampleAlteredMap.isComplete) {
-            if (_.size(this.props.isSampleAlteredMap.result) > 1) {
+            if (_.size(this.isSampleAlteredFilteredMap) > 1) {
                 return (
                     <div data-test="mutualExclusivityTabDiv">
                         {this.props.store && (
                             <div className={"tabMessageContainer"}>
                                 <OqlStatusBanner className="mutex-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                                {this.filteredTrackOqls.length > 0 && (
+                                    <div className="alert alert-warning" role="alert">{this.filteredTrackOqlsMessage}</div>
+                                )}
                             </div>
                         )}
 
-                        {getTrackPairsCountText(this.data, _.size(this.props.isSampleAlteredMap.result))}
+                        {getTrackPairsCountText(this.data, _.size(this.isSampleAlteredFilteredMap))}
 
                         <div className={styles.Checkboxes}>
                             <Checkbox checked={this.mutualExclusivityFilter}
@@ -90,7 +112,10 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                 );
             } else {
                 return <div className={"tabMessageContainer"}>
-                            <div className={"alert alert-info"}>Mutual exclusivity analysis cannot be provided when only a single track is selected.</div>
+                            <div className={"alert alert-info"}>Mutual exclusivity analysis can only be performed when at least two of the queried genes have been profiled in the queried samples.</div>
+                            {this.filteredTrackOqls.length > 0 && (
+                                    <div className="alert alert-warning" role="alert">{this.filteredTrackOqlsMessage}</div>
+                            )}
                         </div>
             }
         } else {

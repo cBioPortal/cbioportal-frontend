@@ -1,3 +1,4 @@
+$study-view-table-icon-size: 10px;
 
 .studyViewTablesTable {
   display: flex;
@@ -37,21 +38,12 @@
 }
 
 .geneSymbol:hover {
-  border: 2px solid $brand-primary;
   cursor: pointer;
 }
 
-.selected {
+.cancerGene {
   font-weight: bold
 }
-
-.ellipsisText {
-  white-space: nowrap;
-  overflow: hidden;
-  -ms-text-overflow: ellipsis;
-  text-overflow: ellipsis;
-}
-
 
 .headerColumn {
   text-transform: none;
@@ -79,10 +71,18 @@
   background-color: #d3d3d3;
 }
 
-.gistic, .mutSig {
-  height: 10px;
+.cancerGeneIcon {
+  margin-right: 5px;
+}
+
+.cancerGeneIcon > img {
+  height: $study-view-table-icon-size;
+}
+
+.gistic, .mutsig, .cancerGenesRow > img {
+  height: $study-view-table-icon-size;
   margin-left: 2px;
-  vertical-align:inherit !important;
+  vertical-align: inherit !important;
 }
 
 .amp {
