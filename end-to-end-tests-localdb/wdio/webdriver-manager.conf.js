@@ -9,6 +9,10 @@ require.extensions['.txt'] = function (module, filename) {
     module.exports = fs.readFileSync(filename, 'utf8');
 };
 
+const debug = process.env.DEBUG;
+const defaultTimeoutInterval = 18000;
+const defaultMaxInstances = 5;
+
 var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
 var refDir = process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
 var screenDir = process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
@@ -51,7 +55,7 @@ var config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: 5,
+    maxInstances: debug? 1 : defaultMaxInstances,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
@@ -177,7 +181,7 @@ var config = {
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 180000 // make big when using browser.debug()
+        timeout: debug ? 20000000 : defaultTimeoutInterval // make big when using browser.debug()
     },
     //
     // =====

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test-webdriver-manager": "(wdio wdio/webdriver-manager.conf.js || bash image-compare/upload_failed_screenshots.sh)",
+    "test-webdriver-manager-debug": "(DEBUG=true wdio wdio/webdriver-manager.conf.js --inspect || bash image-compare/upload_failed_screenshots.sh)",
     "clear": "rm -rf screenshots/screen/; rm -rf screenshots/reference/; rm -rf errorShots/; rm -rf screenshots/diff/;"
   },
   "author": "",

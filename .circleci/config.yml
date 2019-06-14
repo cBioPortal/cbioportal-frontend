@@ -181,7 +181,7 @@ jobs:
       - run:
           name: Run end-2-end tests with studies in local database
           command: | 
-              cd $PORTAL_SOURCE_DIR && $TEST_HOME/runtime-config/run_screenshot_test.sh
+              cd $PORTAL_SOURCE_DIR && $TEST_HOME/runtime-config/run_container_screenshot_test.sh
       -  store_artifacts:
           path: /tmp/repo/end-to-end-tests-localdb/screenshots
           destination: /screenshots-localdb

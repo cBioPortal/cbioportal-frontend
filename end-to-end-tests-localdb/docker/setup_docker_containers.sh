@@ -5,11 +5,28 @@ set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 shopt -s nullglob # allows files and dir globs to be null - needed in 'for ... do' loops that should not run when no files/dirs are detected by expansion
 
-run_database_container() {
+BUILD_PORTAL=true
+BUILD_DATABASE=true
+BUILD_E2E=true
+
+while getopts "pde" opt; do
+  case "${opt}" in
+    d) BUILD_DATABASE=false
+    ;;
+    p) BUILD_PORTAL=false
+    ;;
+    e) BUILD_E2E=false
+    ;;
+    \?) echo "Invalid option -$OPTARG" >&2
+    ;;
+  esac
+done
+
+build_database_container() {
     # create local database from with cbioportal db and seed data
     download_db_seed
-    docker volume rm MYSQL_DATA_DIR 2> /dev/null || true
     docker stop $DB_HOST  2> /dev/null && docker rm $DB_HOST 2> /dev/null
+    docker volume rm MYSQL_DATA_DIR 2> /dev/null || true # empty database
     docker run -d \
         --name=$DB_HOST \
         --net=$DOCKER_NETWORK_NAME \
@@ -34,6 +51,19 @@ run_database_container() {
         sleep 10
     done
 
+    # when seed database has been loaded, create a container that does 
+    # not depend on the seed data to be present in /tmp (this benefits local testing only)
+    (docker stop $DB_HOST && docker rm $DB_HOST) || true
+    docker run -d \
+        --name=$DB_HOST \
+        --net=$DOCKER_NETWORK_NAME \
+        -e MYSQL_ROOT_PASSWORD=$DB_USER \
+        -e MYSQL_USER=$DB_USER \
+        -e MYSQL_PASSWORD=$DB_PASSWORD \
+        -e MYSQL_DATABASE=$DB_PORTAL_DB_NAME \
+        -v "MYSQL_DATA_DIR:/var/lib/mysql/" \
+        mysql:5.7
+
     # migrate database schema to most recent version
     echo Migrating database schema to most recent version ...
     docker run --rm \
@@ -41,6 +71,22 @@ run_database_container() {
         -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
         cbioportal-endtoend-image \
         python3 /cbioportal/core/src/main/scripts/migrate_db.py -y -p /cbioportal/portal.properties -s /cbioportal/db-scripts/src/main/resources/migration.sql
+}
+
+run_database_container() {
+    # when seed database has been loaded, create a container that does 
+    # not depend on the seed data to be present in /tmp (this benefits local testing only)
+    (docker stop $DB_HOST && docker rm $DB_HOST) || true
+    docker run -d \
+        --name=$DB_HOST \
+        --net=$DOCKER_NETWORK_NAME \
+        -e MYSQL_ROOT_PASSWORD=$DB_USER \
+        -e MYSQL_USER=$DB_USER \
+        -e MYSQL_PASSWORD=$DB_PASSWORD \
+        -e MYSQL_DATABASE=$DB_PORTAL_DB_NAME \
+        -v "MYSQL_DATA_DIR:/var/lib/mysql/" \
+        mysql:5.7
+
 }
 
 build_cbioportal_image() {
@@ -103,13 +149,13 @@ load_studies_in_db() {
         cbioportal-endtoend-image \
         sh -c 'cd /cbioportal/core/src/main/scripts; for FILE in /cbioportal/core/src/test/scripts/test_data/study_es_0/data_gene_panel_testpanel*.txt; do ./importGenePanel.pl --data $FILE; done'
 
-    # import study_es_0 gene sets
-    docker run --rm \
-        --name=cbioportal-importer \
-        --net=$DOCKER_NETWORK_NAME \
-        -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
-        cbioportal-endtoend-image \
-        sh -c 'cd /cbioportal/core/src/main/scripts; yes yes | ./importGenesetData.pl --data ../../test/resources/genesets/study_es_0_genesets.gmt \ --new-version msigdb_6.1 --supp ../../test/resources/genesets/study_es_0_supp-genesets.txt;  yes yes | ./importGenesetHierarchy.pl --data ../../test/resources/genesets/study_es_0_tree.yaml'
+    # # import study_es_0 gene sets
+    # docker run --rm \
+    #     --name=cbioportal-importer \
+    #     --net=$DOCKER_NETWORK_NAME \
+    #     -v "$TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+    #     cbioportal-endtoend-image \
+    #     sh -c 'cd /cbioportal/core/src/main/scripts; yes yes | ./importGenesetData.pl --data ../../test/resources/genesets/study_es_0_genesets.gmt \ --new-version msigdb_6.1 --supp ../../test/resources/genesets/study_es_0_supp-genesets.txt;  yes yes | ./importGenesetHierarchy.pl --data ../../test/resources/genesets/study_es_0_tree.yaml'
 
     # import study_es_0
     docker run --rm \
@@ -193,28 +239,43 @@ build_e2e_image() {
     cd $CUR_DIR
 }
 
-echo Wait for JitPack download of frontend code
-check_jitpack_download_frontend
+if [ "$BUILD_PORTAL" = true ]; then
 
-echo Build portal image
-build_cbioportal_image
+    echo Wait for JitPack download of frontend code
+    check_jitpack_download_frontend
 
-echo Run database container, import seed and migrate schema
+    echo Build portal image
+    build_cbioportal_image
+
+fi
+
+if [ "$BUILD_DATABASE" = true ]; then
+
+    echo Setup database container, import seed and migrate schema
+    build_database_container
+
+    echo Run cbioportal container
+    run_cbioportal_container
+
+    echo Load studies into local database
+    load_studies_in_db
+
+fi
+
+if [ "$BUILD_E2E" = true ]; then
+
+    echo Build e2e-image
+    build_e2e_image
+
+fi
+
+echo Run database container
 run_database_container
 
 echo Start session service
 run_session_service
 
-echo Run cbioportal container
+echo Run/restart cbioportal container
 run_cbioportal_container
-
-echo Load studies into local database
-load_studies_in_db
-
-echo Restart cbioportal container
-run_cbioportal_container
-
-echo Build e2e-image
-build_e2e_image 
 
 exit 0
