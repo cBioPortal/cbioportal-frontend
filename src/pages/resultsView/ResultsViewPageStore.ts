@@ -1018,9 +1018,9 @@ export class ResultsViewPageStore {
 
 
     readonly isSampleAlteredMap = remoteData({
-        await: () => [this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine, this.samples],
+        await: () => [this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine, this.samples, this.coverageInformation, this.selectedMolecularProfiles],
         invoke: async() => {
-            return getSampleAlteredMap(this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!, this.samples.result, this.rvQuery.oqlQuery);
+            return getSampleAlteredMap(this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!, this.samples.result, this.rvQuery.oqlQuery, this.coverageInformation.result, this.selectedMolecularProfiles.result!.map((profile) => profile.molecularProfileId));
         }
     });
 
