@@ -27,6 +27,8 @@ const CANCER_GENE_FILTER_ICON="[data-test='cancer-gene-filter']";
 
 const WAIT_FOR_VISIBLE_TIMEOUT = 30000;
 
+const hide = ['.chartHeader .controls'];
+
 describe('study laml_tcga tests', () => {
     before(() => {
         const url = `${CBIOPORTAL_URL}/study?id=laml_tcga`;
@@ -84,7 +86,7 @@ describe('study laml_tcga tests', () => {
 
         // Pause a bit time to let the page render the charts
         browser.pause();
-        const res = browser.checkElement('#mainColumn', {hide:['.chartHeader .controls'] });
+        const res = browser.checkElement('#mainColumn', { hide });
         assertScreenShotMatch(res);
     });
 
@@ -226,7 +228,7 @@ describe('check the filters are working properly', ()=>{
         waitForNetworkQuiet(60000);
     });
     it('filter study from url', function() {
-        const res = browser.checkElement('#mainColumn');
+        const res = browser.checkElement('#mainColumn', { hide});
         assertScreenShotMatch(res);
     });
 
@@ -276,14 +278,14 @@ describe('cancer gene filter', () => {
     });
 
     it('the cancer gene filter should remove non cancer gene', () => {
-        assertScreenShotMatch(browser.checkElement(CNA_GENES_TABLE));
+        assertScreenShotMatch(browser.checkElement(CNA_GENES_TABLE), { hide });
     });
 
     it('non cancer gene should show up when the cancer gene filter is disabled', () => {
         // disable the filter and check
         browser.click(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`);
         assert.equal(browser.getCssProperty(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`, 'color').parsed.hex, '#bebebe');
-        assertScreenShotMatch(browser.checkElement(CNA_GENES_TABLE));
+        assertScreenShotMatch(browser.checkElement(CNA_GENES_TABLE), { hide });
     });
 });
 
@@ -313,7 +315,7 @@ describe('crc_msk_2017 study tests', () => {
 
         browser.waitForVisible("[data-test='chart-container-SAMPLE_MSI_SCORE']", WAIT_FOR_VISIBLE_TIMEOUT);
 
-        const res = browser.checkElement("[data-test='chart-container-SAMPLE_MSI_SCORE'] svg");
+        const res = browser.checkElement("[data-test='chart-container-SAMPLE_MSI_SCORE'] svg", { hide });
         assertScreenShotMatch(res);
 
         toStudyViewClinicalDataTab();
@@ -386,7 +388,7 @@ describe('study view lgg_tcga study tests', () => {
                 // Close the tooltip
                 browser.click(ADD_CHART_BUTTON);
 
-                const res = browser.checkElement(table);
+                const res = browser.checkElement(table, { hide });
                 assertScreenShotMatch(res);
             })
         })
@@ -412,7 +414,7 @@ describe('check the simple filter(filterAttributeId, filterValues) is working pr
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet();
         browser.moveToObject("body", 0, 0);
-        const res = browser.checkElement("[data-test='study-view-header']");
+        const res = browser.checkElement("[data-test='study-view-header']", { hide });
         assertScreenShotMatch(res);
     });
 });
