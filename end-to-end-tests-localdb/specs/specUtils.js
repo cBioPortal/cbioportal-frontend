@@ -1,3 +1,12 @@
+function waitForQueryPage(timeout) {
+    var studyContainer = browser.$('div[data-test="cancerTypeListContainer"]');
+    studyContainer.waitForExist(timeout || 10000);
+}
+
+function waitForPlotsTab(timeout) {
+    $('div.axisBlock').waitForVisible(timeout || 20000);
+}
+
 function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
     browser.waitUntil(()=>{
@@ -73,7 +82,6 @@ function getNthOncoprintTrackOptionsElements(n) {
     };
 }
 
-
 const useExternalFrontend = !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
 
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
@@ -126,6 +134,8 @@ function setInputText(selector, text){
 }
 
 module.exports = {
+    waitForPlotsTab: waitForPlotsTab,
+    waitForQueryPage: waitForQueryPage,
     waitForOncoprint: waitForOncoprint,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     useExternalFrontend: useExternalFrontend,
