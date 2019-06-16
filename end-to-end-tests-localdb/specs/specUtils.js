@@ -133,6 +133,16 @@ function setInputText(selector, text){
     browser.setValue(selector, '\uE003'.repeat(browser.getValue(selector).length) + text);
 }
 
+function selectReactSelectOption(parentSelector, optionText) {
+    reactSelectOption(parentSelector, optionText).click();
+}
+
+function reactSelectOption(parentSelector, optionText) {
+    var select = $(parentSelector);
+    select.$('.Select-value-label').click();
+    return select.$('.Select-option='+optionText);
+}
+
 module.exports = {
     waitForPlotsTab: waitForPlotsTab,
     waitForQueryPage: waitForQueryPage,
@@ -151,4 +161,6 @@ module.exports = {
     setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen,
     getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements,
     setInputText: setInputText,
+    selectReactSelectOption: selectReactSelectOption,
+    reactSelectOption: reactSelectOption,
 };
