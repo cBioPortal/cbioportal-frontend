@@ -37,10 +37,16 @@ export const DEFAULT_NA_COLOR = LIGHT_GREY;
 export const DEFAULT_UNKNOWN_COLOR = DARK_GREY;
 
 // clinical value colors
-const CLI_YES_COLOR = "#109618";
-const CLI_NO_COLOR = "#DC3912";
-const CLI_FEMALE_COLOR = '#E0699E';
-const CLI_MALE_COLOR = '#2986E2';
+// Original version
+// const CLI_YES_COLOR = "#109618";
+// const CLI_NO_COLOR = "#DC3912";
+
+// Colorblind safe version. http://colorbrewer2.org/#type=qualitative&scheme=Dark2&n=3
+export const CLI_YES_COLOR = "#1b9e77";
+export const CLI_NO_COLOR = "#d95f02";
+
+export const CLI_FEMALE_COLOR = '#E0699E';
+export const CLI_MALE_COLOR = '#2986E2';
 
 export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     true: CLI_YES_COLOR,
@@ -48,6 +54,7 @@ export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     positive: CLI_YES_COLOR,
     diseasefree: CLI_YES_COLOR,
     tumorfree: CLI_YES_COLOR,
+    living: CLI_YES_COLOR,
 
     false: CLI_NO_COLOR,
     no: CLI_NO_COLOR,
@@ -56,6 +63,7 @@ export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     progressed: CLI_NO_COLOR,
     'recurred/progressed': CLI_NO_COLOR,
     withtumor: CLI_NO_COLOR,
+    deceased: CLI_NO_COLOR,
 
     female: CLI_FEMALE_COLOR,
     f: CLI_FEMALE_COLOR,

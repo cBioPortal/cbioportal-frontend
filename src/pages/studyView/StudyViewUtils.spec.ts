@@ -68,7 +68,7 @@ import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import {VirtualStudy} from 'shared/model/VirtualStudy';
 import {ChartTypeEnum} from "./StudyViewConfig";
 import {MobxPromise} from "mobxpromise";
-import {DEFAULT_NA_COLOR, RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
+import {CLI_NO_COLOR, CLI_YES_COLOR, DEFAULT_NA_COLOR, RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
@@ -1985,16 +1985,16 @@ describe('StudyViewUtils', () => {
             assert.deepEqual([], getClinicalDataCountWithColorByCategoryCounts(0, 0))
         });
         it('When only yesCount is > 0', () => {
-            assert.deepEqual([{ count: 10, value: "YES", color: "#109618" }], getClinicalDataCountWithColorByCategoryCounts(10, 0))
+            assert.deepEqual([{ count: 10, value: "YES", color: CLI_YES_COLOR }], getClinicalDataCountWithColorByCategoryCounts(10, 0))
         });
         it('When only noCount is > 0', () => {
-            assert.deepEqual([{ count: 10, value: "NO", color: "#DC3912" }], getClinicalDataCountWithColorByCategoryCounts(0, 10))
+            assert.deepEqual([{ count: 10, value: "NO", color: CLI_NO_COLOR }], getClinicalDataCountWithColorByCategoryCounts(0, 10))
         });
         it('When both counts are > 0', () => {
             assert.deepEqual(
                 [
-                    { count: 10, value: "YES", color: "#109618" },
-                    { count: 10, value: "NO", color: "#DC3912" }
+                    { count: 10, value: "YES", color: CLI_YES_COLOR },
+                    { count: 10, value: "NO", color: CLI_NO_COLOR }
                 ], getClinicalDataCountWithColorByCategoryCounts(10, 10))
         });
     });
