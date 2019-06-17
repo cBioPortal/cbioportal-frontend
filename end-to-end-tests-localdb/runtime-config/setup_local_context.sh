@@ -70,6 +70,7 @@ yarn install --frozen-lockfile
 
 echo START SERVE_DIST
 cd $PORTAL_SOURCE_DIR
+yarn
 yarn serveDistLocalDb &
 
 cd $PORTAL_SOURCE_DIR/end-to-end-tests-localdb
