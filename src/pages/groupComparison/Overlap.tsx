@@ -22,6 +22,7 @@ import * as ReactDOM from 'react-dom';
 import WindowStore from 'shared/components/window/WindowStore';
 import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
+import OverlapUpset from "./OverlapUpset";
 
 export interface IOverlapProps {
     store: GroupComparisonStore
@@ -232,20 +233,15 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             switch (this.plotType.result!) {
                 case PlotType.Upset: {
                     plotElt = (
-                        <div style={{ display: `${this.areUpsetPlotsSidebySide ? "flex" : "block"}`, maxWidth: this.maxWidth, overflow: "auto hidden" }} >
-                            <UpSet
-                                groups={this.samplesVennPartition.result!}
-                                uidToGroup={this.uidToGroup.result!}
-                                caseType="sample"
-                                title="Samples overlap"
-                            />
-                            <UpSet
-                                groups={this.patientsVennPartition.result!}
-                                uidToGroup={this.uidToGroup.result!}
-                                caseType="patient"
-                                title="Patients overlap"
-                            />
-                        </div>)
+                        <OverlapUpset
+                            store={this.props.store}
+                            sideBySide={this.areUpsetPlotsSidebySide}
+                            maxWidth={this.maxWidth}
+                            samplesVennPartition={this.samplesVennPartition.result!}
+                            patientsVennPartition={this.patientsVennPartition.result!}
+                            uidToGroup={this.uidToGroup.result!}
+                        />
+                    );
                     break;
                 }
                 case PlotType.Venn:
