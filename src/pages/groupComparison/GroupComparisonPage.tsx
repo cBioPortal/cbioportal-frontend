@@ -58,6 +58,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 }
 
                 this.store = new GroupComparisonStore((query as GroupComparisonURLQuery).sessionId, this.props.appStore);
+                this.setTabIdInStore(props.routing.location.pathname);
                 (window as any).groupComparisonStore = this.store;
 
                 this.lastQuery = query;
@@ -73,10 +74,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     return;
                 }
 
-                const tabId = getTabId(pathname);
-                if (tabId) {
-                    this.store.setTabId(tabId);
-                }
+                this.setTabIdInStore(pathname);
             },
             {fireImmediately: true}
         );
@@ -92,8 +90,15 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         (window as any).groupComparisonPage = this;
     }
 
+    private setTabIdInStore(pathname:string) {
+        const tabId = getTabId(pathname);
+        if (tabId) {
+            this.store.setTabId(tabId);
+        }
+    }
+
     @autobind
-    private setTabId(id:string, replace?:boolean) {
+    private setTabIdInUrl(id:string, replace?:boolean) {
         this.props.routing.updateRoute({},`comparison/${id}`, false, replace);
     }
 
@@ -114,7 +119,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             this.store.survivalClinicalDataExists,
         ],
         render:()=>{
-            return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.setTabId} className="primaryTabs mainTabs">
+            return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.setTabIdInUrl} className="primaryTabs mainTabs">
                 <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
                     <Overlap store={this.store}/>
                 </MSKTab>
