@@ -746,7 +746,7 @@ describe("EnrichmentsUtil", () => {
             assert.deepEqual(getGeneListOptions(exampleAlterationEnrichmentRowData), [
                 { "label": "User-defined genes", "genes": [] },
                 { "label": "Genes with highest frequency in any group", "genes": ["EGFR", "FBXW4", "CAND2"] },
-                { "label": "Genes with highest avgerage frequency", "genes": ["EGFR", "FBXW4", "CAND2"] },
+                { "label": "Genes with highest average frequency", "genes": ["EGFR", "FBXW4", "CAND2"] },
                 { "label": "Genes with most significant p-value", "genes": ["EGFR", "FBXW4", "CAND2"] }
             ]);
 
@@ -764,7 +764,7 @@ describe("EnrichmentsUtil", () => {
             assert.deepEqual(getGeneListOptions(exampleCopyNumberAlterationEnrichmentRowData, true), [
                 { "label": "User-defined genes", "genes": [] },
                 { "label": "Genes with highest frequency in any group", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
-                { "label": "Genes with highest avgerage frequency", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
+                { "label": "Genes with highest average frequency", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
                 { "label": "Genes with most significant p-value", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] }
             ]);
 
