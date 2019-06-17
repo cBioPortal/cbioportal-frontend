@@ -12,7 +12,14 @@ import {Popover} from "react-bootstrap";
 import classnames from "classnames";
 import styles from "../resultsView/survival/styles.module.scss";
 import {pluralize} from "../../shared/lib/StringUtils";
-import {blendColors, getExcludedIndexes, getTextColor, joinGroupNames} from "./OverlapUtils";
+import {
+    blendColors,
+    getExcludedIndexes,
+    getTextColor,
+    joinGroupNames,
+    regionIsSelected,
+    toggleRegionSelected
+} from "./OverlapUtils";
 import {computeVennJsSizes, lossFunction} from "./VennUtils";
 
 const VennJs = require("venn.js");
@@ -41,27 +48,6 @@ function regionMouseOver(e:any) {
 
 function regionMouseOut(e:any) {
     e.target.setAttribute("fill", e.target.getAttribute("data-default-fill"));
-}
-
-function regionIsSelected(
-    regionComb:number[],
-    selectedRegions:number[][]
-) {
-    return selectedRegions.find(r=>_.isEqual(r, regionComb));
-}
-
-function toggleRegionSelected(
-    regionComb:number[],
-    selectedRegions:number[][]
-) {
-    const withoutComb = selectedRegions.filter(r=>!_.isEqual(r, regionComb));
-    if (withoutComb.length === selectedRegions.length) {
-        // combination currently not selected, so add it
-        return selectedRegions.concat([regionComb]);
-    } else {
-        // combination was selected, so return version without it
-        return withoutComb;
-    }
 }
 
 @observer

@@ -20,12 +20,11 @@ import {serializeEvent} from "shared/lib/tracking";
 export interface ICreateGroupFromOverlapProps {
     store:GroupComparisonStore;
     includedRegions:string[][]; // group.uid[][]
-    allGroupsInVenn:string[]; // uid[]
-    x:number;
-    y:number;
+    allGroupsInPlot:string[]; // uid[]
     submitGroup:(group:SessionGroupData, saveToUser:boolean)=>void;
     caseType:"sample"|"patient";
     width:number;
+    style?:any;
 }
 
 function getRegionSummary(
@@ -67,13 +66,13 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
             studiesAttr = getStudiesAttrForSampleOverlapGroup(
                 this.props.store._originalGroups.result!,
                 this.props.includedRegions,
-                this.props.allGroupsInVenn
+                this.props.allGroupsInPlot
             );
         } else {
             studiesAttr = getStudiesAttrForPatientOverlapGroup(
                 this.props.store._originalGroups.result!,
                 this.props.includedRegions,
-                this.props.allGroupsInVenn,
+                this.props.allGroupsInPlot,
                 this.props.store.patientToSamplesSet.result!
             )
         }
@@ -155,7 +154,7 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                         <div>
                             {getRegionSummary(
                                 region,
-                                this.props.allGroupsInVenn,
+                                this.props.allGroupsInPlot,
                                 this.props.store.uidToGroup.result!,
                                 this.props.caseType
                             )}
@@ -168,16 +167,13 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
 
     render() {
         return (
-            <div style={{
-                position:"absolute",
-                left:this.props.x,
-                top:this.props.y,
+            <div style={Object.assign({
                 width:this.props.width,
                 display:"flex",
                 flexDirection:"column",
                 justifyContent:"center",
-                alignItems:"center"
-            }}>
+                alignItems:"center",
+            }, this.props.style)}>
                 <DefaultTooltip
                     trigger={["click"]}
                     overlay={this.enterNameInterface.component}
