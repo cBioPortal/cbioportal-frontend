@@ -2,6 +2,7 @@ var assert = require('assert');
 var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
 var waitForNetworkQuiet = require('./../specUtils').waitForNetworkQuiet;
 var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
+var setInputText = require('./../specUtils').setInputText;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -115,6 +116,54 @@ describe("group comparison page screenshot tests", function () {
             browser.waitForVisible('div[data-test="GroupComparisonMutationEnrichments"]', 10000);
             browser.moveToObject("body", 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+            assertScreenShotMatch(res);
+        });
+
+        it("group comparison page mutation enrichments tab 20 genes with highest frequency in any group", function() {
+            browser.click('[data-test="selectGenes"]')
+            var input = $("input[data-test=numberOfGenes]");
+            input.setValue('20\n');
+            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
+            browser.click('[data-test="addGenestoBarPlot"]')
+            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
+            browser.moveToObject("body", 0, 0);
+            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', { hide: ['.qtip'] });
+            assertScreenShotMatch(res);
+        });
+    
+        it("group comparison page mutation enrichments tab gene box highest average frequency", function() {
+            browser.click('[data-test="selectGenes"]')
+            browser.execute(function () { genesSelection.onGeneListOptionChange({ label: "Genes with highest average frequency" }); });
+            waitForNetworkQuiet();
+            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
+            browser.click('[data-test="addGenestoBarPlot"]')
+            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
+            browser.moveToObject("body", 0, 0);
+            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', { hide: ['.qtip'] });
+            assertScreenShotMatch(res);
+        });
+    
+        it("group comparison page mutation enrichments tab gene box most significant pValues", function() {
+            browser.click('[data-test="selectGenes"]')
+            browser.execute(function () { genesSelection.onGeneListOptionChange({ label: "Genes with most significant p-value" }); });
+            waitForNetworkQuiet();
+            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
+            browser.click('[data-test="addGenestoBarPlot"]')
+            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
+            browser.moveToObject("body", 0, 0);
+            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', { hide: ['.qtip'] });
+            assertScreenShotMatch(res);
+        });
+    
+        it("group comparison page mutation enrichments tab gene box user-defined genes", function() {
+            browser.click('[data-test="selectGenes"]')
+            setInputText('textarea[data-test="geneSet"]', "MUC16 MUC4 ERCC2 TP53 ZNRF3 CTNNB1");
+            waitForNetworkQuiet();
+            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
+            browser.click('[data-test="addGenestoBarPlot"]')
+            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
+            browser.moveToObject("body", 0, 0);
+            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', { hide: ['.qtip'] });
             assertScreenShotMatch(res);
         });
 
