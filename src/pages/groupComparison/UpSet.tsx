@@ -8,7 +8,7 @@ import autobind from 'autobind-decorator';
 import {ComparisonGroup} from './GroupComparisonUtils';
 import {getTextWidth, truncateWithEllipsis} from 'shared/lib/wrapText';
 import {tickFormatNumeral} from 'shared/components/plots/TickUtils';
-import {joinGroupNames} from './OverlapUtils';
+import {joinGroupNames, regionIsSelected, toggleRegionSelected} from './OverlapUtils';
 import {capitalize, pluralize} from 'shared/lib/StringUtils';
 import {getPlotDomain} from './UpSetUtils';
 import * as ReactDOM from "react-dom";
@@ -24,6 +24,8 @@ export interface IUpSetProps {
         value: string[];
     }[];
     uidToGroup: { [uid: string]: ComparisonGroup };
+    onChangeSelectedCombinations:(selectedCombinations:string[][])=>void;
+    selectedCombinations:string[][]; // we do it like this so that updating it doesn't update all props
     svgId?: string;
     title?: string;
     caseType: "sample" | "patient";
@@ -60,7 +62,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                         {
                             target: "data",
                             mutation: (props: any) => {
-                                if (!props.datum || !props.datum.dontShowTooltip) {
+                                 if (!props.datum || !props.datum.dontShowTooltip) {
                                     this.tooltipModel = props;
                                 }
                                 return null;
@@ -78,9 +80,32 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                             }
                         }
                     ];
-                }
+                },
+                onClick:()=>{
+                    return [
+                        {
+                            target: "data",
+                            mutation:(props:any) => {
+                                let groups;
+                                if (props.datum) {
+                                    groups = props.datum.groups;
+                                } else {
+                                    groups = props.data[0].groups;
+                                }
+                                if (!props.datum || !props.datum.notClickable) {
+                                    this.props.onChangeSelectedCombinations(toggleRegionSelected(groups, this.props.selectedCombinations));
+                                }
+                                return null;
+                            }
+                        }
+                    ];
+                },
             }
         }];
+    }
+
+    @autobind private resetSelection() {
+        this.props.onChangeSelectedCombinations([]);
     }
 
     @computed get usedGroups() {
@@ -188,7 +213,10 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     @computed get svgWidth() {
-        return this.leftPadding + this.chartWidth + this.rightPadding;
+        return Math.max(
+            this.leftPadding + this.chartWidth + this.rightPadding,
+            320
+        );
     }
 
     @computed get svgHeight() {
@@ -230,13 +258,18 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
 
     @computed get scatterData() {
         return _.flatMap(this.groupCombinationSets, (set, index) => {
-            return _.map(this.usedGroups, (group, i) => ({
-                x: this.categoryCoord(index),
-                y: this.categoryCoord(i),
-                fill: _.includes(set.groups, group.uid) ? "#000000" : DEFAULT_SCATTER_DOT_COLOR,
-                dontShowTooltip: !_.includes(set.groups, group.uid),
-                ...set
-            }));
+            return _.map(this.usedGroups, (group, i) => {
+                const included = _.includes(set.groups, group.uid);
+                return {
+                    x: this.categoryCoord(index),
+                    y: this.categoryCoord(i),
+                    fill: included ? "#000000" : DEFAULT_SCATTER_DOT_COLOR,
+                    dontShowTooltip: !included,
+                    cursor: included ? "pointer" : "default",
+                    notClickable: !included,
+                    ...set
+                };
+            });
         });
     }
 
@@ -270,7 +303,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                 <VictoryLine
                     style={{
                         data: {
-                            stroke: "#000000",
+                            stroke: this.lineStroke,
                             strokeWidth: 2,
                             strokeLinecap: "round"
                         },
@@ -281,8 +314,9 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                     style={{
                         data: {
                             strokeOpacity: 0,
-                            strokeWidth: 10,
-                            strokeLinecap: "round"
+                            strokeWidth: this.barWidth(),
+                            strokeLinecap: "round",
+                            cursor: "pointer"
                         },
                     }}
                     data={data}
@@ -367,6 +401,27 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
         this.mousePosition.y = e.pageY;
     }
 
+    @autobind private lineStroke(datum:any) {
+        if (datum.length === 0) {
+            return "black";
+        }
+        const selected = regionIsSelected(datum[0].groups, this.props.selectedCombinations);
+        if (selected) {
+            return "yellow";
+        } else {
+            return "black";
+        }
+    }
+
+    @autobind private fill(datum:any) {
+        const selected = regionIsSelected(datum.groups, this.props.selectedCombinations);
+        if (selected && !datum.notClickable) {
+            return "yellow";
+        } else {
+            return datum.fill || "black";
+        }
+    }
+
     @autobind private getChart() {
         if (this.groupCombinationSets.length > 0) {
             return (
@@ -432,11 +487,11 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     axisLabelComponent={<VictoryLabel dy={-40} />}
                                 />
                                 <VictoryBar
-                                    style={{ data: { fill: "#000000", width: this.barWidth() } }}
+                                    style={{ data: { fill: this.fill, width: this.barWidth() } }}
                                     data={this.barPlotData}
                                 />
                                 <VictoryBar
-                                    style={{ data: { fillOpacity:0, width: this.barWidth()} }}
+                                    style={{ data: { fillOpacity:0, width: this.barWidth(), cursor:"pointer"} }}
                                     data={this.barPlotHitzoneData}
                                     events={this.mouseEvents}
                                 />
@@ -494,7 +549,8 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     size={this.barWidth()/2}
                                     style={{
                                         data: {
-                                            fill: (d: any) => d.fill,
+                                            fill: this.fill,
+                                            cursor: (d:any)=>d.cursor
                                         }
                                     }}
                                     data={this.scatterData}

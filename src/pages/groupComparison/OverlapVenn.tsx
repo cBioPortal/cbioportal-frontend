@@ -185,20 +185,26 @@ export default class Venn extends React.Component<IVennProps, {}> {
                 <CreateGroupFromOverlap
                     store={this.props.store}
                     includedRegions={this.sampleSelectedRegionsUids}
-                    x={0}
-                    y={VENN_PLOT_HEIGHT + 20}
+                    style={{
+                        position:"absolute",
+                        left:0,
+                        top:VENN_PLOT_HEIGHT + 20
+                    }}
                     submitGroup={this.submitSampleOverlapGroup}
-                    allGroupsInVenn={this.sampleGroupUids}
+                    allGroupsInPlot={this.sampleGroupUids}
                     caseType="sample"
                     width={VENN_PLOT_WIDTH}
                 />
                 <CreateGroupFromOverlap
                     store={this.props.store}
                     includedRegions={this.patientSelectedRegionsUids}
-                    x={VENN_PLOT_WIDTH + PADDING_BTWN_SAMPLE_AND_PATIENT}
-                    y={VENN_PLOT_HEIGHT + 20}
+                    style={{
+                        position:"absolute",
+                        left:VENN_PLOT_WIDTH + PADDING_BTWN_SAMPLE_AND_PATIENT,
+                        top:VENN_PLOT_HEIGHT + 20
+                    }}
                     submitGroup={this.submitPatientOverlapGroup}
-                    allGroupsInVenn={this.patientGroupUids}
+                    allGroupsInPlot={this.patientGroupUids}
                     caseType="patient"
                     width={VENN_PLOT_WIDTH}
                 />
