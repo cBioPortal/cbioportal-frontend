@@ -4,6 +4,7 @@ import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import _ from "lodash";
 import naturalSort from "javascript-natural-sort";
 import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {Group} from "../../api/ComparisonGroupClient";
 
 export const alterationTypeToProfiledForText:{[alterationType:string]:string} = {
     "MUTATION_EXTENDED": "mutations",
@@ -22,6 +23,19 @@ export function getAnnotatingProgressMessage(usingOncokb:boolean, usingHotspot:b
     } else {
         return "Processing data";
     }
+}
+
+export function makeComparisonGroupClinicalAttributes(
+    comparisonGroups:Group[]
+):(ClinicalAttribute & {comparisonGroup:Group})[] {
+    return comparisonGroups.map(group=>({
+        clinicalAttributeId: `${SpecialAttribute.ComparisonGroupPrefix}_${group.id}`,
+        datatype: "STRING",
+        description: `Membership in ${group.data.name}`,
+        displayName: `In group: ${group.data.name}`,
+        comparisonGroup:group,
+        patientAttribute: false
+    } as (ClinicalAttribute & {comparisonGroup:Group})));
 }
 
 export function makeProfiledInClinicalAttributes(
