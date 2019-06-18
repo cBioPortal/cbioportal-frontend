@@ -101,8 +101,8 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
     public static link(isHotspot:boolean, is3dHotspot:boolean)
     {
         const recurrentLink = isHotspot ? (
-                <a href="http://www.cancerhotspots.org/" target="_blank">
-                    http://cancerhotspots.org/
+                <a href="https://www.cancerhotspots.org/" target="_blank">
+                    https://cancerhotspots.org/
                 </a>
             ) : "";
 
