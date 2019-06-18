@@ -1,30 +1,30 @@
 import {
-    ComparisonGroup,
-    CopyNumberEnrichment, finalizeStudiesAttr,
-    getOverlapFilteredGroups,
-    getOverlappingPatients,
-    getOverlappingSamples,
-    getStudyIds,
-    isGroupEmpty,
     ClinicalDataEnrichmentWithQ,
+    ComparisonGroup,
+    CopyNumberEnrichment,
+    defaultGroupOrder,
+    finalizeStudiesAttr,
+    getOrdinals,
+    getOverlapComputations,
     getSampleIdentifiers,
-    GroupComparisonTab, getOrdinals, partitionCasesByGroupMembership,
-    defaultGroupOrder, getOverlapComputations, IOverlapComputations
+    getStudyIds,
+    GroupComparisonTab,
+    IOverlapComputations,
+    isGroupEmpty,
+    partitionCasesByGroupMembership
 } from "./GroupComparisonUtils";
-import { remoteData } from "../../shared/api/remoteData";
+import {remoteData} from "../../shared/api/remoteData";
 import {
+    CancerStudy,
+    ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     MolecularProfile,
     MolecularProfileFilter,
-    PatientIdentifier,
     Sample,
-    SampleFilter,
-    SampleIdentifier,
-    ClinicalAttribute,
-    CancerStudy
+    SampleFilter
 } from "../../shared/api/generated/CBioPortalAPI";
-import { action, computed, observable } from "mobx";
+import {action, computed, observable} from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
 import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import _ from "lodash";
@@ -34,23 +34,22 @@ import {
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles
 } from "../resultsView/enrichments/EnrichmentsUtil";
-import { makeEnrichmentDataPromise } from "../resultsView/ResultsViewPageStoreUtils";
+import {makeEnrichmentDataPromise} from "../resultsView/ResultsViewPageStoreUtils";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import autobind from "autobind-decorator";
-import { PatientSurvival } from "shared/model/PatientSurvival";
+import {PatientSurvival} from "shared/model/PatientSurvival";
 import request from "superagent";
 import {getPatientSurvivals} from "pages/resultsView/SurvivalStoreHelper";
 import {SURVIVAL_CHART_ATTRIBUTES} from "pages/resultsView/survival/SurvivalChart";
-import {COLORS, getPatientIdentifiers, pickClinicalDataColors} from "pages/studyView/StudyViewUtils";
+import {getPatientIdentifiers, pickClinicalDataColors} from "pages/studyView/StudyViewUtils";
 import {
     AlterationEnrichment,
     Group,
     MolecularProfileCasesGroupFilter
 } from "../../shared/api/generated/CBioPortalAPIInternal";
-import { Session, SessionGroupData } from "../../shared/api/ComparisonGroupClient";
-import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
+import {Session, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
+import {calculateQValues} from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
-import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import {GroupComparisonURLQuery} from "./GroupComparisonPage";
@@ -58,7 +57,7 @@ import {AppStore} from "../../AppStore";
 import {stringListToIndexSet} from "../../shared/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
-import { ISurvivalDescription } from "pages/resultsView/survival/SurvivalDescriptionTable";
+import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples and patients",
@@ -70,24 +69,11 @@ export default class GroupComparisonStore {
     @observable private _currentTabId:GroupComparisonTab|undefined = undefined;
     @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.EXCLUDE;
     @observable private sessionId:string;
+    @observable public loading = false;
     @observable dragNameOrder:string[]|undefined = undefined;
-    private _unsavedGroups = observable.shallowArray<SessionGroupData>([]);
-    private deletedGroupNames = observable.shallowMap<string>();
 
     constructor(sessionId:string, private appStore:AppStore) {
         this.sessionId = sessionId;
-    }
-
-    @action public deleteGroup(name:string) {
-        this.deletedGroupNames.set(name, name);
-    }
-
-    @computed get existsDeletedGroup() {
-        return this.deletedGroupNames.keys().length > 0;
-    }
-
-    private isGroupDeleted(name:string) {
-        return this.deletedGroupNames.has(name);
     }
 
     @action public updateDragOrder(oldIndex:number, newIndex:number) {
@@ -102,24 +88,29 @@ export default class GroupComparisonStore {
         return this.appStore.isLoggedIn;
     }
 
-    public addUnsavedGroup(group:SessionGroupData, saveToUser:boolean) {
-        this._unsavedGroups.push(group);
-
+    @action
+    public async addGroup(group:SessionGroupData, saveToUser:boolean) {
         if (saveToUser && this.isLoggedIn) {
-            comparisonClient.addGroup(group);
+            await comparisonClient.addGroup(group);
         }
+        const newSession = _.cloneDeep(this._session.result!);
+        newSession.groups.push(group);
+
+        this.saveAndGoToSession(newSession);
     }
 
-    public isGroupUnsaved(group:ComparisonGroup) {
-        return !group.savedInSession;
+    @action
+    public async deleteGroup(name:string) {
+        const newSession = _.cloneDeep(this._session.result!);
+        newSession.groups = newSession.groups.filter(g=>g.name !== name);
+
+        this.saveAndGoToSession(newSession);
     }
 
-    @computed public get unsavedGroups() {
-        if (this._originalGroups.isComplete) {
-            return this._originalGroups.result.filter(g=>this.isGroupUnsaved(g));
-        } else {
-            return [];
-        }
+    @action
+    private async saveAndGoToSession(newSession:Session) {
+        const {id} = await comparisonClient.addComparisonSession(newSession);
+        (window as any).routingStore.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
     }
 
     get currentTabId() {
@@ -206,7 +197,7 @@ export default class GroupComparisonStore {
 
             let defaultGroupColors = pickClinicalDataColors(
                 _.map(
-                    this._session.result!.groups.concat(this._unsavedGroups.slice()),
+                    this._session.result!.groups,
                         group=>({value: group.name})
                 ) as any);
 
@@ -230,13 +221,6 @@ export default class GroupComparisonStore {
             this._session.result!.groups.forEach((groupData, index)=>{
                 ret.push(finalizeGroup(true, groupData, index));
             });
-
-            this._unsavedGroups.slice().forEach((groupData, index)=>{
-                ret.push(finalizeGroup(false, groupData, index+this._session.result!.groups.length));
-            });
-
-            // filter out deleted groups
-            ret = ret.filter(g=>!this.isGroupDeleted(g.name));
             return Promise.resolve(ret);
         }
     });
@@ -355,45 +339,6 @@ export default class GroupComparisonStore {
         for (const group of groups) {
             this._selectedGroupIds.set(group.uid, false);
         }
-    }
-
-    @autobind
-    @action
-    public async saveUnsavedChangesAndGoToNewSession() {
-        const newSession = _.cloneDeep(this._session.result!);
-        if (this._unsavedGroups.length > 0) {
-            newSession.groups.push(...this._unsavedGroups);
-        }
-        if (this.dragNameOrder) {
-            newSession.groupNameOrder = this.dragNameOrder.slice(); // get rid of mobx baggage with .slice()
-        }
-        newSession.groups = newSession.groups.filter(g=>!this.isGroupDeleted(g.name));
-
-        const {id} = await comparisonClient.addComparisonSession(newSession);
-        (window as any).routingStore.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
-    }
-
-    @autobind
-    @action
-    public clearUnsavedChanges() {
-        // clear unsaved groups
-        onMobxPromise(
-            this.availableGroups,
-            availableGroups=>{
-                for (const group of availableGroups) {
-                    if (!group.savedInSession) {
-                        this._selectedGroupIds.delete(group.uid);
-                    }
-                }
-            }
-        );
-        this._unsavedGroups.clear();
-
-        // clear drag order
-        this.dragNameOrder = undefined;
-
-        // restore deleted groups
-        this.deletedGroupNames.clear();
     }
 
     @autobind
