@@ -474,7 +474,8 @@ if (isDev || isTest) {
                 {
                     loader: 'css-loader',
                     options: {
-                        modules:true
+                        modules:true,
+                        localIdentName:'[name]__[local]__[hash:base64:5]'
                     }
                 },
                 'sass-loader',
