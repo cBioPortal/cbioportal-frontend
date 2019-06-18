@@ -23,9 +23,9 @@ import autobind from "autobind-decorator";
 import {ButtonHTMLAttributes} from "react";
 
 export interface IGroupSelectorButtonProps {
-    onClick:(uid:string)=>void;
+    onClick:(name:string)=>void;
     onClickDelete:(name:string)=>void;
-    isSelected:(uid:string)=>boolean;
+    isSelected:(name:string)=>boolean;
     group:ComparisonGroup;
     sampleSet:ComplexKeyMap<Sample>;
     excludedFromAnalysis:boolean;
@@ -71,7 +71,7 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
 
     render() {
         const group = this.props.group;
-        const selected = this.props.isSelected(group.uid);
+        const selected = this.props.isSelected(group.name);
         const sampleIdentifiers = getSampleIdentifiers([group]);
         const patientIdentifiers = getPatientIdentifiers(sampleIdentifiers, this.props.sampleSet);
 
@@ -91,7 +91,7 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                 <span style={{display:"flex", alignItems:"center"}}>
                     <span
                         style={{display:"flex", alignItems:"center"}}
-                        onClick={()=>this.props.onClick(this.props.group.uid)}
+                        onClick={()=>this.props.onClick(group.name)}
                     >
                         <EllipsisTextTooltip
                             style={{

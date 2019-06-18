@@ -17,8 +17,7 @@ export type Session = {
     id:string,
     groups:SessionGroupData[],
     origin:string[],
-    clinicalAttributeName?:string,
-    groupNameOrder?:string[];
+    clinicalAttributeName?:string
 };
 export type Group = {
     id:string;

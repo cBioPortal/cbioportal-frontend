@@ -33,6 +33,8 @@ export interface IGroupComparisonPageProps {
 
 export type GroupComparisonURLQuery = {
     sessionId: string;
+    groupOrder?:string; // json stringified array of names
+    unselectedGroups?:string; // json stringified array of names
 };
 
 @inject('routing', 'appStore')
