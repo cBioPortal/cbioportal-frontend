@@ -40,7 +40,11 @@ import {
     Patient,
     Sample
 } from "../../api/generated/CBioPortalAPI";
-import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/ClinicalDataCache";
+import {
+    clinicalAttributeIsINCOMPARISONGROUP,
+    clinicalAttributeIsPROFILEDIN,
+    SpecialAttribute
+} from "../../cache/ClinicalDataCache";
 import {STUDY_VIEW_CONFIG} from "../../../pages/studyView/StudyViewConfig";
 import {getClinicalValueColor, RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 
@@ -522,8 +526,9 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                     altered_uids
                 };
                 if (clinicalAttributeIsPROFILEDIN(attribute)) {
-                    // "Profiled-In" clinical attribute: show "No" on N/A items
+                    // For "Profiled-In" clinical attribute: show "No" on N/A items
                     ret.na_tooltip_value = "No";
+                    ret.na_legend_label = "No";
                 }
                 if (attribute.datatype === "NUMBER") {
                     ret.datatype = "number";
@@ -544,9 +549,6 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                     ret.datatype = "counts";
                     (ret as any).countsCategoryLabels = ["C>A", "C>G", "C>T", "T>A", "T>C", "T>G"];
                     (ret as any).countsCategoryFills = ['#3D6EB1', '#8EBFDC', '#DFF1F8', '#FCE08E', '#F78F5E', '#D62B23'];
-                }
-                if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.ProfiledInPrefix) === 0) {
-                    ret.na_legend_label = "No";
                 }
                 return ret as ClinicalTrackSpec;
             });

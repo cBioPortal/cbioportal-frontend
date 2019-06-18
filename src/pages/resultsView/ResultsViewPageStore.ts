@@ -135,7 +135,10 @@ import {filterAndSortProfiles, getGenesetProfiles,
     sortRnaSeqProfilesToTop} from "./coExpression/CoExpressionTabUtils";
 import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
-import {makeProfiledInClinicalAttributes} from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
+import {
+    makeComparisonGroupClinicalAttributes,
+    makeProfiledInClinicalAttributes
+} from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
 import {ResultsViewQuery} from "./ResultsViewQuery";
 import {annotateAlterationTypes} from "../../shared/lib/oql/annotateAlterationTypes";
 import ErrorMessage from "../../shared/components/ErrorMessage";
@@ -149,6 +152,9 @@ import { SURVIVAL_CHART_ATTRIBUTES } from "./survival/SurvivalChart";
 import sessionServiceClient from "../../shared/api/sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
 import { ISurvivalDescription } from "./survival/SurvivalDescriptionTable";
+import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
+import {Group} from "../../shared/api/ComparisonGroupClient";
+import {AppStore} from "../../AppStore";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -359,7 +365,7 @@ export type DriverAnnotationSettings = {
 /* tslint:disable: member-ordering */
 export class ResultsViewPageStore {
 
-    constructor() {
+    constructor(private appStore:AppStore) {
         labelMobxPromises(this);
 
         // addErrorHandler((error: any) => {
@@ -552,7 +558,6 @@ export class ResultsViewPageStore {
 
     readonly clinicalAttributes_profiledIn = remoteData<(ClinicalAttribute & {molecularProfileIds:string[]})[]>({
         await:()=>[
-            this.samples,
             this.coverageInformation,
             this.molecularProfileIdToMolecularProfile,
             this.selectedMolecularProfiles,
@@ -568,6 +573,28 @@ export class ResultsViewPageStore {
                 )
             );
         },
+    });
+
+    readonly comparisonGroups = remoteData<Group[]>({
+        await:()=>[this.studyIds],
+        invoke:async()=>{
+            let ret:Group[] = [];
+            if (this.appStore.isLoggedIn) {
+                try {
+                    ret = await comparisonClient.getGroupsForStudies(this.studyIds.result!);
+                } catch (e) {
+                    // fail silently
+                }
+            }
+            return ret;
+        }
+    });
+
+    readonly clinicalAttributes_comparisonGroupMembership = remoteData<(ClinicalAttribute & {comparisonGroup:Group})[]>({
+        await:()=>[
+            this.comparisonGroups
+        ],
+        invoke:()=>Promise.resolve(makeComparisonGroupClinicalAttributes(this.comparisonGroups.result!))
     });
 
     readonly alterationsBySelectedMolecularProfiles = remoteData<string[]>({
@@ -599,7 +626,13 @@ export class ResultsViewPageStore {
     });
 
     readonly clinicalAttributes = remoteData<(ClinicalAttribute & { molecularProfileIds?: string[] })[]>({
-        await:()=>[this.studyIds, this.clinicalAttributes_profiledIn, this.samples, this.patients],
+        await:()=>[
+            this.studyIds,
+            this.clinicalAttributes_profiledIn,
+            this.clinicalAttributes_comparisonGroupMembership,
+            this.samples,
+            this.patients
+        ],
         invoke:async()=>{
             const serverAttributes = await client.fetchClinicalAttributesUsingPOST({
                 studyIds:this.studyIds.result!
@@ -637,7 +670,10 @@ export class ResultsViewPageStore {
                     patientAttribute: true
                 } as ClinicalAttribute);
             }
-            return serverAttributes.concat(specialAttributes).concat(this.clinicalAttributes_profiledIn.result!);
+            return serverAttributes
+                .concat(specialAttributes)
+                .concat(this.clinicalAttributes_profiledIn.result!)
+                .concat(this.clinicalAttributes_comparisonGroupMembership.result!);
         }
     });
 
@@ -652,7 +688,8 @@ export class ResultsViewPageStore {
             this.studies,
             this.clinicalAttributes,
             this.studyToDataQueryFilter,
-            this.clinicalAttributes_profiledIn
+            this.clinicalAttributes_profiledIn,
+            this.clinicalAttributes_comparisonGroupMembership
         ],
         invoke:async()=>{
             let clinicalAttributeCountFilter:ClinicalAttributeCountFilter;
@@ -702,6 +739,10 @@ export class ResultsViewPageStore {
             ret[SpecialAttribute.MutationSpectrum] = samplesWithMutationData;
             // add counts for "ProfiledIn" clinical attributes
             for (const attr of this.clinicalAttributes_profiledIn.result!) {
+                ret[attr.clinicalAttributeId] = this.samples.result!.length;
+            }
+            // add counts for "ComparisonGroup" clinical attributes
+            for (const attr of this.clinicalAttributes_comparisonGroupMembership.result!) {
                 ret[attr.clinicalAttributeId] = this.samples.result!.length;
             }
             return ret;
