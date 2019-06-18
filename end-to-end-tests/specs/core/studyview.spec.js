@@ -334,11 +334,15 @@ describe('study view lgg_tcga study tests', () => {
         waitForNetworkQuiet();
     });
     describe('bar chart', () => {
+        this.retries(2);
         const barChart = "[data-test='chart-container-SAMPLE_DAYS_TO_COLLECTION']";
         it('the log scale should be used for Sample Collection', () => {
             browser.waitForVisible(barChart, WAIT_FOR_VISIBLE_TIMEOUT);
             browser.moveToObject(barChart);
-            browser.waitForVisible(barChart + ' .controls');
+            browser.waitUntil(() => {
+                return browser.isExisting(barChart + ' .controls');
+            }, 10000);
+
             assert(browser.isSelected(barChart + ' .chartHeader .logScaleCheckbox input'));
         });
     });
