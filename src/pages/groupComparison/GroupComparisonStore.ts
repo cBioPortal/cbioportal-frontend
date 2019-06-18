@@ -58,6 +58,7 @@ import {stringListToIndexSet} from "../../shared/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
+import {sleep} from "../../shared/lib/TimeUtils";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples and patients",
@@ -70,18 +71,70 @@ export default class GroupComparisonStore {
     @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.EXCLUDE;
     @observable private sessionId:string;
     @observable public loading = false;
-    @observable dragNameOrder:string[]|undefined = undefined;
 
     constructor(sessionId:string, private appStore:AppStore) {
         this.sessionId = sessionId;
     }
 
-    @action public updateDragOrder(oldIndex:number, newIndex:number) {
-        if (!this.dragNameOrder) {
-            this.dragNameOrder = this._originalGroups.result!.map(g=>g.name);
+    @computed get groupOrder() {
+        const param = ((window as any).routingStore.location.query as GroupComparisonURLQuery).groupOrder;
+        if (param) {
+            return JSON.parse(param);
+        } else {
+            return undefined;
         }
-        const poppedUid = this.dragNameOrder.splice(oldIndex, 1)[0];
-        this.dragNameOrder.splice(newIndex, 0, poppedUid);
+    }
+
+    @action public updateGroupOrder(oldIndex:number, newIndex:number) {
+        let groupOrder = this.groupOrder;
+        if (!groupOrder) {
+            groupOrder = this._originalGroups.result!.map(g=>g.name);
+        }
+        groupOrder = groupOrder.slice();
+        const poppedUid = groupOrder.splice(oldIndex, 1)[0];
+        groupOrder.splice(newIndex, 0, poppedUid);
+
+        (window as any).routingStore.updateRoute({ groupOrder: JSON.stringify(groupOrder) } as Partial<GroupComparisonURLQuery>);
+    }
+
+    @action private updateUnselectedGroups(names:string[]) {
+        (window as any).routingStore.updateRoute({ unselectedGroups: JSON.stringify(names) } as Partial<GroupComparisonURLQuery>)
+    }
+
+    @computed get unselectedGroups() {
+        const param = ((window as any).routingStore.location.query as GroupComparisonURLQuery).unselectedGroups;
+        if (param) {
+            return JSON.parse(param);
+        } else {
+            return [];
+        }
+    }
+
+    @autobind
+    @action public toggleGroupSelected(name:string) {
+        const groups = this.unselectedGroups.slice();
+        if (groups.includes(name)) {
+            groups.splice(groups.indexOf(name), 1);
+        } else {
+            groups.push(name);
+        }
+        this.updateUnselectedGroups(groups);
+    }
+
+    @autobind
+    @action public selectAllGroups() {
+        this.updateUnselectedGroups([]);
+    }
+
+    @autobind
+    @action public deselectAllGroups() {
+        const groups = this._originalGroups.result!; // assumed complete
+        this.updateUnselectedGroups(groups.map(g=>g.name));
+    }
+
+    @autobind
+    public isGroupSelected(name:string) {
+        return !this.unselectedGroups.includes(name);
     }
 
     public get isLoggedIn() {
@@ -130,8 +183,6 @@ export default class GroupComparisonStore {
     public setOverlapStrategy(v:OverlapStrategy) {
         this._overlapStrategy = v;
     }
-
-    private _selectedGroupIds = observable.shallowMap<boolean>();
 
     readonly _session = remoteData<Session>({
         invoke:()=>{
@@ -230,11 +281,8 @@ export default class GroupComparisonStore {
         invoke:()=>{
             // sort and add ordinals
             let sorted:ComparisonGroup[];
-            if (this.dragNameOrder) {
-                const order = stringListToIndexSet(this.dragNameOrder);
-                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifndef<number>(order[g.name], Number.POSITIVE_INFINITY));
-            } else if (this._session.result!.groupNameOrder) {
-                const order = stringListToIndexSet(this._session.result!.groupNameOrder!);
+            if (this.groupOrder) {
+                const order = stringListToIndexSet(this.groupOrder);
                 sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifndef<number>(order[g.name], Number.POSITIVE_INFINITY));
             } else {
                 sorted = defaultGroupOrder(this._unsortedOriginalGroups.result!);
@@ -319,36 +367,6 @@ export default class GroupComparisonStore {
         await:()=>[this.activeGroups],
         invoke:()=>Promise.resolve(this.activeGroups.result![1])
     });
-
-    @autobind
-    @action public toggleGroupSelected(uid:string) {
-        this._selectedGroupIds.set(uid, !this.isGroupSelected(uid));
-    }
-
-    @autobind
-    @action public selectAllGroups() {
-        const groups = this.availableGroups.result!; // assumed complete
-        for (const group of groups) {
-            this._selectedGroupIds.set(group.uid, true);
-        }
-    }
-
-    @autobind
-    @action public deselectAllGroups() {
-        const groups = this.availableGroups.result!; // assumed complete
-        for (const group of groups) {
-            this._selectedGroupIds.set(group.uid, false);
-        }
-    }
-
-    @autobind
-    public isGroupSelected(uid:string) {
-        if (!this._selectedGroupIds.has(uid)) {
-            return true; // selected by default, until user toggles and thus adds a value to the map
-        } else {
-            return !!this._selectedGroupIds.get(uid);
-        }
-    }
 
     readonly samples = remoteData({
         await:()=>[this._session],
