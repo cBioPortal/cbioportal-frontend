@@ -73,16 +73,16 @@ export function publication(isHotspot:boolean, is3dHotspot:boolean)
 export function link(isHotspot:boolean, is3dHotspot:boolean)
 {
     const recurrentLink = isHotspot ? (
-        <a href="http://www.cancerhotspots.org/" target="_blank">
-            http://cancerhotspots.org/
+        <a href="https://www.cancerhotspots.org/" target="_blank">
+            https://cancerhotspots.org/
         </a>
     ) : "";
 
     const maybeAnd = isHotspot && is3dHotspot ? "and" : "";
 
     const clusteredLink = is3dHotspot ? (
-        <a href="http://www.3dhotspots.org/" target="_blank">
-            http://3dhotspots.org/
+        <a href="https://www.3dhotspots.org/" target="_blank">
+            https://3dhotspots.org/
         </a>
     ) : "";
 
