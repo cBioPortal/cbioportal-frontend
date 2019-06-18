@@ -27,7 +27,7 @@ describe('Mutation Table', function() {
             browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",30000);
         });
 
-        it('should show the exon number after adding the exon column', ()=>{
+        it.skip('should show the exon number after adding the exon column', ()=>{
             // check if 6 appears once in COSMIC column
             browser.waitForText('//*[text()="6"]',30000);
             var textValuesWith6 = browser.getText('//*[text()="6"]');
