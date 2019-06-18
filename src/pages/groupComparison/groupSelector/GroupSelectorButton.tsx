@@ -24,6 +24,7 @@ import {ButtonHTMLAttributes} from "react";
 
 export interface IGroupSelectorButtonProps {
     onClick:(uid:string)=>void;
+    onClickDelete:(name:string)=>void;
     isSelected:(uid:string)=>boolean;
     group:ComparisonGroup;
     sampleSet:ComplexKeyMap<Sample>;
@@ -45,7 +46,6 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
     @autobind
     @action
     private onMouseClick() {
-        this.props.onClick(this.props.group.uid);
         this.hovered = false;
     }
 
@@ -89,19 +89,37 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                 data-test={`groupSelectorButton${group.ordinal}`}
             >
                 <span style={{display:"flex", alignItems:"center"}}>
-                    <EllipsisTextTooltip
-                        style={{
-                            display:"inline-block",
-                            color:getTextColor(group.color)
-                        }}
-                        text={renderGroupNameWithOrdinal(group)}
-                        shownWidth={100}
-                    />
-                    &nbsp;
-                    <span style={{color:getTextColor(group.color)}}>
-                        {caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
+                    <span
+                        style={{display:"flex", alignItems:"center"}}
+                        onClick={()=>this.props.onClick(this.props.group.uid)}
+                    >
+                        <EllipsisTextTooltip
+                            style={{
+                                display:"inline-block",
+                                color:getTextColor(group.color)
+                            }}
+                            text={renderGroupNameWithOrdinal(group)}
+                            shownWidth={100}
+                        />
+                        &nbsp;
+                        <span style={{color:getTextColor(group.color)}}>
+                            {caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
+                        </span>
                     </span>
                     {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
+                    <div
+                        style={{
+                            paddingLeft:2,
+                            marginLeft:5,
+                            marginRight:-3,
+                            borderLeft: "1px dashed white",
+                            cursor: "pointer"
+                        }}
+                        data-test="deleteButton"
+                        onClick={()=>this.props.onClickDelete(group.name)}
+                    >
+                        <i className="fa fa-times-circle"/>
+                    </div>
                 </span>
                 {this.button && this.props.excludedFromAnalysis && (ReactDOM as any).createPortal(
                     <Overlay
