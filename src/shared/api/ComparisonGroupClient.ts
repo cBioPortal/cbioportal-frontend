@@ -11,6 +11,7 @@ import PromisePlus from "../lib/PromisePlus";
 import {Omit} from "../lib/TypeScriptUtils";
 
 export type SessionGroupData = Omit<VirtualStudyData, "studyViewFilter"> & {
+    uid?: string;
     color?:string; // for charts
 };
 export type Session = {
