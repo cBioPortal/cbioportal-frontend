@@ -2272,10 +2272,11 @@ describe('getSampleAlteredMap', () => {
 
     const molecularProfileIds = ["chol_nus_2012_mutations"];
     const unprofiledMolecularProfileIds = ["chol_nus_2012_mutations","chol_nus_2012_cna"];
+    const studyToMolecularProfiles = {"chol_nus_2012": [{"molecularProfileId": "chol_nus_2012_mutations"} as MolecularProfile, {"molecularProfileId": "chol_nus_2012_cna"} as MolecularProfile]};
 
     it('should handle all profiled samples correctly', () => {
         
-        const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformation, molecularProfileIds);
+        const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformation, molecularProfileIds, studyToMolecularProfiles);
         const expectedResult = {
             "RAS": [
                 AlteredStatus.ALTERED,
@@ -2327,7 +2328,7 @@ describe('getSampleAlteredMap', () => {
 
     it('should set undefined for the not profiled samples', () => {
         
-        const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, molecularProfileIds);
+        const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, molecularProfileIds, studyToMolecularProfiles);
         const expectedResult = {
             "RAS": [
                 AlteredStatus.ALTERED,
@@ -2377,7 +2378,7 @@ describe('getSampleAlteredMap', () => {
 
     it('should search in all molecularProfile ids', () => {
         
-        const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, unprofiledMolecularProfileIds);
+        const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, unprofiledMolecularProfileIds, studyToMolecularProfiles);
         const expectedResult = {
             "RAS": [
                 AlteredStatus.UNPROFILED,
