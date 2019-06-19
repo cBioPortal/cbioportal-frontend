@@ -33,6 +33,7 @@ import {calculateQValues} from "../../shared/lib/calculation/BenjaminiHochbergFD
 import {SpecialAttribute} from "../../shared/cache/ClinicalDataCache";
 import { isSampleProfiled } from "shared/lib/isSampleProfiled";
 import { AlteredStatus } from "./mutualExclusivity/MutualExclusivityUtil";
+import {Group} from "../../shared/api/ComparisonGroupClient";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -46,6 +47,7 @@ export type ExtendedClinicalAttribute =
     {
         clinicalAttributeId: string|SpecialAttribute;
         molecularProfileIds?:string[];
+        comparisonGroup?:Group;
     };
 
 export type CoverageInformationForCase = {
