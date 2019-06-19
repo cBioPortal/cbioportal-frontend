@@ -1192,6 +1192,18 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly existUnsequencedSamplesInAGene = remoteData<boolean>({
+        await:()=>[this.samples, this.sequencedSampleKeysByGene],
+        invoke:()=>{
+            const totalSamples = this.samples.result!.length;
+            return Promise.resolve(
+                _.some(this.sequencedSampleKeysByGene.result!, sampleKeys=>{
+                    return sampleKeys.length < totalSamples;
+                })
+            );
+        }
+    });
+
     readonly sequencedPatientKeysByGene = remoteData<{[hugoGeneSymbol:string]:string[]}>({
         await: ()=>[
             this.sampleKeyToSample,
