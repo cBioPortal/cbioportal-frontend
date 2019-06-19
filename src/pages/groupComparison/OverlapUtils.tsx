@@ -3,15 +3,38 @@ import * as d3 from "d3";
 import _ from "lodash";
 import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import {
-    ComparisonGroup, convertPatientsStudiesAttrToSamples, excludePatients,
+    ComparisonGroup,
+    convertPatientsStudiesAttrToSamples,
+    excludePatients,
     excludeSamples,
     intersectPatients,
-    intersectSamples, unionPatients,
+    intersectSamples,
+    unionPatients,
     unionSamples
 } from "./GroupComparisonUtils";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import {Sample} from "../../shared/api/generated/CBioPortalAPI";
-import {stringListToSet} from "../../shared/lib/StringUtils";
+
+export function regionIsSelected<T extends string|number>(
+    regionComb:T[],
+    selectedRegions:T[][]
+) {
+    return selectedRegions.find(r=>_.isEqual(r, regionComb));
+}
+
+export function toggleRegionSelected<T extends string|number>(
+    regionComb:T[],
+    selectedRegions:T[][]
+) {
+    const withoutComb = selectedRegions.filter(r=>!_.isEqual(r, regionComb));
+    if (withoutComb.length === selectedRegions.length) {
+        // combination currently not selected, so add it
+        return selectedRegions.concat([regionComb]);
+    } else {
+        // combination was selected, so return version without it
+        return withoutComb;
+    }
+}
 
 export function getExcludedIndexes(combination:number[], numGroupsTotal:number) {
     // get all indexes not in the given combination
@@ -89,7 +112,7 @@ export function getTextColor(
 export function getStudiesAttrForSampleOverlapGroup(
     availableGroups:(Pick<ComparisonGroup, "uid">&Pick<SessionGroupData,"studies">)[],
     includedRegions:string[][], // uid[][],
-    allGroupsInVenn:string[] // uid[]
+    allGroupsInPlot:string[] // uid[]
 ) {
     // compute set operations to find contents
     const groups = _.keyBy(availableGroups, g=>g.uid);
@@ -101,7 +124,7 @@ export function getStudiesAttrForSampleOverlapGroup(
             regionStudiesAttr = intersectSamples(regionStudiesAttr, groups[region[i]].studies);
         }
         // exclude
-        for (const uid of allGroupsInVenn) {
+        for (const uid of allGroupsInPlot) {
             if (!region.includes(uid)) {
                 regionStudiesAttr = excludeSamples(regionStudiesAttr, groups[uid].studies);
             }
