@@ -20,6 +20,7 @@ import {
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import MobxPromise from "mobxpromise/dist/src/MobxPromise";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
+import NotUsingGenePanelWarning from "../NotUsingGenePanelWarning";
 
 interface ICancerSummaryContainerProps {
     store:ResultsViewPageStore;
@@ -149,6 +150,7 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
                 return <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el} data-test="cancerTypeSummaryWrapper">
                     <div className={"tabMessageContainer"}>
                         <OqlStatusBanner className="cancer-types-summary-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
+                        <NotUsingGenePanelWarning store={this.props.store}/>
                     </div>
                     <MSKTabs onTabClick={this.handleTabClick}
                              enablePagination={false}
