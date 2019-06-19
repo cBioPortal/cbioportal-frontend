@@ -8,13 +8,11 @@ shopt -s nullglob # allows files and dir globs to be null - needed in 'for ... d
 BUILD_PORTAL=false
 BUILD_DATABASE=false
 BUILD_E2E=false
-INCLUDE_FRONTEND_IN_PORTAL=false
 
 usage() {
     echo "-d: build database image and load studies into database"
     echo "-p: build cbioportal image and container"
     echo "-e: build e2e-screenshot image and container"
-    echo "-i: include tested frontend version in backend image (default: excluded)"
     exit 1
 }
 
@@ -25,8 +23,6 @@ while getopts "pdei" opt; do
     p) BUILD_PORTAL=true
     ;;
     e) BUILD_E2E=true
-    ;;
-    i) INCLUDE_FRONTEND_IN_PORTAL=true
     ;;
     \?) usage
     ;;
@@ -235,11 +231,6 @@ build_e2e_image() {
 }
 
 if [ "$BUILD_PORTAL" = true ]; then
-
-    if [ "$INCLUDE_FRONTEND_IN_PORTAL" = true ]; then
-        echo Wait for JitPack download of frontend code
-        check_jitpack_download_frontend
-    fi
 
     echo Build portal image
     build_cbioportal_image

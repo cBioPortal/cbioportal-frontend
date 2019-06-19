@@ -6,14 +6,12 @@ BUILD_JS=false
 BUILD_PORTAL=false
 BUILD_DATABASE=false
 BUILD_E2E=false
-INCLUDE_FRONTEND_IN_PORTAL=false
 
 usage() {
     echo "-d: build database image and load studies into database"
     echo "-p: build cbioportal image and container"
     echo "-e: build e2e-screenshot image and container"
     echo "-j: build frontend code (yarn build)"
-    echo "-i: include tested frontend version in backend image (default: excluded)"
     exit 1
 }
 
@@ -26,8 +24,6 @@ while getopts "pdeji" opt; do
     e) BUILD_E2E=true
     ;;
     j) BUILD_JS=true
-    ;;
-    i) INCLUDE_FRONTEND_IN_PORTAL=true
     ;;
     \?) usage
     ;;
@@ -72,12 +68,9 @@ fi
 if [ "$BUILD_E2E" = true ]; then
     eflag="-e"
 fi
-if [ "$INCLUDE_FRONTEND_IN_PORTAL" = true ]; then
-    iflag="-i"
-fi
 
 cd $TEST_HOME/local/docker
-./setup_docker_containers.sh $dflag $pflag $eflag $iflag
+./setup_docker_containers.sh $dflag $pflag $eflag
 
 yarn install --frozen-lockfile
 

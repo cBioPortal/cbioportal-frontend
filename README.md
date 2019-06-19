@@ -170,7 +170,7 @@ cd $TEST_HOME/local/runtime-config
 eval "$(./setup_environment.sh)"
 export CBIOPORTAL_URL='http://localhost:8081/cbioportal'
 cd $PORTAL_SOURCE_DIR
-$TEST_HOME/local/runtime-config/setup_local_context.sh -i -j -d -p -e # remove flags to exclude specific stages if desired (see below)
+$TEST_HOME/local/runtime-config/setup_local_context.sh -j -d -p -e # remove flags to exclude specific stages if desired (see below)
 ```
 4. Run the screenshot tests (repeat this step while developing):
 ```
@@ -187,10 +187,7 @@ Setup of the local context involves building of the local frontend code, buildin
 ```
 ./end-to-end-test/local/runtime-config/setup_local_context.sh -d
 ```
-When no parameters are passed, no build steps are executed (only start of containers). 
-
-By default the frontend version under test is not included in the cbioportal image used as backend (in e2e tests the frontend is served on port 3000 to selenium browsers). To incorporate of the frontend version under test in the cbioportal image the `-i` flag van be passed to the `setup_local_context.sh` script.
-
+When no parameters are passed, no build steps are executed (only start of containers).
 
 #### Writing e2e tests
 Note: these are random topics that I encountered while developing e2e-tests. These should be reorganized in a better structured document.
