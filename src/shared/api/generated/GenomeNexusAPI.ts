@@ -136,8 +136,6 @@ export type Dbsnp = {
 
         'flags': Array < string >
 
-        'gene': Gene
-
         'hg19': Hg19
 
         'license': string
