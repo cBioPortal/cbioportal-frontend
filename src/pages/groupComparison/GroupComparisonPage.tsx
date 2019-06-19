@@ -56,7 +56,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     return;
                 }
 
-                this.store = new GroupComparisonStore((query as GroupComparisonURLQuery).sessionId, this.props.appStore);
+                this.store = new GroupComparisonStore((query as GroupComparisonURLQuery).sessionId, this.props.appStore, this.props.routing);
                 this.setTabIdInStore(props.routing.location.pathname);
                 (window as any).groupComparisonStore = this.store;
 

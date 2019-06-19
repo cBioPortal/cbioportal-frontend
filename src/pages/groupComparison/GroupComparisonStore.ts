@@ -70,12 +70,12 @@ export default class GroupComparisonStore {
     @observable private sessionId:string;
     @observable public newSessionPending = false;
 
-    constructor(sessionId:string, private appStore:AppStore) {
+    constructor(sessionId:string, private appStore:AppStore, private routing:any) {
         this.sessionId = sessionId;
     }
 
     @computed get groupOrder() {
-        const param = ((window as any).routingStore.location.query as GroupComparisonURLQuery).groupOrder;
+        const param = (this.routing.location.query as GroupComparisonURLQuery).groupOrder;
         if (param) {
             return JSON.parse(param);
         } else {
@@ -92,15 +92,15 @@ export default class GroupComparisonStore {
         const poppedUid = groupOrder.splice(oldIndex, 1)[0];
         groupOrder.splice(newIndex, 0, poppedUid);
 
-        (window as any).routingStore.updateRoute({ groupOrder: JSON.stringify(groupOrder) } as Partial<GroupComparisonURLQuery>);
+        this.routing.updateRoute({ groupOrder: JSON.stringify(groupOrder) } as Partial<GroupComparisonURLQuery>);
     }
 
     @action private updateUnselectedGroups(names:string[]) {
-        (window as any).routingStore.updateRoute({ unselectedGroups: JSON.stringify(names) } as Partial<GroupComparisonURLQuery>)
+        this.routing.updateRoute({ unselectedGroups: JSON.stringify(names) } as Partial<GroupComparisonURLQuery>)
     }
 
     @computed get unselectedGroups() {
-        const param = ((window as any).routingStore.location.query as GroupComparisonURLQuery).unselectedGroups;
+        const param = (this.routing.location.query as GroupComparisonURLQuery).unselectedGroups;
         if (param) {
             return JSON.parse(param);
         } else {
@@ -161,7 +161,7 @@ export default class GroupComparisonStore {
     @action
     private async saveAndGoToSession(newSession:Session) {
         const {id} = await comparisonClient.addComparisonSession(newSession);
-        (window as any).routingStore.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
+        this.routing.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
     }
 
     get currentTabId() {
