@@ -105,8 +105,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
             }
         },
         renderPending:()=><LoadingIndicator isLoading={true} size="big" center={true} />,
-        renderError:()=><ErrorMessage/>,
-        showLastRenderWhenPending:true
+        renderError:()=><ErrorMessage/>
     });
 
     render() {

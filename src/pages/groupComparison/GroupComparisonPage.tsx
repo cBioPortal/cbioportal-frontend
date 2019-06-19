@@ -235,6 +235,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         return (
             <PageLayout noMargin={true} hideFooter={true} className={"subhead-dark"}>
                 <div>
+                    <LoadingIndicator center={true} isLoading={this.store.newSessionPending}  size={"big"} />
                     <div className={"headBlock"}>
                         {this.studyLink.component}
                         <div>
