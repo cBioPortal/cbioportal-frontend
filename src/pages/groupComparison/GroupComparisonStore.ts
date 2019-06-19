@@ -68,7 +68,7 @@ export default class GroupComparisonStore {
     @observable private _currentTabId:GroupComparisonTab|undefined = undefined;
     @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.EXCLUDE;
     @observable private sessionId:string;
-    @observable public loading = false;
+    @observable public newSessionPending = false;
 
     constructor(sessionId:string, private appStore:AppStore) {
         this.sessionId = sessionId;
@@ -139,8 +139,8 @@ export default class GroupComparisonStore {
         return this.appStore.isLoggedIn;
     }
 
-    @action
     public async addGroup(group:SessionGroupData, saveToUser:boolean) {
+        this.newSessionPending = true;
         if (saveToUser && this.isLoggedIn) {
             await comparisonClient.addGroup(group);
         }
@@ -150,8 +150,8 @@ export default class GroupComparisonStore {
         this.saveAndGoToSession(newSession);
     }
 
-    @action
     public async deleteGroup(name:string) {
+        this.newSessionPending = true;
         const newSession = _.cloneDeep(this._session.result!);
         newSession.groups = newSession.groups.filter(g=>g.name !== name);
 
