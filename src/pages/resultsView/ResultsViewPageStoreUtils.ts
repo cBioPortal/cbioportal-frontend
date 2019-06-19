@@ -416,19 +416,20 @@ export function doesQueryHaveCNSegmentData(
     }
 }
 
-export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackCaseData[], samples: Sample[], oqlQuery: string, coverageInformation: CoverageInformation, selectedMolecularProfileIds: string[]){
+export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackCaseData[], samples: Sample[], oqlQuery: string, coverageInformation: CoverageInformation, selectedMolecularProfileIds: string[], studyToMolecularProfiles : _.Dictionary<MolecularProfile[]>) {
     const result : SampleAlteredMap = {};
     filteredAlterationData.forEach((element, key) => {
         //1: is not group
         if (element.mergedTrackOqlList === undefined) {
             const notGroupedOql = element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;                    
             const sampleKeysMap = _.keyBy(_.map(notGroupedOql.data, (data) => data.uniqueSampleKey));
-            const unProfiledSampleKeysMap = _.keyBy(samples.map((sample) => sample.uniqueSampleKey).filter((sampleKey) => {
+            const unProfiledSampleKeysMap = _.keyBy(samples.filter((sample) => {
+                const molecularProfileIds = studyToMolecularProfiles[sample.studyId] ? _.intersection(studyToMolecularProfiles[sample.studyId].map((profile) => profile.molecularProfileId), selectedMolecularProfileIds) : selectedMolecularProfileIds;
                 // if not profiled in some genes molecular profile, then we think it is not profiled and will exclude this sample
-                return _.some(_.map(selectedMolecularProfileIds, (selectedMolecularProfileId) => {
-                    return isSampleProfiled(sampleKey, selectedMolecularProfileId, notGroupedOql.gene, coverageInformation);
+                return _.some(_.map(molecularProfileIds, (molecularProfileId) => {
+                    return isSampleProfiled(sample.uniqueSampleKey, molecularProfileId, notGroupedOql.gene, coverageInformation);
                 }) , (profiled) => profiled === false);
-            }));
+            }).map((sample) => sample.uniqueSampleKey));
             result[getSingleGeneResultKey(key, oqlQuery, notGroupedOql)] = samples.map((sample: Sample) => {
                 if (sample.uniqueSampleKey in unProfiledSampleKeysMap) {
                     return AlteredStatus.UNPROFILED;
@@ -444,15 +445,16 @@ export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackC
             const groupedOql = element.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
             const sampleKeysMap = _.keyBy(_.map(_.flatten(_.map(groupedOql.list, (list) => list.data)), (data) => data.uniqueSampleKey));
             const groupGenes = _.map(groupedOql.list, (oql) => oql.gene);
-            const unProfiledSampleKeysMap = _.keyBy(samples.map((sample) => sample.uniqueSampleKey).filter((sampleKey) => {
+            const unProfiledSampleKeysMap = _.keyBy(samples.filter((sample) => {
+                const molecularProfileIds = studyToMolecularProfiles[sample.studyId] ? _.intersection(studyToMolecularProfiles[sample.studyId].map((profile) => profile.molecularProfileId), selectedMolecularProfileIds) : selectedMolecularProfileIds;
                 // if not profiled in some genes molecular profile, then we think it is not profiled and will exclude this sample
-                return _.some(_.map(selectedMolecularProfileIds, (selectedMolecularProfileId) => {
+                return _.some(_.map(molecularProfileIds, (molecularProfileId) => {
                     // if not profiled in every genes, then the sample is not profiled, or we think it is profiled
                     return _.every(_.map(groupGenes, (gene) => {
-                        return isSampleProfiled(sampleKey, selectedMolecularProfileId, gene, coverageInformation);
+                        return isSampleProfiled(sample.uniqueSampleKey, molecularProfileId, gene, coverageInformation);
                     }), (profiled) => profiled === false);
                 }) , (notProfiled) => notProfiled === true);
-            }));
+            }).map((sample) => sample.uniqueSampleKey));
             result[getMultipleGeneResultKey(groupedOql)] = samples.map((sample: Sample) => {
                 if (sample.uniqueSampleKey in unProfiledSampleKeysMap) {
                     return AlteredStatus.UNPROFILED;
