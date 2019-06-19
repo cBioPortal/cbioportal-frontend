@@ -325,7 +325,7 @@ if (doBrowserstack) {
 }
 
 // config.specs = [
-//     './specs/**/oncoprint.spec.js'
+//     './specs/**/mutationTable.spec.js'
 // ];
 
 
