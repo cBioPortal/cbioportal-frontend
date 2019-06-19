@@ -61,7 +61,7 @@ export function MakeMobxView(params:{
             return this.status === "pending";
         },
         get component() {
-            let ret = undefined;
+            let ret = null;
             switch (this.status) {
                 case "complete":
                     ret = params.render();
