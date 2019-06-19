@@ -50,7 +50,6 @@ import {
 import {Session, SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import {calculateQValues} from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
-import onMobxPromise from "../../shared/lib/onMobxPromise";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import {GroupComparisonURLQuery} from "./GroupComparisonPage";
 import {AppStore} from "../../AppStore";
@@ -58,7 +57,6 @@ import {stringListToIndexSet} from "../../shared/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
-import {sleep} from "../../shared/lib/TimeUtils";
 
 export enum OverlapStrategy {
     INCLUDE = "Include overlapping samples and patients",
@@ -283,6 +281,9 @@ export default class GroupComparisonStore {
             let sorted:ComparisonGroup[];
             if (this.groupOrder) {
                 const order = stringListToIndexSet(this.groupOrder);
+                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifndef<number>(order[g.name], Number.POSITIVE_INFINITY));
+            } else if (this._session.result!.groupNameOrder) {
+                const order = stringListToIndexSet(this._session.result!.groupNameOrder!);
                 sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifndef<number>(order[g.name], Number.POSITIVE_INFINITY));
             } else {
                 sorted = defaultGroupOrder(this._unsortedOriginalGroups.result!);
