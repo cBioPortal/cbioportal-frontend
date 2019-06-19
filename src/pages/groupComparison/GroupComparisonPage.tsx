@@ -33,6 +33,8 @@ export interface IGroupComparisonPageProps {
 
 export type GroupComparisonURLQuery = {
     sessionId: string;
+    groupOrder?:string; // json stringified array of names
+    unselectedGroups?:string; // json stringified array of names
 };
 
 @inject('routing', 'appStore')
@@ -41,10 +43,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     @observable.ref private store:GroupComparisonStore;
     private queryReaction:IReactionDisposer;
     private pathnameReaction:IReactionDisposer;
-    private unsavedChangesReaction:IReactionDisposer;
     private lastQuery:Partial<GroupComparisonURLQuery>;
-
-    @observable unsavedChangesWarningDismissed = false;
 
     constructor(props:IGroupComparisonPageProps) {
         super(props);
@@ -57,7 +56,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     return;
                 }
 
-                this.store = new GroupComparisonStore((query as GroupComparisonURLQuery).sessionId, this.props.appStore);
+                this.store = new GroupComparisonStore((query as GroupComparisonURLQuery).sessionId, this.props.appStore, this.props.routing);
                 this.setTabIdInStore(props.routing.location.pathname);
                 (window as any).groupComparisonStore = this.store;
 
@@ -79,14 +78,6 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             {fireImmediately: true}
         );
 
-        this.unsavedChangesReaction = reaction(
-            ()=>[
-                this.store.unsavedGroups,
-                JSON.stringify(this.store.dragNameOrder), // need to touch every element to react to changes bc the array changes in place
-            ],
-            ()=>{ this.unsavedChangesWarningDismissed = false; }
-        );
-
         (window as any).groupComparisonPage = this;
     }
 
@@ -105,7 +96,6 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     componentWillUnmount() {
         this.queryReaction && this.queryReaction();
         this.pathnameReaction && this.pathnameReaction();
-        this.unsavedChangesReaction && this.unsavedChangesReaction();
     }
 
     readonly tabs = MakeMobxView({
@@ -237,83 +227,6 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         }
     });
 
-    @computed get unsavedChangesWarning() {
-        if (this.unsavedChangesWarningDismissed) {
-            return null;
-        }
-
-        const warnings:any[] = [];
-
-        if (this.store.unsavedGroups.length > 0) {
-            const pluralUnsaved = this.store.unsavedGroups.length > 1;
-            warnings.push(
-                <div>
-                    <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
-                    <span>
-                        {joinGroupNames(this.store.unsavedGroups, "and")} {pluralUnsaved ? "are" : "is"} not saved. Others visiting this link will not see {pluralUnsaved ? "them" : "it"}.
-                    </span>
-                </div>
-            );
-        }
-
-        if (this.store.dragNameOrder) {
-            warnings.push(
-                <div>
-                    <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
-                    <span>
-                        Your group order is not saved.
-                    </span>
-                </div>
-            );
-        }
-
-        if (this.store.existsDeletedGroup) {
-            warnings.push(
-                <div>
-                    <i className="fa fa-md fa-exclamation-triangle" style={{marginRight:12, marginTop:3}}/>
-                    <span>
-                        Your deleted groups are not saved.
-                    </span>
-                </div>
-            );
-        }
-
-        if (warnings.length === 0) {
-            return null;
-        }
-
-        return (
-            <div className="alert alert-warning" style={{display:"flex", marginBottom:3, marginTop:7, alignItems:"center"}}>
-                <div style={{maxWidth:500, display:"inline-block", marginRight: 20}}>
-                    {warnings}
-                </div>
-                <div
-                    style={{display:"inline-block"}}
-                >
-                    <button
-                        className="btn btn-xs btn-default"
-                        onClick={this.store.saveUnsavedChangesAndGoToNewSession}
-                        style={{marginRight:5}}
-                    >
-                        Save to new comparison session
-                    </button>
-                    <button
-                        className="btn btn-xs btn-default"
-                        onClick={this.store.clearUnsavedChanges}
-                    >
-                        Clear changes
-                    </button>
-                </div>
-                <div className="btn btn-xs btn-none"
-                     onClick={action(()=>{ this.unsavedChangesWarningDismissed = true; })}
-                     style={{position:"absolute", right:25}}
-                >
-                    <i className="fa fa-md fa-times"/>
-                </div>
-            </div>
-        );
-    }
-
     render() {
         if (!this.store) {
             return null;
@@ -322,9 +235,9 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         return (
             <PageLayout noMargin={true} hideFooter={true} className={"subhead-dark"}>
                 <div>
+                    <LoadingIndicator center={true} isLoading={this.store.newSessionPending}  size={"big"} />
                     <div className={"headBlock"}>
                         {this.studyLink.component}
-                        {this.unsavedChangesWarning}
                         <div>
                             <div className={styles.headerControls}>
                                 <GroupSelector

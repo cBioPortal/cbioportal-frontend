@@ -11,13 +11,14 @@ import PromisePlus from "../lib/PromisePlus";
 import {Omit} from "../lib/TypeScriptUtils";
 
 export type SessionGroupData = Omit<VirtualStudyData, "studyViewFilter"> & {
+    uid?: string;
     color?:string; // for charts
 };
 export type Session = {
     id:string,
     groups:SessionGroupData[],
     origin:string[],
-    clinicalAttributeName?:string,
+    clinicalAttributeName?:string
     groupNameOrder?:string[];
 };
 export type Group = {
