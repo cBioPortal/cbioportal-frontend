@@ -50,14 +50,14 @@ export default class OverlapUpset extends React.Component<IOverlapUpsetProps, {}
     @autobind
     @action
     private submitSampleOverlapGroup(group:SessionGroupData, saveToUser:boolean) {
-        this.props.store.addUnsavedGroup(group, saveToUser);
+        this.props.store.addGroup(group, saveToUser);
         this.sampleSelection = [];
     }
 
     @autobind
     @action
     private submitPatientOverlapGroup(group:SessionGroupData, saveToUser:boolean) {
-        this.props.store.addUnsavedGroup(group, saveToUser);
+        this.props.store.addGroup(group, saveToUser);
         this.patientSelection = [];
     }
 
