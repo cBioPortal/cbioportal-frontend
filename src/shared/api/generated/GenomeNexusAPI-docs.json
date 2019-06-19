@@ -1320,10 +1320,6 @@
             "type": "string"
           }
         },
-        "gene": {
-          "description": "gene",
-          "$ref": "#/definitions/Gene"
-        },
         "hg19": {
           "description": "hg19",
           "$ref": "#/definitions/Hg19"
