@@ -25,6 +25,7 @@ import {ButtonHTMLAttributes} from "react";
 export interface IGroupSelectorButtonProps {
     onClick:(name:string)=>void;
     onClickDelete:(name:string)=>void;
+    deletable:boolean;
     isSelected:(name:string)=>boolean;
     group:ComparisonGroup;
     sampleSet:ComplexKeyMap<Sample>;
@@ -107,19 +108,21 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                         </span>
                     </span>
                     {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
-                    <div
-                        style={{
-                            paddingLeft:2,
-                            marginLeft:5,
-                            marginRight:-3,
-                            borderLeft: "1px dashed white",
-                            cursor: "pointer"
-                        }}
-                        data-test="deleteButton"
-                        onClick={()=>this.props.onClickDelete(group.name)}
-                    >
-                        <i className="fa fa-times-circle"/>
-                    </div>
+                    {this.props.deletable && (
+                        <div
+                            style={{
+                                paddingLeft:2,
+                                marginLeft:5,
+                                marginRight:-3,
+                                borderLeft: "1px dashed white",
+                                cursor: "pointer"
+                            }}
+                            data-test="deleteButton"
+                            onClick={()=>this.props.onClickDelete(group.name)}
+                        >
+                            <i className="fa fa-times-circle"/>
+                        </div>
+                    )}
                 </span>
                 {this.button && this.props.excludedFromAnalysis && (ReactDOM as any).createPortal(
                     <Overlay

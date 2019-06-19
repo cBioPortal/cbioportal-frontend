@@ -59,6 +59,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
             if (this.props.store._originalGroups.result!.length === 0) {
                 return null;
             } else {
+                const deletable = this.props.store._originalGroups.result!.length > 2;
                 const buttons = this.props.store._originalGroups.result!.map((group, index)=>{
                     const excludedFromAnalysis =
                         this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE &&
@@ -67,6 +68,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                     return (
                         <GroupSelectorButton
                             isSelected={this.isSelected}
+                            deletable={deletable}
                             onClick={this.onClick}
                             onClickDelete={this.onClickDelete}
                             sampleSet={this.props.store.sampleSet.result!}
