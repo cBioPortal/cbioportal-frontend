@@ -333,7 +333,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     >
                         {
                             (store.studyIdToStudy.isComplete
-                                && store.putativeDriverAnnotatedMutations.isComplete
+                                && store.filteredAndAnnotatedMutations.isComplete
                                 && store.genes.isComplete
                                 && store.coverageInformation.isComplete) &&
                             (<ExpressionWrapper store={store}
@@ -341,7 +341,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                 genes={store.genes.result}
                                 expressionProfiles={store.expressionProfiles}
                                 numericGeneMolecularDataCache={store.numericGeneMolecularDataCache}
-                                mutations={store.putativeDriverAnnotatedMutations.result!}
+                                mutations={store.filteredAndAnnotatedMutations.result!}
                                 RNASeqVersion={store.expressionTabSeqVersion}
                                 coverageInformation={store.coverageInformation.result}
                                 onRNASeqVersionChange={(version:number)=>store.expressionTabSeqVersion=version}
