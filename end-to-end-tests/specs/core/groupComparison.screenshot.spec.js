@@ -4,6 +4,7 @@ var waitForNetworkQuiet = require('./../specUtils').waitForNetworkQuiet;
 var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
 var setInputText = require('./../specUtils').setInputText;
 var checkElementWithTemporaryClass = require('./../specUtils').checkElementWithTemporaryClass;
+var checkElementWithMouseDisabled = require('./../specUtils').checkElementWithMouseDisabled;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -222,7 +223,7 @@ describe("group comparison page screenshot tests", function () {
         });
         it("group comparison page delete group from session", function() {
             browser.click('button[data-test="groupSelectorButtonA"] [data-test="deleteButton"]');
-            var res = browser.checkElement('div.mainContainer');
+            var res = checkElementWithMouseDisabled('div.mainContainer');
             assertScreenShotMatch(res);
         });
     });
