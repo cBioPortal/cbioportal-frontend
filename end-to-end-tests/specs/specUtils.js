@@ -148,6 +148,10 @@ function checkOncoprintElement(selector) {
     return browser.checkElement(selector || "#oncoprintDiv", { hide:[".qtip", '.dropdown-menu', ".oncoprintjs__track_options__dropdown", ".oncoprintjs__cell_overlay_div"] });
 }
 
+function executeInBrowser(callback){
+    return browser.execute(callback).value;
+}
+
 
 module.exports = {
     waitForOncoprint: waitForOncoprint,
@@ -167,7 +171,8 @@ module.exports = {
     getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements,
     setInputText: setInputText,
     pasteToElement: pasteToElement,
-    checkOncoprintElement: checkOncoprintElement
+    checkOncoprintElement: checkOncoprintElement,
+    executeInBrowser: executeInBrowser
 };
 
 

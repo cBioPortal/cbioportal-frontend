@@ -116,7 +116,7 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
             }
         }
         if (naCount > 0 && track.na_tooltip_value) {
-            ret += `${track.label}: <b>${track.na_tooltip_value}</b> (${naCount} samples)<br/>`;
+            ret += `${track.label}: <b>${track.na_tooltip_value}</b>${dataUnderMouse.length > 1 ? ` (${naCount} samples)` : ""}<br/>`;
         }
         return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(getCaseViewElt(dataUnderMouse, !!link_id)).append("<br/>").append(ret);
     };
