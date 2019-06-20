@@ -34,6 +34,7 @@ import {SpecialAttribute} from "../../shared/cache/ClinicalDataCache";
 import { isSampleProfiled } from "shared/lib/isSampleProfiled";
 import { AlteredStatus } from "./mutualExclusivity/MutualExclusivityUtil";
 import {Group} from "../../shared/api/ComparisonGroupClient";
+import {isNotGermlineMutation} from "../../shared/lib/MutationUtils";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -121,17 +122,20 @@ export function annotateMutationPutativeDriver(
     }, mutation) as AnnotatedMutation;
 }
 
-export function computePutativeDriverAnnotatedMutations(
+export function filterAndAnnotateMutations(
     mutations: Mutation[],
     getPutativeDriverInfo:(mutation:Mutation)=>{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean, customDriverBinary:boolean, customDriverTier?:string},
     entrezGeneIdToGene:{[entrezGeneId:number]:Gene},
-    ignoreUnknown:boolean
+    excludeVUS:boolean,
+    excludeGermline:boolean
 ):AnnotatedMutation[] {
     return mutations.reduce((annotated:AnnotatedMutation[], mutation:Mutation)=>{
-        const annotatedMutation = annotateMutationPutativeDriver(mutation, getPutativeDriverInfo(mutation)); // annotate
-        annotatedMutation.hugoGeneSymbol = entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
-        if (annotatedMutation.putativeDriver || !ignoreUnknown) {
-            annotated.push(annotatedMutation);
+        if (!excludeGermline || isNotGermlineMutation(mutation)) {
+            const annotatedMutation = annotateMutationPutativeDriver(mutation, getPutativeDriverInfo(mutation)); // annotate
+            annotatedMutation.hugoGeneSymbol = entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
+            if (annotatedMutation.putativeDriver || !excludeVUS) {
+                annotated.push(annotatedMutation);
+            }
         }
         return annotated;
     }, []);

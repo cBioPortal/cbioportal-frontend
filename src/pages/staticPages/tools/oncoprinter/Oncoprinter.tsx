@@ -89,7 +89,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                 return self.props.store.driverAnnotationSettings.cbioportalCount;
             },
             get hidePutativePassengers() {
-                return self.props.store.driverAnnotationSettings.ignoreUnknown;
+                return self.props.store.driverAnnotationSettings.excludeVUS;
             },
             get annotateCBioPortalInputValue() {
                 return self.props.store.driverAnnotationSettings.cbioportalCountThreshold + "";
@@ -142,7 +142,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                 if (!s) {
                     this.props.store.driverAnnotationSettings.oncoKb = false;
                     this.props.store.driverAnnotationSettings.cbioportalCount = false;
-                    this.props.store.driverAnnotationSettings.ignoreUnknown = false;
+                    this.props.store.driverAnnotationSettings.excludeVUS = false;
                 } else {
                     if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
                         this.props.store.driverAnnotationSettings.oncoKb = true;
@@ -164,7 +164,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                 this.controlsHandlers.onSelectAnnotateCBioPortal && this.controlsHandlers.onSelectAnnotateCBioPortal(true);
             }),
             onSelectHidePutativePassengers:(s:boolean)=>{
-                this.props.store.driverAnnotationSettings.ignoreUnknown = s;
+                this.props.store.driverAnnotationSettings.excludeVUS = s;
             },
             onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
             onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
