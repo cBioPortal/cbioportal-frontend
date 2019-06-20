@@ -33,9 +33,9 @@ import {updateResultsViewQuery} from "./ResultsViewQuery";
 import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 
-function initStore() {
+function initStore(appStore:AppStore) {
 
-    const resultsViewPageStore = new ResultsViewPageStore();
+    const resultsViewPageStore = new ResultsViewPageStore(appStore);
 
     resultsViewPageStore.tabId = getTabId(getBrowserWindow().globalStores.routing.location.pathname);
 
@@ -134,7 +134,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     constructor(props: IResultsViewPageProps) {
         super(props);
 
-        this.resultsViewPageStore = initStore();
+        this.resultsViewPageStore = initStore(props.appStore);
 
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }

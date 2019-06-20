@@ -1,6 +1,10 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {SpecialAttribute} from "../../cache/ClinicalDataCache";
+import {
+    clinicalAttributeIsINCOMPARISONGROUP,
+    clinicalAttributeIsPROFILEDIN,
+    SpecialAttribute
+} from "../../cache/ClinicalDataCache";
 import {computed, observable} from "mobx";
 import {remoteData} from "../../api/remoteData";
 import _ from "lodash";
@@ -38,10 +42,12 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
                             return 0;
                         } else if (x.clinicalAttributeId === SpecialAttribute.MutationSpectrum) {
                             return 1;
-                        } else if (x.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix)) {
+                        } else if (clinicalAttributeIsPROFILEDIN(x)) {
                             return 2;
-                        } else {
+                        } else if (clinicalAttributeIsINCOMPARISONGROUP(x)) {
                             return 3;
+                        } else {
+                            return 4;
                         }
                     },
                     (x:ClinicalAttribute)=>{
