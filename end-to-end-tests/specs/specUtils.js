@@ -164,6 +164,10 @@ function checkElementWithTemporaryClass(selectorForChecking, selectorForTemporar
     return res;
 }
 
+function checkElementWithMouseDisabled(selector, pauseTime) {
+    return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0);
+}
+
 
 module.exports = {
     waitForOncoprint: waitForOncoprint,
@@ -185,7 +189,8 @@ module.exports = {
     pasteToElement: pasteToElement,
     checkOncoprintElement: checkOncoprintElement,
     executeInBrowser: executeInBrowser,
-    checkElementWithTemporaryClass: checkElementWithTemporaryClass
+    checkElementWithTemporaryClass: checkElementWithTemporaryClass,
+    checkElementWithMouseDisabled: checkElementWithMouseDisabled
 };
 
 
