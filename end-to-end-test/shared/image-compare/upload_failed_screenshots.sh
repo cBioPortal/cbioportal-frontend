@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -e
 set -v
-set -u
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -11,11 +10,22 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo UPLOADING ERROR SCREENSHOTS
 
-cd ${DIR}/../../$SCREENSHOT_DIR
-if (ls diff/*.png 2> /dev/null > /dev/null); then
+# paths are different on CI and local testing
+# TODO implement these different paths
+# low prio since I consider running imageCompare locally as a rare event.
+# if [[ ${TRAVIS} || ${CIRCLECI} ]]; then
+#     reference_path=$DIR
+# else
+#     reference_path=$DIR
+# fi
+
+cd ${DIR}/../../$SCREENSHOT_DIRECTORY
+
+if [ -n "$(ls diff/*.png)" ]; then
     references=()
-    for diff in diff/*.png; do
-        reference=${diff/diff/reference}
+    # collect reference images for each screenshot in diff directory
+    for image_path in diff/*.png; do
+        reference=${image_path/diff/reference}
         references=( ${references[@]} $reference )
         echo "FAILED SCREENSHOT TEST: ${reference}"
     done
@@ -26,8 +36,8 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
     if [[ ${TRAVIS} || ${CIRCLECI} ]]; then
         echo "${YELLOW}See Artifacts tab above for image comparison UI (imageCompare.html)${NC}"
     else
-        repo_url=file://${PWD}/../..
-        echo -e "${GREEN}COPY+PASTE in BROWSER TO COMPARE FAILED SCREENSHOTS: ${YELLOW}${repo_url}/end-to-end-test/remote/imageCompare.html${NC}";
+        repo_url=file://${PWD}/../../..
+        echo -e "${GREEN}COPY+PASTE in BROWSER TO COMPARE FAILED SCREENSHOTS: ${YELLOW}${repo_url}/end-to-end-test/shared/imageCompare.html${NC}";
     fi
 
 

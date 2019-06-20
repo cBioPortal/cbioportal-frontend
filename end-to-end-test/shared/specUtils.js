@@ -1,6 +1,5 @@
 function waitForQueryPage(timeout) {
-    var studyContainer = browser.$('div[data-test="cancerTypeListContainer"]');
-    studyContainer.waitForExist(timeout || 10000);
+    $('div[data-test="cancerTypeListContainer"]').waitForExist(timeout || 10000);
 }
 
 function waitForPlotsTab(timeout) {

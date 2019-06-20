@@ -10,7 +10,7 @@ echo export DOCKER_NETWORK_NAME=endtoend_localdb_network
 echo export SESSION_SERVICE_HOST_NAME=cbio-session-service
 echo export SCREENSHOT_IMAGE_NAME=cbio-screenshot
 echo export SCREENSHOT_DIRECTORY=./local/screenshots
-echo export JUNIT_REPORT_PATH=./junit/
+echo export JUNIT_REPORT_PATH=./local/junit/
 echo export SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
 
 echo export DB_CGDS_URL=https://raw.githubusercontent.com/cBioPortal/cbioportal/v2.0.0/db-scripts/src/main/resources/cgds.sql

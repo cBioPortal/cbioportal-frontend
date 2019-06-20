@@ -17,5 +17,11 @@ docker run --rm \
 
 status=$?
 
+if [[ "$status" -eq 0 ]]; then
+    echo Succes!!!!! E2e-test test completed without errors.
+else
+    echo Error!!!!! E2e-test test completed with errors.
+fi
+
 cd $CUR_DIR
 exit $status
