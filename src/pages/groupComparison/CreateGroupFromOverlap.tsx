@@ -185,7 +185,7 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                         className="btn btn-md btn-primary"
                         disabled={this.props.includedRegions.length === 0}
                         data-event={serializeEvent({action:'createGroupFromVenn',label:'', category:'groupComparison' })}
-                        data-test={this.props.caseType + "GroupComparisonVennDiagramCreateGroupButton"}
+                        data-test={this.props.caseType + "GroupComparisonCreateGroupButton"}
                     >
                         Create Group From Selected Diagram Areas
                     </button>
