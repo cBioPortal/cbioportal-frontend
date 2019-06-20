@@ -86,7 +86,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable sortMode:SortMode = {type:"data"};
 
     @observable distinguishGermlineMutations:boolean = true;
-    @observable hideGermlineMutations:boolean = false;
     @observable distinguishMutationType:boolean = true;
     @observable sortByMutationType:boolean = true;
     @observable sortByDrivers:boolean = true;
@@ -272,10 +271,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.driverAnnotationSettings.cosmicCount;
             },
             get hidePutativePassengers() {
-                return self.props.store.driverAnnotationSettings.ignoreUnknown;
+                return self.props.store.driverAnnotationSettings.excludeVUS;
             },
             get hideGermlineMutations() {
-                return self.hideGermlineMutations;
+                return self.props.store.excludeGermlineMutations;
             },
             get annotateCBioPortalInputValue() {
                 return self.props.store.driverAnnotationSettings.cbioportalCountThreshold + "";
@@ -417,7 +416,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     this.props.store.driverAnnotationSettings.driverTiers.forEach((value, key)=>{
                         this.props.store.driverAnnotationSettings.driverTiers.set(key, false);
                     });
-                    this.props.store.driverAnnotationSettings.ignoreUnknown = false;
+                    this.props.store.driverAnnotationSettings.excludeVUS = false;
                 } else {
                     if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
                         this.props.store.driverAnnotationSettings.oncoKb = true;
@@ -461,10 +460,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.props.store.driverAnnotationSettings.driverTiers.set(value, checked);
             }),
             onSelectHidePutativePassengers:(s:boolean)=>{
-                this.props.store.driverAnnotationSettings.ignoreUnknown = s;
+                this.props.store.driverAnnotationSettings.excludeVUS = s;
             },
             onSelectHideGermlineMutations:(s:boolean)=>{
-                this.hideGermlineMutations = s;
+                this.props.store.excludeGermlineMutations = s;
             },
             onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
             onClickSortAlphabetical:()=>{
@@ -993,7 +992,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         const usingHotspot = this.props.store.driverAnnotationSettings.hotspots;
         ret.push({
             label: getAnnotatingProgressMessage(usingOncokb, usingHotspot),
-            promises:[this.props.store.annotatedMolecularData, this.props.store.putativeDriverAnnotatedMutations]
+            promises:[this.props.store.filteredAndAnnotatedMolecularData, this.props.store.filteredAndAnnotatedMutations]
         });
 
         ret.push({
