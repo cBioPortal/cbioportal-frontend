@@ -1,5 +1,5 @@
-
 var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
+var executeInBrowser = require('./../specUtils').executeInBrowser;
 
 var assert = require('assert');
 var expect = require('chai').expect;
@@ -27,11 +27,9 @@ describe('Mutation Table', function() {
             browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",30000);
         });
 
-        it.skip('should show the exon number after adding the exon column', ()=>{
+        it('should show the exon number after adding the exon column', ()=>{
             // check if 6 appears once in COSMIC column
-            browser.waitForText('//*[text()="6"]',30000);
-            var textValuesWith6 = browser.getText('//*[text()="6"]');
-            assert.ok(textValuesWith6.length === 1);
+
             // click on column button
             browser.click("button*=Columns");
             // scroll down to activated "exon" selection
@@ -39,24 +37,22 @@ describe('Mutation Table', function() {
             // click "exon"
             browser.click('//*[text()="Exon"]');
             // check if three exact matches for 6 appear
+
+            let res;
             browser.waitUntil(() => {
-                textValuesWith6 = browser.getText('//*[text()="6"]');
-                return textValuesWith6.length > 1;
-            }, 60000, "Exon data not in Exon column");
-            textValuesWith6 = browser.getText('//*[text()="6"]');
-            // 3 values from Exon column + 1 value from #Mut in Sample column
-            assert.equal(textValuesWith6.length, 4);
+                res =  executeInBrowser( ()=>$("[class*=exon-module__exon-table]").length);
+                return res == 25
+            }, 60000, `Failed: There's 25 exons rows in table (${res} found)`);
         });
 
         it('should show more exon number after clicking "Show more"', ()=>{
             // click "show more" to add more data
             browser.click("button*=Show more");
-            // check if 6 exact matches for 6 appear
+            let res;
             browser.waitUntil(() => {
-                textValuesWith6 = browser.getText('//*[text()="6"]');
-                // 4 values from Exon column + 1 value from #Mut in Sample column + 1 value from COSMIC column
-                return textValuesWith6.length === 6;
-            }, 60000, "Exon data not in Exon column after clikcing show more button");
+                res =  executeInBrowser( ()=>$("[class*=exon-module__exon-table]").length);
+                return res > 25;
+            }, 60000, `Failed: There's more than 25 exons rows in table (${res} found)`);
         });
 
         it('should show the HGVSc data after adding the HGVSc column', ()=>{
@@ -65,21 +61,14 @@ describe('Mutation Table', function() {
             // click "HGVSc"
             browser.click('//*[text()="HGVSc"]');
 
-            // check if "ENST00000269305.4:c.817C>T" appears
-            browser.waitUntil(() => {
-                var hgvscValues = browser.getText('//*[text()[contains(.,"ENST00000269305.4:c.817C>T")]]');
-                return hgvscValues.length > 0;
-            }, 60000, "HGVSc values not in hgvs column");
+            browser.waitForExist('//*[text()[contains(.,"ENST00000269305.4:c.817C>T")]]', 60000);
         });
 
         it('should show more HGVSc data after clicking "Show more"', ()=>{
             // click "show more" to add more data
             browser.click("button*=Show more");
             // check if "C>T" exact matches for 12 appear
-            browser.waitUntil(() => {
-                var hgvscValues = browser.getText('//*[text()[contains(.,"C>T")]]');
-                return hgvscValues.length > 0;
-            }, 60000, "HGVSc values not in hgvs column after clicking show more button");
+            browser.waitForExist('//*[text()[contains(.,"C>T")]]', 60000);
         });
     });
 

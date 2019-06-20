@@ -23,9 +23,10 @@ import autobind from "autobind-decorator";
 import {ButtonHTMLAttributes} from "react";
 
 export interface IGroupSelectorButtonProps {
-    onClick:(uid:string)=>void;
+    onClick:(name:string)=>void;
     onClickDelete:(name:string)=>void;
-    isSelected:(uid:string)=>boolean;
+    deletable:boolean;
+    isSelected:(name:string)=>boolean;
     group:ComparisonGroup;
     sampleSet:ComplexKeyMap<Sample>;
     excludedFromAnalysis:boolean;
@@ -71,7 +72,7 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
 
     render() {
         const group = this.props.group;
-        const selected = this.props.isSelected(group.uid);
+        const selected = this.props.isSelected(group.name);
         const sampleIdentifiers = getSampleIdentifiers([group]);
         const patientIdentifiers = getPatientIdentifiers(sampleIdentifiers, this.props.sampleSet);
 
@@ -91,7 +92,7 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                 <span style={{display:"flex", alignItems:"center"}}>
                     <span
                         style={{display:"flex", alignItems:"center"}}
-                        onClick={()=>this.props.onClick(this.props.group.uid)}
+                        onClick={()=>this.props.onClick(group.name)}
                     >
                         <EllipsisTextTooltip
                             style={{
@@ -107,19 +108,21 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                         </span>
                     </span>
                     {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
-                    <div
-                        style={{
-                            paddingLeft:2,
-                            marginLeft:5,
-                            marginRight:-3,
-                            borderLeft: "1px dashed white",
-                            cursor: "pointer"
-                        }}
-                        data-test="deleteButton"
-                        onClick={()=>this.props.onClickDelete(group.name)}
-                    >
-                        <i className="fa fa-times-circle"/>
-                    </div>
+                    {this.props.deletable && (
+                        <div
+                            style={{
+                                paddingLeft:2,
+                                marginLeft:5,
+                                marginRight:-3,
+                                borderLeft: "1px dashed white",
+                                cursor: "pointer"
+                            }}
+                            data-test="deleteButton"
+                            onClick={()=>this.props.onClickDelete(group.name)}
+                        >
+                            <i className="fa fa-times-circle"/>
+                        </div>
+                    )}
                 </span>
                 {this.button && this.props.excludedFromAnalysis && (ReactDOM as any).createPortal(
                     <Overlay
