@@ -3,6 +3,7 @@ var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStor
 var waitForNetworkQuiet = require('./../specUtils').waitForNetworkQuiet;
 var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
 var setInputText = require('./../specUtils').setInputText;
+var checkElementWithTemporaryClass = require('./../specUtils').checkElementWithTemporaryClass;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -222,6 +223,72 @@ describe("group comparison page screenshot tests", function () {
         it("group comparison page delete group from session", function() {
             browser.click('button[data-test="groupSelectorButtonA"] [data-test="deleteButton"]');
             var res = browser.checkElement('div.mainContainer');
+            assertScreenShotMatch(res);
+        });
+    });
+
+    describe("overlap venn diagram", function() {
+        describe('disjoint diagram', function() {
+            before(function () {
+                goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/comparison?sessionId=5cf8b1b3e4b0ab413787436f`);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+            });
+
+            it("group comparison page overlap tab disjoint venn diagram view", function () {
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+
+            it("group comparison page overlap tab disjoint venn diagram view with a group selected view", function () {
+                browser.waitForVisible('svg#comparison-tab-overlap-svg', 6000);
+                browser.leftClick('rect[data-test="sample0VennRegion"]');
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+        });
+
+        describe('venn diagram with overlap', function() {
+            before(function () {
+                goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/comparison/overlap?sessionId=5cf6bcf0e4b0ab413787430c`);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+            });
+
+            it("group comparison page overlap tab venn diagram with overlap view", function () {
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+
+            it("group comparison page overlap tab venn diagram view with overlap and session selected view", function () {
+                browser.leftClick('rect[data-test="sample0,1,2VennRegion"]');
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+
+            it("group comparison page overlap tab venn diagram view with overlap deselect active group", function () {
+                browser.click('button[data-test="groupSelectorButtonC"]');
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+        });
+    });
+
+    describe("overlap upset diagram group selection", function() {
+        before(function () {
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/comparison?sessionId=5d0bc0c5e4b0ab4137876bc3`);
+            browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+        });
+
+        it("group comparison page overlap tab upset groups selected", function () {
+            browser.leftClick('.sample_testGroup5_bar');
+            browser.leftClick('.sample_testGroup1_testGroup2_bar');
+            browser.leftClick('.patient_testGroup1_bar');
+            var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+            assertScreenShotMatch(res);
+        });
+
+        it("group comparison page overlap tab upset deselect active group", function () {
+            browser.click('button[data-test="groupSelectorButtonD"]');
+            var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
             assertScreenShotMatch(res);
         });
     });
