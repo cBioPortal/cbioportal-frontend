@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {observer, Observer} from "mobx-react";
-import {VictoryAxis, VictoryBar, VictoryChart, VictoryLabel, VictoryLine, VictoryScatter} from 'victory';
+import {VictoryAxis, VictoryBar, VictoryChart, VictoryLabel, VictoryLine, VictoryScatter, Bar} from 'victory';
 import {computed, observable} from 'mobx';
 import * as _ from 'lodash';
 import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from 'shared/theme/cBioPoralTheme';
@@ -36,6 +36,10 @@ const DEFAULT_BOTTOM_PADDING = 10;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const BAR_WIDTH = 10;
 const DEFAULT_SCATTER_DOT_COLOR = "#efefef"
+
+const BarComponent = (props:any)=>(
+    <Bar className={`${props.caseType}_${_.sortBy(props.datum.groups).join("_")}_bar`} {...props}/>
+);
 
 @observer
 export default class UpSet extends React.Component<IUpSetProps, {}> {
@@ -494,6 +498,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     style={{ data: { fillOpacity:0, width: this.barWidth(), cursor:"pointer"} }}
                                     data={this.barPlotHitzoneData}
                                     events={this.mouseEvents}
+                                    dataComponent={<BarComponent caseType={this.props.caseType}/>}
                                 />
 
                             </VictoryChart>
