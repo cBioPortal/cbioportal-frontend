@@ -1,4 +1,3 @@
-var CustomReporter = require('./customReporter');
 
 
 var path = require('path');
@@ -9,6 +8,10 @@ var fs = require('fs');
 require.extensions['.txt'] = function (module, filename) {
     module.exports = fs.readFileSync(filename, 'utf8');
 };
+
+const debug = process.env.DEBUG;
+const defaultTimeoutInterval = 18000;
+const defaultMaxInstances = 5;
 
 var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
 var refDir = process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
@@ -52,7 +55,7 @@ var config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: 3,
+    maxInstances: debug? 1 : defaultMaxInstances,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
@@ -164,18 +167,12 @@ var config = {
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
     // see also: http://webdriver.io/guide/testrunner/reporters.html
-    reporters: ['spec', 'junit', CustomReporter],
+    reporters: ['spec', 'junit'],
     reporterOptions: {
         junit: {
-            outputDir: process.env.JUNIT_REPORT_PATH || "./",
+            outputDir: process.env.JUNIT_REPORT_PATH,
             outputFileFormat: function(opts) { // optional
                 return `results-${opts.cid}.${opts.capabilities}.xml`
-            }
-        },
-        custom: {
-            outputDir: process.env.JUNIT_REPORT_PATH ||  "./",
-            outputFileFormat: function(opts) { // optional
-                return `custom-results-${opts.cid}.${opts.capabilities}.xml`
             }
         }
     },
@@ -184,7 +181,7 @@ var config = {
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 180000 // make big when using browser.debug()
+        timeout: debug ? 20000000 : defaultTimeoutInterval // make big when using browser.debug()
     },
     //
     // =====
@@ -224,7 +221,6 @@ var config = {
      * @param {Object} suite suite details
      */
     // beforeSuite: function (suite) {
-    //
     // },
     /**
      * Hook that gets executed _before_ a hook within the suite starts (e.g. runs before calling
@@ -264,26 +260,8 @@ var config = {
      * Function to be executed after a test (in Mocha/Jasmine) or a step (in Cucumber) starts.
      * @param {Object} test test details
      */
-    afterTest: function (test) {
-
-        var networkLog = browser.execute(function() {
-
-            Object.keys(window.ajaxRequests).forEach((key)=>{
-                window.ajaxRequests[key].end = Date.now();
-                window.ajaxRequests[key].duration = window.ajaxRequests[key].end - window.ajaxRequests[key].started;
-            });
-
-            return JSON.stringify(window.ajaxRequests);
-
-        }).value;
-
-        process.send({
-            event: 'custom-report',
-            data: { test:test, network:JSON.parse(networkLog) }
-        });
-
-
-    },
+    // afterTest: function (test) {
+    // },
     /**
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details
@@ -331,6 +309,7 @@ if (doBrowserstack) {
 
 // config.specs = [
 //     './specs/**/mutationTable.spec.js'
+//     './specs/**/oncoprinter.screenshot.spec.js'
 // ];
 
 
