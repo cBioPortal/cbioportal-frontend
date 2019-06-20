@@ -21,6 +21,10 @@
     opacity:0 !important;
   }
 
+  .disablePointerEvents {
+    pointer-events: none;
+  }
+
   .chartHeader .controls {
     visibility:hidden !important;
   }
