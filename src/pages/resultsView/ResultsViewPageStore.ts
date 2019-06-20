@@ -120,7 +120,10 @@ import {
 import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl} from "../../shared/api/urls";
 import url from "url";
-import ClinicalDataCache, {SpecialAttribute} from "../../shared/cache/ClinicalDataCache";
+import ClinicalDataCache, {
+    clinicalAttributeIsINCOMPARISONGROUP,
+    SpecialAttribute
+} from "../../shared/cache/ClinicalDataCache";
 import {getDefaultMolecularProfiles} from "../../shared/lib/getDefaultMolecularProfiles";
 import {getProteinPositionFromProteinChange} from "../../shared/lib/ProteinChangeUtils";
 import {isMutation} from "../../shared/lib/CBioPortalAPIUtils";
@@ -136,6 +139,7 @@ import {filterAndSortProfiles, getGenesetProfiles,
 import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
 import {
+    convertComparisonGroupClinicalAttribute,
     makeComparisonGroupClinicalAttributes,
     makeProfiledInClinicalAttributes
 } from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
@@ -155,6 +159,7 @@ import { ISurvivalDescription } from "./survival/SurvivalDescriptionTable";
 import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {Group} from "../../shared/api/ComparisonGroupClient";
 import {AppStore} from "../../AppStore";
+import {CLINICAL_TRACKS_URL_PARAM} from "../../shared/components/oncoprint/ResultsViewOncoprint";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -365,7 +370,7 @@ export type DriverAnnotationSettings = {
 /* tslint:disable: member-ordering */
 export class ResultsViewPageStore {
 
-    constructor(private appStore:AppStore) {
+    constructor(private appStore:AppStore, private routing:any) {
         labelMobxPromises(this);
 
         // addErrorHandler((error: any) => {
@@ -582,9 +587,20 @@ export class ResultsViewPageStore {
             let ret:Group[] = [];
             if (this.appStore.isLoggedIn) {
                 try {
-                    ret = await comparisonClient.getGroupsForStudies(this.studyIds.result!);
+                    ret = ret.concat(await comparisonClient.getGroupsForStudies(this.studyIds.result!));
                 } catch (e) {
                     // fail silently
+                }
+            }
+            // add any groups that are referenced in URL
+            const clinicalTracksParam = this.routing.location.query[CLINICAL_TRACKS_URL_PARAM];
+            if (clinicalTracksParam) {
+                const groupIds = clinicalTracksParam.split(",") // split by comma
+                    .filter((clinicalAttributeId:string)=>clinicalAttributeIsINCOMPARISONGROUP({clinicalAttributeId})) // filter for comparison group tracks
+                    .map((clinicalAttributeId:string)=>convertComparisonGroupClinicalAttribute(clinicalAttributeId, false)); // convert track ids to group ids
+
+                for (const id of groupIds) {
+                    ret.push(await comparisonClient.getGroup(id));
                 }
             }
             return ret;
