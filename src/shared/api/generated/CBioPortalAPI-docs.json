@@ -4644,7 +4644,8 @@
             "PROTEIN_LEVEL",
             "PROTEIN_ARRAY_PROTEIN_LEVEL",
             "PROTEIN_ARRAY_PHOSPHORYLATION",
-            "GENESET_SCORE"
+            "GENESET_SCORE",
+            "GENERIC_ASSAY"
           ]
         },
         "molecularProfileId": {
@@ -4653,8 +4654,15 @@
         "name": {
           "type": "string"
         },
+        "pivotThreshold": {
+          "type": "number",
+          "format": "float"
+        },
         "showProfileInAnalysisTab": {
           "type": "boolean"
+        },
+        "sortOrder": {
+          "type": "string"
         },
         "study": {
           "$ref": "#/definitions/CancerStudy"
