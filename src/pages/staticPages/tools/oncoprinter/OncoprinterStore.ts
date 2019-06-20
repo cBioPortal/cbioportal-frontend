@@ -26,7 +26,7 @@ import {SampleAlteredMap} from "../../../resultsView/ResultsViewPageStoreUtils";
 import {CancerGene} from "shared/api/generated/OncoKbAPI";
 import { AlteredStatus } from "pages/resultsView/mutualExclusivity/MutualExclusivityUtil";
 
-export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "ignoreUnknown" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
+export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "excludeVUS" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
 
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 function genomeNexusKey(l:OncoprinterInputLineType3_Incomplete){
@@ -352,7 +352,7 @@ export default class OncoprinterStore {
             this.nonAnnotatedGeneticTrackData.result!,
             this.annotationData.promisesMap,
             this.annotationData.params,
-            this.driverAnnotationSettings.ignoreUnknown
+            this.driverAnnotationSettings.excludeVUS
         )
     });
 
