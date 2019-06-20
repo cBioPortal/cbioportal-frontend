@@ -12,6 +12,7 @@ import classnames from 'classnames';
 import _ from 'lodash';
 import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
 import SurvivalDescriptionTable from './SurvivalDescriptionTable';
+import NotUsingGenePanelWarning from "../NotUsingGenePanelWarning";
 
 export interface ISurvivalTabProps {
     store: ResultsViewPageStore
@@ -186,6 +187,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             <div data-test="survivalTabDiv">
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="survival-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                    <NotUsingGenePanelWarning store={this.props.store}/>
                 </div>
                 {content}
             </div>
