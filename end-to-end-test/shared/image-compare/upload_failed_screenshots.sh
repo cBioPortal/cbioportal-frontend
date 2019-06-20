@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -e
+set -v
+set -u
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -7,7 +9,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-echo UPLOADING FAILED SCREENSHOTS
+echo UPLOADING ERROR SCREENSHOTS
 
 cd ${DIR}/../../$SCREENSHOT_DIR
 if (ls diff/*.png 2> /dev/null > /dev/null); then
