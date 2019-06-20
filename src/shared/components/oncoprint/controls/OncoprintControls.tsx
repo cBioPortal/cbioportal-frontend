@@ -17,7 +17,6 @@ import "./styles.scss";
 import ErrorIcon from "../../ErrorIcon";
 import classNames from "classnames";
 import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
-import ClinicalAttributeSelector from "../../clinicalAttributeSelector/ClinicalAttributeSelector";
 import {ResultsViewPageStore} from "../../../../pages/resultsView/ResultsViewPageStore";
 import {ExtendedClinicalAttribute} from "../../../../pages/resultsView/ResultsViewPageStoreUtils";
 import {getNCBIlink} from "../../../api/urls";
@@ -25,6 +24,7 @@ import {GeneBoxType} from "../../GeneSelectionBox/GeneSelectionBox";
 import GeneSelectionBox from "../../GeneSelectionBox/GeneSelectionBox";
 import autobind from "autobind-decorator";
 import {SingleGeneQuery} from "../../../lib/oql/oql-parser";
+import AddClinicalTracks from "../../../../pages/resultsView/oncoprint/AddClinicalTracks";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -412,13 +412,11 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         if (this.props.store && this.props.state.selectedClinicalAttributeIds &&
             this.props.handlers.onChangeSelectedClinicalTracks) {
             return (
-                <div className="clinical-track-selector" style={{position:"relative"}}>
-                    <ClinicalAttributeSelector
-                        store={this.props.store}
-                        selectedClinicalAttributeIds={this.props.state.selectedClinicalAttributeIds}
-                        onChange={this.props.handlers.onChangeSelectedClinicalTracks}
-                    />
-                </div>
+                <AddClinicalTracks
+                    store={this.props.store}
+                    selectedClinicalAttributeIds={this.props.state.selectedClinicalAttributeIds}
+                    onChangeSelectedClinicalTracks={this.props.handlers.onChangeSelectedClinicalTracks}
+                />
             );
         } else {
             return <span/>;
@@ -994,12 +992,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     render() {
         return (
             <div className="oncoprint__controls">
-                <div style={{width:250, marginRight:5, marginTop:-0.5}}>
+                <ButtonGroup>
                     <Observer>
                         {this.getClinicalTracksMenu}
                     </Observer>
-                </div>
-                <ButtonGroup>
                     <Observer>
                         {this.getHeatmapMenu}
                     </Observer>

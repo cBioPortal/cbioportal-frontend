@@ -160,6 +160,7 @@ import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {Group} from "../../shared/api/ComparisonGroupClient";
 import {AppStore} from "../../AppStore";
 import {CLINICAL_TRACKS_URL_PARAM} from "../../shared/components/oncoprint/ResultsViewOncoprint";
+import {getNumSamples} from "../groupComparison/GroupComparisonUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -760,7 +761,7 @@ export class ResultsViewPageStore {
             }
             // add counts for "ComparisonGroup" clinical attributes
             for (const attr of this.clinicalAttributes_comparisonGroupMembership.result!) {
-                ret[attr.clinicalAttributeId] = this.samples.result!.length;
+                ret[attr.clinicalAttributeId] = getNumSamples(attr.comparisonGroup!.data);
             }
             return ret;
         }
