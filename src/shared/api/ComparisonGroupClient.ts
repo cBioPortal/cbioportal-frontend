@@ -61,6 +61,12 @@ export default class ComparisonGroupClient {
             .send(group);
     }
 
+    public getGroup(id:string) {
+        return request
+            .get(`${getComparisonGroupServiceUrl()}/${id}`)
+            .then((res:any)=>res.body);
+    }
+
     public async getGroupsForStudies(studyIds:string[]):Promise<Group[]> {
         await Promise.all(this.getPendingDeletions()); // wait for pending deletions to finish
 
