@@ -168,18 +168,34 @@ export TEST_HOME="$PORTAL_SOURCE_DIR/end-to-end-test"
 source $PORTAL_SOURCE_DIR/env/custom.sh
 cd $TEST_HOME/local/runtime-config
 eval "$(./setup_environment.sh)"
-export CBIOPORTAL_URL='http://localhost:8081/cbioportal'
 cd $PORTAL_SOURCE_DIR
+```
+
+4. Running tests can be executed (a) on the local system or (b) in the docker environment;
+
+(a) local system (best for test development)
+```
+export CBIOPORTAL_URL='http://localhost:8081/cbioportal'
 $TEST_HOME/local/runtime-config/setup_local_context.sh -j -d -p -e # remove flags to exclude specific stages if desired (see below)
+cd $PORTAL_SOURCE_DIR
+./end-to-end-test/local/runtime-config/run_local_screenshot_test.sh # (repeat this step while developing)
 ```
-4. Run the screenshot tests (repeat this step while developing):
+
+(b) docker environment (best for making reference screenshots)
 ```
-./end-to-end-test/local/runtime-config/run_local_screenshot_test.sh
+export CBIOPORTAL_URL='http://cbioportal:8080/cbioportal'
+yarn
+yarn build
+cd $TEST_HOME/local/docker
+./setup_docker_containers.sh -p -d -e # remove flags to exclude specific stages if desired (see below)
+cd $PORTAL_SOURCE_DIR
+$TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
 ```
+
 5. When finished reclaim ports by killing selenium and node servers:
 ```
-killall java -9
-killall node -9
+killall java -9 # reclaims port 4444
+killall node -9 # reclaims port 3000
 ```
 
 ###### Exclude build stages
