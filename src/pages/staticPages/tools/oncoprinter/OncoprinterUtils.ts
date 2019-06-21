@@ -76,7 +76,7 @@ export function initDriverAnnotationSettings(store:OncoprinterStore) {
         cbioportalCount: false,
         cbioportalCountThreshold: 0,
         _oncoKb:true,
-        _ignoreUnknown: false,
+        _excludeVUS: false,
         hotspots: false, // for now
 
         set oncoKb(val:boolean) {
@@ -85,11 +85,11 @@ export function initDriverAnnotationSettings(store:OncoprinterStore) {
         get oncoKb() {
             return AppConfig.serverConfig.show_oncokb && this._oncoKb && !store.didOncoKbFail;
         },
-        set ignoreUnknown(val:boolean) {
-            this._ignoreUnknown = val;
+        set excludeVUS(val:boolean) {
+            this._excludeVUS = val;
         },
-        get ignoreUnknown() {
-            return this._ignoreUnknown && this.driversAnnotated;
+        get excludeVUS() {
+            return this._excludeVUS && this.driversAnnotated;
         },
         get driversAnnotated() {
             const anySelected = this.oncoKb ||
@@ -428,7 +428,7 @@ export function annotateGeneticTrackData(
         cbioportalCountThreshold?:number;
         useHotspots:boolean;
     },
-    ignoreUnknown:boolean
+    excludeVUS:boolean
 ) {
     // build annotater functions
     let getOncoKbCnaAnnotation = (d:OncoprinterGeneticTrackDatum_Data)=>"";
@@ -502,7 +502,7 @@ export function annotateGeneticTrackData(
                 if (d.molecularProfileAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
                     // tag mutations as putative driver, and filter them
                     d.putativeDriver = !!(d.oncoKbOncogenic || (params.useHotspots && d.isHotspot) || getCBioAnnotation(d));
-                    return (!ignoreUnknown || d.putativeDriver);
+                    return (!excludeVUS || d.putativeDriver);
                 } else {
                     return true;
                 }
