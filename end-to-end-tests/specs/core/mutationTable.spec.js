@@ -84,7 +84,7 @@ describe('Mutation Table', function() {
 
         it('should show the gnomad table after mouse over the frequency in gnomad column', ()=>{
 
-            browser.waitForText('//*[text()="TCGA-78-7540-01"]',60000);
+            browser.waitForText('//*[text()="LUAD-B00416-Tumor"]',60000);
             // show the gnomad column
             browser.scroll(1000, 0);
             // click on column button
@@ -94,7 +94,7 @@ describe('Mutation Table', function() {
             // click "GNOMAD"
             browser.click('//*[text()="gnomAD"]');
             // find frequency
-            const frequency = '[data-test2="TCGA-78-7540-01"][data-test="gnomad-column"]';
+            const frequency = '[data-test2="LUAD-B00416-Tumor"][data-test="gnomad-column"]';
             browser.waitForExist(frequency, 60000);
             // wait for gnomad frequency show in the column
             browser.waitUntil(() => {
@@ -102,13 +102,13 @@ describe('Mutation Table', function() {
                 return textFrequency.length >= 1;
             }, 600000, "Frequency data not in Gnoamd column");
             // check if the column has 1.1e-5
-            assert.equal(browser.getText(frequency), '1.1e-5');
+            assert.equal(browser.getText(frequency), '4.1e-6');
             // mouse over the frequency
             browser.moveToObject(frequency,0,0);
             // wait for gnomad table showing up
             browser.waitForExist('[data-test="gnomad-table"]', 300000);
             // check if the first allele number appears
-            let count = browser.getText('//*[text()[contains(.,"23986")]]');
+            let count = browser.getText('//*[text()[contains(.,"15304")]]');
             assert.ok(count.length > 0);
         });
 
