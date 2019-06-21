@@ -29,12 +29,13 @@ import tabularDownload from "./tabularDownload";
 import classNames from 'classnames';
 import FadeInteraction from "public-lib/components/fadeInteraction/FadeInteraction";
 import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/ClinicalDataCache";
-import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "../banners/OqlStatusBanner";
 import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
+import AlterationFilterWarning from "../banners/AlterationFilterWarning";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1013,6 +1014,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                    <AlterationFilterWarning store={this.props.store}/>
                 </div>
 
                 <div className={classNames('oncoprintContainer', { fadeIn: !this.isHidden })}

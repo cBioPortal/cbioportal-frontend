@@ -11,11 +11,12 @@ import DiscreteCNACache from "../../../shared/cache/DiscreteCNACache";
 import { If, Then, Else } from 'react-if';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import { getTrackPairsCountText, getData, getFilteredData, AlteredStatus, getSampleAlteredFilteredMap } from "./MutualExclusivityUtil";
-import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import { OQLLineFilterOutput } from "../../../shared/lib/oql/oqlfilter";
 import MobxPromise from "mobxpromise";
 import {SampleAlteredMap} from "../ResultsViewPageStoreUtils";
 import Pluralize from 'pluralize';
+import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 
 export interface IMutualExclusivityTabProps {
     store?:ResultsViewPageStore;
@@ -88,6 +89,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                                 {this.filteredTrackOqls.length > 0 && (
                                     <div className="alert alert-warning" role="alert">{this.filteredTrackOqlsMessage}</div>
                                 )}
+                                <AlterationFilterWarning store={this.props.store}/>
                             </div>
                         )}
 
@@ -114,8 +116,9 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                 return <div className={"tabMessageContainer"}>
                             <div className={"alert alert-info"}>Mutual exclusivity analysis can only be performed when at least two of the queried genes have been profiled in the queried samples.</div>
                             {this.filteredTrackOqls.length > 0 && (
-                                    <div className="alert alert-warning" role="alert">{this.filteredTrackOqlsMessage}</div>
+                                <div className="alert alert-warning" role="alert">{this.filteredTrackOqlsMessage}</div>
                             )}
+                            {this.props.store && <AlterationFilterWarning store={this.props.store}/>}
                         </div>
             }
         } else {
