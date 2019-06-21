@@ -748,19 +748,19 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 data-test="HideVUS"
                                 type="checkbox"
                                 value={EVENT_KEY.hidePutativePassengers}
-                                checked={!this.props.state.hidePutativePassengers}
+                                checked={this.props.state.hidePutativePassengers}
                                 onClick={this.onInputClick}
                                 disabled={!this.props.state.distinguishDrivers}
-                            /> Show VUS (variants of unknown significance)
+                            /> Hide VUS (variants of unknown significance)
                         </label></div>
                         <div className="checkbox"><label>
                             <input
                                 data-test="HideGermline"
                                 type="checkbox"
                                 value={EVENT_KEY.hideGermlineMutations}
-                                checked={!this.props.state.hideGermlineMutations}
+                                checked={this.props.state.hideGermlineMutations}
                                 onClick={this.onInputClick}
-                            /> Show germline mutations
+                            /> Hide germline mutations
                         </label></div>
                     </div>
                 </div>
