@@ -152,6 +152,22 @@ function executeInBrowser(callback){
     return browser.execute(callback).value;
 }
 
+function checkElementWithTemporaryClass(selectorForChecking, selectorForTemporaryClass, temporaryClass, pauseTime) {
+    browser.execute(function(selectorForTemporaryClass, temporaryClass){
+        $(selectorForTemporaryClass).addClass(temporaryClass);
+    }, selectorForTemporaryClass, temporaryClass);
+    browser.pause(pauseTime);
+    var res = browser.checkElement(selectorForChecking);
+    browser.execute(function(selectorForTemporaryClass, temporaryClass){
+        $(selectorForTemporaryClass).removeClass(temporaryClass);
+    }, selectorForTemporaryClass, temporaryClass);
+    return res;
+}
+
+function checkElementWithMouseDisabled(selector, pauseTime) {
+    return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0);
+}
+
 
 module.exports = {
     waitForOncoprint: waitForOncoprint,
@@ -172,7 +188,9 @@ module.exports = {
     setInputText: setInputText,
     pasteToElement: pasteToElement,
     checkOncoprintElement: checkOncoprintElement,
-    executeInBrowser: executeInBrowser
+    executeInBrowser: executeInBrowser,
+    checkElementWithTemporaryClass: checkElementWithTemporaryClass,
+    checkElementWithMouseDisabled: checkElementWithMouseDisabled
 };
 
 

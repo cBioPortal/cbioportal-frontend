@@ -103,7 +103,7 @@ import {
     annotateMolecularDatum,
     computeCustomDriverAnnotationReport,
     computeGenePanelInformation,
-    computePutativeDriverAnnotatedMutations,
+    filterAndAnnotateMutations,
     CoverageInformation,
     fetchQueriedStudies,
     filterSubQueryData,
@@ -347,7 +347,7 @@ export function extendSamplesWithCancerType(samples:Sample[], clinicalDataForSam
 }
 
 export type DriverAnnotationSettings = {
-    ignoreUnknown: boolean;
+    excludeVUS: boolean;
     cbioportalCount:boolean;
     cbioportalCountThreshold:number;
     cosmicCount:boolean;
@@ -385,7 +385,7 @@ export class ResultsViewPageStore {
             _customBinary: undefined,
             _hotspots:false,
             _oncoKb:false,
-            _ignoreUnknown: false,
+            _excludeVUS: false,
 
             set hotspots(val:boolean) {
                 this._hotspots = val;
@@ -399,11 +399,11 @@ export class ResultsViewPageStore {
             get oncoKb() {
                 return AppConfig.serverConfig.show_oncokb && this._oncoKb && !store.didOncoKbFailInOncoprint;
             },
-            set ignoreUnknown(val:boolean) {
-                this._ignoreUnknown = val;
+            set excludeVUS(val:boolean) {
+                this._excludeVUS = val;
             },
-            get ignoreUnknown() {
-                return this._ignoreUnknown && this.driversAnnotated;
+            get excludeVUS() {
+                return this._excludeVUS && this.driversAnnotated;
             },
             get driversAnnotated() {
                 const anySelected = this.oncoKb ||
@@ -453,6 +453,7 @@ export class ResultsViewPageStore {
     @observable expressionTabSeqVersion: number = 2;
 
     public driverAnnotationSettings:DriverAnnotationSettings;
+    @observable public excludeGermlineMutations = false;
 
     @observable.ref public _selectedEnrichmentMutationProfile: MolecularProfile;
     @observable.ref public _selectedEnrichmentCopyNumberProfile: MolecularProfile;
@@ -519,7 +520,7 @@ export class ResultsViewPageStore {
         this.driverAnnotationSettings.driverTiers = observable.map<boolean>();
         (this.driverAnnotationSettings as any)._oncoKb = !!AppConfig.serverConfig.oncoprint_oncokb_default;
         this.driverAnnotationSettings.hotspots = !!AppConfig.serverConfig.oncoprint_hotspots_default;
-        (this.driverAnnotationSettings as any)._ignoreUnknown = !!AppConfig.serverConfig.oncoprint_hide_vus_default;
+        (this.driverAnnotationSettings as any)._excludeVUS = !!AppConfig.serverConfig.oncoprint_hide_vus_default;
     }
 
     private getURL() {
@@ -939,8 +940,8 @@ export class ResultsViewPageStore {
 
     readonly nonOqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await: ()=>[
-            this.putativeDriverAnnotatedMutations,
-            this.annotatedMolecularData,
+            this.filteredAndAnnotatedMutations,
+            this.filteredAndAnnotatedMolecularData,
             this.selectedMolecularProfiles,
             this.entrezGeneIdToGene
         ],
@@ -948,8 +949,8 @@ export class ResultsViewPageStore {
             const accessors = new AccessorsForOqlFilter(this.selectedMolecularProfiles.result!);
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
             let result:(AnnotatedMutation|AnnotatedNumericGeneMolecularData)[] = [];
-            result = result.concat(this.putativeDriverAnnotatedMutations.result!);
-            result = result.concat(this.annotatedMolecularData.result!);
+            result = result.concat(this.filteredAndAnnotatedMutations.result!);
+            result = result.concat(this.filteredAndAnnotatedMolecularData.result!);
             return Promise.resolve(result.map(d=>{
                 const extendedD:ExtendedAlteration = annotateAlterationTypes(d, accessors);
                 extendedD.hugoGeneSymbol = entrezGeneIdToGene[d.entrezGeneId].hugoGeneSymbol;
@@ -961,16 +962,16 @@ export class ResultsViewPageStore {
 
     readonly oqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await:()=>[
-            this.putativeDriverAnnotatedMutations,
-            this.annotatedMolecularData,
+            this.filteredAndAnnotatedMutations,
+            this.filteredAndAnnotatedMolecularData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery
         ],
         invoke:()=>{
             if (this.rvQuery.oqlQuery.trim() != "") {
                 let data:(AnnotatedMutation|AnnotatedNumericGeneMolecularData)[] = [];
-                data = data.concat(this.putativeDriverAnnotatedMutations.result!);
-                data = data.concat(this.annotatedMolecularData.result!);
+                data = data.concat(this.filteredAndAnnotatedMutations.result!);
+                data = data.concat(this.filteredAndAnnotatedMolecularData.result!);
                 return Promise.resolve(
                         filterCBioPortalWebServiceData(this.rvQuery.oqlQuery, data, (new AccessorsForOqlFilter(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!)
                 );
@@ -1016,15 +1017,15 @@ export class ResultsViewPageStore {
         IQueriedMergedTrackCaseData[]
     >({
         await: () => [
-            this.putativeDriverAnnotatedMutations,
-            this.annotatedMolecularData,
+            this.filteredAndAnnotatedMutations,
+            this.filteredAndAnnotatedMolecularData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
             this.samples,
             this.patients
         ],
         invoke: () => {
-            const data = [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)];
+            const data = [...(this.filteredAndAnnotatedMutations.result!), ...(this.filteredAndAnnotatedMolecularData.result!)];
             const accessorsInstance = new AccessorsForOqlFilter(this.selectedMolecularProfiles.result!);
             const defaultOQLQuery = this.defaultOQLQuery.result!;
             const samples = this.samples.result!;
@@ -1067,8 +1068,8 @@ export class ResultsViewPageStore {
 
     readonly oqlFilteredCaseAggregatedDataByOQLLine = remoteData<IQueriedCaseData<AnnotatedExtendedAlteration>[]>({
         await:()=>[
-            this.putativeDriverAnnotatedMutations,
-            this.annotatedMolecularData,
+            this.filteredAndAnnotatedMutations,
+            this.filteredAndAnnotatedMolecularData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
             this.samples,
@@ -1080,7 +1081,7 @@ export class ResultsViewPageStore {
             } else {
                 const filteredAlterationsByOQLLine:OQLLineFilterOutput<AnnotatedExtendedAlteration>[] = filterCBioPortalWebServiceDataByOQLLine(
                     this.rvQuery.oqlQuery,
-                    [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)],
+                    [...(this.filteredAndAnnotatedMutations.result!), ...(this.filteredAndAnnotatedMolecularData.result!)],
                     (new AccessorsForOqlFilter(this.selectedMolecularProfiles.result!)),
                     this.defaultOQLQuery.result!
                 );
@@ -1189,6 +1190,18 @@ export class ResultsViewPageStore {
                 });
                 return map;
             }, {}));
+        }
+    });
+
+    readonly existUnsequencedSamplesInAGene = remoteData<boolean>({
+        await:()=>[this.samples, this.sequencedSampleKeysByGene],
+        invoke:()=>{
+            const totalSamples = this.samples.result!.length;
+            return Promise.resolve(
+                _.some(this.sequencedSampleKeysByGene.result!, sampleKeys=>{
+                    return sampleKeys.length < totalSamples;
+                })
+            );
         }
     });
 
@@ -1649,7 +1662,7 @@ export class ResultsViewPageStore {
             // use oql filtering in mutations tab only if query contains mutation oql
             mutations = (this.oqlFilteredAlterations.result || []).filter(a=>isMutation(a));
         } else {
-            mutations = this.putativeDriverAnnotatedMutations.result || [];
+            mutations = this.filteredAndAnnotatedMutations.result || [];
         }
         return _.groupBy(mutations,(mutation:Mutation)=>mutation.gene.hugoGeneSymbol);
     }
@@ -2293,18 +2306,22 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly putativeDriverAnnotatedMutations = remoteData<AnnotatedMutation[]>({
+    readonly filteredAndAnnotatedMutations = remoteData<AnnotatedMutation[]>({
         await:()=>[
             this.mutations,
             this.getPutativeDriverInfo,
             this.entrezGeneIdToGene
         ],
         invoke:()=>{
-            return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.driverAnnotationSettings.ignoreUnknown));
+            return Promise.resolve(filterAndAnnotateMutations(
+                this.mutations.result!, this.getPutativeDriverInfo.result!,
+                this.entrezGeneIdToGene.result!, !!this.driverAnnotationSettings.excludeVUS,
+                this.excludeGermlineMutations
+            ));
         }
     });
 
-    public putativeDriverAnnotatedMutationCache =
+    public filteredAndAnnotatedMutationCache =
         new MobxPromiseCache<{entrezGeneId:number}, AnnotatedMutation[]>(
             q=>({
                 await: ()=>[
@@ -2313,12 +2330,16 @@ export class ResultsViewPageStore {
                     this.entrezGeneIdToGene
                 ],
                 invoke: ()=>{
-                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.driverAnnotationSettings.ignoreUnknown));
+                    return Promise.resolve(filterAndAnnotateMutations(
+                        this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!,
+                        this.entrezGeneIdToGene.result!, !!this.driverAnnotationSettings.excludeVUS,
+                        this.excludeGermlineMutations
+                    ));
                 }
             })
         );
 
-    readonly annotatedMolecularData = remoteData<AnnotatedNumericGeneMolecularData[]>({
+    readonly filteredAndAnnotatedMolecularData = remoteData<AnnotatedNumericGeneMolecularData[]>({
         await: ()=>[
             this.molecularData,
             this.entrezGeneIdToGene,
@@ -2334,7 +2355,7 @@ export class ResultsViewPageStore {
                 getOncoKbAnnotation = this.getOncoKbCnaAnnotationForOncoprint.result! as typeof getOncoKbAnnotation;
             }
             const profileIdToProfile = this.molecularProfileIdToMolecularProfile.result!;
-            const ignoreUnknown = !!this.driverAnnotationSettings.ignoreUnknown;
+            const excludeVUS = !!this.driverAnnotationSettings.excludeVUS;
             return Promise.resolve(this.molecularData.result!.reduce((acc:AnnotatedNumericGeneMolecularData[], next)=>{
                     const d = annotateMolecularDatum(
                         next,
@@ -2342,8 +2363,8 @@ export class ResultsViewPageStore {
                         profileIdToProfile,
                         entrezGeneIdToGene
                     );
-                    if (!ignoreUnknown || d.oncoKbOncogenic) { // truthy check - empty string means not driver
-                        // add data if we don't need to filter it out for ignoreUnknown
+                    if (!excludeVUS || d.oncoKbOncogenic) { // truthy check - empty string means not driver
+                        // add data if we don't need to filter it out for excludeVUS
                         acc.push(d);
                     }
                     return acc;
