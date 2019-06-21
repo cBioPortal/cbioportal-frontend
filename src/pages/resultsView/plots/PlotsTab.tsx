@@ -64,7 +64,7 @@ import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
 import {SpecialAttribute} from "../../../shared/cache/ClinicalDataCache";
-import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 import {getTablePlotDownloadData} from "../../../shared/components/plots/TablePlotUtils";
@@ -72,6 +72,7 @@ import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroup
 import MultipleCategoryBarPlot from "../../../shared/components/plots/MultipleCategoryBarPlot";
 import {STUDY_VIEW_CONFIG} from "../../studyView/StudyViewConfig";
 import {RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
+import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 
 enum EventKey {
     horz_logScale,
@@ -799,11 +800,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     readonly mutationPromise = remoteData({
-        await:()=>this.props.store.filteredAndAnnotatedMutationCache.getAll(
+        await:()=>this.props.store.annotatedMutationCache.getAll(
             getMutationQueries(this.horzSelection, this.vertSelection)
         ),
         invoke: ()=>{
-            return Promise.resolve(_.flatten(this.props.store.filteredAndAnnotatedMutationCache.getAll(
+            return Promise.resolve(_.flatten(this.props.store.annotatedMutationCache.getAll(
                 getMutationQueries(this.horzSelection, this.vertSelection)
             ).map(p=>p.result!)).filter(x=>!!x));
         }
@@ -1584,6 +1585,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             <div data-test="PlotsTabEntireDiv">
                 <div className={'tabMessageContainer'}>
                     <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} />
+                    <AlterationFilterWarning store={this.props.store} isUnaffected={true}/>
                 </div>
                 <div className={"plotsTab"} style={{display:"flex"}}>
                     <div className="leftColumn">
