@@ -35,7 +35,7 @@ import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 
 function initStore(appStore:AppStore) {
 
-    const resultsViewPageStore = new ResultsViewPageStore(appStore);
+    const resultsViewPageStore = new ResultsViewPageStore(appStore, getBrowserWindow().globalStores.routing);
 
     resultsViewPageStore.tabId = getTabId(getBrowserWindow().globalStores.routing.location.pathname);
 
