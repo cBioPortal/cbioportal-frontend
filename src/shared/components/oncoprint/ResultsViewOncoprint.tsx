@@ -8,7 +8,7 @@ import OncoprintControls, {
     IOncoprintControlsState
 } from "shared/components/oncoprint/controls/OncoprintControls";
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
-import {ClinicalAttribute, Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
+import {Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {
     getAlteredUids,
     getUnalteredUids,
@@ -34,9 +34,6 @@ import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../lib/getBrowserWindow";
-import MobxPromise from "mobxpromise";
-import {browserHistory} from "react-router";
-import * as JQuery from 'jquery';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -144,7 +141,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             if (samples.length !== patients.length) {
                 this.selectedClinicalAttributeIds.set(SpecialAttribute.NumSamplesPerPatient, true);
             }
-        })
+        });
 
         onMobxPromise(props.store.clinicalAttributes_profiledIn, (result:any[])=>{
             for (const attr of result) {

@@ -25,11 +25,22 @@ export function getAnnotatingProgressMessage(usingOncokb:boolean, usingHotspot:b
     }
 }
 
+export function convertComparisonGroupClinicalAttribute(
+    id:string,
+    groupIdToAttributeId:boolean
+) {
+    if (groupIdToAttributeId) {
+        return `${SpecialAttribute.ComparisonGroupPrefix}_${id}`;
+    } else {
+        return id.substring(SpecialAttribute.ComparisonGroupPrefix.length + 1) // +1 for the underscore
+    }
+}
+
 export function makeComparisonGroupClinicalAttributes(
     comparisonGroups:Group[]
 ):(ClinicalAttribute & {comparisonGroup:Group})[] {
     return comparisonGroups.map(group=>({
-        clinicalAttributeId: `${SpecialAttribute.ComparisonGroupPrefix}_${group.id}`,
+        clinicalAttributeId: convertComparisonGroupClinicalAttribute(group.id, true),
         datatype: "STRING",
         description: `Membership in ${group.data.name}`,
         displayName: `In group: ${group.data.name}`,
