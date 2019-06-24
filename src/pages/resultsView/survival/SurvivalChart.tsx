@@ -26,6 +26,7 @@ import {toSvgDomNodeWithLegend} from "../../studyView/StudyViewUtils";
 import classnames from "classnames";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
 
 export enum LegendLocation {
     TOOLTIP = "tooltip",
@@ -140,8 +141,14 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         }
     }];
 
-    public toSVGDOMNode(): Element {
-        return toSvgDomNodeWithLegend(this.svgContainer.firstChild, ".survivalChartDownloadLegend");
+    public toSVGDOMNode(): SVGElement {
+        return toSvgDomNodeWithLegend(
+            this.svgContainer.firstChild,
+            {
+                legendGroupSelector: ".survivalChartDownloadLegend",
+                selectorToHide: ".survivalChartLegendHideForDownload"
+            }
+        );
     }
 
     @computed
@@ -300,7 +307,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @autobind
     private getSvg() {
-        return this.svgContainer.firstChild;
+        return this.toSVGDOMNode();
     }
 
     @autobind
@@ -437,7 +444,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     {this.scattersAndLines}
                     {this.showLegend &&
                     <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
-                                   data={this.victoryLegendData} />
+                                   data={this.victoryLegendData}
+                                   labelComponent={<TruncatedTextWithTooltipSVG dy="0.3em" maxWidth={256}/>}
+                                   groupComponent={<g className="survivalChartLegendHideForDownload"/>}
+                    />
                     }
                     {this.legendForDownload}
                     {this.pValueText}
