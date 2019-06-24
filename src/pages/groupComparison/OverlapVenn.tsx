@@ -10,7 +10,7 @@ import CreateGroupFromOverlap from "./CreateGroupFromOverlap";
 import GroupComparisonStore from "./GroupComparisonStore";
 import autobind from "autobind-decorator";
 import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
-import {truncateWithEllipsis} from "../../shared/lib/wrapText";
+import {truncateWithEllipsis} from "../../shared/lib/TextTruncationUtils";
 
 export interface IVennProps {
     svgId?: string;
