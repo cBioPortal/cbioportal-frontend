@@ -14,7 +14,7 @@ import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexK
 import {Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {SortableElement} from "react-sortable-hoc";
 import {getTextColor, renderGroupNameWithOrdinal} from "../OverlapUtils";
-import DefaultTooltip, {TOOLTIP_MOUSE_ENTER_DELAY} from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip, {TOOLTIP_MOUSE_ENTER_DELAY_MS} from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import * as ReactDOM from "react-dom";
 import {Popover, Overlay} from "react-bootstrap";
 import classnames from "classnames";
@@ -53,7 +53,7 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
     @autobind
     @action
     private onMouseEnter() {
-        this.hoverTimeout = setTimeout(()=>{ this.hovered = true; }, TOOLTIP_MOUSE_ENTER_DELAY);
+        this.hoverTimeout = setTimeout(()=>{ this.hovered = true; }, TOOLTIP_MOUSE_ENTER_DELAY_MS);
     }
 
     @autobind
