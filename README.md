@@ -140,9 +140,11 @@ In another terminal run the e2e tests
 ```bash
 # set the environment variables you want based on what branch you're branching
 # from
+export SPEC_FILE_PATTERN=./remote/specs/**/*.spec.js
+export SCREENSHOT_DIRECTORY=./remote/screenshots
 export BRANCH_ENV=master # or rc if branching from rc
 # export any custom external API URLs in env/custom.sh
-cd end-to-end-test/remote
+cd end-to-end-test
 yarn install
 yarn run test-webdriver-manager
 ```
