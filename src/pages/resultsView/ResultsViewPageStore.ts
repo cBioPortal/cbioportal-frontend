@@ -87,7 +87,7 @@ import {
     AlterationEnrichment,
     CosmicMutation,
     ExpressionEnrichment,
-    Geneset, 
+    Geneset,
     GenesetDataFilterCriteria,
     GenesetMolecularData
 } from "../../shared/api/generated/CBioPortalAPIInternal";
@@ -2272,11 +2272,11 @@ export class ResultsViewPageStore {
         invoke: () => {
             const res: GeneticEntity[] = [];
             for (const gene of this.genes.result!) {
-                res.push({geneticEntityName: gene.hugoGeneSymbol, geneticEntityType: GeneticEntityType.GENE, 
+                res.push({geneticEntityName: gene.hugoGeneSymbol, geneticEntityType: GeneticEntityType.GENE,
                     geneticEntityId: gene.entrezGeneId, cytoband: gene.cytoband, geneticEntityData: gene});
             }
             for (const geneset of this.genesets.result!) {
-                res.push({geneticEntityName: geneset.name, geneticEntityType: GeneticEntityType.GENESET, 
+                res.push({geneticEntityName: geneset.name, geneticEntityType: GeneticEntityType.GENESET,
                     geneticEntityId: geneset.genesetId, cytoband: "-", geneticEntityData: geneset});
             }
             return Promise.resolve(res);
@@ -3010,7 +3010,7 @@ export class ResultsViewPageStore {
                 (profile:MolecularProfile)=>isRNASeqProfile(profile.molecularProfileId, this.expressionTabSeqVersion)
             ));
         }
-    });
+    },[]);
 
     readonly rnaSeqMolecularData = remoteData<{[hugoGeneSymbol:string]:NumericGeneMolecularData[][]}>({
        await:()=>[
