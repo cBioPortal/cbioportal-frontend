@@ -4,7 +4,7 @@ import {IStringAxisData} from "../../../pages/resultsView/plots/PlotsTabUtils";
 import {computed, observable} from "mobx";
 import {bind} from "bind-decorator";
 import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles, baseLabelStyles} from "../../theme/cBioPoralTheme";
-import {getTextWidth} from "../../lib/wrapText";
+import {getTextWidth} from "../../lib/TextTruncationUtils";
 import autobind from "autobind-decorator";
 import _ from "lodash";
 import {VictoryAxis, VictoryBar, VictoryChart, VictoryLabel, VictoryStack, VictoryLegend, VictoryGroup} from "victory";
