@@ -25,6 +25,12 @@ bin
 target
 end-to-end-test/remote/screenshots/diff
 end-to-end-test/remote/screenshots/screen
+end-to-end-test/remote/screenshots/error
+end-to-end-test/remote/screenshots/junit
+end-to-end-test/local/screenshots/diff
+end-to-end-test/local/screenshots/screen
+end-to-end-test/local/screenshots/error
+end-to-end-test/local/screenshots/junit
 wdio/browserstack.txt
 env/custom.sh
 image-compare/errors.js
