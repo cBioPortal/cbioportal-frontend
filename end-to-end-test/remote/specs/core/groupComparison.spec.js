@@ -1,5 +1,5 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 const SampleCreateGroupButton = 'button[data-test="sampleGroupComparisonCreateGroupButton"]';
