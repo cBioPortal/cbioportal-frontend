@@ -319,11 +319,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:ResultsViewTab.EXPRESSION,
                 hide:()=> {
-                    if (!this.resultsViewPageStore.studies.isComplete) {
-                        return true;
-                    } else {
-                        return this.resultsViewPageStore.studies.result!.length === 1;
-                    }
+                    return this.resultsViewPageStore.expressionProfiles.result.length === 0
+                        || this.resultsViewPageStore.studies.result.length < 2;
                 },
                 getTab: () => {
 
