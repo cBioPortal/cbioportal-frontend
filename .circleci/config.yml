@@ -38,7 +38,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           yarn run e2e
         when: always
         environment:
-          JUNIT_REPORT_PATH: ./junit/
+          JUNIT_REPORT_PATH: ./remote/junit/
           SCREENSHOT_DIRECTORY: ./remote/screenshots
           FRONTEND_TEST_USE_LOCAL_DIST: true
           NO_PARALLEL: true
