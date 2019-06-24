@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -e
-set -v
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -16,7 +15,7 @@ echo UPLOADING ERROR SCREENSHOTS
 # if [[ ${TRAVIS} || ${CIRCLECI} ]]; then
 #     reference_path=$DIR
 # else
-#     reference_path=$DIR
+#     reference_path=...
 # fi
 
 cd ${DIR}/../../$SCREENSHOT_DIRECTORY
