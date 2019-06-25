@@ -31,7 +31,7 @@ import {
 import {ClinicalAttribute, ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
-import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
+import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {getComparisonUrl} from "../../../shared/api/urls";
 import {DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
@@ -53,6 +53,8 @@ const COMPARISON_CHART_TYPES:ChartType[] = [ChartTypeEnum.PIE_CHART, ChartTypeEn
 
 export interface IChartContainerProps {
     chartMeta: ChartMeta;
+    chartType: ChartType;
+    dimension: ChartDimension;
     title: string;
     promise: MobxPromise<any>;
     filters: any;
@@ -101,7 +103,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     constructor(props: IChartContainerProps) {
         super(props);
 
-        this.chartType = this.props.chartMeta.chartType;
+        this.chartType = this.props.chartType;
 
         this.handlers = {
             ref: (plot: AbstractChart) => {
@@ -203,7 +205,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return validChart &&
             this.props.promise.isComplete &&
                 this.props.promise.result!.length > 1 &&
-                (COMPARISON_CHART_TYPES.indexOf(this.props.chartMeta.chartType) > -1);
+                (COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1);
     }
 
     @autobind
@@ -216,7 +218,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @action
     openComparisonPage() {
         if (this.comparisonPagePossible) {
-            switch (this.props.chartMeta.chartType) {
+            switch (this.props.chartType) {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
                     const openComparison = ()=>this.props.openComparisonPage({
@@ -292,8 +294,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         switch (this.chartType) {
             case ChartTypeEnum.PIE_CHART: {
                 return ()=>(<PieChart
-                    width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
-                    height={getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
+                    width={getWidthByDimension(this.props.dimension, this.borderWidth)}
+                    height={getHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                     ref={this.handlers.ref}
                     onUserSelection={this.handlers.onValueSelection}
                     filters={this.props.filters}
@@ -307,8 +309,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.BAR_CHART: {
                 return ()=>(
                     <BarChart
-                        width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
-                        height={getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
+                        width={getWidthByDimension(this.props.dimension, this.borderWidth)}
+                        height={getHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                         ref={this.handlers.ref}
                         onUserSelection={this.handlers.onDataBinSelection}
                         filters={this.props.filters}
@@ -319,8 +321,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.TABLE: {
                 return ()=>(<ClinicalTable
                     data={this.props.promise.result}
-                    width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
-                    height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
+                    width={getWidthByDimension(this.props.dimension, this.borderWidth)}
+                    height={getTableHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                     filters={this.props.filters}
                     onUserSelection={this.handlers.onValueSelection}
                     labelDescription={this.props.chartMeta.description}
@@ -332,8 +334,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 return ()=>(
                     <MutatedGenesTable
                         promise={this.props.promise}
-                        width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
-                        height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
+                        width={getWidthByDimension(this.props.dimension, this.borderWidth)}
+                        height={getTableHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.updateGeneFilters}
@@ -347,8 +349,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 return ()=>(
                     <CNAGenesTable
                         promise={this.props.promise}
-                        width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
-                        height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
+                        width={getWidthByDimension(this.props.dimension, this.borderWidth)}
+                        height={getTableHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.updateCNAGeneFilters}
@@ -383,12 +385,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        disableZoom={true}
                                        showTable={false}
                                        styleOpts={{
-                                           width: getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth),
-                                           height: getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight),
+                                           width: getWidthByDimension(this.props.dimension, this.borderWidth),
+                                           height: getHeightByDimension(this.props.dimension, this.chartHeaderHeight),
                                            tooltipXOffset:10,
                                            tooltipYOffset:-58,
                                            pValue: {
-                                               x:getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)-10,
+                                               x:getWidthByDimension(this.props.dimension, this.borderWidth)-10,
                                                y:30,
                                                textAnchor:"end"
                                            },
@@ -409,14 +411,14 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.SCATTER: {
                 return ()=>(
-                    <div style={{overflow:"hidden", height:getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}}>
+                    <div style={{overflow:"hidden", height:getHeightByDimension(this.props.dimension, this.chartHeaderHeight)}}>
                         {/* have to do all this weird positioning to decrease gap btwn chart and title, bc I cant do it from within Victory */}
                         {/* overflow: "hidden" because otherwise the large SVG (I have to make it larger to make the plot large enough to
                             decrease the gap) will cover the header controls and make them unclickable */}
                         <div style={{marginTop:-33}}>
                             <StudyViewDensityScatterPlot
                                 ref={this.handlers.ref}
-                                width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
+                                width={getWidthByDimension(this.props.dimension, this.borderWidth)}
                                 height={this.getScatterPlotHeight()}
                                 yBinsMin={MutationCountVsCnaYBinsMin}
                                 onSelection={this.props.onValueSelection}
@@ -457,8 +459,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     componentWillReceiveProps(nextProps: Readonly<IChartContainerProps>, nextContext: any): void {
-        if (nextProps.chartMeta.chartType !== this.chartType) {
-            this.chartType = nextProps.chartMeta.chartType;
+        if (nextProps.chartType !== this.chartType) {
+            this.chartType = nextProps.chartType;
         }
     }
 
