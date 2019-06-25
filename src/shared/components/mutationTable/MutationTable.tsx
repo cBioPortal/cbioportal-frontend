@@ -49,6 +49,7 @@ import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
 import HgvscColumnFormatter from "./column/HgvscColumnFormatter";
 import {CancerGene} from "shared/api/generated/OncoKbAPI";
 import GnomadColumnFormatter from "./column/GnomadColumnFormatter";
+import ClinVarColumnFormatter from "./column/ClinVarColumnFormatter";
 
 export interface IMutationTableProps {
     studyIdToStudy?: {[studyId:string]:CancerStudy};
@@ -125,7 +126,8 @@ export enum MutationTableColumnType {
     NUM_MUTATIONS,
     EXON,
     HGVSC,
-    GNOMAD
+    GNOMAD,
+    CLINVAR
 }
 
 type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=>boolean};
@@ -544,6 +546,18 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             download: (d:Mutation[]) => GnomadColumnFormatter.download(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
             tooltip: (<span><a href="https://gnomad.broadinstitute.org/">gnomAD</a> population allele frequencies. 
             Overall population allele frequency is shown. Hover over a frequency to see the frequency for each specific population.</span>),
+            defaultSortDirection: "desc",
+            visible: false,
+            align: "right"
+        };
+
+        this._columns[MutationTableColumnType.CLINVAR] = {
+            name: "ClinVar ID",
+            render: (d:Mutation[]) => ClinVarColumnFormatter.renderFunction(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+            sortBy: (d:Mutation[]) => ClinVarColumnFormatter.getSortValue(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+            download: (d:Mutation[]) => ClinVarColumnFormatter.download(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+            tooltip: (<span><a href="https://www.ncbi.nlm.nih.gov/clinvar/" target="_blank">ClinVar</a>
+            &nbsp;aggregates information about genomic variation and its relationship to human health.</span>),
             defaultSortDirection: "desc",
             visible: false,
             align: "right"
