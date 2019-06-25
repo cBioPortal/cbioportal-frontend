@@ -11,6 +11,7 @@ import GnomadColumnFormatter from "shared/components/mutationTable/column/Gnomad
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
+    totalNumberOfExons?:string;
 }
 //
 @observer
@@ -108,5 +109,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         // customization for columns
         this._columns[MutationTableColumnType.EXON].render = 
             (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, false));
+        this._columns[MutationTableColumnType.EXON].headerRender = 
+            () => <span style = {{display:'inline-block'}}>Exon<br/>({this.props.totalNumberOfExons} in total)</span>;
     }
 }
