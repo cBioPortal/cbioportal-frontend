@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from 'shared/theme/cBioPoralTheme';
 import autobind from 'autobind-decorator';
 import {ComparisonGroup} from './GroupComparisonUtils';
-import {getTextWidth, truncateWithEllipsis} from 'shared/lib/wrapText';
+import {getTextWidth, truncateWithEllipsis} from 'shared/lib/TextTruncationUtils';
 import {tickFormatNumeral} from 'shared/components/plots/TickUtils';
 import {joinGroupNames, regionIsSelected, toggleRegionSelected} from './OverlapUtils';
 import {capitalize, pluralize} from 'shared/lib/StringUtils';
