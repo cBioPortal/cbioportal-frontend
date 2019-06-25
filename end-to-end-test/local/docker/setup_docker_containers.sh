@@ -185,7 +185,7 @@ load_studies_in_db() {
         -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
         $backend_image_name \
         python3 /cbioportal/core/src/main/scripts/importer/metaImport.py \
-        --url_server "http://$E2E_CBIOPORTAL_HOST_NAME:8080/cbioportal" \
+        --url_server "http://$E2E_CBIOPORTAL_HOST_NAME:8080" \
         --study_directory /cbioportal/core/src/test/scripts/test_data/study_es_0 \
         --override_warning
 
@@ -199,7 +199,7 @@ load_studies_in_db() {
             -v "$DIR:/study:ro" \
             $backend_image_name \
             python3 /cbioportal/core/src/main/scripts/importer/metaImport.py \
-            --url_server "http://$E2E_CBIOPORTAL_HOST_NAME:8080/cbioportal" \
+            --url_server "http://$E2E_CBIOPORTAL_HOST_NAME:8080" \
             --study_directory /study \
             --override_warning
     done
