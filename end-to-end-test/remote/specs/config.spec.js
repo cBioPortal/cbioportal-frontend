@@ -1,5 +1,5 @@
 var assert = require('assert');
-var executeInBrowser = require('../../specUtils').executeInBrowser;
+var executeInBrowser = require('../../shared/specUtils').executeInBrowser;
 var goToUrlAndSetLocalStorage = require('../../shared/specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
