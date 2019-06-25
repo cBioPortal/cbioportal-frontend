@@ -128,7 +128,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @computed
     get genomicDataOptions(): ChartOption[] {
-        const genomicDataOptions = getOptionsByChartMetaDataType(ChartMetaDataTypeEnum.GENOMIC, this.props.store.chartMetaSet, this.selectedAttrs);
+        const genomicDataOptions = getOptionsByChartMetaDataType(ChartMetaDataTypeEnum.GENOMIC, this.props.store.chartMetaSet, this.selectedAttrs, this.props.store.chartsType.toJS());
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             return genomicDataOptions.filter(option => option.chartType === ChartTypeEnum.BAR_CHART || option.chartType === ChartTypeEnum.PIE_CHART);
         } else {
@@ -138,7 +138,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @computed
     get clinicalDataOptions(): ChartOption[] {
-        return getOptionsByChartMetaDataType(ChartMetaDataTypeEnum.CLINICAL, this.props.store.chartMetaSet, this.selectedAttrs);
+        return getOptionsByChartMetaDataType(ChartMetaDataTypeEnum.CLINICAL, this.props.store.chartMetaSet, this.selectedAttrs, this.props.store.chartsType.toJS());
     }
 
     @computed
