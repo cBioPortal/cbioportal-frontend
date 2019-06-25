@@ -10,13 +10,13 @@ import Portal from "react-portal";
 
 export interface ITruncatedTextSVGProps {
     text?:string;
+    prefixTspans?:any;
     maxWidth?:number;
     suffix?:string;
     tooltip?:(datum:any)=>JSX.Element;
     tooltipPlacement?:string;
     dy?:any;
     //victory
-    data?:any;
     datum?:any;
     style?:{
         fontSize:number;
@@ -84,17 +84,21 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
     }
 
     render() {
-        const {text, maxWidth, data, datum, suffix, tooltip,
+        const {text, maxWidth, datum, suffix, tooltip,
             tooltipPlacement, ...rest} = this.props;
         return (
             <>
                 <text
-                    {...rest}
                     onMouseOver={this.onMouseOver}
                     onMouseOut={this.onMouseOut}
                     onMouseMove={this.onMouseMove}
+                    {...rest}
                 >
-                    {this.textReport.text}
+                    {this.props.prefixTspans}
+                    <tspan
+                    >
+                        {this.textReport.text}
+                    </tspan>
                 </text>
                 {this.textReport.truncated && this.tooltipOpen && (
                     <Portal isOpened={true} node={document.body}>
