@@ -90,23 +90,28 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                 data-test={`groupSelectorButton${group.ordinal}`}
             >
                 <span style={{display:"flex", alignItems:"center"}}>
-                    <span
+                    <div
                         style={{display:"flex", alignItems:"center"}}
                         onClick={()=>this.props.onClick(group.name)}
                     >
-                        <EllipsisTextTooltip
+                        <div
+                            className="text-with-ellipsis"
                             style={{
                                 display:"inline-block",
-                                color:getTextColor(group.color)
+                                color:getTextColor(group.color),
+                                maxWidth:100
                             }}
-                            text={renderGroupNameWithOrdinal(group)}
-                            shownWidth={100}
-                        />
+                        >
+                            {renderGroupNameWithOrdinal(group)}
+                        </div>
                         &nbsp;
                         <span style={{color:getTextColor(group.color)}}>
-                            {caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
+                            ({ sampleIdentifiers.length === patientIdentifiers.length ?
+                                sampleIdentifiers.length :
+                                `${sampleIdentifiers.length}/${patientIdentifiers.length}`
+                            })
                         </span>
-                    </span>
+                    </div>
                     {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
                     {this.props.deletable && (
                         <div
@@ -124,7 +129,7 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                         </div>
                     )}
                 </span>
-                {this.button && this.props.excludedFromAnalysis && (ReactDOM as any).createPortal(
+                {this.button && (ReactDOM as any).createPortal(
                     <Overlay
                         rootClose
                         placement="top"
@@ -135,9 +140,14 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                             arrowOffsetTop={17}
                             className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)}
                         >
-                            <div style={{maxWidth:300, whiteSpace:"initial"}}>
-                                This group is a subset of the other selected groups, so it's excluded from analysis, and not considered in overlap calculations.
+                            <div>
+                                {renderGroupNameWithOrdinal(group)}&nbsp;{caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
                             </div>
+                            {this.props.excludedFromAnalysis && (
+                                <div style={{maxWidth:300, whiteSpace:"initial", marginTop:5}}>
+                                    This group is a subset of the other selected groups, so it's excluded from analysis, and not considered in overlap calculations.
+                                </div>
+                            )}
                         </Popover>
                     </Overlay>,
                     document.body
