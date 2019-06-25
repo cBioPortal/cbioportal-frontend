@@ -192,20 +192,7 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
             }
 
             return [hoverArea];
-        }).concat(_.sortBy(this.regions.filter(r=>r.combination.length === 1), r=>-r.vennJsSize).map(r=>{
-            // draw the outlines of the circles
-            const uid = this.props.groups[r.combination[0]].uid;
-            return (
-                <circle
-                    cx={this.circleCenters[uid].x}
-                    cy={this.circleCenters[uid].y}
-                    r={this.circleRadii[uid]}
-                    fill="none"
-                    stroke={r.color}
-                    strokeWidth={2}
-                />
-            );
-        }))).concat(_.flattenDeep<any>(this.regions.map(region=>{
+        })).concat(_.flattenDeep<any>(this.regions.map(region=>{
             if (region.numCases === 0) {
                 return [];
             }
@@ -246,6 +233,21 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
             ];
         })));
 
+        const circleOutlines = _.sortBy(this.regions.filter(r=>r.combination.length === 1), r=>-r.vennJsSize).map(r=>{
+            // draw the outlines of the circles
+            const uid = this.props.groups[r.combination[0]].uid;
+            return (
+                <circle
+                    cx={this.circleCenters[uid].x}
+                    cy={this.circleCenters[uid].y}
+                    r={this.circleRadii[uid]}
+                    fill="none"
+                    stroke={r.color}
+                    strokeWidth={2}
+                />
+            );
+        });
+
         return (
             <>
                 <filter id="whiteFilter">
@@ -273,6 +275,9 @@ export default class VennSimple extends React.Component<IVennSimpleProps, {}> {
                 {clipPaths}
                 <g mask={`url(#${nonZeroClipPathId})`}>
                     {elements}
+                </g>
+                <g>
+                    {circleOutlines}
                 </g>
             </>
         );
