@@ -8,7 +8,7 @@ import autobind from 'autobind-decorator';
 import {ComparisonGroup} from './GroupComparisonUtils';
 import {getTextWidth, truncateWithEllipsis} from 'public-lib/lib/TextTruncationUtils';
 import {tickFormatNumeral} from 'shared/components/plots/TickUtils';
-import {joinGroupNames, regionIsSelected, toggleRegionSelected} from './OverlapUtils';
+import {joinGroupNames, regionIsSelected, renderGroupNameWithOrdinal, toggleRegionSelected} from './OverlapUtils';
 import {capitalize, pluralize} from 'public-lib/lib/StringUtils';
 import {getPlotDomain} from './UpSetUtils';
 import * as ReactDOM from "react-dom";
@@ -17,6 +17,8 @@ import classnames from "classnames";
 import styles from "../resultsView/survival/styles.module.scss";
 import Timer = NodeJS.Timer;
 import WindowStore from "../../shared/components/window/WindowStore";
+import invertIncreasingFunction from "../../shared/lib/invertIncreasingFunction";
+import TruncatedTextWithTooltipSVG from "../../shared/components/TruncatedTextWithTooltipSVG";
 
 export interface IUpSetProps {
     groups: {
@@ -36,10 +38,37 @@ const DEFAULT_BOTTOM_PADDING = 10;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const BAR_WIDTH = 10;
 const DEFAULT_SCATTER_DOT_COLOR = "#efefef"
+const MAX_LABEL_WIDTH = 200;
 
 const BarComponent = (props:any)=>(
     <Bar className={`${props.caseType}_${_.sortBy(props.datum.groups).join("_")}_bar`} {...props}/>
 );
+
+const GroupTickLabelComponent = (props:any)=>{
+    const {categoryCoordToGroup, datum, text, ...rest} = props;
+    const group = categoryCoordToGroup(props.text);
+    return (
+        <TruncatedTextWithTooltipSVG
+            text={group!.name}
+            prefixTspans={[
+                <tspan>(</tspan>,
+                <tspan style={{fontWeight:"bold"}}>{group!.ordinal}</tspan>,
+                <tspan>) </tspan>
+            ]}
+            datum={group}
+            tooltip={(group:ComparisonGroup)=>{
+                return (
+                    <div>
+                        {renderGroupNameWithOrdinal(group)}
+                    </div>
+                );
+            }}
+            maxWidth={MAX_LABEL_WIDTH}
+            dy="0.4em"
+            {...rest}
+        />
+    );
+};
 
 @observer
 export default class UpSet extends React.Component<IUpSetProps, {}> {
@@ -211,9 +240,10 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     @computed get biggestCategoryLabelSize() {
-        return Math.max(
+        const rawLabel = Math.max(
             ..._.map(this.usedGroups, group => getTextWidth(group.nameWithOrdinal, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize + "px"))
         );
+        return Math.min(rawLabel, MAX_LABEL_WIDTH);
     }
 
     @computed get svgWidth() {
@@ -247,6 +277,16 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     @autobind
     private categoryCoord(index: number) {
         return index * (this.barWidth() + this.barSeparation()); // half box + separation + half box
+    }
+
+    @autobind
+    private categoryCoordToGroup(coord:number) {
+        const index = Math.round(invertIncreasingFunction(
+            this.categoryCoord,
+            coord,
+            [0,this.usedGroups.length]
+        ));
+        return this.usedGroups[index];
     }
 
     @computed get groupCombinationSets() {
@@ -539,7 +579,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     offsetX={50}
                                     dependentAxis
                                     crossAxis={false}
-                                    tickFormat={this.groupTick}
+                                    tickLabelComponent={<GroupTickLabelComponent categoryCoordToGroup={this.categoryCoordToGroup}/>}
                                     tickValues={this.groupTickValues}
                                     style={{
                                         axis: { strokeWidth: 0 },
