@@ -102,17 +102,17 @@ build_cbioportal_image() {
 
     curdir=$PWD
 
-    cd /tmp
-    rm -rf cbioportal
-    git clone --depth 1 -b $BACKEND_BRANCH "https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git"
-    docker stop $E2E_CBIOPORTAL_HOST_NAME 2> /dev/null && docker rm $E2E_CBIOPORTAL_HOST_NAME  2> /dev/null
-    cp $TEST_HOME/local/docker/Dockerfile cbioportal
-    cp $TEST_HOME/local/runtime-config/portal.properties cbioportal
-    cd cbioportal
-    docker rm cbioportal-endtoend-image 2> /dev/null || true
-    cp $TEST_HOME/local/docker/catalina_server.xml.patch .
-    docker build -f Dockerfile -t cbioportal-endtoend-image . \
-        --build-arg SESSION_SERVICE_HOST_NAME=$SESSION_SERVICE_HOST_NAME
+    # cd /tmp
+    # rm -rf cbioportal
+    # git clone --depth 1 -b $BACKEND_BRANCH "https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git"
+    # docker stop $E2E_CBIOPORTAL_HOST_NAME 2> /dev/null && docker rm $E2E_CBIOPORTAL_HOST_NAME  2> /dev/null
+    # cp $TEST_HOME/local/docker/Dockerfile cbioportal
+    # cp $TEST_HOME/local/runtime-config/portal.properties cbioportal
+    # cd cbioportal
+    # docker rm cbioportal-endtoend-image 2> /dev/null || true
+    # cp $TEST_HOME/local/docker/catalina_server.xml.patch .
+    # docker build -f Dockerfile -t cbioportal-endtoend-image . \
+    #     --build-arg SESSION_SERVICE_HOST_NAME=$SESSION_SERVICE_HOST_NAME
     
     # cd /tmp
     # rm -rf cbioportal
@@ -120,15 +120,15 @@ build_cbioportal_image() {
     # docker stop $E2E_CBIOPORTAL_HOST_NAME 2> /dev/null && docker rm $E2E_CBIOPORTAL_HOST_NAME  2> /dev/null
     # docker rm $backend_image_name 2> /dev/null || true
     
-    # # rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images
-    # # update the reference to the corresponding image name when prebuilt image exists
-    # if [[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] ); then
-    #     backend_image_name="cbioportal/cbioportal:$BACKEND_BRANCH"
-    # else
-    #     docker build https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git#$BACKEND_BRANCH \
-    #         -f docker/web-and-data/Dockerfile \
-    #         -t $backend_image_name
-    # fi
+    # rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images
+    # update the reference to the corresponding image name when prebuilt image exists
+    if [[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] ); then
+        backend_image_name="cbioportal/cbioportal:$BACKEND_BRANCH"
+    else
+        docker build https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git#$BACKEND_BRANCH \
+            -f docker/web-and-data/Dockerfile \
+            -t $backend_image_name
+    fi
 
     cd $curdir
 }
@@ -144,8 +144,15 @@ run_cbioportal_container() {
         --name=$E2E_CBIOPORTAL_HOST_NAME \
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+        -e JAVA_OPTS="
+            -Xms2g
+            -Xmx4g
+            -Dauthenticate=noauthsessionservice
+            -Dsession.service.url=http://$SESSION_SERVICE_HOST_NAME:5000/api/sessions/my_portal/
+        " \
         -p 8081:8080 \
-        $backend_image_name
+        $backend_image_name \
+        /bin/sh -c 'java ${JAVA_OPTS} -jar webapp-runner.jar /app.war'
     
     sleeptime=0
     maxtime=180

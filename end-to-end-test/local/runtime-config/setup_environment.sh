@@ -5,7 +5,7 @@ set -e
 # -+-+-+-+-+-+-+ ENVIRONMENTAL VARIABLES +-+-+-+-+-+-+-
 
 echo export E2E_CBIOPORTAL_HOST_NAME=cbioportal
-echo export CBIOPORTAL_URL="http://cbioportal:8080/cbioportal"
+echo export CBIOPORTAL_URL="http://cbioportal:8080"
 echo export DOCKER_NETWORK_NAME=endtoend_localdb_network
 echo export SESSION_SERVICE_HOST_NAME=cbio-session-service
 echo export SCREENSHOT_IMAGE_NAME=cbio-screenshot
