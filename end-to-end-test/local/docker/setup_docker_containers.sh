@@ -234,10 +234,11 @@ run_session_service() {
         -e MONGO_INITDB_DATABASE=session_service \
         mongo:4.0
 
-    docker stop cbio-session-service && docker rm cbio-session-service
-    docker run -d --name=cbio-session-service --net=$DOCKER_NETWORK_NAME -p 8084:8080 \
+    docker stop $SESSION_SERVICE_HOST_NAME && docker rm $SESSION_SERVICE_HOST_NAME
+    docker run -d --name=$SESSION_SERVICE_HOST_NAME --net=$DOCKER_NETWORK_NAME \
+        -e SERVER_PORT=5000 \
         -e JAVA_OPTS="-Dspring.data.mongodb.uri=mongodb://mongoDB:27017/session-service" \
-        thehyve/cbioportal-session-service:cbiov2.1.0
+    cbioportal/session-service:latest
 }
 
 build_e2e_image() {
