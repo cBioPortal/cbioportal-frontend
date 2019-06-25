@@ -36,6 +36,27 @@
   }
 }
 
+.oncoprintAddClinicalTracks {
+  > .tab-content {
+    padding:10px 0 5px 0 !important;
+
+    > .msk-tab {
+      padding-left:5px !important;
+      padding-right:5px !important;
+
+      .ReactVirtualized__Table > * {
+        width:100% !important;
+      }
+    }
+  }
+}
+
+.oncoprintAddClinicalTracksDropdown {
+  .rc-tooltip-arrow {
+    border:none !important;
+  }
+}
+
 .oncoprintContainer {
   border: none !important;
   padding: 0 !important;
