@@ -205,13 +205,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                         ) : '-'}
                     </span>
                 </div>
-                <div style={{paddingTop:"1em"}}>
-                    <span data-test="GeneSummaryNrOfExons">
-                        Number of Exons: {transcript && transcript.exons && transcript.exons.length > 0? (
-                            transcript.exons.length
-                        ) : '-'}
-                    </span>
-                </div>
             </div>
         );
     }
