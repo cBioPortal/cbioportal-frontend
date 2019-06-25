@@ -95,7 +95,7 @@ describe("oncoprint screenshot tests", function() {
 });
 
 describe("sorting", function(){
-    this.retries(0);
+
     function getNthTrackOptionsElements(n) {
         // n is one-indexed
 
@@ -127,10 +127,15 @@ describe("sorting", function(){
 
         browser.click('[data-test="StudySelect"] input');
 
+        browser.click('a=Query By Gene');
+
+        browser.pause(1000);
+
         // query KRAS NRAS BRAF
         $('[data-test="geneSet"]').setValue('KRAS NRAS BRAF');
 
         browser.waitForEnabled('[data-test="queryButton"]', 30000);
+
         browser.click('[data-test="queryButton"]');
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
@@ -164,14 +169,19 @@ describe("sorting", function(){
 
         var checkBox = $('[data-test="StudySelect"]');
 
-        checkBox.waitForExist(10000);
+        checkBox.waitForExist(500);
 
         browser.click('[data-test="StudySelect"] input');
+
+        browser.click('a=Query By Gene');
+
+        //browser.pause(500);
 
         // query KRAS NRAS BRAF
         $('[data-test="geneSet"]').setValue('TP53 MDM2 MDM4');
 
         browser.waitForEnabled('[data-test="queryButton"]', 30000);
+
         browser.click('[data-test="queryButton"]');
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
