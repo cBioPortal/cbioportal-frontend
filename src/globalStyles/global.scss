@@ -612,3 +612,10 @@ h3.hr {
   color:#ffA500;
   text-decoration: none;
 }
+
+.text-with-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  -ms-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+}
