@@ -113,7 +113,11 @@ localStorage.setItem("heroku", "cbioportal-frontend-pr-x")
 ```
 Change `x` to the number of your pull request.
 
-## Run e2e tests
+## Run e2e-tests
+
+E2e-tests can be run against public cbioportal instances or against a local dockerized backend. These two e2e-tests types are referred to as `remote` and `local` types of e2e-tests.
+
+## Run of `remote e2e-tests`
 
 Install webdriver-manager, which manages standalone Selenium installation:
 ```
@@ -125,7 +129,7 @@ webdriver-manager update
 ```
 Start the webdriver-manager
 ```
-webdriver-manager start
+webdriver-manager start # ...or `startSSL` (see below)
 ```
 In one terminal run frontend (this will get mounted inside whatever
 `CBIOPORTAL_URL` is pointing to)
@@ -146,25 +150,28 @@ export BRANCH_ENV=master # or rc if branching from rc
 # export any custom external API URLs in env/custom.sh
 cd end-to-end-test
 yarn install
-yarn run test-webdriver-manager
+yarn run test-webdriver-manager # use `test-webdriver-manager-debug` for debugging of tests
 ```
 
-## Local cBioPortal database for e2e-tests
-To enable e2e-tests on for features that depend on data that are not included in studies served by the public cBioPortal instance, cbioportal-frontend provides the `e2e local database` (refered to as _e2e-localdb_ below) facility that allows developers to load custom studies used for e2e-tests. CircleCI runs the `e2e local database` tests as a separate job.
+### Mount of frontend onto HTTPS backend
+A custom frontend can be tested against any backend in the web browser using a local node server (command `yarn run start`) and the `localdev` flag passed to th e browser (see section 'Check in cBioPortal context'). For remote backends that communicate over a HTTP over SSL (https) connection (e.g., cbioportal.org or rc.cbioportal.org), the frontend has to be served over SSL as well. In this case run `yarn run startSSL` in stead of `yarn run start`.
 
-Files for the local database e2e tests are located in the `./end-to-end-test/local` directory of cbioportal-frontend. The directory structure of `./end-to-end-test/local` is comparable to that of the `./end-to-end-test/remote` directory used for e2e tests against public cBioPortal.
+## Run of `local e2e-tests`
+To enable e2e-tests on for features that depend on data that are not included in studies served by the public cBioPortal instance, cbioportal-frontend provides the `e2e local database` (refered to as _e2e-localdb_ or _local e2e_ in this text) facility that allows developers to load custom studies in any backend version used for e2e-tests. CircleCI runs the `e2e-localdb` tests as a separate job.
+
+Files for the local database e2e-tests are located in the `./end-to-end-test/local` directory of cbioportal-frontend. The directory structure of `./end-to-end-test/local` is comparable to that of the `./end-to-end-test/remote` directory used for e2e-tests against remote public cBioPortal instances.
 
 ### Contexts for e2e-localdb tests
-E2e-tests can run in local context (workstation for software development) or CircleCI context (for continuous integration testing). On CircleCI e2e-tests can be conducted on commits that are in- or outside the context of a pull request. These contexts are refered to below as _Local_, _CircleCi_ and _CircleCI+PR_ context.
+E2e-tests can run in _local context_ (workstation for software development) or _CircleCI context_ (for continuous integration testing). On CircleCI, e2e-tests can be conducted on commits that are inside or outside the context of a pull request. These different contexts for _e2e-localdb_ tests are refered to below as _Local_, _CircleCi_ and _CircleCI+PR_ contexts, respectively.
 
-#### Running e2e-localdb tests in _Local_ context
-Running of e2e-localdb tests in _Local_ context follows the procedure as defined in `.circleci/config.yml`, differs only in that the e2e-tests are not run in a docker environment, but on the local system directly. The `end-to-end-test/local/runtime-config/run_local_test.sh` shell script is included to facilitate local development. Prior to running the script several environmental variables should be set. For local development follow these steps:
+### Running e2e-localdb tests in _Local_ context for development
+Running of e2e-localdb tests in _Local_ context in essence follows the procedure as defined in `.circleci/config.yml`. In _Local_ context the e2e-localdb tests can be run in a dockerized environment (usefull for generating screenshots) or directly on the host sytem. The `end-to-end-test/local/runtime-config/run_container_screenshot_test.sh` script is included to run e2e-local tests in a dockerized environment in _Local_ context. The `end-to-end-test/local/runtime-config/run_local_screenshot_test.sh` is included to run e2e-local tests on the host system directly in _Local_ context. Prior to running the script several environmental variables should be set. For local development follow these steps:
 
 1. Add `export BACKEND=cbioportal:rc` (or other backend branch) to `/env/custom.sh`.
 2. Make sure the last commit is pushed to _origin_ repo (needed by jitpack).
 3. Setup a local docker container environment: 
 
-```
+```bash
 export PORTAL_SOURCE_DIR=~/git/cbioportal-frontend # change path if needed
 export TEST_HOME="$PORTAL_SOURCE_DIR/end-to-end-test"
 source $PORTAL_SOURCE_DIR/env/custom.sh
@@ -176,7 +183,7 @@ cd $PORTAL_SOURCE_DIR
 4. Running tests can be executed (a) on the local system or (b) in the docker environment;
 
 (a) local system (best for test development)
-```
+```bash
 export CBIOPORTAL_URL='http://localhost:8081/cbioportal'
 $TEST_HOME/local/runtime-config/setup_local_context.sh -j -d -p -e # remove flags to exclude specific stages if desired (see below)
 cd $PORTAL_SOURCE_DIR
@@ -184,7 +191,7 @@ cd $PORTAL_SOURCE_DIR
 ```
 
 (b) docker environment (best for making reference screenshots)
-```
+```bash
 export CBIOPORTAL_URL='http://cbioportal:8080/cbioportal'
 yarn
 yarn build
@@ -195,33 +202,22 @@ $TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
 ```
 
 5. When finished reclaim ports by killing selenium and node servers:
-```
+```bash
 killall java -9 # reclaims port 4444
 killall node -9 # reclaims port 3000
 ```
 
-###### Exclude build stages
+#### Inclusion of specific build stages
 Setup of the local context involves building of the local frontend code, building of the cbioportal database, building the cbioportal application, building the e2e service and the start of all docker containers. During rebuilding of the development environment the developer can specify which stept should be executed by providing `-j` (building of frontent code), `-d` (building of database), `-p` (building of cbioportal), and/or `-e` (building of e2e service) flags to the `setup_local_context.sh` script. For instance, to rebuild the database and start all containers the script can be executed as:
 ```
 ./end-to-end-test/local/runtime-config/setup_local_context.sh -d
 ```
-When no parameters are passed, no build steps are executed (only start of containers).
+When no parameters are passed, no build steps are executed (only (re)start of containers).
 
-#### Writing e2e tests
-Note: these are random topics that I encountered while developing e2e-tests. These should be reorganized in a better structured document.
-- screenshot tests and DOM-based tests are contained in files that end with *.screenshot.spec.js or *.spec.js, respectively.
-- Screenshot tests should only be used to test components that cannot be accessed via the DOM.
-- For DOM selection webdriverio selectors are used. Although overlapping with jQuery selectors and both using the '$' notation these methods are not equivalent. See [this link](https://blog.kevinlamping.com/selecting-elements-in-webdriverio/) for more information on webdriverio selectors.
-- At the moment of this writing webdriverio v4 is used. Selectors for this version are not fully compatible with webdriverio v5. For instance, selecting of a element with id _test_ `$('id=test')` does not work; this should be `$([id=test])`. I was not able to find documentation of v4 selectors.
-- e2e tests use the node.js _assert_ library for assertions. It has an API that is different API from _chai_ assertion library used in unit tests of cbioportal-frontend! See the [assert documentation](https://nodejs.org/api/assert.html) for information on _assert_ API.
-- Screenshots for failing tests are placed in the screenshots/error folder. These are a valuable asset to debug tests on when developing in _Local_ context.
-- A great tool for test development is the ability of webdriverio to pause execution with `browser.debug()`. When placing this command in the test code and using the `run_local_screenshot_test.sh` facility, a prompt becomes available on the command line that allows testing of DOM selectors in the webbrowser. In addition, the browser window is available on screen; opening of DevTools allows to explore the DOM and observe the effects of webdriverio commands on the command line.
-- <use waitForVisible/waitForExits ... to prevent brittle tests>
-
-#### Running e2e-localdb tests _CircleCI_ or _CircleCI+PR_ context
+### Running e2e-localdb tests _CircleCI_ or _CircleCI+PR_ context
 E2e-tests on _CircleCI_ and _CircleCI+PR_ context are triggered via _hooks_ configured on GitHub. Configuration of hooks falls beyond the scope of this manual.
 
-### cBioPortal-backend version
+#### cBioPortal-backend version
 E2e-testing against a local database removes dependence on data provided by public cbioportal instances for testing. This makes it possible to test features for data types that are not provided by public cbioportal instances or test features that depend on a backend feature not yet integrated in  public cbioportal instances. E2e-localdb tests make use of the `BACKEND` environmental variable to test against a specific backend version. Depending on the running context (see section above) setting the `BACKEND` environmental variable is required or optional (see table below).
 
 Requirement for setting the BACKEND variable depends on the context of the job:
@@ -238,14 +234,31 @@ Using the `BACKEND` variable e2e-localdb tests can be conducted against any back
 
 When the `BACKEND` variable is not set, the backend version will be set to the target branch of the pull request, i.e. a pull request to 'rc' branch will be tested against the 'rc' branch of the backend.
 
-### Create new e2e-test
+#### Writing e2e tests
+Some random remarks on e2e-test development
+- Screenshot tests and DOM-based tests are contained in files that end with *.screenshot.spec.js or *.spec.js, respectively.
+- Screenshot tests should only be used to test components that cannot be accessed via the DOM.
+- Screenshots should cover as little of the page possible to test behavior. Larger screenshots will make it more likely the screenshot will need to be updated when an unrelated feature is modified. 
+- For DOM selection webdriverio selectors are used. Although overlapping with jQuery selectors and both using the '$' notation these methods are not equivalent. See [this link](https://blog.kevinlamping.com/selecting-elements-in-webdriverio/) for more information on webdriverio selectors.
+- At the moment of this writing webdriverio v4 is used. Selectors for this version are not fully compatible with webdriverio v5. For instance, selecting of a element with id _test_ `$('id=test')` does not work; this should be `$([id=test])`. I was not able to find documentation of v4 selectors.
+- e2e tests use the node.js _assert_ library for assertions. It has an API that is different API from _chai_ assertion library used in unit tests of cbioportal-frontend! See the [assert documentation](https://nodejs.org/api/assert.html) for information on _assert_ API.
+- Screenshots for failing tests are placed in the `screenshots/diff` and `screenshots/error` folders. These are a valuable asset to debug tests on when developing in _Local_ context.
+- A great tool for test development is the ability of webdriverio to pause execution with `browser.debug()`. When placing this command in the test code and using the `run_local_screenshot_test.sh` facility, a prompt becomes available on the command line that allows testing of DOM selectors in the webbrowser. In addition, the browser window is available on screen; opening of DevTools allows to explore the DOM and observe the effects of webdriverio commands on the command line.
+- Although webdriverio takes asynchronous behavor of webbrosers into account it does not defend against asynchronous behavior of specific web components (e.g., database access). Not taking this asynchronicity into account will result in `flaky` tests. Typically, flaky test run well on the local system used for development (that has plenty of free resources at moment of test), but fail often on a CI system. Often this is the result of longer times needed page/component update causing tests to fail because the test evaluates a condition before it is loaded. In webdriverio the `waitForExist()`, `waitForVisible()` and `waitFor()` method should be used to pause test execution until the page has been updated. Sometimes it is needed to wait for the appearance of a DOM element which presence is tested.
+```javascript
+browser.waitForExist('id=button');
+assert($('id=button));
+```
+- Reference screenshosts that are created on host system directly (not in dockerized process) differ from screenshots produced by the dockerized setup (e.g., on CircleCI) and cannot be used as references
+
+##### Create new e2e-test
 Making e2e-tests follows the current procedure for the e2e-tests:
-1. Create junit test file and place in the `./end-to-end-test/local/spec` directory.
+1. Create junit test file and place in the `./end-to-end-test/local/specs` or `./end-to-end-test/remote/specs` directory.
 2. [Optional] Add a folder with an uncompressed custom study in the `./end-to-end-test/local/studies` directory.
 
-### Notes
+##### Random notes
 * Study_es_0 is imported by default.
 * Gene panel and gene set matrix data of custom studies must comply with gene panel/sets imported as part of study_es_0.
 * Imports of custom seed data for gene panels and gene sets are not implemented at the moment of this writing.
-* In order to minimize time of local database e2e tests the size of custom studies should be kept as small as possible.
+* In order to minimize time of local database e2e-tests the size of custom studies should be kept as small as possible.
 * When developing in _Local_ context port 8081 can be used to access the cbioportal instance ('http://localhost:8081/cbioportal').
