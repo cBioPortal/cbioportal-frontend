@@ -44,6 +44,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_right_nav_show_examples:true,
     skin_right_nav_show_testimonials:true,
     skin_right_nav_show_whats_new:true,
+    skin_citation_rule_text:"Please cite: <a href=\"http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract\" target=\"_blank\">Cerami et al., 2012</a> &amp; <a href=\"http://www.ncbi.nlm.nih.gov/pubmed/23550210\" target=\"_blank\">Gao et al., 2013</a>",
     skin_show_about_tab:true,
     skin_show_data_tab:true,
     skin_show_faqs_tab:true,
