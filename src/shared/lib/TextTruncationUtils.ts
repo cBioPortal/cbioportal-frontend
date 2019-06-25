@@ -31,7 +31,7 @@ function splitTextByWidth(text:string, maxWidth:number, fontFamily:string, fontS
     return ret;
 }
 
-export function wrapText(text:string, maxWidth:number, fontFamily:string, fontSize:string):string[] {
+export function textTruncationUtils(text:string, maxWidth:number, fontFamily:string, fontSize:string):string[] {
     if (getTextWidth(text, fontFamily, fontSize) <= maxWidth) {
         return [text];
     } else {
@@ -73,5 +73,20 @@ export function truncateWithEllipsis(text:string, maxWidth:number, fontFamily:st
         return wrapped[0]+"...";
     } else {
         return wrapped[0];
+    }
+}
+
+export function truncateWithEllipsisReport(text:string, maxWidth:number, fontFamily:string, fontSize:string) {
+    const wrapped = splitTextByWidth(text, maxWidth, fontFamily, fontSize);
+    let truncated = false;
+    if (wrapped.length > 1) {
+        text = wrapped[0]+"...";
+        truncated = true;
+    } else {
+        text = wrapped[0];
+        truncated = false;
+    }
+    return {
+        text, truncated
     }
 }

@@ -23,7 +23,7 @@ import defaultClient from "shared/api/cbioportalClientInstance";
 import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
 import MobxPromise from 'mobxpromise';
-import {getTextWidth} from "../../shared/lib/wrapText";
+import {getTextWidth} from "../../shared/lib/TextTruncationUtils";
 import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
 import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
 
@@ -501,13 +501,20 @@ export function makePatientToClinicalAnalysisGroup(
 }
 
 export function toSvgDomNodeWithLegend(svgElement: SVGElement,
-                                       legendGroupSelector: string,
-                                       chartGroupSelector?: string,
-                                       centerLegend: boolean = false)
+                                       params:{
+                                           legendGroupSelector: string,
+                                           selectorToHide?:string,
+                                           chartGroupSelector?: string,
+                                           centerLegend?: boolean
+                                       })
 {
-    const svg = svgElement.cloneNode(true) as Element;
-    const legend = $(svgElement).find(legendGroupSelector).get(0);
+    const svg = svgElement.cloneNode(true) as SVGElement;
+    const legend = $(svgElement).find(params.legendGroupSelector).get(0);
     const legendBBox = legend.getBoundingClientRect();
+
+    if (params.selectorToHide) {
+        $(svg).find(params.selectorToHide).remove();
+    }
 
     const height = + $(svgElement).height() + legendBBox.height;
     const width = Math.max($(svgElement).width(), legendBBox.width);
@@ -518,18 +525,18 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
     $(svg).css({height: height + 5, width});
 
     // center elements
-    if (centerLegend) {
+    if (params.centerLegend) {
         const widthDiff = Math.abs($(svgElement).width() - legendBBox.width);
         const shift = widthDiff / 2;
         const transform = `translate(${shift}, 0)`;
 
         if ($(svgElement).width() > legendBBox.width) {
             // legend needs to be centered wrt the chart
-            $(svg).find(legendGroupSelector).attr("transform", transform);
+            $(svg).find(params.legendGroupSelector).attr("transform", transform);
         }
-        else if (chartGroupSelector) {
+        else if (params.chartGroupSelector) {
             // chart needs to be centered wrt the legend
-            $(svg).find(chartGroupSelector).attr("transform", transform);
+            $(svg).find(params.chartGroupSelector).attr("transform", transform);
         }
     }
 
