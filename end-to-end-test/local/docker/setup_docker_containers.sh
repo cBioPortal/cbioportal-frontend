@@ -102,24 +102,6 @@ build_cbioportal_image() {
 
     curdir=$PWD
 
-    # cd /tmp
-    # rm -rf cbioportal
-    # git clone --depth 1 -b $BACKEND_BRANCH "https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git"
-    # docker stop $E2E_CBIOPORTAL_HOST_NAME 2> /dev/null && docker rm $E2E_CBIOPORTAL_HOST_NAME  2> /dev/null
-    # cp $TEST_HOME/local/docker/Dockerfile cbioportal
-    # cp $TEST_HOME/local/runtime-config/portal.properties cbioportal
-    # cd cbioportal
-    # docker rm cbioportal-endtoend-image 2> /dev/null || true
-    # cp $TEST_HOME/local/docker/catalina_server.xml.patch .
-    # docker build -f Dockerfile -t cbioportal-endtoend-image . \
-    #     --build-arg SESSION_SERVICE_HOST_NAME=$SESSION_SERVICE_HOST_NAME
-    
-    # cd /tmp
-    # rm -rf cbioportal
-    # git clone --depth 1 -b $BACKEND_BRANCH "https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git"
-    # docker stop $E2E_CBIOPORTAL_HOST_NAME 2> /dev/null && docker rm $E2E_CBIOPORTAL_HOST_NAME  2> /dev/null
-    # docker rm $backend_image_name 2> /dev/null || true
-    
     # rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images
     # update the reference to the corresponding image name when prebuilt image exists
     if [[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] ); then
