@@ -184,7 +184,7 @@ cd $PORTAL_SOURCE_DIR
 
 (a) local system (best for test development)
 ```bash
-export CBIOPORTAL_URL='http://localhost:8081/cbioportal'
+export CBIOPORTAL_URL='http://localhost:8081'
 $TEST_HOME/local/runtime-config/setup_local_context.sh -j -d -p -e # remove flags to exclude specific stages if desired (see below)
 cd $PORTAL_SOURCE_DIR
 ./end-to-end-test/local/runtime-config/run_local_screenshot_test.sh # (repeat this step while developing)
@@ -192,7 +192,7 @@ cd $PORTAL_SOURCE_DIR
 
 (b) docker environment (best for making reference screenshots)
 ```bash
-export CBIOPORTAL_URL='http://cbioportal:8080/cbioportal'
+export CBIOPORTAL_URL='http://cbioportal:8080'
 yarn
 yarn build
 cd $TEST_HOME/local/docker
