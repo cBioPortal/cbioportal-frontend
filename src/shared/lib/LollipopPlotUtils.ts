@@ -1,7 +1,7 @@
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {longestCommonStartingSubstring} from "./StringUtils";
 import {countMutationsByProteinChange} from "./MutationUtils";
-import {getTextWidth} from "./wrapText";
+import {getTextWidth} from "./TextTruncationUtils";
 
 export function lollipopLabelText(mutationsAtPosition:Mutation[], size?: number): string {
     const mutationCountsByProteinChange = countMutationsByProteinChange(mutationsAtPosition);

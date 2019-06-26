@@ -13,7 +13,7 @@ import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
-import {getTextWidth} from "../../../../shared/lib/wrapText";
+import {getTextWidth} from "../../../../shared/lib/TextTruncationUtils";
 import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 
 export interface IPieChartProps {
@@ -88,7 +88,11 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     public toSVGDOMNode(): Element {
-        return toSvgDomNodeWithLegend(this.svg, ".studyViewPieChartLegend", ".studyViewPieChartGroup", true);
+        return toSvgDomNodeWithLegend(this.svg, {
+            legendGroupSelector: ".studyViewPieChartLegend",
+            chartGroupSelector: ".studyViewPieChartGroup",
+            centerLegend: true
+        });
     }
 
     @computed

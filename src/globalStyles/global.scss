@@ -81,14 +81,6 @@ a:hover {
   }
 }
 
-.topBanner {
-  @extend .portalWidth;
-  margin:0 auto 10px auto;
-  h3 {
-    margin-bottom:2px;
-  }
-}
-
 /* Tables */
 th.reactable-header-sortable {
 
@@ -619,4 +611,11 @@ h3.hr {
 .beta-text {
   color:#ffA500;
   text-decoration: none;
+}
+
+.text-with-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  -ms-text-overflow: ellipsis;
+  text-overflow: ellipsis;
 }

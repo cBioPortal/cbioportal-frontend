@@ -61,12 +61,17 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
     protected get isMutationTableDataLoading() {
         return getMobxPromiseGroupStatus(
             this.props.store.clinicalDataForSamples,
-            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData
+            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.props.store.canonicalTranscript
         ) === "pending";
     }
 
     protected mutationTableComponent(): JSX.Element|null
     {
+        const canonicalTranscriptId = this.props.store.canonicalTranscript.result && this.props.store.canonicalTranscript.result.transcriptId;
+        const transcript = this.props.store.activeTranscript && (this.props.store.activeTranscript === canonicalTranscriptId) ?
+            this.props.store.canonicalTranscript.result : this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript!];
+        const totalExonNumber = transcript && transcript.exons && transcript.exons.length > 0 ? transcript.exons.length.toString() : 'None';
         return (
             <ResultsViewMutationTable
                 uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
@@ -95,6 +100,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 enableHotspot={this.props.config.show_hotspot}
                 enableMyCancerGenome={this.props.config.mycancergenome_show}
                 enableCivic={this.props.config.show_civic}
+                totalNumberOfExons={totalExonNumber}
             />
         );
     }
