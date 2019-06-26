@@ -17,6 +17,7 @@ export enum TrackName {
 }
 
 interface ITrackSelectorProps {
+    tracks?: TrackName[];
     trackVisibility: TrackVisibility;
     trackDataStatus?: TrackDataStatus;
     onChange: (selectedTrackIds: string[]) => void;
@@ -27,10 +28,15 @@ interface ITrackSelectorProps {
 @observer
 export default class TrackSelector extends React.Component<ITrackSelectorProps, {}>
 {
-
     public static defaultProps:Partial<ITrackSelectorProps> = {
         name: "mutationMapperTrackSelector",
-        placeholder: "Add annotation tracks"
+        placeholder: "Add annotation tracks",
+        tracks: [
+            TrackName.CancerHotspots,
+            TrackName.OncoKB,
+            TrackName.PTM,
+            TrackName.PDB
+        ]
     };
 
     @autobind
@@ -45,9 +51,9 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
             .map(id => ({value: id}));
     }
 
-    @computed get options(): Option[] {
-        return [
-            {
+    @computed get availableOptions() {
+        return {
+            [TrackName.CancerHotspots]: {
                 label: (
                     <span>
                         Cancer Hotspots
@@ -56,7 +62,7 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
                 ),
                 value: TrackName.CancerHotspots
             },
-            {
+            [TrackName.OncoKB]: {
                 label: (
                     <span>
                         OncoKB
@@ -65,7 +71,7 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
                 ),
                 value: TrackName.OncoKB
             },
-            {
+            [TrackName.PTM]: {
                 label: (
                     <span>
                         Post Translational Modifications
@@ -74,7 +80,7 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
                 ),
                 value: TrackName.PTM
             },
-            {
+            [TrackName.PDB]: {
                 label: (
                     <span>
                         3D Structure
@@ -84,7 +90,13 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
                 value: TrackName.PDB,
                 disabled: this.isDisabled(TrackName.PDB)
             }
-        ];
+        }
+    }
+
+    @computed get options(): Option[] {
+        return this.props.tracks!
+            .filter(t => this.props.trackVisibility[t] !== undefined)
+            .map(t => this.availableOptions[t]);
     }
 
     private isPending(trackName: string) {
