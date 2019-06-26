@@ -96,6 +96,10 @@ export type ClinVar = {
 
         'hgvs': Hgvs
 
+        'rcv': Array < Rcv >
+
+        'variantId': number
+
 };
 export type Cosmic = {
     '_license': string
@@ -369,6 +373,16 @@ export type ProteinLocation = {
         'end': number
 
         'mutationType': string
+
+};
+export type Rcv = {
+    'accession': string
+
+        'clinicalSignificance': string
+
+        'origin': string
+
+        'preferredName': string
 
 };
 export type Snpeff = {
