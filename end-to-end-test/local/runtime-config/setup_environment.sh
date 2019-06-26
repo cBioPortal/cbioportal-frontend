@@ -21,7 +21,7 @@ echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/mas
 parse_custom_backend_var() {
     # Parse BACKEND environmental variable. This must occur after PR evaluation
     # because this possibly overwrites variables extracted from the GitHub pull request.
-    if [[ $BACKEND =~ ([^\s]+):([^\s]+) ]]; then
+    if [[ $BACKEND =~ (.+):(.+) ]]; then
         echo "export BACKEND_PROJECT_USERNAME=${BASH_REMATCH[1]}"
         echo "export BACKEND_BRANCH=${BASH_REMATCH[2]}"
     else
