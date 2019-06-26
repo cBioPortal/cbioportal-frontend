@@ -157,16 +157,29 @@ load_studies_in_db() {
         $backend_image_name \
         sh -c 'cd /cbioportal/core/src/main/scripts; for FILE in /cbioportal/core/src/test/scripts/test_data/study_es_0/data_gene_panel_testpanel*.txt; do ./importGenePanel.pl --data $FILE; done'
 
-    # import study_es_0
+    # TODO reactivate import of fusion data
     docker run --rm \
         --name=cbioportal-importer \
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
         $backend_image_name \
+        sh -c "rm /cbioportal/core/src/test/scripts/test_data/study_es_0/data_structural_variants.txt && \
+        rm /cbioportal/core/src/test/scripts/test_data/study_es_0/meta_structural_variants.txt && \
         python3 /cbioportal/core/src/main/scripts/importer/metaImport.py \
-        --url_server "http://$E2E_CBIOPORTAL_HOST_NAME:8080" \
+        --url_server http://$E2E_CBIOPORTAL_HOST_NAME:8080 \
         --study_directory /cbioportal/core/src/test/scripts/test_data/study_es_0 \
-        --override_warning
+        --override_warning"
+
+    # # import study_es_0
+    # docker run --rm \
+    #     --name=cbioportal-importer \
+    #     --net=$DOCKER_NETWORK_NAME \
+    #     -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+    #     $backend_image_name \
+    #     python3 /cbioportal/core/src/main/scripts/importer/metaImport.py \
+    #     --url_server "http://$E2E_CBIOPORTAL_HOST_NAME:8080" \
+    #     --study_directory /cbioportal/core/src/test/scripts/test_data/study_es_0 \
+    #     --override_warning
 
     # import custom studies
     for DIR in "$TEST_HOME"/studies/*/; do
