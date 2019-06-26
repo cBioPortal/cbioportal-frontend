@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {CancerTreeNode} from "./CancerStudyTreeData";
+import {CancerTreeNode, CancerTypeWithVisibility} from "./CancerStudyTreeData";
 import {NodeMetadata} from "./CancerStudyTreeData";
 import {TypeOfCancer as CancerType, CancerStudy} from "../../api/generated/CBioPortalAPI";
 import {QueryStore} from "./QueryStore";
@@ -22,9 +22,10 @@ export default class StudyListLogic {
         for (let [node, meta] of this.store.treeData.map_node_meta.entries()) {
             let filter = true;
             if (meta.isCancerType) {
-                // exclude cancer types beyond max depth, or those with no descendant studies
-                if (meta.ancestors.length > this.store.maxTreeDepth || !meta.descendantStudies.length)
+                // exclude cancer types with no descendant studies or cancer types beyond max depth and not always visible
+                if (!meta.descendantStudies.length || (meta.ancestors.length > this.store.maxTreeDepth && !(node as CancerTypeWithVisibility).alwaysVisible)) {
                     filter = false;
+                }
             }
             map_node_filter.set(node, filter);
         }
@@ -172,15 +173,28 @@ export class FilteredCancerTreeView {
         return this.store.treeData.map_node_meta.get(node) as NodeMetadata;
     }
 
-    getChildCancerTypes(cancerType: CancerType): CancerType[] {
+    getChildCancerTypes(cancerType: CancerTypeWithVisibility, ignoreAlwaysVisible?:boolean): CancerTypeWithVisibility[] {
         let meta = this.getMetadata(cancerType);
-        let childTypes = meta.ancestors.length < this.store.maxTreeDepth ? meta.childCancerTypes : [];
+        const childTypes = (meta.ancestors.length < this.store.maxTreeDepth) || !ignoreAlwaysVisible && cancerType.alwaysVisible ? meta.childCancerTypes : [];
         return childTypes.filter(this.nodeFilter);
     }
 
-    getChildCancerStudies(cancerType: CancerType): CancerStudy[] {
+    getChildCancerStudies(cancerType: CancerTypeWithVisibility): CancerStudy[] {
         let meta = this.getMetadata(cancerType);
-        let studies = meta.ancestors.length < this.store.maxTreeDepth ? meta.childStudies : meta.descendantStudies;
+        let studies: CancerStudy[] = [];
+        if (meta.ancestors.length < this.store.maxTreeDepth) {
+            studies = meta.childStudies;
+        } else {
+            studies = meta.descendantStudies;
+            //filter studies that are already shown under cancer type group
+            if (cancerType.alwaysVisible) {
+                let hideStudiesWithCancerTypes = _.chain(meta.descendantCancerTypes)
+                    .filter(descendantCancerType => descendantCancerType.alwaysVisible)
+                    .map(descendantCancerType => descendantCancerType.cancerTypeId)
+                    .value();
+                studies = _.filter(studies, study => !hideStudiesWithCancerTypes.includes(study.cancerTypeId));
+            }
+        }
         return studies.filter(this.nodeFilter);
     }
 
