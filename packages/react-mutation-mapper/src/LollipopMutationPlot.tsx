@@ -21,7 +21,7 @@ import {initDefaultTrackVisibility} from "./util/TrackUtils";
 import DefaultLollipopPlotLegend from "./DefaultLollipopPlotLegend";
 import LollipopPlot from "./LollipopPlot";
 import LollipopMutationPlotControls from "./LollipopMutationPlotControls";
-import {TrackDataStatus, TrackVisibility} from "./TrackSelector";
+import {TrackDataStatus, TrackName, TrackVisibility} from "./TrackSelector";
 import TrackPanel from "./TrackPanel";
 
 const DEFAULT_PROTEIN_LENGTH = 10;
@@ -34,9 +34,13 @@ export interface ILollipopMutationPlotProps
     onXAxisOffset?: (offset:number) => void;
     geneWidth: number;
     trackVisibility?: TrackVisibility;
+    tracks?: TrackName[];
     trackDataStatus?: TrackDataStatus;
     onTrackVisibilityChange?: (selectedTrackIds: string[]) => void;
     autoHideControls?: boolean;
+    showYMaxSlider?: boolean;
+    showLegendToggle?: boolean;
+    showDownloadControls?: boolean;
     legend?: JSX.Element;
     loadingIndicator?: JSX.Element;
 }
@@ -382,6 +386,9 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 >
                     <LollipopMutationPlotControls
                         showControls={this.showControls}
+                        showYMaxSlider={this.props.showYMaxSlider}
+                        showLegendToggle={this.props.showLegendToggle}
+                        showDownloadControls={this.props.showDownloadControls}
                         hugoGeneSymbol={this.hugoGeneSymbol}
                         countRange={this.countRange}
                         onYAxisMaxSliderChange={this.handlers.handleYAxisMaxSliderChange}
@@ -392,6 +399,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         yMaxSlider={this.yMaxSlider}
                         yMaxInput={this.yMaxInput}
                         trackVisibility={this.trackVisibility}
+                        tracks={this.props.tracks}
                         trackDataStatus={this.props.trackDataStatus}
                         onTrackVisibilityChange={this.onTrackVisibilityChange}
                         getSVG={this.getSVG}
@@ -414,6 +422,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                     <TrackPanel
                         store={this.props.store}
                         geneWidth={this.props.geneWidth}
+                        tracks={this.props.tracks}
                         trackVisibility={this.trackVisibility}
                         pubMedCache={this.props.pubMedCache}
                         proteinLength={this.proteinLength}

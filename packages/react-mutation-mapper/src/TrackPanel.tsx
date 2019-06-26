@@ -19,11 +19,20 @@ type TrackPanelProps = {
     geneXOffset?: number;
     maxHeight?: number;
     trackVisibility?: TrackVisibility;
+    tracks?: TrackName[];
 };
 
 @observer
 export default class TrackPanel extends React.Component<TrackPanelProps, {}>
 {
+    public static defaultProps:Partial<TrackPanelProps> = {
+        tracks: [
+            TrackName.CancerHotspots,
+            TrackName.OncoKB,
+            TrackName.PTM
+        ]
+    };
+
     constructor(props: TrackPanelProps) {
         super(props);
     }
@@ -31,6 +40,43 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}>
     @computed get proteinLength() {
         const proteinLength = this.props.proteinLength || 0;
         return Math.max(proteinLength, 1);
+    }
+
+    get availableTracks() {
+        return {
+            [TrackName.CancerHotspots]:
+                !this.props.trackVisibility || this.props.trackVisibility[TrackName.CancerHotspots] === 'visible' ?
+                <HotspotTrack
+                    store={this.props.store}
+                    dataStore={this.props.store.dataStore}
+                    hotspotIndex={this.props.store.indexedHotspotData.result || {}}
+                    width={this.props.geneWidth}
+                    xOffset={this.props.geneXOffset}
+                    proteinLength={this.proteinLength}
+                /> : null,
+            [TrackName.OncoKB]: (
+                !this.props.trackVisibility || this.props.trackVisibility[TrackName.OncoKB] === 'visible' ?
+                <OncoKbTrack
+                    store={this.props.store}
+                    dataStore={this.props.store.dataStore}
+                    width={this.props.geneWidth}
+                    xOffset={this.props.geneXOffset}
+                    proteinLength={this.proteinLength}
+                /> : null
+            ),
+            [TrackName.PTM]: (
+                !this.props.trackVisibility || this.props.trackVisibility[TrackName.PTM] === 'visible' ?
+                <PtmTrack
+                    store={this.props.store}
+                    pubMedCache={this.props.pubMedCache}
+                    ensemblTranscriptId={this.props.store.activeTranscript}
+                    dataStore={this.props.store.dataStore}
+                    width={this.props.geneWidth}
+                    xOffset={this.props.geneXOffset}
+                    proteinLength={this.proteinLength}
+                /> : null
+            )
+        }
     }
 
     public render() {
@@ -43,37 +89,9 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}>
                 }}
             >
                 {
-                    (!this.props.trackVisibility || this.props.trackVisibility[TrackName.CancerHotspots] === 'visible') &&
-                    <HotspotTrack
-                        store={this.props.store}
-                        dataStore={this.props.store.dataStore}
-                        hotspotIndex={this.props.store.indexedHotspotData.result || {}}
-                        width={this.props.geneWidth}
-                        xOffset={this.props.geneXOffset}
-                        proteinLength={this.proteinLength}
-                    />
-                }
-                {
-                    (!this.props.trackVisibility || this.props.trackVisibility[TrackName.OncoKB] === 'visible') &&
-                    <OncoKbTrack
-                        store={this.props.store}
-                        dataStore={this.props.store.dataStore}
-                        width={this.props.geneWidth}
-                        xOffset={this.props.geneXOffset}
-                        proteinLength={this.proteinLength}
-                    />
-                }
-                {
-                    (!this.props.trackVisibility || this.props.trackVisibility[TrackName.PTM] === 'visible') &&
-                    <PtmTrack
-                        store={this.props.store}
-                        pubMedCache={this.props.pubMedCache}
-                        ensemblTranscriptId={this.props.store.activeTranscript}
-                        dataStore={this.props.store.dataStore}
-                        width={this.props.geneWidth}
-                        xOffset={this.props.geneXOffset}
-                        proteinLength={this.proteinLength}
-                    />
+                    this.props.tracks!
+                        .map(t => this.availableTracks[t])
+                        .filter(e => e !== undefined && e !== null)
                 }
             </div>
         );
