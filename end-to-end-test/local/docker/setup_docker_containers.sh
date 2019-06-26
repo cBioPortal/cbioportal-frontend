@@ -4,12 +4,19 @@ set -e
 set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 shopt -s nullglob # allows files and dir globs to be null - needed in 'for ... do' loops that should not run when no files/dirs are detected by expansion
+set -v
 
 BUILD_PORTAL=false
 BUILD_DATABASE=false
 BUILD_E2E=false
 
-backend_image_name=cbioportal-endtoend-image
+# rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images
+# update the reference to the corresponding image name when prebuilt image exists
+if [[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] ); then
+    backend_image_name="cbioportal/cbioportal:$BACKEND_BRANCH"
+else
+    backend_image_name=cbioportal-endtoend-image
+fi
 
 usage() {
     echo "-d: build database image and load studies into database"
@@ -102,11 +109,7 @@ build_cbioportal_image() {
 
     curdir=$PWD
 
-    # rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images
-    # update the reference to the corresponding image name when prebuilt image exists
-    if [[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] ); then
-        backend_image_name="cbioportal/cbioportal:$BACKEND_BRANCH"
-    else
+    if [[ $backend_image_name == "cbioportal-endtoend-image" ]]; then
         docker build https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git#$BACKEND_BRANCH \
             -f docker/web-and-data/Dockerfile \
             -t $backend_image_name
