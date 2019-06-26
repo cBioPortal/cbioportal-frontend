@@ -337,7 +337,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     {/*troubleshooting={["Check that your URL parameters are valid.", "Try refreshing the page.", "Make sure you are connected to the internet."]}*/}
                     {/*/>*/}
 
-                    <div className="topBanner">
+                    <div className="headBlock">
 
                         {  (patientViewPageStore.patientViewData.isComplete) && (
                             <div className="patientPageHeader">
@@ -511,7 +511,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                             }
                         </div>
-                        
+
                     </MSKTab>
 
 
