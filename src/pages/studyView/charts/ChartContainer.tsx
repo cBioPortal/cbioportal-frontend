@@ -21,12 +21,15 @@ import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {
     AnalysisGroup,
-    ChartMeta, ChartType, ClinicalDataCountSummary,
+    ClinicalDataCountSummary,
+    ChartMeta,
+    ChartType,
     getHeightByDimension,
     getTableHeightByDimension,
     getWidthByDimension,
     mutationCountVsCnaTooltip,
-    MutationCountVsCnaYBinsMin, SPECIAL_CHARTS, UniqueKey
+    MutationCountVsCnaYBinsMin,
+    UniqueKey
 } from "../StudyViewUtils";
 import {ClinicalAttribute, ClinicalData, GenePanel} from "../../../shared/api/generated/CBioPortalAPI";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
@@ -57,6 +60,7 @@ const COMPARISON_CHART_TYPES:ChartType[] = [ChartTypeEnum.PIE_CHART, ChartTypeEn
 export interface IChartContainerProps {
     chartMeta: ChartMeta;
     chartType: ChartType;
+    store: StudyViewPageStore;
     dimension: ChartDimension;
     title: string;
     promise: MobxPromise<any>;
@@ -290,8 +294,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get chart() {
+        const {BAR_CHART, SURVIVAL, CNA_GENES_TABLE, TABLE, SCATTER, PIE_CHART, MUTATED_GENES_TABLE} = ChartTypeEnum;
         switch (this.chartType) {
-            case ChartTypeEnum.PIE_CHART: {
+            case PIE_CHART: {
                 return ()=>(<PieChart
                     width={getWidthByDimension(this.props.dimension, this.borderWidth)}
                     height={getHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
@@ -305,7 +310,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     patientAttribute={this.props.chartMeta.patientAttribute}
                 />);
             }
-            case ChartTypeEnum.BAR_CHART: {
+            case BAR_CHART: {
                 return ()=>(
                     <BarChart
                         width={getWidthByDimension(this.props.dimension, this.borderWidth)}
@@ -317,7 +322,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
-            case ChartTypeEnum.TABLE: {
+            case TABLE: {
                 return ()=>(<ClinicalTable
                     data={this.props.promise.result}
                     width={getWidthByDimension(this.props.dimension, this.borderWidth)}
@@ -329,7 +334,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     showAddRemoveAllButtons={this.mouseInChart}
                 />);
             }
-            case ChartTypeEnum.MUTATED_GENES_TABLE: {
+            case MUTATED_GENES_TABLE: {
                 return ()=>(
                     <MutatedGenesTable
                         promise={this.props.promise}
@@ -345,7 +350,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
-            case ChartTypeEnum.CNA_GENES_TABLE: {
+            case CNA_GENES_TABLE: {
                 return ()=>(
                     <CNAGenesTable
                         promise={this.props.promise}
@@ -361,7 +366,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
-            case ChartTypeEnum.SURVIVAL: {
+            case SURVIVAL: {
                 if (this.survivalChartData) {
                     const data = this.survivalChartData;
                     return ()=>(
@@ -407,7 +412,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return null;
                 }
             }
-            case ChartTypeEnum.SCATTER: {
+            case SCATTER: {
                 return ()=>(
                     <div style={{overflow:"hidden", height:getHeightByDimension(this.props.dimension, this.chartHeaderHeight)}}>
                         {/* have to do all this weird positioning to decrease gap btwn chart and title, bc I cant do it from within Victory */}
@@ -471,6 +476,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 <ChartHeader
                     height={this.chartHeaderHeight}
                     chartMeta={this.props.chartMeta}
+                    chartType={this.props.chartType}
+                    store={this.props.store}
                     title={this.props.title}
                     active={this.mouseInChart}
                     resetChart={this.handlers.resetFilters}
