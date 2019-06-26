@@ -275,18 +275,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
 @observer
 export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
-    @observable open = false;
-
-    @autobind
-    private onClick(evt:any) {
-        evt.stopPropagation();
-        this.open = !this.open;
-    }
-
+    @observable showTooltip = false;
     render() {
         return (
             <DefaultTooltip
-                visible={this.open}
+                visible={this.showTooltip}
+                onVisibleChange={visible => this.showTooltip = !!visible}
+                trigger={["click"]}
                 placement={"bottomRight"}
                 destroyTooltipOnHide={true}
                 overlay={() => <AddChartTabs store={this.props.store}
@@ -297,11 +292,11 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                                              disableCustomTab={this.props.disableCustomTab}/>}
                 overlayClassName={this.props.addChartOverlayClassName}
             >
-                <button className={classNames('btn btn-primary btn-sm', {"active":this.open})}
+                <button className={classNames('btn btn-primary btn-sm', {"active":this.showTooltip})}
                         style={{marginLeft: '10px'}}
+                        aria-pressed={this.showTooltip}
                         data-event={serializeEvent({ category:"studyPage", action:"addChartMenuOpen", label:this.props.store.studyIds.join(",")})}
                         data-test="add-charts-button"
-                        onClick={this.onClick}
                 >{this.props.buttonText}</button>
             </DefaultTooltip>
         )
