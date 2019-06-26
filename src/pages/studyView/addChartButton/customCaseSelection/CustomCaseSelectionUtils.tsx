@@ -132,7 +132,7 @@ export function validateLines(lines: InputLine[], caseType: ClinicalDataType, al
                 validLine = false;
             } else {
                 _case = getUniqueCaseId(selectedStudies[0], line.caseId);
-                if (validPair[_case] === undefined) {
+                if (!validPair[_case]) {
                     invalidCases.push(line.caseId);
                     validLine = false;
                 } else {
@@ -156,6 +156,9 @@ export function validateLines(lines: InputLine[], caseType: ClinicalDataType, al
                         occurrence[_case] = 0;
                     }
                     occurrence[_case]++;
+                } else {
+                    invalidCases.push(line.caseId);
+                    validLine = false;
                 }
             }
         }
