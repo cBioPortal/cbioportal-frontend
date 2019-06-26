@@ -10,7 +10,7 @@ import DownloadControls from 'shared/components/downloadControls/DownloadControl
 import autobind from 'autobind-decorator';
 import SelectionComponent from "./SelectionComponent";
 import HoverablePoint from "./HoverablePoint";
-import {getTextWidth, truncateWithEllipsis} from "../../../shared/lib/wrapText";
+import {getTextWidth, truncateWithEllipsis} from "../../../shared/lib/TextTruncationUtils";
 
 export interface IMiniScatterChartProps {
     data: any[];

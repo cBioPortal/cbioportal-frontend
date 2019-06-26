@@ -10,7 +10,7 @@ import {formatLogOddsRatio} from "../../../shared/lib/FormatUtils";
 import {toConditionalPrecision} from "../../../shared/lib/NumberUtils";
 import SelectionComponent from "./SelectionComponent";
 import HoverablePoint from "./HoverablePoint";
-import {getTextWidth, truncateWithEllipsis} from "../../../shared/lib/wrapText";
+import {getTextWidth, truncateWithEllipsis} from "../../../shared/lib/TextTruncationUtils";
 
 export interface IMiniFrequencyScatterChartData {
     x:number;
