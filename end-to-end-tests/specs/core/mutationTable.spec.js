@@ -142,4 +142,29 @@ describe('Mutation Table', function() {
         });
     });
 
+    describe('try getting dbSNP from genome nexus', ()=>{
+        before(()=>{
+            var url = `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=brca_broad&case_set_id=brca_broad_sequenced&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_broad_mutations&tab_index=tab_visualize`;
+
+            goToUrlAndSetLocalStorage(url);
+            // mutations table should be visiable after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",30000);
+        });
+
+        it.only('should show the rs ids in dbsnp after adding the dbSNP column', ()=>{
+            // click on column button
+            browser.click("button*=Columns");
+            // scroll down to activated "dbSNP" selection
+            browser.scroll(1000, 1000);
+            // click "dbSNP"
+            browser.click('//*[text()="dbSNP"]');
+            let res;
+            browser.waitUntil(() => {
+                res =  executeInBrowser( ()=>$('[data-test="dbsnp-data"]').length);
+                return res == 25
+            }, 60000, `Failed: There's 25 dbsnp rows in table (${res} found)`);
+        });
+    });
+
 });
