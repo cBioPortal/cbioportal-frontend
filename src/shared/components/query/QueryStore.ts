@@ -194,7 +194,9 @@ export class QueryStore {
     @computed get selectedVirtualStudies(): VirtualStudy[] {
         return _.reduce(this.selectableSelectedStudies, (acc: VirtualStudy[], study) => {
             if (this.isVirtualStudy(study.studyId)) {
-                acc.push(this.virtualStudiesMap[study.studyId])
+                if (this.virtualStudiesMap !== undefined && this.virtualStudiesMap[study.studyId]) {
+                    acc.push(this.virtualStudiesMap[study.studyId])
+                }
             }
             return acc;
         }, []);
