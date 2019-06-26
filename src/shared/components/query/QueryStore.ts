@@ -1027,7 +1027,8 @@ export class QueryStore {
             cancerTypes: this.cancerTypes.result,
             studies: this.cancerStudies.result,
             priorityStudies: this.priorityStudies,
-            virtualStudies: this.forDownloadTab ? [] : this.userVirtualStudies.result
+            virtualStudies: this.forDownloadTab ? [] : this.userVirtualStudies.result,
+            maxTreeDepth: this.maxTreeDepth
         });
     }
 
