@@ -1198,6 +1198,17 @@
         "hgvs": {
           "description": "hgvs",
           "$ref": "#/definitions/Hgvs"
+        },
+        "rcv": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Rcv"
+          }
+        },
+        "variantId": {
+          "type": "integer",
+          "format": "int32",
+          "description": "variant_id"
         }
       }
     },
@@ -2010,6 +2021,7 @@
       "type": "object",
       "properties": {
         "clinVar": {
+          "description": "clinvar",
           "$ref": "#/definitions/ClinVar"
         },
         "cosmic": {
@@ -2188,6 +2200,27 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Rcv": {
+      "type": "object",
+      "properties": {
+        "accession": {
+          "type": "string",
+          "description": "accession"
+        },
+        "clinicalSignificance": {
+          "type": "string",
+          "description": "clinical_significance"
+        },
+        "origin": {
+          "type": "string",
+          "description": "origin"
+        },
+        "preferredName": {
+          "type": "string",
+          "description": "preferred_name"
         }
       }
     },
