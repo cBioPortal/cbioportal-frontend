@@ -135,15 +135,13 @@ export function getMutationFromSummary(mutation: Partial<Mutation>,
 
     // Entrez Gene id is critical for OncoKB annotation
     const entrezGeneId = parseInt(transcriptConsequenceSummary.entrezGeneId, 10);
-    // annotatedMutation.entrezGeneId = annotatedMutation.entrezGeneId || entrezGeneId;
 
     annotatedMutation.gene = {
+        ...annotatedMutation.gene,
         hugoGeneSymbol: (!overwrite && annotatedMutation.gene && annotatedMutation.gene.hugoGeneSymbol) ||
             transcriptConsequenceSummary.hugoGeneSymbol,
         entrezGeneId: (annotatedMutation.gene && annotatedMutation.gene.entrezGeneId) || entrezGeneId
     };
-
-    annotatedMutation.gene.entrezGeneId = annotatedMutation.gene.entrezGeneId || entrezGeneId;
 
     return annotatedMutation;
 }
