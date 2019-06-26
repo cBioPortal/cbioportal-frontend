@@ -47,7 +47,8 @@ import {
     StudyViewFilterWithSampleIdentifierFilters,
     ChartMeta,
     ChartMetaDataTypeEnum,
-    getStudyViewTabId, ChartType
+    getStudyViewTabId, ChartType,
+    customBinsAreValid
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -2186,4 +2187,16 @@ describe('StudyViewUtils', () => {
             assert.equal(getStudyViewTabId("study/summary/"), StudyViewPageTabKeyEnum.SUMMARY);
         });
     });
+
+    describe('customBinsAreValid', () => {
+        it('If the bins have string, it should be invalid', () => {
+            assert.isTrue(!customBinsAreValid(['1', 'test']));
+        });
+        it('If there is no bin defined, it should be invalid', () => {
+            assert.isTrue(!customBinsAreValid([]));
+        });
+        it('Test a valid bin', () => {
+            assert.isTrue(customBinsAreValid(['1', '2']));
+        });
+    })
 });

@@ -82,7 +82,7 @@ import {
     SPECIAL_CHARTS,
     StudyWithSamples,
     submitToPage, ChartMetaWithDimensionAndChartType,
-    UniqueKey
+    UniqueKey, ClinicalDataType
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -1301,7 +1301,27 @@ export class StudyViewPageStore {
             !this._clinicalDataBinFilterSet.get(uniqueKey)!.disableLogScale;
     }
 
-    @action addCharts(visibleChartIds:string[]) {
+    @autobind
+    @action
+    public updateCustomBins(uniqueKey: string, bins: number[]) {
+        let newFilter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey))!;
+        newFilter.customBins = bins;
+        this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+    }
+
+    public geCurrentBins(chartMeta: ChartMeta): number[] {
+        return _.uniq(_.reduce(this.getClinicalDataBin(chartMeta).result, (acc, next) => {
+            if (next.start) {
+                acc.push(next.start);
+            }
+            if (next.end) {
+                acc.push(next.end);
+            }
+            return acc;
+        }, [] as number[]));
+    }
+
+    @action addCharts(visibleChartIds: string[]) {
         visibleChartIds.forEach(chartId => {
             if(!this._chartVisibility.keys().includes(chartId)) {
                 this.newlyAddedCharts.push(chartId);
@@ -1636,7 +1656,8 @@ export class StudyViewPageStore {
     public getClinicalDataBin(chartMeta: ChartMeta) {
         const uniqueKey: string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if (!this.clinicalDataBinPromises.hasOwnProperty(uniqueKey)) {
-            const isDefaultAttr = _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined;
+            const defaultAttr = _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey);
+            const isDefaultAttr = defaultAttr !== undefined;
             this.clinicalDataBinPromises[uniqueKey] = remoteData<DataBin[]>({
                 await: () => {
                     return getRequestedAwaitPromisesForClinicalData(
@@ -1650,11 +1671,15 @@ export class StudyViewPageStore {
                     // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
                     const dataBinMethod = DataBinMethodConstants.STATIC;
                     let result = [];
-                    const attribute = this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!))!
+                    const initDataBinFilter = _.find(this.initialVisibleAttributesClinicalDataBinAttributes.result,
+                            item=>getClinicalAttributeUniqueKeyByDataTypeAttrId(
+                                item.clinicalDataType,item.attributeId)===getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!));
+                    const attribute = this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!))!;
+                    const attributeChanged = isDefaultAttr && !_.isEqual(toJS(attribute), initDataBinFilter);
                     if (this.isInitialFilterState &&
                         isDefaultAttr &&
                         !this._clinicalDataIntervalFilterSet.has(uniqueKey) &&
-                        !attribute.disableLogScale) {// check if log scale is changed from default value(false)
+                        !attributeChanged) {
                         result = this.initialVisibleAttributesClinicalDataBinCountData.result;
                     } else {
                         if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
@@ -2501,24 +2526,33 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly initialVisibleAttributesClinicalDataBinCountData = remoteData<DataBin[]>({
+    readonly initialVisibleAttributesClinicalDataBinAttributes = remoteData<ClinicalDataBinFilter[]>({
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
-            const attributes = _.chain(this.defaultVisibleAttributes.result)
+            return _.chain(this.defaultVisibleAttributes.result)
                 .filter(attr => attr.datatype === 'NUMBER')
                 .map(this.getDefaultClinicalDataBinFilter)
                 .uniqBy(attr => `${attr.attributeId}_${attr.clinicalDataType}`)
                 .value();
+        },
+        onError: (error => {
+        }),
+        default: []
+    });
 
+    readonly initialVisibleAttributesClinicalDataBinCountData = remoteData<DataBin[]>({
+        await: () => [this.initialVisibleAttributesClinicalDataBinAttributes],
+        invoke: async () => {
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
                 dataBinMethod: 'STATIC',
                 clinicalDataBinCountFilter: {
-                    attributes,
+                    attributes: this.initialVisibleAttributesClinicalDataBinAttributes.result,
                     studyViewFilter: this.initialFilters
                 } as ClinicalDataBinCountFilter
             });
         },
-        onError: (error => {}),
+        onError: (error => {
+        }),
         default: []
     });
 
