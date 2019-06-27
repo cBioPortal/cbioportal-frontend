@@ -11,7 +11,7 @@ import * as _ from "lodash";
 import {AlterationTypeConstants} from "../ResultsViewPageStore";
 import {filterAndSortProfiles} from "../coExpression/CoExpressionTabUtils";
 import {IMiniFrequencyScatterChartData} from "./MiniFrequencyScatterChart";
-import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import EllipsisTextTooltip from "../../../public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import { AlterationEnrichmentTableColumn, AlterationEnrichmentTableColumnType } from './AlterationEnrichmentsTable';
 import styles from "./styles.module.scss";
 import classNames from "classnames";

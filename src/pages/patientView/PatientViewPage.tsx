@@ -46,7 +46,7 @@ import WindowStore from "shared/components/window/WindowStore";
 import {QueryParams} from "url";
 import {AppStore} from "../../AppStore";
 import request from 'superagent';
-import {remoteData} from "../../shared/api/remoteData";
+import {remoteData} from "../../public-lib/api/remoteData";
 
 const patientViewPageStore = new PatientViewPageStore();
 

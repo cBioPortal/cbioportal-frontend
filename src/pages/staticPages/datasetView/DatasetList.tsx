@@ -4,7 +4,8 @@ import {CancerStudy} from 'shared/api/generated/CBioPortalAPI';
 import {ThreeBounce} from 'better-react-spinkit';
 import request from 'superagent';
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
-import {getNCBIlink, getStudyDownloadListUrl} from "../../../shared/api/urls";
+import {getStudyDownloadListUrl} from "../../../shared/api/urls";
+import {getNCBIlink} from "../../../public-lib/lib/urls";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
 import {StudyDataDownloadLink} from "../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
 

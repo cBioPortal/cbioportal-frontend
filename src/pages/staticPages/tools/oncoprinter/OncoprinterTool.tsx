@@ -6,7 +6,7 @@ import OncoprinterStore from "./OncoprinterStore";
 import Oncoprinter from "./Oncoprinter";
 import {action, computed, observable} from "mobx";
 import {Button,FormGroup, ControlLabel, FormControl} from "react-bootstrap";
-import Collapse from "react-collapse";
+import {Collapse} from "react-collapse";
 import autobind from "autobind-decorator";
 import {exampleData} from "./OncoprinterConstants";
 import $ from "jquery";

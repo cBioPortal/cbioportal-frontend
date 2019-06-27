@@ -10,7 +10,7 @@ import { sleep } from "shared/lib/TimeUtils";
 import { Label } from 'react-bootstrap';
 import * as moduleStyles from "./styles.module.scss";
 import {action, computed, observable, runInAction} from "mobx";
-import {remoteData} from "../../../api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import Pluralize from 'pluralize';
 import { Gene } from "shared/api/generated/CBioPortalAPI";
 import AppConfig from "appConfig";

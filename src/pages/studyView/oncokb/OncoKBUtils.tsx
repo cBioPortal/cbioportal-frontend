@@ -1,7 +1,7 @@
 import * as React from "react";
-import styles from "../table/tables.module.scss";
-import {getOncoKbImage} from "../../../shared/components/tracks/OncoKbTrack";
 import {If, Then, Else} from 'react-if';
+
+const oncoKbImg = require("shared/components/annotation/images/oncogenic-only.svg");
 
 const ONCOKB_URL = "https://oncokb.org";
 
@@ -44,4 +44,8 @@ export function getOncoKBReferenceInfo(hugoGeneSymbol: string, isCancerGene: boo
 
 export function getOncoKBCancerGeneListLinkout() {
     return <a href={`${ONCOKB_URL}/cancerGenes`} target="_blank">OncoKB Cancer Gene List</a>;
+}
+
+export function getOncoKbImage() {
+    return <img src={oncoKbImg} alt='OncoKB Oncogenic Symbol' />;
 }

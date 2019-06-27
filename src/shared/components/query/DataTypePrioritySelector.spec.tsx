@@ -6,7 +6,7 @@ import {shallow} from "enzyme";
 import {checkBoxes} from "./DataTypePrioritySelector";
 import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
-import {stringListToSet} from "../../lib/StringUtils";
+import {stringListToSet} from "../../../public-lib/lib/StringUtils";
 import {QueryStore} from "./QueryStore";
 
 expect.extend(expectJSX);

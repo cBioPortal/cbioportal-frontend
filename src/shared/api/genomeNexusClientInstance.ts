@@ -1,5 +1,4 @@
 import GenomeNexusAPI, {Version} from "./generated/GenomeNexusAPI";
-import {getGenomeNexusApiUrl} from "./urls";
 
 async function checkVersion(client:GenomeNexusAPI) {
     const versionResp = await client.fetchVersionGET({});
