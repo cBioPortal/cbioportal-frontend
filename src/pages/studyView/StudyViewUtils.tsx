@@ -23,7 +23,7 @@ import defaultClient from "shared/api/cbioportalClientInstance";
 import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
 import MobxPromise from 'mobxpromise';
-import {getTextWidth} from "../../shared/lib/TextTruncationUtils";
+import {getTextWidth} from "../../public-lib/lib/TextTruncationUtils";
 import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
 import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
 

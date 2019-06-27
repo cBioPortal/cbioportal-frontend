@@ -2,7 +2,7 @@ import {Modal} from "react-bootstrap";
 import * as React from "react";
 import {observer} from "mobx-react";
 import request from 'superagent';
-import {remoteData} from "../../api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import * as _ from 'lodash';

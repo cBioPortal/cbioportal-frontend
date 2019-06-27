@@ -28,7 +28,7 @@ import {
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {action, computed, observable, ObservableMap} from "mobx";
-import {remoteData} from "shared/api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {cached, labelMobxPromises, MobxPromise} from "mobxpromise";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
@@ -52,13 +52,15 @@ import {
     groupBy,
     IDataQueryFilter,
     isMutationProfile,
+    fetchVariantAnnotationsIndexedByGenomicLocation,
     ONCOKB_DEFAULT
-} from "shared/lib/StoreUtils";
-import {fetchHotspotsData, indexHotspotsData} from "shared/lib/CancerHotspotsUtils";
+} from "shared/lib/StoreUtils"
+import {IHotspotIndex, indexHotspotsData} from "react-mutation-mapper";
+import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import ResultsViewMutationMapperStore from "./mutation/ResultsViewMutationMapperStore";
 import AppConfig from "appConfig";
 import * as _ from "lodash";
-import {stringListToSet} from "../../shared/lib/StringUtils";
+import {stringListToSet} from "../../public-lib/lib/StringUtils";
 import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import AccessorsForOqlFilter, {SimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
@@ -80,9 +82,8 @@ import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCa
 import GenesetCorrelatedGeneCache from "../../shared/cache/GenesetCorrelatedGeneCache";
 import GeneCache from "../../shared/cache/GeneCache";
 import GenesetCache from "../../shared/cache/GenesetCache";
-import {IHotspotIndex} from "../../shared/model/CancerHotspots";
 import {IOncoKbData} from "../../shared/model/OncoKB";
-import {generateQueryVariantId} from "../../shared/lib/OncoKbUtils";
+import {generateQueryVariantId} from "../../public-lib/lib/OncoKbUtils";
 import {
     AlterationEnrichment,
     CosmicMutation,
@@ -125,9 +126,8 @@ import ClinicalDataCache, {
     SpecialAttribute
 } from "../../shared/cache/ClinicalDataCache";
 import {getDefaultMolecularProfiles} from "../../shared/lib/getDefaultMolecularProfiles";
-import {getProteinPositionFromProteinChange} from "../../shared/lib/ProteinChangeUtils";
+import {getProteinPositionFromProteinChange} from "public-lib/lib/ProteinChangeUtils";
 import {isMutation} from "../../shared/lib/CBioPortalAPIUtils";
-import {fetchVariantAnnotationsIndexedByGenomicLocation} from "shared/lib/MutationAnnotator";
 import {VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
 import {ServerConfigHelpers} from "../../config/config";
 import {

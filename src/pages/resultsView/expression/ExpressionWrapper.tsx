@@ -6,7 +6,6 @@ import {
     CancerStudy, Gene, NumericGeneMolecularData, Mutation, MolecularProfile
 } from "../../../shared/api/generated/CBioPortalAPI";
 import {action, computed, observable} from "mobx";
-import getCanonicalMutationType from "../../../shared/lib/getCanonicalMutationType";
 import {
     calculateJitter, ExpressionStyle, ExpressionStyleSheet, expressionTooltip, getExpressionStyle,
     getMolecularDataBuckets, prioritizeMutations
@@ -39,14 +38,14 @@ import {getOncoprintMutationType} from "../../../shared/components/oncoprint/Dat
 import {getSampleViewUrl} from "../../../shared/api/urls";
 import {AnnotatedMutation, ResultsViewPageStore} from "../ResultsViewPageStore";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../public-lib/api/remoteData";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
 import {MobxPromise} from "mobxpromise";
-import {stringListToSet} from "../../../shared/lib/StringUtils";
+import {stringListToSet} from "../../../public-lib/lib/StringUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
 import {ViewType} from "../plots/PlotsTab";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import {maxPage} from "../../../shared/components/lazyMobXTable/utils";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 

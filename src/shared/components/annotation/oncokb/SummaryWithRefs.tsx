@@ -1,6 +1,6 @@
 import * as React from 'react';
 import RefComponent from "./RefComponent";
-import {ICache} from "../../../lib/SimpleCache";
+import {ICache} from "public-lib/lib/SimpleCache";
 
 export default class SummaryWithRefs extends React.Component<{ content: string | undefined, type: 'tooltip' | 'linkout', pmidData: ICache<any> }> {
     render() {
