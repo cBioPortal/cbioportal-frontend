@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import TableCellStatusIndicator from "shared/components/TableCellStatus";
-import {TableCellStatus} from "shared/components/TableCellStatus";
+import TableCellStatusIndicator from "public-lib/components/TableCellStatus";
+import {TableCellStatus} from "public-lib/components/TableCellStatus";
 import TumorAlleleFreqColumnFormatter from "./TumorAlleleFreqColumnFormatter";
 
 export default class NormalAlleleFreqColumnFormatter

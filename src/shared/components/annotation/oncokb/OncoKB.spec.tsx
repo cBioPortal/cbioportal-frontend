@@ -1,13 +1,15 @@
+// TODO move this test into react-mutation-mapper repo!
+
+import {OncoKB, IOncoKbProps, oncoKbAnnotationSortValue} from "react-mutation-mapper";
+
 import {initQueryIndicator} from "test/OncoKbMockUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
-import {IOncoKbProps} from "./OncoKB";
-import OncoKB from './OncoKB';
+
 import React from 'react';
 import { assert } from 'chai';
-import {shallow, mount, ReactWrapper} from 'enzyme';
+import {mount, ReactWrapper} from 'enzyme';
 import {Circle} from "better-react-spinkit";
-import sinon from 'sinon';
 
 describe('OncoKB', () => {
     const props = {
@@ -22,16 +24,10 @@ describe('OncoKB', () => {
     });
 
     it('displays a load spinner when there is no indicator data', () => {
-        const spinner = component.find(Circle);
+        const spinner = component.find(".fa-spinner");
 
         assert.isTrue(spinner.exists(),
             "Spinner component should exist");
-
-        assert.equal(spinner.prop("size"), 18,
-            "Spinner size should be equal to 18");
-
-        assert.equal(spinner.prop("color"), "#aaa",
-            "Spinner color should be #aaa");
     });
 
     it('properly calculates OncoKB sort values', () => {
@@ -49,13 +45,13 @@ describe('OncoKB', () => {
         let sortedArray:IndicatorQueryResp[];
 
         assert.deepEqual(
-            OncoKB.sortValue(queryA), OncoKB.sortValue(queryB),
+            oncoKbAnnotationSortValue(queryA), oncoKbAnnotationSortValue(queryB),
             'Equal Oncogenicity');
 
         queryA.oncogenic = 'Oncogenic';
         queryB.oncogenic = 'Inconclusive';
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 2');
@@ -63,7 +59,7 @@ describe('OncoKB', () => {
         queryA.oncogenic = 'Oncogenic';
         queryB.oncogenic = 'Unknown';
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 3');
@@ -71,7 +67,7 @@ describe('OncoKB', () => {
         queryA.oncogenic = 'Oncogenic';
         queryB.oncogenic = 'Likely Neutral';
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 4');
@@ -79,7 +75,7 @@ describe('OncoKB', () => {
         queryA.oncogenic = 'Inconclusive';
         queryB.oncogenic = 'Unknown';
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 5');
@@ -87,7 +83,7 @@ describe('OncoKB', () => {
         queryA.oncogenic = 'Likely Neutral';
         queryB.oncogenic = 'Inconclusive';
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 6');
@@ -101,7 +97,7 @@ describe('OncoKB', () => {
             vus: false
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A is VUS, which should have higher score.');
@@ -115,7 +111,7 @@ describe('OncoKB', () => {
             highestSensitiveLevel: 'LEVEL_2A'
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A(LEVEL_1) should be higher than B(LEVEL_2A)');
@@ -129,7 +125,7 @@ describe('OncoKB', () => {
             highestResistanceLevel: 'LEVEL_R2'
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A(LEVEL_R1) should be higher than B(LEVEL_R2)');
@@ -145,7 +141,7 @@ describe('OncoKB', () => {
             highestResistanceLevel: 'LEVEL_R1'
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A(LEVEL_2A) should be higher than B(LEVEL_R1)');
@@ -158,7 +154,7 @@ describe('OncoKB', () => {
             highestSensitiveLevel: 'LEVEL_2A'
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'The score for Oncogenic variant(A) should always higher than other categories(B) even B has treatments.');
@@ -171,7 +167,7 @@ describe('OncoKB', () => {
             geneExist: false
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A should be higher than B.');
@@ -185,7 +181,7 @@ describe('OncoKB', () => {
             geneExist: true
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A should be higher than B even A gene does not exist. Because A has higher oncogenicity.');
@@ -199,7 +195,7 @@ describe('OncoKB', () => {
             highestSensitiveLevel: 'LEVEL_2A'
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isBelow(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A should be lower than B.');
@@ -212,7 +208,7 @@ describe('OncoKB', () => {
             highestSensitiveLevel: 'LEVEL_2A'
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isBelow(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A should be lower than B[LEVEL_2A] even B variant does not exist.');
@@ -228,7 +224,7 @@ describe('OncoKB', () => {
             highestSensitiveLevel: 'LEVEL_2A'
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isBelow(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A should be lower than B.');
@@ -243,7 +239,7 @@ describe('OncoKB', () => {
             highestSensitiveLevel: 'LEVEL_2A'
         });
         array = [queryB, queryA];
-        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, oncoKbAnnotationSortValue, true);
         assert.isBelow(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A should be lower than B[LEVEL_2A] even A is hotspot.');
