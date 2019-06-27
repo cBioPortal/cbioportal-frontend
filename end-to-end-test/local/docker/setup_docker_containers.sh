@@ -185,26 +185,6 @@ load_studies_in_db() {
 
 }
 
-check_jitpack_download_frontend() {
-    url_short="https://jitpack.io/com/github/$FRONTEND_PROJECT_USERNAME/cbioportal-frontend/$FRONTEND_SHA1_SHORT/cbioportal-frontend-$FRONTEND_SHA1_SHORT.jar"
-    sleeptime=0
-    maxtime=1200
-    while (($sleeptime < $maxtime)); do
-        if !(curl -s --head $url_short | head -n 1 | egrep "HTTP/[0-9.]+ 200"); then
-            echo "Waiting... ($url_short)"
-            sleep 10
-            sleeptime=$sleeptime+10
-        else
-            sleeptime=maxtime+1
-        fi
-    done
-
-    if !(curl -s --head $url_short | head -n 1 | egrep "HTTP/[0-9.]+ 200"); then
-        echo "Could not find frontend .jar (version: $FRONTEND_SHA1, org: $FRONTEND_PROJECT_USERNAME) at jitpack (url: $url_short)"
-        exit 1
-    fi
-}
-
 download_db_seed() {
     # download db schema and seed data
     curdir=$PWD
