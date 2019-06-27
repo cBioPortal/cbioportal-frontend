@@ -28,7 +28,7 @@
     "compileOqlParser": "cd src/shared/lib/oql && pegjs oql-parser.pegjs",
     "serveDist": "./scripts/serve_dist.sh",
     "testTime": "start_time=`date +%s` && karma start karma.conf.js && echo run time is $(expr `date +%s` - $start_time) s",
-    "test": "export NODE_OPTIONS=--max-old-space-size=4096; karma start karma.conf.js",
+    "test": "export NODE_OPTIONS=--max-old-space-size=2048; karma start karma.conf.js",
     "test:watch": "yarn run test -- --watch",
     "test:debug": "yarn run test -- --debug --browsers=Chrome_with_debugging --single-run=false",
     "lint": "tslint 'src/**/*.ts' 'src/**/*.tsx' --exclude 'src/shared/api/generated/**'",
