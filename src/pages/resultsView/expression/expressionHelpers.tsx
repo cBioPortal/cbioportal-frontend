@@ -3,7 +3,6 @@ import {
     CancerStudy, GenePanelData, Mutation,
     NumericGeneMolecularData
 } from "../../../shared/api/generated/CBioPortalAPI";
-import getCanonicalMutationType, {getProteinImpactType} from "../../../shared/lib/getCanonicalMutationType";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";

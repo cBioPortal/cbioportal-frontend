@@ -6,11 +6,11 @@ import { Popover } from 'react-bootstrap';
 import CBIOPORTAL_VICTORY_THEME, {axisLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { formatLogOddsRatio } from "shared/lib/FormatUtils";
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
-import DownloadControls from 'shared/components/downloadControls/DownloadControls';
+import DownloadControls from 'public-lib/components/downloadControls/DownloadControls';
 import autobind from 'autobind-decorator';
 import SelectionComponent from "./SelectionComponent";
 import HoverablePoint from "./HoverablePoint";
-import {getTextWidth, truncateWithEllipsis} from "../../../shared/lib/TextTruncationUtils";
+import {getTextWidth, truncateWithEllipsis} from "../../../public-lib/lib/TextTruncationUtils";
 
 export interface IMiniScatterChartProps {
     data: any[];

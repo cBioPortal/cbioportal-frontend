@@ -1,7 +1,4 @@
 import * as React from "react";
-import {HTMLProps} from "react";
-import {observer} from "mobx-react";
-import {computed, observable} from "mobx";
 
 export interface IEditableSpanProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLSpanElement>, HTMLSpanElement> {
     value:string;

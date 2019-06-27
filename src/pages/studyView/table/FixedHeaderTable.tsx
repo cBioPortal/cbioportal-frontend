@@ -16,7 +16,7 @@ import classnames from 'classnames';
 import {If} from 'react-if';
 import autobind from 'autobind-decorator';
 import {inputBoxChangeTimeoutEvent} from "../../../shared/lib/EventUtils";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[],

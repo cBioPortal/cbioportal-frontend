@@ -1,7 +1,6 @@
 import svg2pdf from "svg2pdf.js";
 import {jsPDF} from "jspdf-yworks";
 import font from "FreeSans.json";
-import _ from "lodash";
 
 function base64ToArrayBuffer(base64:string) {
     const binaryString = window.atob(base64);
