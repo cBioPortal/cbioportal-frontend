@@ -13,7 +13,7 @@ import 'react-rangeslider/lib/index.css';
 
 import { CancerSummaryChart } from "./CancerSummaryChart";
 import autobind from "autobind-decorator";
-import DownloadControls from "shared/components/downloadControls/DownloadControls"
+import DownloadControls from "public-lib/components/downloadControls/DownloadControls"
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
 
 export const OrderedAlterationLabelMap: Record<keyof IAlterationCountMap, string> = {

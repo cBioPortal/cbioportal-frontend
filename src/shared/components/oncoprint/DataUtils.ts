@@ -22,7 +22,7 @@ import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {CoverageInformation, ExtendedClinicalAttribute} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
-import {stringListToIndexSet} from "../../lib/StringUtils";
+import {stringListToIndexSet} from "../../../public-lib/lib/StringUtils";
 import {isNotGermlineMutation} from "../../lib/MutationUtils";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {

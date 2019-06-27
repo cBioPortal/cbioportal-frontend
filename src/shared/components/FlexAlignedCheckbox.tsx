@@ -1,6 +1,5 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import DefaultTooltip from "./defaultTooltip/DefaultTooltip";
 
 export interface ICheckboxProps {
     value?:string;

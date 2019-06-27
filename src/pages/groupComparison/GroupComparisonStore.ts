@@ -13,7 +13,7 @@ import {
     isGroupEmpty,
     partitionCasesByGroupMembership
 } from "./GroupComparisonUtils";
-import {remoteData} from "../../shared/api/remoteData";
+import {remoteData} from "../../public-lib/api/remoteData";
 import {
     CancerStudy,
     ClinicalAttribute,
@@ -53,7 +53,7 @@ import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyM
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import {GroupComparisonURLQuery} from "./GroupComparisonPage";
 import {AppStore} from "../../AppStore";
-import {stringListToIndexSet} from "../../shared/lib/StringUtils";
+import {stringListToIndexSet} from "../../public-lib/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";

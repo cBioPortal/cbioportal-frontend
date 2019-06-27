@@ -5,9 +5,21 @@ import autobind from "autobind-decorator";
 import {observer, Observer} from "mobx-react";
 import {computed, action, observable} from "mobx";
 import classnames from "classnames";
+import {
+    initDefaultTrackVisibility,
+    LollipopMutationPlot,
+    TrackDataStatus,
+    TrackName,
+    TrackVisibility
+} from "react-mutation-mapper";
+
 // tslint:disable-next-line:no-import-side-effect
 import 'react-select/dist/react-select.css';
+import 'react-mutation-mapper/dist/styles.css';
 import './styles.scss';
+
+import 'cbioportal-frontend-commons/styles.css';
+import 'react-table/react-table.css';
 
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
@@ -17,24 +29,33 @@ import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
-import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS} from "shared/lib/MutationUtils";
-import LollipopMutationPlot from "shared/components/lollipopMutationPlot/LollipopMutationPlot";
+import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS, getColorForProteinImpactType} from "shared/lib/MutationUtils";
 import ProteinImpactTypePanel from "shared/components/mutationTypePanel/ProteinImpactTypePanel";
 import ProteinChainPanel from "shared/components/proteinChainPanel/ProteinChainPanel";
-import TrackPanel from "../tracks/TrackPanel";
-import {TrackDataStatus, TrackNames, TrackVisibility} from "../tracks/TrackSelector";
 import MutationMapperStore from "./MutationMapperStore";
-import {initDefaultTrackVisibility} from "./MutationMapperUserSelectionStore";
 import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
-import Mutations from 'pages/resultsView/mutation/Mutations';
-import {IServerConfig} from "../../../config/IAppConfig";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {getNCBIlink} from "public-lib/lib/urls";
 import WindowStore from "../window/WindowStore";
-import {getNCBIlink} from "../../api/urls";
+
+
+export interface IMutationMapperConfig {
+    show_oncokb?: boolean;
+    show_genomenexus?: boolean;
+    show_hotspot?: boolean;
+    mycancergenome_show?: boolean;
+    show_civic?: boolean;
+    isoformOverrideSource?: string;
+    mygene_info_url: string | null;
+    uniprot_id_url: string | null;
+    genomenexus_url: string | null;
+    oncokb_public_api_url: string | null;
+}
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
     trackVisibility?: TrackVisibility;
-    config: IServerConfig;
+    config: IMutationMapperConfig;
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
@@ -91,7 +112,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
 
         let hotspotDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.indexedHotspotData.status;
 
-        if (hotspotDataStatus === 'complete' && _.isEmpty(this.props.store.hotspotsByProteinPosStart)) {
+        if (hotspotDataStatus === 'complete' && _.isEmpty(this.props.store.hotspotsByPosition)) {
             hotspotDataStatus = 'empty';
         }
 
@@ -103,15 +124,16 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
 
         let ptmDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.ptmData.status;
 
-        if (ptmDataStatus === 'complete' && this.props.store.ptmData.result.length === 0) {
+        if (ptmDataStatus === 'complete' &&
+            (!this.props.store.ptmData.result || this.props.store.ptmData.result.length === 0)) {
             ptmDataStatus = 'empty';
         }
 
         return {
-            [TrackNames.OncoKB]: oncoKbDataStatus,
-            [TrackNames.CancerHotspots]: hotspotDataStatus,
-            [TrackNames.PDB]: alignmentDataStatus,
-            [TrackNames.PTM]: ptmDataStatus
+            [TrackName.OncoKB]: oncoKbDataStatus,
+            [TrackName.CancerHotspots]: hotspotDataStatus,
+            [TrackName.PTM]: ptmDataStatus,
+            [TrackName.PDB]: alignmentDataStatus
         };
     }
 
@@ -120,7 +142,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
     }
 
     @computed get is3dPanelOpen() {
-        return this.trackVisibility[TrackNames.PDB] === 'visible';
+        return this.trackVisibility[TrackName.PDB] === 'visible';
     }
 
     @computed get geneSummary():JSX.Element {
@@ -131,7 +153,9 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         const showOnlyAnnotatedTranscriptsInDropdown = this.props.showOnlyAnnotatedTranscriptsInDropdown;
         const canonicalTranscriptId = store.canonicalTranscript.result &&
             store.canonicalTranscript.result.transcriptId;
-        const transcript = store.activeTranscript && (store.activeTranscript === canonicalTranscriptId)? store.canonicalTranscript.result : store.transcriptsByTranscriptId[store.activeTranscript!!];
+        const transcript = store.activeTranscript && (store.activeTranscript === canonicalTranscriptId)?
+            store.canonicalTranscript.result as EnsemblTranscript :
+            store.transcriptsByTranscriptId[store.activeTranscript!!];
         const refseqMrnaId = transcript && transcript.refseqMrnaId;
         const ccdsId = transcript && transcript.ccdsId;
 
@@ -268,7 +292,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                               allTranscripts:string[],
                               canonicalTranscript:string,
                               transcriptsByTranscriptId:{[transcriptId:string]: EnsemblTranscript},
-                              mutationsByTranscriptId?: {[transcriptId:string]: Mutations[]}) {
+                              mutationsByTranscriptId?: {[transcriptId:string]: Mutation[]}) {
         const activeRefseqMrnaId = transcriptsByTranscriptId[activeTranscript].refseqMrnaId;
         return (
             <div>
@@ -362,12 +386,13 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         return (
             <LollipopMutationPlot
                 store={this.props.store}
+                pubMedCache={this.props.pubMedCache}
                 onXAxisOffset={this.handlers.onXAxisOffset}
                 geneWidth={this.geneWidth}
                 trackVisibility={this.trackVisibility}
                 trackDataStatus={this.trackDataStatus}
                 onTrackVisibilityChange={this.onTrackVisibilityChange}
-                {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
+                getLollipopColor={getColorForProteinImpactType}
             />
         );
     }
@@ -383,24 +408,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                 maxChainsHeight={200}
             />
         ): null;
-    }
-
-    protected trackPanel(): JSX.Element|null
-    {
-        const transcript = this.props.store.activeTranscript ?
-            this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript] :
-            this.props.store.canonicalTranscript.result;
-
-        return (
-            <TrackPanel
-                store={this.props.store}
-                pubMedCache={this.props.pubMedCache}
-                trackVisibility={this.trackVisibility}
-                geneWidth={this.geneWidth}
-                proteinLength={transcript && transcript.proteinLength}
-                geneXOffset={this.lollipopPlotGeneX}
-            />
-        );
     }
 
     protected proteinImpactTypePanel(): JSX.Element|null
@@ -493,7 +500,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                         <div style={{ display:'flex' }}>
                             <div className="borderedChart" style={{ marginRight:10 }}>
                                 {this.mutationPlot()}
-                                {this.trackPanel()}
                                 {this.proteinChainPanel()}
                             </div>
 
@@ -515,13 +521,13 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
 
     @action
     protected open3dPanel() {
-        this.trackVisibility[TrackNames.PDB] = 'visible';
+        this.trackVisibility[TrackName.PDB] = 'visible';
     }
 
     @autobind
     @action
     protected close3dPanel() {
-        this.trackVisibility[TrackNames.PDB] = 'hidden';
+        this.trackVisibility[TrackName.PDB] = 'hidden';
     }
 
     @autobind
@@ -539,11 +545,11 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
     protected onTrackVisibilityChange(selectedTrackNames: string[])
     {
         // 3D panel is toggled to open
-        if (this.trackVisibility[TrackNames.PDB] === 'hidden' && selectedTrackNames.includes(TrackNames.PDB)) {
+        if (this.trackVisibility[TrackName.PDB] === 'hidden' && selectedTrackNames.includes(TrackName.PDB)) {
             this.open3dPanel();
         }
         // 3D panel is toggled to close
-        else if (this.trackVisibility[TrackNames.PDB] === 'visible' && !selectedTrackNames.includes(TrackNames.PDB)) {
+        else if (this.trackVisibility[TrackName.PDB] === 'visible' && !selectedTrackNames.includes(TrackName.PDB)) {
             this.close3dPanel();
         }
 

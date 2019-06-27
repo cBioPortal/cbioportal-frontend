@@ -5,7 +5,7 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./gnomad.module.scss";
 import generalStyles from "./styles.module.scss";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 import {MyVariantInfo, MyVariantInfoAnnotation, Gnomad, AlleleCount, AlleleNumber, Homozygotes, AlleleFrequency} from 'shared/api/generated/GenomeNexusAPI';
 import GenomeNexusMyVariantInfoCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusMyVariantInfoCache";

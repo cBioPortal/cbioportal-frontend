@@ -7,7 +7,7 @@ import styles from './shareUI.module.scss';
 import autobind from "autobind-decorator";
 import {BookmarkModal} from "../bookmark/BookmarkModal";
 import {action, observable} from "mobx";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 interface IShareUI {
     sessionEnabled: boolean;

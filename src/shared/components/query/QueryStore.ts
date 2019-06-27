@@ -8,7 +8,7 @@ import {
 } from "../../api/generated/CBioPortalAPI";
 import {Geneset} from "../../api/generated/CBioPortalAPIInternal";
 import CancerStudyTreeData from "./CancerStudyTreeData";
-import {remoteData} from "../../api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {labelMobxPromises, cached, debounceAsync} from "mobxpromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
 import {MUTCommand, SingleGeneQuery, SyntaxError} from "../../lib/oql/oql-parser";
@@ -19,7 +19,7 @@ import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
 import {buildCBioPortalPageUrl, redirectToStudyView} from "../../api/urls";
 import StudyListLogic from "./StudyListLogic";
-import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
+import {stringListToIndexSet, stringListToSet} from "../../../public-lib/lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
 import {
     MolecularProfileQueryParams,

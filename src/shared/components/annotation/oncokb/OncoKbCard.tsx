@@ -1,22 +1,21 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import Collapse from 'react-collapse';
+import {Collapse} from 'react-collapse';
 import {Else, If, Then} from 'react-if';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import {mergeAlterations} from 'shared/lib/OncoKbUtils';
-import {ICache} from "shared/lib/SimpleCache";
+import {ICache} from "public-lib/lib/SimpleCache";
 import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 // TODO these need to be defined as modules, and class names used in this component need to be updated
 import mainStyles from '../styles/oncokb/main.module.scss';
 import collapsibleStyles from '../styles/oncokb/collapsible.module.scss';
-import levelStyles from '../styles/oncokb/level.module.scss';
+import levelStyles from 'public-lib/components/oncokb/level.module.scss';
 import tabsStyles from '../styles/oncokb/tabs.module.scss';
 import {ArticleAbstract, Citations} from "../../../api/generated/OncoKbAPI";
-import {getNCBIlink} from "../../../api/urls";
+import {getNCBIlink} from "public-lib/lib/urls";
 import classnames from 'classnames';
 import OncoKbTreatmentTable from "./OncoKbTreatmentTable";
-import ReferenceList from "./ReferenceList";
+import ReferenceList from "public-lib/components/oncokb/ReferenceList";
 import SummaryWithRefs from "./SummaryWithRefs";
 import OncoKBSuggestAnnotationLinkout from "shared/components/annotation/oncokb/OncoKBSuggestAnnotationLinkout";
 
