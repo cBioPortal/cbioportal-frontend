@@ -1,5 +1,5 @@
 import * as React from 'react';
-import DefaultTooltip from "../../public-lib/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "./defaultTooltip/DefaultTooltip";
 
 export enum TableCellStatus {
     LOADING, ERROR, NA

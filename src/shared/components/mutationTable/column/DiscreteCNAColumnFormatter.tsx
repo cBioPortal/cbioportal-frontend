@@ -6,7 +6,7 @@ import {
     default as DiscreteCNACache
 } from "shared/cache/DiscreteCNACache";
 import {MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 
 export default class DiscreteCNAColumnFormatter {
 

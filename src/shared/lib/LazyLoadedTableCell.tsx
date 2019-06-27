@@ -1,6 +1,6 @@
 import * as React from "react";
 import {CacheData} from "./LazyMobXCache";
-import {TableCellStatus, default as TableCellStatusIndicator} from "../components/TableCellStatus";
+import {TableCellStatus, default as TableCellStatusIndicator} from "public-lib/components/TableCellStatus";
 export default function LazyLoadedTableCell<D,T,M=any>(
     getCacheData:(d:D)=>CacheData<T,M>|null,
     render:(t:T, d?:D)=>JSX.Element,
