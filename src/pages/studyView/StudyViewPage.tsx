@@ -76,7 +76,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private queryReaction:IReactionDisposer;
     @observable showCustomSelectTooltip = false;
     @observable showGroupsTooltip = false;
-    private inCustomSelectTooltip = false;
     private studyViewQueryFilter:StudyViewURLQuery;
 
     constructor(props: IStudyViewPageProps) {
@@ -211,11 +210,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     content() {
 
         return (
-            <div className="studyView" onClick={()=>{
-                if(this.showCustomSelectTooltip && !this.inCustomSelectTooltip) {
-                    this.showCustomSelectTooltip = false;
-                }
-            }}>
+            <div className="studyView">
                 {this.store.comparisonConfirmationModal}
                 {this.store.unknownQueriedIds.isComplete &&
                 this.store.unknownQueriedIds.result.length > 0 && (
@@ -293,12 +288,12 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                         && (<>
                                                 <DefaultTooltip
                                                     visible={this.showCustomSelectTooltip}
+                                                    trigger={['click']}
                                                     placement={"bottomLeft"}
+                                                    onVisibleChange={visible => this.showCustomSelectTooltip = !!visible}
                                                     destroyTooltipOnHide={true}
                                                     overlay={() => (
                                                         <div style={{width: '300px'}}
-                                                             onMouseEnter={()=>this.inCustomSelectTooltip=true}
-                                                             onMouseLeave={()=>this.inCustomSelectTooltip=false}
                                                         >
                                                             <CustomCaseSelection
                                                                 allSamples={this.store.samples.result}
@@ -315,11 +310,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     )}
                                                 >
                                                     <button className={classNames('btn btn-primary btn-sm', {"active":this.showCustomSelectTooltip})}
+                                                            aria-pressed={this.showCustomSelectTooltip}
                                                             data-test='custom-selection-button'
-                                                            onClick={(evt:any) => {
-                                                                evt.stopPropagation();
-                                                                this.showCustomSelectTooltip = !this.showCustomSelectTooltip;
-                                                            }}
                                                             style={{marginLeft: '10px'}}>Custom Selection
                                                     </button>
                                                 </DefaultTooltip>

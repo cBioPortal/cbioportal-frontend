@@ -4,12 +4,9 @@ import BarGraph from "../barGraph/BarGraph";
 import { observer} from "mobx-react";
 import {TypeOfCancer as CancerType} from "../../api/generated/CBioPortalAPI";
 import Testimonials from "../testimonials/Testimonials";
-import {ThreeBounce} from 'better-react-spinkit';
 import AppConfig from "appConfig";
 import {QueryStore} from "shared/components/query/QueryStore";
 import { Link } from 'react-router';
-import getBrowserWindow from "../../lib/getBrowserWindow";
-import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 import {redirectToStudyView} from "../../api/urls";
 import {ResultsViewTab} from "../../../pages/resultsView/ResultsViewPageHelpers";
@@ -41,7 +38,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
     get logic() { return this.studyStore.studyListLogic; }
 
     private CancerTypeList() {
-        return this.logic.cancerTypeListView.getChildCancerTypes(this.studyStore.treeData.rootCancerType);
+        return this.logic.cancerTypeListView.getChildCancerTypes(this.studyStore.treeData.rootCancerType, true);
     };
 
     private CancerTypeDescendantStudy({cancerType}: {cancerType:CancerType}) {
