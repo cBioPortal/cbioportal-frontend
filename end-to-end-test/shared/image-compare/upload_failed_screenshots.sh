@@ -20,7 +20,7 @@ echo UPLOADING ERROR SCREENSHOTS
 
 cd ${DIR}/../../$SCREENSHOT_DIRECTORY
 
-if [ -n "$(ls diff/*.png)" ]; then
+if (ls diff/*.png 2> /dev/null > /dev/null); then
     references=()
     # collect reference images for each screenshot in diff directory
     for image_path in diff/*.png; do
