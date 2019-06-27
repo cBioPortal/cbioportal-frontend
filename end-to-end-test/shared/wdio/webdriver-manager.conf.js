@@ -23,7 +23,7 @@ if (process.env.SCREENSHOT_DIRECTORY.match(/local/)) {
 var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
 var refDir = process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
 var screenDir = process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
-var errorDir = process.env.SCREENSHOT_DIRECTORY + '/../error' || './errorShots/';
+var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
 
 var config = {
     //
