@@ -11,7 +11,7 @@ import PatientHeader from "./patientHeader/PatientHeader";
 import SignificantMutationalSignatures from "./patientHeader/SignificantMutationalSignatures";
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import {IColumnVisibilityDef} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
-import {toggleColumnVisibility} from "shared/components/lazyMobXTable/ColumnVisibilityResolver";
+import {toggleColumnVisibility} from "public-lib/lib/ColumnVisibilityResolver";
 import {parseCohortIds, PatientViewPageStore} from "./clinicalInformation/PatientViewPageStore";
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
@@ -47,6 +47,10 @@ import {QueryParams} from "url";
 import {AppStore} from "../../AppStore";
 import request from 'superagent';
 import {remoteData} from "../../public-lib/api/remoteData";
+
+import 'cbioportal-frontend-commons/styles.css';
+import 'react-mutation-mapper/dist/styles.css';
+import 'react-table/react-table.css';
 
 const patientViewPageStore = new PatientViewPageStore();
 
