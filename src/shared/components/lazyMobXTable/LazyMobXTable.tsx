@@ -14,11 +14,11 @@ import {
     IColumnVisibilityDef
 } from "../columnVisibilityControls/ColumnVisibilityControls";
 import {CopyDownloadControls, ICopyDownloadData} from "../copyDownloadControls/CopyDownloadControls";
-import {resolveColumnVisibility, resolveColumnVisibilityByColumnDefinition} from "./ColumnVisibilityResolver";
+import {resolveColumnVisibility, resolveColumnVisibilityByColumnDefinition} from "public-lib/lib/ColumnVisibilityResolver";
 import {ICopyDownloadControlsProps} from "../copyDownloadControls/ICopyDownloadControls";
 import {SimpleCopyDownloadControls} from "../copyDownloadControls/SimpleCopyDownloadControls";
 import {serializeData} from "shared/lib/Serializer";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
 import {If} from 'react-if';
 import {SortMetric} from "../../lib/ISortMetric";
