@@ -1,5 +1,5 @@
 
-var assertScreenShotMatch = require('../../lib/testUtils').assertScreenShotMatch;
+var assertScreenShotMatch = require('../../../lib/shared/testUtils').assertScreenShotMatch;
 
 var assert = require('assert');
 var expect = require('chai').expect;

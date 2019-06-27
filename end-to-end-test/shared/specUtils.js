@@ -1,3 +1,5 @@
+const clipboardy = require('clipboardy');
+
 function waitForQueryPage(timeout) {
     $('div[data-test="cancerTypeListContainer"]').waitForExist(timeout || 10000);
 }
@@ -64,7 +66,7 @@ function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
             }
         }
         return ret;
-    }, 2000);
+    }, 60000);
 }
 
 function getNthOncoprintTrackOptionsElements(n) {
@@ -80,6 +82,7 @@ function getNthOncoprintTrackOptionsElements(n) {
         dropdown_selector
     };
 }
+
 
 const useExternalFrontend = !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
 
@@ -113,6 +116,13 @@ function toStudyViewClinicalDataTab() {
     }
 }
 
+function removeAllStudyViewFilters() {
+    const clearAllFilter = "[data-test='clear-all-filters']";
+    if (browser.isVisible(clearAllFilter)) {
+        browser.click(clearAllFilter);
+    }
+}
+
 function waitForStudyViewSelectedInfo() {
     browser.waitForVisible("[data-test='selected-info']", 5000);
     // pause to wait the animation finished
@@ -139,6 +149,13 @@ function selectReactSelectOption(parent, optionText) {
 function reactSelectOption(parent, optionText) {
     parent.$('.Select-value-label').click();
     return parent.$('.Select-option='+optionText);
+}
+
+function pasteToElement(elementSelector, text){
+
+    clipboardy.writeSync(text);
+    browser.setValue(elementSelector, ["Shift","Insert"]);
+
 }
 
 function checkOncoprintElement(selector) {
@@ -168,6 +185,7 @@ function checkElementWithMouseDisabled(selector, pauseTime) {
     return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0);
 }
 
+
 module.exports = {
     waitForPlotsTab: waitForPlotsTab,
     waitForQueryPage: waitForQueryPage,
@@ -180,6 +198,7 @@ module.exports = {
     getTextInOncoprintLegend: getTextInOncoprintLegend,
     toStudyViewSummaryTab: toStudyViewSummaryTab,
     toStudyViewClinicalDataTab: toStudyViewClinicalDataTab,
+    removeAllStudyViewFilters: removeAllStudyViewFilters,
     waitForStudyViewSelectedInfo: waitForStudyViewSelectedInfo,
     getTextFromElement: getTextFromElement,
     getNumberOfStudyViewCharts: getNumberOfStudyViewCharts,
@@ -194,3 +213,5 @@ module.exports = {
     selectReactSelectOption: selectReactSelectOption,
     reactSelectOption: reactSelectOption,
 };
+
+
