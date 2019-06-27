@@ -11,7 +11,7 @@ import {getPubMedUrl, getStudySummaryUrl, redirectToStudyView} from "../../../ap
 import {QueryStoreComponent} from "../QueryStore";
 import DefaultTooltip from "../../defaultTooltip/DefaultTooltip";
 import {FilteredCancerTreeView} from "../StudyListLogic";
-import {CancerTreeNode} from "../CancerStudyTreeData";
+import {CancerTreeNode, CancerTypeWithVisibility} from "../CancerStudyTreeData";
 import {StudyLink} from "../../StudyLink/StudyLink";
 import StudyTagsTooltip from '../../studyTagsTooltip/StudyTagsTooltip';
 
@@ -105,7 +105,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 		return studyList;
 	}
 
-	renderCancerType = (cancerType:CancerType, arrayIndex:number = 0):JSX.Element | null =>
+	renderCancerType = (cancerType:CancerTypeWithVisibility, arrayIndex:number = 0):JSX.Element | null =>
 	{
 		let currentLevel = this.logic.getDepth(cancerType);
 		let childCancerTypes = this.view.getChildCancerTypes(cancerType);
