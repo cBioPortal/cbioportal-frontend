@@ -132,11 +132,11 @@
             switch(this.innerText) {
                 case "GraphML":
                     e.preventDefault();
-                    formSubmit("http://www.cbioportal.org/beta/network.do?download=on", networkParams, "_self", "post");
+                    formSubmit(apiHost + "network.do?download=on", networkParams, "_self", "post");
                     break;
                 case "SIF":
                     e.preventDefault();
-                    formSubmit("http://www.cbioportal.org/beta/network.do?download=on&format=sif", networkParams, "_self", "post");
+                    formSubmit(apiHost + "network.do?download=on&format=sif", networkParams, "_self", "post");
                     break;
             }
 
