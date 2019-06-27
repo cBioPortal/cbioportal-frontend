@@ -30,9 +30,6 @@ if(myResponse.ok):
     backend_user = "cbioportal"
     backend_branch_name = frontend_base_branch_name
 
-    # TODO: attempt to shorten git commit hash for jitpack compat
-    frontend_commit_hash = frontend_commit_hash[:10]
-
     frontend_group_id = "com.github."+frontend_user
 
     pr_state = ""
