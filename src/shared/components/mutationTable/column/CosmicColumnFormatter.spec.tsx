@@ -6,7 +6,7 @@ import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 
 describe('CosmicColumnFormatter', () => {
 

@@ -12,7 +12,7 @@ import SampleManager from "../sampleManager";
 
 import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
 import {ClinicalEvent, ClinicalEventData} from "../../../shared/api/generated/CBioPortalAPI";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
 
 interface ITimelineProps {

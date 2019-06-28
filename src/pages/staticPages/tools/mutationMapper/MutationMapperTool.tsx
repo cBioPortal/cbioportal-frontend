@@ -2,7 +2,7 @@ import * as React from 'react';
 import { inject, observer } from "mobx-react";
 import {action, computed, observable} from "mobx";
 import {bind} from "bind-decorator";
-import Collapse from 'react-collapse';
+import {Collapse} from 'react-collapse';
 import {ControlLabel, FormControl, FormGroup} from "react-bootstrap";
 import {PageLayout} from "shared/components/PageLayout/PageLayout";
 import Helmet from "react-helmet";

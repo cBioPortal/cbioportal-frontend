@@ -11,9 +11,9 @@ import {percentAltered} from "../../../../shared/components/oncoprint/OncoprintU
 import AppConfig from "appConfig";
 import OncoprintJS from "oncoprintjs";
 import fileDownload from "react-file-download";
-import svgToPdfDownload from "shared/lib/svgToPdfDownload";
+import svgToPdfDownload from "public-lib/lib/svgToPdfDownload";
 import classNames from "classnames";
-import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
+import FadeInteraction from "public-lib/components/fadeInteraction/FadeInteraction";
 import OncoprinterStore from "./OncoprinterStore";
 import autobind from "autobind-decorator";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";

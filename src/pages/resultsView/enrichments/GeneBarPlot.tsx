@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { observable, action, computed } from 'mobx';
-import DownloadControls from 'shared/components/downloadControls/DownloadControls';
+import DownloadControls from 'public-lib/components/downloadControls/DownloadControls';
 import autobind from 'autobind-decorator';
 import MultipleCategoryBarPlot from 'shared/components/plots/MultipleCategoryBarPlot';
 import ReactSelect from "react-select2";
 import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
 import _ from "lodash";
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from "shared/api/generated/CBioPortalAPI";
 import { getEnrichmentBarPlotData, getGeneListOptions, USER_DEFINED_OPTION, CNA_TO_ALTERATION, AlterationContainerType } from './EnrichmentsUtil';

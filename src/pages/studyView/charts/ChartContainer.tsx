@@ -34,7 +34,7 @@ import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPl
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {getComparisonUrl} from "../../../shared/api/urls";
-import {DownloadControlsButton} from "../../../shared/components/downloadControls/DownloadControls";
+import {DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
 import {MAX_GROUPS_IN_SESSION} from "../../groupComparison/GroupComparisonUtils";
 import {Modal} from "react-bootstrap";
 

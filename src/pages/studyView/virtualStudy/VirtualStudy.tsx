@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 import { computed, observable, action, reaction, IReactionDisposer } from 'mobx';
 import { CancerStudy, Sample } from 'shared/api/generated/CBioPortalAPI';
 import classnames from 'classnames';
-import { remoteData } from 'shared/api/remoteData';
+import { remoteData } from 'public-lib/api/remoteData';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { If, Then, Else } from 'react-if';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
@@ -15,7 +15,7 @@ import {
     getCurrentDate,
     StudyViewFilterWithSampleIdentifierFilters, StudyWithSamples
 } from 'pages/studyView/StudyViewUtils';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import autobind from 'autobind-decorator';
 import client from "shared/api/cbioportalClientInstance";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";

@@ -1,7 +1,7 @@
 import * as React from "react";
 import {Observer, observer} from "mobx-react";
 import {action, computed, IObservableObject, IReactionDisposer, observable, ObservableMap, reaction} from "mobx";
-import {remoteData} from "../../api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import Oncoprint, {GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
@@ -24,10 +24,10 @@ import AppConfig from "appConfig";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import OncoprintJS, {TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
-import svgToPdfDownload from "shared/lib/svgToPdfDownload";
+import svgToPdfDownload from "public-lib/lib/svgToPdfDownload";
 import tabularDownload from "./tabularDownload";
 import classNames from 'classnames';
-import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
+import FadeInteraction from "public-lib/components/fadeInteraction/FadeInteraction";
 import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
 import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";

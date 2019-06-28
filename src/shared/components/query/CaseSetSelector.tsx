@@ -7,7 +7,7 @@ import {computed} from 'mobx';
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
 import {QueryStore, QueryStoreComponent, CUSTOM_CASE_LIST_ID, ALL_CASES_LIST_ID} from './QueryStore';
 import {getStudySummaryUrl} from '../../api/urls';
-import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import { getFilteredCustomCaseSets } from 'shared/components/query/CaseSetSelectorUtils';
 

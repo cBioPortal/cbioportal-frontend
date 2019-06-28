@@ -1,14 +1,5 @@
 import {observable} from "mobx";
-import {TrackNames, TrackVisibility} from "../tracks/TrackSelector";
-
-export function initDefaultTrackVisibility(): TrackVisibility {
-    return {
-        [TrackNames.OncoKB]: 'hidden',
-        [TrackNames.CancerHotspots]: 'hidden',
-        [TrackNames.PTM]: 'hidden',
-        [TrackNames.PDB]: 'hidden'
-    };
-}
+import {initDefaultTrackVisibility, TrackVisibility} from "react-mutation-mapper";
 
 export default class MutationMapperUserSelectionStore
 {

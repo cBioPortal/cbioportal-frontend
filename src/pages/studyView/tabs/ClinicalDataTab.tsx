@@ -12,7 +12,7 @@ import {
 } from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
-import {remoteData} from "shared/api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {Else, If, Then} from 'react-if';
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';

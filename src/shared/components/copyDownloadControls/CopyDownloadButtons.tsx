@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {If} from 'react-if';
 import {Button, ButtonGroup} from 'react-bootstrap';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import {ICopyDownloadInputsProps} from "./ICopyDownloadControls";
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {

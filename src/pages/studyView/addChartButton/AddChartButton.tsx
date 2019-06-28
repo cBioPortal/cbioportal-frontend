@@ -11,7 +11,7 @@ import {
 import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
 import AddChartByType from "./addChartByType/AddChartByType";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../public-lib/api/remoteData";
 import CustomCaseSelection from "./customCaseSelection/CustomCaseSelection";
 import {
     calculateClinicalDataCountFrequency, ChartMetaDataTypeEnum, ChartType,
@@ -19,7 +19,7 @@ import {
     getOptionsByChartMetaDataType
 } from "../StudyViewUtils";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import {ChartTypeEnum, ChartTypeNameEnum} from "../StudyViewConfig";
 import InfoBanner from "../infoBanner/InfoBanner";
 import {GAEvent, serializeEvent, trackEvent} from "../../../shared/lib/tracking";

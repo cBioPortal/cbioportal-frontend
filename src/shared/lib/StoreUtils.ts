@@ -1,13 +1,13 @@
 import * as _ from 'lodash';
-import request from "superagent";
-import Response = request.Response;
+import {
+    fetchVariantAnnotationsByMutation as fetchDefaultVariantAnnotationsByMutation,
+    fetchVariantAnnotationsIndexedByGenomicLocation as fetchDefaultVariantAnnotationsIndexedByGenomicLocation,
+} from "react-mutation-mapper"
 import {
     default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier, CopyNumberSeg,
     ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, NumericGeneMolecularData, SampleFilter, Gene
 } from "shared/api/generated/CBioPortalAPI";
-import {EnsemblFilter, EnsemblTranscript, PostTranslationalModification} from "shared/api/generated/GenomeNexusAPI";
-import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import g2sClient from "shared/api/g2sClientInstance";
@@ -39,7 +39,7 @@ import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
 import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
-import {stringListToIndexSet} from "./StringUtils";
+import {stringListToIndexSet} from "public-lib/lib/StringUtils";
 import {GeneticTrackDatum_Data} from "../components/oncoprint/Oncoprint";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
@@ -69,6 +69,21 @@ export async function fetchMutationData(mutationFilter:MutationFilter,
     }
 }
 
+export async function fetchVariantAnnotationsByMutation(mutations: Mutation[],
+                                                        fields: string[] = ["annotation_summary"],
+                                                        isoformOverrideSource: string = "uniprot",
+                                                        client: GenomeNexusAPI = genomeNexusClient)
+{
+    return fetchDefaultVariantAnnotationsByMutation(mutations, fields, isoformOverrideSource, client);
+}
+
+export async function fetchVariantAnnotationsIndexedByGenomicLocation(mutations: Mutation[],
+                                                                      fields: string[] = ["annotation_summary"],
+                                                                      isoformOverrideSource: string = "uniprot",
+                                                                      client: GenomeNexusAPI = genomeNexusClient)
+{
+    return fetchDefaultVariantAnnotationsIndexedByGenomicLocation(mutations, fields, isoformOverrideSource, client);
+}
 
 export async function fetchGenes(hugoGeneSymbols?: string[],
                                  client: CBioPortalAPI = defaultClient)
@@ -98,65 +113,6 @@ export async function fetchPdbAlignmentData(ensemblId: string,
     }
 }
 
-export function fetchPtmData(ensemblId: string,
-                             client:GenomeNexusAPI = genomeNexusClient): Promise<PostTranslationalModification[]>
-{
-    if (ensemblId)
-    {
-        return client.fetchPostTranslationalModificationsGET({
-            ensemblTranscriptId: ensemblId});
-    }
-    else {
-        return Promise.resolve([]);
-    }
-}
-
-
-export async function fetchSwissProtAccession(entrezGeneId: number)
-{
-    const myGeneData:Response = await request.get(getMyGeneUrl(entrezGeneId));
-    return JSON.parse(myGeneData.text).uniprot["Swiss-Prot"];
-}
-
-export async function fetchUniprotId(swissProtAccession: string)
-{
-    const uniprotData:Response = await request.get(getUniprotIdUrl(swissProtAccession));
-    return uniprotData.text.split("\n")[1];
-}
-
-export async function fetchPfamDomainData(pfamAccessions: string[],
-                                          client:GenomeNexusAPI = genomeNexusClient)
-{
-    return await client.fetchPfamDomainsByPfamAccessionPOST({
-        pfamAccessions: pfamAccessions
-    });
-}
-
-/*
- * Gets the canonical transcript. If there is none pick the transcript with max
- * length.
- */
-export async function fetchCanonicalTranscriptWithFallback(hugoSymbol:string,
-                                                           isoformOverrideSource: string,
-                                                           allTranscripts: EnsemblTranscript[] | undefined,
-                                                           client:GenomeNexusAPI =  genomeNexusClient)
-{
-    return fetchCanonicalTranscript(hugoSymbol, isoformOverrideSource, client).catch(() => {
-        // get transcript with max protein length in given list of all transcripts
-        const transcript = _.maxBy(allTranscripts, (t:EnsemblTranscript) => t.proteinLength);
-        return transcript? transcript : undefined;
-    });
-}
-
-export async function fetchCanonicalTranscript(hugoSymbol: string,
-                                               isoformOverrideSource: string,
-                                               client:GenomeNexusAPI = genomeNexusClient)
-{
-    return await client.fetchCanonicalEnsemblTranscriptByHugoSymbolGET({
-        hugoSymbol, isoformOverrideSource
-    });
-}
-
 export async function fetchCanonicalTranscripts(hugoSymbols: string[],
                                                 isoformOverrideSource: string,
                                                 client:GenomeNexusAPI = genomeNexusClient)
@@ -181,20 +137,6 @@ export async function fetchCanonicalEnsemblGeneIds(hugoSymbols: string[],
     // TODO: this endpoint should accept isoformOverrideSource
     return await client.fetchCanonicalEnsemblGeneIdByHugoSymbolsPOST({
         hugoSymbols});
-}
-
-export async function fetchEnsemblTranscriptsByEnsemblFilter(ensemblFilter: Partial<EnsemblFilter>,
-                                                             client:GenomeNexusAPI = genomeNexusClient)
-{
-
-    return await client.fetchEnsemblTranscriptsByEnsemblFilterPOST({ensemblFilter: Object.assign(
-        // set default to empty array
-        {
-            'geneIds': [],
-            'hugoSymbols': [],
-            'proteinIds': [],
-            'transcriptIds': [],
-        }, ensemblFilter)});
 }
 
 export async function fetchClinicalData(clinicalDataMultiStudyFilter:ClinicalDataMultiStudyFilter,

@@ -1,9 +1,9 @@
+import {IHotspotIndex, isHotspot} from "react-mutation-mapper/";
+
 import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
 import {ICosmicData} from "shared/model/Cosmic";
 import {IMyCancerGenome, IMyCancerGenomeData} from "shared/model/MyCancerGenome";
-import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {isHotspot} from "./CancerHotspotsUtils";
 import {Hotspot} from "../api/generated/GenomeNexusAPI";
 
 /**

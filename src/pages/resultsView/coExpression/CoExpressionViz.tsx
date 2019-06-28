@@ -8,7 +8,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import {SimpleGetterLazyMobXTableApplicationDataStore} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
 import {logScalePossibleForProfile} from "../plots/PlotsTabUtils";
 import CoExpressionPlot, {ICoExpressionPlotProps} from "./CoExpressionPlot";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../public-lib/api/remoteData";
 import {MobxPromise} from "mobxpromise";
 import {computePlotData, requestAllDataMessage} from "./CoExpressionVizUtils";
 import {Button} from "react-bootstrap";
