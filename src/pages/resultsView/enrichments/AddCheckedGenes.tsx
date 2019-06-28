@@ -6,7 +6,7 @@ import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
 import autobind from 'autobind-decorator';
 import {QueryParameter} from "../../../shared/lib/ExtendedRouterStore";
 import {ResultsViewTab} from "../ResultsViewPageHelpers";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 
 export interface IAddCheckedGenesProps {
     checkedGenes:  string[];

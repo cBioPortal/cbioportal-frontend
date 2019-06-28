@@ -1,6 +1,6 @@
 import * as React from 'react';
 import autobind from "autobind-decorator";
-import DownloadControls from "../downloadControls/DownloadControls";
+import DownloadControls from "public-lib/components/downloadControls/DownloadControls";
 
 interface IChartContainer {
     getSVGElement?:()=>SVGElement|null;

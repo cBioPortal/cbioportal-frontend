@@ -8,7 +8,7 @@ import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import classnames from "classnames";
 import styles from "./DownloadControls.module.scss";
 import {saveSvg, saveSvgAsPng} from "save-svg-as-png";
-import svgToPdfDownload from "shared/lib/svgToPdfDownload";
+import svgToPdfDownload from "../../lib/svgToPdfDownload";
 import {types} from "util";
 import {isPromiseLike} from "../../lib/PromiseUtils";
 

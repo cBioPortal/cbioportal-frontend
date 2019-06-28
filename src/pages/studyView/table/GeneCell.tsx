@@ -2,14 +2,14 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import styles from "./tables.module.scss";
 import classnames from 'classnames';
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {getGeneColumnCellOverlaySimple} from "../TableUtils";
 import {getQValue} from "../StudyViewUtils";
 import {action, observable} from 'mobx';
 import {observer} from 'mobx-react';
 import autobind from 'autobind-decorator';
 import {If, Then, Else} from 'react-if';
-import EllipsisTextTooltip from "shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import EllipsisTextTooltip from "public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 export type IGeneCellProps = {
     tableType: 'mutation' | 'cna',

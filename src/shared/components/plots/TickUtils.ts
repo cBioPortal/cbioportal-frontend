@@ -1,7 +1,7 @@
 import _ from "lodash";
 import measureText from "measure-text";
 import numeral from "numeral";
-import {textTruncationUtils} from "../../lib/TextTruncationUtils";
+import {textTruncationUtils} from "../../../public-lib/lib/TextTruncationUtils";
 import {axisTickLabelStyles} from "../../theme/cBioPoralTheme";
 
 export function wrapTick(label:string, maxWidth:number):string[] {

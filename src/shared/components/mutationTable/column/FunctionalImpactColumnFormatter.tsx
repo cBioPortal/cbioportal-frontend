@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {Circle} from "better-react-spinkit";
 import classNames from 'classnames';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";

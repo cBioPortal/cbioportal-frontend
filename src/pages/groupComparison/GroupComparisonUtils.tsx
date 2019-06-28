@@ -19,7 +19,7 @@ import {MakeMobxView, MobxViewAlwaysComponent} from "../../shared/components/Mob
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import {stringListToIndexSet} from "../../shared/lib/StringUtils";
+import {stringListToIndexSet} from "public-lib/lib/StringUtils";
 
 export enum GroupComparisonTab {
     OVERLAP = "overlap",

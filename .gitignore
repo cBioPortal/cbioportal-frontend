@@ -1,5 +1,6 @@
 node_modules
 npm-debug.log
+yarn-error.log
 .env
 .awsDetails
 .idea/**
@@ -10,7 +11,9 @@ stats.json
 .DS_Store
 tsDist/
 dist/
+commons-dist/
 .sass-cache
+.rpt2_cache
 frontend-cbioportal.iml
 test/
 .classpath

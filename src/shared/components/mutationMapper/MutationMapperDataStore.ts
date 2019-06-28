@@ -1,89 +1,133 @@
 import * as _ from 'lodash';
+import {action, computed, observable} from "mobx";
+import autobind from "autobind-decorator";
+import {
+    DataFilter,
+    DataStore,
+    findAllUniquePositions
+} from "react-mutation-mapper";
 import {
     SimpleLazyMobXTableApplicationDataStore
 } from "shared/lib/ILazyMobXTableApplicationDataStore";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {action, computed, observable} from "mobx";
-import Immutable from "seamless-immutable";
 import {countDuplicateMutations, groupMutationsByGeneAndPatientAndProteinChange} from "shared/lib/MutationUtils";
 
-type PositionAttr = {[position:string]:boolean};
-type ImmutablePositionAttr = PositionAttr & Immutable.ImmutableObject<PositionAttr>;
 
-export default class MutationMapperDataStore extends SimpleLazyMobXTableApplicationDataStore<Mutation[]>{
-    @observable.ref private selectedPositions:ImmutablePositionAttr;
-    @observable.ref private highlightedPositions:ImmutablePositionAttr;
-    @observable private dataSelectFilter: (d: Mutation[]) => boolean = () => true;
-    @observable private dataHighlightFilter: (d: Mutation[]) => boolean = () => true;
+type CustomFilterApplier = (filter: DataFilter,
+                            mutation: Mutation,
+                            positions: {[position: string]: {position: number}}) => boolean;
 
-    @action public setPositionSelected(position:number, newVal:boolean) {
-        const toMerge:PositionAttr = {};
-        toMerge[position+""] = newVal;
-        this.selectedPositions = this.selectedPositions.merge(toMerge) as ImmutablePositionAttr;
+// TODO this is now mostly duplicate of DefaultMutationMapperDataStore in react-mutation-mapper
+export default class MutationMapperDataStore
+    extends SimpleLazyMobXTableApplicationDataStore<Mutation[]>
+    implements DataStore
+{
+    @observable public selectionFilters: DataFilter[] = [];
+    @observable public highlightFilters: DataFilter[] = [];
+
+    // this custom filter applier allows us to interpret selection and highlight filters in a customized way,
+    // by default only position filters are taken into account
+    protected applyCustomFilter: CustomFilterApplier | undefined;
+
+    @computed
+    public get selectedPositions() {
+        return _.keyBy(findAllUniquePositions(this.selectionFilters).map(p => ({position: p})), 'position');
     }
 
-    @action public setPositionHighlighted(position:number, newVal:boolean) {
-        const toMerge:PositionAttr = {};
-        toMerge[position+""] = newVal;
-        this.highlightedPositions = this.highlightedPositions.merge(toMerge) as ImmutablePositionAttr;
+    @computed
+    public get highlightedPositions() {
+        return _.keyBy(findAllUniquePositions(this.highlightFilters).map(p => ({position: p})), 'position');
     }
 
-    @action public clearSelectedPositions() {
-        if (!_.isEmpty(this.selectedPositions)) {
-            this.selectedPositions = Immutable.from<PositionAttr>({});
-        }
+    @action
+    public clearHighlightFilters() {
+        this.highlightFilters = [];
     }
 
-    @action public clearHighlightedPositions() {
-        if (!_.isEmpty(this.highlightedPositions)) {
-            this.highlightedPositions = Immutable.from<PositionAttr>({});
-        }
+    @action
+    public clearSelectionFilters() {
+        this.selectionFilters = [];
     }
 
-    @action public setDataSelectFilter(dataSelectorFilter: (d: Mutation[]) => boolean) {
-        this.dataSelectFilter = dataSelectorFilter;
+    @action
+    public setHighlightFilters(filters: DataFilter[]) {
+        this.highlightFilters = filters;
     }
 
-    @action public clearDataSelectFilter() {
-        this.dataSelectFilter = () => true;
-    }
+    @action
+    public setSelectionFilters(filters: DataFilter[]) {
+        this.selectionFilters = filters;
+    };
 
-    @action public setDataHighlightFilter(dataHighlightFilter: (d: Mutation[]) => boolean) {
-        this.dataHighlightFilter = dataHighlightFilter;
-    }
-
-    @action public clearDataHighlightFilter() {
-        this.dataHighlightFilter = () => true;
-    }
-
-    public isPositionSelected(position:number) {
+    public isPositionSelected(position: number) {
         return !!this.selectedPositions[position+""];
     }
 
-    public isPositionHighlighted(position:number) {
+    public isPositionHighlighted(position: number) {
         return !!this.highlightedPositions[position+""];
     }
 
-    @action public resetFilterAndSelection() {
+    @action
+    public resetFilterAndSelection() {
         super.resetFilter();
-        this.clearSelectedPositions();
+        this.clearPositionFilters();
     }
 
-    @computed get tableDataGroupedByPatients() {
+    @computed
+    get tableDataGroupedByPatients() {
         return groupMutationsByGeneAndPatientAndProteinChange(_.flatten(this.tableData));
     }
 
-    @computed get duplicateMutationCountInMultipleSamples(): number {
+    @computed
+    get duplicateMutationCountInMultipleSamples(): number {
         return countDuplicateMutations(this.tableDataGroupedByPatients);
     }
 
-    constructor(data:Mutation[][]) {
+    constructor(data: Mutation[][], applyCustomFilter?: CustomFilterApplier) {
         super(data);
-        this.selectedPositions = Immutable.from<PositionAttr>({});
-        this.highlightedPositions = Immutable.from<PositionAttr>({});
-        this.dataSelector = (d:Mutation[]) =>
-            (!!this.selectedPositions[d[0].proteinPosStart+""] && this.dataSelectFilter(d));
-        this.dataHighlighter = (d:Mutation[]) =>
-            (!!this.highlightedPositions[d[0].proteinPosStart+""] && this.dataHighlightFilter(d));
+        this.dataSelector = (d: Mutation[]) => this.dataSelectFilter(d);
+        this.dataHighlighter = (d:Mutation[]) => this.dataHighlightFilter(d);
+        this.applyCustomFilter = applyCustomFilter;
+    }
+
+    @action
+    private clearPositionFilters() {
+        // remove only filters with defined position field
+        this.selectionFilters = this.selectionFilters.filter(f => f.position === undefined);
+    }
+
+    @autobind
+    private dataSelectFilter(d: Mutation[]): boolean
+    {
+        return (
+            this.selectionFilters.length > 0 &&
+            !this.selectionFilters
+                .map(dataFilter => this.applyFilter(dataFilter, d[0], this.selectedPositions))
+                .includes(false)
+        );
+    }
+
+    @autobind
+    private dataHighlightFilter(d: Mutation[]): boolean
+    {
+        return (
+            this.highlightFilters.length > 0 &&
+            !this.highlightFilters
+                .map(dataFilter => this.applyFilter(dataFilter, d[0], this.highlightedPositions))
+                .includes(false)
+        );
+    }
+
+    @autobind
+    private applyFilter(filter: DataFilter, mutation: Mutation, positions: {[position: string]: {position: number}})
+    {
+        if (this.applyCustomFilter) {
+            // let the custom filter applier decide how to apply the given filter
+            return this.applyCustomFilter(filter, mutation, positions);
+        }
+        else {
+            // by default only filter by position
+            return !!positions[mutation.proteinPosStart+""];
+        }
     }
 }
