@@ -107,7 +107,7 @@ export function proxyPost(targetObj:any, methodName:string){
     }
 }
 
-export function proxyAllPostMethodsOnClient(obj:any){
-    const postMethods = Object.getOwnPropertyNames( obj.prototype ).filter((methodName)=>/UsingPOST$/.test(methodName));
+export function proxyAllPostMethodsOnClient(obj: any, excluded: string[] = []) {
+    const postMethods = Object.getOwnPropertyNames(obj.prototype).filter((methodName) => /UsingPOST$/.test(methodName) && !excluded.includes(methodName));
     postMethods.forEach((n)=>proxyPost(obj.prototype, n));
 }
