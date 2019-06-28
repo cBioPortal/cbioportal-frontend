@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { observable } from 'mobx';
 import styles from "./styles.module.scss";
 import { VictoryChart, VictoryContainer, VictoryAxis, VictoryBar, VictoryStack, VictoryLabel } from 'victory';
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import { Popover } from 'react-bootstrap';
 import { getBarChartTooltipContent } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";

@@ -127,6 +127,7 @@ var config = {
             styles: join(src, 'styles'),
             pages: join(src, 'pages'),
             shared: join(src, 'shared'),
+            commons: join(src, 'commons'),
             appConfig: path.join(__dirname + '/src', 'config', ((process.env.NODE_ENV === 'test')? 'test.' : '') + 'config')
         }
     },
@@ -302,6 +303,12 @@ var config = {
                     /igv\.min/,
                     /node_modules\/svg2pdf.js\//
                 ]
+            },
+
+            {
+                test: require.resolve("3dmol"),
+                // 3Dmol expects "this" to be the global context
+                use: "imports-loader?this=>window"
             }
 
 

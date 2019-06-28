@@ -12,7 +12,8 @@ import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome"
 import {IHotspotDataWrapper} from "shared/model/CancerHotspots";
 import {CancerStudy, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {CancerGene, IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
-import {getEvidenceQuery, getIndicatorData, generateQueryVariantId} from "shared/lib/OncoKbUtils";
+import {getEvidenceQuery} from "shared/lib/OncoKbUtils";
+import {generateQueryVariantId} from "public-lib/lib/OncoKbUtils";
 import {is3dHotspot, isRecurrentHotspot} from "shared/lib/AnnotationUtils";
 import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {buildCivicEntry} from "shared/lib/CivicUtils";

@@ -12,8 +12,8 @@ import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewUtils";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
-import {getTextWidth} from "../../../../shared/lib/TextTruncationUtils";
+import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import {getTextWidth} from "../../../../public-lib/lib/TextTruncationUtils";
 import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 
 export interface IPieChartProps {

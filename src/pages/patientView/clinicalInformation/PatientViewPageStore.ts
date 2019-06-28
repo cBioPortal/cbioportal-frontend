@@ -10,7 +10,7 @@ import {
     Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action, runInAction} from "mobx";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../public-lib/api/remoteData";
 import {IGisticData} from "shared/model/Gistic";
 import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
@@ -25,7 +25,7 @@ import PubMedCache from "shared/cache/PubMedCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {IOncoKbData} from "shared/model/OncoKB";
-import {IHotspotIndex} from "shared/model/CancerHotspots";
+import {IHotspotIndex, indexHotspotsData} from "react-mutation-mapper";
 import {IMutSigData} from "shared/model/MutSig";
 import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
@@ -67,13 +67,13 @@ import {
     findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     concatMutationData,
-    fetchOncoKbCancerGenes
+    fetchOncoKbCancerGenes,
+    fetchVariantAnnotationsIndexedByGenomicLocation
 } from "shared/lib/StoreUtils";
-import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
-import {stringListToSet} from "../../../shared/lib/StringUtils";
+import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
+import {stringListToSet} from "../../../public-lib/lib/StringUtils";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
-import { fetchVariantAnnotationsIndexedByGenomicLocation } from 'shared/lib/MutationAnnotator';
 import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
 import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
@@ -345,7 +345,10 @@ export class PatientViewPageStore {
             this.mutationData,
             this.uncalledMutationData,
         ],
-        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(concatMutationData(this.mutationData, this.uncalledMutationData), ["annotation_summary", "hotspots"], AppConfig.serverConfig.isoformOverrideSource),
+        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(
+            concatMutationData(this.mutationData, this.uncalledMutationData),
+            ["annotation_summary", "hotspots"],
+            AppConfig.serverConfig.isoformOverrideSource),
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }

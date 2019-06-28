@@ -21,7 +21,7 @@ import {
     ResultsViewPageStore
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {remoteData} from "../../api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {
     makeClinicalTrackData,
     makeGeneticTrackData,

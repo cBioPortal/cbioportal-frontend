@@ -5,7 +5,7 @@ import {getHierarchyData} from "shared/lib/StoreUtils";
 import 'jstree/dist/jstree.min'; // tslint:disable-line
 import 'shared/components/query/styles/jstree/style.css'; // tslint:disable-line
 import * as _ from "lodash";
-import { remoteData } from "shared/api/remoteData";
+import { remoteData } from "public-lib/api/remoteData";
 import CBioPortalAPIInternal, { GenesetHierarchyInfo } from "shared/api/generated/CBioPortalAPIInternal";
 import { observer } from "mobx-react";
 import { observable, ObservableMap } from "mobx";

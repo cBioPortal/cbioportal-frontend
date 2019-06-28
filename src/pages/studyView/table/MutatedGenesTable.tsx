@@ -7,7 +7,7 @@ import MobxPromise from "mobxpromise";
 import { If } from "react-if";
 import * as _ from "lodash";
 import classnames from "classnames";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import FixedHeaderTable from "./FixedHeaderTable";
 import { action, computed, IReactionDisposer, observable, reaction } from "mobx";
 import autobind from "autobind-decorator";

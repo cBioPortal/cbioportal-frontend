@@ -1,10 +1,11 @@
+import {IHotspotIndex} from "react-mutation-mapper";
 import {
     Mutation, Gene, ClinicalData, CancerStudy, MolecularProfile, SampleIdentifier
 } from "shared/api/generated/CBioPortalAPI";
-import {remoteData} from "shared/api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
-import {IOncoKbCancerGenesWrapper, IOncoKbDataWrapper} from "shared/model/OncoKB";
-import {IHotspotIndex} from "shared/model/CancerHotspots";
+import {IOncoKbData} from "shared/model/OncoKB";
+import {CancerGene} from "shared/api/generated/OncoKbAPI";
 import {ICivicGene, ICivicVariant} from "shared/model/Civic";
 import {
     fetchCosmicData, fetchCivicGenes, fetchCivicVariants
@@ -21,11 +22,11 @@ import {IServerConfig} from "../../../config/IAppConfig";
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore
 {
-    constructor(protected config: IServerConfig,
+    constructor(protected mutationMapperConfig: IServerConfig,
                 protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
                 public gene:Gene,
                 public samples:MobxPromise<SampleIdentifier[]>,
-                public oncoKbCancerGenes:IOncoKbCancerGenesWrapper,
+                public oncoKbCancerGenes:MobxPromise<CancerGene[] | Error>,
                 // getMutationDataCache needs to be a getter for the following reason:
                 // when the input parameters to the mutationDataCache change, the cache
                 // is recomputed. Mobx needs to respond to this. But if we pass the mutationDataCache
@@ -47,10 +48,10 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
                 public indexedHotspotData:MobxPromise<IHotspotIndex|undefined>,
                 public indexedVariantAnnotations:MobxPromise<{[genomicLocation: string]: VariantAnnotation}|undefined>,
                 public uniqueSampleKeyToTumorType:{[uniqueSampleKey:string]:string},
-                public oncoKbData:IOncoKbDataWrapper)
+                public oncoKbData:MobxPromise<IOncoKbData | Error>)
     {
         super(
-            config,
+            mutationMapperConfig,
             mutationMapperStoreConfig,
             gene,
             getMutations,
@@ -76,7 +77,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             this.mutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => this.config.show_civic ? fetchCivicGenes(this.mutationData) : {},
+        invoke: async() => this.mutationMapperConfig.show_civic ? fetchCivicGenes(this.mutationData) : {},
         onError: (err: Error) => {
             // fail silently
         }
@@ -88,7 +89,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             this.mutationData
         ],
         invoke: async() => {
-            if (this.config.show_civic && this.civicGenes.result) {
+            if (this.mutationMapperConfig.show_civic && this.civicGenes.result) {
                 return fetchCivicVariants(this.civicGenes.result as ICivicGene, this.mutationData);
             }
             else {

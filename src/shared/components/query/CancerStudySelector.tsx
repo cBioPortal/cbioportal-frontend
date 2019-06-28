@@ -16,7 +16,7 @@ import SectionHeader from "../sectionHeader/SectionHeader";
 import {Modal, Button} from 'react-bootstrap';
 import Autosuggest from 'react-bootstrap-autosuggest';
 import ReactElement = React.ReactElement;
-import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import FontAwesome from "react-fontawesome";
 import AppConfig from "appConfig";
 import {ServerConfigHelpers} from "../../../config/config";
