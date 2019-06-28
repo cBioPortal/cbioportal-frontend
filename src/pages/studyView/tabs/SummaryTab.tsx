@@ -192,6 +192,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.onGeneSelect=this.store.onCheckGene;
                 props.title = props.title + ( !this.store.molecularProfileSampleCounts.isComplete || this.store.molecularProfileSampleCounts.result === undefined ? '' : ` (${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} profiled samples)`),
                 props.getData = () => this.store.getMutatedGenesDownloadData();
+                props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ["Data"];
                 break;
             }
@@ -204,6 +205,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.onGeneSelect=this.store.onCheckGene;
                 props.title = props.title + ( !this.store.molecularProfileSampleCounts.isComplete || this.store.molecularProfileSampleCounts.result === undefined ? '' : ` (${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples} profiled samples)`),
                 props.getData = () => this.store.getGenesCNADownloadData();
+                props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ["Data"];
                 break;
             }
