@@ -6,7 +6,6 @@ import { observer } from "mobx-react";
 import styles from "./tables.module.scss";
 import {
     CopyNumberGeneFilterElement,
-    GenePanelToGene
 } from "shared/api/generated/CBioPortalAPIInternal";
 import MobxPromise from "mobxpromise";
 import { If } from "react-if";
@@ -27,10 +26,12 @@ import {
 } from "../StudyViewUtils";
 import { SortDirection } from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import { DEFAULT_SORTING_COLUMN } from "../StudyViewConfig";
-import { GenePanelModal, GenePanelList } from "./GenePanelModal";
+import { GenePanelModal } from "./GenePanelModal";
 import {getFreqColumnRender, getGeneColumnHeaderRender} from "pages/studyView/TableUtils";
 import {GeneCell} from "pages/studyView/table/GeneCell";
 import {IMutatedGenesTablePros} from "pages/studyView/table/MutatedGenesTable";
+import {GenePanel, GenePanelToGene} from "shared/api/generated/CBioPortalAPI";
+import MobxPromiseCache from "shared/lib/MobxPromiseCache";
 
 export type CNAGenesTableUserSelectionWithIndex = CopyNumberAlterationIdentifier & {
     rowIndex: number;
@@ -45,6 +46,7 @@ export interface ICNAGenesTablePros {
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
+    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     cancerGeneFilterEnabled?: boolean;
 }
 
@@ -68,11 +70,9 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @observable private modalSettings: {
         modalOpen: boolean;
         modalPanelName: string;
-        modalPanelGenes: GenePanelToGene[];
     } = {
         modalOpen: false,
-        modalPanelName: "",
-        modalPanelGenes: []
+        modalPanelName: ""
     };
 
     public static defaultProps = {
@@ -81,13 +81,12 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
 
     @autobind
     @action
-    toggleModal(panelName: string, genes: GenePanelToGene[]) {
+    toggleModal(panelName: string) {
         this.modalSettings.modalOpen = !this.modalSettings.modalOpen;
         if (!this.modalSettings.modalOpen) {
             return;
         }
         this.modalSettings.modalPanelName = panelName;
-        this.modalSettings.modalPanelGenes = genes;
     }
 
     @autobind
@@ -263,7 +262,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
                 },
                 render: (data: CopyNumberCountByGeneWithCancerGene) => {
-                    return getFreqColumnRender('cna', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanels, this.toggleModal)
+                    return getFreqColumnRender('cna', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanelIds, this.toggleModal)
                 },
                 sortBy: (data: CopyNumberCountByGeneWithCancerGene) =>
                     (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100,
@@ -432,7 +431,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 )}
                 <GenePanelModal
                     show={this.modalSettings.modalOpen}
-                    genes={this.modalSettings.modalPanelGenes}
+                    genePanelCache={this.props.genePanelCache}
                     panelName={this.modalSettings.modalPanelName}
                     hide={this.closeModal}
                 />
