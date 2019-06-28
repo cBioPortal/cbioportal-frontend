@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 set -e 
-set -u # unset variables throw error
-set -o pipefail # pipes fail when partial command fails
+set -u
+set -o pipefail
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
