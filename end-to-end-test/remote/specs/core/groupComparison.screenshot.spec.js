@@ -5,9 +5,6 @@ var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScree
 var setInputText = require('../../../shared/specUtils').setInputText;
 var checkElementWithTemporaryClass = require('../../../shared/specUtils').checkElementWithTemporaryClass;
 var checkElementWithMouseDisabled = require('../../../shared/specUtils').checkElementWithMouseDisabled;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQuiet;
-var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 

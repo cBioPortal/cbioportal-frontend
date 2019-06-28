@@ -1,6 +1,5 @@
 var assert = require('assert');
-var expect = require('chai').expect;
-<<<<<<< HEAD
+var expect = require('chai').expect
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
 var getTextInOncoprintLegend = require('../../../shared/specUtils').getTextInOncoprintLegend;
 var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils').setOncoprintMutationsMenuOpen;
@@ -8,15 +7,6 @@ var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndS
 var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
 var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils').waitForNumberOfStudyCheckboxes;
 var setInputText = require('../../../shared/specUtils').setInputText;
-=======
-var waitForOncoprint = require('./../../../shared/specUtils').waitForOncoprint;
-var getTextInOncoprintLegend = require('./../../../shared/specUtils').getTextInOncoprintLegend;
-var setOncoprintMutationsMenuOpen = require('./../../../shared/specUtils').setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('./../../../shared/specUtils').goToUrlAndSetLocalStorage;
-var useExternalFrontend = require('./../../../shared/specUtils').useExternalFrontend;
-var waitForNumberOfStudyCheckboxes = require('./../../../shared/specUtils').waitForNumberOfStudyCheckboxes;
-var setInputText = require('./../../../shared/specUtils').setInputText;
->>>>>>> 7c18de28... Working state of e2e-localdb after refactor
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 

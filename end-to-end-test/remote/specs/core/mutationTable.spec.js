@@ -1,8 +1,9 @@
+var executeInBrowser = require('../../../shared/specUtils').executeInBrowser;
+
 var assert = require('assert');
 var expect = require('chai').expect;
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 var waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQuiet;
-var executeInBrowser = require('../../../shared/specUtils').executeInBrowser;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 

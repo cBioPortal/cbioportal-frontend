@@ -1,6 +1,9 @@
 var assert = require('assert');
-var executeInBrowser = require('../../shared/specUtils').executeInBrowser;
+var expect = require('chai').expect;
+var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
 var goToUrlAndSetLocalStorage = require('../../shared/specUtils').goToUrlAndSetLocalStorage;
+var executeInBrowser = require('../../shared/specUtils').executeInBrowser;
+var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 

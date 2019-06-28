@@ -6,6 +6,7 @@ const waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQ
 const assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 const toStudyViewSummaryTab = require('../../../shared/specUtils').toStudyViewSummaryTab;
 const toStudyViewClinicalDataTab = require('../../../shared/specUtils').toStudyViewClinicalDataTab;
+const removeAllStudyViewFilters = require('../../../shared/specUtils').removeAllStudyViewFilters;
 const getNumberOfStudyViewCharts = require('../../../shared/specUtils').getNumberOfStudyViewCharts;
 const getTextFromElement = require('../../../shared/specUtils').getTextFromElement;
 const waitForStudyViewSelectedInfo = require('../../../shared/specUtils').waitForStudyViewSelectedInfo;
