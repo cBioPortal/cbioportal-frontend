@@ -10,7 +10,7 @@ require.extensions['.txt'] = function (module, filename) {
 };
 
 const debug = process.env.DEBUG;
-const defaultTimeoutInterval = 18000;
+const defaultTimeoutInterval = 180000;
   var defaultMaxInstances = 3;
 
 // For e2e-localdb tests `maxInstances` larger than 1 causes tests to become
@@ -95,7 +95,7 @@ var config = {
 
     //
     // Level of logging verbosity: silent | verbose | command | data | result | error
-    logLevel: 'verbose',
+    logLevel: 'error',
     //
     // Enables colors for log output.
     coloredLogs: true,
@@ -174,12 +174,18 @@ var config = {
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
     // see also: http://webdriver.io/guide/testrunner/reporters.html
-    reporters: ['spec', 'junit'],
+    reporters: ['spec', 'junit', CustomReporter],
     reporterOptions: {
         junit: {
-            outputDir: process.env.JUNIT_REPORT_PATH,
+            outputDir: process.env.JUNIT_REPORT_PATH || "./",
             outputFileFormat: function(opts) { // optional
                 return `results-${opts.cid}.${opts.capabilities}.xml`
+            }
+        },
+        custom: {
+            outputDir: process.env.JUNIT_REPORT_PATH ||  "./",
+            outputFileFormat: function(opts) { // optional
+                return `custom-results-${opts.cid}.${opts.capabilities}.xml`
             }
         }
     },
@@ -267,8 +273,26 @@ var config = {
      * Function to be executed after a test (in Mocha/Jasmine) or a step (in Cucumber) starts.
      * @param {Object} test test details
      */
-    // afterTest: function (test) {
-    // },
+    afterTest: function (test) {
+
+        var networkLog = browser.execute(function() {
+
+            Object.keys(window.ajaxRequests).forEach((key)=>{
+                window.ajaxRequests[key].end = Date.now();
+                window.ajaxRequests[key].duration = window.ajaxRequests[key].end - window.ajaxRequests[key].started;
+            });
+
+            return JSON.stringify(window.ajaxRequests);
+
+        }).value;
+
+        process.send({
+            event: 'custom-report',
+            data: { test:test, network:JSON.parse(networkLog) }
+        });
+
+
+    },
     /**
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details
@@ -315,10 +339,8 @@ if (doBrowserstack) {
 }
 
 // config.specs = [
-//     './specs/**/mutationTable.spec.js'
-//     './specs/**/oncoprinter.screenshot.spec.js'
+//     './remote/specs/**/mutationTable.spec.js'
 // ];
-
 
 exports.config  = config;
 
