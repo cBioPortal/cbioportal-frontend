@@ -23,6 +23,7 @@ import WindowStore from 'shared/components/window/WindowStore';
 import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import OverlapUpset from "./OverlapUpset";
+import OverlapContainmentIndicator, {GroupContainmentRelation} from "./OverlapContainmentIndicator";
 
 export interface IOverlapProps {
     store: GroupComparisonStore
@@ -60,7 +61,12 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             if (this.props.store._selectedGroups.result!.length < 2) {
                 content.push(<span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>);
             } else {
-                content.push(<OverlapExclusionIndicator overlapTabMode={true} store={this.props.store}/>);
+                content.push(
+                    <div className="tabMessageContainer">
+                        <OverlapExclusionIndicator overlapTabMode={true} store={this.props.store}/>
+                        <OverlapContainmentIndicator uidToGroup={this.uidToGroup} containments={this.groupContainments}/>
+                    </div>
+                );
                 content.push(this.overlapUI.component);
             }
             return (<div data-test="ComparisonPageOverlapTabDiv">
@@ -109,9 +115,38 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     readonly plotType = remoteData({
         await:()=>[this.props.store._selectedGroups],
-        invoke:async()=>(this.props.store._selectedGroups.result!.length > 3 ? PlotType.Upset : PlotType.Venn)
+        invoke:async()=>(this.props.store._selectedGroups.result!.length > 2 ? PlotType.Upset : PlotType.Venn)
     });
 
+    readonly groupContainments = remoteData<GroupContainmentRelation[]>({
+        await:()=>[this.sampleGroupsWithCases],
+        invoke:()=>{
+            const groups = this.sampleGroupsWithCases.result!;
+            const containments:GroupContainmentRelation[] = [];
+            const casesMap = groups.reduce((map, groupObj)=>{
+                map[groupObj.uid] = _.keyBy(groupObj.cases);
+                return map;
+            }, {} as {[groupUid:string]:{[uniqueSampleKey:string]:string}});
+
+            for (let i=0; i<groups.length; i++) {
+                for (let j=i+1; j<groups.length; j++) {
+                    const uid1 = groups[i].uid;
+                    const uid2 = groups[j].uid;
+                    if (_.isEqual(casesMap[uid1], casesMap[uid2])) {
+                        containments.push({ groupUid:uid1, containerUid:uid2, equal:true });
+                    } else if (_.every(Object.keys(casesMap[uid1]), k=>(k in casesMap[uid2]))) {
+                        // everything in 1 is in 2
+                        containments.push({ groupUid:uid1, containerUid:uid2, equal:false });
+                    } else if (_.every(Object.keys(casesMap[uid2]), k=>(k in casesMap[uid1]))) {
+                        // everything in 2 is in 1
+                        containments.push({ groupUid:uid2, containerUid:uid1, equal:false });
+                    }
+                }
+            }
+
+            return Promise.resolve(containments);
+        }
+    });
 
     public readonly sampleGroupsWithCases = remoteData({
         await: () => [

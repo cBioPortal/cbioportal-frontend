@@ -555,6 +555,10 @@ h3.hr {
     margin-bottom:0 !important;
   }
 
+  .alert:not(:last-child) {
+    margin-bottom: 7px;
+  }
+
 }
 
 .alert {
