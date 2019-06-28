@@ -3,6 +3,12 @@ import {Evidence, EvidenceQueries, EvidenceQueryRes, IndicatorQueryResp, Query} 
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {OncoKbTreatment} from "../components/annotation/oncokb/OncoKbCard";
+import {
+    generateQueryVariant as generateGenericQueryVariant,
+    generatePartialEvidenceQuery,
+    generateQueryVariantId,
+    LEVELS,
+} from "public-lib/lib/OncoKbUtils";
 
 /**
  * @author Selcuk Onur Sumer
@@ -49,16 +55,6 @@ const RESISTANCE_LEVEL_SCORE:{[level:string]: number} = {
     'R1': 3,
 };
 
-export const LEVELS = {
-    sensitivity: ['4', '3B', '3A', '2B', '2A', '1', '0'],
-    resistance: ['R3', 'R2', 'R1'],
-    all: ['4', 'R3', '3B', '3A', 'R2', '2B', '2A', '1', 'R1', '0']
-};
-
-export enum AlterationTypes {
-    Mutation = 0
-}
-
 export function generateIdToIndicatorMap(data:IndicatorQueryResp[]): {[queryId:string]: IndicatorQueryResp}
 {
     const map:{[queryId:string]: IndicatorQueryResp} = {};
@@ -73,12 +69,9 @@ export function generateIdToIndicatorMap(data:IndicatorQueryResp[]): {[queryId:s
 export function generateEvidenceQuery(queryVariants:Query[], evidenceTypes?:string): EvidenceQueries
 {
     return {
-        evidenceTypes: evidenceTypes ? evidenceTypes : "GENE_SUMMARY,GENE_BACKGROUND,ONCOGENIC,MUTATION_EFFECT,VUS,MUTATION_SUMMARY,TUMOR_TYPE_SUMMARY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE",
-        highestLevelOnly: false,
-        levels: ['LEVEL_1', 'LEVEL_2A', 'LEVEL_2B', 'LEVEL_3A', 'LEVEL_3B', 'LEVEL_4', 'LEVEL_R1', 'LEVEL_R2'],
-        queries: queryVariants,
-        source: "cbioportal"
-    };
+        ...generatePartialEvidenceQuery(evidenceTypes),
+        queries: queryVariants
+    } as EvidenceQueries;
 }
 
 export function generateQueryVariant(entrezGeneId:number,
@@ -89,46 +82,9 @@ export function generateQueryVariant(entrezGeneId:number,
                                      proteinPosEnd?:number,
                                      alterationType?:string): Query
 {
-    let query = {
-        id: generateQueryVariantId(entrezGeneId, tumorType, alteration, mutationType),
-        hugoSymbol: '',
-        tumorType:(tumorType as string), // generated api typings are wrong, it can accept null
-        alterationType: alterationType || AlterationTypes[AlterationTypes.Mutation],
-        entrezGeneId: entrezGeneId,
-        alteration: alteration || "",
-        consequence: mutationType || "any",
-        proteinStart: proteinPosStart === undefined ? -1 : proteinPosStart,
-        proteinEnd: proteinPosEnd === undefined ? -1 : proteinPosEnd,
-        type: "web",
-        hgvs: "",
-        svType: "DELETION" // TODO: hack because svType is not optional
-    };
-
-    // Use proper parameters for Intragenic variant
-    if(query.alteration.toLowerCase().indexOf("intragenic") !== -1) {
-        query.alterationType = 'structural_variant';
-        query.svType = 'DELETION';
-        query.consequence = '';
-    }
-    return query as Query;
-}
-
-export function generateQueryVariantId(entrezGeneId:number,
-                                       tumorType:string | null,
-                                       alteration?:string,
-                                       mutationType?:string): string
-{
-    let id = (tumorType) ? `${entrezGeneId}_${tumorType}` : `${entrezGeneId}`;
-
-    if (alteration) {
-        id = `${id}_${alteration}`;
-    }
-
-    if (mutationType) {
-        id = `${id}_${mutationType}`;
-    }
-
-    return id.trim().replace(/\s/g, "_");
+    return generateGenericQueryVariant(
+        entrezGeneId, tumorType, alteration, mutationType, proteinPosStart, proteinPosEnd, alterationType
+    ) as Query;
 }
 
 // TODO evidence:IEvidence
@@ -322,27 +278,7 @@ export function getEvidenceQuery(mutation: Mutation, oncoKbData: IOncoKbData): Q
     ) : undefined;
 }
 
-export function groupOncoKbIndicatorDataByMutations(mutationsByPosition: {[pos: number]: Mutation[]},
-                                                    oncoKbData: IOncoKbData,
-                                                    filter?: (indicator: IndicatorQueryResp) => boolean): {[pos: number]: IndicatorQueryResp[]}
-{
-    const indicatorMap: {[pos: number]: IndicatorQueryResp[]} = {};
-
-    _.keys(mutationsByPosition).forEach(key => {
-        const position = Number(key);
-        const indicators: IndicatorQueryResp[] = mutationsByPosition[position]
-            .map(mutation => getIndicatorData(mutation, oncoKbData))
-            .filter(indicator =>
-                indicator !== undefined && (!filter || filter(indicator))) as IndicatorQueryResp[];
-
-        if (position > 0 && indicators.length > 0) {
-            indicatorMap[position] = indicators;
-        }
-    });
-
-    return indicatorMap;
-}
-
+// TODO remove when done refactoring mutation mapper
 export function defaultOncoKbIndicatorFilter(indicator: IndicatorQueryResp) {
     return indicator.oncogenic.toLowerCase().trim().includes("oncogenic");
 }

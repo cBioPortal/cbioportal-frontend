@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./styles/annotation.module.scss";
 import mcgStyles from "./styles/myCancerGenome.module.scss";
 

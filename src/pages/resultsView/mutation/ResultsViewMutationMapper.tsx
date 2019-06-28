@@ -2,8 +2,7 @@ import * as React from 'react';
 import {observer} from "mobx-react";
 import {computed} from "mobx";
 
-import AppConfig from 'appConfig';
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import {EnsemblTranscript} from "shared/api/generated/GenomeNexusAPI";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
@@ -18,7 +17,6 @@ import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary"
 import ResultsViewMutationMapperStore from "pages/resultsView/mutation/ResultsViewMutationMapperStore";
 import ResultsViewMutationTable from "pages/resultsView/mutation/ResultsViewMutationTable";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
-import {AppStore} from "../../../AppStore";
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps
 {
@@ -66,12 +64,15 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
         ) === "pending";
     }
 
+    protected get totalExonNumber() {
+        const canonicalTranscriptId = this.props.store.canonicalTranscript.result && this.props.store.canonicalTranscript.result.transcriptId;
+        const transcript = (this.props.store.activeTranscript && (this.props.store.activeTranscript === canonicalTranscriptId) ?
+            this.props.store.canonicalTranscript.result : this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript!]) as EnsemblTranscript;
+        return transcript && transcript.exons && transcript.exons.length > 0 ? transcript.exons.length.toString() : 'None';
+    }
+
     protected mutationTableComponent(): JSX.Element|null
     {
-        const canonicalTranscriptId = this.props.store.canonicalTranscript.result && this.props.store.canonicalTranscript.result.transcriptId;
-        const transcript = this.props.store.activeTranscript && (this.props.store.activeTranscript === canonicalTranscriptId) ?
-            this.props.store.canonicalTranscript.result : this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript!];
-        const totalExonNumber = transcript && transcript.exons && transcript.exons.length > 0 ? transcript.exons.length.toString() : 'None';
         return (
             <ResultsViewMutationTable
                 uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
@@ -100,7 +101,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 enableHotspot={this.props.config.show_hotspot}
                 enableMyCancerGenome={this.props.config.mycancergenome_show}
                 enableCivic={this.props.config.show_civic}
-                totalNumberOfExons={totalExonNumber}
+                totalNumberOfExons={this.totalExonNumber}
             />
         );
     }

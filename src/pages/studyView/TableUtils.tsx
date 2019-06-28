@@ -2,7 +2,7 @@ import * as React from 'react';
 import {getOncoKBCancerGeneListLinkout, getOncoKBReferenceInfo} from "./oncokb/OncoKBUtils";
 import styles from "./table/tables.module.scss";
 import classnames from 'classnames';
-import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {ICON_FILTER_OFF, ICON_FILTER_ON} from "shared/lib/Colors";
 import {GenePanelList} from "pages/studyView/table/GenePanelModal";
 import {getFrequencyStr} from "pages/studyView/StudyViewUtils";

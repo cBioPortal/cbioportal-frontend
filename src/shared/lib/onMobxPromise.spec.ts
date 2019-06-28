@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import {remoteData} from "../api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import onMobxPromise from "./onMobxPromise";
 import {extras, IReactionDisposer, observable} from "mobx";
 

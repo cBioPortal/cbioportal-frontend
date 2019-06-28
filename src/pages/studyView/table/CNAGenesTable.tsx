@@ -11,7 +11,7 @@ import {
 import MobxPromise from "mobxpromise";
 import { If } from "react-if";
 import classnames from "classnames";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
 import autobind from "autobind-decorator";

@@ -1,8 +1,6 @@
-import * as _ from "lodash";
-import {fetchVariantAnnotationsByMutation} from "shared/lib/MutationAnnotator";
+import {fetchVariantAnnotationsByMutation} from "shared/lib/StoreUtils";
 import {extractGenomicLocation, genomicLocationString} from "shared/lib/MutationUtils";
 import {VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
-import {Hotspot, MutationAssessor} from "shared/api/generated/GenomeNexusAPIInternal";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import LazyMobXCache, {CacheData} from "shared/lib/LazyMobXCache";
 import AppConfig from "appConfig";

@@ -13,7 +13,7 @@ import {ClinicalDataCountSet} from "../../StudyViewUtils";
 import FixedHeaderTable from "../../table/FixedHeaderTable";
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import EllipsisTextTooltip from "../../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import EllipsisTextTooltip from "../../../../public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import {Omit} from "../../../../shared/lib/TypeScriptUtils";
 import ifndef from "../../../../shared/lib/ifndef";
 

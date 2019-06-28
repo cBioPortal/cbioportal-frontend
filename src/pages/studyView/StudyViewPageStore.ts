@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {remoteData} from "../../shared/api/remoteData";
+import {remoteData} from "../../public-lib/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import oncoKBClient from "shared/api/oncokbClientInstance";
@@ -89,7 +89,7 @@ import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
 import autobind from "autobind-decorator";
 import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
-import {stringListToSet} from 'shared/lib/StringUtils';
+import {stringListToSet} from 'public-lib/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import sessionServiceClient from "shared/api//sessionServiceInstance";

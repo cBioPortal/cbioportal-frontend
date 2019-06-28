@@ -2,12 +2,10 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
-import * as ReactDOM from "react-dom";
 import {Popover} from "react-bootstrap";
 import classnames from "classnames";
 import styles from "../../pages/resultsView/survival/styles.module.scss";
-import {TOOLTIP_MOUSE_ENTER_DELAY_MS} from "./defaultTooltip/DefaultTooltip";
-import {truncateWithEllipsis, truncateWithEllipsisReport} from "../lib/TextTruncationUtils";
+import {truncateWithEllipsisReport} from "../../public-lib/lib/TextTruncationUtils";
 import Portal from "react-portal";
 
 export interface ITruncatedTextSVGProps {

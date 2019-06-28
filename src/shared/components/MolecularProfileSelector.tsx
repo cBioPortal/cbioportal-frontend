@@ -2,7 +2,7 @@ import {observer} from "mobx-react";
 import * as React from "react";
 import {MolecularProfile} from "../api/generated/CBioPortalAPI";
 import {MobxPromise} from "mobxpromise";
-import {remoteData} from "../api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import Select from "react-select";
 import LoadingIndicator from "./loadingIndicator/LoadingIndicator";
 

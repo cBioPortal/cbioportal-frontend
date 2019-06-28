@@ -5,7 +5,7 @@ import { If, Then, Else } from 'react-if';
 import {observable, computed} from "mobx";
 import {observer} from "mobx-react";
 import classNames from 'classnames';
-import EditableSpan from "../editableSpan/EditableSpan";
+import EditableSpan from "public-lib/components/editableSpan/EditableSpan";
 
 export const SHOW_ALL_PAGE_SIZE = -1;
 

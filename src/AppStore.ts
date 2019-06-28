@@ -1,5 +1,5 @@
 import {action, computed, observable} from "mobx";
-import {addServiceErrorHandler, remoteData} from "shared/api/remoteData";
+import {addServiceErrorHandler, remoteData} from "public-lib/api/remoteData";
 import {initializeAPIClients} from "./config/config";
 import * as _ from 'lodash';
 import internalClient from "shared/api/cbioportalInternalClientInstance";

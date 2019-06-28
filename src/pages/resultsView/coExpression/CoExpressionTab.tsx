@@ -17,7 +17,7 @@ import {bind} from "bind-decorator";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import {IDataQueryFilter} from "shared/lib/StoreUtils";
-import {remoteData} from "shared/api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 
 export interface ICoExpressionTabProps {
     store:ResultsViewPageStore;

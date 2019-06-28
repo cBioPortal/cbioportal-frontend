@@ -1,5 +1,5 @@
 import * as React from 'react';
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import TableCellStatusIndicator from "shared/components/TableCellStatus";
 import {TableCellStatus} from "shared/components/TableCellStatus";
