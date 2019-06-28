@@ -174,7 +174,7 @@ jobs:
       - run:
           name: Generate checksum of data that populates the test database
           command: |         
-              $($TEST_HOME/local/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
+              $TEST_HOME/local/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
       - restore_cache:
           keys:
           - e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
