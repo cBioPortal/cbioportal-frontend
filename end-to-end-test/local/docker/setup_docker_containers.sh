@@ -9,14 +9,6 @@ BUILD_PORTAL=false
 BUILD_DATABASE=false
 BUILD_E2E=false
 
-# rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images
-# update the reference to the corresponding image name when prebuilt image exists
-if [[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] ); then
-    backend_image_name="cbioportal/cbioportal:$BACKEND_BRANCH"
-else
-    backend_image_name=cbioportal-endtoend-image
-fi
-
 usage() {
     echo "-d: build database image and load studies into database"
     echo "-p: build cbioportal image and container"
@@ -41,7 +33,7 @@ build_database_container() {
     # create local database from with cbioportal db and seed data
     download_db_seed
     docker stop $DB_HOST  2> /dev/null && docker rm $DB_HOST 2> /dev/null
-    docker volume rm MYSQL_DATA_DIR 2> /dev/null || true # empty database
+    rm -rf DB_DATA_DIR/*
     docker run -d \
         --name=$DB_HOST \
         --net=$DOCKER_NETWORK_NAME \
@@ -49,7 +41,7 @@ build_database_container() {
         -e MYSQL_USER=$DB_USER \
         -e MYSQL_PASSWORD=$DB_PASSWORD \
         -e MYSQL_DATABASE=$DB_PORTAL_DB_NAME \
-        -v "MYSQL_DATA_DIR:/var/lib/mysql/" \
+        -v "$DB_DATA_DIR:/var/lib/mysql/" \
         -v "/tmp/cgds.sql:/docker-entrypoint-initdb.d/cgds.sql:ro" \
         -v "/tmp/seed.sql.gz:/docker-entrypoint-initdb.d/seed_part1.sql.gz:ro" \
         mysql:5.7
@@ -76,7 +68,7 @@ build_database_container() {
         -e MYSQL_USER=$DB_USER \
         -e MYSQL_PASSWORD=$DB_PASSWORD \
         -e MYSQL_DATABASE=$DB_PORTAL_DB_NAME \
-        -v "MYSQL_DATA_DIR:/var/lib/mysql/" \
+        -v "$DB_DATA_DIR:/var/lib/mysql/" \
         mysql:5.7
 
     # migrate database schema to most recent version
@@ -84,7 +76,7 @@ build_database_container() {
     docker run --rm \
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
-        $backend_image_name \
+        $BACKEND_IMAGE_NAME \
         python3 /cbioportal/core/src/main/scripts/migrate_db.py -y -p /cbioportal/portal.properties -s /cbioportal/db-scripts/src/main/resources/migration.sql
 }
 
@@ -99,7 +91,7 @@ run_database_container() {
         -e MYSQL_USER=$DB_USER \
         -e MYSQL_PASSWORD=$DB_PASSWORD \
         -e MYSQL_DATABASE=$DB_PORTAL_DB_NAME \
-        -v "MYSQL_DATA_DIR:/var/lib/mysql/" \
+        -v "$DB_DATA_DIR:/var/lib/mysql/" \
         mysql:5.7
 
 }
@@ -108,10 +100,10 @@ build_cbioportal_image() {
 
     curdir=$PWD
 
-    if [[ $backend_image_name == "cbioportal-endtoend-image" ]]; then
+    if [[ $BACKEND_IMAGE_NAME == $CUSTOM_BACKEND_IMAGE_NAME ]]; then
         docker build https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git#$BACKEND_BRANCH \
             -f docker/web-and-data/Dockerfile \
-            -t $backend_image_name
+            -t $BACKEND_IMAGE_NAME
     fi
 
     cd $curdir
@@ -130,12 +122,12 @@ run_cbioportal_container() {
         -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
         -e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=false" \
         -p 8081:8080 \
-        $backend_image_name \
+        $BACKEND_IMAGE_NAME \
         /bin/sh -c 'java ${JAVA_OPTS} -jar webapp-runner.jar /app.war'
     
     sleeptime=0
     maxtime=180
-    while ! docker run --rm --net=$DOCKER_NETWORK_NAME $backend_image_name ping -c 1 "$E2E_CBIOPORTAL_HOST_NAME" &> /dev/null; do
+    while ! docker run --rm --net=$DOCKER_NETWORK_NAME $BACKEND_IMAGE_NAME ping -c 1 "$E2E_CBIOPORTAL_HOST_NAME" &> /dev/null; do
         echo Waiting for cbioportal to initialize...
         sleeptime=$sleeptime+10
         if (($sleeptime > $maxtime)); then 
@@ -154,7 +146,7 @@ load_studies_in_db() {
         --name=cbioportal-importer \
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
-        $backend_image_name \
+        $BACKEND_IMAGE_NAME \
         sh -c 'cd /cbioportal/core/src/main/scripts; for FILE in /cbioportal/core/src/test/scripts/test_data/study_es_0/data_gene_panel_testpanel*.txt; do ./importGenePanel.pl --data $FILE; done'
 
     # import study_es_0
@@ -162,7 +154,7 @@ load_studies_in_db() {
         --name=cbioportal-importer \
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
-        $backend_image_name \
+        $BACKEND_IMAGE_NAME \
         python3 /cbioportal/core/src/main/scripts/importer/metaImport.py \
         --url_server "http://$E2E_CBIOPORTAL_HOST_NAME:8080" \
         --study_directory /cbioportal/core/src/test/scripts/test_data/study_es_0 \
@@ -176,11 +168,12 @@ load_studies_in_db() {
             --net=$DOCKER_NETWORK_NAME \
             -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
             -v "$DIR:/study:ro" \
-            $backend_image_name \
+            $BACKEND_IMAGE_NAME \
             python3 /cbioportal/core/src/main/scripts/importer/metaImport.py \
             --url_server "http://$E2E_CBIOPORTAL_HOST_NAME:8080" \
             --study_directory /study \
             --override_warning
+
     done
 
 }
@@ -218,7 +211,7 @@ build_e2e_image() {
 if [ "$BUILD_PORTAL" = true ]; then
 
     echo Build portal image
-    build_cbioportal_image
+    $TEST_HOME/local/docker/build_portal_image.sh
 
 fi
 

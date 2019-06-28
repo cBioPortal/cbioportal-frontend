@@ -9,6 +9,7 @@ echo export CBIOPORTAL_URL="http://cbioportal:8080"
 echo export DOCKER_NETWORK_NAME=endtoend_localdb_network
 echo export SESSION_SERVICE_HOST_NAME=cbio-session-service
 echo export SCREENSHOT_IMAGE_NAME=cbio-screenshot
+echo export CUSTOM_BACKEND_IMAGE_NAME=cbioportal-endtoend-image
 echo export SCREENSHOT_DIRECTORY=./local/screenshots
 echo export JUNIT_REPORT_PATH=./local/junit/
 echo export SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
@@ -22,7 +23,9 @@ parse_custom_backend_var() {
     # Parse BACKEND environmental variable. This must occur after PR evaluation
     # because this possibly overwrites variables extracted from the GitHub pull request.
     if [[ $BACKEND =~ (.+):(.+) ]]; then
+        BACKEND_PROJECT_USERNAME=${BASH_REMATCH[1]}
         echo "export BACKEND_PROJECT_USERNAME=${BASH_REMATCH[1]}"
+        BACKEND_BRANCH=${BASH_REMATCH[2]}
         echo "export BACKEND_BRANCH=${BASH_REMATCH[2]}"
     else
         echo "Error: could not parse BACKEND variable from custom.sh. Expected format: <BACKEND_GITHUB_USER>:<BACKEND_BRANCH> (e.g. 'cbioportal:rc')"
@@ -93,3 +96,12 @@ python3 $TEST_HOME/shared/read_portalproperties.py portal.properties
     # DB_PORTAL_DB_NAME             ->  (e.g. 'endtoend_local_cbiodb')
     # DB_CONNECTION_STRING          ->  (e.g. 'jdbc:mysql://cbiodb-endtoend:3306/')
     # DB_HOST                       ->  (e.g. 'cbiodb-endtoend')
+
+# Evaluate what backend docker image to use
+# rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images
+# update the reference to the corresponding image name when prebuilt image exists
+if [[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] ); then
+    echo export BACKEND_IMAGE_NAME="cbioportal/cbioportal:$BACKEND_BRANCH"
+else
+    echo export BACKEND_IMAGE_NAME=cbioportal-endtoend-image
+fi

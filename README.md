@@ -172,6 +172,7 @@ Running of e2e-localdb tests in _Local_ context in essence follows the procedure
 
 ```bash
 export PORTAL_SOURCE_DIR=~/git/cbioportal-frontend # change path if needed
+export DB_DATA_DIR=/tmp/mysql # change path if needed
 export TEST_HOME="$PORTAL_SOURCE_DIR/end-to-end-test"
 source $PORTAL_SOURCE_DIR/env/custom.sh
 cd $TEST_HOME/local/runtime-config
