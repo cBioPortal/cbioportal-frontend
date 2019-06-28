@@ -168,8 +168,7 @@ E2e-tests can run in _local context_ (workstation for software development) or _
 Running of e2e-localdb tests in _Local_ context in essence follows the procedure as defined in `.circleci/config.yml`. In _Local_ context the e2e-localdb tests can be run in a dockerized environment (usefull for generating screenshots) or directly on the host sytem. The `end-to-end-test/local/runtime-config/run_container_screenshot_test.sh` script is included to run e2e-local tests in a dockerized environment in _Local_ context. The `end-to-end-test/local/runtime-config/run_local_screenshot_test.sh` is included to run e2e-local tests on the host system directly in _Local_ context. Prior to running the script several environmental variables should be set. For local development follow these steps:
 
 1. Add `export BACKEND=cbioportal:rc` (or other backend branch) to `/env/custom.sh`.
-2. Make sure the last commit is pushed to _origin_ repo (needed by jitpack).
-3. Setup a local docker container environment: 
+2. Setup a local docker container environment: 
 
 ```bash
 export PORTAL_SOURCE_DIR=~/git/cbioportal-frontend # change path if needed
@@ -180,7 +179,7 @@ eval "$(./setup_environment.sh)"
 cd $PORTAL_SOURCE_DIR
 ```
 
-4. Running tests can be executed (a) on the local system or (b) in the docker environment;
+3. Running tests can be executed (a) on the local system or (b) in the docker environment;
 
 (a) local system (best for test development)
 ```bash
@@ -201,10 +200,10 @@ cd $PORTAL_SOURCE_DIR
 $TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
 ```
 
-5. When finished reclaim ports by killing selenium and node servers:
+4. When finished reclaim ports by killing selenium and node servers:
 ```bash
-killall java -9 # reclaims port 4444
-killall node -9 # reclaims port 3000
+lsof -n -i4TCP:3000 && lsof -n -i4TCP:3000 | grep LISTEN | awk '{ print $2 }' | xargs kill # reclaims port 3000
+lsof -n -i4TCP:4444 && lsof -n -i4TCP:4444 | grep LISTEN | awk '{ print $2 }' | xargs kill # reclaims port 4444
 ```
 
 #### Inclusion of specific build stages
