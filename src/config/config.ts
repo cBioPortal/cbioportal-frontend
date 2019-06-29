@@ -149,7 +149,7 @@ export function initializeAPIClients(){
 
     // add POST caching
     proxyAllPostMethodsOnClient(CBioPortalAPI);
-    proxyAllPostMethodsOnClient(CBioPortalAPIInternal);
+    proxyAllPostMethodsOnClient(CBioPortalAPIInternal, ['fetchMutatedGenesUsingPOST', 'fetchCNAGenesUsingPOST']);
     proxyAllPostMethodsOnClient(CivicAPI);
     proxyAllPostMethodsOnClient(Genome2StructureAPI);
     proxyAllPostMethodsOnClient(GenomeNexusAPI);
