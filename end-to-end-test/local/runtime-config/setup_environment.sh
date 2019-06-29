@@ -13,6 +13,7 @@ echo export CUSTOM_BACKEND_IMAGE_NAME=cbioportal-endtoend-image
 echo export SCREENSHOT_DIRECTORY=./local/screenshots
 echo export JUNIT_REPORT_PATH=./local/junit/
 echo export SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
+echo export DB_DATA_DIR=/tmp/mysql
 
 echo export DB_CGDS_URL=https://raw.githubusercontent.com/cBioPortal/cbioportal/v2.0.0/db-scripts/src/main/resources/cgds.sql
 echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/master/seedDB/seed-cbioportal_hg19_v2.7.3.sql.gz
