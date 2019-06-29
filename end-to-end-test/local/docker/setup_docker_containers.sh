@@ -33,7 +33,7 @@ build_database_container() {
     # create local database from with cbioportal db and seed data
     download_db_seed
     docker stop $DB_HOST  2> /dev/null && docker rm $DB_HOST 2> /dev/null
-    rm -rf DB_DATA_DIR/*
+    sudo rm -rf $DB_DATA_DIR/*
     docker run -d \
         --name=$DB_HOST \
         --net=$DOCKER_NETWORK_NAME \
