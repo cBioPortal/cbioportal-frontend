@@ -13,14 +13,7 @@ require.extensions['.txt'] = function (module, filename) {
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
-  var defaultMaxInstances = 3;
-
-// For e2e-localdb tests `maxInstances` larger than 1 causes tests to become
-// unreliable. For e2e-localdb tests maxInstances are kept at 1.
-// TODO find out what makes parallel tests unstable and revert to maxInstances: 3
-if (process.env.SCREENSHOT_DIRECTORY.match(/local/)) {
-    defaultMaxInstances = 1;
-}
+var defaultMaxInstances = 3;
 
 var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
 var refDir = process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
