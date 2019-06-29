@@ -196,13 +196,6 @@ jobs:
               fi && \
               cd $TEST_HOME/local/docker && ./setup_docker_containers.sh $OPTS
       - run:
-          name: Run end-2-end tests with studies in local database
-          command: | 
-              cd $PORTAL_SOURCE_DIR && $TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
-      - run:
-          name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
-          command: 'for f in $TEST_HOME/local/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
-      - run:
           name: Change owner of MySQL database files (needed by cache)
           command: |         
               sudo chmod -R 777 $DB_DATA_DIR && \
@@ -211,6 +204,13 @@ jobs:
           paths:
             - /tmp/mysql
           key: e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+      - run:
+          name: Run end-2-end tests with studies in local database
+          command: | 
+              cd $PORTAL_SOURCE_DIR && $TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
+      - run:
+          name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
+          command: 'for f in $TEST_HOME/local/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
       -  store_artifacts:
           path: /tmp/repo/end-to-end-test/local/screenshots
           destination: /screenshots
