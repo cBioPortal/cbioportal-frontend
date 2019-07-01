@@ -14,36 +14,36 @@ var selectReactSelectOption = require('../../shared/specUtils').selectReactSelec
 
 describe('gsva feature', () => {
 
-    describe('GenesetVolcanoPlotSelector', () => {
+    // describe('GenesetVolcanoPlotSelector', () => {
 
-        beforeEach(()=>{
-            goToUrlAndSetLocalStorage(queryPageUrl);
-            waitForQueryPage(20000);
-            checkTestStudy();
-            checkGSVAprofile();
-            browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
-            $('div.modal-dialog').waitForExist();
-        });
+    //     beforeEach(()=>{
+    //         goToUrlAndSetLocalStorage(queryPageUrl);
+    //         waitForQueryPage(20000);
+    //         checkTestStudy();
+    //         checkGSVAprofile();
+    //         browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+    //         $('div.modal-dialog').waitForExist();
+    //     });
 
-        it('shows volcano plot for gene sets selection', () => {
-            var res = browser.checkElement('div.VictoryContainer');
-            assertScreenShotMatch(res);
-        });
+    //     it('shows volcano plot for gene sets selection', () => {
+    //         var res = browser.checkElement('div.VictoryContainer');
+    //         assertScreenShotMatch(res);
+    //     });
         
-        it('updates volcano plot after change of `percentile of score calculation`', () => {
-            var modal = $('div.modal-body');
-            modal.$('.Select-value-label').click();
-            modal.$('.Select-option=50%').click();
-            var res = browser.checkElement('div.VictoryContainer');
-            assertScreenShotMatch(res);
-        });
-    });
+    //     it('updates volcano plot after change of `percentile of score calculation`', () => {
+    //         var modal = $('div.modal-body');
+    //         modal.$('.Select-value-label').click();
+    //         modal.$('.Select-option=50%').click();
+    //         var res = browser.checkElement('div.VictoryContainer');
+    //         assertScreenShotMatch(res);
+    //     });
+    // });
 
     describe('oncoprint tab', () => {
 
             beforeEach(() => {
                 goToUrlAndSetLocalStorage(oncoprintTabUrl);
-                waitForOncoprint();
+                waitForOncoprint(20000);
             });
 
             it('shows GSVA heatmap track', () => {
@@ -57,7 +57,7 @@ describe('gsva feature', () => {
 
         beforeEach(()=>{
             goToUrlAndSetLocalStorage(plotsTabUrl);
-            waitForPlotsTab();
+            waitForPlotsTab(20000);
         });
 
         it('shows gsva profile data on horizontal and vertical axes', () => {
@@ -79,7 +79,7 @@ describe('gsva feature', () => {
 
         beforeEach(() => {
             goToUrlAndSetLocalStorage(coexpressionTabUrl);
-            waitForCoExpressionTab();
+            waitForCoExpressionTab(20000);
         });
 
         it('shows GSVA scores in scatterplot', () => {
