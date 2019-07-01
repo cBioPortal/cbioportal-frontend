@@ -222,6 +222,7 @@ module.exports = {
     checkElementWithMouseDisabled: checkElementWithMouseDisabled,
     selectReactSelectOption: selectReactSelectOption,
     reactSelectOption: reactSelectOption,
+    getReactSelectOptions: getReactSelectOptions,
 };
 
 
