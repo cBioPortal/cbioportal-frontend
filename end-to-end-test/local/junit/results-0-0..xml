@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="gsva_feature" timestamp="2019-06-29T13:35:05" time="5.827" tests="0" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="gsva feature"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+  </testsuite>
+  <testsuite name="query_page" timestamp="2019-06-29T13:35:05" time="5.812" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="query page"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".query_page" name="shows_gsva_profile_option_when_selecting_study_es_0" time="5.975">
+      <system-out>
+        <![CDATA[
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/ff0ca1ff00495feb31900ecfb7391e2c/url - {"url":"http://localhost:8081/?localdev=true"}
+RESULT: {"sessionId":"ff0ca1ff00495feb31900ecfb7391e2c","status":0,"value":null}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/ff0ca1ff00495feb31900ecfb7391e2c/window/current/size - {}
+RESULT: {"sessionId":"ff0ca1ff00495feb31900ecfb7391e2c","status":0,"value":{"height":1030,"width":945}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/ff0ca1ff00495feb31900ecfb7391e2c/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"ff0ca1ff00495feb31900ecfb7391e2c","status":0,"value":{"screenHeight":900,"screenWidth":937}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/ff0ca1ff00495feb31900ecfb7391e2c/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"ff0ca1ff00495feb31900ecfb7391e2c","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/ff0ca1ff00495feb31900ecfb7391e2c/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"ff0ca1ff00495feb31900ecfb7391e2c","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/ff0ca1ff00495feb31900ecfb7391e2c/window/current/size - {}
+RESULT: {"sessionId":"ff0ca1ff00495feb31900ecfb7391e2c","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/ff0ca1ff00495feb31900ecfb7391e2c/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"ff0ca1ff00495feb31900ecfb7391e2c","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/ff0ca1ff00495feb31900ecfb7391e2c/window/current/size - {"width":1008,"height":1730}
+]]>
+      </system-out>
+    </testcase>
+    <testcase classname=".query_page" name="before_each_hook_for_shows_gsva_profile_option_when_selecting_study_es_0" time="0.166">
+      <error message="invalid session id&#xA;  (Driver info: chromedriver=2.42.591071 (0b695ff80972cc1a65a5cd643186d2ae582cd4ac),platform=Linux 4.15.0-51-generic x86_64)"/>
+      <system-err>
+        <![CDATA[
+Error: invalid session id
+    (Driver info: chromedriver=2.42.591071 (0b695ff80972cc1a65a5cd643186d2ae582cd4ac),platform=Linux 4.15.0-51-generic x86_64)
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+  <testsuite name="genesetshierarchyselector" timestamp="2019-06-29T13:35:11" time="0.002" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="GenesetsHierarchySelector"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".genesetshierarchyselector" name="adds_gene_set_name_to_entry_component_from_hierachy_selector" time="0.164"/>
+    <testcase classname=".genesetshierarchyselector" name="before_each_hook_for_adds_gene_set_name_to_entry_component_from_hierachy_selector" time="0.163">
+      <error message="A session id is required for this command but wasn't found in the response payload"/>
+      <system-err>
+        <![CDATA[
+Error: A session id is required for this command but wasn't found in the response payload
+    unknown error line
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+  <testsuite name="genesetvolcanoplotselector" timestamp="2019-06-29T13:35:11" time="0.002" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="GenesetVolcanoPlotSelector"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".genesetvolcanoplotselector" name="adds_gene_set_name_to_entry_component" time="0.162"/>
+    <testcase classname=".genesetvolcanoplotselector" name="before_each_hook_for_adds_gene_set_name_to_entry_component" time="0.161">
+      <error message="A session id is required for this command but wasn't found in the response payload"/>
+      <system-err>
+        <![CDATA[
+Error: A session id is required for this command but wasn't found in the response payload
+    unknown error line
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+  <testsuite name="results_view_page" timestamp="2019-06-29T13:35:11" time="0.003" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="results view page"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".results_view_page" name="shows_co_expression_tab_when_genes_with_expression_data_selected" time="0.16"/>
+    <testcase classname=".results_view_page" name="before_each_hook_for_shows_co_expression_tab_when_genes_with_expression_data_selected" time="0.158">
+      <error message="A session id is required for this command but wasn't found in the response payload"/>
+      <system-err>
+        <![CDATA[
+Error: A session id is required for this command but wasn't found in the response payload
+    unknown error line
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+  <testsuite name="oncoprint_tab" timestamp="2019-06-29T13:35:11" time="0.002" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="oncoprint tab"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".oncoprint_tab" name="has_gsva_profile_option_in_heatmap_menu" time="0.157"/>
+    <testcase classname=".oncoprint_tab" name="before_each_hook_for_has_gsva_profile_option_in_heatmap_menu" time="0.156">
+      <error message="A session id is required for this command but wasn't found in the response payload"/>
+      <system-err>
+        <![CDATA[
+Error: A session id is required for this command but wasn't found in the response payload
+    unknown error line
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+  <testsuite name="plots_tab" timestamp="2019-06-29T13:35:11" time="0.002" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="plots tab"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".plots_tab" name="shows_gsva_option_in_horizontal_data_type_selection_box" time="0.156"/>
+    <testcase classname=".plots_tab" name="before_each_hook_for_shows_gsva_option_in_horizontal_data_type_selection_box" time="0.155">
+      <error message="A session id is required for this command but wasn't found in the response payload"/>
+      <system-err>
+        <![CDATA[
+Error: A session id is required for this command but wasn't found in the response payload
+    unknown error line
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+  <testsuite name="co_expression_tab" timestamp="2019-06-29T13:35:11" time="0.003" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="co-expression tab"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".co_expression_tab" name="shows_buttons_for_genes" time="0.154"/>
+    <testcase classname=".co_expression_tab" name="before_each_hook_for_shows_buttons_for_genes" time="0.152">
+      <error message="A session id is required for this command but wasn't found in the response payload"/>
+      <system-err>
+        <![CDATA[
+Error: A session id is required for this command but wasn't found in the response payload
+    unknown error line
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+  <testsuite name="gsva_feature" timestamp="2019-06-29T13:35:11" time="0.041" tests="0" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="gsva feature"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+  </testsuite>
+  <testsuite name="genesetvolcanoplotselector" timestamp="2019-06-29T13:35:11" time="0.002" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="GenesetVolcanoPlotSelector"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".genesetvolcanoplotselector" name="shows_volcano_plot_for_gene_sets_selection" time="0.151"/>
+    <testcase classname=".genesetvolcanoplotselector" name="before_each_hook_for_shows_volcano_plot_for_gene_sets_selection" time="0.15">
+      <error message="A session id is required for this command but wasn't found in the response payload"/>
+      <system-err>
+        <![CDATA[
+Error: A session id is required for this command but wasn't found in the response payload
+    unknown error line
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+  <testsuite name="oncoprint_tab" timestamp="2019-06-29T13:35:11" time="0.003" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="oncoprint tab"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".oncoprint_tab" name="shows_gsva_heatmap_track" time="0.149"/>
+    <testcase classname=".oncoprint_tab" name="before_each_hook_for_shows_gsva_heatmap_track" time="0.147">
+      <error message="A session id is required for this command but wasn't found in the response payload"/>
+      <system-err>
+        <![CDATA[
+Error: A session id is required for this command but wasn't found in the response payload
+    unknown error line
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+  <testsuite name="plots_tab" timestamp="2019-06-29T13:35:11" time="0.032" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="plots tab"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".plots_tab" name="shows_gsva_profile_data_on_horizontal_and_vertical_axes" time="0.146"/>
+    <testcase classname=".plots_tab" name="before_each_hook_for_shows_gsva_profile_data_on_horizontal_and_vertical_axes" time="0.142">
+      <error message="A session id is required for this command but wasn't found in the response payload"/>
+      <system-err>
+        <![CDATA[
+Error: A session id is required for this command but wasn't found in the response payload
+    unknown error line
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+  <testsuite name="co_expression_tab" timestamp="2019-06-29T13:35:11" time="0.004" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="b3bb0deb68f5d87d9cc2ab5fd56ee112"/>
+      <property name="suiteName" value="co-expression tab"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/gsva.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".co_expression_tab" name="shows_gsva_scores_in_scatterplot" time="0.114"/>
+    <testcase classname=".co_expression_tab" name="before_each_hook_for_shows_gsva_scores_in_scatterplot" time="0.111">
+      <error message="A session id is required for this command but wasn't found in the response payload"/>
+      <system-err>
+        <![CDATA[
+Error: A session id is required for this command but wasn't found in the response payload
+    unknown error line
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+</testsuites>
