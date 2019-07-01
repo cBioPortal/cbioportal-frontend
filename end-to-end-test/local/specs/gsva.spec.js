@@ -3,11 +3,13 @@ var goToUrlAndSetLocalStorage = require('../../shared/specUtils').goToUrlAndSetL
 var waitForQueryPage = require('../../shared/specUtils').waitForQueryPage;
 var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
 var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
+var waitForCoExpressionTab = require('../../shared/specUtils').waitForCoExpressionTab;
 var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
-const oncoprintTabUrl = CBIOPORTAL_URL+'/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=TP53&geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_GENESET_SCORE=study_es_0_gsva_scores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&tab_index=tab_visualize&show_samples=false&clinicallist=PROFILED_IN_study_es_0_gsva_scores%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic';
-const plotsTabUrl = CBIOPORTAL_URL+'/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&clinicallist=PROFILED_IN_study_es_0_gsva_scores%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=TP53&geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_GENESET_SCORE=study_es_0_gsva_scores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize'
+const oncoprintTabUrl = CBIOPORTAL_URL+'/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_all&clinicallist=NUM_SAMPLES_PER_PATIENT%2CPROFILED_IN_study_es_0_gsva_scores%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic%2CPROFILED_IN_study_es_0_mrna_median_Zscores&data_priority=0&gene_list=CREB3L1%2520RPS11%2520PNMA1%2520MMP2%2520ZHX3%2520ERCC5&geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING%20GO_ACYLGLYCEROL_HOMEOSTASIS%20GO_ANATOMICAL_STRUCTURE_FORMATION_INVOLVED_IN_MORPHOGENESIS%20GO_ANTEROGRADE_AXONAL_TRANSPORT%20GO_APICAL_PROTEIN_LOCALIZATION%20GO_CARBOHYDRATE_CATABOLIC_PROCESS%20GO_CARDIAC_CHAMBER_DEVELOPMENT&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_GENESET_SCORE=study_es_0_gsva_scores&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=study_es_0_mrna_median_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize';
+const plotsTabUrl = CBIOPORTAL_URL+'/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&clinicallist=PROFILED_IN_study_es_0_gsva_scores%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=TP53&geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_GENESET_SCORE=study_es_0_gsva_scores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize';
+const coexpressionTabUrl = CBIOPORTAL_URL+'/results/coexpression?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_all&clinicallist=NUM_SAMPLES_PER_PATIENT%2CPROFILED_IN_study_es_0_gsva_scores%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic%2CPROFILED_IN_study_es_0_mrna_median_Zscores&data_priority=0&gene_list=CREB3L1%2520RPS11%2520PNMA1%2520MMP2%2520ZHX3%2520ERCC5&geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING%20GO_ACYLGLYCEROL_HOMEOSTASIS%20GO_ANATOMICAL_STRUCTURE_FORMATION_INVOLVED_IN_MORPHOGENESIS%20GO_ANTEROGRADE_AXONAL_TRANSPORT%20GO_APICAL_PROTEIN_LOCALIZATION%20GO_CARBOHYDRATE_CATABOLIC_PROCESS%20GO_CARDIAC_CHAMBER_DEVELOPMENT&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_GENESET_SCORE=study_es_0_gsva_scores&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=study_es_0_mrna_median_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize%27';
 
 describe('gsva feature', function() {
 
@@ -219,6 +221,19 @@ describe('gsva feature', function() {
 
         });
 
+        describe('results view page', () => {
+
+            beforeEach(() => {
+                goToUrlAndSetLocalStorage(oncoprintTabUrl);
+                waitForOncoprint();
+            });
+
+            it('shows co-expression tab when genes with expression data selected', () => {
+                assert( $('ul.nav-tabs li.tabAnchor_coexpression') );
+            });
+
+        });
+
         describe('oncoprint tab', () => {
 
             beforeEach(() => {
@@ -313,6 +328,50 @@ describe('gsva feature', function() {
                 assert( vertEntitySelect.$('.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING') );
             });
 
+        });
+
+        describe('co-expression tab', () => {
+
+            beforeEach(() => {
+                goToUrlAndSetLocalStorage(coexpressionTabUrl);
+                waitForCoExpressionTab();
+            });
+
+            it('shows buttons for genes', () => {
+                const geneSets = coexpressionTabUrl.match(/geneset_list=(.*)\&/)[1].split('%20');
+                const genes = coexpressionTabUrl.match(/gene_list=(.*)\&/)[1].split('%20');
+                var buttons = $('[id=coexpressionTabGeneTabs] li');
+            });
+            it('shows buttons for genes and gene sets', () => {
+                const geneSets = coexpressionTabUrl.match(/geneset_list=(.*)\&/)[1].split('%20');
+                const genes = coexpressionTabUrl.match(/gene_list=(.*)\&/)[1].split('%20');
+                browser.debug();
+                var buttons = $$('[id=coexpressionTabGeneTabs] li*!=GO_').value;
+            });
+            it(' shows mRNA expression/GSVA scores in first select box when reference gene selected', () => {
+                
+            });
+            it('shows mRNA expression in second select box when reference gene selected', () => {
+                
+            });
+            it('shows name of gene in `correlated with` field when reference gene selected', () => {
+                
+            });
+            it('shows mRNA expression/GSVA scores in first select box when reference gene set selected', () => {
+                
+            });
+            it('shows disabled second select box when reference gene set selected', () => {
+                
+            });
+            it('shows gene sets in table when GSVA scores selected in first select box', () => {
+                
+            });
+            it('shows `Enter gene set.` placeholder in table search box when GSVA scores selected in first select box', () => {
+                
+            });
+            it('shows GSVA scores in scatterplot', () => {
+                // --> screenshot
+            });
         });
 
     }

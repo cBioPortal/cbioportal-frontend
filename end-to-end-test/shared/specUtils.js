@@ -8,6 +8,10 @@ function waitForPlotsTab(timeout) {
     $('div.axisBlock').waitForVisible(timeout || 20000);
 }
 
+function waitForCoExpressionTab(timeout) {
+    $('div.coExpressionTabDiv').waitForVisible(timeout || 20000);
+}
+
 function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
     browser.waitUntil(()=>{
@@ -190,6 +194,7 @@ module.exports = {
     waitForPlotsTab: waitForPlotsTab,
     waitForQueryPage: waitForQueryPage,
     waitForOncoprint: waitForOncoprint,
+    waitForCoExpressionTab: waitForCoExpressionTab,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     useExternalFrontend: useExternalFrontend,
     sessionServiceIsEnabled: sessionServiceIsEnabled,
