@@ -20,395 +20,395 @@ describe('gsva feature', function() {
 
     if (useExternalFrontend) {
 
-        // describe('query page', () => {
+        describe('query page', () => {
 
-        //     beforeEach(()=>{
-        //         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-        //         waitForQueryPage();
-        //     });    
+            beforeEach(()=>{
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+                waitForQueryPage();
+            });    
 
-        //     it('shows GSVA-profile option when selecting study_es_0', () => {
+            it('shows GSVA-profile option when selecting study_es_0', () => {
 
-        //         checkTestStudy();
+                checkTestStudy();
 
-        //         var gsvaProfileCheckbox = browser.$('[data-test=GENESET_SCORE]');
-        //         assert( gsvaProfileCheckbox.isVisible() );
-        //     });
+                var gsvaProfileCheckbox = browser.$('[data-test=GENESET_SCORE]');
+                assert( gsvaProfileCheckbox.isVisible() );
+            });
 
-        //     it('shows gene set entry component when selecting gsva-profile data type', () => {
+            it('shows gene set entry component when selecting gsva-profile data type', () => {
 
-        //         checkTestStudy();
-        //         checkGSVAprofile();
+                checkTestStudy();
+                checkGSVAprofile();
 
-        //         assert( browser.$('h2=Enter Gene Sets:').isVisible() );
-        //         assert( browser.$('[data-test=GENESET_HIERARCHY_BUTTON]').isVisible() );
-        //         assert( browser.$('[data-test=GENESET_VOLCANO_BUTTON]').isVisible() );
-        //         assert( browser.$('[data-test=GENESETS_TEXT_AREA]').isVisible() );
-        //     });
+                assert( browser.$('h2=Enter Gene Sets:').isVisible() );
+                assert( browser.$('[data-test=GENESET_HIERARCHY_BUTTON]').isVisible() );
+                assert( browser.$('[data-test=GENESET_VOLCANO_BUTTON]').isVisible() );
+                assert( browser.$('[data-test=GENESETS_TEXT_AREA]').isVisible() );
+            });
 
-        //     it('adds gene set parameter to url after submit', () => {
+            it('adds gene set parameter to url after submit', () => {
 
-        //         checkTestStudy();
-        //         checkGSVAprofile();
+                checkTestStudy();
+                checkGSVAprofile();
 
-        //         browser.setValue('[data-test=geneSet]', 'TP53');
-        //         browser.setValue('[data-test=GENESETS_TEXT_AREA]', 'GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
-        //         var queryButton = browser.$('[data-test=queryButton]');
-        //         queryButton.waitForEnabled(1000);
-        //         queryButton.click();
-        //         var url = browser.url().value;
-        //         var regex = /geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING/;
-        //         assert(url.match(regex));
-        //     });
+                browser.setValue('[data-test=geneSet]', 'TP53');
+                browser.setValue('[data-test=GENESETS_TEXT_AREA]', 'GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
+                var queryButton = browser.$('[data-test=queryButton]');
+                queryButton.waitForEnabled(1000);
+                queryButton.click();
+                var url = browser.url().value;
+                var regex = /geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING/;
+                assert(url.match(regex));
+            });
 
-        // });
+        });
 
-        // describe('GenesetsHierarchySelector', () => {
+        describe('GenesetsHierarchySelector', () => {
 
-        //     beforeEach(()=>{
-        //         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-        //         waitForQueryPage();
-        //         checkTestStudy();
-        //         checkGSVAprofile();
-        //         browser.$('button[data-test=GENESET_HIERARCHY_BUTTON]').click();
-        //         $('div.modal-dialog').waitForExist();
-        //     });
+            beforeEach(()=>{
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+                waitForQueryPage();
+                checkTestStudy();
+                checkGSVAprofile();
+                browser.$('button[data-test=GENESET_HIERARCHY_BUTTON]').click();
+                $('div.modal-dialog').waitForExist();
+            });
 
-        //     it('adds gene set name to entry component from hierachy selector', () => {
+            it('adds gene set name to entry component from hierachy selector', () => {
 
-        //         $('*=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').waitForExist();
+                $('*=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').waitForExist();
 
-        //         var checkBox = $('*=GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
-        //         checkBox.click();
+                var checkBox = $('*=GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
+                checkBox.click();
 
-        //         // wait for jstree to process the click
-        //         checkBox.$('.jstree-clicked').waitForExist();
+                // wait for jstree to process the click
+                checkBox.$('.jstree-clicked').waitForExist();
 
-        //         browser.$('button=Select').click();
+                browser.$('button=Select').click();
 
-        //         $('span*=All gene sets are valid').waitForExist();
+                $('span*=All gene sets are valid').waitForExist();
 
-        //         var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
-        //         assert.equal(textArea.getText(), "GO_ATP_DEPENDENT_CHROMATIN_REMODELING");
-        //     });
+                var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
+                assert.equal(textArea.getText(), "GO_ATP_DEPENDENT_CHROMATIN_REMODELING");
+            });
 
-        //     it('filters gene sets with the GSVA score input field', () => {
+            it('filters gene sets with the GSVA score input field', () => {
 
-        //         var before = $$('*=GO_');
+                var before = $$('*=GO_');
 
-        //         browser.$('[id=GSVAScore]').setValue('0');
-        //         browser.$('[id=filterButton]').click();
+                browser.$('[id=GSVAScore]').setValue('0');
+                browser.$('[id=filterButton]').click();
                 
-        //         browser.waitUntil(  () => $$('*=GO_').length > before.length );
-        //         var after = $$('*=GO_');
+                browser.waitUntil(  () => $$('*=GO_').length > before.length );
+                var after = $$('*=GO_');
                 
-        //         assert.equal( after.length, 7);
-        //     });
+                assert.equal( after.length, 7);
+            });
             
-        //     it('filters gene sets with the search input field', () => {
+            it('filters gene sets with the search input field', () => {
 
-        //         var before = $$('*=GO_');
+                var before = $$('*=GO_');
 
-        //         browser.$('[id=GSVAScore]').setValue('0');
-        //         browser.$('[id=filterButton]').click();
+                browser.$('[id=GSVAScore]').setValue('0');
+                browser.$('[id=filterButton]').click();
                 
-        //         browser.waitUntil( () => $$('*=GO_').length > before.length );
+                browser.waitUntil( () => $$('*=GO_').length > before.length );
 
-        //         $('[id=geneset-hierarchy-search]').setValue('GO_ACYLGLYCEROL_HOMEOSTASIS');
-        //         assert( $('*=GO_ACYLGLYCEROL_HOMEOSTASIS') );
-        //     });
+                $('[id=geneset-hierarchy-search]').setValue('GO_ACYLGLYCEROL_HOMEOSTASIS');
+                assert( $('*=GO_ACYLGLYCEROL_HOMEOSTASIS') );
+            });
 
-        //     it('filters gene sets with the gene set pvalue input field', () => {
+            it('filters gene sets with the gene set pvalue input field', () => {
 
-        //         var before = $$('*=GO_');
+                var before = $$('*=GO_');
 
-        //         browser.$('[id=Pvalue]').setValue('0.0005');
-        //         browser.$('[id=filterButton]').click();
+                browser.$('[id=Pvalue]').setValue('0.0005');
+                browser.$('[id=filterButton]').click();
 
-        //         browser.waitUntil( () => $$('*=GO_').length < before.length );
-        //         var after = $$('*=GO_');
+                browser.waitUntil( () => $$('*=GO_').length < before.length );
+                var after = $$('*=GO_');
 
-        //         assert.equal(after.length, 0);
-        //     });
+                assert.equal(after.length, 0);
+            });
 
-        //     it('filters gene sets with the gene set percentile select box', () => {
+            it('filters gene sets with the gene set percentile select box', () => {
 
-        //         var before = $$('*=GO_');
+                var before = $$('*=GO_');
 
-        //         var modal = $('div.modal-body');
-        //         modal.$('.Select-value-label').click();
-        //         modal.$('.Select-option=100%').click();
-        //         modal.$('[id=filterButton]').click();
+                var modal = $('div.modal-body');
+                modal.$('.Select-value-label').click();
+                modal.$('.Select-option=100%').click();
+                modal.$('[id=filterButton]').click();
 
-        //         browser.waitUntil( () => $$('*=GO_').length > before.length );
-        //         var after = $$('*=GO_');
+                browser.waitUntil( () => $$('*=GO_').length > before.length );
+                var after = $$('*=GO_');
 
-        //         assert.equal(after.length, 2);
-        //     });
-        // });
+                assert.equal(after.length, 2);
+            });
+        });
 
-        // describe('GenesetVolcanoPlotSelector', () => {
+        describe('GenesetVolcanoPlotSelector', () => {
 
-        //     beforeEach(()=>{
-        //         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-        //         waitForQueryPage();
-        //         checkTestStudy();
-        //         checkGSVAprofile();
-        //     });
+            beforeEach(()=>{
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+                waitForQueryPage();
+                checkTestStudy();
+                checkGSVAprofile();
+            });
             
-        //     it('adds gene set name to entry component', () => {
+            it('adds gene set name to entry component', () => {
                 
-        //         browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
-        //         $('div.modal-dialog').waitForExist();
+                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                $('div.modal-dialog').waitForExist();
 
-        //         // find the GO_ATP_DEPENDENT_CHROMATIN_REMODELING entry and check its checkbox
-        //         var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').$('..').$('..').$$('td')[3].$('label input');
-        //         checkBox.waitForVisible();
+                // find the GO_ATP_DEPENDENT_CHROMATIN_REMODELING entry and check its checkbox
+                var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').$('..').$('..').$$('td')[3].$('label input');
+                checkBox.waitForVisible();
                 
-        //         checkBox.click();
-        //         checkBox.waitUntil(checkBox.isSelected());
+                checkBox.click();
+                checkBox.waitUntil(checkBox.isSelected());
                 
-        //         browser.$('button=Add selection to the query').click();
+                browser.$('button=Add selection to the query').click();
                 
-        //         $('span*=All gene sets are valid').waitForExist();
+                $('span*=All gene sets are valid').waitForExist();
                 
-        //         var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
-        //         assert.equal(textArea.getText(), "GO_ATP_DEPENDENT_CHROMATIN_REMODELING");
-        //     });
+                var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
+                assert.equal(textArea.getText(), "GO_ATP_DEPENDENT_CHROMATIN_REMODELING");
+            });
             
-        //     it('selects gene sets from query page text area', () => {
+            it('selects gene sets from query page text area', () => {
 
-        //         var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
-        //         textArea.setValue('GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
+                var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
+                textArea.setValue('GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
 
-        //         browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
 
-        //         $('div.modal-dialog').waitForExist();
+                $('div.modal-dialog').waitForExist();
 
-        //         var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').$('..').$('..').$$('td')[3].$('label input');
+                var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').$('..').$('..').$$('td')[3].$('label input');
 
-        //         assert( checkBox.isSelected() );
-        //     });
+                assert( checkBox.isSelected() );
+            });
 
-        //     it('reset keeps gene sets from query page text area', () => {
+            it('reset keeps gene sets from query page text area', () => {
 
-        //         var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
-        //         textArea.setValue('GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
+                var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
+                textArea.setValue('GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
 
-        //         browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
 
-        //         $('div.modal-dialog').waitForExist();
+                $('div.modal-dialog').waitForExist();
 
-        //         var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').$('..').$('..').$$('td')[3].$('label input');
-        //         $('button=Clear selection').click();
+                var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').$('..').$('..').$$('td')[3].$('label input');
+                $('button=Clear selection').click();
 
-        //         assert( checkBox.isSelected() );
-        //     });
+                assert( checkBox.isSelected() );
+            });
 
-        //     it('searchbox filters gene set list', () => {
+            it('searchbox filters gene set list', () => {
 
-        //         browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
 
-        //         $('div.modal-dialog').waitForExist();
+                $('div.modal-dialog').waitForExist();
 
-        //         var before = $$('span*=GO_');
+                var before = $$('span*=GO_');
                 
-        //         $('input.tableSearchInput').setValue('GO_ACYL');
+                $('input.tableSearchInput').setValue('GO_ACYL');
 
-        //         browser.waitUntil( () => $$('span*=GO_').length < before.length );
+                browser.waitUntil( () => $$('span*=GO_').length < before.length );
                 
-        //         var after = $$('span*=GO_');
+                var after = $$('span*=GO_');
 
-        //         assert.equal(after.length, 1);
-        //     });
+                assert.equal(after.length, 1);
+            });
 
-        // });
+        });
 
-        // describe('results view page', () => {
+        describe('results view page', () => {
 
-        //     beforeEach(() => {
-        //         goToUrlAndSetLocalStorage(oncoprintTabUrl);
-        //         waitForOncoprint();
-        //     });
+            beforeEach(() => {
+                goToUrlAndSetLocalStorage(oncoprintTabUrl);
+                waitForOncoprint();
+            });
 
-        //     it('shows co-expression tab when genes with expression data selected', () => {
-        //         assert( $('ul.nav-tabs li.tabAnchor_coexpression') );
-        //     });
+            it('shows co-expression tab when genes with expression data selected', () => {
+                assert( $('ul.nav-tabs li.tabAnchor_coexpression') );
+            });
 
-        // });
+        });
 
-        // describe('oncoprint tab', () => {
+        describe('oncoprint tab', () => {
 
-        //     beforeEach(() => {
-        //         goToUrlAndSetLocalStorage(oncoprintTabUrl);
-        //         waitForOncoprint();
-        //     });
+            beforeEach(() => {
+                goToUrlAndSetLocalStorage(oncoprintTabUrl);
+                waitForOncoprint();
+            });
             
-        //     it('has GSVA profile option in heatmap menu', () => {
-        //         var heatmapButton = browser.$('button[id=heatmapDropdown]');
-        //         heatmapButton.click();
-        //         var heatmapDropdown = browser.$$('.dropdown-menu.heatmap .Select-control')[0];
-        //         heatmapDropdown.click();
-        //         assert( $('div=GSVA scores on oncogenic signatures gene sets').isVisible() );
-        //     });
+            it('has GSVA profile option in heatmap menu', () => {
+                var heatmapButton = browser.$('button[id=heatmapDropdown]');
+                heatmapButton.click();
+                var heatmapDropdown = browser.$$('.dropdown-menu.heatmap .Select-control')[0];
+                heatmapDropdown.click();
+                assert( $('div=GSVA scores on oncogenic signatures gene sets').isVisible() );
+            });
 
-        // });
+        });
 
-        // describe('plots tab', () => {
+        describe('plots tab', () => {
 
-        //     beforeEach(()=>{
-        //         goToUrlAndSetLocalStorage(plotsTabUrl);
-        //         waitForPlotsTab();
-        //     });
+            beforeEach(()=>{
+                goToUrlAndSetLocalStorage(plotsTabUrl);
+                waitForPlotsTab();
+            });
 
-        //     it('shows gsva option in horizontal data type selection box', () => {
-        //         var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-        //         horzDataSelect.$('.Select-value-label').click();
-        //         assert( horzDataSelect.$('.Select-option=Gene Sets') );
-        //     });
+            it('shows gsva option in horizontal data type selection box', () => {
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                horzDataSelect.$('.Select-value-label').click();
+                assert( horzDataSelect.$('.Select-option=Gene Sets') );
+            });
 
-        //     it('shows gsva option in vertical data type selection box', () => {
-        //         var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-        //         vertDataSelect.$('.Select-value-label').click();
-        //         assert( vertDataSelect.$('.Select-option=Gene Sets') );
-        //     });
+            it('shows gsva option in vertical data type selection box', () => {
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+                vertDataSelect.$('.Select-value-label').click();
+                assert( vertDataSelect.$('.Select-option=Gene Sets') );
+            });
 
-        //     it('horizontal axis menu shows gsva score and pvalue in profile menu', () => {
+            it('horizontal axis menu shows gsva score and pvalue in profile menu', () => {
 
-        //         var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-        //         horzDataSelect.$('.Select-value-label').click();
-        //         horzDataSelect.$('.Select-option=Gene Sets').click();
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                horzDataSelect.$('.Select-value-label').click();
+                horzDataSelect.$('.Select-option=Gene Sets').click();
 
-        //         var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
-        //         horzProfileSelect.$('.Select-value-label').click();
+                var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
+                horzProfileSelect.$('.Select-value-label').click();
 
-        //         assert( horzProfileSelect.$('.Select-option=GSVA scores on oncogenic signatures gene sets') );
-        //         assert( horzProfileSelect.$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets') );
-        //     });
+                assert( horzProfileSelect.$('.Select-option=GSVA scores on oncogenic signatures gene sets') );
+                assert( horzProfileSelect.$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets') );
+            });
 
-        //     it('vertical axis menu shows gsva score and pvalue in profile menu', () => {
+            it('vertical axis menu shows gsva score and pvalue in profile menu', () => {
 
-        //         var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-        //         vertDataSelect.$('.Select-value-label').click();
-        //         vertDataSelect.$('.Select-option=Gene Sets').click();
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+                vertDataSelect.$('.Select-value-label').click();
+                vertDataSelect.$('.Select-option=Gene Sets').click();
 
-        //         var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
-        //         vertProfileSelect.$('.Select-value-label').click();
+                var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
+                vertProfileSelect.$('.Select-value-label').click();
 
-        //         assert( vertProfileSelect.$('.Select-option=GSVA scores on oncogenic signatures gene sets') );
-        //         assert( vertProfileSelect.$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets') );
-        //     });
+                assert( vertProfileSelect.$('.Select-option=GSVA scores on oncogenic signatures gene sets') );
+                assert( vertProfileSelect.$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets') );
+            });
 
-        //     it('horizontal axis menu shows gene set entry in entity menu', () => {
+            it('horizontal axis menu shows gene set entry in entity menu', () => {
                 
-        //         var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-        //         horzDataSelect.$('.Select-value-label').click();
-        //         horzDataSelect.$('.Select-option=Gene Sets').click();
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                horzDataSelect.$('.Select-value-label').click();
+                horzDataSelect.$('.Select-option=Gene Sets').click();
                 
-        //         var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
-        //         horzProfileSelect.$('.Select-value-label').click();
-        //         horzProfileSelect.$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets').click();
+                var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
+                horzProfileSelect.$('.Select-value-label').click();
+                horzProfileSelect.$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets').click();
                 
-        //         var horzEntitySelect = $('[name=h-geneset-selector]').$('..');
-        //         horzEntitySelect.$('.Select-value-label').click();
+                var horzEntitySelect = $('[name=h-geneset-selector]').$('..');
+                horzEntitySelect.$('.Select-value-label').click();
 
-        //         assert( horzEntitySelect.$('.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING') );
-        //     });
+                assert( horzEntitySelect.$('.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING') );
+            });
 
-        //     it('vertical axis menu shows gene set entry in entity menu', () => {
+            it('vertical axis menu shows gene set entry in entity menu', () => {
                 
-        //         var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-        //         vertDataSelect.$('.Select-value-label').click();
-        //         vertDataSelect.$('.Select-option=Gene Sets').click();
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+                vertDataSelect.$('.Select-value-label').click();
+                vertDataSelect.$('.Select-option=Gene Sets').click();
                 
-        //         var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
-        //         vertProfileSelect.$('.Select-value-label').click();
-        //         vertProfileSelect.$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets').click();
+                var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
+                vertProfileSelect.$('.Select-value-label').click();
+                vertProfileSelect.$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets').click();
                 
-        //         var vertEntitySelect = $('[name=v-geneset-selector]').$('..');
-        //         vertEntitySelect.$('.Select-value-label').click();
+                var vertEntitySelect = $('[name=v-geneset-selector]').$('..');
+                vertEntitySelect.$('.Select-value-label').click();
 
-        //         assert( vertEntitySelect.$('.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING') );
-        //     });
+                assert( vertEntitySelect.$('.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING') );
+            });
 
-        // });
+        });
 
-        // describe('co-expression tab', () => {
+        describe('co-expression tab', () => {
 
-        //     beforeEach(() => {
-        //         goToUrlAndSetLocalStorage(coexpressionTabUrl);
-        //         waitForCoExpressionTab();
-        //     });
+            beforeEach(() => {
+                goToUrlAndSetLocalStorage(coexpressionTabUrl);
+                waitForCoExpressionTab();
+            });
             
-        //     it('shows buttons for genes', () => {
-        //         const genes = coexpressionTabUrl.match(/gene_list=(.*)\&/)[1].split('%20');
-        //         var container = $('//*[@id="coexpressionTabGeneTabs"]');
-        //         var icons = genes.map(g => container.$('a='+g) );
-        //         assert.equal(genes.length, icons.length);
-        //     });
+            it('shows buttons for genes', () => {
+                const genes = coexpressionTabUrl.match(/gene_list=(.*)\&/)[1].split('%20');
+                var container = $('//*[@id="coexpressionTabGeneTabs"]');
+                var icons = genes.map(g => container.$('a='+g) );
+                assert.equal(genes.length, icons.length);
+            });
 
-        //     it('shows buttons for genes and gene sets', () => {
-        //         const geneSets = coexpressionTabUrl.match(/geneset_list=(.*)\&/)[1].split('%20');
-        //         var container = $('//*[@id="coexpressionTabGeneTabs"]');
-        //         var icons = geneSets.map(g => container.$('a='+g) );
-        //         assert.equal(geneSets.length, icons.length);
-        //     });
+            it('shows buttons for genes and gene sets', () => {
+                const geneSets = coexpressionTabUrl.match(/geneset_list=(.*)\&/)[1].split('%20');
+                var container = $('//*[@id="coexpressionTabGeneTabs"]');
+                var icons = geneSets.map(g => container.$('a='+g) );
+                assert.equal(geneSets.length, icons.length);
+            });
 
-        //     it('shows mRNA expression/GSVA scores in query profile select box when reference gene selected', () => {
-        //         var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
-        //         icon.click();
-        //         $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-        //         assert.equal( getReactSelectOptions($('.coexpression-select-query-profile')).length, 2 );
-        //         assert( reactSelectOption($('.coexpression-select-query-profile'), 'mRNA expression (microarray) (526 samples)') );
-        //         assert( reactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)') );
-        //     });
+            it('shows mRNA expression/GSVA scores in query profile select box when reference gene selected', () => {
+                var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
+                icon.click();
+                $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+                assert.equal( getReactSelectOptions($('.coexpression-select-query-profile')).length, 2 );
+                assert( reactSelectOption($('.coexpression-select-query-profile'), 'mRNA expression (microarray) (526 samples)') );
+                assert( reactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)') );
+            });
 
-        //     it('shows mRNA expression in subject profile select box when reference gene selected', () => {
-        //         var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
-        //         icon.click();
-        //         $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-        //         assert.equal( getReactSelectOptions($('.coexpression-select-subject-profile')).length, 1 );
-        //         assert( reactSelectOption($('.coexpression-select-subject-profile'), 'mRNA expression (microarray) (526 samples)') );
-        //     });
+            it('shows mRNA expression in subject profile select box when reference gene selected', () => {
+                var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
+                icon.click();
+                $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+                assert.equal( getReactSelectOptions($('.coexpression-select-subject-profile')).length, 1 );
+                assert( reactSelectOption($('.coexpression-select-subject-profile'), 'mRNA expression (microarray) (526 samples)') );
+            });
 
-        //     it('shows name of gene in `correlated with` field when reference gene selected', () => {
-        //         var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
-        //         icon.click();
-        //         $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-        //         var text = $('span*=that are correlated').getText();
-        //         assert( text.match('RPS11') );
-        //     });
+            it('shows name of gene in `correlated with` field when reference gene selected', () => {
+                var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
+                icon.click();
+                $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+                var text = $('span*=that are correlated').getText();
+                assert( text.match('RPS11') );
+            });
 
-        //     it('shows mRNA expression/GSVA scores in subject profile box when reference gene set selected', () => {
-        //         var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=GO_ACYLGLYCEROL_HOMEOSTASIS');
-        //         icon.click();
-        //         $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-        //         assert.equal( getReactSelectOptions($('.coexpression-select-query-profile')).length, 2 );
-        //         assert( reactSelectOption($('.coexpression-select-query-profile'), 'mRNA expression (microarray) (526 samples)') );
-        //         assert( reactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)') );
-        //     });
+            it('shows mRNA expression/GSVA scores in subject profile box when reference gene set selected', () => {
+                var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=GO_ACYLGLYCEROL_HOMEOSTASIS');
+                icon.click();
+                $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+                assert.equal( getReactSelectOptions($('.coexpression-select-query-profile')).length, 2 );
+                assert( reactSelectOption($('.coexpression-select-query-profile'), 'mRNA expression (microarray) (526 samples)') );
+                assert( reactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)') );
+            });
 
-        //     it('shows disabled subject query select box when reference gene set selected', () => {
-        //         var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=GO_ACYLGLYCEROL_HOMEOSTASIS');
-        //         icon.click();
-        //         $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-        //         assert( $('.coexpression-select-subject-profile.is-disabled ') );
-        //         assert( $('.coexpression-select-subject-profile').$('.Select-value-label*=GSVA scores on oncogenic') );
-        //     });
+            it('shows disabled subject query select box when reference gene set selected', () => {
+                var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=GO_ACYLGLYCEROL_HOMEOSTASIS');
+                icon.click();
+                $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+                assert( $('.coexpression-select-subject-profile.is-disabled ') );
+                assert( $('.coexpression-select-subject-profile').$('.Select-value-label*=GSVA scores on oncogenic') );
+            });
 
-        //     it('shows gene sets in table when GSVA scores selected in subject profile select box', () => {
-        //         selectReactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)');
-        //         $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-        //         assert.equal($$('span*=GO_').length, 7);
-        //     });
+            it('shows gene sets in table when GSVA scores selected in subject profile select box', () => {
+                selectReactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)');
+                $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+                assert.equal($$('span*=GO_').length, 7);
+            });
 
-        //     it('shows `Enter gene set.` placeholder in table search box when GSVA scores selected in first select box', () => {
-        //         selectReactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)');
-        //         $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-        //         assert( $('[data-test=CoExpressionGeneTabContent] input[placeholder="Enter gene set.."]') )
-        //     });
+            it('shows `Enter gene set.` placeholder in table search box when GSVA scores selected in first select box', () => {
+                selectReactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)');
+                $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+                assert( $('[data-test=CoExpressionGeneTabContent] input[placeholder="Enter gene set.."]') )
+            });
 
-        // });
+        });
 
     }
 
