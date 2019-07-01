@@ -1,4 +1,5 @@
 import _ from "lodash";
+import { IAxisLogScaleParams } from 'pages/resultsView/plots/PlotsTabUtils';
 
 export function getUniquePrecision(value:number, allValues:number[], maxPrecision:number=3) {
     if (!allValues.length)
@@ -15,8 +16,8 @@ export function getUniquePrecision(value:number, allValues:number[], maxPrecisio
     return precision;
 }
 
-export function axisLabel(geneticEntity:{geneticEntityName:string}, logScale:boolean, profileName:string) {
-    return `${profileName}: ${geneticEntity.geneticEntityName} ${logScale ? "(log2) " : ""}`;
+export function axisLabel(geneticEntity:{geneticEntityName:string}, logScale:IAxisLogScaleParams|undefined, profileName:string) {
+    return `${profileName}: ${geneticEntity.geneticEntityName} ${logScale ? `(${logScale.label}) ` : ""}`;
 }
 
 export function isNotProfiled(d:{profiledX:boolean, profiledY:boolean}) {

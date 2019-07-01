@@ -1,13 +1,15 @@
 var assert = require('assert');
+var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 var goToUrlAndSetLocalStorage = require('../../shared/specUtils').goToUrlAndSetLocalStorage;
 var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
+var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
 var reactSelectOption =  require('../../shared/specUtils').reactSelectOption;
 var getReactSelectOptions =  require('../../shared/specUtils').getReactSelectOptions;
 var selectReactSelectOption =  require('../../shared/specUtils').selectReactSelectOption;
-var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
-const oncoprintTabUrl = CBIOPORTAL_URL+'/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_all&clinicallist=NUM_SAMPLES_PER_PATIENT%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize'
+const oncoprintTabUrl = CBIOPORTAL_URL+'/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_all&clinicallist=NUM_SAMPLES_PER_PATIENT%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize';
+const plotsTabUrl = CBIOPORTAL_URL+'/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&clinicallist=PROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize&treatment_list=17-AAG%3BAEW541';
 
 describe('treatment feature', function() {
 
@@ -119,6 +121,173 @@ describe('treatment feature', function() {
 
         });
 
+        describe('plots tab', () => {
+
+            beforeEach(()=>{
+                goToUrlAndSetLocalStorage(plotsTabUrl);
+                waitForPlotsTab();
+            });
+
+            it('shows treatment option in horizontal data type selection box', () => {
+                var select = $('[name=h-profile-type-selector]').$('..');
+                assert( reactSelectOption(select, 'Treatment') );
+            });
+
+            it('shows treatment option in vertical data type selection box', () => {
+                var select = $('[name=v-profile-type-selector]').$('..');
+                assert( reactSelectOption(select, 'Treatment') );
+            });
+            
+            it('horizontal axis menu shows treatments in profile menu', () => {
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                selectReactSelectOption(horzDataSelect, 'Treatment');
+                
+                var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
+                assert( reactSelectOption(horzProfileSelect, 'EC50 values of compounds on cellular phenotype readout') );
+                assert( reactSelectOption(horzProfileSelect, 'IC50 values of compounds on cellular phenotype readout') );
+            });
+
+            it('vertical axis menu shows treatments in profile menu', () => {
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+                selectReactSelectOption(vertDataSelect, 'Treatment');
+                
+                var vertProfileSelect = $('[name=h-profile-name-selector]').$('..');
+                assert( reactSelectOption(vertProfileSelect, 'EC50 values of compounds on cellular phenotype readout') );
+                assert( reactSelectOption(vertProfileSelect, 'IC50 values of compounds on cellular phenotype readout') );
+            });
+
+            it('horizontal axis menu shows treatment entry in entity menu', () => {
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                selectReactSelectOption(horzDataSelect, 'Treatment');
+                
+                var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
+                selectReactSelectOption(horzProfileSelect, 'IC50 values of compounds on cellular phenotype readout');
+                
+                var horzEntitySelect = $('[name=h-treatment-selector]').$('..');
+                assert( reactSelectOption(horzEntitySelect, 'Name of 17-AAG') );
+                assert( reactSelectOption(horzEntitySelect, 'Name of AEW541') );
+            });
+
+            it('vertical axis menu shows treatment entry in entity menu', () => {
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+                selectReactSelectOption(vertDataSelect, 'Treatment');
+                
+                var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
+                selectReactSelectOption(vertProfileSelect, 'IC50 values of compounds on cellular phenotype readout');
+                
+                var vertEntitySelect = $('[name=v-treatment-selector]').$('..');
+                assert( reactSelectOption(vertEntitySelect, 'Name of 17-AAG') );
+                assert( reactSelectOption(vertEntitySelect, 'Name of AEW541') );
+            });
+
+            it('has Ordered samples entry in vert. menu when treatment selected on horz. axis', () => {
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+                selectReactSelectOption(vertDataSelect, 'Treatment');
+                
+                var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
+                selectReactSelectOption(vertProfileSelect, 'IC50 values of compounds on cellular phenotype readout');
+
+                var vertEntitySelect = $('[name=v-treatment-selector]').$('..');
+                selectReactSelectOption( vertEntitySelect, 'Name of AEW541');
+
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                assert( reactSelectOption(horzDataSelect, 'Ordered samples') );
+            });
+
+            it('has `Ordered samples` entry in horz. menu when treatment selected on vert. axis', () => {
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                selectReactSelectOption(horzDataSelect, 'Treatment');
+                
+                var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
+                selectReactSelectOption(horzProfileSelect, 'IC50 values of compounds on cellular phenotype readout');
+
+                var horzEntitySelect = $('[name=h-treatment-selector]').$('..');
+                selectReactSelectOption( horzEntitySelect, 'Name of AEW541');
+
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+                assert( reactSelectOption(vertDataSelect, 'Ordered samples') );
+            });
+
+            it('shows `Log Scale` checkbox when treatment selected on vert. axis', () => {
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                selectReactSelectOption(horzDataSelect, 'Treatment');
+                assert( $('[data-test=HorizontalLogCheckbox]') );
+            });
+
+            it('shows `Log Scale` checkbox when treatment selected on horz. axis', () => {
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+                selectReactSelectOption(vertDataSelect, 'Treatment');
+                assert( $('[data-test=VerticalLogCheckbox]') );
+            });
+            
+            it('shows checkbox for limit values (e.g., >8.00) checkbox when such profile selected on horz. axis', () => {
+
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                selectReactSelectOption(horzDataSelect, 'Treatment');
+
+                var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
+                selectReactSelectOption(horzProfileSelect, 'EC50 values of compounds on cellular phenotype readout');
+
+                var horzEntitySelect = $('[name=h-treatment-selector]').$('..');
+                selectReactSelectOption(horzEntitySelect, 'Name of AEW541');
+
+                assert( $('[data-test=ViewLimitValues]').isVisible() );
+            });
+
+            it('shows checkbox for limit values (e.g., >8.00) checkbox when such profile selected on vert. axis', () => {
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+                selectReactSelectOption(vertDataSelect, 'Treatment');
+
+                var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
+                selectReactSelectOption(vertProfileSelect, 'EC50 values of compounds on cellular phenotype readout');
+
+                var vertEntitySelect = $('[name=v-treatment-selector]').$('..');
+                selectReactSelectOption(vertEntitySelect, 'Name of AEW541');
+
+                assert( $('[data-test=ViewLimitValues]').isVisible() );
+            });
+
+            it('shows hint for handling of threshold values for treatment data in scatter plot', () => {
+                assert( $('label=Value >8.00 Labels **') );
+                assert( $('div*=** ') );
+            });
+
+            it('shows gene selection box in utilities menu for waterfall plot', () => {
+                selectTreamentsBothAxes();
+
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                selectReactSelectOption(horzDataSelect, 'Ordered samples');
+                assert( $('.gene-select-container') );
+                assert( $('.gene-select-container') );
+            });
+
+            it('shows selected genes in gene selection box in utilities menu for waterfall plot', () => {
+                selectTreamentsBothAxes();
+
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                selectReactSelectOption(horzDataSelect, 'Ordered samples');
+
+                $('.gene-select-container').waitForExist();
+                var geneSelect = $('.gene-select-container');
+                geneSelect.$('.Select-value-label').click();
+
+                var options = geneSelect.$$('.Select-option');
+
+                assert.equal(options[0].getText(), 'CDKN2A');
+                assert.equal(options[1].getText(), 'MDM2');
+                assert.equal(options[2].getText(), 'MDM4');
+                assert.equal(options[3].getText(), 'TP53');
+            });
+
+            it('shows sort order button for waterfall plot when `Ordered samples` selected', () => {
+                selectTreamentsBothAxes();
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+                selectReactSelectOption(horzDataSelect, 'Ordered samples');
+                assert( $('[data-test=changeSortOrderButton') );
+            });
+
+        });
+
     }
 
 });
@@ -126,9 +295,42 @@ describe('treatment feature', function() {
 var openHeatmapMenu = () => {
     var heatmapButton = browser.$('button[id=heatmapDropdown]');
     heatmapButton.click();
+};
+
+var selectTreamentsBothAxes = () => {
+    var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+    selectReactSelectOption(horzDataSelect, 'Treatment');
+    var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
+    selectReactSelectOption(horzProfileSelect, 'IC50 values of compounds on cellular phenotype readout');
+
+    var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+    selectReactSelectOption(vertDataSelect, 'Treatment');
+    var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
+    selectReactSelectOption(vertProfileSelect, 'IC50 values of compounds on cellular phenotype readout');
+
+    var horzEntitySelect = $('[name=h-treatment-selector]').$('..');
+    selectReactSelectOption(horzEntitySelect, 'Name of AEW541');
+
+    var vertEntitySelect = $('[name=v-treatment-selector]').$('..');
+    selectReactSelectOption(vertEntitySelect, 'Name of AEW541');
+
+    if (! $('[data-test=ViewLimitValues]').isSelected()) {
+        $('[data-test=ViewLimitValues]').click();
+    }
+
+    if ($('[data-test=HorizontalLogCheckbox]').isSelected()) {
+        $('[data-test=HorizontalLogCheckbox]').click();
+    }
+
+    if ($('[data-test=VerticalLogCheckbox]').isSelected()) {
+        $('[data-test=VerticalLogCheckbox]').click();
+    }
 }
 
 module.exports = {
     oncoprintTabUrl: oncoprintTabUrl,
     openHeatmapMenu: openHeatmapMenu,
+    queryPageUrl: CBIOPORTAL_URL,
+    plotsTabUrl: plotsTabUrl,
+    selectTreamentsBothAxes: selectTreamentsBothAxes,
 };
