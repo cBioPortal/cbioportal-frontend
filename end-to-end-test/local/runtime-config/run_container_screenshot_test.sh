@@ -5,7 +5,7 @@ set -o pipefail # pipes fail when partial command fails
 
 CUR_DIR=$PWD
 cd $PORTAL_SOURCE_DIR
-docker run --rm \
+docker run -it --rm \
     --name screenshot-e2e \
     --network="$DOCKER_NETWORK_NAME" \
     -e CBIOPORTAL_URL="$CBIOPORTAL_URL" \
