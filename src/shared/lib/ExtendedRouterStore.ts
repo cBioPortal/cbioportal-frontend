@@ -60,6 +60,7 @@ export enum QueryParameter {
     CANCER_STUDY_ID="cancer_study_id",
     DATA_PRIORITY="data_priority",
     GENESET_LIST="geneset_list",
+    TREATMENT_LIST="treatment_list",
     TAB_INDEX="tab_index",
     TRANSPOSE_MATRIX="transpose_matrix",
     ACTION="Action"
