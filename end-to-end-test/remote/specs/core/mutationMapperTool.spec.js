@@ -3,7 +3,7 @@ var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScree
 
 var assert = require('assert');
 var expect = require('chai').expect;
-var goToUrlAndSetLocalStorage = require('../specUtils').goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
