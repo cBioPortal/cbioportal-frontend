@@ -9,7 +9,7 @@ function waitForPlotsTab(timeout) {
 }
 
 function waitForCoExpressionTab(timeout) {
-    $('div.coExpressionTabDiv').waitForVisible(timeout || 20000);
+    $('//*[@id="coexpressionTabGeneTabs"]').waitForExist(timeout || 20000);
 }
 
 function waitForOncoprint(timeout) {
@@ -146,12 +146,17 @@ function setInputText(selector, text){
     browser.setValue(selector, '\uE003'.repeat(browser.getValue(selector).length) + text);
 }
 
+function getReactSelectOptions(parent) {
+    parent.$('.Select-control').click();
+    return parent.$$('.Select-option');
+}
+
 function selectReactSelectOption(parent, optionText) {
     reactSelectOption(parent, optionText).click();
 }
 
 function reactSelectOption(parent, optionText) {
-    parent.$('.Select-value-label').click();
+    parent.$('.Select-control').click();
     return parent.$('.Select-option='+optionText);
 }
 

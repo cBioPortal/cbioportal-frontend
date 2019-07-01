@@ -11,65 +11,65 @@ var oncoprintTabUrl = require('./gsva.spec').oncoprintTabUrl;
 
 describe('gsva feature', () => {
 
-    describe('GenesetVolcanoPlotSelector', () => {
+    // describe('GenesetVolcanoPlotSelector', () => {
 
-        beforeEach(()=>{
-            goToUrlAndSetLocalStorage(queryPageUrl);
-            waitForQueryPage();
-            checkTestStudy();
-            checkGSVAprofile();
-            browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
-            $('div.modal-dialog').waitForExist();
-        });
+    //     beforeEach(()=>{
+    //         goToUrlAndSetLocalStorage(queryPageUrl);
+    //         waitForQueryPage();
+    //         checkTestStudy();
+    //         checkGSVAprofile();
+    //         browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+    //         $('div.modal-dialog').waitForExist();
+    //     });
 
-        it('shows volcano plot for gene sets selection', () => {
-            var res = browser.checkElement('div.VictoryContainer');
-            assertScreenShotMatch(res);
-        });
+    //     it('shows volcano plot for gene sets selection', () => {
+    //         var res = browser.checkElement('div.VictoryContainer');
+    //         assertScreenShotMatch(res);
+    //     });
         
-        it('updates volcano plot after change of `percentile of score calculation`', () => {
-            var modal = $('div.modal-body');
-            modal.$('.Select-value-label').click();
-            modal.$('.Select-option=50%').click();
-            var res = browser.checkElement('div.VictoryContainer');
-            assertScreenShotMatch(res);
-        });
-    });
+    //     it('updates volcano plot after change of `percentile of score calculation`', () => {
+    //         var modal = $('div.modal-body');
+    //         modal.$('.Select-value-label').click();
+    //         modal.$('.Select-option=50%').click();
+    //         var res = browser.checkElement('div.VictoryContainer');
+    //         assertScreenShotMatch(res);
+    //     });
+    // });
 
-    describe('oncoprint tab', () => {
+    // describe('oncoprint tab', () => {
 
-            beforeEach(() => {
-                goToUrlAndSetLocalStorage(oncoprintTabUrl);
-                waitForOncoprint();
-            });
+    //         beforeEach(() => {
+    //             goToUrlAndSetLocalStorage(oncoprintTabUrl);
+    //             waitForOncoprint();
+    //         });
 
-            it('shows GSVA heatmap track', () => {
-                var res = browser.checkElement('div[id=oncoprintDiv]');
-                assertScreenShotMatch(res);
-            });
+    //         it('shows GSVA heatmap track', () => {
+    //             var res = browser.checkElement('div[id=oncoprintDiv]');
+    //             assertScreenShotMatch(res);
+    //         });
 
-    });
+    // });
 
-    describe('plots tab', () => {
+    // describe('plots tab', () => {
 
-        beforeEach(()=>{
-            goToUrlAndSetLocalStorage(plotsTabUrl);
-            waitForPlotsTab();
-        });
+    //     beforeEach(()=>{
+    //         goToUrlAndSetLocalStorage(plotsTabUrl);
+    //         waitForPlotsTab();
+    //     });
 
-        it('shows gsva profile data on horizontal and vertical axes', () => {
-            var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            horzDataSelect.$('.Select-value-label').click();
-            horzDataSelect.$('.Select-option=Gene Sets').click();
+    //     it('shows gsva profile data on horizontal and vertical axes', () => {
+    //         var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
+    //         horzDataSelect.$('.Select-value-label').click();
+    //         horzDataSelect.$('.Select-option=Gene Sets').click();
             
-            var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-            vertDataSelect.$('.Select-value-label').click();
-            vertDataSelect.$('.Select-option=Gene Sets').click();
+    //         var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
+    //         vertDataSelect.$('.Select-value-label').click();
+    //         vertDataSelect.$('.Select-option=Gene Sets').click();
 
-            var res = browser.checkElement('div[data-test="PlotsTabPlotDiv"]');
-            assertScreenShotMatch(res);
-        });
+    //         var res = browser.checkElement('div[data-test="PlotsTabPlotDiv"]');
+    //         assertScreenShotMatch(res);
+    //     });
 
-    });
+    // });
 
 });
