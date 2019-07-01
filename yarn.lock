@@ -6639,7 +6639,7 @@ flush-write-stream@^1.0.0:
     inherits "^2.0.3"
     readable-stream "^2.3.6"
 
-fmin@0.0.2:
+fmin@0.0.2, fmin@^0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/fmin/-/fmin-0.0.2.tgz#59bbb40d43ffdc1c94cd00a568c41f95f1973017"
   integrity sha1-Wbu0DUP/3ByUzQClaMQflfGXMBc=
