@@ -14,7 +14,11 @@ if [[ "$CIRCLECI" ]]; then
     else
         BRANCH=$CIRCLE_BRANCH
     fi
-    cat $SCRIPT_DIR/../env/${BRANCH}.sh
+    if test -f "$SCRIPT_DIR/../env/${BRANCH}.sh"; then
+        cat $SCRIPT_DIR/../env/${BRANCH}.sh
+    else
+        echo Branch name was not recognized. Please add env script to /env/ directory or test the branch as part of a github pull request. 
+    fi
 elif [[ "$BRANCH_ENV" ]]; then
     cat $SCRIPT_DIR/../env/${BRANCH_ENV}.sh
 
