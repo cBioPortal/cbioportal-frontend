@@ -19,6 +19,7 @@ import Timer = NodeJS.Timer;
 import WindowStore from "../../shared/components/window/WindowStore";
 import invertIncreasingFunction from "../../shared/lib/invertIncreasingFunction";
 import TruncatedTextWithTooltipSVG from "../../shared/components/TruncatedTextWithTooltipSVG";
+import {GroupTickLabelComponent} from "./labelComponents/GroupTickLabelComponent";
 
 export interface IUpSetProps {
     groups: {
@@ -43,32 +44,6 @@ const MAX_LABEL_WIDTH = 200;
 const BarComponent = (props:any)=>(
     <Bar className={`${props.caseType}_${_.sortBy(props.datum.groups).join("_")}_bar`} {...props}/>
 );
-
-const GroupTickLabelComponent = (props:any)=>{
-    const {categoryCoordToGroup, datum, text, ...rest} = props;
-    const group = categoryCoordToGroup(props.text);
-    return (
-        <TruncatedTextWithTooltipSVG
-            text={group!.name}
-            prefixTspans={[
-                <tspan>(</tspan>,
-                <tspan style={{fontWeight:"bold"}}>{group!.ordinal}</tspan>,
-                <tspan>) </tspan>
-            ]}
-            datum={group}
-            tooltip={(group:ComparisonGroup)=>{
-                return (
-                    <div>
-                        {renderGroupNameWithOrdinal(group)}
-                    </div>
-                );
-            }}
-            maxWidth={MAX_LABEL_WIDTH}
-            dy="0.4em"
-            {...rest}
-        />
-    );
-};
 
 @observer
 export default class UpSet extends React.Component<IUpSetProps, {}> {
@@ -579,7 +554,13 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     offsetX={50}
                                     dependentAxis
                                     crossAxis={false}
-                                    tickLabelComponent={<GroupTickLabelComponent categoryCoordToGroup={this.categoryCoordToGroup}/>}
+                                    tickLabelComponent={
+                                        <GroupTickLabelComponent
+                                            categoryCoordToGroup={this.categoryCoordToGroup}
+                                            maxLabelWidth={MAX_LABEL_WIDTH}
+                                            dy="0.4em"
+                                        />
+                                    }
                                     tickValues={this.groupTickValues}
                                     style={{
                                         axis: { strokeWidth: 0 },
