@@ -185,7 +185,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 <ComparisonGroupManager store={this.store} /> :
                                 (<span>
                                     Please log in to use the custom groups feature to save and compare sub-cohorts.
-                                    <If condition={AppConfig.serverConfig.authenticationMethod === "social_auth"}>
+                                    <If condition={AppConfig.serverConfig.authenticationMethod &&  AppConfig.serverConfig.authenticationMethod.includes("social_auth")}>
                                         <div className={"text-center"} style={{padding:20}}>
                                             <SocialAuthButton appStore={this.props.appStore}/>
                                         </div>

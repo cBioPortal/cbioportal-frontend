@@ -124,7 +124,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                             </div>
                         </Then>
                         <Else>
-                            <If condition={AppConfig.serverConfig.authenticationMethod === "social_auth"}>
+                            <If condition={AppConfig.serverConfig.authenticationMethod &&  AppConfig.serverConfig.authenticationMethod.includes("social_auth")}>
                                 <SocialAuthButton appStore={this.props.appStore}/>
                             </If>
                         </Else>
