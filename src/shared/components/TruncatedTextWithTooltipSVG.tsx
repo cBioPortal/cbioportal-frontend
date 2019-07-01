@@ -10,12 +10,15 @@ import Portal from "react-portal";
 
 export interface ITruncatedTextSVGProps {
     text?:string;
-    prefixTspans?:any;
+    prefixTspans?:any[]; // tspans. typescript doesn't play nice though so it has to be any
+    renderTruncatedText?:(truncatedText:string)=>any[]; // tspans. typescript doesn't play nice though so it has to be any
     maxWidth?:number;
     suffix?:string;
-    tooltip?:(datum:any)=>JSX.Element;
+    tooltip?:(datum?:any)=>JSX.Element;
     tooltipPlacement?:string;
+    alwaysShowTooltip?:boolean;
     dy?:any;
+    dx?:any;
     //victory
     datum?:any;
     style?:{
@@ -36,7 +39,7 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
     @observable tooltipOpen = false;
 
     @computed get tooltipElt() {
-        if (this.props.tooltip && this.props.datum) {
+        if (this.props.tooltip) {
             return this.props.tooltip(this.props.datum);
         } else {
             return <span>{this.props.text}</span>;
@@ -83,6 +86,14 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
         );
     }
 
+    @computed get truncatedText() {
+        if (this.props.renderTruncatedText) {
+            return this.props.renderTruncatedText(this.textReport.text);
+        } else {
+            return <tspan>{this.textReport.text}</tspan>;
+        }
+    }
+
     render() {
         const {text, maxWidth, datum, suffix, tooltip,
             tooltipPlacement, ...rest} = this.props;
@@ -95,12 +106,9 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
                     {...rest}
                 >
                     {this.props.prefixTspans}
-                    <tspan
-                    >
-                        {this.textReport.text}
-                    </tspan>
+                    {this.truncatedText}
                 </text>
-                {this.textReport.truncated && this.tooltipOpen && (
+                {(this.textReport.isTruncated || this.props.alwaysShowTooltip) && this.tooltipOpen && (
                     <Portal isOpened={true} node={document.body}>
                         <Popover
                             arrowOffsetTop={17}
