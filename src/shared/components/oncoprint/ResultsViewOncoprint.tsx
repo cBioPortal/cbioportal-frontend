@@ -2,13 +2,13 @@ import * as React from "react";
 import {Observer, observer} from "mobx-react";
 import {action, computed, IObservableObject, IReactionDisposer, observable, ObservableMap, reaction} from "mobx";
 import {remoteData} from "public-lib/api/remoteData";
-import Oncoprint, {GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
+import Oncoprint, {GENETIC_TRACK_GROUP_INDEX, IHeatmapTrackSpec} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
 } from "shared/components/oncoprint/controls/OncoprintControls";
-import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
+import {ResultsViewPageStore, AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 import {
     getAlteredUids,
     getUnalteredUids,
@@ -16,7 +16,8 @@ import {
     makeGenesetHeatmapExpansionsMobxPromise,
     makeGenesetHeatmapTracksMobxPromise,
     makeGeneticTracksMobxPromise,
-    makeHeatmapTracksMobxPromise
+    makeHeatmapTracksMobxPromise,
+    makeTreatmentProfileHeatmapTracksMobxPromise
 } from "./OncoprintUtils";
 import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
@@ -34,6 +35,7 @@ import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../lib/getBrowserWindow";
+import { MobxPromiseUnionTypeWithDefault } from "mobxpromise";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -65,14 +67,20 @@ export const SAMPLE_MODE_URL_PARAM = "show_samples";
 export const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
 export const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
 export const ONCOPRINT_SORTBY_URL_PARAM = "oncoprint_sortby";
+export const TREATMENT_LIST_URL_PARAM = "treatment_list";
 
 const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
 
+/*  Each heatmap track group can hold tracks of a single entity type.
+    Implemented entity types are genes and treatments. In the 
+    HeatmapTrackGroupRecord type the `entities` member refers to 
+    hugo_gene_symbols (for genes) or to treatment_id's (for treatments). */
 type HeatmapTrackGroupRecord = {
     trackGroupIndex:number,
-    genes:ObservableMap<boolean>,
+    molecularAlterationType:string,
+    entities:ObservableMap<boolean>, // map of hugo_gene_symbols or treatment_id's
     molecularProfileId:string
-};
+}
 
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
@@ -130,7 +138,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
-        this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
+        // The heatmap tracks can only be added when detailed information on
+        // molecular profiles has been retrieved from the server.
+        onMobxPromise(props.store.molecularProfileIdToMolecularProfile, (result:any)=>{
+            this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
+        });
 
         onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
             if (studyIds.length > 1) {
@@ -179,7 +191,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             ()=>[
                 this.columnMode,
                 this.heatmapTrackGroupsUrlParam,
-                this.clinicalTracksUrlParam
+                this.clinicalTracksUrlParam,
+                this.treatmentsUrlParam
             ],
             ()=>{
                 const newParams = Object.assign({}, getBrowserWindow().globalStores.routing.location.query);
@@ -193,6 +206,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     delete newParams[HEATMAP_TRACKS_URL_PARAM];
                 } else {
                     newParams[HEATMAP_TRACKS_URL_PARAM] = this.heatmapTrackGroupsUrlParam;
+                }
+                if (!this.treatmentsUrlParam) {
+                    delete newParams[TREATMENT_LIST_URL_PARAM];
+                } else {
+                    newParams[TREATMENT_LIST_URL_PARAM] = this.treatmentsUrlParam;
                 }
                 getBrowserWindow().globalStores.routing.updateRoute(newParams, undefined, true, true);
             }
@@ -288,8 +306,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get heatmapProfilesPromise() {
                 return self.props.store.heatmapMolecularProfiles;
             },
+            get treatmentsPromise() {
+                return self.props.store.treatmentsInStudies;
+            },
             get selectedHeatmapProfile() {
                 return self.selectedHeatmapProfile;
+            },
+            get selectedHeatmapProfileAlterationType() {
+                return self.selectedHeatmapProfileAlterationType;
             },
             get heatmapIsDynamicallyQueried () {
                 return self.heatmapIsDynamicallyQueried;
@@ -480,6 +504,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onClickAddGenesToHeatmap:()=>{
                 this.addHeatmapTracks(this.selectedHeatmapProfile, this.heatmapGeneInputValue.toUpperCase().trim().split(/\s+/));
             },
+            onClickAddTreatmentsToHeatmap:(treatmentIds:string[])=>{
+                this.addHeatmapTracks(this.selectedHeatmapProfile, treatmentIds);
+            },
             onClickRemoveHeatmap:action(() => {
                 this.molecularProfileIdToHeatmapTracks.clear();
             }),
@@ -551,6 +578,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                     this.geneticTracks.result,
                                     this.clinicalTracks.result,
                                     this.heatmapTracks.result,
+                                    this.treatmentHeatmapTracks.result,
+                                    this.genesetHeatmapTracks.result,
                                     this.oncoprint.getIdOrder(),
                                     (this.columnMode === "sample" ?
                                         ((key:string)=>(sampleKeyToSample[key].sampleId)) :
@@ -638,28 +667,45 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @computed get heatmapTrackGroupsUrlParam() {
         return _.sortBy(this.molecularProfileIdToHeatmapTracks.values(), (x:HeatmapTrackGroupRecord)=>x.trackGroupIndex)
-            .filter((x:HeatmapTrackGroupRecord)=>!!x.genes.size)
-            .map((x:HeatmapTrackGroupRecord)=>`${x.molecularProfileId},${x.genes.keys().join(",")}`)
-            .join(";");
+        .filter((x:HeatmapTrackGroupRecord)=>!!x.entities.size)
+        .map((x:HeatmapTrackGroupRecord)=>`${x.molecularProfileId},${x.entities.keys().join(",")}`)
+        .join(";");
     }
 
-    private addHeatmapTracks(molecularProfileId:string, genes:string[]) {
-        let trackGroup = this.molecularProfileIdToHeatmapTracks.get(molecularProfileId);
-        if (!trackGroup) {
-            let newTrackGroupIndex = 2;
-            for (const group of this.molecularProfileIdToHeatmapTracks.values()) {
-                newTrackGroupIndex = Math.max(newTrackGroupIndex, group.trackGroupIndex + 1);
+    // treatments selected iin heatmap are added to the `treatment_list` url param
+    @computed get treatmentsUrlParam():string {
+        return _.filter(this.molecularProfileIdToHeatmapTracks.values(), (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
+        .map((x:HeatmapTrackGroupRecord)=>`${x.entities.keys().join(";")}`)
+        .join(";");
+    }
+
+    @computed get selectedHeatmapProfileAlterationType():string {
+        let molecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[this.selectedHeatmapProfile];
+        return molecularProfile.molecularAlterationType;
+    }
+
+    private addHeatmapTracks(molecularProfileId:string, entities:string[]) {
+        const profile:MolecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[molecularProfileId];
+        if (profile) {
+            let trackGroup = this.molecularProfileIdToHeatmapTracks.get(molecularProfileId);
+            if (!trackGroup) {
+                let newTrackGroupIndex = 2;
+                for (const group of this.molecularProfileIdToHeatmapTracks.values()) {
+                    newTrackGroupIndex = Math.max(newTrackGroupIndex, group.trackGroupIndex + 1);
+                }
+
+                trackGroup = observable({
+                    trackGroupIndex: newTrackGroupIndex,
+                    molecularProfileId,
+                    molecularAlterationType: profile.molecularAlterationType,
+                    entities: observable.shallowMap<boolean>({})
+                });
+                this.molecularProfileIdToHeatmapTracks.set(molecularProfileId, trackGroup);
             }
-            trackGroup = observable({
-                trackGroupIndex: newTrackGroupIndex,
-                molecularProfileId,
-                genes: observable.shallowMap<boolean>({})
-            });
+            for (const entity of entities) {
+                trackGroup!.entities.set(entity, true);
+            }
         }
-        for (const gene of genes) {
-            trackGroup!.genes.set(gene, true);
-        }
-        this.molecularProfileIdToHeatmapTracks.set(molecularProfileId, trackGroup);
     }
 
     private toggleColumnMode() {
@@ -796,11 +842,18 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return (this.columnMode === "sample" ? this.sampleHeatmapTracks : this.patientHeatmapTracks);
     }
 
+    readonly sampleTreatmentHeatmapTracks = makeTreatmentProfileHeatmapTracksMobxPromise(this, true);
+    readonly patientTreatmentHeatmapTracks = makeTreatmentProfileHeatmapTracksMobxPromise(this, false);
+    @computed get treatmentHeatmapTracks() {
+        return (this.columnMode === "sample" ? this.sampleTreatmentHeatmapTracks : this.patientTreatmentHeatmapTracks);
+    }
+
     @computed get genesetHeatmapTrackGroup(): number {
         return 1 + Math.max(
             GENETIC_TRACK_GROUP_INDEX,
             // observe the heatmap tracks to render in the very next group
-            ...(this.heatmapTracks.result.map(hmTrack => hmTrack.trackGroupIndex))
+            ...(this.heatmapTracks.result.map(hmTrack => hmTrack.trackGroupIndex)),
+            ...(this.treatmentHeatmapTracks.result.map(hmTrack => hmTrack.trackGroupIndex))
         );
     }
 
@@ -815,7 +868,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @computed get genesetHeatmapTracks() {
         return (this.columnMode === "sample" ? this.sampleGenesetHeatmapTracks : this.patientGenesetHeatmapTracks);
     }
-
 
     @computed get clusterHeatmapTrackGroupIndex() {
         if (this.sortMode.type === "heatmap") {
@@ -884,7 +936,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return this.clinicalTracks.isPending
             || this.geneticTracks.isPending
             || this.genesetHeatmapTracks.isPending
-            || this.heatmapTracks.isPending;
+            || this.heatmapTracks.isPending
+            || this.treatmentHeatmapTracks.isPending;
     }
 
     @computed get isHidden() {
@@ -1028,7 +1081,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 clinicalTracks={this.clinicalTracks.result}
                                 geneticTracks={this.geneticTracks.result}
                                 genesetHeatmapTracks={this.genesetHeatmapTracks.result}
-                                heatmapTracks={this.heatmapTracks.result}
+                                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this. heatmapTracks.result)}
                                 divId={this.props.divId}
                                 width={900}
                                 caseLinkOutInTooltips={true}
