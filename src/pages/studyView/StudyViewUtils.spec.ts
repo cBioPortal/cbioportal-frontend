@@ -47,7 +47,7 @@ import {
     StudyViewFilterWithSampleIdentifierFilters,
     ChartMeta,
     ChartMetaDataTypeEnum,
-    getStudyViewTabId
+    getStudyViewTabId, ChartType
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -66,7 +66,7 @@ import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import {VirtualStudy} from 'shared/model/VirtualStudy';
-import {ChartTypeEnum} from "./StudyViewConfig";
+import {ChartDimension, ChartTypeEnum} from "./StudyViewConfig";
 import {MobxPromise} from "mobxpromise";
 import {CLI_NO_COLOR, CLI_YES_COLOR, DEFAULT_NA_COLOR, RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 
@@ -1310,6 +1310,7 @@ describe('StudyViewUtils', () => {
 
     describe("calculateLayout", () => {
         let visibleAttrs: ChartMeta[] = [];
+        let visibleAttrsChartDimensions: { [id: string]: ChartDimension } = {};
         const clinicalAttr: ClinicalAttribute = {
             'clinicalAttributeId': 'test',
             'datatype': 'STRING',
@@ -1320,28 +1321,28 @@ describe('StudyViewUtils', () => {
             'studyId': ''
         };
         for (let i = 0; i < 8; i++) {
+            const uniqueKey = 'test' + i;
             visibleAttrs.push({
                 clinicalAttribute: clinicalAttr,
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
-                uniqueKey: 'test' + i,
+                uniqueKey: uniqueKey,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                chartType: ChartTypeEnum.PIE_CHART,
-                dimension: {w: 1, h: 1},
                 renderWhenDataChange: false,
                 priority: 1,
             });
+            visibleAttrsChartDimensions[uniqueKey] = {w: 1, h: 1};
         }
 
         it("Empty array should be returned when no attributes given", () => {
-            let layout: Layout[] = calculateLayout([], 6);
+            let layout: Layout[] = calculateLayout([], 6, visibleAttrsChartDimensions);
             assert.isArray(layout);
             assert.equal(layout.length, 0);
         });
 
         it("The layout is not expected - 1", () => {
-            let layout: Layout[] = calculateLayout(visibleAttrs, 6);
+            let layout: Layout[] = calculateLayout(visibleAttrs, 6, visibleAttrsChartDimensions);
             assert.equal(layout.length, 8);
             assert.equal(layout[0].i, 'test0');
             assert.equal(layout[0].x, 0);
@@ -1370,7 +1371,7 @@ describe('StudyViewUtils', () => {
         });
 
         it("The layout is not expected - 2", () => {
-            let layout: Layout[] = calculateLayout(visibleAttrs, 2);
+            let layout: Layout[] = calculateLayout(visibleAttrs, 2, visibleAttrsChartDimensions);
             assert.equal(layout.length, 8);
             assert.equal(layout[0].i, 'test0');
             assert.equal(layout[0].x, 0);
@@ -1399,6 +1400,7 @@ describe('StudyViewUtils', () => {
         });
 
         it("Higher priority chart should be displayed first", () => {
+            let visibleAttrsChartDimensions: { [id: string]: ChartDimension } = {};
             visibleAttrs = [{
                 clinicalAttribute: clinicalAttr,
                 displayName: clinicalAttr.displayName,
@@ -1406,8 +1408,6 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test0',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                chartType: ChartTypeEnum.TABLE,
-                dimension: {w: 2, h: 2},
                 renderWhenDataChange: true,
                 priority: 10,
             }, {
@@ -1415,15 +1415,15 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test1',
-                chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 1, h: 1},
                 renderWhenDataChange: false,
                 priority: 20,
             }];
+            visibleAttrsChartDimensions['test0'] = {w: 2, h: 2};
+            visibleAttrsChartDimensions['test1'] = {w: 1, h: 1};
 
-            let layout: Layout[] = calculateLayout(visibleAttrs, 4);
+            let layout: Layout[] = calculateLayout(visibleAttrs, 4, visibleAttrsChartDimensions);
             assert.equal(layout.length, 2);
             assert.equal(layout[0].i, 'test1');
             assert.equal(layout[0].x, 0);
@@ -1435,15 +1435,14 @@ describe('StudyViewUtils', () => {
         });
 
         it("The lower priority chart should occupy the empty space first", () => {
+            let visibleAttrsChartDimensions: { [id: string]: ChartDimension } = {};
             visibleAttrs = [{
                 clinicalAttribute: clinicalAttr,
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test0',
-                chartType: ChartTypeEnum.BAR_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 2, h: 1},
                 renderWhenDataChange: false,
                 priority: 10,
             }, {
@@ -1451,10 +1450,8 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test1',
-                chartType: ChartTypeEnum.TABLE,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 2, h: 2},
                 renderWhenDataChange: true,
                 priority: 5,
             }, {
@@ -1462,15 +1459,16 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test2',
-                chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 1, h: 1},
                 renderWhenDataChange: false,
                 priority: 2,
             }];
+            visibleAttrsChartDimensions['test0'] = {w: 2, h: 1};
+            visibleAttrsChartDimensions['test1'] = {w: 2, h: 2};
+            visibleAttrsChartDimensions['test2'] = {w: 1, h: 1};
 
-            let layout: Layout[] = calculateLayout(visibleAttrs, 4);
+            let layout: Layout[] = calculateLayout(visibleAttrs, 4, visibleAttrsChartDimensions);
             assert.equal(layout.length, 3);
             assert.equal(layout[0].i, 'test0');
             assert.equal(layout[0].x, 0);
@@ -1487,15 +1485,14 @@ describe('StudyViewUtils', () => {
         });
 
         it("The chart should utilize the horizontal space in the last row", () => {
+            let visibleAttrsChartDimensions: { [id: string]: ChartDimension } = {};
             visibleAttrs = [{
                 clinicalAttribute: clinicalAttr,
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test0',
-                chartType: ChartTypeEnum.BAR_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 2, h: 2},
                 renderWhenDataChange: false,
                 priority: 1,
             }, {
@@ -1503,10 +1500,8 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test1',
-                chartType: ChartTypeEnum.TABLE,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 2, h: 2},
                 renderWhenDataChange: true,
                 priority: 1,
             }, {
@@ -1514,10 +1509,8 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test2',
-                chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 2, h: 1},
                 renderWhenDataChange: false,
                 priority: 1,
             }, {
@@ -1525,10 +1518,8 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test3',
-                chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 1, h: 1},
                 renderWhenDataChange: false,
                 priority: 1,
             }, {
@@ -1536,15 +1527,18 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test4',
-                chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 1, h: 1},
                 renderWhenDataChange: false,
                 priority: 1,
             }];
+            visibleAttrsChartDimensions['test0'] = {w: 2, h: 2};
+            visibleAttrsChartDimensions['test1'] = {w: 2, h: 2};
+            visibleAttrsChartDimensions['test2'] = {w: 2, h: 1};
+            visibleAttrsChartDimensions['test3'] = {w: 1, h: 1};
+            visibleAttrsChartDimensions['test4'] = {w: 1, h: 1};
 
-            let layout: Layout[] = calculateLayout(visibleAttrs, 4);
+            let layout: Layout[] = calculateLayout(visibleAttrs, 4, visibleAttrsChartDimensions);
             assert.equal(layout.length, 5);
             assert.equal(layout[0].i, 'test0');
             assert.equal(layout[0].x, 0);
@@ -2021,15 +2015,14 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test',
-                chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 2, h: 2},
                 renderWhenDataChange: false,
                 priority: 1,
             };
+            const focusedChartDimension = {w: 2, h: 2};
             const cols = 5;
-            const newLayout = calculateNewLayoutForFocusedChart(layout, focusedChartMeta, cols);
+            const newLayout = calculateNewLayoutForFocusedChart(layout, focusedChartMeta, cols, focusedChartDimension);
             assert.equal(newLayout.i, 'test');
             assert.equal(newLayout.x, 1);
             assert.equal(newLayout.y, 1);
@@ -2059,15 +2052,14 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test',
-                chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 2, h: 2},
                 renderWhenDataChange: false,
                 priority: 1,
             };
+            const focusedChartDimension = {w: 2, h: 2};
             const cols = 5;
-            const newLayout = calculateNewLayoutForFocusedChart(layout, focusedChartMeta, cols);
+            const newLayout = calculateNewLayoutForFocusedChart(layout, focusedChartMeta, cols, focusedChartDimension);
             assert.equal(newLayout.i, 'test');
             assert.equal(newLayout.x, 3);
             assert.equal(newLayout.y, 1);
@@ -2097,15 +2089,14 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test',
-                chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
-                dimension: {w: 1, h: 1},
                 renderWhenDataChange: false,
                 priority: 1,
-            }
+            };
+            const focusedChartDimension = {w: 1, h: 1};
             const cols = 5;
-            const newLayout = calculateNewLayoutForFocusedChart(layout, focusedChartMeta, cols);
+            const newLayout = calculateNewLayoutForFocusedChart(layout, focusedChartMeta, cols, focusedChartDimension);
             assert.equal(newLayout.i, 'test');
             assert.equal(newLayout.x, 2);
             assert.equal(newLayout.y, 1);
