@@ -5,7 +5,7 @@ import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
 import _ from "lodash";
 import {action, computed, observable} from 'mobx';
 import {ComparisonGroup} from './GroupComparisonUtils';
-import VennSimple from "./VennSimple";
+import RectangleVennDiagram from "./vennDiagram/RectangleVennDiagram";
 import CreateGroupFromOverlap from "./CreateGroupFromOverlap";
 import GroupComparisonStore from "./GroupComparisonStore";
 import autobind from "autobind-decorator";
@@ -133,7 +133,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         y="1.2em"
                         text={'Samples overlap'}
                     />
-                    <VennSimple
+                    <RectangleVennDiagram
                         uid="samples"
                         x={0}
                         y={15}
@@ -159,7 +159,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         text={'Patients overlap'}
                     />
 
-                    <VennSimple
+                    <RectangleVennDiagram
                         uid="patients"
                         x={VENN_PLOT_WIDTH+PADDING_BTWN_SAMPLE_AND_PATIENT}
                         y={15}
