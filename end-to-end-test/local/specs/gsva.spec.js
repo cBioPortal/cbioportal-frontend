@@ -350,8 +350,8 @@ describe('gsva feature', function() {
             it('shows buttons for genes and gene sets', () => {
                 const geneSets = coexpressionTabUrl.match(/geneset_list=(.*)\&/)[1].split('%20');
                 var container = $('//*[@id="coexpressionTabGeneTabs"]');
-                var icons = genes.map(g => container.$('a='+g) );
-                assert.equal(genes.length, icons.length);
+                var icons = geneSets.map(g => container.$('a='+g) );
+                assert.equal(geneSets.length, icons.length);
             });
 
             it('shows mRNA expression/GSVA scores in query profile select box when reference gene selected', () => {
@@ -367,8 +367,8 @@ describe('gsva feature', function() {
                 var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
                 icon.click();
                 $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-                assert.equal( getReactSelectOptions($('.coexpression-select-query-profile')).length, 1 );
-                assert( reactSelectOption($('.coexpression-select-query-profile'), 'mRNA expression (microarray) (526 samples)') );
+                assert.equal( getReactSelectOptions($('.coexpression-select-subject-profile')).length, 1 );
+                assert( reactSelectOption($('.coexpression-select-subject-profile'), 'mRNA expression (microarray) (526 samples)') );
             });
 
             it('shows name of gene in `correlated with` field when reference gene selected', () => {
