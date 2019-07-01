@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="homepage" timestamp="2019-07-01T14:02:37" time="1.483" tests="1" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="c3136c27eb94def93e3f7d8fe9f97313"/>
+      <property name="suiteName" value="homepage"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/home.spec.js"/>
+    </properties>
+    <testcase classname=".homepage" name="it_should_show_dev_mode_when_testing" time="0.411">
+      <system-out>
+        <![CDATA[
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/f58372fb04c6c48773e43a45771f1039/element - {"using":"css selector","value":".alert-warning"}
+RESULT: {"sessionId":"f58372fb04c6c48773e43a45771f1039","status":0,"value":{"ELEMENT":"0.6914290183567753-2"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/f58372fb04c6c48773e43a45771f1039/elements - {"using":"css selector","value":".alert-warning"}
+RESULT: {"sessionId":"f58372fb04c6c48773e43a45771f1039","status":0,"value":[{"ELEMENT":"0.6914290183567753-2"}]}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/f58372fb04c6c48773e43a45771f1039/elements - {"using":"css selector","value":".alert-warning"}
+RESULT: {"sessionId":"f58372fb04c6c48773e43a45771f1039","status":0,"value":[{"ELEMENT":"0.6914290183567753-2"}]}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/f58372fb04c6c48773e43a45771f1039/element/0.6914290183567753-2/text - {}
+RESULT: {"sessionId":"f58372fb04c6c48773e43a45771f1039","status":0,"value":"×\ncbioportal-frontend dev mode, using //localhost:3000/ clear"}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/f58372fb04c6c48773e43a45771f1039/execute - {"script":"return (function () {\n\n            Object.keys(window.ajaxRequests).forEach((key)=>{\n                window.ajaxRequests[key].end = Date.now();\n                window.ajaxRequests[key].duration = window.ajaxRequests[key].end - window.ajaxRequests[key].started;\n            });\n\n            return JSON.stringify(window.ajaxRequests);\n\n        }).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"f58372fb04c6c48773e43a45771f1039","status":0,"value":"{\"740207721\":{\"url\":\"https://3dmol.csb.pitt.edu/track/report.cgi\",\"started\":1561989759278,\"end\":1561989759473,\"duration\":195}}"}
+COMMAND: DELETE http://127.0.0.1:4444/wd/hub/session/f58372fb04c6c48773e43a45771f1039 - {}
+RESULT: {"sessionId":"f58372fb04c6c48773e43a45771f1039","status":0,"value":null}
+]]>
+      </system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="homepage" timestamp="2019-07-01T14:02:33" time="3.681" tests="1" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="519aca2ff6d56ad75d83c6a75713a98e"/>
+      <property name="suiteName" value="homepage"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/home.screenshot.spec.js"/>
+    </properties>
+    <testcase classname=".homepage" name="shows_the_home_page" time="3.671">
+      <system-out>
+        <![CDATA[
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/url - {"url":"http://cbioportal:8080/?localdev=true"}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/window/current/size - {}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":{"height":1004,"width":1050}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":{"screenHeight":888,"screenWidth":1050}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/window/current/size - {"width":1000,"height":1716}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":{"screenHeight":1600,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/element - {"using":"css selector","value":"body"}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":{"ELEMENT":"0.5125316152447248-1"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/moveto - {"element":"0.5125316152447248-1","xoffset":0,"yoffset":0}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/elements - {"using":"css selector","value":"div[data-test=\"studyList\"]"}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":[{"ELEMENT":"0.5125316152447248-2"}]}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/element/0.5125316152447248-2/displayed - {}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":true}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/element - {"using":"css selector","value":"div[data-test=\"studyList\"] input"}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":{"ELEMENT":"0.5125316152447248-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/element/0.5125316152447248-3/clear - {}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/element/0.5125316152447248-3/value - {"value":["d","u","m","m","y","-","s","t","u","d","(1 more items)"],"text":"dummy-study"}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/url - {}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":"http://cbioportal:8080/?localdev=true"}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/window/current/size - {}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":{"height":1716,"width":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":{"screenHeight":1600,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/window/current/size - {"width":1600,"height":1116}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":{"screenHeight":1000,"screenWidth":1600}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function scrollbars(enabled) {\n  if (enabled) {\n    document.documentElement.style.overflow = '';\n  } else {\n    document.documentElement.style.overflow = 'hidden';\n  }\n}).apply(null, arguments)","args":[false]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function triggerResize() {\n  var evt = window.document.createEvent('UIEvents');\n  evt.initUIEvent('resize', true, false, window, 0);\n  window.dispatchEvent(evt);\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function scroll(x, y) {\n  window.scrollTo(x, y);\n}).apply(null, arguments)","args":[0,0]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return !!document.evaluate;","args":[]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":true}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function executeClientSide(fn, sArr, args) {  var cb = arguments[arguments.length - 1];  var i = 0;  var sArgs = [];  var use, value, xp, cs, tn, res, j, arg;   if (typeof document.querySelect ... (1983 more bytes)","args":[]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":[{"bottom":802,"left":0,"right":1600,"top":382}]}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function getScreenDimension() {\n\n  var body = document.body;\n  var html = document.documentElement;\n\n  return {\n    window: {\n      innerWidth: window.innerWidth,\n      innerHeight: window.innerHeight,\n      pixelRatio: typeof window.devicePixelRatio === 'undefined' ? 1 : window.devicePixelRatio,\n      orientation: typeof window.orientation === 'undefined' ? 0 : Math.abs(window.orientation),\n      screenWidth: window.screen.width,\n      screenHeight: window.screen.height\n    },\n    body: {\n      scrollHeight: body.scrollHeight,\n      offsetHeight: body.offsetHeight\n    },\n    html: {\n      clientWidth: html.clientWidth,\n      scrollWidth: html.scrollWidth,\n      clientHeight: html.clientHeight,\n      scrollHeight: html.scrollHeight,\n      offsetHeight: html.offsetHeight\n    }\n  };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":{"body":{"offsetHeight":2884,"scrollHeight":2894},"html":{"clientHeight":1000,"clientWidth":1600,"offsetHeight":2894,"scrollHeight":2894,"scrollWidth":1600},"window":{"innerHeight":1000,"innerWidth":1600,"orientation":0,"pixelRatio":1,"screenHeight":1024,"screenWidth":1280}}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function pageHeight(height) {\n  document.body.style.height = height;\n}).apply(null, arguments)","args":["2894px"]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function virtualScroll(x, y, remove) {\n  var w = x === 0 ? 0 : -1 * x;\n  var h = y === 0 ? 0 : -1 * y;\n\n  var translate = remove ? 'none' : 'translate(' + w + 'px,' + h + 'px)';\n  var html = document.documentElement;\n\n  html.style.webkitTransform = translate;\n  html.style.mozTransform = translate;\n  html.style.msTransform = translate;\n  html.style.oTransform = translate;\n  html.style.transform = translate;\n}).apply(null, arguments)","args":[0,382,false]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/screenshot - {}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":"[base64] 114128 bytes"}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function pageHeight(height) {\n  document.body.style.height = height;\n}).apply(null, arguments)","args":[""]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function virtualScroll(x, y, remove) {\n  var w = x === 0 ? 0 : -1 * x;\n  var h = y === 0 ? 0 : -1 * y;\n\n  var translate = remove ? 'none' : 'translate(' + w + 'px,' + h + 'px)';\n  var html = document.documentElement;\n\n  html.style.webkitTransform = translate;\n  html.style.mozTransform = translate;\n  html.style.msTransform = translate;\n  html.style.oTransform = translate;\n  html.style.transform = translate;\n}).apply(null, arguments)","args":[0,0,true]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function scrollbars(enabled) {\n  if (enabled) {\n    document.documentElement.style.overflow = '';\n  } else {\n    document.documentElement.style.overflow = 'hidden';\n  }\n}).apply(null, arguments)","args":[true]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9/execute - {"script":"return (function () {\n\n            Object.keys(window.ajaxRequests).forEach((key)=>{\n                window.ajaxRequests[key].end = Date.now();\n                window.ajaxRequests[key].duration = window.ajaxRequests[key].end - window.ajaxRequests[key].started;\n            });\n\n            return JSON.stringify(window.ajaxRequests);\n\n        }).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":"{}"}
+COMMAND: DELETE http://127.0.0.1:4444/wd/hub/session/7a9e6e241d40833ab66567125b4b9de9 - {}
+RESULT: {"sessionId":"7a9e6e241d40833ab66567125b4b9de9","status":0,"value":null}
+]]>
+      </system-out>
+    </testcase>
+  </testsuite>
+</testsuites>
