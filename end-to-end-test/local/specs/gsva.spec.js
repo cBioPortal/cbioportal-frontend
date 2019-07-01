@@ -416,11 +416,13 @@ describe('gsva feature', function() {
 
 const checkTestStudy = () => {
     // check the'Test study es_0' checkbox
-    var secondCheckbox = browser.$("[data-test=StudySelect] input[type=checkbox]");
-    secondCheckbox.click();
+    $('span=Test study es_0').waitForExist();
+    var checkbox = $('span=Test study es_0').$('..').$('input[type=checkbox]');
+    checkbox.click();
 }
 
 const checkGSVAprofile = () => {
+    $("[data-test=GENESET_SCORE]").waitForExist();
     var gsvaProfileCheckbox = browser.$("[data-test=GENESET_SCORE]");
     gsvaProfileCheckbox.click();
 }

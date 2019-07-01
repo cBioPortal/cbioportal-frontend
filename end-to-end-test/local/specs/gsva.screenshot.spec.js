@@ -18,7 +18,7 @@ describe('gsva feature', () => {
 
         beforeEach(()=>{
             goToUrlAndSetLocalStorage(queryPageUrl);
-            waitForQueryPage();
+            waitForQueryPage(20000);
             checkTestStudy();
             checkGSVAprofile();
             browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
