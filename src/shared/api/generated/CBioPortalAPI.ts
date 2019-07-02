@@ -348,6 +348,10 @@ export type Mutation = {
 
         'normalRefCount': number
 
+        'CCF': number
+
+        'clusterId': number 
+
         'patientId': string
 
         'proteinChange': string

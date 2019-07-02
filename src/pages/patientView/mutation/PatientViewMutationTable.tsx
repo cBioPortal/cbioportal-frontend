@@ -39,6 +39,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.VAR_READS_N,
             MutationTableColumnType.REF_READS,
             MutationTableColumnType.VAR_READS,
+            MutationTableColumnType.CCF,
+            MutationTableColumnType.MUTATION_CLUSTER,
             MutationTableColumnType.START_POS,
             MutationTableColumnType.END_POS,
             MutationTableColumnType.REF_ALLELE,

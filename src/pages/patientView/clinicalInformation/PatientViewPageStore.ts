@@ -567,6 +567,23 @@ export class PatientViewPageStore {
             this.mutationMolecularProfileId
         ],
         invoke: async() => {
+
+            async function fetchMutationDataFromFile() {
+                var promise = $.getJSON("http://localhost:8081/backend/mutationData4test.json");
+                return await promise; // wait till the promise resolves (*)
+            };
+            var mutationData = fetchMutationDataFromFile();
+//             debugger;
+            return mutationData;
+        }
+    });
+
+    readonly mutationData4bk = remoteData({
+        await: () => [
+            this.samples,
+            this.mutationMolecularProfileId
+        ],
+        invoke: async() => {
             const mutationFilter = {
                 sampleIds: this.sampleIds
             } as MutationFilter;

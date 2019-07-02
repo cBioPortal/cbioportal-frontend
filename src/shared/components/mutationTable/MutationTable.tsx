@@ -118,6 +118,8 @@ export enum MutationTableColumnType {
     VAR_READS_N,
     REF_READS,
     VAR_READS,
+    CCF,
+    MUTATION_CLUSTER,
     CANCER_TYPE,
     NUM_MUTATIONS,
     EXON,
@@ -324,6 +326,24 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "tumorAltCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "tumorAltCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.tumorAltCount),
+            visible: false,
+            align: "right"
+        };
+
+        this._columns[MutationTableColumnType.CCF] = {
+            name: "Cancer Cell Fraction 4 Test",
+            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "CCF"),
+            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "CCF"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.CCF),
+            visible: false,
+            align: "right"
+        };
+        
+        this._columns[MutationTableColumnType.MUTATION_CLUSTER] = {
+            name: "Mutation Cluster ID 4 Test",
+            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "clusterId"),
+            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "clusterId"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.clusterId),
             visible: false,
             align: "right"
         };

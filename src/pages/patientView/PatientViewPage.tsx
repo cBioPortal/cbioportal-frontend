@@ -487,6 +487,91 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     }
                                 </MSKTab>
 
+                    <MSKTab key={1} id="evolution" linkText="Cancer Evolution">
+                            <div className="treeplot">
+                               <p>Tree Plot</p>  
+                            </div>
+
+                            <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.uncalledMutationData.isPending || patientViewPageStore.oncoKbAnnotatedGenes.isPending || patientViewPageStore.studyIdToStudy.isPending} />
+
+                            {
+                                (patientViewPageStore.oncoKbAnnotatedGenes.isComplete && patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager && patientViewPageStore.studyIdToStudy.isComplete) && (
+                                    <PatientViewMutationTable
+                                        studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
+                                        sampleManager={sampleManager}
+                                        sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                        uniqueSampleKeyToTumorType={patientViewPageStore.uniqueSampleKeyToTumorType}
+                                        molecularProfileIdToMolecularProfile={patientViewPageStore.molecularProfileIdToMolecularProfile.result}
+                                        variantCountCache={patientViewPageStore.variantCountCache}
+                                        indexedVariantAnnotations={patientViewPageStore.indexedVariantAnnotations}
+                                        discreteCNACache={patientViewPageStore.discreteCNACache}
+                                        mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                        oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                        pubMedCache={patientViewPageStore.pubMedCache}
+                                        genomeNexusCache={patientViewPageStore.genomeNexusCache}
+                                        mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
+                                        discreteCNAMolecularProfileId={patientViewPageStore.molecularProfileIdDiscrete.result}
+                                        data={patientViewPageStore.mergedMutationDataIncludingUncalled}
+                                        downloadDataFetcher={patientViewPageStore.downloadDataFetcher}
+                                        mutSigData={patientViewPageStore.mutSigData.result}
+                                        myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
+                                        hotspotData={patientViewPageStore.indexedHotspotData}
+                                        cosmicData={patientViewPageStore.cosmicData.result}
+                                        oncoKbData={patientViewPageStore.oncoKbData}
+                                        oncoKbCancerGenes={patientViewPageStore.oncoKbCancerGenes}
+                                        civicGenes={patientViewPageStore.civicGenes}
+                                        civicVariants={patientViewPageStore.civicVariants}
+                                        userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
+                                        enableOncoKb={AppConfig.serverConfig.show_oncokb}
+                                        enableFunctionalImpact={AppConfig.serverConfig.show_genomenexus}
+                                        enableHotspot={AppConfig.serverConfig.show_hotspot}
+                                        enableMyCancerGenome={AppConfig.serverConfig.mycancergenome_show}
+                                        enableCivic={AppConfig.serverConfig.show_civic}
+                                        columnVisibility={this.mutationTableColumnVisibility}
+                                        columnVisibilityProps={{
+                                            onColumnToggled: this.onMutationTableColumnVisibilityToggled
+                                        }}
+                                    />
+                                )
+                            }
+
+                            <hr />
+
+                            <LoadingIndicator isLoading={(this.cnaTableStatus === 'loading' || patientViewPageStore.studyIdToStudy.isPending)} />
+
+                            {
+                                (patientViewPageStore.studyIdToStudy.isComplete) && (
+                                    <CopyNumberTableWrapper
+                                    studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
+                                    sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                    sampleManager={sampleManager}
+                                    cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
+                                    cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
+                                    cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
+                                    oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                    oncoKbCancerGenes={patientViewPageStore.oncoKbCancerGenes}
+                                    enableOncoKb={AppConfig.serverConfig.show_oncokb}
+                                    enableCivic={AppConfig.serverConfig.show_civic}
+                                    userEmailAddress={AppConfig.serverConfig.user_email_address}
+                                    pubMedCache={patientViewPageStore.pubMedCache}
+                                    data={patientViewPageStore.mergedDiscreteCNAData}
+                                    copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
+                                    mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                    gisticData={patientViewPageStore.gisticData.result}
+                                    mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
+                                    status={this.cnaTableStatus}
+                                    columnVisibility={this.cnaTableColumnVisibility}
+                                    columnVisibilityProps={{
+                                        onColumnToggled: this.onCnaTableColumnVisibilityToggled
+                                    }}
+                                />
+                                )
+                            }
+
+                    </MSKTab>
+
+
+
                     <MSKTab key={2} id="clinicalData" linkText="Clinical Data">
 
                         <div className="clearfix">
