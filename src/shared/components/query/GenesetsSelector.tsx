@@ -88,10 +88,10 @@ export default class GenesetsSelector extends QueryStoreComponent<GenesetsSelect
                     <FlexCol overflow>
 
                     <FlexRow padded className={styles.buttonRow}>
-                    <button className="btn btn-default btn-sm" onClick={() => this.store.showGenesetsHierarchyPopup = true}>
+                    <button className="btn btn-default btn-sm" data-test="GENESET_HIERARCHY_BUTTON" onClick={() => this.store.showGenesetsHierarchyPopup = true}>
                         Select Gene Sets from Hierarchy
                     </button>
-                    <button className="btn btn-default btn-sm" onClick={() => this.store.showGenesetsVolcanoPopup = true}>
+                    <button className="btn btn-default btn-sm" data-test="GENESET_VOLCANO_BUTTON" onClick={() => this.store.showGenesetsVolcanoPopup = true}>
                         Select Gene Sets from Volcano Plot
                     </button>
                     </FlexRow>
@@ -105,7 +105,7 @@ export default class GenesetsSelector extends QueryStoreComponent<GenesetsSelect
                         title="Enter Gene Sets"
                         value={this.store.genesetQuery}
                         onChange={event => this.store.genesetQuery = event.currentTarget.value}
-                        data-test='geneSet'
+                        data-test='GENESETS_TEXT_AREA'
                     />
 
                     <GenesetsValidator/>
