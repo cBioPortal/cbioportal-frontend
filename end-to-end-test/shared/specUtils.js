@@ -8,6 +8,10 @@ function waitForPlotsTab(timeout) {
     $('div.axisBlock').waitForVisible(timeout || 20000);
 }
 
+function waitForCoExpressionTab(timeout) {
+    $('//*[@id="coexpressionTabGeneTabs"]').waitForExist(timeout || 20000);
+}
+
 function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
     browser.waitUntil(()=>{
@@ -142,12 +146,17 @@ function setInputText(selector, text){
     browser.setValue(selector, '\uE003'.repeat(browser.getValue(selector).length) + text);
 }
 
+function getReactSelectOptions(parent) {
+    parent.$('.Select-control').click();
+    return parent.$$('.Select-option');
+}
+
 function selectReactSelectOption(parent, optionText) {
     reactSelectOption(parent, optionText).click();
 }
 
 function reactSelectOption(parent, optionText) {
-    parent.$('.Select-value-label').click();
+    parent.$('.Select-control').click();
     return parent.$('.Select-option='+optionText);
 }
 
@@ -190,6 +199,7 @@ module.exports = {
     waitForPlotsTab: waitForPlotsTab,
     waitForQueryPage: waitForQueryPage,
     waitForOncoprint: waitForOncoprint,
+    waitForCoExpressionTab: waitForCoExpressionTab,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     useExternalFrontend: useExternalFrontend,
     sessionServiceIsEnabled: sessionServiceIsEnabled,
@@ -212,6 +222,7 @@ module.exports = {
     checkElementWithMouseDisabled: checkElementWithMouseDisabled,
     selectReactSelectOption: selectReactSelectOption,
     reactSelectOption: reactSelectOption,
+    getReactSelectOptions: getReactSelectOptions,
 };
 
 
