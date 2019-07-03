@@ -8,7 +8,8 @@ import client from "shared/api/cbioportalClientInstance";
 import {ClinicalTrackSpec, GeneticTrackDatum} from "./Oncoprint";
 import {
     AnnotatedExtendedAlteration, AnnotatedMutation, AnnotatedNumericGeneMolecularData,
-    ExtendedAlteration
+    ExtendedAlteration,
+    AlterationTypeConstants
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import _ from "lodash";
 import {alterationTypeToProfiledForText} from "./ResultsViewOncoprintUtils";
@@ -22,6 +23,8 @@ const customDriverTiersImg = require("../../../rootImages/driver_tiers.png");
 
 
 export const TOOLTIP_DIV_CLASS = "oncoprint__tooltip";
+
+const tooltipTextElementNaN = 'N/A';
 
 function sampleViewAnchorTag(study_id:string, sample_id:string) {
     return `<a href="${getSampleViewUrl(study_id, sample_id)}" target="_blank">${sample_id}</a>`;
@@ -123,34 +126,72 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
 }
 export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile["molecularAlterationType"], link_id?:boolean) {
     return function (dataUnderMouse:any[]) {
+        
         let data_header = '';
-        let profile_data = 'N/A';
+        let valueTextElement = tooltipTextElementNaN;
+        let categoryTextElement = '';
+
         switch(genetic_alteration_type) {
-            case "MRNA_EXPRESSION":
+            case AlterationTypeConstants.MRNA_EXPRESSION:
                 data_header = 'MRNA: ';
                 break;
-            case "PROTEIN_LEVEL":
+            case AlterationTypeConstants.PROTEIN_LEVEL:
                 data_header = 'PROT: ';
                 break;
-            case "METHYLATION":
+            case AlterationTypeConstants.METHYLATION:
                 data_header = 'METHYLATION: ';
                 break;
+            case AlterationTypeConstants.GENERIC_ASSAY:
+                data_header = 'TREATMENT: ';
+                break;
         }
+
         let profileDataSum = 0;
+        const profileCategories:string[] = [];
         let profileDataCount = 0;
+        let categoryCount = 0;
         for (const d of dataUnderMouse) {
             if ((d.profile_data !== null) && (typeof d.profile_data !== "undefined")) {
-                profileDataSum += d.profile_data;
-                profileDataCount += 1;
+                if (genetic_alteration_type === AlterationTypeConstants.GENERIC_ASSAY && d.category) {
+                    profileCategories.push(d.category);
+                    categoryCount += 1;
+                } else {
+                    profileDataSum += d.profile_data;
+                    profileDataCount += 1;
+                }
             }
         }
+        
         if (profileDataCount > 0) {
-            profile_data = (profileDataSum/profileDataCount).toFixed(2);
-            if (profileDataCount > 1) {
-                profile_data = `${profile_data} (average of ${profileDataCount} values)`;
+            const profileDisplayValue = (profileDataSum/profileDataCount).toFixed(2);
+            if (profileDataCount === 1) {
+                valueTextElement = profileDisplayValue;
+            } else {
+                valueTextElement = `${profileDisplayValue} (average of ${profileDataCount} values)`;
             }
         }
-        let ret = data_header + '<b>' + profile_data + '</b><br/>';
+        
+        if (categoryCount > 0) {
+            if (profileDataCount === 0 && categoryCount === 1) {
+                categoryTextElement = profileCategories[0];
+            } else if (profileDataCount > 0 && categoryCount === 1) {
+                categoryTextElement = `${profileCategories[0]}`;
+            } else {
+                categoryTextElement = `${_.uniq(profileCategories).join(", ")} (${categoryCount} data points)`;
+            }
+        }
+
+        let ret = data_header;
+        if (valueTextElement !== tooltipTextElementNaN || categoryCount === 0) {
+            ret += '<b>' + valueTextElement + '</b>';
+        }
+        if (valueTextElement !== tooltipTextElementNaN && categoryCount > 0) {
+            ret += ' and ';
+        }
+        if (categoryCount > 0) {
+            ret += '<b>' + categoryTextElement + '</b>';
+        }
+        ret += '<br />';
         return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(getCaseViewElt(dataUnderMouse, !!link_id)).append("<br/>").append(ret);
     };
 };
