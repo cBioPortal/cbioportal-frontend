@@ -218,8 +218,6 @@ export type Gene = {
 
         'hugoGeneSymbol': string
 
-        'length': number
-
         'type': string
 
 };
