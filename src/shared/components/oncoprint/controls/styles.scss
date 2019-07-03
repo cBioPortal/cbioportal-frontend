@@ -2,6 +2,8 @@
 
 .oncoprint__controls {
 
+  display:flex;
+  
   .rangeslider {
     margin:0;
     .rangeslider__labels {
@@ -15,18 +17,17 @@
       }
     }
   }
-
+  
   .checkbox, .radio {
     &:first-child {
       margin-top:0px;
     }
   }
-
   .dropdown-menu {
     width:270px;
     padding:12px !important;
     > *, button {
-      margin-bottom:10px !important;
+      margin-bottom:10px;
       width:100%;
     }
     > :last-child {
@@ -34,9 +35,9 @@
     }
     &.heatmap {
       width:450px;
-    }  
+    }
   }
-
+  
   .oncoprint__controls__heatmap_menu {
     textarea {
       width:100%;
@@ -45,45 +46,131 @@
       resize: vertical;
     }
     > *, button {
-      margin-bottom:10px !important;
+      margin-bottom:10px;
       width:100%;
     }
     > :last-child {
       margin-bottom:0 !important;
     }
 
-  }
+    .treatment-selector {
+      
+      .Select {
+        
+        margin-right:0px;
+        
+        .Select-control {
+          height:32px;
+        }
+        
+        .Select-input {
+          height:32px;
+        }
+        
+        .Select-menu-outer {
+          width: 100%;
+          max-height: 400px;
+          
+          .Select-menu {
+            max-height: 398px; // needs to be 2 less than Select-menu-outer height to not hide border. Irrelevant
+            //    as long as & > div > div:nth-child(2) max-height is less
+            overflow:hidden;
 
+            button {
+              width: auto;
+              margin: 0;
+              padding: 0;
+              vertical-align: middle;
+            }
+            
+            & > div > div:nth-child(1){
+              padding: 0;
+            }
+
+            & > div > div:nth-child(2){
+              max-height:350px !important;
+              overflow-x:hidden !important;
+              overflow-y:scroll !important;
+            }
+
+          }
+          
+        }
+      }
+      
+    }
+        
+    .text-icon-area {
+      width:100%;
+      min-height:50px;
+      overflow: hidden;
+      margin-bottom: 5px;
+
+      $iconMargin: 2px;
+      $iconPadding: 1px;
+
+      .icon-area {
+        min-height:0px;
+        overflow: hidden;
+        padding: 1px;
+        padding-bottom: 2px;
+
+        .icon {
+          padding: $iconPadding;
+          padding-left: $iconPadding+6;
+          padding-right: $iconPadding+6;
+          margin: $iconMargin;
+          margin-bottom: $iconMargin+1;
+          background: $brand-primary;
+          color: white;
+          border-radius: 4px;
+          float: left;
+        }
+
+      }
+      
+      .text-area {
+        width:100%;
+        min-height: 50px;
+        resize: vertical;
+        overflow: hidden;
+        border:1px solid $borderColor;
+      }
+
+    }
+
+  }
+    
   .oncoprint__zoom-controls {
     display:flex !important;
     align-items:center;
-
+    
     > * {
       margin-right:10px;
     }
-
+    
     > :last-child {
       margin-right:0;
     }
-
+    
   }
-
+  
   .oncoprint__controls__minimap_button {
     padding: 5px 8px 6px 10px !important;
   }
-
+  
   .Select {
-
+    
     margin-right:10px;
-
+    
     .Select-control {
       height:32px;
     }
-
+    
     .Select-input {
       height:32px;
     }
-
+    
   }
 
   .clinical-track-selector {
