@@ -19,7 +19,6 @@ describe('CohortColumnFormatter', () => {
                 cytoband: "",
                 entrezGeneId: 0,
                 hugoGeneSymbol: "BRCA2",
-                length: -1,
                 type: ""
             },
             molecularProfileId: "alterations",
@@ -37,7 +36,6 @@ describe('CohortColumnFormatter', () => {
                 cytoband: "",
                 entrezGeneId: 1,
                 hugoGeneSymbol: "SMURF2",
-                length: -1,
                 type: ""
             },
             molecularProfileId: "alterations",
