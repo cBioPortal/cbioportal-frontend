@@ -17,7 +17,6 @@ describe('DownloadUtils', () => {
             "hugoGeneSymbol": "PTEN",
             "type": "protein-coding",
             "cytoband": "10q23.31",
-            "length": 87892669,
             "chromosome": "10"
         },
         {
@@ -25,7 +24,6 @@ describe('DownloadUtils', () => {
             "hugoGeneSymbol": "TP53",
             "type": "protein-coding",
             "cytoband": "17p13.1",
-            "length": 19149,
             "chromosome": "17"
         },
         {
@@ -33,7 +31,6 @@ describe('DownloadUtils', () => {
             "hugoGeneSymbol": "EGFR",
             "type": "protein-coding",
             "cytoband": "7p11.2",
-            "length": 188307,
             "chromosome": "7"
         }
     ];
@@ -70,8 +67,7 @@ describe('DownloadUtils', () => {
             entrezGeneId: 5728,
             hugoGeneSymbol: "PTEN",
             type: "protein-coding",
-            cytoband: "10q23.31",
-            length: 87892669
+            cytoband: "10q23.31"
         },
         molecularProfileAlterationType: "MRNA_EXPRESSION",
         alterationType: "MRNA_EXPRESSION",
@@ -92,8 +88,7 @@ describe('DownloadUtils', () => {
             entrezGeneId: 5728,
             hugoGeneSymbol: "PTEN",
             type: "protein-coding",
-            cytoband: "10q23.31",
-            length: 87892669
+            cytoband: "10q23.31"
         },
         molecularProfileAlterationType: "PROTEIN_LEVEL",
         alterationType: "PROTEIN_LEVEL",
@@ -114,8 +109,7 @@ describe('DownloadUtils', () => {
             entrezGeneId: 7157,
             hugoGeneSymbol: "TP53",
             type: "protein-coding",
-            cytoband: "17p13.1",
-            length: 19149
+            cytoband: "17p13.1"
         }
     };
 
@@ -136,7 +130,6 @@ describe('DownloadUtils', () => {
                 "hugoGeneSymbol": "EGFR",
                 "type": "protein-coding",
                 "cytoband": "7p11.2",
-                "length": 188307,
                 "chromosome": "7"
             },
             "studyId": "msk_impact_2017",
@@ -188,7 +181,6 @@ describe('DownloadUtils', () => {
                 "hugoGeneSymbol": "EGFR",
                 "type": "protein-coding",
                 "cytoband": "7p11.2",
-                "length": 188307,
                 "chromosome": "7"
             },
             "studyId": "msk_impact_2017",
@@ -236,7 +228,6 @@ describe('DownloadUtils', () => {
                 "hugoGeneSymbol": "EGFR",
                 "type": "protein-coding",
                 "cytoband": "7p11.2",
-                "length": 188307,
                 "chromosome": "7"
             },
             "studyId": "msk_impact_2017",

@@ -34,7 +34,6 @@ describe('GeneSymbolValidatorMessage', () => {
                 hugoGeneSymbol: "TP53",
                 type: "protein-coding",
                 cytoband: "17p13.1",
-                length: 19149,
                 chromosome: "17"
             }], suggestions: []
         };
@@ -106,7 +105,6 @@ describe('GeneSymbolValidatorMessage', () => {
                         "hugoGeneSymbol": "APP",
                         "type": "protein-coding",
                         "cytoband": "21q21.3",
-                        "length": 6349,
                         "chromosome": "21"
                     }
                 ]
