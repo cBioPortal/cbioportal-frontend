@@ -4488,10 +4488,6 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "length": {
-          "type": "integer",
-          "format": "int32"
-        },
         "type": {
           "type": "string"
         }
