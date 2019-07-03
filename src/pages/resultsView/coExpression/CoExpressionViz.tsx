@@ -337,7 +337,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
             //Create a GeneticEntity object based on this.highlightedCoExpression
             let yGeneticEntity: GeneticEntity;
             if (this.highlightedCoExpression) {
-                const emptyGeneEntityData: Gene = {chromosome:'', cytoband: '', entrezGeneId: 0, hugoGeneSymbol: '', length: 0, type: ''};
+                const emptyGeneEntityData: Gene = {chromosome:'', cytoband: '', entrezGeneId: 0, hugoGeneSymbol: '', type: ''};
                 yGeneticEntity = {geneticEntityName: this.highlightedCoExpression.geneticEntityName,
                     geneticEntityType: this.highlightedCoExpression.geneticEntityType,
                     geneticEntityId: this.highlightedCoExpression.geneticEntityId,
