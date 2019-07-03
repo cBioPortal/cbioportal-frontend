@@ -20,7 +20,6 @@ describe('#countMutations', () => {
                     "hugoGeneSymbol": "KRAS",
                     "type": "protein-coding",
                     "cytoband": "12p12.1",
-                    "length": 47305,
                     "chromosome": "12"
                 },
                 "studyId": "chol_tcga",
@@ -64,7 +63,6 @@ describe('#countMutations', () => {
                     "hugoGeneSymbol": "KRAS",
                     "type": "protein-coding",
                     "cytoband": "12p12.1",
-                    "length": 47305,
                     "chromosome": "12"
                 },
                 "studyId": "chol_tcga",
