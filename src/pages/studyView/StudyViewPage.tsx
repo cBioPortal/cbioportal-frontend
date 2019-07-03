@@ -114,7 +114,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     componentDidMount() {
         // make the route as the default tab value
-        this.props.routing.updateRoute({},`study/${this.store.currentTab}`);
+        this.props.routing.updateRoute({},`study/${this.store.currentTab}`, false, true);
     }
 
     private handleTabChange(id: string) {
