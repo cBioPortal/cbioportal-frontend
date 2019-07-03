@@ -51,12 +51,17 @@ export interface IBaseHeatmapTrackDatum {
     study_id: string;
     uid: string;
     na?:boolean;
+    category?:string;
+    thresholdType?:">"|"<";
 }
 export interface IGeneHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
     hugo_gene_symbol: string;
 }
 export interface IGenesetHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
     geneset_id: string;
+}
+export interface ITreatmentHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
+    treatment_id: string;
 }
 
 export type GeneticTrackDatum_Data =
@@ -99,7 +104,7 @@ export type GeneticTrackSpec = {
     labelColor?: string;
 };
 
-interface IBaseHeatmapTrackSpec {
+export interface IBaseHeatmapTrackSpec {
     key: string; // for efficient diffing, just like in React. must be unique
     label: string;
     molecularProfileId: string; // source
@@ -108,16 +113,23 @@ interface IBaseHeatmapTrackSpec {
     data: IBaseHeatmapTrackDatum[];
     trackGroupIndex: number;
 }
-export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
-    data: IGeneHeatmapTrackDatum[];
-    onRemove: () => void;
+
+export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
+    data: IBaseHeatmapTrackDatum[]; // can be IGeneHeatmapTrackDatum or ITreatmentHeatmapTrackDatum
     info?: string;
     labelColor?: string;
+    trackLinkUrl?: string | undefined;
+    onRemove: () => void;
+    molecularProfileName?: string;
+    pivotThreshold?: number;
+    sortOrder?: string;
+    maxProfileValue?: number;
+    minProfileValue?: number;
 }
 export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGenesetHeatmapTrackDatum[];
     trackLinkUrl: string | undefined;
-    expansionTrackList: IGeneHeatmapTrackSpec[];
+    expansionTrackList: IHeatmapTrackSpec[];
     expansionCallback: () => void;
 }
 
@@ -131,7 +143,7 @@ export interface IOncoprintProps {
     geneticTracks: GeneticTrackSpec[];
     geneticTracksOrder?:string[]; // track keys
     genesetHeatmapTracks: IGenesetHeatmapTrackSpec[];
-    heatmapTracks: IGeneHeatmapTrackSpec[];
+    heatmapTracks: IHeatmapTrackSpec[];
     divId:string;
     width:number;
     caseLinkOutInTooltips:boolean;
