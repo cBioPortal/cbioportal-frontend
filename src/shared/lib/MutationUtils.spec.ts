@@ -346,7 +346,6 @@ describe('MutationUtils', () => {
                 hugoGeneSymbol: "AR",
                 type: "protein-coding",
                 cytoband: "Xq12",
-                length: 186588,
                 chromosome: "X"
             },
             BRCA1: {
@@ -354,7 +353,6 @@ describe('MutationUtils', () => {
                 hugoGeneSymbol: "BRCA1",
                 type: "protein-coding",
                 cytoband: "17q21.31",
-                length: 81189,
                 chromosome: "17"
             },
             BRCA2: {
@@ -362,7 +360,6 @@ describe('MutationUtils', () => {
                 hugoGeneSymbol: "BRCA2",
                 type: "protein-coding",
                 cytoband: "13q13.1",
-                length: 84193,
                 chromosome: "13"
             }
         };
