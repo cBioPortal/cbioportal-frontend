@@ -128,7 +128,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             studyId: 'brca_tcga',
             gene: {
                 entrezGeneId, hugoGeneSymbol: `GENE${entrezGeneId}`,
-                "type": "protein-coding", "cytoband": "1p20.1", "length": 4000
+                "type": "protein-coding", "cytoband": "1p20.1"
             }
         })) as NumericGeneMolecularData[];
 

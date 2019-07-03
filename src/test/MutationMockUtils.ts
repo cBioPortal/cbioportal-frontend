@@ -22,7 +22,6 @@ export function emptyMutation(): Mutation
             cytoband: "",
             entrezGeneId: -1,
             hugoGeneSymbol: "",
-            length: -1,
             type: ""
         },
         molecularProfileId: "",

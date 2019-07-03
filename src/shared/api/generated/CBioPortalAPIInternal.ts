@@ -142,7 +142,7 @@ export type CopyNumberCountByGene = {
 
         'hugoGeneSymbol': string
 
-        'matchingGenePanelIds': Array < string >
+        'matchingGenePanels': Array < GenePanel >
 
         'numberOfAlteredCases': number
 
@@ -243,6 +243,20 @@ export type ExpressionEnrichment = {
         'standardDeviationInAlteredGroup': number
 
         'standardDeviationInUnalteredGroup': number
+
+};
+export type GenePanel = {
+    'description': string
+
+        'genePanelId': string
+
+        'genes': Array < GenePanelToGene >
+
+};
+export type GenePanelToGene = {
+    'entrezGeneId': number
+
+        'hugoGeneSymbol': string
 
 };
 export type Geneset = {
@@ -438,7 +452,7 @@ export type MutationCountByGene = {
 
         'hugoGeneSymbol': string
 
-        'matchingGenePanelIds': Array < string >
+        'matchingGenePanels': Array < GenePanel >
 
         'numberOfAlteredCases': number
 
