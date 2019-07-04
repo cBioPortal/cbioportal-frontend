@@ -1,7 +1,7 @@
 var assert = require('assert');
-var waitForOncoprint = require('../specUtils').waitForOncoprint;
-var setOncoprintMutationsMenuOpen = require('../specUtils').setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('../specUtils').goToUrlAndSetLocalStorage;
+var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
+var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils').setOncoprintMutationsMenuOpen;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
