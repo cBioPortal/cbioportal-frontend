@@ -11,12 +11,19 @@ import {
     MUT_PROFILE_COUNT_NOT_PROFILED,
     mutationTypeToDisplayName,
     mutTypeCategoryOrder,
-    mutVsWildCategoryOrder
+    mutVsWildCategoryOrder,
+    makeWaterfallPlotData,
+    IWaterfallPlotData,
+    getWaterfallPlotDownloadData,
+    getLimitValues
 } from "./PlotsTabUtils";
-import {MolecularProfile, Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
-import {AlterationTypeConstants} from "../ResultsViewPageStore";
-import {MutationCountBy} from "./PlotsTab";
-import {CoverageInformation} from "../ResultsViewPageStoreUtils";
+import { Mutation, Sample, Gene} from "../../../shared/api/generated/CBioPortalAPI";
+import {AlterationTypeConstants, AnnotatedNumericGeneMolecularData, AnnotatedMutation} from "../ResultsViewPageStore";
+import {MutationCountBy, AxisMenuSelection} from "./PlotsTab";
+import {CoverageInformation, CoverageInformationForCase} from "../ResultsViewPageStoreUtils";
+import { makeAxisLogScaleFunction, IAxisData, axisHasNegativeNumbers } from 'pages/resultsView/plots/PlotsTabUtils';
+import * as _ from "lodash";
+
 
 describe("PlotsTabUtils", ()=>{
     describe("makeClinicalAttributeOptions", ()=>{
@@ -102,6 +109,135 @@ describe("PlotsTabUtils", ()=>{
             for (const key of ["uniqueSampleKey", "sampleId", "studyId", "x", "y"]) {
                 assert.equal(target[key], datum[key], key);
             }
+        });
+    });
+
+    describe("makeWaterfallPlotData", ()=>{
+
+        const mockParams = {
+            axisData: {
+                datatype:"number",
+                data:[
+                    {uniqueSampleKey:"sample1", value:1}
+                ],
+            },
+            uniqueSampleKeyToSample: {
+                sample1: {sampleId:"sample1", studyId:"study"} as any as Sample,
+                sample2: {sampleId:"sample2", studyId:"study"} as any as Sample,
+                sample3: {sampleId:"sample3", studyId:"study"} as any as Sample
+            },
+            coverageInformation: {
+                sample1: {byGene:{}, allGenes:[]} as any as CoverageInformationForCase,
+                sample2: {byGene:{}, allGenes:[]} as any as CoverageInformationForCase,
+                sample3: {byGene:{}, allGenes:[]} as any as CoverageInformationForCase
+            },
+            selectedGene: { entrezGeneId: 1234, hugoGeneSymbol: 'geneA'} as any as Gene,
+            mutations: {
+                molecularProfileIds: [],
+                data: [
+                    {entrezGeneId: 1234 , uniqueSampleKey: "sample1", oncoKbOncogenic: "MutationA", mutationType: "fusion"},
+                    {entrezGeneId: 1234 , uniqueSampleKey: "sample1", oncoKbOncogenic: "MutationB", mutationType: "fusion"},
+                    {entrezGeneId: 5678 , uniqueSampleKey: "sample2", oncoKbOncogenic: "MutationC", mutationType: "fusion"},
+                    {entrezGeneId: 5678 , uniqueSampleKey: "sample2", oncoKbOncogenic: "MutationD", mutationType: "fusion"}
+                ] as AnnotatedMutation[]
+            },
+            copyNumberAlterations: {
+                molecularProfileIds: [],
+                data: [
+                    {entrezGeneId: 1234 , uniqueSampleKey: "sample1", oncoKbOncogenic: "DuplicationA", value: 1},
+                    {entrezGeneId: 1234 , uniqueSampleKey: "sample1", oncoKbOncogenic: "DuplicationB", value: 2},
+                    {entrezGeneId: 5678 , uniqueSampleKey: "sample2", oncoKbOncogenic: "DuplicationC", value: 3},
+                    {entrezGeneId: 5678 , uniqueSampleKey: "sample2", oncoKbOncogenic: "DuplicationD", value: 4}
+                ] as AnnotatedNumericGeneMolecularData[]
+            }
+        };
+
+        it ("does not create data for NaN values", ()=>{
+
+            const i = {
+                ...mockParams,
+                axisData: {
+                    datatype:"number",
+                    data:[
+                        { uniqueSampleKey:"sample1", value:NaN}, 
+                        { uniqueSampleKey:"sample2", value:NaN},
+                        { uniqueSampleKey:"sample3", value:3}
+                    ],
+                }
+            }
+            
+            const data = makeWaterfallPlotData(i.axisData, i.uniqueSampleKeyToSample, i.coverageInformation, i.selectedGene, undefined, undefined);
+            assert.equal(data.length, 1, "only one datum - others have NaN");
+            const datum:any = data[0];
+            const target:any = {
+                uniqueSampleKey:"sample3",
+                sampleId:"sample3",
+                studyId:"study",
+                value:3,
+            };
+            for (const key of ["uniqueSampleKey", "sampleId", "studyId", "x", "y"]) {
+                assert.equal(target[key], datum[key], key);
+            }
+        });
+
+        it ("should return most severe CNA of user-selected gene", () => {
+
+            const i = {
+                ...mockParams,
+                mutations: undefined
+            }
+
+            const data = makeWaterfallPlotData(i.axisData, i.uniqueSampleKeyToSample, i.coverageInformation, i.selectedGene, i.mutations, i.copyNumberAlterations);
+            assert.equal(data.length, 1);
+            assert.equal(data[0].dispCna!.oncoKbOncogenic, "DuplicationB");
+        });
+
+        it ("should return no CNA when user-selected gene has no CNA's", () => {
+
+            const i = {
+                ...mockParams,
+                axisData: {
+                    datatype:"number",
+                    data:[
+                        { uniqueSampleKey:"sample2", value:1}
+                    ],
+                },
+                mutations: undefined,
+            }
+
+            const data = makeWaterfallPlotData(i.axisData, i.uniqueSampleKeyToSample, i.coverageInformation, i.selectedGene, i.mutations, i.copyNumberAlterations);
+            assert.equal(data.length, 1);
+            assert.isUndefined(data[0].dispCna);
+        });
+
+        it ("should return most severe mutation of user-selected gene", () => {
+
+            const i = {
+                ...mockParams,
+                copyNumberAlterations: undefined
+            }
+
+            const data = makeWaterfallPlotData(i.axisData, i.uniqueSampleKeyToSample, i.coverageInformation, i.selectedGene, i.mutations, i.copyNumberAlterations);
+            assert.equal(data.length, 1);
+            assert.equal(data[0].dispMutationType!, "fusion");
+        });
+
+        it ("should return no mutation when user-selected gene has no mutations's", () => {
+
+            const i = {
+                ...mockParams,
+                axisData: {
+                    datatype:"number",
+                    data:[
+                        { uniqueSampleKey:"sample2", value:1}
+                    ],
+                },
+                copyNumberAlterations: undefined,
+            }
+
+            const data = makeWaterfallPlotData(i.axisData, i.uniqueSampleKeyToSample, i.coverageInformation, i.selectedGene, i.mutations, i.copyNumberAlterations);
+            assert.equal(data.length, 1);
+            assert.isUndefined(data[0].dispMutationType);
         });
     });
 
@@ -291,4 +427,175 @@ describe("PlotsTabUtils", ()=>{
             );
         });
     });
+
+    describe('makeAxisLogScaleFunction', () => {
+
+        it('should return log2-transformation function for non treatment data', () => {
+            const axisMenuSelection = { 
+                dataType: AlterationTypeConstants.MRNA_EXPRESSION,
+                logScale: true
+            } as any as AxisMenuSelection;
+            const funcs = makeAxisLogScaleFunction(axisMenuSelection);
+            assert.equal(funcs!.fLogScale(2), 1);
+            assert.equal(funcs!.fInvLogScale(1), 2);
+            assert.equal(funcs!.fLogScale(8), 3);
+            assert.equal(funcs!.fInvLogScale(3), 8);
+        });
+        
+        it('should return log10-transformation function for non treatment data', () => {
+            const axisMenuSelection = { 
+                dataType: AlterationTypeConstants.GENERIC_ASSAY,
+                logScale: true
+            } as any as AxisMenuSelection;
+            const funcs = makeAxisLogScaleFunction(axisMenuSelection);
+            assert.equal(funcs!.fLogScale(10), 1);
+            assert.equal(funcs!.fInvLogScale(1), 10);
+            assert.equal(funcs!.fLogScale(100), 2);
+            assert.equal(funcs!.fInvLogScale(2), 100);
+        });
+        
+        it('should apply offset before log10-transformation for treatment data', () => {
+            const axisMenuSelection = { 
+                dataType: AlterationTypeConstants.GENERIC_ASSAY,
+                logScale: true
+            } as any as AxisMenuSelection;
+            const funcs = makeAxisLogScaleFunction(axisMenuSelection);
+            assert.equal(funcs!.fLogScale(0, 10), 1);
+            assert.equal(funcs!.fLogScale(90, 10), 2);
+            assert.equal(funcs!.fInvLogScale(11, 10), 10);
+        });
+
+    });
+
+    describe('axisHasNegativeNumbers', () => {
+
+        it('should return false when data is not numerical', () => {
+            const axisData = {
+                datatype: "string",
+                data: [{value:"category2"}, {value:"category1"}]
+            } as any as IAxisData;
+            assert.isFalse(axisHasNegativeNumbers(axisData)); 
+        });
+
+        it('should return false when data consists of positive numbers', () => {
+            const axisData = {
+                datatype: "number",
+                data: [{value:1}, {value:2}]
+            } as any as IAxisData;
+            assert.isFalse(axisHasNegativeNumbers(axisData)); 
+        });
+
+        it('should return true when data has negative numbers', () => {
+            const axisData = {
+                datatype: "number",
+                data: [{value:1}, {value:-2}]
+            } as any as IAxisData;
+            assert.isTrue(axisHasNegativeNumbers(axisData)); 
+        });
+
+        it('should return false when no data points are passed', () => {
+            const axisData = {
+                datatype: "number",
+                data: []
+            } as any as IAxisData;
+            assert.isFalse(axisHasNegativeNumbers(axisData)); 
+        });
+
+    });
+
+    describe('getWaterfallPlotDownloadData', () => {
+
+        const mockProps = {
+            data: [
+                {
+                    sampleId: 'sample1',
+                    value: 1,
+                    mutations: [
+                        {entrezGeneId: '1234', proteinChange: "changeA"},
+                        {entrezGeneId: '1234', proteinChange: "changeB"}
+                    ] as any as AnnotatedMutation
+                },
+                {
+                    sampleId: 'sample2',
+                    value: 2, 
+                    mutations: [
+                        {entrezGeneId: '1234', proteinChange: "changeC"},
+                        {entrezGeneId: '1234', proteinChange: "changeD"}
+                    ] as any as AnnotatedMutation
+                }
+         ] as any as IWaterfallPlotData[],
+         sortOrder: "ASC",
+         pivotThreshold: 0.1,
+         axisLabel: "profile1",
+         entrezGeneIdToGene: { 1234: {entrezGeneId: '1234', hugoGeneSymbol: 'GeneA' } as any as Gene }
+        }
+
+        const text = getWaterfallPlotDownloadData(
+            mockProps.data,
+            mockProps.sortOrder,
+            mockProps.pivotThreshold,
+            mockProps.axisLabel,
+            mockProps.entrezGeneIdToGene
+        );
+
+        const elements = _.map(text.split('\n'), (d)=>d.split('\t'));
+        
+        it('should sort data points in ascending order', () => {
+            assert.equal(elements.length, 3);
+            assert.equal(elements[1][0], 'sample1');
+            assert.equal(elements[2][0], 'sample2');
+        });
+
+        it('should sort data points in descending order', () => {
+
+            const i = {
+                ...mockProps,
+                sortOrder: "DESC"
+            }
+
+            const myText = getWaterfallPlotDownloadData(
+                i.data,
+                i.sortOrder,
+                i.pivotThreshold,
+                i.axisLabel,
+                i.entrezGeneIdToGene
+            );
+
+            const myElements = _.map(myText.split('\n'), (d)=>d.split('\t'));
+
+            assert.equal(myElements.length, 3);
+            assert.equal(myElements[1][0], 'sample2');
+            assert.equal(myElements[2][0], 'sample1');
+        });
+
+        it('should add mutation summary when mutations are known for sample', () => {
+            assert.equal(elements[0].length, 5);
+            assert.equal(elements[1][4], "GeneA: changeA, changeB");
+            assert.equal(elements[2][4], "GeneA: changeC, changeD");
+        });
+
+    });
+
+    describe('limitValueTypes', () => {
+        
+        it('returns unique list of concatenated thresholdTypes and values', () => {
+            const data = [
+                { uniqueSampleKey:'A', value:5, thresholdType:undefined},
+                { uniqueSampleKey:'B', value:6, thresholdType:''},
+                { uniqueSampleKey:'C', value:7, thresholdType:'>'},
+                { uniqueSampleKey:'D', value:8, thresholdType:'>'},
+            ];
+            const types = getLimitValues(data);
+            assert.deepEqual(types, ['>7.00','>8.00']);
+        });
+    
+        it('returns empty array when multiple values in dattum', () => {
+            const data = [
+                { uniqueSampleKey:'A', value:[5,5], thresholdType:'>'}
+            ];
+            const types = getLimitValues(data);
+            assert.deepEqual(types, []);
+        });
+    });
+
 });

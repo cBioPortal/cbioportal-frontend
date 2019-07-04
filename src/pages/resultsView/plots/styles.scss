@@ -51,7 +51,6 @@
       }
     }
 
-
     .label-text {
       color: #333333;
       margin-bottom: 5px;
@@ -71,7 +70,98 @@
       bottom: 0;
       position: absolute;
     }
+ 
+    .btn.sort-order {
+      margin-right: 10px;
+      padding: 4px 9px;
+      margin-left: -20px;
+    }
+
+    i.horz-descending {
+      transform: rotate(-90deg) scaleY(-1) scaleX(-1);
+    }
+
+    i.horz-ascending {
+      transform: rotate(-90deg) scaleY(-1);
+    }
+
+    i.vert-descending {
+      transform: scaleX(-1);
+    }
+
+    .mutation-message {
+      color: red;
+      margin: 3px;
+    }
+    
   }
+
+  .utilities-menu {
+
+    margin-bottom: -20px;
+    
+    * {
+      vertical-align: middle;
+      margin: 0;
+    }
+
+    label {
+      padding: 0px;
+      margin: 0 0 0 8px;
+    }
+
+    .legend-label {
+      margin-right: 4px;
+    }
+
+    input[type='checkbox'] {
+      margin: 0 8px 1px 0;
+      padding: 0;
+      position: relative;
+    }
+
+    input[type='radio'] {
+      margin: 0px 8px 0px 2px;
+    }
+
+    .gene-select-background {
+      
+      border-radius: 4px;
+      vertical-align: middle;
+      padding: 2px 2px 2px 2px;
+      margin-right: -10px;
+      
+      label {
+        margin: 0 0 0 0;
+      }
+      
+      .checkbox {
+        display: inline-block;
+        margin: 0;
+      }
+      
+  
+      // the styles below are applied when
+      // the gene select box is shown
+      &.gene-select-shown {
+        background-color: $main-bg;
+        margin-right: 2px;
+      }
+      
+      .gene-select-container {
+        margin-left: 8px;
+        
+        .gene-select {
+          text-align: left;
+          margin-right: 0;
+          width: 100px;
+        }
+      }
+      
+    }
+
+  }
+    
 }
 
 .color-samples-toolbar-elt {
@@ -79,4 +169,5 @@
   margin-right: 10px !important;
   margin-top: 0px !important;
   margin-bottom: 0px !important;
+  
 }
