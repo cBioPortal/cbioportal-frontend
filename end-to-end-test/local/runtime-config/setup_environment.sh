@@ -58,10 +58,18 @@ if [[ "$CIRCLECI" = true ]]; then
     fi
 
     # Check whether custom BACKEND environmental var is defined (required when running outside context of a pull request on CircleCI)
+    # When the current branch is master or rc continue using corresponding master or rc backend, respectively. 
     if [[ -z $BACKEND ]]; then
         if [[ -z $CIRCLE_PULL_REQUEST ]]; then
-            echo Error: BACKEND environmental variable not set in /env/custom.sh. This is required when running outside context of a pull request on CircleCI.
-            exit 1
+            if [[ "$CIRCLE_BRANCH" = "master" ]] || [[ "$CIRCLE_BRANCH" = "rc" ]]; then
+                BACKEND_PROJECT_USERNAME="cbioportal"
+                echo "export BACKEND_PROJECT_USERNAME=$BACKEND_PROJECT_USERNAME"
+                BACKEND_BRANCH="$CIRCLE_BRANCH"
+                echo "export BACKEND_BRANCH=$BACKEND_BRANCH"
+            else
+                echo Error: BACKEND environmental variable not set in /env/custom.sh for this feature branch. This is required when running outside context of a pull request on CircleCI.
+                exit 1
+            fi
         fi
     else
         parse_custom_backend_var
