@@ -54,15 +54,18 @@ function augmentQueryResults(queries: IQuery[], results: TreatmentMolecularData[
 // check for value threshold indicators ('>' or '<') to appear in front of values
 // and convert to a numeric value and a separate value threshold indicator
 function handleValueThreshold(datum:TreatmentMolecularDataEnhanced):TreatmentMolecularDataEnhanced {
-    const matches = /([><]?)(.+)/.exec(datum.value);
-    datum.thresholdType = undefined;
-    if (matches) {
-        datum.value = matches[2];
-        if (matches[1].length > 0) {
-            if (matches[1] === '>') {
-                datum.thresholdType = matches[1] as '>';
-            } else if (matches[1] === '<') {
-                datum.thresholdType = matches[1] as '<';
+
+    if (! datum.thresholdType) { // this is to prevent repeated extraction of '>' and '<' symbols
+        const matches = /([><]?)(.+)/.exec(datum.value);
+        datum.thresholdType = undefined;
+        if (matches) {
+            datum.value = matches[2];
+            if (matches[1].length > 0) {
+                if (matches[1] === '>') {
+                    datum.thresholdType = matches[1] as '>';
+                } else if (matches[1] === '<') {
+                    datum.thresholdType = matches[1] as '<';
+                }
             }
         }
     }
