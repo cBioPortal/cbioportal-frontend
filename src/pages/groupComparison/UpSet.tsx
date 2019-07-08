@@ -19,7 +19,7 @@ import Timer = NodeJS.Timer;
 import WindowStore from "../../shared/components/window/WindowStore";
 import invertIncreasingFunction from "../../shared/lib/invertIncreasingFunction";
 import TruncatedTextWithTooltipSVG from "../../shared/components/TruncatedTextWithTooltipSVG";
-import {GroupTickLabelComponent} from "./labelComponents/GroupTickLabelComponent";
+import GroupTickLabelComponent from "./labelComponents/GroupTickLabelComponent";
 
 export interface IUpSetProps {
     groups: {
