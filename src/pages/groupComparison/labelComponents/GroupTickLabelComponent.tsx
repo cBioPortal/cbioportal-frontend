@@ -1,7 +1,10 @@
 import * as React from "react";
 import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
 import {ComparisonGroup} from "../GroupComparisonUtils";
-import {renderGroupNameWithOrdinal} from "../OverlapUtils";
+import {getTextColor, renderGroupNameWithOrdinal} from "../OverlapUtils";
+import {observer} from "mobx-react";
+import autobind from "autobind-decorator";
+import {action, computed, observable} from "mobx";
 
 export interface IGroupTickLabelComponentProps {
     categoryCoordToGroup:(coord:number)=>ComparisonGroup;
@@ -14,29 +17,67 @@ export interface IGroupTickLabelComponentProps {
     datum?:any;
 }
 
-export const GroupTickLabelComponent:React.FunctionComponent<IGroupTickLabelComponentProps> = (props:IGroupTickLabelComponentProps)=>{
-    const {categoryCoordToGroup, dx, dy, datum, text, ...rest} = props;
-    const group = categoryCoordToGroup(props.text!);
-    return (
-        <TruncatedTextWithTooltipSVG
-            text={group!.name}
-            prefixTspans={[
-                <tspan>(</tspan>,
-                <tspan style={{fontWeight:"bold"}}>{group!.ordinal}</tspan>,
-                <tspan>) </tspan>
-            ]}
-            datum={group}
-            tooltip={(group:ComparisonGroup)=>{
-                return (
-                    <div>
-                        {renderGroupNameWithOrdinal(group)}
-                    </div>
-                );
-            }}
-            maxWidth={props.maxLabelWidth}
-            dy={dy}
-            dx={dx}
-            {...rest}
-        />
-    );
+@observer
+export default class GroupTickLabelComponent extends React.Component<IGroupTickLabelComponentProps> {
+    @observable.ref private textElt:SVGTextElement|null = null;
+
+    @computed get group() {
+        return this.props.categoryCoordToGroup(this.props.text!);
+    }
+
+    @autobind
+    @action
+    private ref(elt:any) {
+        this.textElt = elt;
+    }
+
+    @computed get colorRectangle() {
+        if (this.textElt) {
+            const box = this.textElt.getBBox();
+            const boxLength = 10;
+            return (
+                <rect
+                    x={box.x - boxLength - 5}
+                    y={box.y + (box.height - boxLength)/2}
+                    fill={this.group.color}
+                    width={boxLength}
+                    height={boxLength}
+                />
+            );
+        } else {
+            return null;
+        }
+    }
+
+    render() {
+        const {categoryCoordToGroup, dx, dy, maxLabelWidth, datum, text, ...rest} = this.props;
+        return (
+            <>
+                {this.colorRectangle}
+                <TruncatedTextWithTooltipSVG
+                    text={this.group!.name}
+                    textRef={this.ref}
+                    prefixTspans={[
+                        <tspan>(</tspan>,
+                        <tspan fontWeight="bold">
+                            {this.group!.ordinal}
+                        </tspan>,
+                        <tspan>)&nbsp;</tspan>
+                    ]}
+                    datum={this.group}
+                    tooltip={(group:ComparisonGroup)=>{
+                        return (
+                            <div>
+                                {renderGroupNameWithOrdinal(group)}
+                            </div>
+                        );
+                    }}
+                    maxWidth={maxLabelWidth}
+                    dy={dy}
+                    dx={dx}
+                    {...rest}
+                />
+            </>
+        );
+    }
 };
