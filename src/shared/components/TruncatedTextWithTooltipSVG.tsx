@@ -19,6 +19,7 @@ export interface ITruncatedTextSVGProps {
     alwaysShowTooltip?:boolean;
     dy?:any;
     dx?:any;
+    textRef?:(elt:SVGTextElement|null)=>void;
     //victory
     datum?:any;
     style?:{
@@ -96,13 +97,15 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
 
     render() {
         const {text, maxWidth, datum, suffix, tooltip,
-            tooltipPlacement, ...rest} = this.props;
+            prefixTspans, alwaysShowTooltip, renderTruncatedText,
+            tooltipPlacement, textRef, ...rest} = this.props;
         return (
             <>
                 <text
                     onMouseOver={this.onMouseOver}
                     onMouseOut={this.onMouseOut}
                     onMouseMove={this.onMouseMove}
+                    ref={textRef}
                     {...rest}
                 >
                     {this.props.prefixTspans}
