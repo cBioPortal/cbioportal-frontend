@@ -15,6 +15,7 @@ export enum ResultsViewTab {
     SURVIVAL = 'survival',
     CN_SEGMENTS = 'cnSegments',
     NETWORK = 'network',
+    PATHWAY_MAPPER = 'pathways',
     EXPRESSION = 'expression',
     DOWNLOAD = 'download',
 }
@@ -49,6 +50,7 @@ export const oldTabToNewTabRoute: { [legacyTabId: string]: ResultsViewTab } = {
     survival: ResultsViewTab.SURVIVAL,
     IGV: ResultsViewTab.CN_SEGMENTS,
     network: ResultsViewTab.NETWORK,
+    pathways: ResultsViewTab.PATHWAY_MAPPER,
     expression: ResultsViewTab.EXPRESSION,
     download: ResultsViewTab.DOWNLOAD,
 };
