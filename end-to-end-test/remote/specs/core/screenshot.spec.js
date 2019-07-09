@@ -171,6 +171,17 @@ function runResultsTestSuite(prefix) {
         assertScreenShotMatch(res);
     });
 
+    it(`${prefix} pathwaymapper tab`, function() {
+        browser.click('a.tabAnchor_pathways');
+        browser.waitForVisible('#cy', 10000);
+        browser.waitForExist('.Toastify__toast', 4000);
+        browser.waitUntil(() => !$('.Toastify__toast').isExisting());
+        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {
+            hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
+        });
+        assertScreenShotMatch(res);
+    });
+
     it.skip(`${prefix} network tab`, function() {
         // TODO: unskip this when bug is fixed
 

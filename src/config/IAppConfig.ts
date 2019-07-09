@@ -56,6 +56,7 @@ export interface IServerConfig {
     show_oncokb: boolean;
     show_civic: boolean;
     show_genomenexus: boolean;
+    show_pathway_mapper: boolean;
     skin_documentation_about: string | null;
     skin_documentation_software: string | null;
     skin_documentation_baseurl: string | null;

@@ -49,6 +49,7 @@ import {
     MolecularProfile,
     Patient,
     Sample,
+    Gene,
 } from '../../api/generated/CBioPortalAPI';
 import {
     clinicalAttributeIsPROFILEDIN,
@@ -579,6 +580,54 @@ export function getAlteredUids(tracks: GeneticTrackSpec[]) {
         }
     }
     return Object.keys(isAlteredMap);
+}
+
+export function getAlterationData(
+    samples: Pick<Sample, 'sampleId' | 'studyId' | 'uniqueSampleKey'>[],
+    patients: Pick<Patient, 'patientId' | 'studyId' | 'uniquePatientKey'>[],
+    coverageInformation: CoverageInformation,
+    sequencedSampleKeysByGene: any,
+    sequencedPatientKeysByGene: any,
+    selectedMolecularProfiles: MolecularProfile[],
+    caseData:
+        | IQueriedMergedTrackCaseData
+        | (IQueriedCaseData<any> & { mergedTrackOqlList?: never }),
+    isQueriedGeneSampling: boolean,
+    queryGenes: Gene[]
+) {
+    const sampleMode = false;
+    const oql = caseData.oql;
+    const geneSymbolArray = isMergedTrackFilter(oql)
+        ? oql.list.map(({ gene }) => gene)
+        : [oql.gene];
+    const dataByCase = caseData.cases;
+    const data = makeGeneticTrackData(
+        dataByCase.patients,
+        geneSymbolArray,
+        patients as Patient[],
+        coverageInformation,
+        selectedMolecularProfiles
+    );
+
+    const alterationInfo = alterationInfoForOncoprintTrackData(
+        sampleMode,
+        { trackData: data, oql: geneSymbolArray },
+        sequencedSampleKeysByGene,
+        sequencedPatientKeysByGene
+    );
+    if (
+        isQueriedGeneSampling ||
+        !queryGenes.map(gene => gene.hugoGeneSymbol).includes((oql as any).gene)
+    ) {
+        return {
+            gene: (oql as any).gene,
+            altered: alterationInfo.altered,
+            sequenced: alterationInfo.sequenced,
+            percentAltered: alterationInfo.percent,
+        };
+    } else {
+        return undefined;
+    }
 }
 
 export function getUnalteredUids(tracks: GeneticTrackSpec[]) {
