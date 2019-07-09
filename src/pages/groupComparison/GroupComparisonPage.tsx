@@ -52,8 +52,13 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             query => {
 
                 if (!props.routing.location.pathname.includes("/comparison") ||
-                    _.isEqual(query, this.lastQuery)) {
+                    _.isEqual(query, this.lastQuery) ||
+                    (this.lastQuery && (query.sessionId === this.lastQuery.sessionId))) {
                     return;
+                }
+
+                if (this.store) {
+                    this.store.destroy();
                 }
 
                 this.store = new GroupComparisonStore((query as GroupComparisonURLQuery).sessionId, this.props.appStore, this.props.routing);
@@ -96,6 +101,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     componentWillUnmount() {
         this.queryReaction && this.queryReaction();
         this.pathnameReaction && this.pathnameReaction();
+        this.store && this.store.destroy();
     }
 
     readonly tabs = MakeMobxView({
@@ -125,28 +131,28 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     anchorClassName={this.store.clinicalTabGrey ? "greyedOut" : ""}>
                     <ClinicalData store={this.store}/>
                 </MSKTab>
-                {this.store.mutationEnrichmentProfiles.result!.length > 0 && (
+                {this.store.showMutationsTab && (
                     <MSKTab id={GroupComparisonTab.MUTATIONS} linkText="Mutations"
                         anchorClassName={this.store.mutationsTabGrey ? "greyedOut" : ""}
                     >
                         <MutationEnrichments store={this.store}/>
                     </MSKTab>
                 )}
-                {this.store.copyNumberEnrichmentProfiles.result!.length > 0 && (
+                {this.store.showCopyNumberTab && (
                     <MSKTab id={GroupComparisonTab.CNA} linkText="Copy-number"
                         anchorClassName={this.store.copyNumberTabGrey ? "greyedOut" : ""}
                     >
                         <CopyNumberEnrichments store={this.store}/>
                     </MSKTab>
                 )}
-                {this.store.mRNAEnrichmentProfiles.result!.length > 0 && (
+                {this.store.showMRNATab && (
                     <MSKTab id={GroupComparisonTab.MRNA} linkText="mRNA"
                         anchorClassName={this.store.mRNATabGrey ? "greyedOut" : ""}
                     >
                         <MRNAEnrichments store={this.store}/>
                     </MSKTab>
                 )}
-                {this.store.proteinEnrichmentProfiles.result!.length > 0 && (
+                {this.store.showProteinTab && (
                     <MSKTab id={GroupComparisonTab.PROTEIN} linkText="Protein"
                         anchorClassName={this.store.proteinTabGrey ? "greyedOut" : ""}
                     >
