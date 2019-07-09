@@ -7,7 +7,7 @@ import GroupComparisonStore, {OverlapStrategy} from "../GroupComparisonStore";
 import autobind from "autobind-decorator";
 import GroupSelectorButton from "./GroupSelectorButton";
 import GroupSelectorButtonList from "./GroupSelectorButtonList";
-import SelectionButton from "./SelectionButton";
+import SelectAllDeselectAll from "./SelectAllDeselectAll";
 
 export interface IGroupSelectorProps {
     store:GroupComparisonStore;
@@ -79,7 +79,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                         />
                     );
                 });
-                buttons.push(<SelectionButton store={this.props.store} disabled={true} index={buttons.length}/>);
+                buttons.push(<SelectAllDeselectAll store={this.props.store} disabled={true} index={buttons.length}/>);
                 return (
                     <div style={{
                         display:"flex",

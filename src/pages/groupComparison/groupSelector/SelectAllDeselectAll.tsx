@@ -8,7 +8,7 @@ export interface ISelectionButtonProps {
 }
 
 @observer
-class SelectionButton extends React.Component<ISelectionButtonProps, {}> {
+class SelectAllDeselectAll extends React.Component<ISelectionButtonProps, {}> {
     render() {
         return (
             <div style={{
@@ -25,4 +25,4 @@ class SelectionButton extends React.Component<ISelectionButtonProps, {}> {
     }
 }
 
-export default SortableElement(SelectionButton);
+export default SortableElement(SelectAllDeselectAll);
