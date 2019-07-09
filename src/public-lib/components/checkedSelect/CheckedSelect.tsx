@@ -25,6 +25,7 @@ type CheckedSelectProps = {
     onClearAll?: () => void;
     isAddAllDisabled?: boolean;
     addAllLabel?: string | JSX.Element;
+    height?:number;
 };
 
 @observer
@@ -112,8 +113,8 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                     styles={{
                         control: (provided:any)=>({
                             ...provided,
-                            height:33.5,
-                            minHeight:33.5,
+                            height:this.props.height || 33.5,
+                            minHeight:this.props.height || 33.5,
                             border: "1px solid rgb(204,204,204)"
                         }),
                         menu: (provided:any)=>({
