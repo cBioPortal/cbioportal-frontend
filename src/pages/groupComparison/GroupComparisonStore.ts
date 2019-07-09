@@ -59,14 +59,13 @@ import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
 
 export enum OverlapStrategy {
-    INCLUDE = "Include overlapping samples and patients",
-    EXCLUDE = "Exclude overlapping samples and patients",
+    INCLUDE = "Include",
+    EXCLUDE = "Exclude",
 }
 
 export default class GroupComparisonStore {
 
     @observable private _currentTabId:GroupComparisonTab|undefined = undefined;
-    @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.EXCLUDE;
     @observable private sessionId:string;
     @observable public newSessionPending = false;
     private tabHasBeenShown = observable.map<boolean>();
@@ -101,6 +100,15 @@ export default class GroupComparisonStore {
 
     public destroy() {
         this.tabHasBeenShownReactionDisposer && this.tabHasBeenShownReactionDisposer();
+    }
+
+    @action public updateOverlapStrategy(strategy:OverlapStrategy) {
+        this.routing.updateRoute({ overlapStrategy: strategy } as Partial<GroupComparisonURLQuery>)
+    }
+
+    @computed get overlapStrategy() {
+        const param = (this.routing.location.query as GroupComparisonURLQuery).overlapStrategy;
+        return param || OverlapStrategy.EXCLUDE;
     }
 
     @computed get groupOrder() {
@@ -200,15 +208,6 @@ export default class GroupComparisonStore {
     @autobind
     public setTabId(id:GroupComparisonTab) {
         this._currentTabId = id;
-    }
-
-    get overlapStrategy() {
-        return this._overlapStrategy;
-    }
-
-    @autobind
-    public setOverlapStrategy(v:OverlapStrategy) {
-        this._overlapStrategy = v;
     }
 
     readonly _session = remoteData<Session>({
