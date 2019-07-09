@@ -24,7 +24,7 @@ import {
     Sample,
     SampleFilter
 } from "../../shared/api/generated/CBioPortalAPI";
-import {action, computed, observable} from "mobx";
+import {action, autorun, computed, IReactionDisposer, observable} from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
 import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import _ from "lodash";
@@ -69,9 +69,38 @@ export default class GroupComparisonStore {
     @observable private _overlapStrategy:OverlapStrategy = OverlapStrategy.EXCLUDE;
     @observable private sessionId:string;
     @observable public newSessionPending = false;
+    private tabHasBeenShown = observable.map<boolean>();
+    private tabHasBeenShownReactionDisposer:IReactionDisposer;
 
     constructor(sessionId:string, private appStore:AppStore, private routing:any) {
         this.sessionId = sessionId;
+
+        this.tabHasBeenShownReactionDisposer = autorun(()=>{
+            this.tabHasBeenShown.set(
+                GroupComparisonTab.SURVIVAL,
+                !!this.tabHasBeenShown.get(GroupComparisonTab.SURVIVAL) || this.showSurvivalTab
+            );
+            this.tabHasBeenShown.set(
+                GroupComparisonTab.MUTATIONS,
+                !!this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS) || this.showMutationsTab
+            );
+            this.tabHasBeenShown.set(
+                GroupComparisonTab.CNA,
+                !!this.tabHasBeenShown.get(GroupComparisonTab.CNA) || this.showCopyNumberTab
+            );
+            this.tabHasBeenShown.set(
+                GroupComparisonTab.MRNA,
+                !!this.tabHasBeenShown.get(GroupComparisonTab.MRNA) || this.showMRNATab
+            );
+            this.tabHasBeenShown.set(
+                GroupComparisonTab.PROTEIN,
+                !!this.tabHasBeenShown.get(GroupComparisonTab.PROTEIN) || this.showProteinTab
+            );
+        });
+    }
+
+    public destroy() {
+        this.tabHasBeenShownReactionDisposer && this.tabHasBeenShownReactionDisposer();
     }
 
     @computed get groupOrder() {
@@ -675,14 +704,35 @@ export default class GroupComparisonStore {
         }
     });
 
+
+    @computed get survivalTabShowable() {
+        return this.survivalClinicalDataExists.isComplete && this.survivalClinicalDataExists.result;
+    }
+
+    @computed get showSurvivalTab() {
+        return this.survivalTabShowable ||
+            (this.activeGroups.isComplete && this.activeGroups.result!.length === 0 && this.tabHasBeenShown.get(GroupComparisonTab.SURVIVAL));
+    }
+
     @computed get survivalTabGrey() {
         // grey out if more than 10 active groups
-        return (this.activeGroups.isComplete && this.activeGroups.result.length > 10);
+        return (this.activeGroups.isComplete && this.activeGroups.result.length > 10)
+            || !this.survivalTabShowable;
+    }
+
+    @computed get mutationsTabShowable() {
+        return this.mutationEnrichmentProfiles.isComplete && this.mutationEnrichmentProfiles.result!.length > 0;
+    }
+
+    @computed get showMutationsTab() {
+        return this.mutationsTabShowable ||
+            (this.activeGroups.isComplete && this.activeGroups.result!.length === 0 && this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS));
     }
 
     @computed get mutationsTabGrey() {
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
-        || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study;
+            || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study
+            || !this.mutationsTabShowable;
     }
 
     @computed get clinicalTabGrey() {
@@ -690,21 +740,51 @@ export default class GroupComparisonStore {
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2);
     }
 
+    @computed get copyNumberTabShowable() {
+        return this.copyNumberEnrichmentProfiles.isComplete && this.copyNumberEnrichmentProfiles.result!.length > 0;
+    }
+
+    @computed get showCopyNumberTab() {
+        return this.copyNumberTabShowable ||
+            (this.activeGroups.isComplete && this.activeGroups.result!.length === 0 && this.tabHasBeenShown.get(GroupComparisonTab.CNA));
+    }
+
     @computed get copyNumberTabGrey() {
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
-        || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study;
+            || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study
+            || !this.copyNumberTabShowable;
+    }
+
+    @computed get mRNATabShowable() {
+        return this.mRNAEnrichmentProfiles.isComplete && this.mRNAEnrichmentProfiles.result!.length > 0;
+    }
+
+    @computed get showMRNATab() {
+        return this.mRNATabShowable ||
+            (this.activeGroups.isComplete && this.activeGroups.result!.length === 0 && this.tabHasBeenShown.get(GroupComparisonTab.MRNA));
     }
 
     @computed get mRNATabGrey() {
         // grey out if
         return (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) // more than one active study
-            || (this.activeGroups.isComplete && this.activeGroups.result.length !== 2); // not two active groups
+            || (this.activeGroups.isComplete && this.activeGroups.result.length !== 2) // not two active groups
+            || !this.mRNATabShowable;
+    }
+
+    @computed get proteinTabShowable() {
+        return this.proteinEnrichmentProfiles.isComplete && this.proteinEnrichmentProfiles.result!.length > 0;
+    }
+
+    @computed get showProteinTab() {
+        return this.proteinTabShowable ||
+            (this.activeGroups.isComplete && this.activeGroups.result!.length === 0 && this.tabHasBeenShown.get(GroupComparisonTab.PROTEIN));
     }
 
     @computed get proteinTabGrey() {
         // grey out if
         return (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) // more than one active study
-            || (this.activeGroups.isComplete && this.activeGroups.result.length !== 2); // not two active groups
+            || (this.activeGroups.isComplete && this.activeGroups.result.length !== 2) // not two active groups
+            || !this.proteinTabShowable;
     }
 
     public readonly sampleSet = remoteData({
@@ -825,15 +905,14 @@ export default class GroupComparisonStore {
         }
     });
 
-    @computed get showSurvivalTab() {
-        return this.survivalClinicalDataExists.isComplete && this.survivalClinicalDataExists.result;
-    }
-
     readonly survivalClinicalData = remoteData<ClinicalData[]>({
         await: () => [
             this.activeSamplesNotOverlapRemoved
         ],
         invoke: () => {
+            if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
+                return Promise.resolve([]);
+            }
             const filter: ClinicalDataMultiStudyFilter = {
                 attributeIds: SURVIVAL_CHART_ATTRIBUTES,
                 identifiers: this.activeSamplesNotOverlapRemoved.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
@@ -850,6 +929,9 @@ export default class GroupComparisonStore {
             this.activeStudyIds
         ],
         invoke: () => {
+            if (this.activeStudyIds.result!.length === 0) {
+                return Promise.resolve([]);
+            }
             return client.fetchClinicalAttributesUsingPOST({
                 studyIds:this.activeStudyIds.result!
             });
