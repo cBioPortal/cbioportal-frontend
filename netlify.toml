@@ -18,6 +18,12 @@ for = "/*.ttf"
 	Content-Type = "application/font-ttf"
 
 [[headers]]
+    for = "/*.json"
+    	[headers.values]
+    	Access-Control-Allow-Origin = "*"
+    	Content-Type = "application/json"
+
+[[headers]]
 for = "/*.ttc"
 	[headers.values]
 	Access-Control-Allow-Origin = "*"
