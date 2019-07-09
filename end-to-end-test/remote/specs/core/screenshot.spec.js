@@ -73,6 +73,15 @@ function runResultsTestSuite(prefix){
         assertScreenShotMatch(res);
     });
 
+    it(`${prefix} enrichments tab patient mode`, function(){
+        browser.execute(function() { resultsViewPageStore.setUsePatientLevelEnrichments(true); });
+        browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
+        browser.click('b=CDK14');
+        browser.waitForExist('[data-test="enrichmentsTabDiv"]', 10000);
+        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
+        assertScreenShotMatch(res);
+    });
+
     it(`${prefix} survival tab`, function(){
         browser.click("a.tabAnchor_survival");
         browser.waitForVisible('[data-test=SurvivalChart] svg',10000);
