@@ -14,6 +14,9 @@ import DownloadTab from './download/DownloadTab';
 import AppConfig from 'appConfig';
 import CNSegments from './cnSegments/CNSegments';
 import './styles.scss';
+import Network from './network/Network';
+import PathwayMapper from "react-pathway-mapper";
+import "react-pathway-mapper/dist/base.css";
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
 import ExpressionWrapper from './expression/ExpressionWrapper';
@@ -433,6 +436,25 @@ export default class ResultsViewPage extends React.Component<
                         </MSKTab>
                     );
                 },
+            },
+            {
+                id:ResultsViewTab.PATHWAY_MAPPER,
+                hide:()=>{
+                    if (!this.resultsViewPageStore.studies.isComplete) {
+                        return true;
+                    } else {
+                        return this.resultsViewPageStore.studies.result!.length > 1;
+                    }
+                },
+                getTab: () => {
+                    return <MSKTab key={13} id={ResultsViewTab.PATHWAY_MAPPER} linkText={'PathwayMapper'}>
+                        {
+                             (store.molecularData.isComplete && store.nonOqlFilteredCaseAggregatedData.isComplete && store.molecularProfilesWithData.isComplete && store.alterationsBySelectedMolecularProfiles.isComplete &&
+                             store.molecularProfileIdToProfiledSampleCount.isComplete && store.studies.isComplete && store.samples.isComplete && store.mutations.isComplete && store.genes.isComplete) &&
+                                (<PathwayMapper isCBioPortal={true} isCollaborative={false} genes={store.genes.result as any} store={store}/>)
+                        }
+                    </MSKTab>;
+                }
             },
 
             {
