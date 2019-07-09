@@ -17,13 +17,12 @@ import GroupSelector from "./groupSelector/GroupSelector";
 import {getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
 import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
-import {computed, IReactionDisposer, observable, reaction, action} from "mobx";
+import {action, IReactionDisposer, observable, reaction} from "mobx";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
 import _ from "lodash";
 import ClinicalData from "./ClinicalData";
 import ReactSelect from "react-select2";
-import {joinGroupNames} from "./OverlapUtils";
 import {trackEvent} from "shared/lib/tracking";
 
 export interface IGroupComparisonPageProps {
@@ -35,6 +34,7 @@ export type GroupComparisonURLQuery = {
     sessionId: string;
     groupOrder?:string; // json stringified array of names
     unselectedGroups?:string; // json stringified array of names
+    overlapStrategy?:OverlapStrategy;
 };
 
 @inject('routing', 'appStore')
@@ -201,7 +201,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     @action
     public onOverlapStrategySelect(option:any) {
         trackEvent({ category:'groupComparison', action:'setOverlapStrategy', label:option.value});
-        this.store.setOverlapStrategy(option.value);
+        this.store.updateOverlapStrategy(option.value as OverlapStrategy);
     }
 
     readonly overlapStrategySelector = MakeMobxView({
@@ -210,6 +210,8 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             if (!this.store.overlapComputations.result!.totalSampleOverlap && !this.store.overlapComputations.result!.totalPatientOverlap) {
                 return null;
             } else {
+                const includeLabel = "Include overlapping samples and patients";
+                const excludeLabel = "Exclude overlapping samples and patients";
                 return (
                     <div style={{minWidth:355, width:355, zIndex:20}}>
                         <ReactSelect
@@ -220,12 +222,12 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                                 }
                             }}
                             options={[
-                                { label: OverlapStrategy.INCLUDE, value: OverlapStrategy.INCLUDE},
-                                { label: OverlapStrategy.EXCLUDE, value: OverlapStrategy.EXCLUDE}
+                                { label: includeLabel, value: OverlapStrategy.INCLUDE },
+                                { label: excludeLabel, value: OverlapStrategy.EXCLUDE }
                             ]}
                             clearable={false}
                             searchable={false}
-                            value={{ label: this.store.overlapStrategy, value: this.store.overlapStrategy}}
+                            value={{ label: this.store.overlapStrategy === OverlapStrategy.EXCLUDE ? excludeLabel : includeLabel, value: this.store.overlapStrategy}}
                         />
                     </div>
                 );
