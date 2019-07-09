@@ -7,6 +7,7 @@ var checkElementWithTemporaryClass = require('./../specUtils').checkElementWithT
 var checkElementWithMouseDisabled = require('./../specUtils').checkElementWithMouseDisabled;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
+const OverlapStrategy = require("./../../../src/pages/groupComparison/GroupComparisonStore").OverlapStrategy;
 
 
 describe("group comparison page screenshot tests", function () {
@@ -31,7 +32,7 @@ describe("group comparison page screenshot tests", function () {
         });
 
         it("group comparison page survival tab include overlapping samples", function () {
-            browser.execute(function () { groupComparisonPage.onOverlapStrategySelect({ value: "Include overlapping samples and patients" }); });
+            browser.execute(function () { groupComparisonPage.onOverlapStrategySelect({ value: OverlapStrategy.INCLUDE }); });
             waitForNetworkQuiet();
             browser.waitForExist('div[data-test="ComparisonPageSurvivalTabDiv"]', 60000);
             browser.moveToObject("body", 0, 0);
@@ -68,7 +69,7 @@ describe("group comparison page screenshot tests", function () {
 
 
         it("group comparison page clinical tab percentage stacked bar chart exclude overlapping samples Chi squared test", function () {
-            browser.execute(function () { groupComparisonPage.onOverlapStrategySelect({ value: "Exclude overlapping samples and patients" }); });
+            browser.execute(function () { groupComparisonPage.onOverlapStrategySelect({ value: OverlapStrategy.EXCLUDE }); });
             waitForNetworkQuiet();
             browser.waitForVisible('div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="PlotsTabPlotDiv"]', 20000);
             browser.moveToObject("body", 0, 0);
