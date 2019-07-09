@@ -34,7 +34,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
             const groups = _.map(this.props.store._activeGroupsOverlapRemoved.result, group => {
                 return {
                     name:group.nameWithOrdinal,
-                    description:`Number (percentage) of samples in ${group.nameWithOrdinal} that have a mutation in the listed gene.`,
+                    description:`Number (percentage) of ${this.props.store.usePatientLevelEnrichments ? "patients" : "samples"} in ${group.nameWithOrdinal} that have a mutation in the listed gene.`,
                     count: getNumSamples(group),
                     color: group.color
                 }
@@ -59,6 +59,8 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                         alteredVsUnalteredMode={false}
                         headerName={this.props.store.mutationEnrichmentProfile.result!.name}
                         containerType={AlterationContainerType.MUTATION}
+                        patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
+                        onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
                     />
                 </div>
             );

@@ -32,7 +32,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
             const groups = _.map(this.props.store._activeGroupsOverlapRemoved.result, group => {
                 return {
                     name:group.nameWithOrdinal,
-                    description:`Number (percentage) of samples in ${group.nameWithOrdinal} that have the listed alteration in the listed gene.`,
+                    description:`Number (percentage) of ${this.props.store.usePatientLevelEnrichments ? "patients" : "samples"} in ${group.nameWithOrdinal} that have the listed alteration in the listed gene.`,
                     count: getNumSamples(group),
                     color: group.color
                 }
@@ -58,6 +58,8 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                         headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
                         showCNAInTable={true}
                         containerType={AlterationContainerType.COPY_NUMBER}
+                        patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
+                        onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
                     />
                 </div>
             );
