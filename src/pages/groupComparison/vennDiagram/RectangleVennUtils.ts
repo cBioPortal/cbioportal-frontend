@@ -2,7 +2,7 @@ import _ from "lodash";
 import {nelderMead} from 'fmin';
 import {getDeterministicRandomNumber} from "../../../shared/components/plots/PlotUtils";
 
-type Area = {size:number, sets:string[], sizeForVennJsInitialLayout:number};
+type Region = {size:number, sets:string[], sizeOfIntersectionOfSets:number};
 type Set = { size:number, uid:string};
 type SetRectangles = {[setUid:string]:Rectangle};
 type Rectangle = {x:number, y:number, xLength:number, yLength:number};// bottom-left aligned
@@ -212,7 +212,7 @@ export function getApproximateRegionArea(
 
 export function rectangleVennLossFunction(
     setRectangles:SetRectangles,
-    areas:Area[],
+    areas:Region[],
     sets:Set[]
 ) {
     let areaError = 0;
@@ -243,12 +243,12 @@ export function rectangleVennLossFunction(
     return areaError + intersectionDistancePenalty;
 }
 
-export function computeRectangleVennLayout(areas:Area[], sets:Set[], parameters:any) {
+export function computeRectangleVennLayout(areas:Region[], sets:Set[], parameters:any) {
     // based on https://github.com/benfred/venn.js/blob/master/src/layout.js#L7
     parameters = parameters || {};
 
     // Base our initial layout on the VennJs library's initial layout for circles.
-    const initialLayout = VennJs.bestInitialLayout(areas.map(area=>({ sets: area.sets, size: area.sizeForVennJsInitialLayout })), parameters);
+    const initialLayout = VennJs.bestInitialLayout(areas.map(area=>({ sets: area.sets, size: area.sizeOfIntersectionOfSets })), parameters);
     const initialRectangles:SetRectangles = _.mapValues(initialLayout, circle=>({
         x: circle.x - circle.radius,
         y: circle.y - circle.radius,

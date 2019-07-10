@@ -51,7 +51,7 @@ function regionMouseOut(e:any) {
 @observer
 export default class RectangleVennDiagram extends React.Component<IRectangleVennDiagramProps, {}> {
     @observable.ref svg:SVGElement|null = null;
-    @observable.ref tooltipModel:{ combination:number[], numCases:number } | null = null;
+    @observable.ref tooltipModel:{ combination:number[], sizeOfRegion:number } | null = null;
     @observable mousePosition = { x:0, y:0 };
 
     @computed public get isLayoutSuccessful() {
@@ -65,8 +65,8 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
     );
 
     private regionHoverHandlers = MemoizedHandlerFactory(
-        (e:React.MouseEvent<any>, params:{ combination:number[], numCases:number}) => {
-            if (params.numCases > 0) {
+        (e:React.MouseEvent<any>, params:{ combination:number[], sizeOfRegion:number}) => {
+            if (params.sizeOfRegion > 0) {
                 this.tooltipModel = params;
                 this.mousePosition.x = e.pageX;
                 this.mousePosition.y = e.pageY;
@@ -99,14 +99,14 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
         const regions = combinations.map(combination=>{
             // compute the cases in this region
             let casesInRegion = _.intersection(...combination.map(index=>this.props.groups[index].cases));
-            const sizeForVennJsInitialLayout = casesInRegion.length;
+            const sizeOfIntersectionOfSets = casesInRegion.length;
             for (const i of getExcludedIndexes(combination, this.props.groups.length)) {
                 _.pullAll(casesInRegion, this.props.groups[i].cases);
             }
             return {
                 combination,
-                sizeForVennJsInitialLayout,
-                numCases: casesInRegion.length,
+                sizeOfIntersectionOfSets,
+                sizeOfRegion: casesInRegion.length,
                 // compute the fill based on the colors of the included groups
                 color: blendColors(combination.map(index=>this.props.uidToGroup[this.props.groups[index].uid].color)),
                 labelPosition: null as {x:number, y:number} | null
@@ -116,8 +116,8 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
         // convert to form thats useful for algorithm
         const regionsForAlgorithm = regions.map(r=>({
             sets: r.combination.map(i=>this.props.groups[i].uid),
-            size: r.numCases,
-            sizeForVennJsInitialLayout: r.sizeForVennJsInitialLayout
+            size: r.sizeOfRegion,
+            sizeOfIntersectionOfSets: r.sizeOfIntersectionOfSets
         }));
 
         // the algorithm also needs all the sets
@@ -139,7 +139,7 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
 
         // compute label positions for nonempty regions
         for (const region of regions) {
-            if (region.numCases > 0) {
+            if (region.sizeOfRegion > 0) {
                 region.labelPosition = getRegionLabelPosition(
                     region.combination.map(i=>this.props.groups[i].uid),
                     rectangles
@@ -191,13 +191,13 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
                         height={this.props.height}
                         width={this.props.width}
                         fill={region.color}
-                        style={{ cursor: region.numCases > 0 ? "pointer" : "default" }}
+                        style={{ cursor: region.sizeOfRegion > 0 ? "pointer" : "default" }}
                         data-default-fill={region.color}
                         data-hover-fill={d3.hsl(region.color).brighter(1).rgb()}
-                        onMouseOver={region.numCases > 0 ? regionMouseOver : undefined}
-                        onMouseOut={region.numCases > 0 ? regionMouseOut : undefined}
-                        onMouseMove={this.regionHoverHandlers({combination:comb, numCases: region.numCases })}
-                        onClick={region.numCases > 0 ? this.regionClickHandlers({ combination: comb }) : undefined}
+                        onMouseOver={region.sizeOfRegion > 0 ? regionMouseOver : undefined}
+                        onMouseOut={region.sizeOfRegion > 0 ? regionMouseOut : undefined}
+                        onMouseMove={this.regionHoverHandlers({combination:comb, sizeOfRegion: region.sizeOfRegion })}
+                        onClick={region.sizeOfRegion > 0 ? this.regionClickHandlers({ combination: comb }) : undefined}
                         data-test={`${this.props.caseType}${region.combination.join(",")}VennRegion`}
                     />
                 </g>
@@ -209,7 +209,7 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
                     </g>
                 );
             }
-            if (region.numCases > 0) {
+            if (region.sizeOfRegion > 0) {
                 nonZeroClipPathContents.push(hoverRegion);
             }
 
@@ -233,13 +233,13 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
             );
         });
         const textElements = _.flattenDeep<any>(this.layoutParams.regions.map(region=>{
-            if (region.numCases === 0 || !region.labelPosition) {
+            if (region.sizeOfRegion === 0 || !region.labelPosition) {
                 return [];
             }
 
             const selected = regionIsSelected(region.combination, this.props.selection.regions);
 
-            const textContents = `${region.numCases.toString()}${selected ? " "+String.fromCharCode(10004) : ""}`;
+            const textContents = `${region.sizeOfRegion.toString()}${selected ? " "+String.fromCharCode(10004) : ""}`;
             // Add rect behind for ease of reading
             const textSize = measureText({text:textContents, fontFamily:"Arial", fontSize:"13px", lineHeight: 1});
             const padding = 4;
@@ -263,7 +263,7 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
                     x={textPosition.x}
                     y={textPosition.y}
                     style={{ userSelect:"none", color:selected ? "black" : getTextColor(region.color)}}
-                    fontWeight={region.numCases > 0 ? "bold" : "normal"}
+                    fontWeight={region.sizeOfRegion > 0 ? "bold" : "normal"}
                     pointerEvents="none"
                     textAnchor="middle"
                     alignmentBaseline="middle"
@@ -326,7 +326,7 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
 
         return (
             <div style={{width:300, whiteSpace:"normal"}}>
-                <strong>{this.tooltipModel.numCases} {pluralize(this.props.caseType, this.tooltipModel.numCases)}</strong>
+                <strong>{this.tooltipModel.sizeOfRegion} {pluralize(this.props.caseType, this.tooltipModel.sizeOfRegion)}</strong>
                 <br/>
                 in only {joinGroupNames(includedGroups, "and")}.
             </div>
