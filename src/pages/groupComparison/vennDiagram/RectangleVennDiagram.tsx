@@ -20,7 +20,12 @@ import {
     regionIsSelected,
     toggleRegionSelected
 } from "../OverlapUtils";
-import {computeRectangleVennLayout, getRegionLabelPosition, scaleAndCenterLayout} from "./RectangleVennUtils";
+import {
+    adjustSizesForMinimumSizeRegions,
+    computeRectangleVennLayout,
+    getRegionLabelPosition,
+    scaleAndCenterLayout
+} from "./RectangleVennUtils";
 
 export interface IRectangleVennDiagramProps {
     uid:string;
@@ -114,7 +119,7 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
         });
 
         // convert to form thats useful for algorithm
-        const regionsForAlgorithm = regions.map(r=>({
+        const regionsInAlgorithmForm = regions.map(r=>({
             sets: r.combination.map(i=>this.props.groups[i].uid),
             size: r.sizeOfRegion,
             sizeOfIntersectionOfSets: r.sizeOfIntersectionOfSets
@@ -127,9 +132,11 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
             color: this.props.uidToGroup[g.uid].color
         }));
 
+        const algorithmInput = adjustSizesForMinimumSizeRegions(regionsInAlgorithmForm, sets);
+
         // compute a layout for the venn diagram using the specification given by the
         //  sets and the regions
-        const unscaledLayout = computeRectangleVennLayout(regionsForAlgorithm, sets, {
+        const unscaledLayout = computeRectangleVennLayout(algorithmInput.regions, algorithmInput.sets, {
             maxIterations: 10000
         });
 
