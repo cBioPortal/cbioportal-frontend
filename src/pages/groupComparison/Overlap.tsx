@@ -2,7 +2,7 @@ import * as React from 'react';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {observer} from "mobx-react";
 import GroupComparisonStore from './GroupComparisonStore';
-import {observable, computed} from 'mobx';
+import {observable, computed, action, autorun, reaction, IReactionDisposer} from 'mobx';
 import Venn from './OverlapVenn';
 import _ from "lodash";
 import autobind from 'autobind-decorator';
@@ -23,6 +23,7 @@ import WindowStore from 'shared/components/window/WindowStore';
 import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import OverlapUpset from "./OverlapUpset";
+import OverlapVenn from "./OverlapVenn";
 
 export interface IOverlapProps {
     store: GroupComparisonStore
@@ -39,9 +40,44 @@ enum PlotType {
 export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     @observable plotExists = false;
+    @observable.ref venn:OverlapVenn|null = null;
+    @observable vennFailed = false;
+
+    private reactionDisposers:IReactionDisposer[] = [];
+
+    constructor(props:IOverlapProps) {
+        super(props);
+
+        // Keep track of when a venn diagram fails to find an adequate layout, so we'll show upset instead.
+        this.reactionDisposers.push(
+            // Only when the selected groups change, reset the venn failure marker, to mark that venn hasn't tried yet.
+            reaction(
+                ()=>[this.props.store._selectedGroups.result],
+                ()=>{ this.vennFailed = false; }
+            ),
+            // Mark if venn fails.
+            autorun(()=>{
+                if (this.venn && !this.venn.isLayoutSuccessful) {
+                    this.vennFailed = true;
+                }
+            })
+        );
+    }
 
     componentDidUpdate() {
         this.plotExists = !!this.getSvg();
+    }
+
+    componentWillUnmount() {
+        for (const disposer of this.reactionDisposers) {
+            disposer();
+        }
+    }
+
+    @autobind
+    @action
+    private vennRef(v:OverlapVenn|null) {
+        this.venn = v;
     }
 
     readonly tabUI = MakeMobxView({
@@ -109,7 +145,13 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     readonly plotType = remoteData({
         await:()=>[this.props.store._selectedGroups],
-        invoke:async()=>(this.props.store._selectedGroups.result!.length > 3 ? PlotType.Upset : PlotType.Venn)
+        invoke:()=>{
+            if (this.vennFailed || this.props.store._selectedGroups.result!.length > 3) {
+                return Promise.resolve(PlotType.Upset);
+            } else {
+                return Promise.resolve(PlotType.Venn);
+            }
+        }
     });
 
 
@@ -247,6 +289,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 case PlotType.Venn:
                     plotElt = (
                         <Venn
+                            ref={this.vennRef}
                             svgId={SVG_ID}
                             sampleGroups={this.sampleGroupsWithCases.result!}
                             patientGroups={this.patientGroupsWithCases.result!}
