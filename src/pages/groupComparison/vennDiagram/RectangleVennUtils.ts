@@ -141,13 +141,13 @@ export function getRegionArea(
     // if there are other sets not included in the region, subtract them from the set
     const numSets = Object.keys(setRectangles).length;
     if (sets.length !== numSets) {
-        // since max 3 sets total, we know (area.sets, numSets) is either (1,3), (2,3) or (1,2)
+        // since max 3 sets total, we know (sets, numSets) is either (1,3), (2,3) or (1,2)
         if (sets.length === 2) {
             // numSets is 3
             // so just subtract the intersection of all 3
             size -= rectangleArea(rectangleIntersection(..._.values(setRectangles)));
         } else {
-            // area.sets.length is 1
+            // sets.length is 1
             if (numSets === 2) {
                 // just subtract the intersection
                 size -= rectangleArea(rectangleIntersection(..._.values(setRectangles)));
@@ -212,23 +212,23 @@ export function getApproximateRegionArea(
 
 export function rectangleVennLossFunction(
     setRectangles:SetRectangles,
-    areas:Region[],
+    regions:Region[],
     sets:Set[]
 ) {
     let areaError = 0;
     let intersectionDistancePenalty = 0;
 
-    for (const area of areas) {
+    for (const region of regions) {
         // Make regions proportional to their size
-        const regionArea = getRegionArea(area.sets, setRectangles);
-        const error = (regionArea - area.size);
+        const regionArea = getRegionArea(region.sets, setRectangles);
+        const error = (regionArea - region.size);
         areaError += error*error;
 
-        if (area.sets.length === 2 && regionArea === 0 && area.size > 0) {
+        if (region.sets.length === 2 && regionArea === 0 && region.size > 0) {
             // try to bring each pair of rectangles together if they should intersect and currently dont. Otherwise,
-            //  the loss function only detects errors in intersection areas, so won't know how to move them to get better.
+            //  the loss function only detects errors in intersection regions, so won't know how to move them to get better.
             intersectionDistancePenalty += rectangleDistance(
-                setRectangles[area.sets[0]], setRectangles[area.sets[1]]
+                setRectangles[region.sets[0]], setRectangles[region.sets[1]]
             );
         }
     }
@@ -243,12 +243,44 @@ export function rectangleVennLossFunction(
     return areaError + intersectionDistancePenalty;
 }
 
-export function computeRectangleVennLayout(areas:Region[], sets:Set[], parameters:any) {
+export function adjustSizesForMinimumSizeRegions(
+    regions:Region[],
+    sets:Set[]
+) {
+    // Adjust sizes in order to not have regions that are too tiny to interact with/see.
+    // The minimum region size is a fraction of the biggest set size.
+    const biggestSetSize = Math.max(...sets.map(s=>s.size));
+    const minRegionSize = biggestSetSize / 30;
+
+    sets = _.cloneDeep(sets);
+    regions = _.cloneDeep(regions);
+
+    const setsMap = _.keyBy(sets, s=>s.uid);
+    for (const region of regions) {
+        // Adjust sizes of nonempty regions in a consistent way:
+        //  When adding to a region in order to bring it to the minimum, it also implies
+        //  adding to the size of the intersection of sets, and adding to the size of all
+        //  the sets of the region.
+        // This keeps the consistency of the sizes to represent mathematically valid set relationships.
+        if (region.size > 0 && region.size < minRegionSize) {
+            const addition = minRegionSize - region.size;
+            region.size += addition;
+            region.sizeOfIntersectionOfSets += addition;
+            for (const setId of region.sets) {
+                setsMap[setId].size += addition;
+            }
+        }
+    }
+
+    return { regions, sets };
+}
+
+export function computeRectangleVennLayout(regions:Region[], sets:Set[], parameters:any) {
     // based on https://github.com/benfred/venn.js/blob/master/src/layout.js#L7
     parameters = parameters || {};
 
     // Base our initial layout on the VennJs library's initial layout for circles.
-    const initialLayout = VennJs.bestInitialLayout(areas.map(area=>({ sets: area.sets, size: area.sizeOfIntersectionOfSets })), parameters);
+    const initialLayout = VennJs.bestInitialLayout(regions.map(region=>({ sets: region.sets, size: region.sizeOfIntersectionOfSets })), parameters);
     const initialRectangles:SetRectangles = _.mapValues(initialLayout, circle=>({
         x: circle.x - circle.radius,
         y: circle.y - circle.radius,
@@ -305,7 +337,7 @@ export function computeRectangleVennLayout(areas:Region[], sets:Set[], parameter
                 const setId = setIds[i];
                 current[setId] = vectorToRectangle(i, values);
             }
-            return rectangleVennLossFunction(current, areas, sets);
+            return rectangleVennLossFunction(current, regions, sets);
         },
         initial,
         parameters);
@@ -320,7 +352,7 @@ export function computeRectangleVennLayout(areas:Region[], sets:Set[], parameter
 
     return {
         rectangles,
-        finalErrorValue: rectangleVennLossFunction(rectangles, areas, sets)
+        finalErrorValue: rectangleVennLossFunction(rectangles, regions, sets)
     };
 }
 
