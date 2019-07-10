@@ -3,28 +3,35 @@ import {
     ExtendedSample
 } from "../../pages/resultsView/ResultsViewPageStore";
 import {IAlterationCountMap, IAlterationData} from "../../pages/resultsView/cancerSummary/CancerSummaryContent";
-import {Sample} from "../api/generated/CBioPortalAPI";
+import {Sample, MolecularProfile} from "../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
+import { CoverageInformation } from "pages/resultsView/ResultsViewPageStoreUtils";
+import { isSampleProfiledInMultiple } from "./isSampleProfiled";
 
-export function getAlterationCountsForCancerTypesByGene(alterationsByGeneBySampleKey:{ [geneName:string]: {[sampleId: string]: ExtendedAlteration[]} },
-                                                        samplesExtendedWithClinicalData:ExtendedSample[],
-                                                        groupByProperty: keyof ExtendedSample){
-    const ret = _.mapValues(alterationsByGeneBySampleKey, (alterationsBySampleId: {[sampleId: string]: ExtendedAlteration[]}, gene: string) => {
-        const samplesByCancerType = _.groupBy(samplesExtendedWithClinicalData,(sample:ExtendedSample)=>{
+export function getAlterationCountsForCancerTypesByGene(
+    alterationsByGeneBySampleKey: { [geneName: string]: { [sampleId: string]: ExtendedAlteration[] } },
+    samplesExtendedWithClinicalData: ExtendedSample[],
+    groupByProperty: keyof ExtendedSample,
+    molecularProfileIdsByAlterationType:{ [alterationType: string]: MolecularProfile[] },
+    coverageInformation:CoverageInformation) {
+
+    const ret = _.mapValues(alterationsByGeneBySampleKey, (alterationsBySampleId: { [sampleId: string]: ExtendedAlteration[] }, gene: string) => {
+        const samplesByCancerType = _.groupBy(samplesExtendedWithClinicalData, (sample: ExtendedSample) => {
             return sample[groupByProperty];
         });
-        return countAlterationOccurences(samplesByCancerType, alterationsBySampleId);
+        return countAlterationOccurences(samplesByCancerType, alterationsBySampleId, molecularProfileIdsByAlterationType, coverageInformation, gene);
     });
     return ret;
 }
 
-export function getAlterationCountsForCancerTypesForAllGenes(alterationsByGeneBySampleKey:{ [geneName:string]: {[sampleId: string]: ExtendedAlteration[]} },
-                                                             samplesExtendedWithClinicalData:ExtendedSample[],
-                                                             groupByProperty: keyof ExtendedSample){
+export function getAlterationCountsForCancerTypesForAllGenes(
+    alterationsByGeneBySampleKey: { [geneName: string]: { [sampleId: string]: ExtendedAlteration[] } },
+    samplesExtendedWithClinicalData: ExtendedSample[],
+    groupByProperty: keyof ExtendedSample,
+    molecularProfileIdsByAlterationType:{ [alterationType: string]: MolecularProfile[] },
+    coverageInformation:CoverageInformation) {
 
-    const samplesByCancerType = _.groupBy(samplesExtendedWithClinicalData,(sample:ExtendedSample)=>{
-        return sample[groupByProperty];
-    });
+    const samplesByCancerType = _.groupBy(samplesExtendedWithClinicalData, (sample: ExtendedSample) => sample[groupByProperty]);
     const flattened = _.flatMap(alterationsByGeneBySampleKey, (map) => map);
 
     // NEED TO FLATTEN and then merge this to get all alteration by sampleId
@@ -33,9 +40,10 @@ export function getAlterationCountsForCancerTypesForAllGenes(alterationsByGeneBy
             return objValue.concat(srcValue);
         }
     }
+
     const merged: { [uniqueSampleKey: string]: ExtendedAlteration[] } =
         (_.mergeWith({}, ...flattened, customizer) as { [uniqueSampleKey: string]: ExtendedAlteration[] });
-    return countAlterationOccurences(samplesByCancerType, merged);
+    return countAlterationOccurences(samplesByCancerType, merged, molecularProfileIdsByAlterationType, coverageInformation);
 
 }
 
@@ -43,7 +51,12 @@ export function getAlterationCountsForCancerTypesForAllGenes(alterationsByGeneBy
  * accepts samples and alterations to those samples and produces counts keyed by grouping type
  * (e.g. cancerType, cancerTypeDetailed, cancerStudy)
  */
-export function countAlterationOccurences(groupedSamples: {[groupingProperty: string]: ExtendedSample[]}, alterationsBySampleId: {[id: string]: ExtendedAlteration[]}):{ [groupingProperty:string]:IAlterationData } {
+export function countAlterationOccurences(
+    groupedSamples: { [groupingProperty: string]: ExtendedSample[] },
+    alterationsBySampleId: { [id: string]: ExtendedAlteration[] },
+    molecularProfileIdsByAlterationType:{ [alterationType: string]: MolecularProfile[] },
+    coverageInformation:CoverageInformation,
+    hugoGeneSymbol?:string) {
 
     return _.mapValues(groupedSamples, (samples: ExtendedSample[], cancerType: string) => {
 
@@ -61,19 +74,63 @@ export function countAlterationOccurences(groupedSamples: {[groupingProperty: st
             multiple: 0,
         };
 
+        const profiledTypeCounts = {
+            mutation:0,
+            cna:0,
+            expression:0,
+            protein:0
+        }
+
+        const notProfiledSamplesCounts = {
+            mutation:0,
+            cna:0,
+            expression:0,
+            protein:0
+        }
+
         const ret: IAlterationData = {
-            sampleTotal:samples.length,
+            profiledSampleTotal:0,
             alterationTotal:0,
             alterationTypeCounts:counts,
             alteredSampleCount:0,
-            parentCancerType:samples[0].cancerType
+            parentCancerType:samples[0].cancerType,
+            profiledSamplesCounts: profiledTypeCounts,
+            notProfiledSamplesCounts: notProfiledSamplesCounts
         };
 
         // for each sample in cancer type
         _.forEach(samples, (sample: Sample) => {
+            
+            let isSampleProfiled = false;
+
+            _.forEach(molecularProfileIdsByAlterationType, (molecularProfiles, alterationType) => {
+                const profiled = _.some(isSampleProfiledInMultiple(sample.uniqueSampleKey, _.map(molecularProfiles,molecularProfile=>molecularProfile.molecularProfileId), coverageInformation, hugoGeneSymbol))
+                isSampleProfiled = isSampleProfiled || profiled
+                switch (alterationType) {
+                    case AlterationTypeConstants.COPY_NUMBER_ALTERATION: {
+                        profiled ? profiledTypeCounts.cna++ : notProfiledSamplesCounts.cna++;
+                        break;
+                    }
+                    case AlterationTypeConstants.MRNA_EXPRESSION: {
+                        profiled ? profiledTypeCounts.expression++ : notProfiledSamplesCounts.expression++;
+                        break;
+                    }
+                    case AlterationTypeConstants.PROTEIN_LEVEL: {
+                        profiled ? profiledTypeCounts.protein++ : notProfiledSamplesCounts.protein++;
+                        break;
+                    }
+                    case AlterationTypeConstants.MUTATION_EXTENDED: {
+                        profiled ? profiledTypeCounts.mutation++ : notProfiledSamplesCounts.mutation++;
+                        break;
+                    }
+                }
+            });
+
+            if(isSampleProfiled) {
+                ret.profiledSampleTotal += 1;
+            }
             // there are alterations corresponding to that sample
             if (sample.uniqueSampleKey in alterationsBySampleId) {
-
                 const alterations = alterationsBySampleId[sample.uniqueSampleKey];
 
                 //a sample could have multiple mutations.  we only want to to count one
@@ -123,10 +180,7 @@ export function countAlterationOccurences(groupedSamples: {[groupingProperty: st
             }
 
         });
-
         return ret;
-
-
     });
 
 }
