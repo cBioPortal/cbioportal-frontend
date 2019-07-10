@@ -20,9 +20,7 @@ import {
     regionIsSelected,
     toggleRegionSelected
 } from "../OverlapUtils";
-import {computeRectangleVennLayout, getRegionLabelPosition, rectangleVennLossFunction, scaleAndCenterLayout} from "./RectangleVennUtils";
-
-const VennJs = require("venn.js");
+import {computeRectangleVennLayout, getRegionLabelPosition, scaleAndCenterLayout} from "./RectangleVennUtils";
 
 export interface IRectangleVennDiagramProps {
     uid:string;
@@ -39,7 +37,7 @@ export interface IRectangleVennDiagramProps {
     selection:{
         regions:number[][]; // we do it like this so that updating it doesn't update all props
     };
-    caseType:"sample"|"patient"
+    caseType:"sample"|"patient";
 }
 
 function regionMouseOver(e:any) {
@@ -55,6 +53,10 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
     @observable.ref svg:SVGElement|null = null;
     @observable.ref tooltipModel:{ combination:number[], numCases:number } | null = null;
     @observable mousePosition = { x:0, y:0 };
+
+    @computed public get isLayoutSuccessful() {
+        return this.layoutParams.layoutErrorValue < 1;
+    }
 
     private regionClickHandlers = MemoizedHandlerFactory(
         (e:any, params:{ combination:number[], }) => {
@@ -133,7 +135,7 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
 
         // scale and center the layout in a normalized form for presenting
         const padding = 20;
-        const rectangles = scaleAndCenterLayout(unscaledLayout, this.props.width, this.props.height, padding);
+        const rectangles = scaleAndCenterLayout(unscaledLayout.rectangles, this.props.width, this.props.height, padding);
 
         // compute label positions for nonempty regions
         for (const region of regions) {
@@ -146,7 +148,7 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
         }
 
         return {
-            rectangles, regions, sets
+            rectangles, regions, sets, layoutErrorValue: unscaledLayout.finalErrorValue
         }
     }
 
