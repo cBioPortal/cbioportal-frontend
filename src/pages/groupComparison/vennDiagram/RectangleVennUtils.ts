@@ -80,7 +80,7 @@ export function getRegionLabelPosition(sets:string[], setRectangles:SetRectangle
     return { x: solution[0], y:solution[1] };
 }
 
-export function rectangleArea(rectangle:Rectangle) {
+export function rectangleArea(rectangle:Pick<Rectangle, "xLength"|"yLength">) {
     return rectangle.xLength*rectangle.yLength;
 }
 
@@ -210,6 +210,62 @@ export function getApproximateRegionArea(
     return (numInside / numSamples) * (xMax - xMin) * (yMax - yMin);
 }
 
+export function getConnectedComponents(
+    setRectangles:SetRectangles
+) {
+    const components:{ rectangles:Rectangle[] }[] = [];
+    const rectangles = _.values(setRectangles);
+
+    for (const rect of rectangles) {
+        // We iterate through the rectangles
+        // First we check if `rect` is intersecting with any connected component we've already tracked
+        let added = false;
+        for (const component of components) {
+            if (_.some(
+                component.rectangles,
+                componentRect=>(rectangleArea(rectangleIntersection(rect, componentRect)) > 0)
+            )) {
+                component.rectangles.push(rect);
+                added = true;
+            }
+        }
+        // If not, then add it to a new component
+        if (!added) {
+            components.push({
+                rectangles:[rect]
+            });
+        }
+    }
+    return components;
+}
+
+export function getTotalAreaOfRectangles(
+    rectangles:Rectangle[]
+) {
+    // inclusion-exclusion
+    let result = 0;
+    switch (rectangles.length) {
+        case 1:
+            result = rectangleArea(rectangles[0]);
+            break;
+        case 2:
+            result = rectangleArea(rectangles[0])
+                + rectangleArea(rectangles[1])
+                - rectangleArea(rectangleIntersection(...rectangles));
+                break;
+        case 3:
+            result = rectangleArea(rectangles[0])
+                + rectangleArea(rectangles[1])
+                + rectangleArea(rectangles[2])
+                - rectangleArea(rectangleIntersection(rectangles[0], rectangles[1]))
+                - rectangleArea(rectangleIntersection(rectangles[0], rectangles[2]))
+                - rectangleArea(rectangleIntersection(rectangles[1], rectangles[2]))
+                + rectangleArea(rectangleIntersection(...rectangles));
+            break;
+    }
+    return result;
+}
+
 export function rectangleVennLossFunction(
     setRectangles:SetRectangles,
     regions:Region[],
@@ -240,7 +296,10 @@ export function rectangleVennLossFunction(
         areaError += rectSizeError*rectSizeError;
     }
 
-    return areaError + intersectionDistancePenalty;
+    return {
+        areaError,
+        otherPenalties: intersectionDistancePenalty
+    };
 }
 
 export function adjustSizesForMinimumSizeRegions(
@@ -319,7 +378,7 @@ export function computeRectangleVennLayout(regions:Region[], sets:Set[], paramet
         return {x,y,xLength,yLength};
     };
 
-    // transform x/y coordinates to a vector to pass to the optimization algorithm
+    // transform rectangles to a vector to pass to the optimization algorithm
     const initial:number[] = [];
     const setIds:string[] = [];
     for (const setId of Object.keys(initialRectangles)) {
@@ -337,12 +396,13 @@ export function computeRectangleVennLayout(regions:Region[], sets:Set[], paramet
                 const setId = setIds[i];
                 current[setId] = vectorToRectangle(i, values);
             }
-            return rectangleVennLossFunction(current, regions, sets);
+            const error = rectangleVennLossFunction(current, regions, sets);
+            return error.areaError + error.otherPenalties;
         },
         initial,
         parameters);
 
-    // transform solution vector back to x/y points
+    // transform solution vector back to rectangles
     const rectangles:SetRectangles = {};
     const values = solution.x;
     for (let i=0; i<setIds.length; i++) {
@@ -350,27 +410,74 @@ export function computeRectangleVennLayout(regions:Region[], sets:Set[], paramet
         rectangles[setId] = vectorToRectangle(i, values);
     }
 
+    layoutConnectedComponents(rectangles);
+
     return {
         rectangles,
-        finalErrorValue: rectangleVennLossFunction(rectangles, regions, sets)
+        finalErrorValue: rectangleVennLossFunction(rectangles, regions, sets).areaError
     };
+}
+
+function getBoundingBox(rectangles:Rectangle[]) {
+    const ret = {
+        xRange:{
+            min: Math.min(...rectangles.map(r=>r.x)),
+            max: Math.max(...rectangles.map(r=>r.x + r.xLength))
+        },
+        yRange:{
+            min: Math.min(...rectangles.map(r=>r.y)),
+            max: Math.max(...rectangles.map(r=>r.y + r.yLength))
+        },
+        xLength:0,
+        yLength:0
+    };
+    ret.xLength = ret.xRange.max - ret.xRange.min;
+    ret.yLength = ret.yRange.max - ret.yRange.min;
+    return ret;
+}
+
+export function layoutConnectedComponents(
+    setRectangles:SetRectangles
+) {
+    // layout connected components by their bounding boxes
+    let connectedComponents = getConnectedComponents(setRectangles);
+    // sort by size
+    connectedComponents = _.sortBy(connectedComponents, component=>-getTotalAreaOfRectangles(component.rectangles));
+
+    if (connectedComponents.length > 1) {
+        const boundingBoxes = connectedComponents.map(component=>getBoundingBox(component.rectangles));
+        const xPadding = Math.min(...boundingBoxes.map(box=>(box.xRange.max - box.xRange.min))) / 10;
+        const yPadding = Math.min(...boundingBoxes.map(box=>(box.yRange.max - box.yRange.min))) / 10;
+
+        let targetCoordinates:{x:number, y:number}[] = [];
+        switch (boundingBoxes.length) {
+            case 2:
+                targetCoordinates = [
+                    { x:0, y:0 },
+                    { x:boundingBoxes[0].xLength + xPadding, y:0 }
+                ];
+                break;
+            case 3:
+                targetCoordinates = [
+                    {x:0, y:0},
+                    {x:Math.max(boundingBoxes[0].xLength, boundingBoxes[2].xLength) + xPadding, y:0 },
+                    {x:0, y:Math.max(boundingBoxes[0].yLength, boundingBoxes[1].yLength) + yPadding }
+                ];
+                break;
+        }
+        for (let i=0; i<targetCoordinates.length; i++) {
+            const xDiff = targetCoordinates[i].x - boundingBoxes[i].xRange.min;
+            const yDiff = targetCoordinates[i].y - boundingBoxes[i].yRange.min;
+            for (const rectangle of connectedComponents[i].rectangles) {
+                rectangle.x += xDiff;
+                rectangle.y += yDiff;
+            }
+        }
+    }
 }
 
 export function scaleAndCenterLayout(layout:SetRectangles, width:number, height:number, padding:number) {
     // Based on https://github.com/benfred/venn.js/blob/d5a47bd12140f95a17402c6356af4631f53a0723/src/layout.js#L635
-
-    function getBoundingBox(rectangles:Rectangle[]) {
-        return {
-            xRange:{
-                min: Math.min(...rectangles.map(r=>r.x)),
-                max: Math.max(...rectangles.map(r=>r.x + r.xLength))
-            },
-            yRange:{
-                min: Math.min(...rectangles.map(r=>r.y)),
-                max: Math.max(...rectangles.map(r=>r.y + r.yLength))
-            }
-        };
-    }
 
     const rectangles = _.values(layout);
     const setIds = Object.keys(layout);
