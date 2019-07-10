@@ -90,6 +90,7 @@
 .headerControls {
     display:flex;
     align-items:center;
+    justify-content: space-between;
     > div {
       margin-right:30px;
     }
