@@ -94,7 +94,7 @@ describe('CancerSummaryChart', () => {
             }, {"alterationType": "mutated", "x": "Lung Adenocarcinoma", "y": 42.42424242424242}]],
             "countsByGroup": {
                 "Lung Adenocarcinoma": {
-                    "sampleTotal": 660,
+                    "profiledSampleTotal": 660,
                     "alterationTotal": 547,
                     "alterationTypeCounts": {
                         "mutated": 280,
@@ -113,7 +113,7 @@ describe('CancerSummaryChart', () => {
                     "parentCancerType": "Non-Small Cell Lung Cancer"
                 },
                 "Lung Squamous Cell Carcinoma": {
-                    "sampleTotal": 484,
+                    "profiledSampleTotal": 484,
                     "alterationTotal": 574,
                     "alterationTypeCounts": {
                         "mutated": 292,
@@ -160,8 +160,29 @@ describe('CancerSummaryChart', () => {
                 "protExpressionLow": "#E0FFFF",
                 "multiple": "#666"
             },
-            "xLabels": ["Lung Squamous Cell Carcinoma", "Lung Adenocarcinoma"]
-        };
+            "xLabels": ["Lung Squamous Cell Carcinoma", "Lung Adenocarcinoma"],
+            "alterationTypeDataCounts": [{
+                "x": "Lung Squamous Cell Carcinoma",
+                "y": "Mutation data",
+                "profiledCount": 484,
+                "notProfiledCount": 0
+            },{
+                "x": "Lung Adenocarcinoma",
+                "y": "Mutation data",
+                "profiledCount": 660,
+                "notProfiledCount": 0
+            },{
+                "x": "Lung Squamous Cell Carcinoma",
+                "y": "CNA data",
+                "profiledCount": 100,
+                "notProfiledCount": 0
+            },{
+                "x": "Lung Adenocarcinoma",
+                "y": "CNA data",
+                "profiledCount": 25,
+                "notProfiledCount": 0
+            }]
+        } as any;
 
         const instance = shallow(<CancerSummaryChart {...props} />).instance() as CancerSummaryChart;
 
