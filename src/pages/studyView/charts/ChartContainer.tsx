@@ -28,7 +28,7 @@ import {
     mutationCountVsCnaTooltip,
     MutationCountVsCnaYBinsMin, SPECIAL_CHARTS, UniqueKey
 } from "../StudyViewUtils";
-import {ClinicalAttribute, ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
+import {ClinicalAttribute, ClinicalData, GenePanel} from "../../../shared/api/generated/CBioPortalAPI";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
@@ -37,6 +37,7 @@ import {getComparisonUrl} from "../../../shared/api/urls";
 import {DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
 import {MAX_GROUPS_IN_SESSION} from "../../groupComparison/GroupComparisonUtils";
 import {Modal} from "react-bootstrap";
+import MobxPromiseCache from "shared/lib/MobxPromiseCache";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -84,6 +85,7 @@ export interface IChartContainerProps {
     patientKeysWithNAInSelectedClinicalData?:MobxPromise<string[]>; // patients which have NA values for filtered clinical attributes
     patientToAnalysisGroup?:MobxPromise<{[uniquePatientKey:string]:string}>;
     sampleToAnalysisGroup?:MobxPromise<{[uniqueSampleKey:string]:string}>;
+    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
 }
 
 @observer
@@ -341,6 +343,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onUserSelection={this.handlers.updateGeneFilters}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
+                        genePanelCache={this.props.genePanelCache}
                         cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
                     />
                 );
@@ -356,6 +359,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onUserSelection={this.handlers.updateCNAGeneFilters}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
+                        genePanelCache={this.props.genePanelCache}
                         cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
                     />
                 );
