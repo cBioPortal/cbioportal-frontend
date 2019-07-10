@@ -318,7 +318,10 @@ export function computeRectangleVennLayout(areas:Area[], sets:Set[], parameters:
         rectangles[setId] = vectorToRectangle(i, values);
     }
 
-    return rectangles;
+    return {
+        rectangles,
+        finalErrorValue: rectangleVennLossFunction(rectangles, areas, sets)
+    };
 }
 
 export function scaleAndCenterLayout(layout:SetRectangles, width:number, height:number, padding:number) {
