@@ -245,13 +245,15 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 <div>
                     <LoadingIndicator center={true} isLoading={this.store.newSessionPending}  size={"big"} />
                     <div className={"headBlock"}>
-                        {this.studyLink.component}
+                        <div style={{display:"flex", justifyContent:"space-between"}}>
+                            {this.studyLink.component}
+                            {this.overlapStrategySelector.component}
+                        </div>
                         <div>
                             <div className={styles.headerControls}>
                                 <GroupSelector
                                     store = {this.store}
                                 />
-                                {this.overlapStrategySelector.component}
                             </div>
                         </div>
                     </div>
