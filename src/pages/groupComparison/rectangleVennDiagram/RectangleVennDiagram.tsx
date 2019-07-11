@@ -177,9 +177,6 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
             </clipPath>
         ));
 
-        const nonZeroClipPathContents:any[] = [];
-        const nonZeroClipPathId = `${this.props.uid}_nonzero_regions`;
-
         const elements = _.flattenDeep<any>(this.layoutParams.regions.map(region=>{
 
             // FOR EACH REGION: generate the filled region, and the "# cases" text for it
@@ -214,9 +211,6 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
                         {hoverRegion}
                     </g>
                 );
-            }
-            if (region.sizeOfRegion > 0) {
-                nonZeroClipPathContents.push(hoverRegion);
             }
 
             return [hoverRegion];
@@ -281,36 +275,10 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
 
         return (
             <>
-                <filter id="whiteFilter">
-                    <feColorMatrix in="SourceGraphic"
-                                   type="matrix"
-                                   values="0 0 0 0 1
-                                            0 0 0 0 1
-                                            0 0 0 0 1
-                                            0 0 0 1 0"
-                    />
-                </filter>
-                <mask id={nonZeroClipPathId}>
-                    {/* This mask makes empty non-intersection regions white */}
-                    <rect
-                        x="0"
-                        y="0"
-                        height={this.props.height}
-                        width={this.props.width}
-                        fill="black"
-                    />
-                    <g filter={`url(#whiteFilter)`}>
-                        {nonZeroClipPathContents}
-                    </g>
-                </mask>
                 {clipPaths}
-                <g mask={`url(#${nonZeroClipPathId})`}>
-                    {elements}
-                </g>
+                {elements}
                 {outlines}
-                <g mask={`url(#${nonZeroClipPathId})`}>
-                    {textElements}
-                </g>
+                {textElements}
             </>
         );
     }
