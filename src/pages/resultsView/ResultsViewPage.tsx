@@ -49,6 +49,7 @@ import { createQueryStore } from 'pages/home/HomePage';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import { CancerStudyQueryUrlParams } from '../../shared/components/query/QueryStore';
 import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidationError';
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 
 function initStore(appStore: AppStore) {
     const resultsViewPageStore = new ResultsViewPageStore(
@@ -447,11 +448,19 @@ export default class ResultsViewPage extends React.Component<
                     }
                 },
                 getTab: () => {
+
+                    const canShowPM = (store.molecularData.isComplete && store.nonOqlFilteredCaseAggregatedData.isComplete && store.molecularProfilesWithData.isComplete && store.alterationsBySelectedMolecularProfiles.isComplete &&
+                        store.molecularProfileIdToProfiledSampleCount.isComplete && store.studies.isComplete && store.samples.isComplete && store.mutations.isComplete && store.genes.isComplete);
+
                     return <MSKTab key={13} id={ResultsViewTab.PATHWAY_MAPPER} linkText={'PathwayMapper'}>
                         {
-                             (store.molecularData.isComplete && store.nonOqlFilteredCaseAggregatedData.isComplete && store.molecularProfilesWithData.isComplete && store.alterationsBySelectedMolecularProfiles.isComplete &&
-                             store.molecularProfileIdToProfiledSampleCount.isComplete && store.studies.isComplete && store.samples.isComplete && store.mutations.isComplete && store.genes.isComplete) &&
+                                canShowPM &&
                                 (<PathwayMapper isCBioPortal={true} isCollaborative={false} genes={store.genes.result as any} store={store}/>)
+                        }
+                        {
+                                !canShowPM &&
+                                (<LoadingIndicator isLoading={true} size={"big"} center={true}>
+                                </LoadingIndicator>)
                         }
                     </MSKTab>;
                 }
