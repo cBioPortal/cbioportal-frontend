@@ -21,11 +21,10 @@ import {
     toggleRegionSelected
 } from "../OverlapUtils";
 import {
-    adjustSizesForMinimumSizeRegions,
     computeRectangleVennLayout,
-    getRegionLabelPosition,
-    scaleAndCenterLayout
-} from "./RectangleVennUtils";
+    getRegionLabelPosition
+} from "./layout";
+import {adjustSizesForMinimumSizeRegions, scaleAndCenterLayout} from "./normalizeLayout";
 
 export interface IRectangleVennDiagramProps {
     uid:string;
