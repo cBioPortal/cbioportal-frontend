@@ -97,6 +97,13 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 content.push(<span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>);
             } else {
                 content.push(<OverlapExclusionIndicator overlapTabMode={true} store={this.props.store}/>);
+                if (this.vennFailed) {
+                    content.push(
+                        <div className="alert alert-info">
+                            We couldn't find a good Venn diagram layout, so showing UpSet diagram instead.
+                        </div>
+                    );
+                }
                 content.push(this.overlapUI.component);
             }
             return (<div data-test="ComparisonPageOverlapTabDiv">
