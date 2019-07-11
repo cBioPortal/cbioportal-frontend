@@ -4,7 +4,7 @@ import {layoutConnectedComponents} from "./normalizeLayout";
 import {getRegionArea, getRegionShape, rectangleArea, rectangleDistance} from "./geometry";
 
 export type Region = {size:number, sets:string[], sizeOfIntersectionOfSets:number};
-export type Set = { size:number, uid:string};
+export type Set = { size:number, uid:string, disjoint:boolean};
 export type SetRectangles = {[setUid:string]:Rectangle};
 export type Rectangle = {x:number, y:number, xLength:number, yLength:number};// bottom-left aligned
 export type RegionShape = Rectangle[];
@@ -89,14 +89,23 @@ export function computeRectangleVennLayout(regions:Region[], sets:Set[], paramet
         //  whereas to change x in Param. B you'd need to alter both x1 and x2 synchronously.
     };
 
-    const vectorToRectangle = (i:number, vector:number[])=>{
+    const vectorToRectangle = (i:number, vector:number[], square:boolean)=>{
         // This is completely tied to `rectangleToVector` - if one is rewritten then so must the other be so that they are inverses.
         const centerX = vector[6*i];
         const centerY = vector[6*i + 1];
         const leftXLength = Math.abs(vector[6*i + 2]);
         const xLength = leftXLength + Math.abs(vector[6*i+3]);
-        const bottomYLength = Math.abs(vector[6*i+4]);
-        const yLength = bottomYLength + Math.abs(vector[6*i + 5]);
+
+        let bottomYLength:number, yLength:number;
+        if (square) {
+            // if square, then ignore the vector values for y width, just copy from x
+            bottomYLength = leftXLength;
+            yLength = xLength;
+        } else {
+            bottomYLength = Math.abs(vector[6*i+4]);
+            yLength = bottomYLength + Math.abs(vector[6*i + 5]);
+        }
+
         const x = centerX - leftXLength;
         const y = centerY - bottomYLength;
         return {x,y,xLength,yLength};
@@ -104,21 +113,17 @@ export function computeRectangleVennLayout(regions:Region[], sets:Set[], paramet
 
     // transform rectangles to a vector to pass to the optimization algorithm
     const initial:number[] = [];
-    const setIds:string[] = [];
-    for (const setId of Object.keys(initialRectangles)) {
-        if (initialRectangles.hasOwnProperty(setId)) {
-            initial.push(...rectangleToVector(initialRectangles[setId]));
-            setIds.push(setId);
-        }
+    for (const set of sets) {
+        initial.push(...rectangleToVector(initialRectangles[set.uid]));
     }
 
     // optimize initial layout from our loss function
     const solution = nelderMead(
         function(values:number[]) {
             const current:SetRectangles = {};
-            for (let i=0; i<setIds.length; i++) {
-                const setId = setIds[i];
-                current[setId] = vectorToRectangle(i, values);
+            for (let i=0; i<sets.length; i++) {
+                const setId = sets[i].uid;
+                current[setId] = vectorToRectangle(i, values, sets[i].disjoint);
             }
             const error = rectangleVennLossFunction(current, regions, sets);
             return error.areaError + error.otherPenalties;
@@ -129,9 +134,9 @@ export function computeRectangleVennLayout(regions:Region[], sets:Set[], paramet
     // transform solution vector back to rectangles
     const rectangles:SetRectangles = {};
     const values = solution.x;
-    for (let i=0; i<setIds.length; i++) {
-        const setId = setIds[i];
-        rectangles[setId] = vectorToRectangle(i, values);
+    for (let i=0; i<sets.length; i++) {
+        const setId = sets[i].uid;
+        rectangles[setId] = vectorToRectangle(i, values, sets[i].disjoint);
     }
 
     layoutConnectedComponents(rectangles);
