@@ -8,9 +8,9 @@ type SetRectangles = {[setUid:string]:Rectangle};
 type Rectangle = {x:number, y:number, xLength:number, yLength:number};// bottom-left aligned
 const VennJs = require("venn.js");
 
-function getAxisAlignedDistanceToNearestRectangle(x:number, y:number, setRectangles:SetRectangles) {
+function getAxisAlignedDistanceToNearestRectangle(x:number, y:number, rectangles:Rectangle[]) {
     let distance = Number.POSITIVE_INFINITY;
-    for (const rect of _.values(setRectangles)) {
+    for (const rect of rectangles) {
         // get nearest axis-aligned distance from each side of `rect`
         const distanceFromLeft = Math.abs(x - rect.x);
         const distanceFromRight = Math.abs(x - (rect.x + rect.xLength));
@@ -57,15 +57,31 @@ function getAxisAlignedDistanceToNearestRectangle(x:number, y:number, setRectang
 }
 
 export function getRegionLabelPosition(sets:string[], setRectangles:SetRectangles) {
-    // only sample within intersection region
-    const sampleRect = rectangleIntersection(...sets.map(s=>setRectangles[s]));
-    const xMin = sampleRect.x;
-    const xMax = sampleRect.x + sampleRect.xLength;
-    const yMin = sampleRect.y;
-    const yMax = sampleRect.y + sampleRect.yLength;
+    const intersectionRect = rectangleIntersection(...sets.map(s=>setRectangles[s]));
+    const intersectingExcludedSets =
+        _.difference(Object.keys(setRectangles), sets)
+            .filter(uid=>rectangleArea(rectangleIntersection(intersectionRect, setRectangles[uid])) > 0);
+    // if no intersecting excluded sets, then we just have a plain unbothered rectangle - put the label in the center
+    if (intersectingExcludedSets.length === 0) {
+        return {
+            x: intersectionRect.x + intersectionRect.xLength / 2,
+            y: intersectionRect.y + intersectionRect.yLength / 2
+        };
+    }
 
-    // First, sample to find an initial position thats inside the region
-    const excludedSets = _.difference(Object.keys(setRectangles), sets);
+
+    // only sample within intersection region
+    const xMin = intersectionRect.x;
+    const xMax = intersectionRect.x + intersectionRect.xLength;
+    const yMin = intersectionRect.y;
+    const yMax = intersectionRect.y + intersectionRect.yLength;
+
+    // First, sample to find a good initial position thats inside the region
+
+    // When evaluating the distance of a position from the rectangles, we need only consider
+    //  the rectangles that intersect with this region.
+    const relevantRectangles = [intersectionRect, ...intersectingExcludedSets.map(uid=>setRectangles[uid])];
+
     let initialPosition = null;
     let numSamples = 100;
     let bestMargin = 0;
@@ -77,11 +93,13 @@ export function getRegionLabelPosition(sets:string[], setRectangles:SetRectangle
         const y = randomNumber*(yMax-yMin) + yMin;
         // we already know point is inside intersected sets, so lets just make sure its not in excluded sets
         let inside = true;
-        for (const set of excludedSets) {
+        for (const set of intersectingExcludedSets) {
             inside = inside && !isPointInsideRectangle(x, y, setRectangles[set]);
         }
         if (inside) {
-            const newMargin = getAxisAlignedDistanceToNearestRectangle(x, y, setRectangles);
+            const newMargin = getAxisAlignedDistanceToNearestRectangle(
+                x, y, relevantRectangles
+            );
             if (newMargin > bestMargin) {
                 bestMargin = newMargin;
                 initialPosition = {x,y};
@@ -100,8 +118,10 @@ export function getRegionLabelPosition(sets:string[], setRectangles:SetRectangle
     //  deep inside the region, far from the boundary. This will be a good place to put a label.
     const solution = nelderMead(
         function(values:number[]) {
-            if (isPointInsideRegion(values[0], values[1], sets, excludedSets, setRectangles)) {
-                return -getAxisAlignedDistanceToNearestRectangle(values[0], values[1], setRectangles);
+            if (isPointInsideRegion(values[0], values[1], sets, intersectingExcludedSets, setRectangles)) {
+                return -getAxisAlignedDistanceToNearestRectangle(
+                    values[0], values[1], relevantRectangles
+                );
             } else {
                 return Number.POSITIVE_INFINITY;
             }
