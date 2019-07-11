@@ -128,7 +128,11 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
         const sets = this.props.groups.map(g=>({
             size: g.cases.length,
             uid: g.uid,
-            color: this.props.uidToGroup[g.uid].color
+            color: this.props.uidToGroup[g.uid].color,
+            disjoint: (function(){
+                const region = regionsInAlgorithmForm.find(r=>(r.sets.length === 1 && r.sets[0] === g.uid));
+                return region!.size === region!.sizeOfIntersectionOfSets; // disjoint if not intersecting with anything else, aka nothing is excluded from its solo region
+            })()
         }));
 
         const algorithmInput = adjustSizesForMinimumSizeRegions(regionsInAlgorithmForm, sets);
