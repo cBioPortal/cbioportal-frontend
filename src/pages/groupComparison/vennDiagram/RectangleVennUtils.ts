@@ -446,8 +446,8 @@ export function layoutConnectedComponents(
 
     if (connectedComponents.length > 1) {
         const boundingBoxes = connectedComponents.map(component=>getBoundingBox(component.rectangles));
-        const xPadding = Math.min(...boundingBoxes.map(box=>(box.xRange.max - box.xRange.min))) / 10;
-        const yPadding = Math.min(...boundingBoxes.map(box=>(box.yRange.max - box.yRange.min))) / 10;
+        const xPadding = Math.max(...boundingBoxes.map(box=>(box.xRange.max - box.xRange.min))) / 10;
+        const yPadding = Math.max(...boundingBoxes.map(box=>(box.yRange.max - box.yRange.min))) / 10;
 
         let targetCoordinates:{x:number, y:number}[] = [];
         switch (boundingBoxes.length) {
