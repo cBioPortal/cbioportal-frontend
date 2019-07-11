@@ -941,7 +941,7 @@ export class StudyViewPageStore {
             trackStudyViewFilterEvent("withCNADataQuickFilter", this);
             this.customChartFilterSet.set(UniqueKey.WITH_CNA_DATA, [Datalabel.YES]);
         } else {
-            this._chartSampleIdentifiersFilterSet.delete(UniqueKey.WITH_CNA_DATA);
+            this.customChartFilterSet.delete(UniqueKey.WITH_CNA_DATA);
         }
     }
 
