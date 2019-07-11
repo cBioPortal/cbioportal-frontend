@@ -17,8 +17,41 @@ function getAxisAlignedDistanceToNearestRectangle(x:number, y:number, setRectang
         const distanceFromBottom = Math.abs(y - rect.y);
         const distanceFromTop = Math.abs(y - (rect.y + rect.yLength));
 
+        const relevantDistances = [];
+        if (y > rect.y && y < rect.y + rect.yLength) {
+            // distance to this rectangles left and right are only relevant for avoiding
+            //  if y is within the yrange of the rectangle
+            relevantDistances.push(distanceFromLeft, distanceFromRight);
+        }
+        if (x > rect.x && x < rect.x + rect.xLength) {
+            // distance to this rectangles top and bottom are only relevant for avoiding
+            //  if x is within the xrange of the rectangle
+            relevantDistances.push(distanceFromBottom, distanceFromTop);
+        }
+        if (x < rect.x && y < rect.y) {
+            // down and left from rectangle, consider distance to bottom left corner
+            relevantDistances.push(
+                Math.sqrt(distanceFromBottom*distanceFromBottom + distanceFromLeft*distanceFromLeft)
+            );
+        } else if (x < rect.x && y > rect.y + rect.yLength) {
+            // up and left from rectangle, consider distance to top left corner
+            relevantDistances.push(
+                Math.sqrt(distanceFromTop*distanceFromTop + distanceFromLeft*distanceFromLeft)
+            );
+        } else if (x > rect.x + rect.xLength && y < rect.y) {
+            // down and right from rectangle, consider distance to bottom right corner
+            relevantDistances.push(
+                Math.sqrt(distanceFromBottom*distanceFromBottom + distanceFromRight*distanceFromRight)
+            );
+        } else if (x > rect.x + rect.xLength && y > rect.y + rect.yLength) {
+            // up and right from rectangle, consider distance to top right corner
+            relevantDistances.push(
+                Math.sqrt(distanceFromTop*distanceFromTop + distanceFromRight*distanceFromRight)
+            );
+        }
+
         // keep track of the minimum one, over all rectangles `rect`
-        distance = Math.min(distance, distanceFromLeft, distanceFromRight, distanceFromBottom, distanceFromTop);
+        distance = Math.min(distance, ...relevantDistances);
     }
     return distance;
 }
