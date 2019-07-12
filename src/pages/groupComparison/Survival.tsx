@@ -5,7 +5,7 @@ import {observer} from "mobx-react";
 import GroupComparisonStore, {OverlapStrategy} from './GroupComparisonStore';
 import {remoteData} from 'public-lib/api/remoteData';
 import {MakeMobxView} from "../../shared/components/MobxView";
-import {SURVIVAL_TOO_MANY_GROUPS_MSG} from "./GroupComparisonUtils";
+import {SURVIVAL_NOT_ENOUGH_GROUPS_MSG, SURVIVAL_TOO_MANY_GROUPS_MSG} from "./GroupComparisonUtils";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {blendColors} from "./OverlapUtils";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
@@ -120,6 +120,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             let content: any = [];
             if (this.props.store._activeGroupsNotOverlapRemoved.result!.length > 10) {
                 content.push(<span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>);
+            } else if (this.props.store._activeGroupsNotOverlapRemoved.result!.length === 0) {
+                content.push(<span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>);
             } else {
                 content.push(<OverlapExclusionIndicator store={this.props.store} only="patient" survivalTabMode={true}/>);
                 content.push(this.survivalUI.component);

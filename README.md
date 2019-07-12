@@ -262,3 +262,18 @@ Making e2e-tests follows the current procedure for the e2e-tests:
 * Imports of custom seed data for gene panels and gene sets are not implemented at the moment of this writing.
 * In order to minimize time of local database e2e-tests the size of custom studies should be kept as small as possible.
 * When developing in _Local_ context port 8081 can be used to access the cbioportal instance ('http://localhost:8081/cbioportal').
+
+## Components
+
+### cbioportal-frontend-commons
+
+[cbioportal-frontend-commons](https://www.npmjs.com/package/cbioportal-frontend-commons/) is a separate npm library which is internally hosted under the `src/public-lib` directory. 
+This library contains basic utility functions and components, and it is designed as a dependency for external react libraries and applications.
+ 
+Components/utils added under `src/public-lib` should only depend on either external node modules or components/utils under `src/public-lib`.
+Please make sure to not introduce any internal dependencies (from directories under `src` other than `public-lib`) when updating or adding new files under `src/public-lib`.
+
+### react-mutation-mapper
+
+Mutation Mapper component has been moved to a separate GitHub repository: [cBioPortal/react-mutation-mapper](https://github.com/cBioPortal/react-mutation-mapper).
+For more information about `react-mutation-mapper` development please see [react-mutation-mapper.md](docs/react-mutation-mapper.md).
