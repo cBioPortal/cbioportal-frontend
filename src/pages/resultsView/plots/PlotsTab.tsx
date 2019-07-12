@@ -1552,7 +1552,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     }]}
                                     dontFade={true}
                                     style={{position:'absolute', right:10, top:10 }}
-                                    collapse={true}
+                                    type='button'
                                 />
                             )}
                             <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>

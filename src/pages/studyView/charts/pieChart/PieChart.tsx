@@ -247,7 +247,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     public render() {
         return (
             <DefaultTooltip
-                placement="right"
+                placement={this.props.placement}
                 overlay={(
                     <ClinicalTable
                         width={300}
