@@ -25,6 +25,7 @@ const isTest = NODE_ENV === 'test';
 const root = resolve(__dirname);
 const src = join(root, 'src');
 const common = join(src, 'common');
+const publicLib = join(src, 'public-lib');
 const modules = join(root, 'node_modules');
 
 const fontPath = 'lib/[hash].[ext]';
@@ -394,7 +395,7 @@ config.module.rules.push(
 
 // Roots
 config.resolve.modules = [
-    src,
+    publicLib,
     common,
     modules
 ];

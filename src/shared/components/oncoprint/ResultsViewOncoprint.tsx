@@ -799,7 +799,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             if (this.columnMode === "sample" && this.props.store.givenSampleOrder.isComplete) {
                 return this.props.store.givenSampleOrder.result.map(x=>x.uniqueSampleKey);
             } else if (this.columnMode === "patient" && this.props.store.givenSampleOrder.isComplete) {
-                return this.props.store.givenSampleOrder.result.map(x=>x.uniquePatientKey);
+                return _.uniq(this.props.store.givenSampleOrder.result.map(x=>x.uniquePatientKey));
             } else {
                 return undefined;
             }

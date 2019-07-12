@@ -143,6 +143,23 @@ jobs:
       - store_artifacts:
           path: /tmp/repo/junit
 
+  public_lib:
+    <<: *defaults
+    steps:
+      - run:
+          name: "Install yarn at specific version"
+          command:
+            sudo npm install --global yarn@1.13.0
+      - attach_workspace:
+          at: /tmp/
+      # build public lib
+      - run:
+          command: "yarn run buildPublicLib"
+          environment:
+            DISABLE_SOURCEMAP: true
+            NO_PARALLEL: true
+          when: always
+
   end_to_end_tests:
     <<: *defaults
     environment:
@@ -235,6 +252,9 @@ workflows:
     install_and_test:
         jobs:
             - install
+            - public_lib:
+                requires:
+                    - install
             - unit_tests:
                 requires:
                     - install
@@ -258,6 +278,9 @@ workflows:
                            - rc
        jobs:
            - install
+           - public_lib:
+               requires:
+                   - install
            - api_sync:
                requires:
                    - install
