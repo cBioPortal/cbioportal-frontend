@@ -1,13 +1,11 @@
 import _ from "lodash";
 import {nelderMead} from 'fmin';
 import {layoutConnectedComponents} from "./normalizeLayout";
-import {getRegionArea, getRegionShape, rectangleArea, rectangleDistance} from "./geometry";
+import {getRegionArea, getRegionShape, Rectangle, rectangleArea, rectangleDistance} from "./geometry";
 
 export type Region = {size:number, sets:string[], sizeOfIntersectionOfSets:number};
 export type Set = { size:number, uid:string, disjoint:boolean};
 export type SetRectangles = {[setUid:string]:Rectangle};
-export type Rectangle = {x:number, y:number, xLength:number, yLength:number};// bottom-left aligned
-export type RegionShape = Rectangle[];
 const VennJs = require("venn.js");
 
 export function getRegionLabelPosition(sets:string[], setRectangles:SetRectangles) {
