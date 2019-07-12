@@ -246,6 +246,12 @@ describe("group comparison page screenshot tests", function () {
                 var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
                 assertScreenShotMatch(res);
             });
+            it("group comparison page overlap tab 3 disjoint venn diagram", function() {
+                goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/comparison?sessionId=5d28f03be4b0ab413787b1ef`);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
         });
 
         describe('venn diagram with overlap', function() {
@@ -267,6 +273,69 @@ describe("group comparison page screenshot tests", function () {
 
             it("group comparison page overlap tab venn diagram view with overlap deselect active group", function () {
                 browser.click('button[data-test="groupSelectorButtonC"]');
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+        });
+
+        describe('venn diagram with complex overlaps', function() {
+            const buttonA = 'button[data-test="groupSelectorButtonA"]';
+            const buttonB = 'button[data-test="groupSelectorButtonB"]';
+            const buttonC = 'button[data-test="groupSelectorButtonC"]';
+            const buttonD = 'button[data-test="groupSelectorButtonD"]';
+
+            before(function () {
+                goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/comparison/overlap?sessionId=5d1bc517e4b0ab413787924a`);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+            });
+            it("group comparison complex venn BCD", function() {
+                browser.click(buttonA);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+            it("group comparison complex venn CD", function() {
+                browser.click(buttonB);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+            it("group comparison complex venn BC", function() {
+                browser.click(buttonB);
+                browser.waitForVisible(buttonD);
+                browser.click(buttonD);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+            it("group comparison complex venn ABC", function() {
+                browser.click(buttonA);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+            it("group comparison complex venn AB", function() {
+                browser.click(buttonC);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+            it("group comparison complex venn ABD", function() {
+                browser.click(buttonD);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+            it("group comparison complex venn AD", function() {
+                browser.click(buttonB);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
+                var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
+                assertScreenShotMatch(res);
+            });
+            it("group comparison complex venn ACD", function() {
+                browser.click(buttonC);
+                browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
                 var res = checkElementWithTemporaryClass('div[data-test="ComparisonPageOverlapTabDiv"]', 'div[data-test="ComparisonPageOverlapTabDiv"]', "disablePointerEvents", 0);
                 assertScreenShotMatch(res);
             });
