@@ -3,7 +3,7 @@ import {
     Rectangle, Region,
     SetRectangles, Set
 } from "./layout";
-import {getBoundingBox, getTotalAreaOfRectangles, rectangleArea, rectangleIntersection} from "./geometry";
+import {getBoundingBox, rectangleArea, rectangleIntersection} from "./geometry";
 
 
 export function adjustSizesForMinimumSizeRegions(
@@ -86,7 +86,7 @@ export function layoutConnectedComponents(
         //   SMALLEST
 
         // First sort by size
-        connectedComponents = _.sortBy(connectedComponents, component=>-getTotalAreaOfRectangles(component.rectangles));
+        connectedComponents = _.sortBy(connectedComponents, component=>-rectangleArea(getBoundingBox(component.rectangles)));
         const boundingBoxes = connectedComponents.map(component=>getBoundingBox(component.rectangles));
         const xPadding = Math.max(...boundingBoxes.map(box=>(box.xRange.max - box.xRange.min))) / 10;
         const yPadding = Math.max(...boundingBoxes.map(box=>(box.yRange.max - box.yRange.min))) / 10;
