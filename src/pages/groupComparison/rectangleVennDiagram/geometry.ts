@@ -48,10 +48,10 @@ export function rectangleIntersection(
 
 export function rectangleDifference(
     a:Rectangle, b:Rectangle
-) {
+):RegionShape {
     if (rectangleArea(rectangleIntersection(a, b)) === 0) {
         // no intersection -> no difference
-        return a;
+        return [a];
     }
     // Otherwise, there is some intersection
 
@@ -101,13 +101,16 @@ export function rectangleDifference(
         }
     ]
 
-    // Intersect a with each of those rectangles and return the result
-    return setComplementOfB.map(rect=>rectangleIntersection(rect, a));
+    // Intersect a with each of those rectangles
+    let intersection = setComplementOfB.map(rect=>rectangleIntersection(rect, a));
+    // filter out empty rectangles
+    intersection = intersection.filter(r=>rectangleArea(r) > 0);
+    return intersection;
 }
 
 export function rectangleDifferenceMultiple(
     a:Rectangle, subRects:Rectangle[]
-) {
+):RegionShape {
     let difference = [a];
     for (const subRect of subRects) {
         difference = _.flatMap(difference, rect=>rectangleDifference(rect, subRect));
@@ -119,33 +122,6 @@ export function getRegionArea(
     region:RegionShape
 ) {
     return _.sumBy(region, rectangleArea);
-}
-
-export function getTotalAreaOfRectangles(
-    rectangles:Rectangle[]
-) {
-    // inclusion-exclusion
-    let result = 0;
-    switch (rectangles.length) {
-        case 1:
-            result = rectangleArea(rectangles[0]);
-            break;
-        case 2:
-            result = rectangleArea(rectangles[0])
-                + rectangleArea(rectangles[1])
-                - rectangleArea(rectangleIntersection(...rectangles));
-            break;
-        case 3:
-            result = rectangleArea(rectangles[0])
-                + rectangleArea(rectangles[1])
-                + rectangleArea(rectangles[2])
-                - rectangleArea(rectangleIntersection(rectangles[0], rectangles[1]))
-                - rectangleArea(rectangleIntersection(rectangles[0], rectangles[2]))
-                - rectangleArea(rectangleIntersection(rectangles[1], rectangles[2]))
-                + rectangleArea(rectangleIntersection(...rectangles));
-            break;
-    }
-    return result;
 }
 
 export function getRegionShape(
