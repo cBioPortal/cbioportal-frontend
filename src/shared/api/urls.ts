@@ -56,8 +56,15 @@ export function buildCBioLink(path:string){
 
 export function getCbioPortalApiUrl() {
     const root = trimTrailingSlash(AppConfig.apiRoot!);
-    return `${root}/api`
+    return `${root}/api`;
 }
+
+export function getFrontendAssetUrl(path:string) {
+    const root = trimTrailingSlash(AppConfig.frontendUrl!);
+    return `${root}/${path}`;
+}
+
+
 function getStudySummaryUrlParams(studyIds:string | ReadonlyArray<string>) {
     let cohortsArray:ReadonlyArray<string>;
     if (typeof studyIds === "string") {
