@@ -648,6 +648,16 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly selectedMolecularProfileIdsByAlterationType = remoteData<{ [alterationType: string]: MolecularProfile[] }>({
+        await: () => [
+            this.selectedMolecularProfiles
+        ],
+        invoke: () => {
+            const profiles: MolecularProfile[] = this.selectedMolecularProfiles.result!;
+            return Promise.resolve(_.groupBy(profiles, "molecularAlterationType"));
+        }
+    });
+
     readonly clinicalAttributes = remoteData<(ClinicalAttribute & { molecularProfileIds?: string[] })[]>({
         await:()=>[
             this.studyIds,
