@@ -1,9 +1,9 @@
 import _ from "lodash";
 import {
-    Rectangle, Region,
+    Region,
     SetRectangles, Set
 } from "./layout";
-import {getBoundingBox, rectangleArea, rectangleIntersection} from "./geometry";
+import {getBoundingBox, Rectangle, rectangleArea, rectangleIntersection} from "./geometry";
 
 
 export function adjustSizesForMinimumSizeRegions(

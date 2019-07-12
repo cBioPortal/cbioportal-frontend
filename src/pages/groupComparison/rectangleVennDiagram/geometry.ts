@@ -1,5 +1,8 @@
 import _ from "lodash";
-import {Rectangle, RegionShape, SetRectangles} from "./layout";
+import {SetRectangles} from "./layout";
+
+export type Rectangle = {x:number, y:number, xLength:number, yLength:number};// bottom-left aligned
+export type RegionShape = Rectangle[];
 
 export function rectangleArea(rectangle:Pick<Rectangle, "xLength"|"yLength">) {
     return rectangle.xLength*rectangle.yLength;
