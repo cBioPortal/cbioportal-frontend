@@ -18,7 +18,7 @@ describe('CancerSummaryContent', () => {
     beforeEach(()=>{
         groupedAlterationData = {
             "Colon Adenocarcinoma": {
-                "sampleTotal": 94,
+                "profiledSampleTotal": 94,
                 "alterationTotal": 10,
                 "alterationTypeCounts": {
                     "mutated": 10,
@@ -34,10 +34,22 @@ describe('CancerSummaryContent', () => {
                     "multiple": 0
                 },
                 "alteredSampleCount": 10,
-                "parentCancerType": "Colorectal Cancer"
+                "parentCancerType": "Colorectal Cancer",
+                "profiledSamplesCounts":{
+                    "mutation": 10,
+                    "cna": 0,
+                    "expression": 0,
+                    "protein": 0
+                },
+                "notProfiledSamplesCounts":{
+                    "mutation": 0,
+                    "cna": 0,
+                    "expression": 0,
+                    "protein": 0
+                }
             },
             "Colorectal Adenocarcinoma": {
-                "sampleTotal": 23,
+                "profiledSampleTotal": 23,
                 "alterationTotal": 1,
                 "alterationTypeCounts": {
                     "mutated": 1,
@@ -53,10 +65,22 @@ describe('CancerSummaryContent', () => {
                     "multiple": 0
                 },
                 "alteredSampleCount": 1,
-                "parentCancerType": "Colorectal Cancer"
+                "parentCancerType": "Colorectal Cancer",
+                "profiledSamplesCounts":{
+                    "mutation": 1,
+                    "cna": 0,
+                    "expression": 0,
+                    "protein": 0
+                },
+                "notProfiledSamplesCounts":{
+                    "mutation": 0,
+                    "cna": 0,
+                    "expression": 0,
+                    "protein": 0
+                }
             },
             "Rectal Adenocarcinoma": {
-                "sampleTotal": 48,
+                "profiledSampleTotal": 48,
                 "alterationTotal": 5,
                 "alterationTypeCounts": {
                     "mutated": 4,
@@ -72,7 +96,19 @@ describe('CancerSummaryContent', () => {
                     "multiple": 0
                 },
                 "alteredSampleCount": 5,
-                "parentCancerType": "Colorectal Cancer"
+                "parentCancerType": "Colorectal Cancer",
+                "profiledSamplesCounts":{
+                    "mutation": 5,
+                    "cna": 1,
+                    "expression": 0,
+                    "protein": 0
+                },
+                "notProfiledSamplesCounts":{
+                    "mutation": 0,
+                    "cna": 0,
+                    "expression": 0,
+                    "protein": 0
+                }
             }
         };
     });
@@ -278,7 +314,7 @@ describe('CancerSummaryContent', () => {
                 countsData: {
                     'test': {
                         alteredSampleCount: 12,
-                        sampleTotal: 50
+                        profiledSampleTotal: 50
                     }
                 }
 

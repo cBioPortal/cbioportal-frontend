@@ -1,10 +1,10 @@
 import * as React from "react";
 import * as _ from 'lodash';
-import {Checkbox, ButtonGroup, Panel, Radio} from 'react-bootstrap';
+import {Checkbox, ButtonGroup, Radio} from 'react-bootstrap';
 import {computed, observable, action} from "mobx";
 import {observer} from "mobx-react";
 import Slider from 'react-rangeslider';
-import {FormGroup, ControlLabel, FormControl} from 'react-bootstrap';
+import { ControlLabel, FormControl } from 'react-bootstrap';
 import {If, Then, Else} from 'react-if';
 import classnames from 'classnames';
 
@@ -12,8 +12,6 @@ import 'react-select/dist/react-select.css';
 import 'react-rangeslider/lib/index.css';
 
 import { CancerSummaryChart } from "./CancerSummaryChart";
-import autobind from "autobind-decorator";
-import DownloadControls from "public-lib/components/downloadControls/DownloadControls"
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
 
 export const OrderedAlterationLabelMap: Record<keyof IAlterationCountMap, string> = {
@@ -28,6 +26,13 @@ export const OrderedAlterationLabelMap: Record<keyof IAlterationCountMap, string
     amp: "Amplification",
     fusion: "Fusion",
     mutated: "Mutation"
+};
+
+export const AlterationTypeToDataTypeLabel: {[id:string]:string} = {
+    protein: "Protein data",
+    expression: "mRNA data",
+    cna: "CNA data",
+    mutation: "Mutation data"
 };
 
 const alterationToColor: Record<keyof IAlterationCountMap, string> = {
@@ -62,10 +67,22 @@ export interface IAlterationCountMap {
 
 export interface IAlterationData {
     alterationTotal: number;
-    sampleTotal: number;
+    profiledSampleTotal: number;
     alterationTypeCounts: IAlterationCountMap;
     alteredSampleCount: number;
     parentCancerType: string;
+    profiledSamplesCounts: {
+        mutation: number,
+        cna: number,
+        expression: number,
+        protein: number
+    },
+    notProfiledSamplesCounts: {
+        mutation: number,
+        cna: number,
+        expression: number,
+        protein: number
+    }
 }
 
 
@@ -74,7 +91,14 @@ export interface ICancerSummaryChartData {
     data: {
         x: string,
         y: number,
-        alterationType: string }[][];
+        alterationType: string
+    }[][];
+    alterationTypeDataCounts: {
+        x: string,
+        y: string,
+        profiledCount: number,
+        notProfiledCount: number
+    }[];
     labels: string[];
     maxPercentage: number;
     maxAbsoluteCount: number;
@@ -168,7 +192,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     determineSorterAndDirection(): { sorter:(item:any)=>number|string, dir:'asc'| 'desc' } {
         const sortByPercentage = (key:string) => {
             const alterationCountsData: IAlterationData = this.countsData[key];
-            return alterationCountsData.alteredSampleCount / alterationCountsData.sampleTotal;
+            return alterationCountsData.alteredSampleCount / alterationCountsData.profiledSampleTotal;
         };
         const sortByAbsoluteCount = (key:string) => {
             const alterationCountsData: IAlterationData = this.countsData[key];
@@ -189,6 +213,42 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         return { sorter, dir };
     }
 
+    @computed get alterationTypeDataCounts() {
+        const scatterPlotData: { x: string, y: string, profiledCount: number, notProfiledCount: number }[] = [];
+        _.forEach(this.groupKeysSorted, groupKey => {
+            const alterationData = this.countsData[groupKey];
+            const totalProfiledSamplesCount = _.chain(alterationData.profiledSamplesCounts as any).values().sum().value();
+            const alterationPercentage = calculatePercentage(alterationData.alteredSampleCount, alterationData.profiledSampleTotal);;
+
+            let meetsAlterationThreshold;
+            if (this.yAxis === "abs-count") {
+                meetsAlterationThreshold = alterationData.alteredSampleCount >= this.tempAltCasesValue;
+            } else {
+                meetsAlterationThreshold = alterationPercentage >= this.tempAltCasesValue;
+            }
+
+            const meetsSampleTotalThreshold = alterationData.profiledSampleTotal >= this.totalCasesValue;
+
+            // if we don't meet the threshold set by the user in the custom controls, don't put data in (default 0)
+            //hide scatter point if there are no profiled samples in the group
+            if (totalProfiledSamplesCount > 0 && meetsAlterationThreshold && meetsSampleTotalThreshold) {
+                _.forEach(_.keys(AlterationTypeToDataTypeLabel), alterationType => {
+                    const profiledCount = (alterationData.profiledSamplesCounts as any)[alterationType];
+                    const notProfiledCount = (alterationData.notProfiledSamplesCounts as any)[alterationType];
+                    if ((profiledCount + notProfiledCount) > 0) {
+                        scatterPlotData.push({
+                            x: (this.props.labelTransformer) ? this.props.labelTransformer(groupKey) : groupKey,
+                            y: AlterationTypeToDataTypeLabel[alterationType],
+                            profiledCount,
+                            notProfiledCount
+                        });
+                    }
+                });
+            }
+        });
+        return scatterPlotData;
+    }
+
     @computed
     get chartData(): ICancerSummaryChartData  {
 
@@ -205,35 +265,31 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             return _.reduce(this.groupKeysSorted, (memo, groupKey) => {
                 // each of these represents a bucket along x-axis (e.g. cancer type or cancer study)
                 const alterationData = this.countsData[groupKey];
+                const totalProfiledSamplesCount = _.chain(alterationData.profiledSamplesCounts as any).values().sum().value();
 
-                const alterationPercentage = calculatePercentage(alterationData.alteredSampleCount,alterationData.sampleTotal);
+                const alterationPercentage = calculatePercentage(alterationData.alteredSampleCount,alterationData.profiledSampleTotal);;
 
-                //console.log("me", this.tempAltCasesValue);
-
-                let meetsAlterationThreshold;
-
-                if (this.yAxis === "abs-count") {
-                    meetsAlterationThreshold = alterationData.alteredSampleCount >= this.tempAltCasesValue;
-                } else {
-                    meetsAlterationThreshold = alterationPercentage >= this.tempAltCasesValue;
-                }
-
-                const meetsSampleTotalThreshold = alterationData.sampleTotal >= this.totalCasesValue;
-
-                // if we don't meet the threshold set by the user in the custom controls, don't put data in (default 0)
-                if (meetsAlterationThreshold && meetsSampleTotalThreshold) {
-                    // now we push label into collection
-
-                    if (this.props.labelTransformer) {
-                        labels.push(this.props.labelTransformer(groupKey))
+                    let meetsAlterationThreshold;
+    
+                    if (this.yAxis === "abs-count") {
+                        meetsAlterationThreshold = alterationData.alteredSampleCount >= this.tempAltCasesValue;
                     } else {
-                        labels.push(groupKey)
+                        meetsAlterationThreshold = alterationPercentage >= this.tempAltCasesValue;
                     }
+    
+                    const meetsSampleTotalThreshold = alterationData.profiledSampleTotal >= this.totalCasesValue;
+
+                //hide bar if there are no profiled samples in the group
+                if(totalProfiledSamplesCount > 0 && meetsAlterationThreshold && meetsSampleTotalThreshold) {
+                    // if we don't meet the threshold set by the user in the custom controls, don't put data in (default 0)
+                    // now we push label into collection
+                    const label = this.props.labelTransformer ? this.props.labelTransformer(groupKey) : groupKey;
+                    labels.push(label);
 
                     // update maxes if item exceeds memoized
                     maxPercentage = (alterationPercentage > maxPercentage) ? alterationPercentage : maxPercentage;
                     maxAbsoluteCount = (alterationData.alteredSampleCount > maxAbsoluteCount) ? alterationData.alteredSampleCount : maxAbsoluteCount;
-                    maxSampleCount = (alterationData.sampleTotal > maxSampleCount) ? alterationData.sampleTotal : maxSampleCount;
+                    maxSampleCount = (alterationData.profiledSampleTotal > maxSampleCount) ? alterationData.profiledSampleTotal : maxSampleCount;
 
                     const alterationCount = (alterationData.alterationTypeCounts as any)[alterationKey];
 
@@ -245,9 +301,9 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
                     memo.push({
                         alterationType: alterationKey,
-                        x: (this.props.labelTransformer) ? this.props.labelTransformer(groupKey) : groupKey,
+                        x: label,
                         xKey: groupKey,
-                        y: this.getYValue(alterationCount, alterationData.sampleTotal)
+                        y: this.getYValue(alterationCount, alterationData.profiledSampleTotal)
                     });
                 }
 
@@ -255,8 +311,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             }, [] as { x: string, y: number, xKey:string, alterationType: string }[]);
         });
 
-        return { labels:_.uniq(labels), data: retData, representedAlterations, maxPercentage , maxAbsoluteCount, maxSampleCount };
-
+        return { labels: _.uniq(labels), data: retData, alterationTypeDataCounts: this.alterationTypeDataCounts, representedAlterations, maxPercentage, maxAbsoluteCount, maxSampleCount };
     }
 
     @computed
@@ -526,6 +581,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
                         <CancerSummaryChart key={Date.now()}
                                         data={this.chartData.data}
+                                        alterationTypeDataCounts={this.chartData.alterationTypeDataCounts}
                                         ref={(el:any)=>this.chartComponent = el}
                                         countsByGroup={this.countsData}
                                         representedAlterations={this.chartData.representedAlterations}

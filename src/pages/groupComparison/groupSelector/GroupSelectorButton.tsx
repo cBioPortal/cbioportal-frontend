@@ -99,7 +99,7 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                             style={{
                                 display:"inline-block",
                                 color:getTextColor(group.color),
-                                maxWidth:100
+                                maxWidth:200
                             }}
                         >
                             {renderGroupNameWithOrdinal(group)}
