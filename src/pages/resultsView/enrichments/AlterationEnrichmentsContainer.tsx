@@ -9,7 +9,7 @@ import styles from "./styles.module.scss";
 import {
     getAlterationScatterData,
     getAlterationRowData,
-    getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getFilteredDataByGroups, getGroupColumns, AlterationContainerType
+    getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getAlterationEnrichmentColumns, AlterationContainerType, getFilteredData
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
@@ -53,7 +53,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     @observable.shallow selectedGenes: string[]|null;
     @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
 
-    @observable _enrichedGroups: string[] = this.props.groups.map(group=>group.name);
+    @observable.ref _enrichedGroups: string[] = this.props.groups.map(group=>group.name);
 
     @computed get isTwoGroupAnalysis(): boolean {
         return this.props.groups.length == 2;
@@ -74,7 +74,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {
-        return getFilteredDataByGroups(this.data, this._enrichedGroups, this.significanceFilter, this.selectedGenes);
+        return getFilteredData(this.data, this._enrichedGroups, this.significanceFilter, this.selectedGenes);
     }
 
     @autobind
@@ -121,7 +121,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     );
 
     @computed get customColumns() {
-        const cols =  getGroupColumns(this.props.groups, this.props.alteredVsUnalteredMode);
+        const cols =  getAlterationEnrichmentColumns(this.props.groups, this.props.alteredVsUnalteredMode);
         if (this.isTwoGroupAnalysis) {
             cols.push({
             name: 'Alteration Overlap',
