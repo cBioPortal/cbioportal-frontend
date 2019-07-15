@@ -41,7 +41,7 @@ const cnaToAlteration:{[cna:number]:string} = {
     "-2": "DeepDel"
 };
 
-export type AlterationEnrichmentTableColumn = Column<AlterationEnrichmentRow> & { order?: number, shouldExclude?: () => boolean };
+export type AlterationEnrichmentTableColumn = Column<AlterationEnrichmentRow> & { order?: number };
 
 export class AlterationEnrichmentTableComponent extends LazyMobXTable<AlterationEnrichmentRow> {
 }
