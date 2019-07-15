@@ -93,7 +93,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         if (this.props.chartControls && !!this.props.chartControls.showLogScaleToggle) {
             items.push(
                 <li>
-                    <a className="dropdown-item"  onClick={this.props.toggleLogScale}>
+                    <a className="dropdown-item logScaleCheckbox"  onClick={this.props.toggleLogScale}>
                         <FlexAlignedCheckbox
                             checked={!!(this.props.chartControls && this.props.chartControls.logScaleChecked)}
                             onClick={this.props.toggleLogScale}
@@ -258,6 +258,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 <div
                                     onMouseEnter={this.openMenu}
                                     onMouseLeave={this.closeMenu}
+                                    data-test='chart-header-hamburger-icon'
                                     className={classnames("dropdown btn-group", styles.chartMenu, {show:this.menuOpen})}
                                 >
                                     <button className={classnames("btn btn-xs btn-default dropdown-toggle", {active:this.menuOpen})}>
@@ -265,7 +266,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                             className={classnames("fa fa-xs fa-bars")}
                                         />
                                     </button>
-                                    <ul className={classnames("dropdown-menu pull-right", {show:this.menuOpen})}>
+                                    <ul data-test='chart-header-hamburger-icon-menu'
+                                        className={classnames("dropdown-menu pull-right", {show:this.menuOpen})}>
                                         {this.menuItems}
                                     </ul>
                                 </div>
