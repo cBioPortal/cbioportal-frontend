@@ -291,7 +291,7 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                         getSvg={() => this.svgContainer}
                         filename="enrichments-frequency-scatter"
                         dontFade={true}
-                        collapse={true}
+                        type='button'
                         style={{position:"absolute", top:10, right:10, zIndex:0}}
                     />
                 </div>
