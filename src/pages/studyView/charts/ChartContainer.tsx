@@ -38,6 +38,7 @@ import {DownloadControlsButton} from "../../../public-lib/components/downloadCon
 import {MAX_GROUPS_IN_SESSION} from "../../groupComparison/GroupComparisonUtils";
 import {Modal} from "react-bootstrap";
 import Timer = NodeJS.Timer;
+import WindowStore from "shared/components/window/WindowStore";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -136,7 +137,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 if (this.mouseLeaveTimeout) {
                     clearTimeout(this.mouseLeaveTimeout);
                 }
-                this.placement = event.nativeEvent.x > 800 ? 'left' : 'right';
+                this.placement = event.nativeEvent.x > WindowStore.size.width - 400 ? 'left' : 'right';
                 this.mouseInChart = true;
             }),
             onMouseLeaveChart: action(() => {
@@ -492,6 +493,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     getData={this.props.getData}
                     downloadTypes={this.props.downloadTypes}
                     openComparisonPage={this.openComparisonPage}
+                    placement={this.placement}
                 />
                 <div style={{display: 'flex', flexGrow: 1, margin: 'auto', alignItems: 'center'}}>
                     {(this.props.promise.isPending) && (
