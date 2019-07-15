@@ -423,7 +423,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     getSvg={this.getSvg}
                     getData={this.getData}
                     style={{position:'absolute', zIndex: 10, right: 10}}
-                    collapse={true}
+                    type='button'
                 />
                 }
 
