@@ -42,6 +42,7 @@ export interface IRectangleVennDiagramProps {
         regions:number[][]; // we do it like this so that updating it doesn't update all props
     };
     caseType:"sample"|"patient";
+    onLayoutFailure:()=>void;
 }
 
 function regionMouseOver(e:any) {
@@ -57,10 +58,6 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
     @observable.ref svg:SVGElement|null = null;
     @observable.ref tooltipModel:{ combination:number[], sizeOfRegion:number } | null = null;
     @observable mousePosition = { x:0, y:0 };
-
-    @computed public get isLayoutSuccessful() {
-        return this.layoutParams.layoutErrorValue < 1;
-    }
 
     private regionClickHandlers = MemoizedHandlerFactory(
         (e:any, params:{ combination:number[], }) => {
@@ -157,8 +154,13 @@ export default class RectangleVennDiagram extends React.Component<IRectangleVenn
             }
         }
 
+        const layoutFailure = unscaledLayout.finalErrorValue >= 1;
+        if (layoutFailure) {
+            setTimeout(this.props.onLayoutFailure, 0); // call in timeout so that no chance of breaking mobx invariant
+        }
+
         return {
-            rectangles, regions, sets, layoutErrorValue: unscaledLayout.finalErrorValue
+            rectangles, regions, sets
         }
     }
 
