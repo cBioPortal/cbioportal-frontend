@@ -504,7 +504,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                     getSvg={this.getSvg}
                     filename={SVG_ID}
                     dontFade={true}
-                    collapse={true}
+                    type='button'
                     style={{ position: 'absolute', right: 0, top: 0 }}
                 />
             </div>
