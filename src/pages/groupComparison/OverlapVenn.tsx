@@ -24,6 +24,7 @@ export interface IVennProps {
     }[];
     uidToGroup: { [uid: string]: ComparisonGroup };
     store:GroupComparisonStore;
+    onLayoutFailure:()=>void;
 }
 
 const VENN_PLOT_WIDTH = 400;
@@ -34,29 +35,6 @@ const LEGEND_WIDTH = 180;
 
 @observer
 export default class Venn extends React.Component<IVennProps, {}> {
-
-    @observable.ref sampleVenn:RectangleVennDiagram|null = null;
-    @observable.ref patientVenn:RectangleVennDiagram|null = null;
-
-    @computed public get isLayoutSuccessful() {
-        if (this.sampleVenn && this.patientVenn) {
-            return this.sampleVenn.isLayoutSuccessful && this.patientVenn.isLayoutSuccessful;
-        } else {
-            return true;
-        }
-    }
-
-    @autobind
-    @action
-    private sampleVennRef(v:RectangleVennDiagram|null) {
-        this.sampleVenn = v;
-    }
-
-    @autobind
-    @action
-    private patientVennRef(v:RectangleVennDiagram|null) {
-        this.patientVenn = v;
-    }
 
     @observable.shallow sampleSelection = {
         regions:[] as number[][]
@@ -157,7 +135,6 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         text={'Samples overlap'}
                     />
                     <RectangleVennDiagram
-                        ref={this.sampleVennRef}
                         uid="samples"
                         x={0}
                         y={15}
@@ -168,6 +145,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         selection={this.sampleSelection}
                         onChangeSelectedRegions={this.changeSelectedSampleRegions}
                         caseType="sample"
+                        onLayoutFailure={this.props.onLayoutFailure}
                     />
 
                     <VictoryLabel
@@ -184,7 +162,6 @@ export default class Venn extends React.Component<IVennProps, {}> {
                     />
 
                     <RectangleVennDiagram
-                        ref={this.patientVennRef}
                         uid="patients"
                         x={VENN_PLOT_WIDTH+PADDING_BTWN_SAMPLE_AND_PATIENT}
                         y={15}
@@ -195,6 +172,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         selection={this.patientSelection}
                         onChangeSelectedRegions={this.changeSelectedPatientRegions}
                         caseType="patient"
+                        onLayoutFailure={this.props.onLayoutFailure}
                     />
 
                     {this.legendData.length > 0 && (
