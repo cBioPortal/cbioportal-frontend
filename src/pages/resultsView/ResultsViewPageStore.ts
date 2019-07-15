@@ -94,7 +94,8 @@ import {
     GenesetDataFilterCriteria,
     GenesetMolecularData,
     Treatment,
-    TreatmentFilter
+    TreatmentFilter,
+    MolecularProfileCasesGroupFilter
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {CancerGene, IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
@@ -2946,16 +2947,25 @@ export class ResultsViewPageStore {
             this.unalteredSamples
         ],
         getSelectedProfile:()=>this.selectedEnrichmentMRNAProfile,// returns an empty array if the selected study doesn't have any mRNA profiles
-        fetchData:()=>internalClient.fetchExpressionEnrichmentsUsingPOST({
-            molecularProfileId: this.selectedEnrichmentMRNAProfile.molecularProfileId,
-            enrichmentType: "SAMPLE",
-            enrichmentFilter: {
-                alteredIds: this.alteredSamples.result
-                    .filter(s=>(s.studyId === this.selectedEnrichmentMRNAProfile.studyId)).map(s => s.sampleId),
-                unalteredIds: this.unalteredSamples.result
-                    .filter(s=>(s.studyId === this.selectedEnrichmentMRNAProfile.studyId)).map(s => s.sampleId),
-            }
-        })
+        fetchData: () => {
+            const molecularProfileId = this.selectedEnrichmentMRNAProfile.molecularProfileId;
+            const groups: MolecularProfileCasesGroupFilter[] = [{
+                molecularProfileCaseIdentifiers: this.alteredSamples.result!
+                    .filter(s => (s.studyId === this.selectedEnrichmentMRNAProfile.studyId))
+                    .map(s => ({ caseId: s.sampleId, molecularProfileId })),
+                name: "Altered group"
+            }, {
+                molecularProfileCaseIdentifiers: this.unalteredSamples.result
+                    .filter(s => (s.studyId === this.selectedEnrichmentMRNAProfile.studyId))
+                    .map(s => ({ caseId: s.sampleId, molecularProfileId })),
+                name: "Unaltered group"
+            }];
+
+            return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                enrichmentType: "SAMPLE",
+                groups
+            })
+        }
     });
 
     readonly proteinEnrichmentProfiles = remoteData<MolecularProfile[]>({
@@ -2970,14 +2980,23 @@ export class ResultsViewPageStore {
             this.unalteredSamples
         ],
         getSelectedProfile:()=>this.selectedEnrichmentProteinProfile, // returns an empty array if the selected study doesn't have any protein profiles
-        fetchData:()=>internalClient.fetchExpressionEnrichmentsUsingPOST({
-            molecularProfileId: this.selectedEnrichmentProteinProfile.molecularProfileId,
-            enrichmentType: "SAMPLE",
-            enrichmentFilter: {
-                alteredIds: this.alteredSamples.result.map(s => s.sampleId),
-                unalteredIds: this.unalteredSamples.result.map(s => s.sampleId),
-            }
-        })
+        fetchData:()=>{
+            const molecularProfileId = this.selectedEnrichmentProteinProfile.molecularProfileId;
+            const groups: MolecularProfileCasesGroupFilter[] = [{
+                molecularProfileCaseIdentifiers: this.alteredSamples.result
+                    .map(s => ({ caseId: s.sampleId, molecularProfileId })),
+                name: "Altered group"
+            }, {
+                molecularProfileCaseIdentifiers: this.unalteredSamples.result
+                    .map(s => ({ caseId: s.sampleId, molecularProfileId })),
+                name: "Unaltered group"
+            }];
+
+            return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                enrichmentType: "SAMPLE",
+                groups
+            });
+        }
     });
 
     readonly molecularProfileIdToProfiledSampleCount = remoteData({
