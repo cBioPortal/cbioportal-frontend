@@ -9,17 +9,16 @@ import {Cache, MobxCache} from "./model/MobxCache";
 import {PostTranslationalModification} from "./model/PostTranslationalModification";
 import PtmReferenceList from "./PtmReferenceList";
 
-export interface IPtmSummaryTableProps
-{
+export type PtmSummaryTableProps = {
     data: PostTranslationalModification[];
     pubMedCache?: MobxCache;
     initialSortColumn?: string;
     initialSortDirection?: 'asc'|'desc';
     initialItemsPerPage?: number;
-}
+};
 
 @observer
-export default class PtmAnnotationTable extends React.Component<IPtmSummaryTableProps, {}>
+export default class PtmAnnotationTable extends React.Component<PtmSummaryTableProps, {}>
 {
     public static defaultProps = {
         data: [],
@@ -27,12 +26,6 @@ export default class PtmAnnotationTable extends React.Component<IPtmSummaryTable
         initialSortDirection: "asc",
         initialItemsPerPage: 10
     };
-
-    constructor(props: IPtmSummaryTableProps)
-    {
-        super(props);
-        this.state = {};
-    }
 
     @computed
     get pmidData(): Cache

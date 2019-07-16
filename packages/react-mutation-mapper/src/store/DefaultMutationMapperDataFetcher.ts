@@ -17,6 +17,7 @@ import {
     DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
     DEFAULT_MY_GENE_URL_TEMPLATE,
     DEFAULT_UNIPROT_ID_URL_TEMPLATE,
+    fetchVariantAnnotationsIndexedByGenomicLocation,
     getUrl,
     initGenomeNexusClient,
     initGenomeNexusInternalClient,
@@ -35,9 +36,9 @@ export interface MutationMapperDataFetcherConfig {
 
 export class DefaultMutationMapperDataFetcher
 {
-    private oncoKbClient: OncoKbAPI;
-    private genomeNexusClient: GenomeNexusAPI;
-    private genomeNexusInternalClient: GenomeNexusAPIInternal;
+    public oncoKbClient: OncoKbAPI;
+    public genomeNexusClient: GenomeNexusAPI;
+    public genomeNexusInternalClient: GenomeNexusAPIInternal;
 
     constructor(
         private config: MutationMapperDataFetcherConfig,
@@ -81,6 +82,13 @@ export class DefaultMutationMapperDataFetcher
         });
     }
 
+    public async fetchVariantAnnotationsIndexedByGenomicLocation(mutations: Partial<Mutation>[],
+                                                                 fields: string[] = ["annotation_summary"],
+                                                                 isoformOverrideSource: string = "uniprot",
+                                                                 client: GenomeNexusAPI = this.genomeNexusClient)
+    {
+        return await fetchVariantAnnotationsIndexedByGenomicLocation(mutations, fields, isoformOverrideSource, client);
+    }
     /*
      * Gets the canonical transcript. If there is none pick the transcript with max
      * length.

@@ -1,4 +1,5 @@
 import * as _ from "lodash";
+import {toJS} from "mobx";
 
 import {getMutationTypeFromProteinChange, getProteinPositionFromProteinChange} from "cbioportal-frontend-commons";
 
@@ -182,17 +183,17 @@ export function annotateMutation(mutation: Partial<Mutation>,
 
 export function initAnnotatedMutation(mutation: Partial<Mutation>): Partial<Mutation>
 {
-    const deepCopy = _.cloneDeep(mutation);
+    const deepClone = toJS(mutation);
 
     return {
-        ...deepCopy,
+        ...deepClone,
         // set some default values in case annotation fails
-        variantType: deepCopy.variantType || "",
-        gene: deepCopy.gene || {
+        variantType: deepClone.variantType || "",
+        gene: deepClone.gene || {
             hugoGeneSymbol: ""
         },
-        proteinChange: deepCopy.proteinChange || "",
-        mutationType: deepCopy.mutationType || ""
+        proteinChange: deepClone.proteinChange || "",
+        mutationType: deepClone.mutationType || ""
     };
 }
 

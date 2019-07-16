@@ -10,6 +10,7 @@ export type Mutation = {
     proteinChange: string;
     aminoAcidChange?: string;
     variantType?: string;
+    mutationStatus?: string;
     proteinPosEnd?: number;
     proteinPosStart: number;
     mutationType?: string;
