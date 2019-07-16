@@ -34,6 +34,7 @@ import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../lib/getBrowserWindow";
+import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -478,7 +479,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             }),
             onSelectHeatmapProfile:(id:string)=>{this.selectedHeatmapProfile = id;},
             onClickAddGenesToHeatmap:()=>{
-                this.addHeatmapTracks(this.selectedHeatmapProfile, this.heatmapGeneInputValue.toUpperCase().trim().split(/\s+/));
+                const genes = parseOQLQuery(this.heatmapGeneInputValue.toUpperCase().trim()).map(q=>q.gene);
+                this.addHeatmapTracks(this.selectedHeatmapProfile, genes);
             },
             onClickRemoveHeatmap:action(() => {
                 this.molecularProfileIdToHeatmapTracks.clear();
