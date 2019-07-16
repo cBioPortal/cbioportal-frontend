@@ -375,6 +375,7 @@ describe('study view lgg_tcga study tests', () => {
                 assert(browser.isExisting(table + ' .controls .fa-pie-chart'));
             });
 
+
             it('table should be sorted by Freq in the default setting', ()=>{
                 // we need to move to the top of the page, otherwise the offset of add chart button is calculated wrong
                 browser.moveToObject("body", 0, 0);
