@@ -42,7 +42,6 @@ export default class OncoKbTreatmentTable extends React.Component<OncoKbTreatmen
             ) : <span/>
     };
 
-    // TODO react table columns
     readonly columns = [
         {
             id: "level",
