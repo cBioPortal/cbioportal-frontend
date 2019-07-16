@@ -50,7 +50,7 @@ import {
     ChartType,
     clinicalAttributeComparator,
     ClinicalDataCountSet,
-    ClinicalDataCountWithColor,
+    ClinicalDataCountSummary,
     ClinicalDataTypeEnum,
     Datalabel,
     generateScatterPlotDownloadData,
@@ -121,6 +121,7 @@ import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import jStat from 'jStat'
 import {CancerGene, Gene as OncokbGene} from "../../public-lib/api/generated/OncoKbAPI";
+import {DataType} from "public-lib/components/downloadControls/DownloadControls";
 
 
 export enum StudyViewPageTabKeyEnum {
@@ -426,7 +427,7 @@ export class StudyViewPageStore {
         // for now, the only one possible is cancer studies
         return new Promise<string>(resolve=>{
             onMobxPromise<any>([this.selectedSamples, this.cancerStudiesData],
-                async (selectedSamples:Sample[], cancerStudiesData:ClinicalDataCountWithColor[])=>{
+                async (selectedSamples:Sample[], cancerStudiesData:ClinicalDataCountSummary[])=>{
 
                     // group samples by study
                     const studyIdToSamples:{[studyId:string]:Sample[]} = _.groupBy(selectedSamples, s=>s.studyId);
@@ -455,7 +456,7 @@ export class StudyViewPageStore {
 
     private createStringAttributeComparisonSession(
         clinicalAttribute:ClinicalAttribute,
-        clinicalAttributeValues:ClinicalDataCountWithColor[],
+        clinicalAttributeValues:ClinicalDataCountSummary[],
         statusCallback:(phase:LoadingPhase)=>void
     ) {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
@@ -534,7 +535,7 @@ export class StudyViewPageStore {
     @autobind
     public async openComparisonPage(params:{
         chartMeta: ChartMeta,
-        clinicalAttributeValues?: ClinicalDataCountWithColor[]
+        clinicalAttributeValues?: ClinicalDataCountSummary[]
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
@@ -830,8 +831,8 @@ export class StudyViewPageStore {
     private currentFocusedChartByUserDimension: ChartDimension | undefined = undefined;
 
     public clinicalDataBinPromises: { [id: string]: MobxPromise<DataBin[]> } = {};
-    public clinicalDataCountPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
-    public customChartsPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
+    public clinicalDataCountPromises: { [id: string]: MobxPromise<ClinicalDataCountSummary[]> } = {};
+    public customChartsPromises: { [id: string]: MobxPromise<ClinicalDataCountSummary[]> } = {};
 
     private _chartSampleIdentifiersFilterSet =  observable.map<SampleIdentifier[]>();
 
@@ -1579,7 +1580,7 @@ export class StudyViewPageStore {
         let uniqueKey:string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if(!this.clinicalDataCountPromises.hasOwnProperty(uniqueKey)) {
             const isDefaultAttr = _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined;
-            this.clinicalDataCountPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
+            this.clinicalDataCountPromises[uniqueKey] = remoteData<ClinicalDataCountSummary[]>({
                 await: () => {
                     return getRequestedAwaitPromisesForClinicalData(
                         isDefaultAttr,
@@ -2368,7 +2369,7 @@ export class StudyViewPageStore {
 
     @action
     changeChartType(attr: ChartMeta, newChartType: ChartType) {
-        let data: MobxPromise<ClinicalDataCountWithColor[]> | undefined
+        let data: MobxPromise<ClinicalDataCountSummary[]> | undefined
         if (newChartType === ChartTypeEnum.TABLE) {
             if (_.includes(this.specialChartKeysInCustomCharts, attr.uniqueKey)) {
                 if (attr.uniqueKey === UniqueKey.CANCER_STUDIES) {
@@ -2782,6 +2783,31 @@ export class StudyViewPageStore {
         return survivalTypes;
     }
 
+    public async getPieChartDataDownload(chartMeta: ChartMeta, dataType?: DataType) {
+        const isCustomChart = this.isCustomChart(chartMeta.uniqueKey);
+        if (dataType && dataType === 'summary') {
+            if (isCustomChart) {
+                return this.getClinicalDataCountSummary(chartMeta, this.getCustomChartDataCount(chartMeta).result!);
+            } else {
+                return this.getClinicalDataCountSummary(chartMeta, this.getClinicalDataCount(chartMeta).result!)
+            }
+        } else {
+            if (isCustomChart) {
+                return this.getCustomChartDownloadData(chartMeta)
+            } else {
+                return this.getClinicalData(chartMeta)
+            }
+        }
+    }
+
+    public getClinicalDataCountSummary(chartMeta: ChartMeta, clinicalDataCountSummaries:ClinicalDataCountSummary[]) {
+        const subInfo = chartMeta.patientAttribute ? 'patients' : 'samples';
+        const header: string[] = ["Category", `Number of ${subInfo}`, `Percentage of ${subInfo}`];
+        let data = [header.join("\t")];
+        data = data.concat(clinicalDataCountSummaries.map(clinicalData => [clinicalData.value, clinicalData.count, clinicalData.freq].join("\t")));
+        return data.join("\n");
+    }
+
     public async getClinicalData(chartMeta: ChartMeta) {
         if (chartMeta.clinicalAttribute && this.samples.result) {
             const clinicalDataList = await defaultClient.fetchClinicalDataUsingPOST({
@@ -2827,11 +2853,11 @@ export class StudyViewPageStore {
     public getCustomChartDownloadData(chartMeta: ChartMeta) {
         return new Promise<string>((resolve) => {
             if (chartMeta && chartMeta.uniqueKey && this._customChartsSelectedCases.has(chartMeta.uniqueKey)) {
-                let isPatientChart = false;
-                let header = ["Study ID", "Patient ID",]
+                let isPatientChart = true;
+                let header = ["Study ID", "Patient ID",];
 
-                if (this._customChartsSelectedCases.get(chartMeta.uniqueKey)!.length > 0 && this._customChartsSelectedCases.get(chartMeta.uniqueKey)![0].patientAttribute) {
-                    isPatientChart = true;
+                if (!chartMeta.patientAttribute) {
+                    isPatientChart = false;
                     header.push('Sample ID');
                 }
                 header.push(chartMeta.displayName);
@@ -3444,7 +3470,7 @@ export class StudyViewPageStore {
         }
     }
 
-    readonly cancerStudiesData = remoteData<ClinicalDataCountWithColor[]>({
+    readonly cancerStudiesData = remoteData<ClinicalDataCountSummary[]>({
         await: () => [this.selectedSamples],
         invoke: async () => {
             let selectedSamples = [];
@@ -3500,7 +3526,7 @@ export class StudyViewPageStore {
                     this.customChartsPromises[uniqueKey] = this.withCNADataChartCounts;
                     break;
                 default:
-                    this.customChartsPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
+                    this.customChartsPromises[uniqueKey] = remoteData<ClinicalDataCountSummary[]>({
                         await: () => {
                             return _.includes([UniqueKey.WITH_MUTATION_DATA, UniqueKey.WITH_CNA_DATA], uniqueKey) ? [this.molecularProfileSampleCounts, this.selectedSamples] : [this.selectedSamples];
                         },
@@ -3539,7 +3565,7 @@ export class StudyViewPageStore {
         return this.customChartsPromises[uniqueKey];
     }
 
-    private withMutationDataChartCounts = remoteData<ClinicalDataCountWithColor[]>({
+    private withMutationDataChartCounts = remoteData<ClinicalDataCountSummary[]>({
         invoke: async () => {
             let molecularProfileSampleCounts = await internalClient.fetchMolecularProfileSampleCountsUsingPOST({
                 studyViewFilter: Object.assign({}, this.filters, { withMutationData: undefined })
@@ -3552,7 +3578,7 @@ export class StudyViewPageStore {
         default: []
     })
 
-    private withCNADataChartCounts = remoteData<ClinicalDataCountWithColor[]>({
+    private withCNADataChartCounts = remoteData<ClinicalDataCountSummary[]>({
         invoke: async () => {
             let molecularProfileSampleCounts = await internalClient.fetchMolecularProfileSampleCountsUsingPOST({
                 studyViewFilter: Object.assign({}, this.filters, { withCNAData: undefined })
