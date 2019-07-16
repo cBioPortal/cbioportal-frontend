@@ -28,6 +28,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import ValidationAlert from "shared/components/ValidationAlert";
 import AppConfig from "appConfig";
 import {getMouseIcon} from "./SVGIcons";
+import {default as TreePlot} from "../../shared/components/evolution/treePlot";
 
 import "./patient.scss";
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
@@ -488,10 +489,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 </MSKTab>
 
                     <MSKTab key={1} id="evolution" linkText="Cancer Evolution">
-                            <div className="treeplot">
-                               <p>Tree Plot</p>  
-                            </div>
-
+                            <TreePlot/>
                             <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.uncalledMutationData.isPending || patientViewPageStore.oncoKbAnnotatedGenes.isPending || patientViewPageStore.studyIdToStudy.isPending} />
 
                             {

@@ -567,30 +567,33 @@ export class PatientViewPageStore {
             this.mutationMolecularProfileId
         ],
         invoke: async() => {
+            const mutationFilter = {
+                sampleIds: this.sampleIds,
+                clusterId: "1",
+            } as MutationFilter;
 
             async function fetchMutationDataFromFile() {
                 var promise = $.getJSON("http://localhost:8081/backend/mutationData4test.json");
                 return await promise; // wait till the promise resolves (*)
             };
             var mutationData = fetchMutationDataFromFile();
-//             debugger;
             return mutationData;
         }
     });
 
-    readonly mutationData4bk = remoteData({
-        await: () => [
-            this.samples,
-            this.mutationMolecularProfileId
-        ],
-        invoke: async() => {
-            const mutationFilter = {
-                sampleIds: this.sampleIds
-            } as MutationFilter;
+//     readonly mutationData4bk = remoteData({
+//         await: () => [
+//             this.samples,
+//             this.mutationMolecularProfileId
+//         ],
+//         invoke: async() => {
+//             const mutationFilter = {
+//                 sampleIds: this.sampleIds
+//             } as MutationFilter;
 
-            return fetchMutationData(mutationFilter, this.mutationMolecularProfileId.result);
-        }
-    }, []);
+//             return fetchMutationData(mutationFilter, this.mutationMolecularProfileId.result);
+//         }
+//     }, []);
 
     readonly oncoKbCancerGenes = remoteData({
         invoke: () => {
@@ -744,8 +747,16 @@ export class PatientViewPageStore {
         return mergeMutations(this.mutationData);
     }
 
+    clusterSelected = 1;
+
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
-        return mergeMutationsIncludingUncalled(this.mutationData, this.uncalledMutationData);
+        var mergedMutation = mergeMutationsIncludingUncalled(this.mutationData, this.uncalledMutationData);
+        debugger;
+        if (this.clusterSelected) {
+            return mergedMutation.filter((mutationPerPerson) => {return mutationPerPerson[0].clusterId === this.clusterSelected});
+        } else {
+            return mergedMutation;
+        }
     }
 
     @computed get uniqueSampleKeyToTumorType(): {[sampleId: string]: string} {

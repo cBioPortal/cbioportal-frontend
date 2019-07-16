@@ -61,6 +61,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         ]
     };
 
+
     protected getSamples():string[] {
         if (this.props.sampleIds) {
             return this.props.sampleIds;
@@ -138,6 +139,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.VAR_READS_N].order = 170;
         this._columns[MutationTableColumnType.REF_READS_N].order = 180;
         this._columns[MutationTableColumnType.COPY_NUM].order = 181;
+        this._columns[MutationTableColumnType.CCF].order = 181.1;
+        this._columns[MutationTableColumnType.MUTATION_CLUSTER].order = 181.2;
         this._columns[MutationTableColumnType.MRNA_EXPR].order = 182;
         this._columns[MutationTableColumnType.COHORT].order = 183;
         this._columns[MutationTableColumnType.COSMIC].order = 184;
@@ -172,4 +175,5 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             });
         });
     }
+
 }

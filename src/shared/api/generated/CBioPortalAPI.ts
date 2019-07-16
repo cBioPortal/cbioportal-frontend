@@ -402,6 +402,8 @@ export type MutationFilter = {
 
         'sampleListId': string
 
+        'clusterId': string
+
 };
 export type MutationMultipleStudyFilter = {
     'entrezGeneIds': Array < number >
