@@ -325,6 +325,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
                                     key={i}
                                     studyDescription={this.store.isVirtualStudy(study.studyId) ? study.description.replace(/\r?\n/g, '<br />') : study.description}
                                     studyId={study.studyId}
+                                    isVirtualStudy={this.store.isVirtualStudy(study.studyId)}
                                     mouseEnterDelay={0}
                                     placement="top"
                                 >

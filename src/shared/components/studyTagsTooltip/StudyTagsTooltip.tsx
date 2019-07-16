@@ -34,6 +34,7 @@ import Loader from '../loadingIndicator/LoadingIndicator';
 export type StudyTagsTooltipProps = {
     studyDescription: string;
     studyId: string;
+    isVirtualStudy: boolean;
     key: number;
     mouseEnterDelay: number;
     placement: string;
@@ -43,12 +44,16 @@ export type StudyTagsTooltipProps = {
 export type BuildOverlayTooltipProps = {
     studyDescription: string;
     studyId: string;
+    isVirtualStudy: boolean;
 };
 
 @observer
 default class BuildOverlay extends React.Component<BuildOverlayTooltipProps, {}> {
     @observable readonly studyMetadata = remoteData({
         invoke: async () => {
+            if (this.props.isVirtualStudy) {
+                return '';
+            }
             return client.getTagsUsingGET({studyId: this.props.studyId});
         },
         onError: (error) => {
@@ -88,6 +93,7 @@ export default class StudyTagsTooltip extends React.Component<StudyTagsTooltipPr
             overlay={<BuildOverlay
                         studyDescription={this.props.studyDescription}
                         studyId={this.props.studyId}
+                        isVirtualStudy={this.props.isVirtualStudy}
                     />}
             children={this.props.children}
         />);
