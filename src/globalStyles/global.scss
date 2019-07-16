@@ -44,11 +44,11 @@ button:active, button:focus, div:focus, div:active {
 
 a {
   cursor:pointer;
-  text-decoration:none !important;
+  text-decoration:none;
 }
 
 a:hover {
-  text-decoration:underline !important;
+  text-decoration:underline;
 }
 
 .pipeSeperator {
@@ -338,9 +338,23 @@ th.reactable-header-sort-asc:after {
 }
 
 .headBlock {
-  padding:$gutterWidth $gutterWidth 10px $gutterWidth;
+
   background:$main-bg;
   margin-top:-$gutterWidth;
+  position:relative;
+  padding-top:10px;
+  padding-left:$gutterWidth;
+  padding-right:$gutterWidth;
+  padding-bottom:10px;
+
+  &:empty {
+    padding-bottom:0;
+  }
+
+  .headBlurb {
+    padding:0 $gutterWidth 10px $gutterWidth;
+  }
+
 }
 
 #mainColumn {
