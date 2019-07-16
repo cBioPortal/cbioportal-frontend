@@ -8,8 +8,7 @@ import TrackSelector, {TrackDataStatus, TrackName, TrackVisibility} from "./Trac
 import styles from "./lollipopMutationPlot.module.scss";
 
 
-interface ILollipopMutationPlotControlsProps
-{
+type LollipopMutationPlotControlsProps = {
     showControls: boolean;
     hugoGeneSymbol: string;
     countRange: [number, number];
@@ -28,12 +27,12 @@ interface ILollipopMutationPlotControlsProps
     showDownloadControls?: boolean;
     onTrackVisibilityChange?: (selectedTrackIds: string[]) => void;
     getSVG: () => SVGElement;
-}
+};
 
 @observer
-export default class LollipopMutationPlotControls extends React.Component<ILollipopMutationPlotControlsProps, {}>
+export default class LollipopMutationPlotControls extends React.Component<LollipopMutationPlotControlsProps, {}>
 {
-    public static defaultProps: Partial<ILollipopMutationPlotControlsProps> = {
+    public static defaultProps: Partial<LollipopMutationPlotControlsProps> = {
         showYMaxSlider: true,
         showLegendToggle: true,
         showDownloadControls: true
@@ -102,7 +101,7 @@ export default class LollipopMutationPlotControls extends React.Component<ILolli
                 getSvg={this.props.getSVG}
                 filename={`${this.props.hugoGeneSymbol}_lollipop.svg`}
                 dontFade={true}
-                collapse={true}
+                type="button"
             />
         );
     }

@@ -3,12 +3,12 @@ import * as React from "react";
 import hotspotStyles from "./hotspotInfo.module.scss";
 import {getNCBIlink} from "cbioportal-frontend-commons";
 
-export interface IHotspotInfoProps {
+export type HotspotInfoProps = {
     isHotspot: boolean;
     is3dHotspot: boolean;
     count?: number;
     customInfo?: JSX.Element
-}
+};
 
 export function hotspotInfo(isHotspot:boolean, is3dHotspot:boolean, count?: number, customInfo?: JSX.Element)
 {
@@ -93,7 +93,7 @@ export function link(isHotspot:boolean, is3dHotspot:boolean)
     );
 }
 
-export default class HotspotInfo extends React.Component<IHotspotInfoProps, {}>
+export default class HotspotInfo extends React.Component<HotspotInfoProps, {}>
 {
     public render() {
         const {

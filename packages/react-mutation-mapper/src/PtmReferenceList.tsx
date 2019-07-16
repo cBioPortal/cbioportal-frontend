@@ -1,14 +1,14 @@
+import {DefaultTooltip} from "cbioportal-frontend-commons";
 import {observer} from "mobx-react";
 import * as React from "react";
 
-import {DefaultTooltip, ReferenceList} from "cbioportal-frontend-commons";
-
+import ReferenceList from "./component/oncokb/ReferenceList";
 import {Cache} from "./model/MobxCache";
 
-interface IPtmReferenceListProps {
+type PtmReferenceListProps = {
     pubmedIds: string[];
     pmidData: Cache
-}
+};
 
 function extractNumericalPart(pmid: string) {
     const matched = pmid.match(/[0-9]+/);
@@ -22,7 +22,7 @@ function extractNumericalPart(pmid: string) {
 }
 
 @observer
-export default class PtmReferenceList extends React.Component<IPtmReferenceListProps, {}>
+export default class PtmReferenceList extends React.Component<PtmReferenceListProps, {}>
 {
     public render() {
         return (

@@ -26,8 +26,7 @@ import TrackPanel from "./TrackPanel";
 
 const DEFAULT_PROTEIN_LENGTH = 10;
 
-export interface ILollipopMutationPlotProps
-{
+export type LollipopMutationPlotProps = {
     store: MutationMapperStore;
     pubMedCache?: MobxCache;
     getLollipopColor?: (mutations: Mutation[]) => string;
@@ -43,11 +42,11 @@ export interface ILollipopMutationPlotProps
     showDownloadControls?: boolean;
     legend?: JSX.Element;
     loadingIndicator?: JSX.Element;
-}
+};
 
 
 @observer
-export default class LollipopMutationPlot extends React.Component<ILollipopMutationPlotProps, {}>
+export default class LollipopMutationPlot extends React.Component<LollipopMutationPlotProps, {}>
 {
     @observable private mouseInPlot:boolean = true;
     @observable private _yMaxInput:number;
@@ -308,7 +307,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         return [this.countRange[0], Math.max(this.countRange[1], this.countRange[0]+5)];
     }
 
-    constructor(props: ILollipopMutationPlotProps) {
+    constructor(props: LollipopMutationPlotProps) {
         super(props);
 
         this.handlers = {

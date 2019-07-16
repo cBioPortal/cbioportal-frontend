@@ -16,19 +16,19 @@ export enum TrackName {
     PTM = "PTM"
 }
 
-interface ITrackSelectorProps {
+type TrackSelectorProps = {
     tracks?: TrackName[];
     trackVisibility: TrackVisibility;
     trackDataStatus?: TrackDataStatus;
     onChange: (selectedTrackIds: string[]) => void;
     name?: string;
     placeholder?: string;
-}
+};
 
 @observer
-export default class TrackSelector extends React.Component<ITrackSelectorProps, {}>
+export default class TrackSelector extends React.Component<TrackSelectorProps, {}>
 {
-    public static defaultProps:Partial<ITrackSelectorProps> = {
+    public static defaultProps:Partial<TrackSelectorProps> = {
         name: "mutationMapperTrackSelector",
         placeholder: "Add annotation tracks",
         tracks: [

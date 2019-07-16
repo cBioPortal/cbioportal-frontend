@@ -11,16 +11,15 @@ import {
 
 import {defaultSortMethod, defaultStringArraySortMethod} from "./util/ReactTableUtils";
 
-import levelStyles from "cbioportal-frontend-commons/styleModules/level.module.scss";
+import levelStyles from "./component/oncokb/level.module.scss";
 import styles from "./oncokbSummaryTable.module.scss";
 
-export interface IOncoKbSummaryTableProps
-{
+export type OncoKbSummaryTableProps = {
     data: OncoKbSummary[];
     initialSortColumn?: string;
     initialSortDirection?: 'asc'|'desc';
     initialItemsPerPage?: number;
-}
+};
 
 export type OncoKbSummary = {
     count: number;
@@ -31,7 +30,7 @@ export type OncoKbSummary = {
 };
 
 @observer
-export default class OncoKbSummaryTable extends React.Component<IOncoKbSummaryTableProps, {}>
+export default class OncoKbSummaryTable extends React.Component<OncoKbSummaryTableProps, {}>
 {
     public static defaultProps = {
         data: [],
@@ -40,7 +39,7 @@ export default class OncoKbSummaryTable extends React.Component<IOncoKbSummaryTa
         initialItemsPerPage: 10
     };
 
-    constructor(props: IOncoKbSummaryTableProps)
+    constructor(props: OncoKbSummaryTableProps)
     {
         super(props);
         this.state = {};

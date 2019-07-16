@@ -88,6 +88,15 @@ export function filter3dHotspotsByMutations(mutations: Mutation[],
     );
 }
 
+export function isRecurrentHotspot(mutation: Mutation, index: IHotspotIndex): boolean
+{
+    return filterRecurrentHotspotsByMutations([mutation], index).length > 0;
+}
+
+export function is3dHotspot(mutation:Mutation, index:IHotspotIndex): boolean
+{
+    return filter3dHotspotsByMutations([mutation], index).length > 0;
+}
 
 export function isHotspot(mutation: Mutation, index: IHotspotIndex, filter?: (hotspot: Hotspot) => boolean): boolean
 {
