@@ -38,6 +38,7 @@ export type MutationMapperProps = {
     mainLoadingIndicator?: JSX.Element;
     geneSummaryLoadingIndicator?: JSX.Element;
     getLollipopColor?: (mutations: Mutation[]) => string;
+    getMutationCount?: (mutation: Partial<Mutation>) => number;
     onXAxisOffset?: (offset:number) => void;
     onTrackVisibilityChange?: (selectedTrackIds: string[]) => void;
 };
@@ -94,7 +95,8 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
             {
                 isoformOverrideSource: this.props.isoformOverrideSource,
                 filterMutationsBySelectedTranscript: this.props.filterMutationsBySelectedTranscript,
-                genomeNexusUrl: this.props.genomeNexusUrl
+                genomeNexusUrl: this.props.genomeNexusUrl,
+                getMutationCount: this.props.getMutationCount
             },
             () => (this.props.data || []) as Mutation[]);
     }
