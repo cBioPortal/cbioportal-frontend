@@ -42,6 +42,7 @@ interface DefaultMutationMapperStoreConfig {
     isoformOverrideSource?: string;
     filterMutationsBySelectedTranscript?: boolean;
     genomeNexusUrl?: string;
+    getMutationCount?: (mutation: Partial<Mutation>) => number;
 }
 
 class DefaultMutationMapperStore implements MutationMapperStore
@@ -169,7 +170,14 @@ class DefaultMutationMapperStore implements MutationMapperStore
     {
         // assume by default all mutations are unique
         // child classes need to override this method to have a custom way of counting unique mutations
-        return mutations.length;
+        return this.config.getMutationCount ?
+            this.getMutationCount(mutations, this.config.getMutationCount) :
+            mutations.length;
+    }
+
+    protected getMutationCount(mutations: Mutation[], getMutationCount: (mutation: Partial<Mutation>) => number)
+    {
+        return mutations.map(m => getMutationCount(m)).reduce((sum, count) => sum + count);
     }
 
     readonly mutationData = remoteData({
