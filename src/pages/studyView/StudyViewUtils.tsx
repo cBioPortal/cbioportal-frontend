@@ -1242,15 +1242,19 @@ export function pickClinicalAttrFixedColors(data: ClinicalDataCount[]): {[attrib
     }, {});
 }
 
-export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
+export type ClinicalDataCountSummary = ClinicalDataCount & { color: string , percentage: number, freq: string}
 
-export function getClinicalDataCountWithColorByClinicalDataCount(counts:ClinicalDataCount[]):ClinicalDataCountWithColor[] {
+export function getClinicalDataCountWithColorByClinicalDataCount(counts:ClinicalDataCount[]):ClinicalDataCountSummary[] {
     counts.sort(clinicalDataCountComparator);
     const colors = pickClinicalDataColors(counts);
-    return counts.map(slice =>{
+    const sum = _.sumBy(counts, count => count.count);
+    return counts.map(slice => {
+        const percentage = slice.count / sum;
         return {
             ...slice,
-            color: colors[slice.value]
+            color: colors[slice.value],
+            percentage: percentage,
+            freq: getFrequencyStr(percentage * 100)
         };
     });
 }
@@ -1493,7 +1497,7 @@ export function getClinicalEqualityFilterValuesByString(filterValues: string):st
     return filterValues.replace(/\\,/g,'$@$').split(",").map(val=>val.trim().replace(/\$@\$/g,','));
 }
 
-export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, noCount: number):ClinicalDataCountWithColor[] {
+export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, noCount: number):ClinicalDataCountSummary[] {
 
     let dataCountSet: { [id: string]: ClinicalDataCount } = {};
     if (yesCount > 0) {

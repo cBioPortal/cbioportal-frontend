@@ -16,7 +16,10 @@ import {ChartMeta, getClinicalAttributeOverlay} from "../StudyViewUtils";
 import svgToPdfDownload from "public-lib/lib/svgToPdfDownload";
 import {Dropdown, MenuItem} from "react-bootstrap";
 import Timer = NodeJS.Timer;
-import DownloadControls, {DownloadControlsButton} from "public-lib/components/downloadControls/DownloadControls";
+import DownloadControls, {
+    DataType,
+    DownloadControlsButton
+} from "public-lib/components/downloadControls/DownloadControls";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 import {serializeEvent} from "shared/lib/tracking";
 
@@ -33,7 +36,7 @@ export interface IChartHeaderProps {
     chartControls?   : ChartControls;
     changeChartType  : (chartType: ChartType) => void;
     getSVG?          : ()=>Promise<SVGElement | null>;
-    getData?         : ()=>Promise<string | null>;
+    getData?         : (dataType?:DataType)=>Promise<string | null>;
     downloadTypes?   : DownloadControlsButton[];
     openComparisonPage : () => void;
 }
@@ -147,24 +150,25 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
-        const downloadSubmenuWidth = 70;
-        items.push(
-            <li style={{position: 'relative'}}>
-                <div className={classnames('dropdown-item', styles.dropdownHoverEffect)}
-                   style={{'display': 'flex', justifyContent:'space-between', padding: '3px 20px'}}
-                   onMouseEnter={() => this.downloadSubmenuOpen = true}
-                   onMouseLeave={() => this.downloadSubmenuOpen = false}
-                >
-                    <div>
-                        <i className={classnames("fa fa-xs", "fa-download", styles.menuItemIcon)}
-                           aria-hidden="true"
-                        />
-                        <span>Download</span>
-                    </div>
-                    <i className={classnames("fa fa-xs", this.props.placement === 'left' ? 'fa-caret-left' : 'fa-caret-right')}
-                       style={{lineHeight: 'inherit'}}/>
+        if (this.props.chartControls && this.props.downloadTypes && this.props.downloadTypes.length > 0) {
+            const downloadSubmenuWidth = 70;
+            items.push(
+                <li style={{position: 'relative'}}>
+                    <div className={classnames('dropdown-item', styles.dropdownHoverEffect)}
+                         style={{'display': 'flex', justifyContent: 'space-between', padding: '3px 20px'}}
+                         onMouseEnter={() => this.downloadSubmenuOpen = true}
+                         onMouseLeave={() => this.downloadSubmenuOpen = false}
+                    >
+                        <div>
+                            <i className={classnames("fa fa-xs", "fa-download", styles.menuItemIcon)}
+                               aria-hidden="true"
+                            />
+                            <span>Download</span>
+                        </div>
+                        <i className="fa fa-xs fa-caret-right"
+                           style={{lineHeight: 'inherit'}}/>
 
-                    {this.downloadSubmenuOpen &&
+                        {this.downloadSubmenuOpen &&
                         <DownloadControls
                             filename={this.fileName}
                             buttons={this.props.downloadTypes}
@@ -180,11 +184,11 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             }}
                             dontFade={true}
                         />
-                    }
-                </div>
-            </li>
-        );
-
+                        }
+                    </div>
+                </li>
+            );
+        }
         return items;
     }
 

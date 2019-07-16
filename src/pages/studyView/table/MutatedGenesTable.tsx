@@ -241,7 +241,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                     return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
                 },
                 render: (data: MutationCountByGeneWithCancerGene) => {
-                    return getFreqColumnRender('mutation', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanels, this.toggleModal);
+                    return getFreqColumnRender('mutation', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanels, this.toggleModal, {marginLeft: this.cellMargin[ColumnKey.FREQ]});
                 },
                 sortBy: (data: MutationCountByGeneWithCancerGene) =>
                     (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100,
