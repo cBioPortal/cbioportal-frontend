@@ -4,7 +4,7 @@ import {observable} from "mobx";
 
 import {SequenceSpec} from "./model/SequenceSpec";
 
-interface ISequenceProps {
+type SequenceProps = {
     x:number;
     y:number;
     width:number;
@@ -12,13 +12,13 @@ interface ISequenceProps {
     color?:string;
     hitzoneClassName?:string;
     spec:SequenceSpec;
-}
+};
 
 @observer
-export default class Sequence extends React.Component<ISequenceProps, {}> {
+export default class Sequence extends React.Component<SequenceProps, {}> {
     @observable isMounted:boolean = false;
 
-    constructor(props: ISequenceProps) {
+    constructor(props: SequenceProps) {
         super(props);
     }
 
