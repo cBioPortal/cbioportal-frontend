@@ -262,18 +262,18 @@ export default class PatientFACETSCNAColumnFormatter {
 
       if (wgd === "WGD" && cnaNumber !== "NA") {
         wgdStringSVG = <svg>
-                          <text x='6' y='3' dominantBaseline='middle' fontWeight='bold' textAnchor='middle' fontSize='5' fill='black'>WGD</text>
+                          <text x='9' y='5' dominantBaseline='middle' fontWeight='bold' textAnchor='middle' fontSize='7' fill='black'>WGD</text>
                        </svg>
       }
       let facetsCNAIconRectangle = <rect width='12' height='12' rx='15%' ry='15%' fill={fillColor} opacity={opacity}/>
 
       return (
-          <svg width='17' height='18' className='case-label-header'>
+          <svg width='18' height='20' className='case-label-header'>
               {wgdStringSVG}
-              <g transform="translate(0,6)">
+              <g transform="translate(3,8)">
                 {facetsCNAIconRectangle}
                 <svg>
-                  <text x='6' y='6.5' dominantBaseline='middle' textAnchor='middle' fontSize={size} fill={textcolor}>{cnaTextValue}</text>
+                  <text x='6' y='7' dominantBaseline='middle' textAnchor='middle' fontSize={size} fill={textcolor}>{cnaTextValue}</text>
                 </svg>
               </g>
           </svg>
