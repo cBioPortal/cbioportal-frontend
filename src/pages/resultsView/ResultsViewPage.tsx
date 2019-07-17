@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as _ from "lodash";
 import $ from "jquery";
+import URL from 'url';
 import {inject, observer} from "mobx-react";
 import {computed, observable, reaction, runInAction} from "mobx";
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
@@ -408,6 +409,15 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         }
     }
 
+    @autobind
+    private getTabHref(tabId:string) {
+        return URL.format({
+            pathname:tabId,
+            query:this.props.routing.location.query,
+            hash:this.props.routing.location.hash
+        });
+    }
+
     @computed get pageContent(){
         // if studies are complete but we don't have a tab id in route, we need to derive default
         return (<div>
@@ -444,7 +454,9 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             // we don't show the result tabs if we don't have valid query
                             (this.showTabs && !this.resultsViewPageStore.genesInvalid && !this.resultsViewPageStore.isQueryInvalid) && (
                                 <MSKTabs key={this.resultsViewPageStore.rvQuery.hash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
-                                         onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
+                                         onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs"
+                                         getTabHref={this.getTabHref}
+                                >
                                     {
                                         this.tabs
                                     }
