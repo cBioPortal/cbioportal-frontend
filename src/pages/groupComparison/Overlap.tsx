@@ -2,7 +2,7 @@ import * as React from 'react';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {observer} from "mobx-react";
 import GroupComparisonStore from './GroupComparisonStore';
-import {observable, computed} from 'mobx';
+import {action, computed, observable} from 'mobx';
 import Venn from './OverlapVenn';
 import _ from "lodash";
 import autobind from 'autobind-decorator';
@@ -11,13 +11,11 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {
-    CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
     getSampleIdentifiers,
     OVERLAP_NOT_ENOUGH_GROUPS_MSG,
     partitionCasesByGroupMembership
 } from "./GroupComparisonUtils";
 import {remoteData} from "../../public-lib/api/remoteData";
-import UpSet from './UpSet';
 import * as ReactDOM from 'react-dom';
 import WindowStore from 'shared/components/window/WindowStore';
 import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
@@ -39,9 +37,16 @@ enum PlotType {
 export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     @observable plotExists = false;
+    @observable vennFailed = false;
 
     componentDidUpdate() {
         this.plotExists = !!this.getSvg();
+    }
+
+    @autobind
+    @action
+    private onVennLayoutFailure() {
+        this.vennFailed = true;
     }
 
     readonly tabUI = MakeMobxView({
@@ -61,6 +66,13 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 content.push(<span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>);
             } else {
                 content.push(<OverlapExclusionIndicator overlapTabMode={true} store={this.props.store}/>);
+                if (this.vennFailed) {
+                    content.push(
+                        <div className="alert alert-info">
+                            We couldn't find a good Venn diagram layout, so showing UpSet diagram instead.
+                        </div>
+                    );
+                }
                 content.push(this.overlapUI.component);
             }
             return (<div data-test="ComparisonPageOverlapTabDiv">
@@ -109,7 +121,13 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     readonly plotType = remoteData({
         await:()=>[this.props.store._selectedGroups],
-        invoke:async()=>(this.props.store._selectedGroups.result!.length > 3 ? PlotType.Upset : PlotType.Venn)
+        invoke:()=>{
+            if (this.vennFailed || this.props.store._selectedGroups.result!.length > 3) {
+                return Promise.resolve(PlotType.Upset);
+            } else {
+                return Promise.resolve(PlotType.Venn);
+            }
+        }
     });
 
 
@@ -252,6 +270,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                             patientGroups={this.patientGroupsWithCases.result!}
                             uidToGroup={this.uidToGroup.result!}
                             store={this.props.store}
+                            onLayoutFailure={this.onVennLayoutFailure}
                         />)
                     break;
                 default:
