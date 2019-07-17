@@ -4,7 +4,7 @@ import $ from "jquery";
 import URL from 'url';
 import {inject, observer} from "mobx-react";
 import {computed, observable, reaction, runInAction} from "mobx";
-import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
+import {ResultsViewPageStore} from "./ResultsViewPageStore";
 import CancerSummaryContainer from "pages/resultsView/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
@@ -33,6 +33,9 @@ import {AppStore} from "../../AppStore";
 import {updateResultsViewQuery} from "./ResultsViewQuery";
 import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
+import QueryAndDownloadTabs from "shared/components/query/QueryAndDownloadTabs";
+import {createQueryStore} from "pages/home/HomePage";
+import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 
 function initStore(appStore:AppStore) {
 
@@ -119,7 +122,7 @@ function addOnBecomeVisibleListener(callback:()=>void) {
 }
 
 export interface IResultsViewPageProps {
-    routing: any;
+    routing: ExtendedRouterStore;
     appStore: AppStore;
     params: any; // from react router
 }
@@ -146,7 +149,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     @autobind
     private customTabCallback(div:HTMLDivElement,tab:any, isUnmount = false){
-        showCustomTab(div, tab, this.props.routing.location, this.resultsViewPageStore, isUnmount);
+        showCustomTab(div, tab, getBrowserWindow().location.href, this.resultsViewPageStore, isUnmount);
     }
 
     componentWillUnmount(){
@@ -419,32 +422,46 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     }
 
     @computed get pageContent(){
-        // if studies are complete but we don't have a tab id in route, we need to derive default
-        return (<div>
-            {
-                // if qeury invalid(we only check gene length for now), return error page
-                (this.resultsViewPageStore.isQueryInvalid) && (
-                    <div className="alert alert-danger queryInvalid" style={{marginBottom: "15px"}} role="alert">
-                        <p>
-                            Queries are limited to 100 genes. Please <a href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>let us know</a> your use case(s) if you need to query more than 100 genes.
-                        </p>
-                    </div>
-                )
-            }
-            {
-                (this.resultsViewPageStore.studies.isComplete) && (
-                    <Helmet>
-                        <title>{buildResultsViewPageTitle(this.resultsViewPageStore.hugoGeneSymbols, this.resultsViewPageStore.studies.result)}</title>
-                    </Helmet>
-                )
-            }
-            {(this.resultsViewPageStore.studies.isComplete) && (
+
+        if (this.resultsViewPageStore.invalidStudyIds.result.length > 0) {
+            return (<div>
+                <div className={'headBlock'}></div>
+                <QueryAndDownloadTabs
+                      forkedMode={false}
+                      showQuickSearchTab={false}
+                      showDownloadTab={false}
+                      showAlerts={true}
+                      getQueryStore={()=>createQueryStore(this.props.routing.query)}
+                />
+            </div>);
+        } else {
+            return (<>
+                {
+                    // if query invalid(we only check gene length for now), return error page
+                    (this.resultsViewPageStore.isQueryInvalid) && (
+                        <div className="alert alert-danger queryInvalid" style={{marginBottom: "15px"}} role="alert">
+                            <p>
+                                Queries are limited to 100 genes. Please <a
+                                href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>let us know</a> your use
+                                case(s) if you need to query more than 100 genes.
+                            </p>
+                        </div>
+                    )
+                }
+                {
+                    (this.resultsViewPageStore.studies.isComplete) && (
+                        <Helmet>
+                            <title>{buildResultsViewPageTitle(this.resultsViewPageStore.hugoGeneSymbols, this.resultsViewPageStore.studies.result)}</title>
+                        </Helmet>
+                    )
+                }
+                {(this.resultsViewPageStore.studies.isComplete) && (
                     <div>
                         <div className={'headBlock'}>
                             <QuerySummary
                                 routingStore={this.props.routing}
                                 store={this.resultsViewPageStore}
-                                onToggleQueryFormVisiblity={(visible)=>{
+                                onToggleQueryFormVisiblity={(visible) => {
                                     this.showTabs = visible;
                                 }}
                             />
@@ -466,8 +483,9 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
                     </div>
                 )
-            }
-        </div>);
+                }
+            </>);
+        }
     }
 
     public render() {
