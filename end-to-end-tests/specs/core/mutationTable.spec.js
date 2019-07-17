@@ -83,8 +83,11 @@ describe('Mutation Table', function() {
         });
 
         it('should show the gnomad table after mouse over the frequency in gnomad column', ()=>{
-
-            browser.waitForText('//*[text()="LUAD-B00416-Tumor"]',60000);
+            // filter the table
+            var textArea = browser.$('[class*=tableSearchInput]');
+            // only show LUAD-B00416-Tumor in table
+            textArea.setValue('LUAD-B00416-Tumor');
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",60000);
             // show the gnomad column
             browser.scroll(1000, 0);
             // click on column button
