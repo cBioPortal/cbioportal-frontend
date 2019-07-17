@@ -6,9 +6,9 @@ import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {sendSentryMessage} from "./shared/lib/tracking";
 import getBrowserWindow from "./shared/lib/getBrowserWindow";
 
-type SiteError = {
-    message:string;
-    dismissed?:boolean;
+export type SiteError = {
+    errorObj:any;
+    dismissed:boolean;
 };
 
 export class AppStore {
@@ -21,9 +21,10 @@ export class AppStore {
                 sendSentryMessage("ERRORHANDLER:" + error);
             } catch (ex) {};
 
-            if (/Error: 400|Error: 500/.test(error)) {
+            if (error.status && /400|500/.test(error.status)) {
+
                 sendSentryMessage("ERROR DIALOG SHOWN:" + error);
-                this.siteErrors.push({ message:error });
+                this.siteErrors.push({errorObj: error, dismissed:false});
             }
         });
     }
@@ -49,8 +50,7 @@ export class AppStore {
     }
 
     @computed get undismissedSiteErrors(){
-        const me =  _.filter(this.siteErrors.slice(), (err)=>!err.dismissed);
-        return me;
+        return _.filter(this.siteErrors.slice(), (err)=>!err.dismissed);
     }
 
     @computed get isErrorCondition(){
@@ -80,7 +80,7 @@ export class AppStore {
             if (portalVersionResult && portalVersionResult.portalVersion) {
                 return Promise.resolve("v" + portalVersionResult.portalVersion.split('-')[0]);
             }
-            return undefined; 
+            return undefined;
         }
     });
 }

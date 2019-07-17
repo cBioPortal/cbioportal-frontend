@@ -256,7 +256,9 @@ export class PatientViewPageStore {
     });
 
     readonly samples = remoteData(
-        async() => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
+        {
+            invoke: async () => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
+        },
         []
     );
 
@@ -314,7 +316,7 @@ export class PatientViewPageStore {
                             return getPathologyReport(patientId, i+1);
                         }, () => reports);
                 }
-                
+
                return getPathologyReport(this.patientId, 0);
             } else {
                 return Promise.resolve([]);
