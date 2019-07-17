@@ -208,7 +208,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                         molecularProfileIdB: q.profileY.molecularProfileId,
                         coExpressionFilter: dataQueryFilter as CoExpressionFilter,
                         threshold
-                    })
+                    });
                 } else {
                     return Promise.resolve([]);
                 }

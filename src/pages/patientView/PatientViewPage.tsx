@@ -330,13 +330,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 }
                 <div className="patientViewPage">
 
-                    {/*<AjaxErrorModal*/}
-                    {/*show={(patientViewPageStore.ajaxErrors.length > 0)}*/}
-                    {/*onHide={()=>{ patientViewPageStore.clearErrors() }}*/}
-                    {/*title={`Can't find ${patientViewPageStore.pageMode} ${patientViewPageStore.caseId} in study ${patientViewPageStore.studyId}.`}*/}
-                    {/*troubleshooting={["Check that your URL parameters are valid.", "Try refreshing the page.", "Make sure you are connected to the internet."]}*/}
-                    {/*/>*/}
-
                     <div className="headBlock">
 
                         {  (patientViewPageStore.patientViewData.isComplete) && (

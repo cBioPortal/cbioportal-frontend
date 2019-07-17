@@ -1640,7 +1640,7 @@ export class ResultsViewPageStore {
         invoke: async()=>(await client.getAllStudiesUsingGET({projection: "SUMMARY"}))
     }, []);
 
-    readonly queriedVirtualStudies = ServerConfigHelpers.sessionServiceIsEnabled() ? remoteData({
+    readonly queriedVirtualStudies = remoteData({
         await: () => [
             this.allStudies,
         ],
@@ -1666,7 +1666,7 @@ export class ResultsViewPageStore {
             // fail silently when an error occurs with the virtual studies
         }
         // just return empty array if session service is disabled
-    }) : remoteData({invoke: async() => ([])});
+    }, []);
 
     readonly studyIds = remoteData({
         await:()=>[
@@ -1683,6 +1683,30 @@ export class ResultsViewPageStore {
             return Promise.resolve(physicalStudies);
         }
     });
+
+    // this is less than desirable way of validating studyIds
+    // if studyId does not appear in list of all physical studies
+    // we assume it's a virtual study and try to retrieve it as such
+    // if there's no corresponding virtual study
+    // we assume it's an invalid studyId
+    readonly invalidStudyIds = remoteData({
+        await: ()=>[
+            this.allStudies,
+            this.queriedVirtualStudies
+        ],
+        invoke:()=>{
+            const allCancerStudies = this.allStudies.result;
+            const cancerStudyIds = this.rvQuery.cohortIdsList;
+
+            const missingFromCancerStudies = _.differenceWith(cancerStudyIds, allCancerStudies,(id:string, study:CancerStudy)=>id===study.studyId);
+
+            if (missingFromCancerStudies.length && this.queriedVirtualStudies.result.length === 0) {
+                return Promise.resolve(missingFromCancerStudies);
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    }, []);
 
     @computed get downloadFilenamePrefix() {
         return generateDownloadFilenamePrefixByStudies(this.studies.result);
