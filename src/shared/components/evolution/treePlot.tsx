@@ -4,7 +4,7 @@ import {observer} from "mobx-react";
 const demoSvg = require("./demo.svg") as string;
 
 export interface TreeNodeProps {
-    nodeMutationClusterId: String
+    nodeMutationClusterId: Number;
 }
 
 function selectMutationClusterInMutationTable(props:any) {

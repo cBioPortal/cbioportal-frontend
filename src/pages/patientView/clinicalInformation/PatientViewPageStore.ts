@@ -747,16 +747,9 @@ export class PatientViewPageStore {
         return mergeMutations(this.mutationData);
     }
 
-    clusterSelected = 1;
 
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
-        var mergedMutation = mergeMutationsIncludingUncalled(this.mutationData, this.uncalledMutationData);
-        debugger;
-        if (this.clusterSelected) {
-            return mergedMutation.filter((mutationPerPerson) => {return mutationPerPerson[0].clusterId === this.clusterSelected});
-        } else {
-            return mergedMutation;
-        }
+        return mergeMutationsIncludingUncalled(this.mutationData, this.uncalledMutationData);
     }
 
     @computed get uniqueSampleKeyToTumorType(): {[sampleId: string]: string} {
