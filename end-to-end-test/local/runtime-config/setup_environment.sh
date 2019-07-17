@@ -61,7 +61,7 @@ if [[ "$CIRCLECI" = true ]]; then
     # When the current branch is master or rc continue using corresponding master or rc backend, respectively. 
     if [[ -z $BACKEND ]]; then
         if [[ -z $CIRCLE_PULL_REQUEST ]]; then
-            if [[ "$CIRCLE_BRANCH" = "master" ]] || [[ "$CIRCLE_BRANCH" = "rc" ]]; then
+            if [[ "$CIRCLE_BRANCH" = "master" ]] || [[ "$CIRCLE_BRANCH" = "rc" ]] || [[ "$CIRCLE_BRANCH" == "release-"* ]]; then
                 BACKEND_PROJECT_USERNAME="cbioportal"
                 echo "export BACKEND_PROJECT_USERNAME=$BACKEND_PROJECT_USERNAME"
                 BACKEND_BRANCH="$CIRCLE_BRANCH"
