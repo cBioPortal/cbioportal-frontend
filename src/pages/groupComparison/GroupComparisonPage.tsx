@@ -17,7 +17,7 @@ import GroupSelector from "./groupSelector/GroupSelector";
 import {getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
 import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
-import {action, IReactionDisposer, observable, reaction} from "mobx";
+import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
 import _ from "lodash";
@@ -93,6 +93,12 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         }
     }
 
+    @computed get selectedGroupsKey() {
+        // for components which should remount whenever selected studies change
+        const selectedGroups = this.store._selectedGroups.result || [];
+        return JSON.stringify(selectedGroups.map(g=>g.uid));
+    }
+
     @autobind
     private setTabIdInUrl(id:string, replace?:boolean) {
         this.props.routing.updateRoute({},`comparison/${id}`, false, replace);
@@ -117,7 +123,10 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         render:()=>{
             return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.setTabIdInUrl} className="primaryTabs mainTabs">
                 <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
-                    <Overlap store={this.store}/>
+                    <Overlap
+                        key={this.selectedGroupsKey}
+                        store={this.store}
+                    />
                 </MSKTab>
                 {
                     this.store.showSurvivalTab &&
