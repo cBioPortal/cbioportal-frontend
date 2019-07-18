@@ -5,7 +5,7 @@ import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
 import _ from "lodash";
 import {action, computed, observable} from 'mobx';
 import {ComparisonGroup} from './GroupComparisonUtils';
-import VennSimple from "./VennSimple";
+import RectangleVennDiagram from "./rectangleVennDiagram/RectangleVennDiagram";
 import CreateGroupFromOverlap from "./CreateGroupFromOverlap";
 import GroupComparisonStore from "./GroupComparisonStore";
 import autobind from "autobind-decorator";
@@ -24,6 +24,7 @@ export interface IVennProps {
     }[];
     uidToGroup: { [uid: string]: ComparisonGroup };
     store:GroupComparisonStore;
+    onLayoutFailure:()=>void;
 }
 
 const VENN_PLOT_WIDTH = 400;
@@ -133,7 +134,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         y="1.2em"
                         text={'Samples overlap'}
                     />
-                    <VennSimple
+                    <RectangleVennDiagram
                         uid="samples"
                         x={0}
                         y={15}
@@ -144,6 +145,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         selection={this.sampleSelection}
                         onChangeSelectedRegions={this.changeSelectedSampleRegions}
                         caseType="sample"
+                        onLayoutFailure={this.props.onLayoutFailure}
                     />
 
                     <VictoryLabel
@@ -159,7 +161,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         text={'Patients overlap'}
                     />
 
-                    <VennSimple
+                    <RectangleVennDiagram
                         uid="patients"
                         x={VENN_PLOT_WIDTH+PADDING_BTWN_SAMPLE_AND_PATIENT}
                         y={15}
@@ -170,6 +172,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         selection={this.patientSelection}
                         onChangeSelectedRegions={this.changeSelectedPatientRegions}
                         caseType="patient"
+                        onLayoutFailure={this.props.onLayoutFailure}
                     />
 
                     {this.legendData.length > 0 && (
