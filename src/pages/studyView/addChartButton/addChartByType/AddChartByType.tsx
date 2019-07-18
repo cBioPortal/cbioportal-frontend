@@ -13,18 +13,23 @@ import {ClinicalDataCountSet} from "../../StudyViewUtils";
 import FixedHeaderTable from "../../table/FixedHeaderTable";
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import EllipsisTextTooltip from "../../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import EllipsisTextTooltip from "../../../../public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import {Omit} from "../../../../shared/lib/TypeScriptUtils";
+import ifndef from "../../../../shared/lib/ifndef";
 
+export type AddChartOption = Omit<ChartOption, "chartType">;
 export interface IAddChartByTypeProps {
-    options: ChartOption[];
+    options: Omit<AddChartOption, "freq">[];
     freqPromise: MobxPromise<ClinicalDataCountSet>;
     onAddAll: (keys: string[]) => void;
     onClearAll: (keys: string[]) => void;
     onToggleOption: (key: string) => void;
+    optionsGivenInSortedOrder?:boolean;
+    frequencyHeaderTooltip?:string;
 }
 
 
-class AddChartTableComponent extends FixedHeaderTable<ChartOption> {
+class AddChartTableComponent extends FixedHeaderTable<AddChartOption> {
 }
 
 const NUM_ROWS_SHOWN = 15;
@@ -35,28 +40,37 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     @computed
     get options() {
         if (this.props.freqPromise.isComplete) {
-            return _.reduce(this.props.options, (acc, next) => {
+            const options = _.reduce(this.props.options, (acc, next) => {
                 const disabled = this.props.freqPromise.result![next.key] === 0;
                 acc.push({
                     label: next.label,
                     key: next.key,
-                    chartType: next.chartType,
                     disabled: disabled,
                     selected: next.selected,
                     freq: disabled ? 0 : this.props.freqPromise.result![next.key]
                 });
                 return acc;
-            }, [] as ChartOption[]).sort((a: ChartOption, b: ChartOption) => {
-                return b.freq - a.freq || a.label.localeCompare(b.label);
-            });
+            }, [] as AddChartOption[]);
+            if (this.props.optionsGivenInSortedOrder) {
+                return options;
+            } else {
+                return options.sort((a: AddChartOption, b: AddChartOption) => {
+                    return b.freq - a.freq || a.label.localeCompare(b.label);
+                });
+            }
         } else {
-            return this.props.options.sort((a, b) => a.label.localeCompare(b.label));
+            const options = this.props.options.map(o=>Object.assign({freq:100}, o));
+            if (this.props.optionsGivenInSortedOrder) {
+                return options;
+            } else {
+                return options.sort((a, b) => a.label.localeCompare(b.label));
+            }
         }
     }
 
-    private _columns: Column<ChartOption>[] = [{
+    private _columns: Column<AddChartOption>[] = [{
         name: 'Name',
-        render: (option: ChartOption) => {
+        render: (option: AddChartOption) => {
             return (
                 <div className={classnames(styles.option, 'add-chart-option')}
                      data-test={`add-chart-option-${option.label.toLowerCase().replace(/\s/g,'-')}`}>
@@ -76,19 +90,19 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                 </div>
             )
         },
-        filter: (d: ChartOption, f: string, filterStringUpper: string) => d.label.toUpperCase().includes(filterStringUpper),
-        sortBy: (d: ChartOption) => d.label,
+        filter: (d: AddChartOption, f: string, filterStringUpper: string) => d.label.toUpperCase().includes(filterStringUpper),
+        sortBy: (d: AddChartOption) => d.label,
         width: 320,
         defaultSortDirection: 'asc' as 'asc'
     }, {
         name: 'Freq',
-        tooltip: <span>% samples with data</span>,
-        render: (option: ChartOption) =>
+        tooltip: <span>{ifndef(this.props.frequencyHeaderTooltip, "% samples with data")}</span>,
+        render: (option: AddChartOption) =>
             <span style={{display: 'flex', flexDirection: 'row-reverse'}}
                   className={classnames(option.disabled ? styles.labelDisabled : '')}>
                 {this.props.freqPromise.isComplete ? getFrequencyStr(option.freq) : ''}
             </span>,
-        sortBy: (d: ChartOption) => d.freq,
+        sortBy: (d: AddChartOption) => d.freq,
         headerRender: () => {
             return <span style={{display: 'flex', flexDirection: 'row-reverse', flexGrow: 1}}>Freq</span>
         },
@@ -102,7 +116,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     }
 
     @autobind
-    getCurrentSelectedRows():ChartOption[] {
+    getCurrentSelectedRows():AddChartOption[] {
         return this.options.filter(option => option.selected);
     }
 
@@ -113,19 +127,19 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
 
     @autobind
     @action
-    addAll(selectedOptions: ChartOption[]) {
+    addAll(selectedOptions: AddChartOption[]) {
         this.props.onAddAll(_.filter(selectedOptions, option => !option.disabled).map(option => option.key));
     }
 
     @autobind
     @action
-    removeAll(selectedOptions: ChartOption[]) {
+    removeAll(selectedOptions: AddChartOption[]) {
         this.props.onClearAll(selectedOptions.map(option => option.key));
     }
 
     @autobind
     @action
-    onOptionChange(option: ChartOption) {
+    onOptionChange(option: AddChartOption) {
         this.props.onToggleOption(option.key);
     }
 
@@ -143,6 +157,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                     showSelectableNumber={true}
                     showAddRemoveAllButtons={true}
                     autoFocusSearchAfterRendering={true}
+                    removeAllDisabled={!_.some(this.options, o=>o.selected)}
                 />
                 {
                     this.props.freqPromise.isPending && (

@@ -14,7 +14,7 @@ import {
     getFrequencyStr
 } from "../StudyViewUtils";
 import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
-import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import EllipsisTextTooltip from "../../../public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import {DEFAULT_SORTING_COLUMN} from "../StudyViewConfig";
 
 export interface IClinicalTableProps {
@@ -132,7 +132,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 style.opacity = 0;
                 text = ".";
             }
-            return <div style={style} className={styles.ellipsisText}>{text}</div>
+            return <EllipsisTextTooltip style={style} text={text} hideTooltip={true}></EllipsisTextTooltip>;
         },
         tooltip: getClinicalAttributeOverlay(this.firstColumnName, this.props.labelDescription ? this.props.labelDescription : ''),
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().includes(filterStringUpper)),

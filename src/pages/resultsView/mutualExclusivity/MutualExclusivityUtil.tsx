@@ -5,12 +5,19 @@ import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochber
 import Combinatorics from 'js-combinatorics';
 import Dictionary = _.Dictionary;
 import * as _ from 'lodash';
+import { SampleAlteredMap } from '../ResultsViewPageStoreUtils';
+
+export enum AlteredStatus {
+    UNPROFILED = "unprofiled",
+    ALTERED = "altered",
+    UNALTERED = "unaltered"
+}
 
 export function calculateAssociation(logOddsRatio: number): string {
     return logOddsRatio > 0 ? "Co-occurrence" : "Mutual exclusivity";
 }
 
-export function countOccurences(valuesA: boolean[], valuesB: boolean[]): [number, number, number, number] {
+export function countOccurences(valuesA: AlteredStatus[], valuesB: AlteredStatus[]): [number, number, number, number] {
 
     let neither = 0;
     let bNotA = 0;
@@ -18,13 +25,16 @@ export function countOccurences(valuesA: boolean[], valuesB: boolean[]): [number
     let both = 0;
 
     valuesA.forEach((valueA, index) => {
-
+        // jump over this comparison if there is a unprofiled value
+        if (valueA === AlteredStatus.UNPROFILED || valuesB[index] === AlteredStatus.UNPROFILED) {
+            return true;
+        }
         const valueB = valuesB[index];
-        if (!valueA && !valueB) {
+        if (valueA === AlteredStatus.UNALTERED && valueB === AlteredStatus.UNALTERED) {
             neither++;
-        } else if (!valueA && valueB) {
+        } else if (valueA === AlteredStatus.UNALTERED && valueB === AlteredStatus.ALTERED) {
             bNotA++;
-        } else if (valueA && !valueB) {
+        } else if (valueA === AlteredStatus.ALTERED && valueB === AlteredStatus.UNALTERED) {
             aNotB++;
         } else {
             both++;
@@ -97,7 +107,7 @@ export function getCountsText(data: MutualExclusivity[]): JSX.Element {
             coOccurentCounts[1]}.</p>;
 }
 
-export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclusivity[] {
+export function getData(isSampleAlteredMap: Dictionary<AlteredStatus[]>): MutualExclusivity[] {
 
     let data: MutualExclusivity[] = [];
     const combinations: string[][] = (Combinatorics as any).bigCombination(Object.keys(isSampleAlteredMap), 2).toArray();
@@ -163,4 +173,16 @@ export function formatLogOddsRatio(logOddsRatio: number): string {
         return ">3";
     }
     return logOddsRatio.toFixed(3);
+}
+
+export function getSampleAlteredFilteredMap(isSampleAlteredMap: SampleAlteredMap): SampleAlteredMap {
+    const filteredMap : SampleAlteredMap = {};
+    _.forIn(isSampleAlteredMap, (alteredStatus, trackOql) => {
+        if (alteredStatus && alteredStatus.length > 0) {
+            if (alteredStatus.filter((status) => status != AlteredStatus.UNPROFILED).length > 0) {
+                filteredMap[trackOql] = alteredStatus;
+            }
+        }
+    });
+    return filteredMap;
 }

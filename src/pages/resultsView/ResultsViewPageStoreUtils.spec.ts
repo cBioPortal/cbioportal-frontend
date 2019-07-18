@@ -6,7 +6,7 @@ import {
 import {
     annotateMolecularDatum,
     annotateMutationPutativeDriver,
-    computeCustomDriverAnnotationReport, computeGenePanelInformation, computePutativeDriverAnnotatedMutations,
+    computeCustomDriverAnnotationReport, computeGenePanelInformation, filterAndAnnotateMutations,
     filterSubQueryData,
     getOncoKbOncogenic,
     initializeCustomDriverAnnotationSettings,
@@ -26,6 +26,7 @@ import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy, VirtualStudyData } from "shared/model/VirtualStudy";
 import client from "shared/api/cbioportalClientInstance";
 import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
+import { AlteredStatus } from "./mutualExclusivity/MutualExclusivityUtil";
 
 describe("ResultsViewPageStoreUtils", ()=>{
     describe("computeCustomDriverAnnotationReport", ()=>{
@@ -525,17 +526,18 @@ describe("ResultsViewPageStoreUtils", ()=>{
         });
     });
 
-    describe("computePutativeDriverAnnotatedMutations", ()=>{
+    describe("filterAndAnnotateMutations", ()=>{
         it("returns empty list for empty input", ()=>{
-            assert.deepEqual(computePutativeDriverAnnotatedMutations([], ()=>({}) as any, {}, false), []);
+            assert.deepEqual(filterAndAnnotateMutations([], ()=>({}) as any, {}, false, false), []);
         });
         it("annotates a single mutation", ()=>{
             assert.deepEqual(
-                computePutativeDriverAnnotatedMutations(
+                filterAndAnnotateMutations(
                     [{mutationType:"missense", entrezGeneId:1} as Mutation],
                     ()=>({oncoKb:"", hotspots:true, cbioportalCount:false, cosmicCount:true, customDriverBinary:false}),
                     {1:{ hugoGeneSymbol:"mygene"} as Gene},
-                    true
+                    true,
+                    false
                 ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"missense",
@@ -550,11 +552,12 @@ describe("ResultsViewPageStoreUtils", ()=>{
         });
         it("annotates a few mutations", ()=>{
             assert.deepEqual(
-                computePutativeDriverAnnotatedMutations(
+                filterAndAnnotateMutations(
                     [{mutationType:"missense", entrezGeneId:1} as Mutation, {mutationType:"in_frame_del", entrezGeneId:1} as Mutation, {mutationType:"asdf", entrezGeneId:134} as Mutation],
                     ()=>({oncoKb:"", hotspots:true, cbioportalCount:false, cosmicCount:true, customDriverBinary:false}),
                     {1:{hugoGeneSymbol:"gene1hello"} as Gene, 134:{hugoGeneSymbol:"gene3hello"} as Gene},
-                    true
+                    true,
+                    false
                 ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"missense",
@@ -585,24 +588,61 @@ describe("ResultsViewPageStoreUtils", ()=>{
         });
         it("excludes a single non-annotated mutation", ()=>{
             assert.deepEqual(
-                computePutativeDriverAnnotatedMutations(
+                filterAndAnnotateMutations(
                     [{mutationType:"missense", entrezGeneId:1} as Mutation],
                     ()=>({oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:false}),
                     {1:{hugoGeneSymbol:"gene1hello"} as Gene, 134:{hugoGeneSymbol:"gene3hello"} as Gene},
-                    true
+                    true,
+                    false
                 ),
                 []
             );
         });
         it("excludes non-annotated mutations from a list of a few", ()=>{
             assert.deepEqual(
-                computePutativeDriverAnnotatedMutations(
+                filterAndAnnotateMutations(
                     [{mutationType:"missense", entrezGeneId:1} as Mutation, {mutationType:"in_frame_del", entrezGeneId:1} as Mutation, {mutationType:"asdf", entrezGeneId:134} as Mutation],
                     (m)=>(m.mutationType === "in_frame_del" ?
                         {oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:true}:
                         {oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:false}
                     ),
                     {1:{hugoGeneSymbol:"gene1hello"} as Gene, 134:{hugoGeneSymbol:"gene3hello"} as Gene},
+                    true,
+                    false
+                ) as Partial<AnnotatedMutation>[],
+                [{
+                    mutationType:"in_frame_del",
+                    hugoGeneSymbol:"gene1hello",
+                    entrezGeneId:1,
+                    simplifiedMutationType: getSimplifiedMutationType("in_frame_del"),
+                    isHotspot: false,
+                    oncoKbOncogenic: "",
+                    putativeDriver: true
+                }]
+            );
+        });
+        it("excludes a single germline mutation", ()=>{
+            assert.deepEqual(
+                filterAndAnnotateMutations(
+                    [{mutationType:"missense", entrezGeneId:1, mutationStatus:"germline"} as Mutation],
+                    ()=>({oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:false}),
+                    {1:{hugoGeneSymbol:"gene1hello"} as Gene, 134:{hugoGeneSymbol:"gene3hello"} as Gene},
+                    false,
+                    true
+                ),
+                []
+            );
+        });
+        it("excludes germline mutations from a list of a few", ()=>{
+            assert.deepEqual(
+                filterAndAnnotateMutations(
+                    [{mutationType:"missense", entrezGeneId:1, mutationStatus:"germline"} as Mutation, {mutationType:"in_frame_del", entrezGeneId:1} as Mutation, {mutationType:"asdf", entrezGeneId:134, mutationStatus:"germline"} as Mutation],
+                    (m)=>(m.mutationType === "in_frame_del" ?
+                            {oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:true}:
+                            {oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:false}
+                    ),
+                    {1:{hugoGeneSymbol:"gene1hello"} as Gene, 134:{hugoGeneSymbol:"gene3hello"} as Gene},
+                    false,
                     true
                 ) as Partial<AnnotatedMutation>[],
                 [{
@@ -1264,7 +1304,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
 
 describe('getSampleAlteredMap', () => {
 
-    const arg0 = [
+    const filteredAlterationData = [
         {
             "cases": {
                 "samples": {
@@ -1578,7 +1618,7 @@ describe('getSampleAlteredMap', () => {
         }
     ] as IQueriedMergedTrackCaseData[];
 
-    var arg1 = [
+    var samples = [
         {
             "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
             "uniquePatientKey": "QjA4NTpjaG9sX251c18yMDEy",
@@ -1661,51 +1701,661 @@ describe('getSampleAlteredMap', () => {
         }
     ] as Sample[];
 
-    const arg2 = "[\"RAS\" KRAS NRAS]\n[SMAD4 RAN]\nSMAD4: MUT\nKRAS";
+    const oqlQuery = "[\"RAS\" KRAS NRAS]\n[SMAD4 RAN]\nSMAD4: MUT\nKRAS";
 
-    it('handles different type of gene tracks correctly', () => {
+    const coverageInformation = {
+        "samples": {
+            "QjA4NTpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "QjA4NTpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "B085",
+                        "patientId": "B085",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "QjA5OTpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "QjA5OTpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "B099",
+                        "patientId": "B099",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "UjEwNDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "UjEwNDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "R104",
+                        "patientId": "R104",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VDAyNjpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VDAyNjpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VDAyNjpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "T026",
+                        "patientId": "T026",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VTA0NDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VTA0NDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "U044",
+                        "patientId": "U044",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzAxMjpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzAxMjpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W012",
+                        "patientId": "W012",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzAzOTpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzAzOTpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzAzOTpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W039",
+                        "patientId": "W039",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzA0MDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzA0MDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzA0MDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W040",
+                        "patientId": "W040",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            }
+        },
+        "patients": {
+            "QjA4NTpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "QjA4NTpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "B085",
+                        "patientId": "B085",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "QjA5OTpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "QjA5OTpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "B099",
+                        "patientId": "B099",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "UjEwNDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "UjEwNDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "R104",
+                        "patientId": "R104",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VDAyNjpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VDAyNjpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VDAyNjpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "T026",
+                        "patientId": "T026",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VTA0NDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VTA0NDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "U044",
+                        "patientId": "U044",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzAxMjpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzAxMjpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W012",
+                        "patientId": "W012",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzAzOTpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzAzOTpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzAzOTpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W039",
+                        "patientId": "W039",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzA0MDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzA0MDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzA0MDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W040",
+                        "patientId": "W040",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            }
+        }
+    };
+
+    const coverageInformationWithUnprofiledSamples = {
+        "samples": {
+            "QjA4NTpjaG9sX251c18yMDEy": {
+                "byGene": {
+                    "NRAS": [
+                        {
+                            "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+                            "uniquePatientKey": "QjA4NTpjaG9sX251c18yMDEy",
+                            "molecularProfileId": "chol_nus_2012_mutations",
+                            "sampleId": "B085",
+                            "patientId": "B085",
+                            "genePanelId": "test",
+                            "studyId": "chol_nus_2012",
+                            "profiled": true
+                        }
+                    ]
+                },
+                "allGenes": [],
+                "notProfiledByGene": {
+                    "KRAS": [
+                        {
+                            "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+                            "uniquePatientKey": "QjA4NTpjaG9sX251c18yMDEy",
+                            "molecularProfileId": "chol_nus_2012_mutations",
+                            "sampleId": "B085",
+                            "patientId": "B085",
+                            "genePanelId": "test",
+                            "studyId": "chol_nus_2012",
+                            "profiled": true
+                        }
+                    ],
+                    "SMAD4": [
+                        {
+                            "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+                            "uniquePatientKey": "QjA4NTpjaG9sX251c18yMDEy",
+                            "molecularProfileId": "chol_nus_2012_mutations",
+                            "sampleId": "B085",
+                            "patientId": "B085",
+                            "genePanelId": "test",
+                            "studyId": "chol_nus_2012",
+                            "profiled": true
+                        }
+                    ],
+                    "RAN": [
+                        {
+                            "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+                            "uniquePatientKey": "QjA4NTpjaG9sX251c18yMDEy",
+                            "molecularProfileId": "chol_nus_2012_mutations",
+                            "sampleId": "B085",
+                            "patientId": "B085",
+                            "genePanelId": "test",
+                            "studyId": "chol_nus_2012",
+                            "profiled": true
+                        }
+                    ]
+                },
+                "notProfiledAllGenes": []
+            },
+            "QjA5OTpjaG9sX251c18yMDEy": {
+                "byGene": {
+                    "NRAS": [
+                        {
+                            "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+                            "uniquePatientKey": "QjA5OTpjaG9sX251c18yMDEy",
+                            "molecularProfileId": "chol_nus_2012_mutations",
+                            "sampleId": "B099",
+                            "patientId": "B099",
+                            "genePanelId": "test",
+                            "studyId": "chol_nus_2012",
+                            "profiled": true
+                        }
+                    ],
+                    "SMAD4": [
+                        {
+                            "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+                            "uniquePatientKey": "QjA5OTpjaG9sX251c18yMDEy",
+                            "molecularProfileId": "chol_nus_2012_mutations",
+                            "sampleId": "B099",
+                            "patientId": "B099",
+                            "genePanelId": "test",
+                            "studyId": "chol_nus_2012",
+                            "profiled": true
+                        }
+                    ],
+                    "RAN": [
+                        {
+                            "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+                            "uniquePatientKey": "QjA5OTpjaG9sX251c18yMDEy",
+                            "molecularProfileId": "chol_nus_2012_mutations",
+                            "sampleId": "B099",
+                            "patientId": "B099",
+                            "genePanelId": "test",
+                            "studyId": "chol_nus_2012",
+                            "profiled": true
+                        }
+                    ]
+                },
+                "allGenes": [],
+                "notProfiledByGene": {
+                    "KRAS": [
+                        {
+                            "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+                            "uniquePatientKey": "QjA5OTpjaG9sX251c18yMDEy",
+                            "molecularProfileId": "chol_nus_2012_mutations",
+                            "sampleId": "B099",
+                            "patientId": "B099",
+                            "genePanelId": "test",
+                            "studyId": "chol_nus_2012",
+                            "profiled": true
+                        }
+                    ]
+                },
+                "notProfiledAllGenes": []
+            },
+            "UjEwNDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "UjEwNDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "R104",
+                        "patientId": "R104",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VDAyNjpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VDAyNjpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VDAyNjpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "T026",
+                        "patientId": "T026",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VTA0NDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VTA0NDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "U044",
+                        "patientId": "U044",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzAxMjpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzAxMjpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W012",
+                        "patientId": "W012",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzAzOTpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzAzOTpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzAzOTpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W039",
+                        "patientId": "W039",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzA0MDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzA0MDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzA0MDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W040",
+                        "patientId": "W040",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            }
+        },
+        "patients": {
+            "QjA4NTpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "QjA4NTpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "B085",
+                        "patientId": "B085",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "QjA5OTpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "QjA5OTpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "B099",
+                        "patientId": "B099",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "UjEwNDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "UjEwNDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "R104",
+                        "patientId": "R104",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VDAyNjpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VDAyNjpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VDAyNjpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "T026",
+                        "patientId": "T026",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VTA0NDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VTA0NDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "U044",
+                        "patientId": "U044",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzAxMjpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzAxMjpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W012",
+                        "patientId": "W012",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzAzOTpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzAzOTpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzAzOTpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W039",
+                        "patientId": "W039",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            },
+            "VzA0MDpjaG9sX251c18yMDEy": {
+                "byGene": {},
+                "allGenes": [
+                    {
+                        "uniqueSampleKey": "VzA0MDpjaG9sX251c18yMDEy",
+                        "uniquePatientKey": "VzA0MDpjaG9sX251c18yMDEy",
+                        "molecularProfileId": "chol_nus_2012_mutations",
+                        "sampleId": "W040",
+                        "patientId": "W040",
+                        "studyId": "chol_nus_2012",
+                        "profiled": true
+                    }
+                ],
+                "notProfiledByGene": {},
+                "notProfiledAllGenes": []
+            }
+        }
+    };
+
+    const molecularProfileIds = ["chol_nus_2012_mutations"];
+    const unprofiledMolecularProfileIds = ["chol_nus_2012_mutations","chol_nus_2012_cna"];
+    const studyToMolecularProfiles = {"chol_nus_2012": [{"molecularProfileId": "chol_nus_2012_mutations"} as MolecularProfile, {"molecularProfileId": "chol_nus_2012_cna"} as MolecularProfile]};
+
+    it('should handle all profiled samples correctly', () => {
         
-        const ret = getSampleAlteredMap(arg0, arg1, arg2);
+        const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformation, molecularProfileIds, studyToMolecularProfiles);
         const expectedResult = {
             "RAS": [
-                true,
-                false,
-                true,
-                false,
-                false,
-                true,
-                false,
-                false
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ],
             "SMAD4 / RAN": [
-                false,
-                true,
-                true,
-                false,
-                true,
-                true,
-                false,
-                false
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ],
             "SMAD4: MUT": [
-                false,
-                true,
-                true,
-                false,
-                true,
-                true,
-                false,
-                false
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ],
             "KRAS": [
-                true,
-                false,
-                true,
-                false,
-                false,
-                true,
-                false,
-                false
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
             ]
         };
         assert.deepEqual(ret["KRAS"], expectedResult["KRAS"], "single gene track");
@@ -1713,6 +2363,74 @@ describe('getSampleAlteredMap', () => {
         assert.deepEqual(ret["SMAD4 / RAN"], expectedResult["SMAD4 / RAN"], "merged gene track");
         assert.deepEqual(ret["RAS"], expectedResult["RAS"], "merged gene track(with group name)");
 
+    });
+
+    it('should set undefined for the not profiled samples', () => {
+        
+        const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, molecularProfileIds, studyToMolecularProfiles);
+        const expectedResult = {
+            "RAS": [
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
+            ],
+            "SMAD4 / RAN": [
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
+            ],
+            "SMAD4: MUT": [
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
+            ],
+            "KRAS": [
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.ALTERED,
+                AlteredStatus.UNALTERED,
+                AlteredStatus.UNALTERED
+            ]
+        };
+        assert.deepEqual(ret["KRAS"], expectedResult["KRAS"], "single gene track with unprofiled samples");
+        assert.deepEqual(ret["RAS"], expectedResult["RAS"], "merged gene track with unprofiled samples in one gene");
+        assert.deepEqual(ret["SMAD4 / RAN"], expectedResult["SMAD4 / RAN"], "merged gene track with unprofiled samples in all genes");
+    });
+
+    it('should search in all molecularProfile ids', () => {
+        
+        const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, unprofiledMolecularProfileIds, studyToMolecularProfiles);
+        const expectedResult = {
+            "RAS": [
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED,
+                AlteredStatus.UNPROFILED
+            ]
+        };
+        assert.deepEqual(ret["RAS"], expectedResult["RAS"], "should return an list contains only undefined value");
     });
 });
 

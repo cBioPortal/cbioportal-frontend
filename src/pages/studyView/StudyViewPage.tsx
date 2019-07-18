@@ -28,9 +28,9 @@ import {Alert} from 'react-bootstrap';
 import AddChartButton from "./addChartButton/AddChartButton";
 import {CSSTransition} from "react-transition-group";
 import {sleep} from "../../shared/lib/TimeUtils";
-import {remoteData} from "../../shared/api/remoteData";
+import {remoteData} from "../../public-lib/api/remoteData";
 import {Else, If, Then} from 'react-if';
-import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../public-lib/components/defaultTooltip/DefaultTooltip";
 import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
 import {AppStore} from "../../AppStore";
 import ActionButtons from "./studyPageHeader/ActionButtons";
@@ -76,7 +76,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private queryReaction:IReactionDisposer;
     @observable showCustomSelectTooltip = false;
     @observable showGroupsTooltip = false;
-    private inCustomSelectTooltip = false;
     private studyViewQueryFilter:StudyViewURLQuery;
 
     constructor(props: IStudyViewPageProps) {
@@ -115,7 +114,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     componentDidMount() {
         // make the route as the default tab value
-        this.props.routing.updateRoute({},`study/${this.store.currentTab}`);
+        this.props.routing.updateRoute({},`study/${this.store.currentTab}`, false, true);
     }
 
     private handleTabChange(id: string) {
@@ -186,7 +185,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 <ComparisonGroupManager store={this.store} /> :
                                 (<span>
                                     Please log in to use the custom groups feature to save and compare sub-cohorts.
-                                    <If condition={AppConfig.serverConfig.authenticationMethod === "social_auth"}>
+                                    <If condition={AppConfig.serverConfig.authenticationMethod &&  AppConfig.serverConfig.authenticationMethod.includes("social_auth")}>
                                         <div className={"text-center"} style={{padding:20}}>
                                             <SocialAuthButton appStore={this.props.appStore}/>
                                         </div>
@@ -211,11 +210,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     content() {
 
         return (
-            <div className="studyView" onClick={()=>{
-                if(this.showCustomSelectTooltip && !this.inCustomSelectTooltip) {
-                    this.showCustomSelectTooltip = false;
-                }
-            }}>
+            <div className="studyView">
                 {this.store.comparisonConfirmationModal}
                 {this.store.unknownQueriedIds.isComplete &&
                 this.store.unknownQueriedIds.result.length > 0 && (
@@ -293,12 +288,12 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                         && (<>
                                                 <DefaultTooltip
                                                     visible={this.showCustomSelectTooltip}
+                                                    trigger={['click']}
                                                     placement={"bottomLeft"}
+                                                    onVisibleChange={visible => this.showCustomSelectTooltip = !!visible}
                                                     destroyTooltipOnHide={true}
                                                     overlay={() => (
                                                         <div style={{width: '300px'}}
-                                                             onMouseEnter={()=>this.inCustomSelectTooltip=true}
-                                                             onMouseLeave={()=>this.inCustomSelectTooltip=false}
                                                         >
                                                             <CustomCaseSelection
                                                                 allSamples={this.store.samples.result}
@@ -315,11 +310,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     )}
                                                 >
                                                     <button className={classNames('btn btn-primary btn-sm', {"active":this.showCustomSelectTooltip})}
+                                                            aria-pressed={this.showCustomSelectTooltip}
                                                             data-test='custom-selection-button'
-                                                            onClick={(evt:any) => {
-                                                                evt.stopPropagation();
-                                                                this.showCustomSelectTooltip = !this.showCustomSelectTooltip;
-                                                            }}
                                                             style={{marginLeft: '10px'}}>Custom Selection
                                                     </button>
                                                 </DefaultTooltip>

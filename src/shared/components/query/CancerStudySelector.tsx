@@ -1,29 +1,29 @@
 import * as _ from "lodash";
 import * as React from "react";
-import Dictionary = _.Dictionary;
-import {TypeOfCancer as CancerType, CancerStudy} from "../../api/generated/CBioPortalAPI";
+import ReactDOM from 'react-dom';
+import {TypeOfCancer as CancerType} from "../../api/generated/CBioPortalAPI";
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
 import * as styles_any from './styles/styles.module.scss';
 import classNames from 'classnames';
-import ReactSelect from 'react-select';
 import StudyList from "./studyList/StudyList";
 import {observer, Observer} from "mobx-react";
-import {action, expr, runInAction} from 'mobx';
+import {action, expr, IReactionDisposer, reaction} from 'mobx';
 import memoize from "memoize-weak-decorator";
 import {If, Then, Else} from 'react-if';
-import {QueryStore, QueryStoreComponent} from "./QueryStore";
+import {QueryStore} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
-import {Modal, Button} from 'react-bootstrap';
+import {Modal} from 'react-bootstrap';
 import Autosuggest from 'react-bootstrap-autosuggest';
-import ReactElement = React.ReactElement;
-import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
-import FontAwesome from "react-fontawesome";
 import AppConfig from "appConfig";
 import {ServerConfigHelpers} from "../../../config/config";
 import autobind from "autobind-decorator";
-import getBrowserWindow from "../../lib/getBrowserWindow";
 import {PAN_CAN_SIGNATURE} from "./StudyListLogic";
 import QuickSelectButtons from "./QuickSelectButtons";
+import {StudySelectorStats} from "shared/components/query/StudySelectorStats";
+import WindowStore from "shared/components/window/WindowStore";
+import Timeout = NodeJS.Timeout;
+
+const MIN_LIST_HEIGHT = 200;
 
 const styles = styles_any as {
     SelectedStudiesWindow: string,
@@ -63,6 +63,7 @@ const styles = styles_any as {
 export interface ICancerStudySelectorProps {
     style?: React.CSSProperties;
     queryStore: QueryStore;
+    forkedMode: boolean;
 }
 
 @observer
@@ -157,10 +158,39 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
         }
     }
 
+    private windowSizeDisposer: IReactionDisposer;
+
+    componentDidMount(): void {
+
+        let resizeTimeout: Timeout;
+        this.windowSizeDisposer = reaction(
+            ()=>{
+                return WindowStore.size;
+            },
+            ()=>{
+                if (this.props.forkedMode) {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => this.setListHeight(), 200);
+                }
+            },
+            { fireImmediately:true }
+        );
+    }
+
+    componentWillUnmount(): void {
+        this.windowSizeDisposer();
+    }
+
+    setListHeight(){
+        const $el = $(ReactDOM.findDOMNode(this) as HTMLDivElement);
+        var h = WindowStore.size.height - $el.offset().top;
+        h = (h < MIN_LIST_HEIGHT) ? MIN_LIST_HEIGHT : h; // impose limit
+        $el.css("height",h-75);
+    }
 
     render() {
 
-        const {selectableSelectedStudyIds, selectableSelectedStudies, shownStudies, shownAndSelectedStudies} =
+        const {shownStudies, shownAndSelectedStudies} =
             this.logic.mainView.getSelectionReport();
 
         const quickSetButtons = this.logic.mainView.quickSelectButtons(AppConfig.serverConfig.skin_quick_select_buttons);
@@ -170,93 +200,12 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                 <FlexRow overflow className={styles.CancerStudySelectorHeader}>
 
                     <SectionHeader promises={[this.store.cancerTypes, this.store.cancerStudies]}>
-                        Select Studies:
+                        Select Studies for Visualization & Analysis:
                     </SectionHeader>
 
                     {this.store.selectableStudiesSet.isComplete && (
                         <div>
-                            {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending && !this.store.profiledSamplesCount.isPending) && (
-                                <Observer>
-                                    {() => {
-                                        let numSelectedStudies = expr(() => this.store.selectableSelectedStudyIds.length);
-                                        let selectedCountClass = classNames({
-                                            [styles.selectedCount]: true,
-                                            [styles.selectionsExist]: numSelectedStudies > 0
-                                        });
-                                        return (
-                                            <a
-                                                onClick={() => {
-                                                    if (numSelectedStudies)
-                                                        this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly;
-                                                }}
-                                            >
-                                                <b>{numSelectedStudies}</b> studies selected
-                                                (<b>{this.store.profiledSamplesCount.result.all}</b> samples)
-                                            </a>
-                                        );
-                                    }}
-                                </Observer>
-                            )}
-
-
-                            {(!!(!this.store.forDownloadTab) && !!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending)) && (
-                                <Observer>
-                                    {() => {
-                                        let hasSelection = this.store.selectableSelectedStudyIds.length > 0;
-
-                                        if (hasSelection) {
-                                            return (
-                                                <a data-test='globalDeselectAllStudiesButton' style={{marginLeft: 10}}
-                                                onClick={() => {
-                                                    (hasSelection) ? this.logic.mainView.clearAllSelection() :
-                                                        this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !hasSelection);
-                                                }}>
-                                                    Deselect all
-                                                </a>
-                                            );
-                                        } else {
-                                            return <span/>;
-                                        }
-                                    }}
-                                </Observer>
-                            )}
-
-
-                            {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
-                                <Observer>
-                                    {() => {
-
-                                        const studyLimitReached = (this.store.selectableSelectedStudyIds.length > 50);
-                                        const tooltipMessage = studyLimitReached ?
-                                            <span>Too many studies selected for study summary (limit: 50)</span> :
-                                            <span>Open summary of selected studies in a new window.</span>;
-
-                                        return (
-                                            <DefaultTooltip
-                                                placement="top"
-                                                overlay={tooltipMessage}
-                                                disabled={!this.store.summaryEnabled}
-                                                mouseEnterDelay={0}
-                                            >
-
-                                                <Button bsSize="xs" disabled={studyLimitReached} bsStyle="primary"
-                                                        className={classNames('btn-primary')}
-                                                        onClick={this.handlers.onSummaryClick}
-                                                        style={{
-                                                            marginLeft: 10,
-                                                            display: this.store.summaryEnabled ? 'inline-block' : 'none',
-                                                            cursor: 'pointer',
-                                                            bgColor: '#3786C2'
-                                                        }}
-                                                >
-                                                    <i className='ci ci-pie-chart'></i> View summary
-                                                </Button>
-                                            </DefaultTooltip>
-                                        );
-                                    }}
-                                </Observer>
-                            )}
-
+                            <StudySelectorStats store={this.store}/>
                         </div>
                     )}
 
@@ -324,33 +273,6 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
                 </FlexRow>
 
-                <SectionHeader style={{display: 'none'}} promises={[this.store.cancerTypes, this.store.cancerStudies]}>
-                    Select Studies:
-                    {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending && !this.store.profiledSamplesCount.isPending) && (
-                        <Observer>
-                            {() => {
-                                let numSelectedStudies = expr(() => this.store.selectableSelectedStudyIds.length);
-                                let selectedCountClass = classNames({
-                                    [styles.selectedCount]: true,
-                                    [styles.selectionsExist]: numSelectedStudies > 0
-                                });
-                                return (
-                                    <span
-                                        className={selectedCountClass}
-                                        onClick={() => {
-                                            if (numSelectedStudies)
-                                                this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly;
-                                        }}
-                                    >
-										<b>{numSelectedStudies}</b> studies selected
-										(<b>{this.store.profiledSamplesCount.result.all}</b> samples)
-									</span>
-                                );
-                            }}
-                        </Observer>
-                    )}
-                </SectionHeader>
-
                 <FlexRow className={styles.cancerStudySelectorBody}>
                     <If condition={this.store.maxTreeDepth > 0}>
                         <Then>
@@ -412,3 +334,6 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
         );
     }
 }
+
+
+

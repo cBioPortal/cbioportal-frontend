@@ -981,6 +981,17 @@
         "hgvs": {
           "description": "hgvs",
           "$ref": "#/definitions/Hgvs"
+        },
+        "rcv": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Rcv"
+          }
+        },
+        "variantId": {
+          "type": "integer",
+          "format": "int32",
+          "description": "variant_id"
         }
       }
     },
@@ -1062,10 +1073,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "gene": {
-          "description": "gene",
-          "$ref": "#/definitions/Gene"
         },
         "hg19": {
           "description": "hg19",
@@ -1555,6 +1562,7 @@
       "type": "object",
       "properties": {
         "clinVar": {
+          "description": "clinvar",
           "$ref": "#/definitions/ClinVar"
         },
         "cosmic": {
@@ -1621,6 +1629,27 @@
         "mutationType": {
           "type": "string",
           "description": "Mutation Type e.g. Missense_Mutation"
+        }
+      }
+    },
+    "Rcv": {
+      "type": "object",
+      "properties": {
+        "accession": {
+          "type": "string",
+          "description": "accession"
+        },
+        "clinicalSignificance": {
+          "type": "string",
+          "description": "clinical_significance"
+        },
+        "origin": {
+          "type": "string",
+          "description": "origin"
+        },
+        "preferredName": {
+          "type": "string",
+          "description": "preferred_name"
         }
       }
     },

@@ -21,7 +21,7 @@ import {
     ResultsViewPageStore
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {remoteData} from "../../api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {
     makeClinicalTrackData,
     makeGeneticTrackData,
@@ -40,7 +40,11 @@ import {
     Patient,
     Sample
 } from "../../api/generated/CBioPortalAPI";
-import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/ClinicalDataCache";
+import {
+    clinicalAttributeIsINCOMPARISONGROUP,
+    clinicalAttributeIsPROFILEDIN,
+    SpecialAttribute
+} from "../../cache/ClinicalDataCache";
 import {STUDY_VIEW_CONFIG} from "../../../pages/studyView/StudyViewConfig";
 import {getClinicalValueColor, RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 
@@ -333,7 +337,6 @@ interface IGeneticTrackAppState {
     sampleMode: boolean;
     samples: Pick<Sample, 'sampleId'|'studyId'|'uniqueSampleKey'>[];
     patients: Pick<Patient, 'patientId'|'studyId'|'uniquePatientKey'>[];
-    hideGermlineMutations:boolean;
     coverageInformation: CoverageInformation;
     sequencedSampleKeysByGene: any;
     sequencedPatientKeysByGene: any;
@@ -366,7 +369,6 @@ export function makeGeneticTrackWith({
     sampleMode,
     samples,
     patients,
-    hideGermlineMutations,
     coverageInformation,
     sequencedSampleKeysByGene,
     sequencedPatientKeysByGene,
@@ -385,8 +387,8 @@ export function makeGeneticTrackWith({
         );
         const dataByCase = caseData.cases;
         const data = (sampleMode
-            ? makeGeneticTrackData(dataByCase.samples, geneSymbolArray, samples as Sample[], coverageInformation, selectedMolecularProfiles, hideGermlineMutations)
-            : makeGeneticTrackData(dataByCase.patients, geneSymbolArray, patients as Patient[], coverageInformation, selectedMolecularProfiles, hideGermlineMutations)
+            ? makeGeneticTrackData(dataByCase.samples, geneSymbolArray, samples as Sample[], coverageInformation, selectedMolecularProfiles)
+            : makeGeneticTrackData(dataByCase.patients, geneSymbolArray, patients as Patient[], coverageInformation, selectedMolecularProfiles)
         );
         const alterationInfo = alterationInfoForOncoprintTrackData(
             sampleMode,
@@ -463,7 +465,6 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                 sampleMode,
                 samples: oncoprint.props.store.samples.result!,
                 patients: oncoprint.props.store.patients.result!,
-                hideGermlineMutations: oncoprint.hideGermlineMutations,
                 coverageInformation: oncoprint.props.store.coverageInformation.result!,
                 sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
                 sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene.result!,
@@ -522,8 +523,9 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                     altered_uids
                 };
                 if (clinicalAttributeIsPROFILEDIN(attribute)) {
-                    // "Profiled-In" clinical attribute: show "No" on N/A items
+                    // For "Profiled-In" clinical attribute: show "No" on N/A items
                     ret.na_tooltip_value = "No";
+                    ret.na_legend_label = "No";
                 }
                 if (attribute.datatype === "NUMBER") {
                     ret.datatype = "number";
@@ -544,9 +546,6 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                     ret.datatype = "counts";
                     (ret as any).countsCategoryLabels = ["C>A", "C>G", "C>T", "T>A", "T>C", "T>G"];
                     (ret as any).countsCategoryFills = ['#3D6EB1', '#8EBFDC', '#DFF1F8', '#FCE08E', '#F78F5E', '#D62B23'];
-                }
-                if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.ProfiledInPrefix) === 0) {
-                    ret.na_legend_label = "No";
                 }
                 return ret as ClinicalTrackSpec;
             });

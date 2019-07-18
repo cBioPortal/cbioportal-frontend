@@ -7,7 +7,7 @@ import {action, autorun, computed, IReactionDisposer, observable} from "mobx";
 import {SimpleGetterLazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
 import ClinicalDataEnrichmentsTable from "./ClinicalDataEnrichmentsTable";
 import _ from "lodash";
-import {remoteData} from "shared/api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import client from "shared/api/cbioportalClientInstance";
 import {
     boxPlotTooltip,
@@ -21,7 +21,7 @@ import {
     MutationSummary,
     mutationSummaryToAppearance
 } from "pages/resultsView/plots/PlotsTabUtils";
-import DownloadControls from "shared/components/downloadControls/DownloadControls";
+import DownloadControls from "public-lib/components/downloadControls/DownloadControls";
 import ScrollBar from "shared/components/Scrollbar/ScrollBar";
 import BoxScatterPlot, {IBoxScatterPlotData} from "shared/components/plots/BoxScatterPlot";
 import {getMobxPromiseGroupStatus} from "shared/lib/getMobxPromiseGroupStatus";
@@ -504,7 +504,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                     getSvg={this.getSvg}
                     filename={SVG_ID}
                     dontFade={true}
-                    collapse={true}
+                    type='button'
                     style={{ position: 'absolute', right: 0, top: 0 }}
                 />
             </div>

@@ -120,6 +120,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
     renderAttributeChart = (chartMeta: ChartMeta) => {
         const props:Partial<IChartContainerProps> = {
             chartMeta: chartMeta,
+            chartType: this.store.chartsType.get(chartMeta.uniqueKey),
+            dimension: this.store.chartsDimension.get(chartMeta.uniqueKey),
             openComparisonPage: this.store.openComparisonPage,
             title: chartMeta.displayName,
             filters: [],
@@ -127,10 +129,11 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             isNewlyAdded: this.handlers.isNewlyAdded,
             studyViewFilters: this.store.filters,
             analysisGroupsSettings: this.store.analysisGroupsSettings,
+            cancerGeneFilterEnabled: this.store.oncokbCancerGeneFilterEnabled,
             setComparisonConfirmationModal: this.store.setComparisonConfirmationModal
         };
 
-        switch (chartMeta.chartType) {
+        switch (this.store.chartsType.get(chartMeta.uniqueKey)) {
             case ChartTypeEnum.PIE_CHART: {
 
                 //if the chart is one of the custom charts then get the appropriate promise

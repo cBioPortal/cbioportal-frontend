@@ -107,22 +107,14 @@ export type AnnotatedVariant = {
         'variant': string
 
 };
-export type Gene = {
-    'curatedIsoform': string
+export type Implication = {
+    'alterations': Array < string >
 
-        'curatedRefSeq': string
+        'description': string
 
-        'entrezGeneId': number
+        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
-        'geneAliases': Array < string >
-
-        'hugoSymbol': string
-
-        'name': string
-
-        'oncogene': boolean
-
-        'tsg': boolean
+        'tumorType': TumorType
 
 };
 export type TumorType = {
@@ -153,6 +145,24 @@ export type TumorType = {
         'parent': string
 
         'tissue': string
+
+};
+export type Gene = {
+    'curatedIsoform': string
+
+        'curatedRefSeq': string
+
+        'entrezGeneId': number
+
+        'geneAliases': Array < string >
+
+        'hugoSymbol': string
+
+        'name': string
+
+        'oncogene': boolean
+
+        'tsg': boolean
 
 };
 export type Version = {
@@ -236,11 +246,17 @@ export type IndicatorQueryResp = {
 
         'dataVersion': string
 
+        'diagnosticImplications': Array < Implication >
+
         'diagnosticSummary': string
 
         'geneExist': boolean
 
         'geneSummary': string
+
+        'highestDiagnosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+
+        'highestPrognosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
         'highestResistanceLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
@@ -257,6 +273,8 @@ export type IndicatorQueryResp = {
         'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
 
         'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
+
+        'prognosticImplications': Array < Implication >
 
         'prognosticSummary': string
 

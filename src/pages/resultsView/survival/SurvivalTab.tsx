@@ -4,14 +4,15 @@ import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import { observer } from "mobx-react";
 import styles from "./styles.module.scss";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../public-lib/api/remoteData";
 import {ALTERED_GROUP_VALUE, getSurvivalChartDataByAlteredStatus, UNALTERED_GROUP_VALUE} from "./SurvivalUtil";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import classnames from 'classnames';
 import _ from 'lodash';
 import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
 import SurvivalDescriptionTable from './SurvivalDescriptionTable';
+import NotUsingGenePanelWarning from "../NotUsingGenePanelWarning";
 
 export interface ISurvivalTabProps {
     store: ResultsViewPageStore
@@ -186,6 +187,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             <div data-test="survivalTabDiv">
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="survival-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                    <NotUsingGenePanelWarning store={this.props.store}/>
                 </div>
                 {content}
             </div>

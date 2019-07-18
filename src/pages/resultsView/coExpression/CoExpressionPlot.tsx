@@ -7,7 +7,7 @@ import {getSampleViewUrl} from "../../../shared/api/urls";
 import "./styles.scss";
 import {bind} from "bind-decorator";
 import ScatterPlot from "../../../shared/components/plots/ScatterPlot";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import {axisLabel, isNotProfiled} from "./CoExpressionPlotUtils";
 import _ from "lodash";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
@@ -266,7 +266,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                     getSvg={this.getSvg}
                     filename="coexpression"
                     dontFade={true}
-                    collapse={true}
+                    type='button'
                     style={{position:"absolute", top:0, right:0}}
                 />
 

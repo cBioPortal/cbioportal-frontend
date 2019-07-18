@@ -84,6 +84,10 @@ export type ClinVar = {
 
         'hgvs': Hgvs
 
+        'rcv': Array < Rcv >
+
+        'variantId': number
+
 };
 export type ColocatedVariant = {
     'dbSnpId': string
@@ -135,8 +139,6 @@ export type Dbsnp = {
         'dbsnpBuild': number
 
         'flags': Array < string >
-
-        'gene': Gene
 
         'hg19': Hg19
 
@@ -493,6 +495,16 @@ export type PtmAnnotation = {
 };
 export type PtmFilter = {
     'transcriptIds': Array < string >
+
+};
+export type Rcv = {
+    'accession': string
+
+        'clinicalSignificance': string
+
+        'origin': string
+
+        'preferredName': string
 
 };
 export type Snpeff = {

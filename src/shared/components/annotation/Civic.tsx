@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./styles/annotation.module.scss";
 import {ICivicVariant, ICivicEntry} from "shared/model/Civic.ts";
 import {observable} from "mobx";

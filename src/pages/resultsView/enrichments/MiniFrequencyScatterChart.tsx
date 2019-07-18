@@ -4,13 +4,13 @@ import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import {VictoryAxis, VictoryChart, VictoryLabel, VictoryScatter, VictorySelectionContainer, VictoryLine} from "victory";
 import CBIOPORTAL_VICTORY_THEME, {axisLabelStyles} from "../../../shared/theme/cBioPoralTheme";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import {Popover} from "react-bootstrap";
 import {formatLogOddsRatio} from "../../../shared/lib/FormatUtils";
 import {toConditionalPrecision} from "../../../shared/lib/NumberUtils";
 import SelectionComponent from "./SelectionComponent";
 import HoverablePoint from "./HoverablePoint";
-import {getTextWidth, truncateWithEllipsis} from "../../../shared/lib/wrapText";
+import {getTextWidth, truncateWithEllipsis} from "../../../public-lib/lib/TextTruncationUtils";
 
 export interface IMiniFrequencyScatterChartData {
     x:number;
@@ -291,7 +291,7 @@ export default class MiniFrequencyScatterChart extends React.Component<IMiniFreq
                         getSvg={() => this.svgContainer}
                         filename="enrichments-frequency-scatter"
                         dontFade={true}
-                        collapse={true}
+                        type='button'
                         style={{position:"absolute", top:10, right:10, zIndex:0}}
                     />
                 </div>

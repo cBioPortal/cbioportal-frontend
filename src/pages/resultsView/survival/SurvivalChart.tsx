@@ -18,14 +18,15 @@ import {
 import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import {getPatientViewUrl} from "../../../shared/api/urls";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
 import {AnalysisGroup} from "../../studyView/StudyViewUtils";
 import {AbstractChart} from "../../studyView/charts/ChartContainer";
 import {toSvgDomNodeWithLegend} from "../../studyView/StudyViewUtils";
 import classnames from "classnames";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
 
 export enum LegendLocation {
     TOOLTIP = "tooltip",
@@ -60,6 +61,7 @@ export interface ISurvivalChartProps {
     styleOpts?: any; // see victory styles, and styleOptsDefaultProps for examples
     className?: string;
     showCurveInTooltip?:boolean;
+    legendLabelComponent?:any;
 }
 
 // Start to down sampling when there are more than 1000 dots in the plot.
@@ -140,8 +142,14 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         }
     }];
 
-    public toSVGDOMNode(): Element {
-        return toSvgDomNodeWithLegend(this.svgContainer.firstChild, ".survivalChartDownloadLegend");
+    public toSVGDOMNode(): SVGElement {
+        return toSvgDomNodeWithLegend(
+            this.svgContainer.firstChild,
+            {
+                legendGroupSelector: ".survivalChartDownloadLegend",
+                selectorToHide: ".survivalChartLegendHideForDownload"
+            }
+        );
     }
 
     @computed
@@ -249,7 +257,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
             for (const grp of this.analysisGroupsWithData) {
                 data.push({
                     name: !!grp.legendText ? grp.legendText : grp.value,
-                    symbol: { fill: grp.color, strokeOpacity:0, type:"square", size: 6 }
+                    symbol: { fill: grp.color, strokeOpacity:0, type:"square", size: 6 },
                 });
             }
         }
@@ -300,7 +308,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @autobind
     private getSvg() {
-        return this.svgContainer.firstChild;
+        return this.toSVGDOMNode();
     }
 
     @autobind
@@ -415,7 +423,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     getSvg={this.getSvg}
                     getData={this.getData}
                     style={{position:'absolute', zIndex: 10, right: 10}}
-                    collapse={true}
+                    type='button'
                 />
                 }
 
@@ -437,7 +445,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     {this.scattersAndLines}
                     {this.showLegend &&
                     <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
-                                   data={this.victoryLegendData} />
+                                   data={this.victoryLegendData}
+                                   labelComponent={this.props.legendLabelComponent || <TruncatedTextWithTooltipSVG dy="0.3em" maxWidth={256}/>}
+                                   groupComponent={<g className="survivalChartLegendHideForDownload"/>}
+                    />
                     }
                     {this.legendForDownload}
                     {this.pValueText}

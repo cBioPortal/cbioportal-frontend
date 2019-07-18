@@ -17,9 +17,9 @@ import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
-import CheckedSelect, {Option} from 'shared/components/checkedSelect/CheckedSelect';
+import CheckedSelect, {Option} from 'public-lib/components/checkedSelect/CheckedSelect';
 import {MiniOncoprint} from "shared/components/miniOncoprint/MiniOncoprint";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import GeneBarPlot from './GeneBarPlot';
 import WindowStore from "shared/components/window/WindowStore";
 import './styles.scss';
@@ -183,7 +183,18 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                           />
                       </div>
                   </DefaultTooltip>;
-              },
+            },
+            tooltip:
+                <table>
+                    <tr>
+                        <td>Upper row</td>
+                        <td>: Samples colored according to group.</td>
+                    </tr>
+                    <tr>
+                        <td>Lower row</td>
+                        <td>: Samples with {this.props.showCNAInTable ? 'the listed alteration' : 'a mutation'} in the listed gene are highlighted.</td>
+                    </tr>
+                </table>,
           });
         }
 

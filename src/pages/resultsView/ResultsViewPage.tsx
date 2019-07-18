@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as _ from "lodash";
 import $ from "jquery";
+import URL from 'url';
 import {inject, observer} from "mobx-react";
 import {computed, observable, reaction, runInAction} from "mobx";
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
@@ -33,9 +34,9 @@ import {updateResultsViewQuery} from "./ResultsViewQuery";
 import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 
-function initStore() {
+function initStore(appStore:AppStore) {
 
-    const resultsViewPageStore = new ResultsViewPageStore();
+    const resultsViewPageStore = new ResultsViewPageStore(appStore, getBrowserWindow().globalStores.routing);
 
     resultsViewPageStore.tabId = getTabId(getBrowserWindow().globalStores.routing.location.pathname);
 
@@ -134,7 +135,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     constructor(props: IResultsViewPageProps) {
         super(props);
 
-        this.resultsViewPageStore = initStore();
+        this.resultsViewPageStore = initStore(props.appStore);
 
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
@@ -319,11 +320,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:ResultsViewTab.EXPRESSION,
                 hide:()=> {
-                    if (!this.resultsViewPageStore.studies.isComplete) {
-                        return true;
-                    } else {
-                        return this.resultsViewPageStore.studies.result!.length === 1;
-                    }
+                    return this.resultsViewPageStore.expressionProfiles.result.length === 0
+                        || this.resultsViewPageStore.studies.result.length < 2;
                 },
                 getTab: () => {
 
@@ -333,7 +331,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     >
                         {
                             (store.studyIdToStudy.isComplete
-                                && store.putativeDriverAnnotatedMutations.isComplete
+                                && store.filteredAndAnnotatedMutations.isComplete
                                 && store.genes.isComplete
                                 && store.coverageInformation.isComplete) &&
                             (<ExpressionWrapper store={store}
@@ -341,7 +339,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                 genes={store.genes.result}
                                 expressionProfiles={store.expressionProfiles}
                                 numericGeneMolecularDataCache={store.numericGeneMolecularDataCache}
-                                mutations={store.putativeDriverAnnotatedMutations.result!}
+                                mutations={store.filteredAndAnnotatedMutations.result!}
                                 RNASeqVersion={store.expressionTabSeqVersion}
                                 coverageInformation={store.coverageInformation.result}
                                 onRNASeqVersionChange={(version:number)=>store.expressionTabSeqVersion=version}
@@ -411,6 +409,15 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         }
     }
 
+    @autobind
+    private getTabHref(tabId:string) {
+        return URL.format({
+            pathname:tabId,
+            query:this.props.routing.location.query,
+            hash:this.props.routing.location.hash
+        });
+    }
+
     @computed get pageContent(){
         // if studies are complete but we don't have a tab id in route, we need to derive default
         return (<div>
@@ -447,7 +454,9 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             // we don't show the result tabs if we don't have valid query
                             (this.showTabs && !this.resultsViewPageStore.genesInvalid && !this.resultsViewPageStore.isQueryInvalid) && (
                                 <MSKTabs key={this.resultsViewPageStore.rvQuery.hash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
-                                         onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
+                                         onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs"
+                                         getTabHref={this.getTabHref}
+                                >
                                     {
                                         this.tabs
                                     }

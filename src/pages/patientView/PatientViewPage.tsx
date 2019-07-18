@@ -47,7 +47,7 @@ import WindowStore from "shared/components/window/WindowStore";
 import {QueryParams} from "url";
 import {AppStore} from "../../AppStore";
 import request from 'superagent';
-import {remoteData} from "../../shared/api/remoteData";
+import {remoteData} from "../../public-lib/api/remoteData";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -338,7 +338,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     {/*troubleshooting={["Check that your URL parameters are valid.", "Try refreshing the page.", "Make sure you are connected to the internet."]}*/}
                     {/*/>*/}
 
-                    <div className="topBanner">
+                    <div className="headBlock">
 
                         {  (patientViewPageStore.patientViewData.isComplete) && (
                             <div className="patientPageHeader">
@@ -428,6 +428,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                 oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
                                                 pubMedCache={patientViewPageStore.pubMedCache}
                                                 genomeNexusCache={patientViewPageStore.genomeNexusCache}
+                                                genomeNexusMyVariantInfoCache={patientViewPageStore.genomeNexusMyVariantInfoCache}
                                                 mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
                                                 discreteCNAMolecularProfileId={patientViewPageStore.molecularProfileIdDiscrete.result}
                                                 data={patientViewPageStore.mergedMutationDataIncludingUncalled}

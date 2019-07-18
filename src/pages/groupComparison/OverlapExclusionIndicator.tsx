@@ -44,8 +44,7 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                             {`${count} overlapping ${this.props.only}${plural ? "s" : ""}`}
                             {groupsAreExcluded && [
                                 ` between `,
-                                joinGroupNames(includedGroups, "and"),
-                                "."
+                                joinGroupNames(includedGroups, "and")
                             ]}
                         </span>
                     );
@@ -56,8 +55,7 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                             {`${caseCounts(selectionInfo.overlappingSamples.length, selectionInfo.overlappingPatients.length, " and ", " overlapping ")}`}
                             {groupsAreExcluded && [
                                 ` between `,
-                                joinGroupNames(includedGroups, "and"),
-                                "."
+                                joinGroupNames(includedGroups, "and")
                             ]}
                         </span>
                     );
@@ -96,7 +94,7 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                             message = (
                                 <span>
                                     {groupsAreExcluded ? `There are ` : `The selected groups contain `}
-                                    {caseCountsSummary}
+                                    {caseCountsSummary}.
                                 </span>
                             );
                         }

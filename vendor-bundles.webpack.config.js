@@ -25,8 +25,7 @@ const config = {
             "mobx-utils",
             "d3",
             "datatables.net",
-            "webpack-raphael",
-            "FreeSans.json"
+            "webpack-raphael"
         ]
     },
 

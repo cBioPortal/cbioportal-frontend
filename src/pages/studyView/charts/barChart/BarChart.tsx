@@ -17,7 +17,7 @@ import {
     needAdditionShiftForLogScaleBarChart
 } from "../../StudyViewUtils";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import {getTextDiagonal, getTextHeight, getTextWidth} from "../../../../shared/lib/wrapText";
+import {getTextDiagonal, getTextHeight, getTextWidth} from "public-lib/lib/TextTruncationUtils";
 import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 
 export interface IBarChartProps {

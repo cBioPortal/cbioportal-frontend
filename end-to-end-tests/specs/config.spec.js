@@ -2,6 +2,7 @@ var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('./../specUtils').waitForOncoprint;
 var goToUrlAndSetLocalStorage = require('./../specUtils').goToUrlAndSetLocalStorage;
+var executeInBrowser = require('./../specUtils').executeInBrowser;
 var useExternalFrontend = require('./../specUtils').useExternalFrontend;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
@@ -77,7 +78,7 @@ describe('homepage', function() {
 
         browser.waitForExist("#rightHeaderContent");
 
-        assert(testJqueryExpression(()=>{
+        assert(executeInBrowser(()=>{
             return $("img[src='images/msk_logo_transparent_black.png']").length > 0;
         }));
 
@@ -96,10 +97,6 @@ describe('homepage', function() {
 
 
 });
-
-function testJqueryExpression(callback){
-    return browser.execute(callback).value;
-}
 
 function setServerConfiguration(serverConfig){
     browser.localStorage('POST', {key: 'frontendConfig', value: JSON.stringify({"serverConfig":serverConfig}) });

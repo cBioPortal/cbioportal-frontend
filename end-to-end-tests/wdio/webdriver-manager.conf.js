@@ -162,13 +162,13 @@ var config = {
     reporters: ['spec', 'junit', CustomReporter],
     reporterOptions: {
         junit: {
-            outputDir: process.env.JUNIT_REPORT_PATH,
+            outputDir: process.env.JUNIT_REPORT_PATH || "./",
             outputFileFormat: function(opts) { // optional
                 return `results-${opts.cid}.${opts.capabilities}.xml`
             }
         },
         custom: {
-            outputDir: process.env.JUNIT_REPORT_PATH,
+            outputDir: process.env.JUNIT_REPORT_PATH ||  "./",
             outputFileFormat: function(opts) { // optional
                 return `custom-results-${opts.cid}.${opts.capabilities}.xml`
             }
@@ -219,6 +219,7 @@ var config = {
      * @param {Object} suite suite details
      */
     // beforeSuite: function (suite) {
+    //
     // },
     /**
      * Hook that gets executed _before_ a hook within the suite starts (e.g. runs before calling
@@ -324,7 +325,7 @@ if (doBrowserstack) {
 }
 
 // config.specs = [
-//     './specs/**/oncoprint.spec.js'
+//     './specs/**/mutationTable.spec.js'
 // ];
 
 

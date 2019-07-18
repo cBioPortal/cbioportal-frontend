@@ -1,11 +1,11 @@
 import _ from "lodash";
 import measureText from "measure-text";
 import numeral from "numeral";
-import {wrapText} from "../../lib/wrapText";
+import {textTruncationUtils} from "../../../public-lib/lib/TextTruncationUtils";
 import {axisTickLabelStyles} from "../../theme/cBioPoralTheme";
 
 export function wrapTick(label:string, maxWidth:number):string[] {
-    return wrapText(label, maxWidth, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize+"px");
+    return textTruncationUtils(label, maxWidth, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize+"px");
 }
 
 function zeroes(times:number) {

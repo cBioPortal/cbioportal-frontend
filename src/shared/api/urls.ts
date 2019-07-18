@@ -4,12 +4,11 @@ import getBrowserWindow from "../lib/getBrowserWindow";
 import * as _ from 'lodash';
 import {GroupComparisonURLQuery} from "../../pages/groupComparison/GroupComparisonPage";
 import {GroupComparisonLoadingParams} from "../../pages/groupComparison/GroupComparisonLoading";
+import {BuildUrlParams} from "../../public-lib/lib/urls";
 
 export function trimTrailingSlash(str:string){
    return str.replace(/\/$/g,"");
 }
-
-export type BuildUrlParams = {pathname:string, query?:QueryParams, hash?:string};
 
 export function buildCBioPortalAPIUrl(params:BuildUrlParams):string;
 export function buildCBioPortalAPIUrl(pathname:string, query?:QueryParams, hash?:string):string;
@@ -57,8 +56,15 @@ export function buildCBioLink(path:string){
 
 export function getCbioPortalApiUrl() {
     const root = trimTrailingSlash(AppConfig.apiRoot!);
-    return `${root}/api`
+    return `${root}/api`;
 }
+
+export function getFrontendAssetUrl(path:string) {
+    const root = trimTrailingSlash(AppConfig.frontendUrl!);
+    return `${root}/${path}`;
+}
+
+
 function getStudySummaryUrlParams(studyIds:string | ReadonlyArray<string>) {
     let cohortsArray:ReadonlyArray<string>;
     if (typeof studyIds === "string") {
@@ -279,13 +285,4 @@ export function getWholeSlideViewerUrl(ids: string[], userName: string): string 
     catch (ex) {
         throw("error parsing mskWholeSlideViewerToken");
     }
-}
-
-export function getNCBIlink(pathnameOrParams?: BuildUrlParams | string): string {
-    let params = typeof pathnameOrParams === 'string' ? {pathname: pathnameOrParams} : pathnameOrParams;
-    return URL.format({
-        protocol: 'https',
-        host: 'www.ncbi.nlm.nih.gov',
-        ...params
-    });
 }

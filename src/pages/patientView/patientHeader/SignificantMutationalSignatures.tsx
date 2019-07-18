@@ -1,6 +1,6 @@
 import * as React from "react";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
-import {placeArrowBottomLeft} from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {placeArrowBottomLeft} from "public-lib/components/defaultTooltip/DefaultTooltip";
 import SimpleTable from "shared/components/simpleTable/SimpleTable";
 import {IMutationalSignature, IMutationalSignatureMeta, ISignificantMutationalSignaturesForSample} from "../../../shared/model/MutationalSignature";
 import LazyMobXTable, {Column} from "shared/components/lazyMobXTable/LazyMobXTable";

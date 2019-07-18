@@ -2,7 +2,7 @@ import * as React from "react";
 import * as _ from "lodash";
 import {observer} from "mobx-react";
 import {CategorizedConfigItems} from "../../../config/IAppConfig";
-import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 
 @observer

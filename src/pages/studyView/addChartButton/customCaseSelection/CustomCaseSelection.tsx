@@ -13,7 +13,7 @@ import {
     ValidationResult
 } from "./CustomCaseSelectionUtils";
 import autobind from 'autobind-decorator';
-import Collapse from "react-collapse";
+import {Collapse} from "react-collapse";
 import {serializeEvent} from "../../../../shared/lib/tracking";
 import {ClinicalDataType, ClinicalDataTypeEnum} from "../../StudyViewUtils";
 

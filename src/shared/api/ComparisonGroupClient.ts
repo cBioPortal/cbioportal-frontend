@@ -11,13 +11,14 @@ import PromisePlus from "../lib/PromisePlus";
 import {Omit} from "../lib/TypeScriptUtils";
 
 export type SessionGroupData = Omit<VirtualStudyData, "studyViewFilter"> & {
+    uid?: string;
     color?:string; // for charts
 };
 export type Session = {
     id:string,
     groups:SessionGroupData[],
     origin:string[],
-    clinicalAttributeName?:string,
+    clinicalAttributeName?:string
     groupNameOrder?:string[];
 };
 export type Group = {
@@ -58,6 +59,12 @@ export default class ComparisonGroupClient {
         return request
             .post(`${getComparisonGroupServiceUrl()}/${id}`)
             .send(group);
+    }
+
+    public getGroup(id:string) {
+        return request
+            .get(`${getComparisonGroupServiceUrl()}/${id}`)
+            .then((res:any)=>res.body);
     }
 
     public async getGroupsForStudies(studyIds:string[]):Promise<Group[]> {

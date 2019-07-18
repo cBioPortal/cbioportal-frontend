@@ -20,6 +20,7 @@ import {
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import MobxPromise from "mobxpromise/dist/src/MobxPromise";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
+import NotUsingGenePanelWarning from "../NotUsingGenePanelWarning";
 
 interface ICancerSummaryContainerProps {
     store:ResultsViewPageStore;
@@ -85,8 +86,12 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
         const labelTransformer = (this.groupAlterationsBy === 'studyId') ? this.mapStudyIdToShortName : undefined;
 
         const alterationCountsForCancerTypesByGene =
-            getAlterationCountsForCancerTypesByGene(this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
-                this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
+            getAlterationCountsForCancerTypesByGene(
+                this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
+                this.props.store.samplesExtendedWithClinicalData.result!,
+                this.groupAlterationsBy,
+                this.props.store.selectedMolecularProfileIdsByAlterationType.result!,
+                this.props.store.coverageInformation.result!);
 
         const geneTabs = _.map(this.props.store.genes.result!, (gene:Gene) => {
             const geneData = alterationCountsForCancerTypesByGene[gene.hugoGeneSymbol];
@@ -116,7 +121,9 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
             const groupedAlterationDataForAllGenes = getAlterationCountsForCancerTypesForAllGenes(
                 this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
                 this.props.store.samplesExtendedWithClinicalData.result!,
-                this.groupAlterationsBy);
+                this.groupAlterationsBy,
+                this.props.store.selectedMolecularProfileIdsByAlterationType.result!,
+                this.props.store.coverageInformation.result!);
             geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
                 <CancerSummaryContent gene={'all'}
                                       width={this.resultsViewPageWidth}
@@ -136,7 +143,10 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
         const status = getMobxPromiseGroupStatus(
             this.props.store.samplesExtendedWithClinicalData,
             this.props.store.oqlFilteredAlterationsByGeneBySampleKey,
-            this.props.store.studies
+            this.props.store.studies,
+            this.props.store.sequencedSampleKeysByGene,
+            this.props.store.selectedMolecularProfileIdsByAlterationType,
+            this.props.store.coverageInformation
         );
 
         switch(status) {

@@ -4,12 +4,9 @@ import BarGraph from "../barGraph/BarGraph";
 import { observer} from "mobx-react";
 import {TypeOfCancer as CancerType} from "../../api/generated/CBioPortalAPI";
 import Testimonials from "../testimonials/Testimonials";
-import {ThreeBounce} from 'better-react-spinkit';
 import AppConfig from "appConfig";
 import {QueryStore} from "shared/components/query/QueryStore";
 import { Link } from 'react-router';
-import getBrowserWindow from "../../lib/getBrowserWindow";
-import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 import {redirectToStudyView} from "../../api/urls";
 import {ResultsViewTab} from "../../../pages/resultsView/ResultsViewPageHelpers";
@@ -41,7 +38,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
     get logic() { return this.studyStore.studyListLogic; }
 
     private CancerTypeList() {
-        return this.logic.cancerTypeListView.getChildCancerTypes(this.studyStore.treeData.rootCancerType);
+        return this.logic.cancerTypeListView.getChildCancerTypes(this.studyStore.treeData.rootCancerType, true);
     };
 
     private CancerTypeDescendantStudy({cancerType}: {cancerType:CancerType}) {
@@ -123,6 +120,9 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
                 <div className="rightBarSection exampleQueries">
                     <h3>Example Queries</h3>
                     <ul>
+                        <li>
+                            <Link to="/comparison/mutations?sessionId=5cf89323e4b0ab413787436c">Primary vs. metastatic prostate cancer</Link>
+                        </li>
                         <li>
                             <Link to="/results?cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list">RAS/RAF alterations in colorectal cancer</Link>
                         </li>

@@ -126,17 +126,20 @@
     // calls to network do must now include all case ids
     // so we need to hijack click and form submit
     $(document).ready(function(){
+
+
+
         $("body").on("click","#netmsg a",function(e){
             e.preventDefault();
 
             switch(this.innerText) {
                 case "GraphML":
                     e.preventDefault();
-                    formSubmit("http://www.cbioportal.org/beta/network.do?download=on", networkParams, "_self", "post");
+                    formSubmit(apiHost + "network.do?download=on", networkParams, "_self", "post");
                     break;
                 case "SIF":
                     e.preventDefault();
-                    formSubmit("http://www.cbioportal.org/beta/network.do?download=on&format=sif", networkParams, "_self", "post");
+                    formSubmit(apiHost + "network.do?download=on&format=sif", networkParams, "_self", "post");
                     break;
             }
 
@@ -167,6 +170,15 @@
     body {
         background:transparent !important;
     }
+
+    #netmsg a {
+        color:#1974b8;
+        cursor:pointer;
+    }
+    #netmsg a:hover {
+        text-decoration:underline;
+    }
+
 </style>
 
 </head>
@@ -202,6 +214,11 @@
                                 $(divNetMsg).append(msgs.replace(/\n/g, "<br/>\n"));
                             }
                         }
+
+                        // these download links should not open in a new tab
+                        // text is stored in backend so this is a cloodge
+                        $("#netmsg a:lt(2)").removeAttr("href");
+
                     }
 
                     function showXDebug(graphml) {

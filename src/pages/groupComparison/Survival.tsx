@@ -3,19 +3,23 @@ import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {observer} from "mobx-react";
 import GroupComparisonStore, {OverlapStrategy} from './GroupComparisonStore';
-import {remoteData} from 'shared/api/remoteData';
+import {remoteData} from 'public-lib/api/remoteData';
 import {MakeMobxView} from "../../shared/components/MobxView";
-import {SURVIVAL_TOO_MANY_GROUPS_MSG} from "./GroupComparisonUtils";
+import {SURVIVAL_NOT_ENOUGH_GROUPS_MSG, SURVIVAL_TOO_MANY_GROUPS_MSG} from "./GroupComparisonUtils";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {blendColors} from "./OverlapUtils";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import classnames from 'classnames';
 import styles from "./styles.module.scss";
 import { ClinicalData, ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import _ from 'lodash';
 import SurvivalDescriptionTable from 'pages/resultsView/survival/SurvivalDescriptionTable';
+import {
+    GroupLegendLabelComponent,
+    SurvivalTabGroupLegendLabelComponent
+} from "./labelComponents/GroupLegendLabelComponent";
 
 export interface ISurvivalProps {
     store: GroupComparisonStore
@@ -75,7 +79,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             name,
                             color: blendColors(partitionGroupUids.map(uid => uidToGroup[uid].color)),
                             value,
-                            legendText: name
+                            legendText: JSON.stringify(partitionGroupUids),
                         });
                     }
                 }
@@ -87,7 +91,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         name,
                         color: group.color,
                         value: group.uid,
-                        legendText: name
+                        legendText: group.uid
                     });
                     const patientIdentifiers = getPatientIdentifiers([group]);
                     for (const identifier of patientIdentifiers) {
@@ -120,6 +124,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             let content: any = [];
             if (this.props.store._activeGroupsNotOverlapRemoved.result!.length > 10) {
                 content.push(<span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>);
+            } else if (this.props.store._activeGroupsNotOverlapRemoved.result!.length === 0) {
+                content.push(<span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>);
             } else {
                 content.push(<OverlapExclusionIndicator store={this.props.store} only="patient" survivalTabMode={true}/>);
                 content.push(this.survivalUI.component);
@@ -141,7 +147,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.diseaseFreeSurvivalDescriptions,
             this.props.store.activeStudiesClinicalAttributes,
             this.analysisGroupsComputations,
-            this.props.store.overlapComputations
+            this.props.store.overlapComputations,
+            this.props.store.uidToGroup
         ],
         render:()=>{
             let content: any = [];
@@ -195,6 +202,19 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 xLabelWithoutEventTooltip="Time of last observation"
                                 fileName="Overall_Survival"
                                 showCurveInTooltip={true}
+                                legendLabelComponent={
+                                    this.props.store.overlapStrategy === OverlapStrategy.INCLUDE ? (
+                                        <SurvivalTabGroupLegendLabelComponent
+                                            maxLabelWidth={256}
+                                            uidToGroup={this.props.store.uidToGroup.result!}
+                                            dy="0.3em"
+                                        />
+                                    ) : <GroupLegendLabelComponent
+                                        maxLabelWidth={256}
+                                        uidToGroup={this.props.store.uidToGroup.result!}
+                                        dy="0.3em"
+                                    />
+                                }
                             />
                         </div>
                     </div>
@@ -246,6 +266,19 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 xLabelWithoutEventTooltip="Time of Last Observation"
                                 fileName="Disease_Free_Survival"
                                 showCurveInTooltip={true}
+                                legendLabelComponent={
+                                    this.props.store.overlapStrategy === OverlapStrategy.INCLUDE ? (
+                                        <SurvivalTabGroupLegendLabelComponent
+                                            maxLabelWidth={256}
+                                            uidToGroup={this.props.store.uidToGroup.result!}
+                                            dy="0.3em"
+                                        />
+                                    ) : <GroupLegendLabelComponent
+                                        maxLabelWidth={256}
+                                        uidToGroup={this.props.store.uidToGroup.result!}
+                                        dy="0.3em"
+                                    />
+                                }
                             />
                         </div>
                     </div>

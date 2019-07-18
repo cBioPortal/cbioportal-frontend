@@ -9,22 +9,22 @@ import _ from "lodash";
 import {SortMode} from "../ResultsViewOncoprint";
 import {Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import Slider from "react-rangeslider";
 import "react-rangeslider/lib/index.css";
-import EditableSpan from "shared/components/editableSpan/EditableSpan";
+import EditableSpan from "public-lib/components/editableSpan/EditableSpan";
 import "./styles.scss";
 import ErrorIcon from "../../ErrorIcon";
 import classNames from "classnames";
 import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
-import ClinicalAttributeSelector from "../../clinicalAttributeSelector/ClinicalAttributeSelector";
 import {ResultsViewPageStore} from "../../../../pages/resultsView/ResultsViewPageStore";
 import {ExtendedClinicalAttribute} from "../../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {getNCBIlink} from "../../../api/urls";
+import {getNCBIlink} from "public-lib/lib/urls";
 import {GeneBoxType} from "../../GeneSelectionBox/GeneSelectionBox";
 import GeneSelectionBox from "../../GeneSelectionBox/GeneSelectionBox";
 import autobind from "autobind-decorator";
 import {SingleGeneQuery} from "../../../lib/oql/oql-parser";
+import AddClinicalTracks from "../../../../pages/resultsView/oncoprint/AddClinicalTracks";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -412,13 +412,11 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         if (this.props.store && this.props.state.selectedClinicalAttributeIds &&
             this.props.handlers.onChangeSelectedClinicalTracks) {
             return (
-                <div className="clinical-track-selector" style={{position:"relative"}}>
-                    <ClinicalAttributeSelector
-                        store={this.props.store}
-                        selectedClinicalAttributeIds={this.props.state.selectedClinicalAttributeIds}
-                        onChange={this.props.handlers.onChangeSelectedClinicalTracks}
-                    />
-                </div>
+                <AddClinicalTracks
+                    store={this.props.store}
+                    selectedClinicalAttributeIds={this.props.state.selectedClinicalAttributeIds}
+                    onChangeSelectedClinicalTracks={this.props.handlers.onChangeSelectedClinicalTracks}
+                />
             );
         } else {
             return <span/>;
@@ -656,7 +654,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     Hotspots
                                     <DefaultTooltip
                                         overlay={<div style={{maxWidth:"400px"}}>Identified as a recurrent hotspot (statistically significant) in a population-scale cohort of tumor samples of various cancer types using methodology based in part on <a href={getNCBIlink('/pubmed/26619011')} target="_blank">Chang et al., Nat Biotechnol, 2016.</a>
-                                            Explore all mutations at <a href="http://www.cancerhotspots.org" target="_blank">http://cancerhotspots.org</a></div>}
+                                            Explore all mutations at <a href="https://www.cancerhotspots.org" target="_blank">https://cancerhotspots.org</a></div>}
                                         placement="top"
                                     >
                                         <img
@@ -748,19 +746,19 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 data-test="HideVUS"
                                 type="checkbox"
                                 value={EVENT_KEY.hidePutativePassengers}
-                                checked={!this.props.state.hidePutativePassengers}
+                                checked={this.props.state.hidePutativePassengers}
                                 onClick={this.onInputClick}
                                 disabled={!this.props.state.distinguishDrivers}
-                            /> Show VUS (variants of unknown significance)
+                            /> Hide VUS (variants of unknown significance)
                         </label></div>
                         <div className="checkbox"><label>
                             <input
                                 data-test="HideGermline"
                                 type="checkbox"
                                 value={EVENT_KEY.hideGermlineMutations}
-                                checked={!this.props.state.hideGermlineMutations}
+                                checked={this.props.state.hideGermlineMutations}
                                 onClick={this.onInputClick}
-                            /> Show germline mutations
+                            /> Hide germline mutations
                         </label></div>
                     </div>
                 </div>
@@ -994,12 +992,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     render() {
         return (
             <div className="oncoprint__controls">
-                <div style={{width:250, marginRight:5, marginTop:-0.5}}>
+                <ButtonGroup>
                     <Observer>
                         {this.getClinicalTracksMenu}
                     </Observer>
-                </div>
-                <ButtonGroup>
                     <Observer>
                         {this.getHeatmapMenu}
                     </Observer>

@@ -8,7 +8,7 @@ import {
 } from "../../api/generated/CBioPortalAPI";
 import {Geneset} from "../../api/generated/CBioPortalAPIInternal";
 import CancerStudyTreeData from "./CancerStudyTreeData";
-import {remoteData} from "../../api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {labelMobxPromises, cached, debounceAsync} from "mobxpromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
 import {MUTCommand, SingleGeneQuery, SyntaxError} from "../../lib/oql/oql-parser";
@@ -19,7 +19,7 @@ import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
 import {buildCBioPortalPageUrl, redirectToStudyView} from "../../api/urls";
 import StudyListLogic from "./StudyListLogic";
-import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
+import {stringListToIndexSet, stringListToSet} from "../../../public-lib/lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
 import {
     MolecularProfileQueryParams,
@@ -194,7 +194,9 @@ export class QueryStore {
     @computed get selectedVirtualStudies(): VirtualStudy[] {
         return _.reduce(this.selectableSelectedStudies, (acc: VirtualStudy[], study) => {
             if (this.isVirtualStudy(study.studyId)) {
-                acc.push(this.virtualStudiesMap[study.studyId])
+                if (this.virtualStudiesMap !== undefined && this.virtualStudiesMap[study.studyId]) {
+                    acc.push(this.virtualStudiesMap[study.studyId])
+                }
             }
             return acc;
         }, []);
@@ -1025,7 +1027,8 @@ export class QueryStore {
             cancerTypes: this.cancerTypes.result,
             studies: this.cancerStudies.result,
             priorityStudies: this.priorityStudies,
-            virtualStudies: this.forDownloadTab ? [] : this.userVirtualStudies.result
+            virtualStudies: this.forDownloadTab ? [] : this.userVirtualStudies.result,
+            maxTreeDepth: this.maxTreeDepth
         });
     }
 
@@ -1358,6 +1361,10 @@ export class QueryStore {
     }
 
     @computed get summaryEnabled() {
+        return this.selectableSelectedStudyIds.length > 0;
+    }
+
+    @computed get hasSelectedStudies(){
         return this.selectableSelectedStudyIds.length > 0;
     }
 

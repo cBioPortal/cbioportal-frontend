@@ -84,6 +84,7 @@ describe('CustomCaseSelectionUtils', () => {
             assert.equal(result.groupName, 'group1');
         });
     });
+
     describe('getLines', () => {
         it('proper number of lines should be returned - 1', () => {
             const line = 'test\n';
@@ -194,6 +195,50 @@ describe('CustomCaseSelectionUtils', () => {
             }];
             const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
             assert.isTrue(result.error.length === 0);
+        });
+
+        describe('The warning message should be given when case is invalid', () => {
+            it('Check when study id is not specified', function () {
+                const lines: InputLine[] = [{
+                    line: 's1test',
+                    caseId: 's1test'
+                }];
+                const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
+                assert.isTrue(result.warning.length === 1);
+                assert.equal(result.warning[0].code, CodeEnum.INVALID_CASE_ID);
+            });
+            it('Check when study id is specified', function () {
+                const lines: InputLine[] = [{
+                    line: 's1test',
+                    studyId: 'chol_nus_2012',
+                    caseId: 's1test'
+                }];
+                const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
+                assert.isTrue(result.warning.length === 1);
+                assert.equal(result.warning[0].code, CodeEnum.INVALID_CASE_ID);
+            });
+        });
+
+        describe('The warning message should be given when case id is sample but asking for validation on patient', () => {
+            it('Check when study id is not specified', function () {
+                const lines: InputLine[] = [{
+                    line: 's1',
+                    caseId: 's1'
+                }];
+                const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.PATIENT, st1, true, ['chol_nus_2012']);
+                assert.isTrue(result.warning.length === 1);
+                assert.equal(result.warning[0].code, CodeEnum.INVALID_CASE_ID);
+            });
+            it('Check when study id is specified', function () {
+                const lines: InputLine[] = [{
+                    line: 's1',
+                    studyId: 'chol_nus_2012',
+                    caseId: 's1'
+                }];
+                const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.PATIENT, st1, true, ['chol_nus_2012']);
+                assert.isTrue(result.warning.length === 1);
+                assert.equal(result.warning[0].code, CodeEnum.INVALID_CASE_ID);
+            });
         });
 
         it('For duplicate cases, give POTENTIAL_OVERLAP warning when the case is in different group', () => {

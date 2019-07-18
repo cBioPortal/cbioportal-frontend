@@ -28,9 +28,13 @@ import client from "shared/api/cbioportalClientInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
 import MobxPromise, {MobxPromise_await} from "mobxpromise";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
-import {remoteData} from "../../shared/api/remoteData";
+import {remoteData} from "../../public-lib/api/remoteData";
 import {calculateQValues} from "../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import {SpecialAttribute} from "../../shared/cache/ClinicalDataCache";
+import { isSampleProfiled } from "shared/lib/isSampleProfiled";
+import { AlteredStatus } from "./mutualExclusivity/MutualExclusivityUtil";
+import {Group} from "../../shared/api/ComparisonGroupClient";
+import {isNotGermlineMutation} from "../../shared/lib/MutationUtils";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -44,6 +48,7 @@ export type ExtendedClinicalAttribute =
     {
         clinicalAttributeId: string|SpecialAttribute;
         molecularProfileIds?:string[];
+        comparisonGroup?:Group;
     };
 
 export type CoverageInformationForCase = {
@@ -60,7 +65,7 @@ export type CoverageInformation = {
         {[uniquePatientKey:string]:CoverageInformationForCase};
 };
 
-export type SampleAlteredMap = {[trackOqlKey:string]:boolean[]};
+export type SampleAlteredMap = {[trackOqlKey:string]:AlteredStatus[]};
 
 export function computeCustomDriverAnnotationReport(mutations:Mutation[]):CustomDriverAnnotationReport {
     let hasBinary = false;
@@ -117,17 +122,20 @@ export function annotateMutationPutativeDriver(
     }, mutation) as AnnotatedMutation;
 }
 
-export function computePutativeDriverAnnotatedMutations(
+export function filterAndAnnotateMutations(
     mutations: Mutation[],
     getPutativeDriverInfo:(mutation:Mutation)=>{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean, customDriverBinary:boolean, customDriverTier?:string},
     entrezGeneIdToGene:{[entrezGeneId:number]:Gene},
-    ignoreUnknown:boolean
+    excludeVUS:boolean,
+    excludeGermline:boolean
 ):AnnotatedMutation[] {
     return mutations.reduce((annotated:AnnotatedMutation[], mutation:Mutation)=>{
-        const annotatedMutation = annotateMutationPutativeDriver(mutation, getPutativeDriverInfo(mutation)); // annotate
-        annotatedMutation.hugoGeneSymbol = entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
-        if (annotatedMutation.putativeDriver || !ignoreUnknown) {
-            annotated.push(annotatedMutation);
+        if (!excludeGermline || isNotGermlineMutation(mutation)) {
+            const annotatedMutation = annotateMutationPutativeDriver(mutation, getPutativeDriverInfo(mutation)); // annotate
+            annotatedMutation.hugoGeneSymbol = entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
+            if (annotatedMutation.putativeDriver || !excludeVUS) {
+                annotated.push(annotatedMutation);
+            }
         }
         return annotated;
     }, []);
@@ -414,23 +422,53 @@ export function doesQueryHaveCNSegmentData(
     }
 }
 
-export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackCaseData[], samples: Sample[], oqlQuery: string){
+export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackCaseData[], samples: Sample[], oqlQuery: string, coverageInformation: CoverageInformation, selectedMolecularProfileIds: string[], studyToMolecularProfiles : _.Dictionary<MolecularProfile[]>) {
     const result : SampleAlteredMap = {};
     filteredAlterationData.forEach((element, key) => {
         //1: is not group
         if (element.mergedTrackOqlList === undefined) {
             const notGroupedOql = element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;                    
-            const sampleKeys = _.map(notGroupedOql.data, (data) => data.uniqueSampleKey);
+            const sampleKeysMap = _.keyBy(_.map(notGroupedOql.data, (data) => data.uniqueSampleKey));
+            const unProfiledSampleKeysMap = _.keyBy(samples.filter((sample) => {
+                const molecularProfileIds = studyToMolecularProfiles[sample.studyId] ? _.intersection(studyToMolecularProfiles[sample.studyId].map((profile) => profile.molecularProfileId), selectedMolecularProfileIds) : selectedMolecularProfileIds;
+                // if not profiled in some genes molecular profile, then we think it is not profiled and will exclude this sample
+                return _.some(_.map(molecularProfileIds, (molecularProfileId) => {
+                    return isSampleProfiled(sample.uniqueSampleKey, molecularProfileId, notGroupedOql.gene, coverageInformation);
+                }) , (profiled) => profiled === false);
+            }).map((sample) => sample.uniqueSampleKey));
             result[getSingleGeneResultKey(key, oqlQuery, notGroupedOql)] = samples.map((sample: Sample) => {
-                return sampleKeys.includes(sample.uniqueSampleKey);
+                if (sample.uniqueSampleKey in unProfiledSampleKeysMap) {
+                    return AlteredStatus.UNPROFILED;
+                } else if (sample.uniqueSampleKey in sampleKeysMap) {
+                    return AlteredStatus.ALTERED;
+                } else {
+                    return AlteredStatus.UNALTERED;
+                }
             });
         }
         //2: is group
         else {
             const groupedOql = element.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
-            const sampleKeys = _.map(_.flatten(_.map(groupedOql.list, (list) => list.data)), (data) => data.uniqueSampleKey);
+            const sampleKeysMap = _.keyBy(_.map(_.flatten(_.map(groupedOql.list, (list) => list.data)), (data) => data.uniqueSampleKey));
+            const groupGenes = _.map(groupedOql.list, (oql) => oql.gene);
+            const unProfiledSampleKeysMap = _.keyBy(samples.filter((sample) => {
+                const molecularProfileIds = studyToMolecularProfiles[sample.studyId] ? _.intersection(studyToMolecularProfiles[sample.studyId].map((profile) => profile.molecularProfileId), selectedMolecularProfileIds) : selectedMolecularProfileIds;
+                // if not profiled in some genes molecular profile, then we think it is not profiled and will exclude this sample
+                return _.some(_.map(molecularProfileIds, (molecularProfileId) => {
+                    // if not profiled in every genes, then the sample is not profiled, or we think it is profiled
+                    return _.every(_.map(groupGenes, (gene) => {
+                        return isSampleProfiled(sample.uniqueSampleKey, molecularProfileId, gene, coverageInformation);
+                    }), (profiled) => profiled === false);
+                }) , (notProfiled) => notProfiled === true);
+            }).map((sample) => sample.uniqueSampleKey));
             result[getMultipleGeneResultKey(groupedOql)] = samples.map((sample: Sample) => {
-                return sampleKeys.includes(sample.uniqueSampleKey);
+                if (sample.uniqueSampleKey in unProfiledSampleKeysMap) {
+                    return AlteredStatus.UNPROFILED;
+                } else if (sample.uniqueSampleKey in sampleKeysMap) {
+                    return AlteredStatus.ALTERED;
+                } else {
+                    return AlteredStatus.UNALTERED;
+                }
             });
         }
     });

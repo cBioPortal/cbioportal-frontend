@@ -1,14 +1,13 @@
 import * as React from "react";
-import { GeneIdentifier, MutatedGenesData } from "pages/studyView/StudyViewPageStore";
+import {GeneIdentifier, MutatedGenesData, MutationCountByGeneWithCancerGene} from "pages/studyView/StudyViewPageStore";
 import { observer } from "mobx-react";
 import styles from "./tables.module.scss";
-import { MutationCountByGene } from "shared/api/generated/CBioPortalAPIInternal";
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import MobxPromise from "mobxpromise";
 import { If } from "react-if";
 import * as _ from "lodash";
 import classnames from "classnames";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import FixedHeaderTable from "./FixedHeaderTable";
 import { action, computed, IReactionDisposer, observable, reaction } from "mobx";
 import autobind from "autobind-decorator";
@@ -20,13 +19,15 @@ import {
     getFrequencyStr,
     getQValue
 } from "../StudyViewUtils";
-import { SortDirection } from "../../../shared/components/lazyMobXTable/LazyMobXTable";
+import {Column, SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import { DEFAULT_SORTING_COLUMN } from "../StudyViewConfig";
 import { GenePanelToGene } from "shared/api/generated/CBioPortalAPI";
 import { GenePanelModal, GenePanelList } from "./GenePanelModal";
+import {getFreqColumnRender, getGeneColumnHeaderRender} from "pages/studyView/TableUtils";
+import {GeneCell} from "pages/studyView/table/GeneCell";
 
 export interface IMutatedGenesTablePros {
-    promise: MobxPromise<MutatedGenesData>;
+    promise: MobxPromise<MutationCountByGeneWithCancerGene[]>;
     width: number;
     height: number;
     filters: number[];
@@ -34,6 +35,7 @@ export interface IMutatedGenesTablePros {
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
+    cancerGeneFilterEnabled?: boolean;
 }
 
 type MutatedGenesTableUserSelectionWithIndex = {
@@ -49,19 +51,14 @@ enum ColumnKey {
     FREQ = "Freq"
 }
 
-class MutatedGenesTableComponent extends FixedHeaderTable<MutationCountByGene> {}
+class MutatedGenesTableComponent extends FixedHeaderTable<MutationCountByGeneWithCancerGene> {}
 
 @observer
 export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {}> {
     @observable private preSelectedRows: MutatedGenesTableUserSelectionWithIndex[] = [];
-    @observable private sortBy: string = DEFAULT_SORTING_COLUMN;
+    @observable private sortBy: string = ColumnKey.FREQ;
     @observable private sortDirection: SortDirection;
-    @observable private cellMargin: { [key: string]: number } = {
-        [ColumnKey.GENE]: 0,
-        [ColumnKey.NUMBER_MUTATIONS]: 0,
-        [ColumnKey.NUMBER]: 0,
-        [ColumnKey.FREQ]: 0
-    };
+    @observable private cancerGeneFilterIconEnabled = true;
     @observable private modalSettings: {
         modalOpen: boolean;
         modalPanelName: string;
@@ -72,27 +69,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         modalPanelGenes: []
     };
 
-    private disposers:IReactionDisposer[] = [];
-
-    constructor(props: IMutatedGenesTablePros) {
-        super(props);
-        this.disposers.push(
-            reaction(() => this.columnsWidth, () => {
-                this.updateCellMargin();
-            }, {fireImmediately: true})
-        );
-        this.disposers.push(
-            reaction(() => this.props.promise.result, () => {
-                this.updateCellMargin();
-            }, {fireImmediately: true})
-        );
-    }
-
-    componentWillUnmount() {
-        for (const disposer of this.disposers) {
-            disposer();
-        }
-    }
+    public static defaultProps = {
+        cancerGeneFilterEnabled: false
+    };
 
     @autobind
     @action
@@ -121,114 +100,72 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         };
     }
 
-    @autobind
-    @action
-    updateCellMargin() {
-        try {
-            if (this.props.promise.result!.length > 0) {
-                this.cellMargin[ColumnKey.NUMBER_MUTATIONS] = correctMargin(
-                    getFixedHeaderNumberCellMargin(
-                        this.columnsWidth[ColumnKey.NUMBER_MUTATIONS],
-                        _.max(
-                            this.props.promise.result!.map(item => item.totalCount)
-                        )!.toLocaleString()
-                    )
-                );
-                this.cellMargin[ColumnKey.NUMBER] = correctMargin(
-                    (this.columnsWidth[ColumnKey.NUMBER] -
-                        10 -
-                        (getFixedHeaderTableMaxLengthStringPixel(
-                            _.max(
-                                this.props.promise.result!.map(item => item.numberOfAlteredCases)
-                            )!.toLocaleString()
-                        ) +
-                            20)) /
-                        2
-                );
-                this.cellMargin[ColumnKey.FREQ] = correctMargin(
-                    getFixedHeaderNumberCellMargin(
-                        this.columnsWidth[ColumnKey.FREQ],
-                        getFrequencyStr(
-                            _.max(
-                                this.props.promise.result!.map(
-                                    item =>
-                                        (item.numberOfAlteredCases / item.numberOfSamplesProfiled) *
-                                        100
-                                )
-                            )!
-                        )
-                    )
-                );
-            }
-        } catch (e) {
-            console.log(this.props.promise.result);
+    @computed
+    get cellMargin() {
+        const maxNumberMutationsColumn = _.max(this.tableData.map(item => item.totalCount));
+        const maxNumberColumn = _.max(this.tableData!.map(item => item.numberOfAlteredCases));
+        const localeNumberMutationsString = maxNumberMutationsColumn === undefined ? '' : maxNumberMutationsColumn.toLocaleString();
+        const localeNumberString = maxNumberColumn === undefined ? '' : maxNumberColumn.toLocaleString();
+        return {
+            [ColumnKey.GENE]: 0,
+            [ColumnKey.NUMBER_MUTATIONS]: correctMargin(
+                getFixedHeaderNumberCellMargin(
+                    this.columnsWidth[ColumnKey.NUMBER_MUTATIONS],
+                    localeNumberMutationsString
+                )
+            ),
+            [ColumnKey.NUMBER]: correctMargin(
+                (this.columnsWidth[ColumnKey.NUMBER] - 10 - (
+                        getFixedHeaderTableMaxLengthStringPixel(localeNumberString) + 20)
+                ) / 2),
+            [ColumnKey.FREQ]: correctMargin(
+                getFixedHeaderNumberCellMargin(
+                    this.columnsWidth[ColumnKey.FREQ],
+                    getFrequencyStr(_.max(this.tableData.map(item => (item.numberOfAlteredCases / item.numberOfSamplesProfiled) * 100))!)
+                )
+            )
         }
     }
 
+    @autobind
+    toggleCancerGeneFilter(event: any) {
+        event.stopPropagation();
+        this.cancerGeneFilterIconEnabled = !this.cancerGeneFilterIconEnabled;
+    }
+
+    @computed get isFilteredByCancerGeneList() {
+        return this.props.cancerGeneFilterEnabled! && this.cancerGeneFilterIconEnabled;
+    }
+
+    @computed get tableData() {
+        return this.isFilteredByCancerGeneList ? _.filter(this.props.promise.result, data => data.isCancerGene) : (this.props.promise.result || []);
+    }
+
     @computed
-    get tableColumns() {
+    get tableColumns():Column<MutationCountByGeneWithCancerGene>[] {
         return [
             {
                 name: ColumnKey.GENE,
-                tooltip: <span>Gene</span>,
-                render: (data: MutationCountByGene) => {
-                    const addGeneOverlay = () => (
-                        <span>{`Click ${data.hugoGeneSymbol} to ${
-                            _.includes(this.props.selectedGenes, data.hugoGeneSymbol)
-                                ? "remove from"
-                                : "add to"
-                        } your query`}</span>
-                    );
-                    const qvalOverlay = () => (
-                        <div>
-                            <b>MutSig</b>
-                            <br />
-                            <i>Q-value: </i>
-                            <span>{getQValue(data.qValue)}</span>
-                        </div>
-                    );
-                    return (
-                        <div className={styles.displayFlex}>
-                            <DefaultTooltip
-                                placement="left"
-                                overlay={addGeneOverlay}
-                                destroyTooltipOnHide={true}
-                            >
-                                <span
-                                    className={classnames(
-                                        styles.geneSymbol,
-                                        styles.ellipsisText,
-                                        _.includes(this.props.selectedGenes, data.hugoGeneSymbol)
-                                            ? styles.selected
-                                            : undefined,
-                                        _.isUndefined(data.qValue) ? undefined : styles.shortenText
-                                    )}
-                                    onClick={() => this.props.onGeneSelect(data.hugoGeneSymbol)}
-                                >
-                                    {data.hugoGeneSymbol}
-                                </span>
-                            </DefaultTooltip>
-                            <If condition={!_.isUndefined(data.qValue)}>
-                                <DefaultTooltip
-                                    placement="right"
-                                    overlay={qvalOverlay}
-                                    destroyTooltipOnHide={true}
-                                >
-                                    <span>
-                                        <img
-                                            src={require("./images/mutsig.png")}
-                                            className={styles.mutSig}
-                                        />
-                                    </span>
-                                </DefaultTooltip>
-                            </If>
-                        </div>
-                    );
+                headerRender: () => {
+                    return getGeneColumnHeaderRender(this.cellMargin[ColumnKey.GENE], ColumnKey.GENE, this.props.cancerGeneFilterEnabled!, this.isFilteredByCancerGeneList, this.toggleCancerGeneFilter);
                 },
-                sortBy: (data: MutationCountByGene) => data.hugoGeneSymbol,
+                render: (data: MutationCountByGeneWithCancerGene) => {
+                    return <GeneCell
+                        tableType={'mutation'}
+                        selectedGenes={this.props.selectedGenes}
+                        hugoGeneSymbol={data.hugoGeneSymbol}
+                        qValue={data.qValue}
+                        isCancerGene={data.isCancerGene}
+                        oncokbAnnotated={data.oncokbAnnotated}
+                        isOncogene={data.oncokbOncogene}
+                        isTumorSuppressorGene={data.oncokbTumorSuppressorGene}
+                        onGeneSelect={this.props.onGeneSelect}
+                    />
+                },
+                sortBy: (data: MutationCountByGeneWithCancerGene) => data.hugoGeneSymbol,
                 defaultSortDirection: "asc" as "asc",
                 filter: (
-                    data: MutationCountByGene,
+                    data: MutationCountByGeneWithCancerGene,
                     filterString: string,
                     filterStringUpper: string
                 ) => {
@@ -246,7 +183,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                         </div>
                     );
                 },
-                render: (data: MutationCountByGene) => (
+                render: (data: MutationCountByGeneWithCancerGene) => (
                     <span
                         style={{
                             flexDirection: "row-reverse",
@@ -257,9 +194,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                         {data.totalCount.toLocaleString()}
                     </span>
                 ),
-                sortBy: (data: MutationCountByGene) => data.totalCount,
+                sortBy: (data: MutationCountByGeneWithCancerGene) => data.totalCount,
                 defaultSortDirection: "desc" as "desc",
-                filter: (data: MutationCountByGene, filterString: string) => {
+                filter: (data: MutationCountByGeneWithCancerGene, filterString: string) => {
                     return _.toString(data.totalCount).includes(filterString);
                 },
                 width: this.columnsWidth[ColumnKey.NUMBER_MUTATIONS]
@@ -270,7 +207,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 headerRender: () => {
                     return <div style={{ marginLeft: this.cellMargin[ColumnKey.NUMBER] }}>#</div>;
                 },
-                render: (data: MutationCountByGene) => (
+                render: (data: MutationCountByGeneWithCancerGene) => (
                     <LabeledCheckbox
                         checked={this.isChecked(data.entrezGeneId)}
                         disabled={this.isDisabled(data.entrezGeneId)}
@@ -290,9 +227,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                         <span>{data.numberOfAlteredCases.toLocaleString()}</span>
                     </LabeledCheckbox>
                 ),
-                sortBy: (data: MutationCountByGene) => data.numberOfAlteredCases,
+                sortBy: (data: MutationCountByGeneWithCancerGene) => data.numberOfAlteredCases,
                 defaultSortDirection: "desc" as "desc",
-                filter: (data: MutationCountByGene, filterString: string) => {
+                filter: (data: MutationCountByGeneWithCancerGene, filterString: string) => {
                     return _.toString(data.numberOfAlteredCases).includes(filterString);
                 },
                 width: this.columnsWidth[ColumnKey.NUMBER]
@@ -303,35 +240,13 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 headerRender: () => {
                     return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
                 },
-                render: (data: MutationCountByGene) => {
-                    const addTotalProfiledOverlay = () => (
-                        <span>
-                            # of samples profiled for mutations in this gene:{" "}
-                            {data.numberOfSamplesProfiled.toLocaleString()}
-                            <GenePanelList
-                                genePanels={data.matchingGenePanels}
-                                toggleModal={this.toggleModal}
-                            />
-                        </span>
-                    );
-                    return (
-                        <DefaultTooltip
-                            placement="right"
-                            overlay={addTotalProfiledOverlay}
-                            destroyTooltipOnHide={true}
-                        >
-                            <span>
-                                {getFrequencyStr(
-                                    (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100
-                                )}
-                            </span>
-                        </DefaultTooltip>
-                    );
+                render: (data: MutationCountByGeneWithCancerGene) => {
+                    return getFreqColumnRender('mutation', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanels, this.toggleModal);
                 },
-                sortBy: (data: MutationCountByGene) =>
+                sortBy: (data: MutationCountByGeneWithCancerGene) =>
                     (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100,
                 defaultSortDirection: "desc" as "desc",
-                filter: (data: MutationCountByGene, filterString: string) => {
+                filter: (data: MutationCountByGeneWithCancerGene, filterString: string) => {
                     return _.toString(
                         getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled)
                     ).includes(filterString);
@@ -382,9 +297,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         if (_.isUndefined(record)) {
             let dataIndex = -1;
             // definitely there is a match
-            const datum: MutationCountByGene | undefined = _.find(
-                this.props.promise.result,
-                (row: MutationCountByGene, index: number) => {
+            const datum: MutationCountByGeneWithCancerGene | undefined = _.find(
+                this.tableData,
+                (row: MutationCountByGeneWithCancerGene, index: number) => {
                     const exist = row.entrezGeneId === entrezGeneId;
                     if (exist) {
                         dataIndex = index;
@@ -425,10 +340,10 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             return [];
         } else {
             return _.reduce(
-                this.props.promise.result,
+                this.tableData,
                 (
                     acc: MutatedGenesTableUserSelectionWithIndex[],
-                    row: MutationCountByGene,
+                    row: MutationCountByGeneWithCancerGene,
                     index: number
                 ) => {
                     if (_.includes(this.props.filters, row.entrezGeneId)) {
@@ -446,7 +361,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     }
 
     @autobind
-    isSelectedRow(data: MutationCountByGene) {
+    isSelectedRow(data: MutationCountByGeneWithCancerGene) {
         return !_.isUndefined(
             _.find(_.union(this.selectedRows, this.preSelectedRows), function(row) {
                 return row.entrezGeneId === data.entrezGeneId;
@@ -463,26 +378,28 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
 
     public render() {
         return (
-            <div>
-                <MutatedGenesTableComponent
-                    width={this.props.width}
-                    height={this.props.height}
-                    data={this.props.promise.result || []}
-                    columns={this.tableColumns}
-                    showSelectSamples={true && this.preSelectedRows.length > 0}
-                    isSelectedRow={this.isSelectedRow}
-                    afterSelectingRows={this.afterSelectingRows}
-                    sortBy={this.sortBy}
-                    sortDirection={this.sortDirection}
-                    afterSorting={this.afterSorting}
-                />
+            <>
+                {this.props.promise.isComplete && (
+                    <MutatedGenesTableComponent
+                        width={this.props.width}
+                        height={this.props.height}
+                        data={this.tableData}
+                        columns={this.tableColumns}
+                        showSelectSamples={true && this.preSelectedRows.length > 0}
+                        isSelectedRow={this.isSelectedRow}
+                        afterSelectingRows={this.afterSelectingRows}
+                        sortBy={this.sortBy}
+                        sortDirection={this.sortDirection}
+                        afterSorting={this.afterSorting}
+                    />
+                )}
                 <GenePanelModal
                     show={this.modalSettings.modalOpen}
                     genes={this.modalSettings.modalPanelGenes}
                     panelName={this.modalSettings.modalPanelName}
                     hide={this.closeModal}
                 />
-            </div>
+            </>
         );
     }
 }

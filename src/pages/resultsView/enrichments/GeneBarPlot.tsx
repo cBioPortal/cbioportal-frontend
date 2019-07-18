@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { observable, action, computed } from 'mobx';
-import DownloadControls from 'shared/components/downloadControls/DownloadControls';
+import DownloadControls from 'public-lib/components/downloadControls/DownloadControls';
 import autobind from 'autobind-decorator';
 import MultipleCategoryBarPlot from 'shared/components/plots/MultipleCategoryBarPlot';
 import ReactSelect from "react-select2";
 import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
 import _ from "lodash";
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from "shared/api/generated/CBioPortalAPI";
 import { getEnrichmentBarPlotData, getGeneListOptions, USER_DEFINED_OPTION, CNA_TO_ALTERATION, AlterationContainerType } from './EnrichmentsUtil';
@@ -186,7 +186,10 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                                 placement="bottomLeft"
                             >
                                 <div>
-                                    <button className="btn btn-default btn-xs">
+                                    <button
+                                        data-test='selectGenes'
+                                        className="btn btn-default btn-xs"
+                                    >
                                         Select genes
                                     </button>
                                 </div>
@@ -195,7 +198,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                             getSvg={this.getSvg}
                             filename={SVG_ID}
                             dontFade={true}
-                            collapse={true}
+                            type='button'
                         />
                     </div>
                 </div>
@@ -209,7 +212,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
 
     public render() {
         return (
-            <div data-test="ClinicalTabPlotDiv" className="borderedChart" style={{ position: "relative", display: "inline-block" }}>
+            <div data-test="GeneBarPlotDiv" className="borderedChart" style={{ position: "relative", display: "inline-block" }}>
                 {this.toolbar}
                 <div style={{ overflow: "auto hidden", position: "relative" }} >
                     <MultipleCategoryBarPlot
@@ -252,6 +255,11 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         maxNumberOfGenes: 100
     };
 
+    constructor(props:IGeneSelectionProps) {
+        super(props);
+        (window as any).genesSelection = this;
+    }
+
     @observable _geneQuery: string | undefined;
     @observable selectedGenesHasError = false;
     @observable private numberOfGenes = this.props.defaultNumberOfGenes;
@@ -266,10 +274,13 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         return _.map(this.props.options, option => {
             return {
                 label: option.label,
-                genes: option.genes,
                 value: option.genes.join("\n")
             };
         });
+    }
+
+    @computed get geneOptionSet() {
+        return _.keyBy(this.props.options, option => option.label)
     }
 
     @computed get selectedGeneListOption() {
@@ -337,10 +348,11 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
 
     @autobind
     @action
-    private onGeneListOptionChange(option: any) {
+    public onGeneListOptionChange(option: any) {
         this._selectedGeneListOption = option
         if (option.value !== '') {
-            this._geneQuery = option.genes.slice(0, this.numberOfGenes).join('\n');
+            const genes = this.geneOptionSet[option.label].genes
+            this._geneQuery = genes.slice(0, this.numberOfGenes).join('\n');
         } else {
             this._geneQuery = '';
         }
@@ -366,7 +378,8 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
             //removes leading 0s
             this.numberOfGenes = Number(this.numberOfGenes);
             if (this.selectedGeneListOption) {
-                let genes = this.selectedGeneListOption.genes;
+                const label = this.selectedGeneListOption.label;
+                const genes = this.geneOptionSet[label].genes;
                 if (genes.length > 0) {
                     this._geneQuery = genes.slice(0, this.numberOfGenes).join('\n');
                 }
@@ -384,7 +397,8 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         //removes leading 0s
         this.numberOfGenes = Number(this.numberOfGenes);
         if (this.selectedGeneListOption) {
-            let genes = this.selectedGeneListOption.genes;
+            const label = this.selectedGeneListOption.label;
+            const genes = this.geneOptionSet[label].genes;
             if (genes.length > 0) {
                 this._geneQuery = genes.slice(0, this.numberOfGenes).join('\n');
             }
@@ -395,19 +409,22 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         return (
             <div style={{ width: 300 }}>
                 {
-                    this.props.options.length > 0 && <ReactSelect
-                        value={this.selectedGeneListOption}
-                        options={this.geneListOptions}
-                        onChange={this.onGeneListOptionChange}
-                        isClearable={false}
-                        isSearchable={false}
-                    />
+                    this.props.options.length > 0 && <div data-test="genesSelector">
+                        <ReactSelect
+                            value={this.selectedGeneListOption}
+                            options={this.geneListOptions}
+                            onChange={this.onGeneListOptionChange}
+                            isClearable={false}
+                            isSearchable={false}
+                        />
+                    </div>
                 }
                 {!this.isCustomGeneSelection && <div>
                     <br />
                     <div style={{ display: "table-row" }}>
                         <label style={{ display: "table-cell", whiteSpace: "nowrap" }}>Number of Genes (max. {this.props.maxNumberOfGenes}): &nbsp;</label>
                         <FormControl
+                            data-test="numberOfGenes"
                             type="text"
                             value={this.numberOfGenes}
                             onChange={this.handleTotalInputChange}
@@ -435,6 +452,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                     }
                     <button
                         key="addGenestoBarPlot"
+                        data-test='addGenestoBarPlot'
                         className="btn btn-sm btn-default"
                         onClick={() => {
                             this.props.onSelectedGenesChange(this._geneQuery!, this.genesToPlot, this.selectedGeneListOption!.label);

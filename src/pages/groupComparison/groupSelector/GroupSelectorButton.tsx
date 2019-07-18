@@ -2,7 +2,7 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import classNames from "classnames";
 import styles from "../styles.module.scss";
-import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import EllipsisTextTooltip from "public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import {
     caseCountsInParens,
     ComparisonGroup, getPatientIdentifiers,
@@ -14,7 +14,7 @@ import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexK
 import {Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {SortableElement} from "react-sortable-hoc";
 import {getTextColor, renderGroupNameWithOrdinal} from "../OverlapUtils";
-import DefaultTooltip, {TOOLTIP_MOUSE_ENTER_DELAY} from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip, {TOOLTIP_MOUSE_ENTER_DELAY_MS} from "public-lib/components/defaultTooltip/DefaultTooltip";
 import * as ReactDOM from "react-dom";
 import {Popover, Overlay} from "react-bootstrap";
 import classnames from "classnames";
@@ -23,8 +23,10 @@ import autobind from "autobind-decorator";
 import {ButtonHTMLAttributes} from "react";
 
 export interface IGroupSelectorButtonProps {
-    onClick:(uid:string)=>void;
-    isSelected:(uid:string)=>boolean;
+    onClick:(name:string)=>void;
+    onClickDelete:(name:string)=>void;
+    deletable:boolean;
+    isSelected:(name:string)=>boolean;
     group:ComparisonGroup;
     sampleSet:ComplexKeyMap<Sample>;
     excludedFromAnalysis:boolean;
@@ -45,14 +47,13 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
     @autobind
     @action
     private onMouseClick() {
-        this.props.onClick(this.props.group.uid);
         this.hovered = false;
     }
 
     @autobind
     @action
     private onMouseEnter() {
-        this.hoverTimeout = setTimeout(()=>{ this.hovered = true; }, TOOLTIP_MOUSE_ENTER_DELAY);
+        this.hoverTimeout = setTimeout(()=>{ this.hovered = true; }, TOOLTIP_MOUSE_ENTER_DELAY_MS);
     }
 
     @autobind
@@ -71,7 +72,7 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
 
     render() {
         const group = this.props.group;
-        const selected = this.props.isSelected(group.uid);
+        const selected = this.props.isSelected(group.name);
         const sampleIdentifiers = getSampleIdentifiers([group]);
         const patientIdentifiers = getPatientIdentifiers(sampleIdentifiers, this.props.sampleSet);
 
@@ -89,21 +90,46 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                 data-test={`groupSelectorButton${group.ordinal}`}
             >
                 <span style={{display:"flex", alignItems:"center"}}>
-                    <EllipsisTextTooltip
-                        style={{
-                            display:"inline-block",
-                            color:getTextColor(group.color)
-                        }}
-                        text={renderGroupNameWithOrdinal(group)}
-                        shownWidth={100}
-                    />
-                    &nbsp;
-                    <span style={{color:getTextColor(group.color)}}>
-                        {caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
-                    </span>
+                    <div
+                        style={{display:"flex", alignItems:"center"}}
+                        onClick={()=>this.props.onClick(group.name)}
+                    >
+                        <div
+                            className="text-with-ellipsis"
+                            style={{
+                                display:"inline-block",
+                                color:getTextColor(group.color),
+                                maxWidth:200
+                            }}
+                        >
+                            {renderGroupNameWithOrdinal(group)}
+                        </div>
+                        &nbsp;
+                        <span style={{color:getTextColor(group.color)}}>
+                            ({ sampleIdentifiers.length === patientIdentifiers.length ?
+                                sampleIdentifiers.length :
+                                `${sampleIdentifiers.length}/${patientIdentifiers.length}`
+                            })
+                        </span>
+                    </div>
                     {group.nonExistentSamples.length > 0 && <ErrorIcon style={{marginLeft:7}} tooltip={<MissingSamplesMessage samples={group.nonExistentSamples}/>}/>}
+                    {this.props.deletable && (
+                        <div
+                            style={{
+                                paddingLeft:2,
+                                marginLeft:5,
+                                marginRight:-3,
+                                borderLeft: "1px dashed white",
+                                cursor: "pointer"
+                            }}
+                            data-test="deleteButton"
+                            onClick={()=>this.props.onClickDelete(group.name)}
+                        >
+                            <i className="fa fa-times-circle"/>
+                        </div>
+                    )}
                 </span>
-                {this.button && this.props.excludedFromAnalysis && (ReactDOM as any).createPortal(
+                {this.button && (ReactDOM as any).createPortal(
                     <Overlay
                         rootClose
                         placement="top"
@@ -114,9 +140,14 @@ class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}>
                             arrowOffsetTop={17}
                             className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)}
                         >
-                            <div style={{maxWidth:300, whiteSpace:"initial"}}>
-                                This group is a subset of the other selected groups, so it's excluded from analysis, and not considered in overlap calculations.
+                            <div>
+                                {renderGroupNameWithOrdinal(group)}&nbsp;{caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
                             </div>
+                            {this.props.excludedFromAnalysis && (
+                                <div style={{maxWidth:300, whiteSpace:"initial", marginTop:5}}>
+                                    This group is a subset of the other selected groups, so it's excluded from analysis, and not considered in overlap calculations.
+                                </div>
+                            )}
                         </Popover>
                     </Overlay>,
                     document.body

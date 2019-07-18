@@ -8,10 +8,11 @@ import {AlterationTypeConstants} from "../../../resultsView/ResultsViewPageStore
 import {cna_profile_data_to_string} from "../../../../shared/lib/oql/AccessorsForOqlFilter";
 import {fillGeneticTrackDatum, OncoprintMutationType} from "../../../../shared/components/oncoprint/DataUtils";
 import {Gene, Mutation, NumericGeneMolecularData} from "../../../../shared/api/generated/CBioPortalAPI";
-import {getProteinPositionFromProteinChange} from "../../../../shared/lib/ProteinChangeUtils";
+import {getProteinPositionFromProteinChange} from "public-lib/lib/ProteinChangeUtils";
 import OncoKbAPI, {Query} from "../../../../shared/api/generated/OncoKbAPI";
 import {ONCOKB_DEFAULT, queryOncoKbData} from "../../../../shared/lib/StoreUtils";
-import {generateQueryVariant, generateQueryVariantId} from "../../../../shared/lib/OncoKbUtils";
+import {generateQueryVariant} from "../../../../shared/lib/OncoKbUtils";
+import {generateQueryVariantId} from "public-lib/lib/OncoKbUtils";
 import {default as oncokbClient} from "../../../../shared/api/oncokbClientInstance";
 import {IOncoKbData} from "../../../../shared/model/OncoKB";
 import MobxPromise from "mobxpromise";
@@ -76,7 +77,7 @@ export function initDriverAnnotationSettings(store:OncoprinterStore) {
         cbioportalCount: false,
         cbioportalCountThreshold: 0,
         _oncoKb:true,
-        _ignoreUnknown: false,
+        _excludeVUS: false,
         hotspots: false, // for now
 
         set oncoKb(val:boolean) {
@@ -85,11 +86,11 @@ export function initDriverAnnotationSettings(store:OncoprinterStore) {
         get oncoKb() {
             return AppConfig.serverConfig.show_oncokb && this._oncoKb && !store.didOncoKbFail;
         },
-        set ignoreUnknown(val:boolean) {
-            this._ignoreUnknown = val;
+        set excludeVUS(val:boolean) {
+            this._excludeVUS = val;
         },
-        get ignoreUnknown() {
-            return this._ignoreUnknown && this.driversAnnotated;
+        get excludeVUS() {
+            return this._excludeVUS && this.driversAnnotated;
         },
         get driversAnnotated() {
             const anySelected = this.oncoKb ||
@@ -428,7 +429,7 @@ export function annotateGeneticTrackData(
         cbioportalCountThreshold?:number;
         useHotspots:boolean;
     },
-    ignoreUnknown:boolean
+    excludeVUS:boolean
 ) {
     // build annotater functions
     let getOncoKbCnaAnnotation = (d:OncoprinterGeneticTrackDatum_Data)=>"";
@@ -502,7 +503,7 @@ export function annotateGeneticTrackData(
                 if (d.molecularProfileAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
                     // tag mutations as putative driver, and filter them
                     d.putativeDriver = !!(d.oncoKbOncogenic || (params.useHotspots && d.isHotspot) || getCBioAnnotation(d));
-                    return (!ignoreUnknown || d.putativeDriver);
+                    return (!excludeVUS || d.putativeDriver);
                 } else {
                     return true;
                 }

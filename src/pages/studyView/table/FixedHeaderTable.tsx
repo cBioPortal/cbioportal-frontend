@@ -16,7 +16,7 @@ import classnames from 'classnames';
 import {If} from 'react-if';
 import autobind from 'autobind-decorator';
 import {inputBoxChangeTimeoutEvent} from "../../../shared/lib/EventUtils";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[],
@@ -35,6 +35,7 @@ export type IFixedHeaderTableProps<T> = {
     showAddRemoveAllButtons?: boolean;
     addAll?: (data: T[]) => void;
     removeAll?: (data: T[]) => void;
+    removeAllDisabled?:boolean;
     showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
     autoFocusSearchAfterRendering?:boolean;
@@ -226,7 +227,9 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                     {this.props.removeAll && (
                         <button className="btn btn-default btn-xs"
                                 data-test="fixed-header-table-remove-all"
-                                onClick={this.onRemoveAll}>Deselect all</button>
+                                onClick={this.onRemoveAll}
+                                disabled={this.props.removeAllDisabled}
+                        >Deselect all</button>
                     )}
                 </div>
             </If>

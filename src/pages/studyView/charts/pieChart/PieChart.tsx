@@ -12,8 +12,8 @@ import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewUtils";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
-import {getTextWidth} from "../../../../shared/lib/wrapText";
+import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import {getTextWidth} from "../../../../public-lib/lib/TextTruncationUtils";
 import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 
 export interface IPieChartProps {
@@ -88,7 +88,11 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     public toSVGDOMNode(): Element {
-        return toSvgDomNodeWithLegend(this.svg, ".studyViewPieChartLegend", ".studyViewPieChartGroup", true);
+        return toSvgDomNodeWithLegend(this.svg, {
+            legendGroupSelector: ".studyViewPieChartLegend",
+            chartGroupSelector: ".studyViewPieChartGroup",
+            centerLegend: true
+        });
     }
 
     @computed
@@ -243,12 +247,13 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     public render() {
         return (
             <DefaultTooltip
-                placement="right"
+                placement={this.props.placement}
                 overlay={(
                     <ClinicalTable
                         width={300}
                         height={150}
                         data={this.props.data}
+                        label={this.props.label}
                         labelDescription={this.props.labelDescription}
                         patientAttribute={this.props.patientAttribute}
                         showAddRemoveAllButtons={true}

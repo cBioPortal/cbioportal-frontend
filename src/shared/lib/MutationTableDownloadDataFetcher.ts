@@ -6,6 +6,7 @@ import {default as GenomeNexusCache, fetch as fetchGenomeNexusData } from "share
 import {default as DiscreteCNACache, fetch as fetchDiscreteCNAData} from "shared/cache/DiscreteCNACache";
 import {Mutation, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import _ from 'lodash';
+import {default as GenomeNexusMyVariantInfoCache, fetch as fetchGenomeNexusMyVariantInfoData } from "shared/cache/GenomeNexusMyVariantInfoCache";
 
 export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicationLazyDownloadDataFetcher
 {
@@ -14,6 +15,7 @@ export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicati
     constructor(private mutationData: MobxPromise<Mutation[]>,
                 private studyToMolecularProfileDiscrete?: {[studyId:string]:MolecularProfile},
                 private genomeNexusCache?: () => GenomeNexusCache,
+                private genomeNexusMyVariantInfoCache?: () => GenomeNexusMyVariantInfoCache,
                 private mutationCountCache?: () => MutationCountCache,
                 private discreteCNACache?: () => DiscreteCNACache) {
         // TODO labelMobxPromises(this); ?
@@ -52,6 +54,12 @@ export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicati
             caches.push(this.genomeNexusCache());
         }
 
+        if (this.genomeNexusMyVariantInfoCache)
+        {
+            promises.push(this.fetchAllGenomeNexusMyVariantInfoData());
+            caches.push(this.genomeNexusMyVariantInfoCache());
+        }
+
         if (this.mutationCountCache)
         {
             promises.push(this.fetchAllMutationCountData());
@@ -72,6 +80,17 @@ export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicati
         if (this.mutationData.result)
         {
             return await fetchGenomeNexusData(this.mutationData.result);
+        }
+        else {
+            return undefined;
+        }
+    }
+
+    private async fetchAllGenomeNexusMyVariantInfoData()
+    {
+        if (this.mutationData.result)
+        {
+            return await fetchGenomeNexusMyVariantInfoData(this.mutationData.result);
         }
         else {
             return undefined;

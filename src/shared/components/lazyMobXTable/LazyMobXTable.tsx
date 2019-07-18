@@ -18,7 +18,7 @@ import {resolveColumnVisibility, resolveColumnVisibilityByColumnDefinition} from
 import {ICopyDownloadControlsProps} from "../copyDownloadControls/ICopyDownloadControls";
 import {SimpleCopyDownloadControls} from "../copyDownloadControls/SimpleCopyDownloadControls";
 import {serializeData} from "shared/lib/Serializer";
-import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
 import {If} from 'react-if';
 import {SortMetric} from "../../lib/ISortMetric";

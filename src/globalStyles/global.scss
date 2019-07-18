@@ -44,11 +44,11 @@ button:active, button:focus, div:focus, div:active {
 
 a {
   cursor:pointer;
-  text-decoration:none !important;
+  text-decoration:none;
 }
 
 a:hover {
-  text-decoration:underline !important;
+  text-decoration:underline;
 }
 
 .pipeSeperator {
@@ -78,14 +78,6 @@ a:hover {
     background: $lightGrey;
     border-bottom: 0;
     color: $darkGrey;
-  }
-}
-
-.topBanner {
-  @extend .portalWidth;
-  margin:0 auto 10px auto;
-  h3 {
-    margin-bottom:2px;
   }
 }
 
@@ -346,9 +338,23 @@ th.reactable-header-sort-asc:after {
 }
 
 .headBlock {
-  padding:$gutterWidth $gutterWidth 10px $gutterWidth;
+
   background:$main-bg;
   margin-top:-$gutterWidth;
+  position:relative;
+  padding-top:10px;
+  padding-left:$gutterWidth;
+  padding-right:$gutterWidth;
+  padding-bottom:10px;
+
+  &:empty {
+    padding-bottom:0;
+  }
+
+  .headBlurb {
+    padding:0 $gutterWidth 10px $gutterWidth;
+  }
+
 }
 
 #mainColumn {
@@ -619,4 +625,11 @@ h3.hr {
 .beta-text {
   color:#ffA500;
   text-decoration: none;
+}
+
+.text-with-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  -ms-text-overflow: ellipsis;
+  text-overflow: ellipsis;
 }

@@ -5,7 +5,7 @@ import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
 import classNames from 'classnames';
 import './styles.scss';
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {action, computed, observable} from "mobx";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
@@ -138,6 +138,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     @computed get queryForm(){
         return <div style={{margin:"10px -20px 0 -20px"}}>
             <QueryAndDownloadTabs onSubmit={this.onSubmit}
+                                  forkedMode={false}
                                   showQuickSearchTab={false}
                                   showDownloadTab={false}
                                   showAlerts={true}

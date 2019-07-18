@@ -1,15 +1,15 @@
 import * as React from 'react';
 import {observer, Observer} from "mobx-react";
-import {VictoryAxis, VictoryBar, VictoryChart, VictoryLabel, VictoryLine, VictoryScatter} from 'victory';
+import {VictoryAxis, VictoryBar, VictoryChart, VictoryLabel, VictoryLine, VictoryScatter, Bar} from 'victory';
 import {computed, observable} from 'mobx';
 import * as _ from 'lodash';
 import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from 'shared/theme/cBioPoralTheme';
 import autobind from 'autobind-decorator';
 import {ComparisonGroup} from './GroupComparisonUtils';
-import {getTextWidth, truncateWithEllipsis} from 'shared/lib/wrapText';
+import {getTextWidth, truncateWithEllipsis} from 'public-lib/lib/TextTruncationUtils';
 import {tickFormatNumeral} from 'shared/components/plots/TickUtils';
-import {joinGroupNames} from './OverlapUtils';
-import {capitalize, pluralize} from 'shared/lib/StringUtils';
+import {joinGroupNames, regionIsSelected, renderGroupNameWithOrdinal, toggleRegionSelected} from './OverlapUtils';
+import {capitalize, pluralize} from 'public-lib/lib/StringUtils';
 import {getPlotDomain} from './UpSetUtils';
 import * as ReactDOM from "react-dom";
 import {Popover} from "react-bootstrap";
@@ -17,6 +17,9 @@ import classnames from "classnames";
 import styles from "../resultsView/survival/styles.module.scss";
 import Timer = NodeJS.Timer;
 import WindowStore from "../../shared/components/window/WindowStore";
+import invertIncreasingFunction from "../../shared/lib/invertIncreasingFunction";
+import TruncatedTextWithTooltipSVG from "../../shared/components/TruncatedTextWithTooltipSVG";
+import GroupTickLabelComponent from "./labelComponents/GroupTickLabelComponent";
 
 export interface IUpSetProps {
     groups: {
@@ -24,6 +27,8 @@ export interface IUpSetProps {
         value: string[];
     }[];
     uidToGroup: { [uid: string]: ComparisonGroup };
+    onChangeSelectedCombinations:(selectedCombinations:string[][])=>void;
+    selectedCombinations:string[][]; // we do it like this so that updating it doesn't update all props
     svgId?: string;
     title?: string;
     caseType: "sample" | "patient";
@@ -34,6 +39,11 @@ const DEFAULT_BOTTOM_PADDING = 10;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const BAR_WIDTH = 10;
 const DEFAULT_SCATTER_DOT_COLOR = "#efefef"
+const MAX_LABEL_WIDTH = 200;
+
+const BarComponent = (props:any)=>(
+    <Bar className={`${props.caseType}_${_.sortBy(props.datum.groups).join("_")}_bar`} {...props}/>
+);
 
 @observer
 export default class UpSet extends React.Component<IUpSetProps, {}> {
@@ -60,7 +70,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                         {
                             target: "data",
                             mutation: (props: any) => {
-                                if (!props.datum || !props.datum.dontShowTooltip) {
+                                 if (!props.datum || !props.datum.dontShowTooltip) {
                                     this.tooltipModel = props;
                                 }
                                 return null;
@@ -78,9 +88,32 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                             }
                         }
                     ];
-                }
+                },
+                onClick:()=>{
+                    return [
+                        {
+                            target: "data",
+                            mutation:(props:any) => {
+                                let groups;
+                                if (props.datum) {
+                                    groups = props.datum.groups;
+                                } else {
+                                    groups = props.data[0].groups;
+                                }
+                                if (!props.datum || !props.datum.notClickable) {
+                                    this.props.onChangeSelectedCombinations(toggleRegionSelected(groups, this.props.selectedCombinations));
+                                }
+                                return null;
+                            }
+                        }
+                    ];
+                },
             }
         }];
+    }
+
+    @autobind private resetSelection() {
+        this.props.onChangeSelectedCombinations([]);
     }
 
     @computed get usedGroups() {
@@ -182,13 +215,17 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     @computed get biggestCategoryLabelSize() {
-        return Math.max(
+        const rawLabel = Math.max(
             ..._.map(this.usedGroups, group => getTextWidth(group.nameWithOrdinal, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize + "px"))
         );
+        return Math.min(rawLabel, MAX_LABEL_WIDTH);
     }
 
     @computed get svgWidth() {
-        return this.leftPadding + this.chartWidth + this.rightPadding;
+        return Math.max(
+            this.leftPadding + this.chartWidth + this.rightPadding,
+            320
+        );
     }
 
     @computed get svgHeight() {
@@ -217,6 +254,16 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
         return index * (this.barWidth() + this.barSeparation()); // half box + separation + half box
     }
 
+    @autobind
+    private categoryCoordToGroup(coord:number) {
+        const index = Math.round(invertIncreasingFunction(
+            this.categoryCoord,
+            coord,
+            [0,this.usedGroups.length]
+        ));
+        return this.usedGroups[index];
+    }
+
     @computed get groupCombinationSets() {
         return _.orderBy(
             this.props.groups.map(entry=>({
@@ -230,13 +277,18 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
 
     @computed get scatterData() {
         return _.flatMap(this.groupCombinationSets, (set, index) => {
-            return _.map(this.usedGroups, (group, i) => ({
-                x: this.categoryCoord(index),
-                y: this.categoryCoord(i),
-                fill: _.includes(set.groups, group.uid) ? "#000000" : DEFAULT_SCATTER_DOT_COLOR,
-                dontShowTooltip: !_.includes(set.groups, group.uid),
-                ...set
-            }));
+            return _.map(this.usedGroups, (group, i) => {
+                const included = _.includes(set.groups, group.uid);
+                return {
+                    x: this.categoryCoord(index),
+                    y: this.categoryCoord(i),
+                    fill: included ? "#000000" : DEFAULT_SCATTER_DOT_COLOR,
+                    dontShowTooltip: !included,
+                    cursor: included ? "pointer" : "default",
+                    notClickable: !included,
+                    ...set
+                };
+            });
         });
     }
 
@@ -270,7 +322,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                 <VictoryLine
                     style={{
                         data: {
-                            stroke: "#000000",
+                            stroke: this.lineStroke,
                             strokeWidth: 2,
                             strokeLinecap: "round"
                         },
@@ -281,8 +333,9 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                     style={{
                         data: {
                             strokeOpacity: 0,
-                            strokeWidth: 10,
-                            strokeLinecap: "round"
+                            strokeWidth: this.barWidth(),
+                            strokeLinecap: "round",
+                            cursor: "pointer"
                         },
                     }}
                     data={data}
@@ -367,6 +420,27 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
         this.mousePosition.y = e.pageY;
     }
 
+    @autobind private lineStroke(datum:any) {
+        if (datum.length === 0) {
+            return "black";
+        }
+        const selected = regionIsSelected(datum[0].groups, this.props.selectedCombinations);
+        if (selected) {
+            return "yellow";
+        } else {
+            return "black";
+        }
+    }
+
+    @autobind private fill(datum:any) {
+        const selected = regionIsSelected(datum.groups, this.props.selectedCombinations);
+        if (selected && !datum.notClickable) {
+            return "yellow";
+        } else {
+            return datum.fill || "black";
+        }
+    }
+
     @autobind private getChart() {
         if (this.groupCombinationSets.length > 0) {
             return (
@@ -432,13 +506,14 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     axisLabelComponent={<VictoryLabel dy={-40} />}
                                 />
                                 <VictoryBar
-                                    style={{ data: { fill: "#000000", width: this.barWidth() } }}
+                                    style={{ data: { fill: this.fill, width: this.barWidth() } }}
                                     data={this.barPlotData}
                                 />
                                 <VictoryBar
-                                    style={{ data: { fillOpacity:0, width: this.barWidth()} }}
+                                    style={{ data: { fillOpacity:0, width: this.barWidth(), cursor:"pointer"} }}
                                     data={this.barPlotHitzoneData}
                                     events={this.mouseEvents}
+                                    dataComponent={<BarComponent caseType={this.props.caseType}/>}
                                 />
 
                             </VictoryChart>
@@ -479,7 +554,13 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     offsetX={50}
                                     dependentAxis
                                     crossAxis={false}
-                                    tickFormat={this.groupTick}
+                                    tickLabelComponent={
+                                        <GroupTickLabelComponent
+                                            categoryCoordToGroup={this.categoryCoordToGroup}
+                                            maxLabelWidth={MAX_LABEL_WIDTH}
+                                            dy="0.4em"
+                                        />
+                                    }
                                     tickValues={this.groupTickValues}
                                     style={{
                                         axis: { strokeWidth: 0 },
@@ -494,7 +575,8 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     size={this.barWidth()/2}
                                     style={{
                                         data: {
-                                            fill: (d: any) => d.fill,
+                                            fill: this.fill,
+                                            cursor: (d:any)=>d.cursor
                                         }
                                     }}
                                     data={this.scatterData}

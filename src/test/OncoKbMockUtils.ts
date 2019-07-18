@@ -10,6 +10,8 @@ export function emptyQueryIndicator(): IndicatorQueryResp
         geneSummary: "",
         highestResistanceLevel: "LEVEL_R3",
         highestSensitiveLevel: "LEVEL_4",
+        highestDiagnosticImplicationLevel: "LEVEL_Dx1",
+        highestPrognosticImplicationLevel: "LEVEL_Px1",
         hotspot: false,
         lastUpdate: "",
         mutationEffect: {
@@ -38,6 +40,8 @@ export function emptyQueryIndicator(): IndicatorQueryResp
             svType: "DELETION" // TODO: hack because svType is not optional
         },
         treatments: [],
+        diagnosticImplications: [],
+        prognosticImplications: [],
         tumorTypeSummary: "",
         diagnosticSummary: "",
         prognosticSummary: "",

@@ -21,4 +21,8 @@
     opacity:0 !important;
   }
 
+  .disablePointerEvents {
+    pointer-events: none;
+  }
+
 }

@@ -7,7 +7,7 @@ import { observable, computed, action, reaction, IReactionDisposer } from 'mobx'
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery, SyntaxError } from 'shared/lib/oql/oql-parser';
 import { parseOQLQuery } from 'shared/lib/oql/oqlfilter';
-import { remoteData } from 'shared/api/remoteData';
+import { remoteData } from 'public-lib/api/remoteData';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
 import client from "shared/api/cbioportalClientInstance";
 import {getEmptyGeneValidationResult, getFocusOutText, getOQL} from './GeneSelectionBoxUtils';

@@ -2,10 +2,10 @@ import * as React from "react";
 import {SyntheticEvent} from "react";
 import {observer} from "mobx-react";
 import GroupComparisonStore from "./GroupComparisonStore";
-import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../public-lib/components/defaultTooltip/DefaultTooltip";
 import autobind from "autobind-decorator";
 import {action, computed, observable} from "mobx";
-import {remoteData} from "../../shared/api/remoteData";
+import {remoteData} from "../../public-lib/api/remoteData";
 import {ComparisonGroup, DUPLICATE_GROUP_NAME_MSG} from "./GroupComparisonUtils";
 import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
@@ -20,12 +20,11 @@ import {serializeEvent} from "shared/lib/tracking";
 export interface ICreateGroupFromOverlapProps {
     store:GroupComparisonStore;
     includedRegions:string[][]; // group.uid[][]
-    allGroupsInVenn:string[]; // uid[]
-    x:number;
-    y:number;
+    allGroupsInPlot:string[]; // uid[]
     submitGroup:(group:SessionGroupData, saveToUser:boolean)=>void;
     caseType:"sample"|"patient";
     width:number;
+    style?:any;
 }
 
 function getRegionSummary(
@@ -67,13 +66,13 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
             studiesAttr = getStudiesAttrForSampleOverlapGroup(
                 this.props.store._originalGroups.result!,
                 this.props.includedRegions,
-                this.props.allGroupsInVenn
+                this.props.allGroupsInPlot
             );
         } else {
             studiesAttr = getStudiesAttrForPatientOverlapGroup(
                 this.props.store._originalGroups.result!,
                 this.props.includedRegions,
-                this.props.allGroupsInVenn,
+                this.props.allGroupsInPlot,
                 this.props.store.patientToSamplesSet.result!
             )
         }
@@ -125,17 +124,19 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                         placeholder="Enter a group name.."
                         value={this.inputGroupName}
                         onChange={this.onChangeInputGroupName}
+                        data-test={this.props.caseType + "GroupNameInputField"}
                     />
                     <button
                         className="btn btm-sm btn-primary"
                         disabled={this.inputGroupName.length === 0 || this.isDuplicateName}
                         onClick={this.submit}
+                        data-test={this.props.caseType + "GroupNameSubmitButton"}
                     >
                         Submit
                     </button>
                 </div>
                 { this.isDuplicateName && (
-                    <div style={{marginTop:4}}>
+                    <div style={{marginTop:4}} data-test={this.props.caseType + "DuplicateGroupNameMessage"}>
                         {DUPLICATE_GROUP_NAME_MSG}
                     </div>
                 )}
@@ -155,7 +156,7 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                         <div>
                             {getRegionSummary(
                                 region,
-                                this.props.allGroupsInVenn,
+                                this.props.allGroupsInPlot,
                                 this.props.store.uidToGroup.result!,
                                 this.props.caseType
                             )}
@@ -168,16 +169,13 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
 
     render() {
         return (
-            <div style={{
-                position:"absolute",
-                left:this.props.x,
-                top:this.props.y,
+            <div style={Object.assign({
                 width:this.props.width,
                 display:"flex",
                 flexDirection:"column",
                 justifyContent:"center",
-                alignItems:"center"
-            }}>
+                alignItems:"center",
+            }, this.props.style)}>
                 <DefaultTooltip
                     trigger={["click"]}
                     overlay={this.enterNameInterface.component}
@@ -187,6 +185,7 @@ export default class CreateGroupFromOverlap extends React.Component<ICreateGroup
                         className="btn btn-md btn-primary"
                         disabled={this.props.includedRegions.length === 0}
                         data-event={serializeEvent({action:'createGroupFromVenn',label:'', category:'groupComparison' })}
+                        data-test={this.props.caseType + "GroupComparisonCreateGroupButton"}
                     >
                         Create Group From Selected Diagram Areas
                     </button>

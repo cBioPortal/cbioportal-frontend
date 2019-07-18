@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
-import {remoteData} from "../../shared/api/remoteData";
+import {remoteData} from "../../public-lib/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
+import oncoKBClient from "shared/api/oncokbClientInstance";
 import {action, computed, IReactionDisposer, observable, ObservableMap, reaction, toJS} from "mobx";
 import {
     ClinicalDataBinCountFilter,
@@ -80,7 +81,7 @@ import {
     showOriginStudiesInSummaryDescription,
     SPECIAL_CHARTS,
     StudyWithSamples,
-    submitToPage,
+    submitToPage, ChartMetaWithDimensionAndChartType,
     UniqueKey
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
@@ -88,7 +89,7 @@ import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
 import autobind from "autobind-decorator";
 import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
-import {stringListToSet} from 'shared/lib/StringUtils';
+import {stringListToSet} from 'public-lib/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
@@ -119,6 +120,7 @@ import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import jStat from 'jStat'
+import {CancerGene, Gene as OncokbGene} from "../../shared/api/generated/OncoKbAPI";
 
 
 export enum StudyViewPageTabKeyEnum {
@@ -212,6 +214,17 @@ export type StatusMessage = {
     message: string
 };
 
+type OncokbCancerGene = {
+    oncokbAnnotated: boolean;
+    oncokbOncogene: boolean;
+    oncokbTumorSuppressorGene: boolean;
+    isCancerGene: boolean;
+};
+
+export type MutationCountByGeneWithCancerGene = MutationCountByGene & OncokbCancerGene;
+
+export type CopyNumberCountByGeneWithCancerGene = CopyNumberCountByGene & OncokbCancerGene;
+
 export class StudyViewPageStore {
     private reactionDisposers:IReactionDisposer[] = [];
 
@@ -223,21 +236,21 @@ export class StudyViewPageStore {
         }));
 
         // Include special charts into custom charts list
-       SPECIAL_CHARTS.forEach(chartMeta => {
+       SPECIAL_CHARTS.forEach((chartMeta:ChartMetaWithDimensionAndChartType) => {
            const uniqueKey = chartMeta.uniqueKey;
-           const chartType = this.chartsType.get(uniqueKey) || chartMeta.chartType;
+           const chartType = chartMeta.chartType;
            if (chartType !== undefined) {
                this._customCharts.set(uniqueKey, {
                    displayName: chartMeta.displayName,
                    uniqueKey: uniqueKey,
-                   chartType: chartType,
                    dataType: getChartMetaDataType(uniqueKey),
                    patientAttribute: chartMeta.patientAttribute,
                    description: chartMeta.description,
                    renderWhenDataChange: false,
-                   dimension: this.chartsDimension[uniqueKey] || chartMeta.dimension,
                    priority: STUDY_VIEW_CONFIG.priority[uniqueKey] || chartMeta.priority
                });
+               this.chartsType.set(uniqueKey, chartMeta.chartType);
+               this.chartsDimension.set(uniqueKey, chartMeta.dimension);
 
                if (uniqueKey === UniqueKey.CANCER_STUDIES) {
                    this.customChartsPromises[uniqueKey] = this.cancerStudiesData;
@@ -568,7 +581,7 @@ export class StudyViewPageStore {
                 statusCallback
             );
         } else {
-            switch (params.chartMeta.chartType) {
+            switch (this.chartsType.get(params.chartMeta.uniqueKey)) {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
                     sessionId =
@@ -625,9 +638,9 @@ export class StudyViewPageStore {
 
     private geneMapCache:{[entrezGeneId:number]:string} = {};
 
-    @observable private chartsDimension: { [uniqueKey: string]: ChartDimension } = {};
+    @observable public chartsDimension = observable.map<ChartDimension>();
 
-    @observable private chartsType = observable.map<ChartType>();
+    @observable public chartsType = observable.map<ChartType>();
 
     private newlyAddedCharts = observable.array<string>();
 
@@ -802,7 +815,7 @@ export class StudyViewPageStore {
             cols: cols,
             grid: STUDY_VIEW_CONFIG.layout.grid,
             gridMargin: STUDY_VIEW_CONFIG.layout.gridMargin,
-            layout: calculateLayout(this.visibleAttributes, cols, this.currentGridLayout, this.currentFocusedChartByUser),
+            layout: calculateLayout(this.visibleAttributes, cols, this.chartsDimension.toJS(), this.currentGridLayout, this.currentFocusedChartByUser, this.currentFocusedChartByUserDimension),
             dimensions: STUDY_VIEW_CONFIG.layout.dimensions
         };
     }
@@ -814,6 +827,7 @@ export class StudyViewPageStore {
 
     private currentGridLayout: ReactGridLayout.Layout[] | undefined = undefined;
     private currentFocusedChartByUser: ChartMeta | undefined = undefined;
+    private currentFocusedChartByUserDimension: ChartDimension | undefined = undefined;
 
     public clinicalDataBinPromises: { [id: string]: MobxPromise<DataBin[]> } = {};
     public clinicalDataCountPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
@@ -927,7 +941,7 @@ export class StudyViewPageStore {
             trackStudyViewFilterEvent("withCNADataQuickFilter", this);
             this.customChartFilterSet.set(UniqueKey.WITH_CNA_DATA, [Datalabel.YES]);
         } else {
-            this._chartSampleIdentifiersFilterSet.delete(UniqueKey.WITH_CNA_DATA);
+            this.customChartFilterSet.delete(UniqueKey.WITH_CNA_DATA);
         }
     }
 
@@ -1216,7 +1230,7 @@ export class StudyViewPageStore {
     @action
     resetFilterAndChangeChartVisibility(chartMeta: ChartMeta, visible: boolean) {
         if (!visible) {
-            switch (chartMeta.chartType) {
+            switch (this.chartsType.get(chartMeta.uniqueKey)) {
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                     this.resetGeneFilter();
                     break;
@@ -2023,6 +2037,62 @@ export class StudyViewPageStore {
         }
     }, []);
 
+    readonly oncokbCancerGenes = remoteData<CancerGene[]>({
+        await: () => [],
+        invoke: async () => {
+            return oncoKBClient.utilsCancerGeneListGetUsingGET({});
+        },
+        onError: (error => {
+        }),
+        default: []
+    });
+
+    readonly oncokbGenes = remoteData<OncokbGene[]>({
+        await: () => [],
+        invoke: async () => {
+            return oncoKBClient.genesGetUsingGET({});
+        },
+        onError: (error => {
+        }),
+        default: []
+    });
+
+    readonly oncokbCancerGeneEntrezGeneIds = remoteData<number[]>({
+        await: () => [this.oncokbCancerGenes],
+        invoke: async () => {
+            return this.oncokbCancerGenes.result.map(gene => gene.entrezGeneId);
+        },
+        default: []
+    });
+
+    readonly oncokbAnnotatedGeneEntrezGeneIds = remoteData<number[]>({
+        await: () => [this.oncokbCancerGenes],
+        invoke: async () => {
+            return this.oncokbCancerGenes.result.filter(gene => gene.oncokbAnnotated).map(gene => gene.entrezGeneId);
+        },
+        default: []
+    });
+
+    readonly oncokbOncogeneEntrezGeneIds = remoteData<number[]>({
+        await: () => [this.oncokbGenes],
+        invoke: async () => {
+            return this.oncokbGenes.result.filter(gene => gene.oncogene).map(gene => gene.entrezGeneId);
+        },
+        default: []
+    });
+
+    readonly oncokbTumorSuppressorGeneEntrezGeneIds = remoteData<number[]>({
+        await: () => [this.oncokbGenes],
+        invoke: async () => {
+            return this.oncokbGenes.result.filter(gene => gene.tsg).map(gene => gene.entrezGeneId);
+        },
+        default: []
+    });
+
+    @computed get oncokbCancerGeneFilterEnabled() {
+        return !this.oncokbCancerGenes.isError && !this.oncokbGenes.isError;
+    }
+
     @computed get isSingleVirtualStudyPageWithoutFilter() {
         return (this.filteredPhysicalStudies.result.length + this.filteredVirtualStudies.result.length) === 1 && this.filteredVirtualStudies.result.length > 0 && !this.chartsAreFiltered;
     }
@@ -2055,17 +2125,12 @@ export class StudyViewPageStore {
     @action addCustomChart(newChart:NewChart) {
         const uniqueKey = this.newCustomChartUniqueKey();
         const newChartName = newChart.name ? newChart.name : this.getDefaultCustomChartName();
-        let chartMeta = {
+        let chartMeta:ChartMeta = {
             uniqueKey: uniqueKey,
             displayName: newChartName,
             description: newChartName,
-            chartType: ChartTypeEnum.PIE_CHART,
             dataType: getChartMetaDataType(uniqueKey),
             patientAttribute: false,
-            dimension: {
-                w: 1,
-                h: 1
-            },
             renderWhenDataChange: false,
             priority: 1
         };
@@ -2088,6 +2153,8 @@ export class StudyViewPageStore {
         this._customCharts.set(uniqueKey, chartMeta);
         this._chartVisibility.set(uniqueKey, true);
         this._customChartsSelectedCases.set(uniqueKey, allCases);
+        this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
+        this.chartsDimension.set(uniqueKey, {w: 1, h: 1});
 
         // Autoselect the groups
         this.setCustomChartFilters(chartMeta, newChart.groups.map(group=>group.name));
@@ -2113,7 +2180,6 @@ export class StudyViewPageStore {
 
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
-
         let _chartMetaSet: { [id: string]: ChartMeta } = _.reduce(this._customCharts.values(), (acc: { [id: string]: ChartMeta }, chartMeta:ChartMeta) => {
             acc[chartMeta.uniqueKey] = toJS(chartMeta);
             return acc
@@ -2123,21 +2189,16 @@ export class StudyViewPageStore {
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
             const uniqueKey = getClinicalAttributeUniqueKey(attribute);
-            const chartType = this.chartsType.get(uniqueKey);
-            if (chartType !== undefined) {
-                acc[uniqueKey] = {
-                    displayName: attribute.displayName,
-                    uniqueKey: uniqueKey,
-                    chartType: chartType,
-                    dataType: getChartMetaDataType(uniqueKey),
-                    patientAttribute:attribute.patientAttribute,
-                    description: attribute.description,
-                    dimension: this.chartsDimension[uniqueKey]!,
-                    priority: getPriorityByClinicalAttribute(attribute),
-                    renderWhenDataChange: chartType === ChartTypeEnum.TABLE,
-                    clinicalAttribute: attribute
-                };
-            }
+            acc[uniqueKey] = {
+                displayName: attribute.displayName,
+                uniqueKey: uniqueKey,
+                dataType: getChartMetaDataType(uniqueKey),
+                patientAttribute:attribute.patientAttribute,
+                description: attribute.description,
+                priority: getPriorityByClinicalAttribute(attribute),
+                renderWhenDataChange: false,
+                clinicalAttribute: attribute
+            };
             return acc
         }, _chartMetaSet);
 
@@ -2146,11 +2207,9 @@ export class StudyViewPageStore {
                 uniqueKey: UniqueKey.MUTATED_GENES_TABLE,
                 dataType: getChartMetaDataType(UniqueKey.MUTATED_GENES_TABLE),
                 patientAttribute:false,
-                chartType: this.chartsType.get(UniqueKey.MUTATED_GENES_TABLE)!,
-                dimension: this.chartsDimension[UniqueKey.MUTATED_GENES_TABLE]!,
                 displayName: 'Mutated Genes',
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.MUTATED_GENES_TABLE),
-                renderWhenDataChange: true,
+                renderWhenDataChange: false,
                 description: ''
             };
         }
@@ -2160,10 +2219,8 @@ export class StudyViewPageStore {
                 uniqueKey: UniqueKey.CNA_GENES_TABLE,
                 dataType: getChartMetaDataType(UniqueKey.CNA_GENES_TABLE),
                 patientAttribute:false,
-                chartType: this.chartsType.get(UniqueKey.CNA_GENES_TABLE)!,
-                dimension: this.chartsDimension[UniqueKey.CNA_GENES_TABLE]!,
                 displayName: 'CNA Genes',
-                renderWhenDataChange: true,
+                renderWhenDataChange: false,
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.CNA_GENES_TABLE),
                 description: ''
             };
@@ -2184,10 +2241,8 @@ export class StudyViewPageStore {
                 dataType: getChartMetaDataType(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
                 patientAttribute:false,
                 uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
-                chartType: ChartTypeEnum.SCATTER,
                 displayName: 'Mutation Count vs Fraction of Genome Altered',
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
-                dimension: STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER],
                 renderWhenDataChange: false,
                 description: ''
             };
@@ -2200,16 +2255,6 @@ export class StudyViewPageStore {
         return _.reduce(this._chartVisibility.entries(), (acc, [chartUniqueKey, visible]) => {
             if (visible && this.chartMetaSet[chartUniqueKey]) {
                 let chartMeta = this.chartMetaSet[chartUniqueKey];
-                let dimension = this.chartsDimension[chartUniqueKey];
-                if (dimension !== undefined) {
-                    chartMeta.dimension = dimension;
-                } else {
-                    chartMeta.dimension = STUDY_VIEW_CONFIG.layout.dimensions[chartMeta.chartType] || {w: 1, h: 1};
-                }
-                const chartType = this.chartsType.get(chartUniqueKey);
-                if (chartType !== undefined) {
-                    chartMeta.chartType = chartType;
-                }
                 acc.push(chartMeta);
             }
             return acc;
@@ -2241,7 +2286,7 @@ export class StudyViewPageStore {
                 this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
             }
             this.chartsType.set(UniqueKey.MUTATED_GENES_TABLE, ChartTypeEnum.MUTATED_GENES_TABLE);
-            this.chartsDimension[UniqueKey.MUTATED_GENES_TABLE] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE];
+            this.chartsDimension.set(UniqueKey.MUTATED_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE]);
         }
         if (!_.isEmpty(this.cnaProfiles.result)) {
             const cnaGeneMeta = _.find(this.chartMetaSet, chartMeta => chartMeta.uniqueKey === UniqueKey.CNA_GENES_TABLE);
@@ -2249,7 +2294,7 @@ export class StudyViewPageStore {
                 this.changeChartVisibility(UniqueKey.CNA_GENES_TABLE, true);
             }
             this.chartsType.set(UniqueKey.CNA_GENES_TABLE, ChartTypeEnum.CNA_GENES_TABLE);
-            this.chartsDimension[UniqueKey.CNA_GENES_TABLE] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.CNA_GENES_TABLE];
+            this.chartsDimension.set(UniqueKey.CNA_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.CNA_GENES_TABLE]);
         }
 
         this.initializeClinicalDataCountCharts();
@@ -2285,17 +2330,17 @@ export class StudyViewPageStore {
 
             if (obj.datatype === 'NUMBER') {
                 this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
-                this.chartsDimension[uniqueKey] =STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART];
+                this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
             } else {
                 this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
-                this.chartsDimension[uniqueKey] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART];
+                this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART]);
             }
         });
 
         const cancerTypeIds = _.uniq(this.queriedPhysicalStudies.result.map(study => study.cancerTypeId));
 
         this.chartsType.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, ChartTypeEnum.SCATTER);
-        this.chartsDimension[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER];
+        this.chartsDimension.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER]);
         if (mutationCountFlag && fractionGenomeAlteredFlag && getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION)!== 0) {
             this.changeChartVisibility(UniqueKey.MUTATION_COUNT_CNA_FRACTION, true);
         }
@@ -2335,15 +2380,15 @@ export class StudyViewPageStore {
                 data = this.getClinicalDataCount(attr);
             }
             if (data !== undefined) {
-                this.chartsDimension[attr.uniqueKey] = this.getTableDimensionByNumberOfRecords(data.result!.length);
+                this.chartsDimension.set(attr.uniqueKey, this.getTableDimensionByNumberOfRecords(data.result!.length));
             }
             this.chartsType.set(attr.uniqueKey, ChartTypeEnum.TABLE);
         } else {
-            this.chartsDimension[attr.uniqueKey] = STUDY_VIEW_CONFIG.layout.dimensions[newChartType];
+            this.chartsDimension.set(attr.uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[newChartType]);
             this.chartsType.set(attr.uniqueKey, newChartType);
         }
         this.currentFocusedChartByUser = _.clone(attr);
-        this.currentFocusedChartByUser.dimension = this.chartsDimension[attr.uniqueKey];
+        this.currentFocusedChartByUserDimension = this.chartsDimension.get(attr.uniqueKey);
     }
 
     readonly defaultVisibleAttributes = remoteData({
@@ -2439,7 +2484,7 @@ export class StudyViewPageStore {
                 this._chartVisibility.set(uniqueKey, true);
             }
             this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
-            this.chartsDimension[uniqueKey] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART];
+            this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
         });
     }
 
@@ -2617,29 +2662,52 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly mutatedGeneData = remoteData<MutatedGenesData>({
-        await: () => [this.mutationProfiles],
+    readonly mutatedGeneData = remoteData<MutationCountByGeneWithCancerGene[]>({
+        await: () => this.oncokbCancerGeneFilterEnabled ?
+            [this.mutationProfiles, this.oncokbAnnotatedGeneEntrezGeneIds, this.oncokbOncogeneEntrezGeneIds, this.oncokbTumorSuppressorGeneEntrezGeneIds, this.oncokbCancerGeneEntrezGeneIds] :
+            [this.mutationProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result!)) {
                 // TODO: get data for all profiles
-                return internalClient.fetchMutatedGenesUsingPOST({
+                let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST({
                     studyViewFilter: this.filters
+                });
+                return mutatedGenes.map(item => {
+                    return {
+                        ...item,
+                        oncokbAnnotated: this.oncokbCancerGeneFilterEnabled ? this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        oncokbOncogene: this.oncokbCancerGeneFilterEnabled ? this.oncokbOncogeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        oncokbTumorSuppressorGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        isCancerGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbCancerGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false
+                    };
                 });
             } else {
                 return [];
             }
         },
-        onError: (error => {}),
+        onError: (error => {
+        }),
         default: []
     });
 
-    readonly cnaGeneData = remoteData<CNAGenesData>({
-        await:()=>[this.cnaProfiles],
+    readonly cnaGeneData = remoteData<CopyNumberCountByGeneWithCancerGene[]>({
+        await: () => this.oncokbCancerGeneFilterEnabled ?
+            [this.cnaProfiles, this.oncokbAnnotatedGeneEntrezGeneIds, this.oncokbOncogeneEntrezGeneIds, this.oncokbTumorSuppressorGeneEntrezGeneIds, this.oncokbCancerGeneEntrezGeneIds] :
+            [this.mutationProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.cnaProfiles.result)) {
                 // TODO: get data for all profiles
-                return internalClient.fetchCNAGenesUsingPOST({
+                let cnaGenes = await internalClient.fetchCNAGenesUsingPOST({
                     studyViewFilter: this.filters
+                });
+                return cnaGenes.map(item => {
+                    return {
+                        ...item,
+                        oncokbAnnotated: this.oncokbCancerGeneFilterEnabled ? this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        oncokbOncogene: this.oncokbCancerGeneFilterEnabled ? this.oncokbOncogeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        oncokbTumorSuppressorGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                        isCancerGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbCancerGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
+                    };
                 });
             } else {
                 return [];
@@ -2858,14 +2926,23 @@ export class StudyViewPageStore {
 
     public async getMutatedGenesDownloadData() {
         if (this.mutatedGeneData.result) {
-            let data = [['Gene', 'MutSig(Q-value)', '# Mut', '#', 'Freq'].join('\t')];
-            _.each(this.mutatedGeneData.result, function (record: MutationCountByGene) {
-                data.push([
+            let header = ['Gene', 'MutSig(Q-value)', '# Mut', '#', 'Freq'];
+            if(this.oncokbCancerGeneFilterEnabled) {
+                header.push('Is Cancer Gene (source: OncoKB)');
+            }
+            let data = [header.join('\t')];
+            _.each(this.mutatedGeneData.result, (record: MutationCountByGeneWithCancerGene) => {
+                let rowData = [
                     record.hugoGeneSymbol,
                     record.qValue === undefined ? '' : getQValue(record.qValue),
-                    record.totalCount, 
+                    record.totalCount,
                     record.numberOfAlteredCases,
-                    getFrequencyStr(record.numberOfAlteredCases / record.numberOfSamplesProfiled * 100)].join("\t"));
+                    getFrequencyStr(record.numberOfAlteredCases / record.numberOfSamplesProfiled * 100)
+                ];
+                if (this.oncokbCancerGeneFilterEnabled) {
+                    rowData.push(this.oncokbCancerGeneFilterEnabled ? (record.isCancerGene ? 'Yes' : 'No') : 'NA');
+                }
+                data.push(rowData.join("\t"));
             });
             return data.join("\n");
         } else
@@ -2874,13 +2951,22 @@ export class StudyViewPageStore {
 
     public async getGenesCNADownloadData() {
         if (this.cnaGeneData.result) {
-            let data = [['Gene', 'Gistic(Q-value)', 'Cytoband', 'CNA', '#', 'Freq'].join('\t')];
-            _.each(this.cnaGeneData.result, function (record: CopyNumberCountByGene) {
-                data.push([
+            let header = ['Gene', 'Gistic(Q-value)', 'Cytoband', 'CNA', '#', 'Freq'];
+            if (this.oncokbCancerGeneFilterEnabled) {
+                header.push('Is Cancer Gene (source: OncoKB)');
+            }
+            let data = [header.join('\t')];
+            _.each(this.cnaGeneData.result, (record: CopyNumberCountByGeneWithCancerGene) => {
+                let rowData = [
                     record.hugoGeneSymbol,
                     record.qValue === undefined ? '' : getQValue(record.qValue),
                     record.cytoband, getCNAByAlteration(record.alteration),
-                    record.numberOfAlteredCases, getFrequencyStr(record.numberOfAlteredCases / record.numberOfSamplesProfiled * 100)].join("\t"));
+                    record.numberOfAlteredCases, getFrequencyStr(record.numberOfAlteredCases / record.numberOfSamplesProfiled * 100)
+                ];
+                if (this.oncokbCancerGeneFilterEnabled) {
+                    rowData.push(this.oncokbCancerGeneFilterEnabled ? (record.isCancerGene ? 'Yes' : 'No') : 'NA');
+                }
+                data.push(rowData.join("\t"));
             });
             return data.join("\n");
         } else
@@ -3394,10 +3480,10 @@ export class StudyViewPageStore {
 
             if (dataSize > STUDY_VIEW_CONFIG.thresholds.pieToTable || _.includes(STUDY_VIEW_CONFIG.tableAttrs, uniqueKey)) {
                 this.chartsType.set(uniqueKey, ChartTypeEnum.TABLE);
-                this.chartsDimension[uniqueKey] = this.getTableDimensionByNumberOfRecords(dataSize);
+                this.chartsDimension.set(uniqueKey, this.getTableDimensionByNumberOfRecords(dataSize));
             }else {
                 this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
-                this.chartsDimension[uniqueKey] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART];
+                this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART]);
             }
         }
     }

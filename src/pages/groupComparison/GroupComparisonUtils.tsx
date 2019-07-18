@@ -19,7 +19,7 @@ import {MakeMobxView, MobxViewAlwaysComponent} from "../../shared/components/Mob
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import {stringListToIndexSet} from "../../shared/lib/StringUtils";
+import {stringListToIndexSet} from "public-lib/lib/StringUtils";
 
 export enum GroupComparisonTab {
     OVERLAP = "overlap",
@@ -366,6 +366,9 @@ export function ENRICHMENTS_NOT_2_GROUPS_MSG(numActiveGroups:number, numSelected
 export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
     return `The selected comparison groups span more than one study, so we can't show ${enrichmentsType} enrichments. Please change your selection in the Groups section so that all samples only come from one study.`;
 }
+
+export const SURVIVAL_NOT_ENOUGH_GROUPS_MSG =
+    "We need at least 1 group to show survival. Please select more groups from the Groups section above.";
 
 export const SURVIVAL_TOO_MANY_GROUPS_MSG =
     "We can't show survival for more than 10 groups. Please deselect groups in the Groups section.";

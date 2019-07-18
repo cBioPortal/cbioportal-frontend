@@ -181,7 +181,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.TENDENCY] = {
-            name: this.props.mutexTendency ? "Tendency" : "Enriched in",
+            name: this.props.mutexTendency ? "Tendency" : "Higher expression in",
             render: (d: ExpressionEnrichmentRow) => {
                 let groupColor = undefined;
                 const significant = d.qValue < 0.05;

@@ -13,7 +13,7 @@ import {getDeterministicRandomNumber, separateScatterDataByAppearance} from "./P
 import {logicalAnd} from "../../lib/LogicUtils";
 import {tickFormatNumeral, wrapTick} from "./TickUtils";
 import {makeScatterPlotSizeFunction} from "./PlotUtils";
-import {getTextWidth} from "../../lib/wrapText";
+import {getTextWidth} from "../../../public-lib/lib/TextTruncationUtils";
 import autobind from "autobind-decorator";
 
 export interface IBaseBoxScatterPlotPoint {

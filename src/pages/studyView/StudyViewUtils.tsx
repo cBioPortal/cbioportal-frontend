@@ -23,7 +23,7 @@ import defaultClient from "shared/api/cbioportalClientInstance";
 import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
 import MobxPromise from 'mobxpromise';
-import {getTextWidth} from "../../shared/lib/wrapText";
+import {getTextWidth} from "../../public-lib/lib/TextTruncationUtils";
 import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
 import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
 
@@ -73,12 +73,14 @@ export type ChartMeta = {
     uniqueKey: string,
     displayName: string,
     description: string,
-    dimension: ChartDimension,
     priority: number,
     dataType: ChartMetaDataType,
     patientAttribute: boolean,
-    chartType: ChartType,
     renderWhenDataChange: boolean
+}
+export type ChartMetaWithDimensionAndChartType = ChartMeta & {
+    dimension: ChartDimension,
+    chartType: ChartType,
 }
 export type ClinicalDataCountSet = { [attrId: string]: number };
 export type StudyWithSamples = CancerStudy & {
@@ -94,7 +96,7 @@ export enum Datalabel {
     NA = "NA"
 }
 
-export const SPECIAL_CHARTS: ChartMeta[] = [{
+export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [{
     uniqueKey: UniqueKey.CANCER_STUDIES,
     displayName: 'Cancer Studies',
     description: 'Cancer Studies',
@@ -501,13 +503,20 @@ export function makePatientToClinicalAnalysisGroup(
 }
 
 export function toSvgDomNodeWithLegend(svgElement: SVGElement,
-                                       legendGroupSelector: string,
-                                       chartGroupSelector?: string,
-                                       centerLegend: boolean = false)
+                                       params:{
+                                           legendGroupSelector: string,
+                                           selectorToHide?:string,
+                                           chartGroupSelector?: string,
+                                           centerLegend?: boolean
+                                       })
 {
-    const svg = svgElement.cloneNode(true) as Element;
-    const legend = $(svgElement).find(legendGroupSelector).get(0);
+    const svg = svgElement.cloneNode(true) as SVGElement;
+    const legend = $(svgElement).find(params.legendGroupSelector).get(0);
     const legendBBox = legend.getBoundingClientRect();
+
+    if (params.selectorToHide) {
+        $(svg).find(params.selectorToHide).remove();
+    }
 
     const height = + $(svgElement).height() + legendBBox.height;
     const width = Math.max($(svgElement).width(), legendBBox.width);
@@ -518,18 +527,18 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
     $(svg).css({height: height + 5, width});
 
     // center elements
-    if (centerLegend) {
+    if (params.centerLegend) {
         const widthDiff = Math.abs($(svgElement).width() - legendBBox.width);
         const shift = widthDiff / 2;
         const transform = `translate(${shift}, 0)`;
 
         if ($(svgElement).width() > legendBBox.width) {
             // legend needs to be centered wrt the chart
-            $(svg).find(legendGroupSelector).attr("transform", transform);
+            $(svg).find(params.legendGroupSelector).attr("transform", transform);
         }
-        else if (chartGroupSelector) {
+        else if (params.chartGroupSelector) {
             // chart needs to be centered wrt the legend
-            $(svg).find(chartGroupSelector).attr("transform", transform);
+            $(svg).find(params.chartGroupSelector).attr("transform", transform);
         }
     }
 
@@ -1065,17 +1074,21 @@ export function isOccupied(matrix: string[][], position: Position, chartDimensio
     return occupied;
 }
 
-export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, currentGridLayout?: Layout[], currentFocusedChartByUser?: ChartMeta): Layout[] {
+export function getDefaultChartDimension(): ChartDimension {
+    return {w: 1, h: 1};
+}
+
+export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, chartsDimension:{[uniqueId:string]:ChartDimension}, currentGridLayout?: Layout[], currentFocusedChartByUser?: ChartMeta, currentFocusedChartByUserDimension?: ChartDimension): Layout[] {
     let layout: Layout[] = [];
     let matrix = [new Array(cols).fill('')] as string[][];
     // sort the visibleAttributes by priority
     visibleAttributes.sort(chartMetaComparator);
 
     // look if we need to put the chart to a fixed position and add the position to the matrix
-    if (currentGridLayout && currentGridLayout.length > 0 && currentFocusedChartByUser) {
+    if (currentGridLayout && currentGridLayout.length > 0 && currentFocusedChartByUser && currentFocusedChartByUserDimension) {
         const currentChartLayout = currentGridLayout.find((layout) => layout.i === currentFocusedChartByUser.uniqueKey)!;
         if (currentChartLayout) {
-            const newChartLayout = calculateNewLayoutForFocusedChart(currentChartLayout, currentFocusedChartByUser, cols);
+            const newChartLayout = calculateNewLayoutForFocusedChart(currentChartLayout, currentFocusedChartByUser, cols, currentFocusedChartByUserDimension);
             layout.push(newChartLayout);
             matrix = generateMatrixByLayout(newChartLayout, cols);
         }
@@ -1086,20 +1099,21 @@ export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, cu
 
     // filter out the fixed position chart then calculate layout
     _.forEach(_.filter(visibleAttributes, (chart: ChartMeta) => currentFocusedChartByUser ? chart.uniqueKey !== currentFocusedChartByUser.uniqueKey : true), (chart: ChartMeta) => {
-        const position = findSpot(matrix, chart.dimension);
-        while ((position.y + chart.dimension.h) >= matrix.length) {
+        const dimension = chartsDimension[chart.uniqueKey] || getDefaultChartDimension();
+        const position = findSpot(matrix, dimension);
+        while ((position.y + dimension.h) >= matrix.length) {
             matrix.push(new Array(cols).fill(''));
         }
         layout.push({
             i: chart.uniqueKey,
             x: position.x,
             y: position.y,
-            w: chart.dimension.w,
-            h: chart.dimension.h,
+            w: dimension.w,
+            h: dimension.h,
             isResizable: false
         });
-        const xMax = position.x + chart.dimension.w;
-        const yMax = position.y + chart.dimension.h;
+        const xMax = position.x + dimension.w;
+        const yMax = position.y + dimension.h;
         for (let i = position.y; i < yMax; i++) {
             for (let j = position.x; j < xMax; j++) {
                 matrix[i][j] = chart.uniqueKey;
@@ -1109,14 +1123,14 @@ export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, cu
     return layout;
 }
 
-export function calculateNewLayoutForFocusedChart(previousLayout: Layout, currentFocusedChartByUser: ChartMeta, cols: number): Layout {
+export function calculateNewLayoutForFocusedChart(previousLayout: Layout, currentFocusedChartByUser: ChartMeta, cols: number, currentFocusedChartByUserDimension:ChartDimension): Layout {
     const initialX = previousLayout.x;
     const initialY = previousLayout.y;
-    const dimensionWidth = currentFocusedChartByUser.dimension.w;
+    const dimensionWidth = currentFocusedChartByUserDimension.w;
     let x = initialX;
     let y = initialY;
 
-    if (isFocusedChartShrunk({w: previousLayout.w, h: previousLayout.h}, currentFocusedChartByUser.dimension)) {
+    if (isFocusedChartShrunk({w: previousLayout.w, h: previousLayout.h}, currentFocusedChartByUserDimension)) {
         x = initialX + previousLayout.w - dimensionWidth;
     }
     else if (initialX + dimensionWidth >= cols && initialX - dimensionWidth >= 0) {
@@ -1127,8 +1141,8 @@ export function calculateNewLayoutForFocusedChart(previousLayout: Layout, curren
         i: currentFocusedChartByUser.uniqueKey,
         x,
         y,
-        w: currentFocusedChartByUser.dimension.w,
-        h: currentFocusedChartByUser.dimension.h,
+        w: currentFocusedChartByUserDimension.w,
+        h: currentFocusedChartByUserDimension.h,
         isResizable: false
     };
 }
@@ -1259,13 +1273,13 @@ export function calculateClinicalDataCountFrequency(data: ClinicalDataCountSet, 
 }
 
 
-export function getOptionsByChartMetaDataType(type: ChartMetaDataType, allCharts: { [id: string]: ChartMeta }, selectedAttrs: string[]) {
+export function getOptionsByChartMetaDataType(type: ChartMetaDataType, allCharts: { [id: string]: ChartMeta }, selectedAttrs: string[], allChartTypes:{[id:string]:ChartType}) {
     return _.filter(allCharts, chartMeta => chartMeta.dataType === type)
         .map(chartMeta => {
             return {
                 label: chartMeta.displayName,
                 key: chartMeta.uniqueKey,
-                chartType: chartMeta.chartType,
+                chartType: allChartTypes[chartMeta.uniqueKey],
                 disabled: false,
                 selected: selectedAttrs.includes(chartMeta.uniqueKey),
                 freq: 100

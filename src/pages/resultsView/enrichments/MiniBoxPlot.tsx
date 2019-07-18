@@ -14,7 +14,7 @@ import { getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel,
 import autobind from 'autobind-decorator';
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 import {getSampleViewUrl} from "../../../shared/api/urls";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 
 export interface IMiniBoxPlotProps {
     selectedGeneHugo: string;
@@ -122,7 +122,7 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                                     buttons={["SVG", "PNG", "Data"]}
                                     getSvg={this.getSvg}
                                     getData={this.getData}
-                                    collapse={true}
+                                    type='button'
                                     dontFade={true}
                                     style={{position:'absolute', zIndex:10, right: 10 }}
                                     filename={FILE_NAME}

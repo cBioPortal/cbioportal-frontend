@@ -7,6 +7,7 @@ import GroupComparisonStore, {OverlapStrategy} from "../GroupComparisonStore";
 import autobind from "autobind-decorator";
 import GroupSelectorButton from "./GroupSelectorButton";
 import GroupSelectorButtonList from "./GroupSelectorButtonList";
+import SelectAllDeselectAll from "./SelectAllDeselectAll";
 
 export interface IGroupSelectorProps {
     store:GroupComparisonStore;
@@ -18,21 +19,28 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
     private dragging = false;
 
     @autobind
-    private isSelected(groupUid:string) {
-        return !!this.props.store.isGroupSelected(groupUid);
+    private isSelected(groupName:string) {
+        return !!this.props.store.isGroupSelected(groupName);
     }
 
     @autobind
-    private onClick(groupUid:string) {
+    private onClick(groupName:string) {
         if (!this.dragging) {
-            this.props.store.toggleGroupSelected(groupUid);
+            this.props.store.toggleGroupSelected(groupName);
+        }
+    }
+
+    @autobind
+    private onClickDelete(groupName:string) {
+        if (!this.dragging) {
+            this.props.store.deleteGroup(groupName);
         }
     }
 
     @autobind
     private onSortEnd(params:any) {
         if (params.oldIndex !== params.newIndex)
-            this.props.store.updateDragOrder(params.oldIndex, params.newIndex);
+            this.props.store.updateGroupOrder(params.oldIndex, params.newIndex);
 
         this.dragging = false;
     }
@@ -52,6 +60,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
             if (this.props.store._originalGroups.result!.length === 0) {
                 return null;
             } else {
+                const deletable = this.props.store._originalGroups.result!.length > 2;
                 const buttons = this.props.store._originalGroups.result!.map((group, index)=>{
                     const excludedFromAnalysis =
                         this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE &&
@@ -60,7 +69,9 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                     return (
                         <GroupSelectorButton
                             isSelected={this.isSelected}
+                            deletable={deletable}
                             onClick={this.onClick}
+                            onClickDelete={this.onClickDelete}
                             sampleSet={this.props.store.sampleSet.result!}
                             group={group}
                             index={index}
@@ -68,6 +79,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                         />
                     );
                 });
+                buttons.push(<SelectAllDeselectAll store={this.props.store} disabled={true} index={buttons.length}/>);
                 return (
                     <div style={{
                         display:"flex",
@@ -83,22 +95,12 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                             onSortEnd={this.onSortEnd}
                             distance={6}
                         />
-                        <div style={{marginLeft:15, display:'flex', whiteSpace:'nowrap'}} >
-                            <a onClick={this.props.store.selectAllGroups}
-                            >Select all
-                            </a>
-                            &nbsp;|&nbsp;
-                            <a onClick={this.props.store.deselectAllGroups}
-                            >Deselect all
-                            </a>
-                        </div>
                     </div>
                 )
             }
         },
         renderPending:()=><LoadingIndicator isLoading={true} size="big" center={true} />,
-        renderError:()=><ErrorMessage/>,
-        showLastRenderWhenPending:true
+        renderError:()=><ErrorMessage/>
     });
 
     render() {

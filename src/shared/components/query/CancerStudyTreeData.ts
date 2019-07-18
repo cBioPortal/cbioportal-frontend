@@ -5,17 +5,21 @@ import {VirtualStudy} from "shared/model/VirtualStudy";
 
 export const CANCER_TYPE_ROOT = 'tissue';
 export const VIRTUAL_STUDY_NAME= 'My Virtual Studies';
+export const PHYSICAL_STUDY_NAME= 'Studies';
 
-export type CancerTreeNode = CancerType|CancerStudy;
+export type CancerTypeWithVisibility = CancerType & { alwaysVisible?:boolean };
+
+export type CancerTreeNode = CancerTypeWithVisibility|CancerStudy;
+
 export type NodeMetadata = {
 	isCancerType:boolean,
 	isPriorityCategory:boolean,
-	priorityCategories:CancerType[],
-	childCancerTypes:CancerType[],
+	priorityCategories:CancerTypeWithVisibility[],
+	childCancerTypes:CancerTypeWithVisibility[],
 	childStudies:CancerStudy[],
 	descendantStudies:CancerStudy[],
-	descendantCancerTypes:CancerType[],
-	ancestors:CancerType[], // in order of ascending distance from node, ending in root node
+	descendantCancerTypes:CancerTypeWithVisibility[],
+	ancestors:CancerTypeWithVisibility[], // in order of ascending distance from node, ending in root node
 	siblings:CancerStudy[], // descendants of highest level non-root ancestor
 	searchTerms:string, // all related text in a single string for easy searching
 };
@@ -27,7 +31,7 @@ export default class CancerStudyTreeData
 		return _.sortBy(nodes, node => node.name) as T;
 	}
 
-	rootCancerType:CancerType = {
+	rootCancerType:CancerTypeWithVisibility = {
 		clinicalTrialKeywords: '',
 		dedicatedColor: '',
 		name: 'All',
@@ -36,21 +40,32 @@ export default class CancerStudyTreeData
 		cancerTypeId: CANCER_TYPE_ROOT
 	};
 
-	virtualStudyCategory:CancerType = {
+	virtualStudyCategory:CancerTypeWithVisibility = {
 		clinicalTrialKeywords: '',
 		dedicatedColor       : '',
 		name                 : VIRTUAL_STUDY_NAME,
 		parent               : CANCER_TYPE_ROOT,
 		shortName            : VIRTUAL_STUDY_NAME,
-		cancerTypeId         : VIRTUAL_STUDY_NAME
+		cancerTypeId         : VIRTUAL_STUDY_NAME,
+		alwaysVisible        : true
 	};
 
-	priorityCategories:CancerType[] = [];
+	physicalStudyCategory:CancerTypeWithVisibility = {
+		clinicalTrialKeywords: '',
+		dedicatedColor       : '',
+		name                 : PHYSICAL_STUDY_NAME,
+		parent               : CANCER_TYPE_ROOT,
+		shortName            : PHYSICAL_STUDY_NAME,
+		cancerTypeId         : PHYSICAL_STUDY_NAME,
+		alwaysVisible        : true
+	};
+
+	priorityCategories:CancerTypeWithVisibility[] = [];
 	map_node_meta = new Map<CancerTreeNode, NodeMetadata>();
-	map_cancerTypeId_cancerType = new Map<string, CancerType>();
+	map_cancerTypeId_cancerType = new Map<string, CancerTypeWithVisibility>();
 	map_studyId_cancerStudy = new Map<string, CancerStudy>();
 
-	constructor({cancerTypes = [], studies = [], priorityStudies = {}, virtualStudies=[]}: {cancerTypes: CancerType[], studies: CancerStudy[], priorityStudies?:CategorizedConfigItems, virtualStudies?:VirtualStudy[]})
+	constructor({cancerTypes = [], studies = [], priorityStudies = {}, virtualStudies=[], maxTreeDepth = 0}: {cancerTypes: CancerTypeWithVisibility[], studies: CancerStudy[], priorityStudies?:CategorizedConfigItems, virtualStudies?:VirtualStudy[], maxTreeDepth: number})
 	{
 		let nodes:CancerTreeNode[];
 		let node:CancerTreeNode;
@@ -82,8 +97,16 @@ export default class CancerStudyTreeData
 				cancerTypeId: name
 			});
 		}
+
+		//map all physical studies to physicalStudy cancer type if maxTreeDepth is zero and when virtual studie are present
+		if (maxTreeDepth === 0 && virtualStudies.length > 0) {
+			studies = _.map(studies, study => {
+				study.cancerTypeId = this.physicalStudyCategory.cancerTypeId;
+				return study;
+			});
+		}
 		// add virtual study category, and studies
-		cancerTypes = [this.virtualStudyCategory, ...this.priorityCategories, this.rootCancerType, ...cancerTypes];
+		cancerTypes = [this.virtualStudyCategory, this.physicalStudyCategory, ...this.priorityCategories, this.rootCancerType, ...cancerTypes];
 		studies     = CancerStudyTreeData.sortNodes([..._virtualStudies, ...studies]);
 
 		// initialize lookups and metadata entries
@@ -94,7 +117,7 @@ export default class CancerStudyTreeData
 				let isCancerType = nodes == cancerTypes;
 				if (isCancerType)
 				{
-					this.map_cancerTypeId_cancerType.set(node.cancerTypeId, node as CancerType);
+					this.map_cancerTypeId_cancerType.set(node.cancerTypeId, node as CancerTypeWithVisibility);
 				}
 				else
 				{
@@ -142,8 +165,13 @@ export default class CancerStudyTreeData
 			{
 				meta = this.map_node_meta.get(node) as NodeMetadata;
 				let parent;
-				if (meta.isCancerType)
-					parent = this.map_cancerTypeId_cancerType.get((node as CancerType).parent);
+				if (meta.isCancerType){
+					const alwaysVisible = (node as CancerTypeWithVisibility).alwaysVisible
+					parent = this.map_cancerTypeId_cancerType.get((node as CancerTypeWithVisibility).parent);
+					if(alwaysVisible && parent) {
+						(parent as CancerTypeWithVisibility).alwaysVisible = alwaysVisible;
+					}
+				}
 				else
 					parent = this.map_cancerTypeId_cancerType.get(node.cancerTypeId);
 
@@ -151,7 +179,7 @@ export default class CancerStudyTreeData
 				if (parentMeta)
 				{
 					if (meta.isCancerType)
-						parentMeta.childCancerTypes.push(node as CancerType);
+						parentMeta.childCancerTypes.push(node as CancerTypeWithVisibility);
 					else
 						parentMeta.childStudies.push(node as CancerStudy);
 				}
@@ -160,7 +188,7 @@ export default class CancerStudyTreeData
 				{
 					meta.ancestors.push(parent);
 					if (meta.isCancerType)
-						parentMeta.descendantCancerTypes.push(node as CancerType);
+						parentMeta.descendantCancerTypes.push(node as CancerTypeWithVisibility);
 					else
 						parentMeta.descendantStudies.push(node as CancerStudy);
 

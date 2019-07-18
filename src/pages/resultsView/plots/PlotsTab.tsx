@@ -54,11 +54,11 @@ import ScatterPlot from "shared/components/plots/ScatterPlot";
 import TablePlot from "shared/components/plots/TablePlot";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import InfoIcon from "../../../shared/components/InfoIcon";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../public-lib/api/remoteData";
 import {MobxPromise} from "mobxpromise";
 import BoxScatterPlot, {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
@@ -799,11 +799,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     readonly mutationPromise = remoteData({
-        await:()=>this.props.store.putativeDriverAnnotatedMutationCache.getAll(
+        await:()=>this.props.store.filteredAndAnnotatedMutationCache.getAll(
             getMutationQueries(this.horzSelection, this.vertSelection)
         ),
         invoke: ()=>{
-            return Promise.resolve(_.flatten(this.props.store.putativeDriverAnnotatedMutationCache.getAll(
+            return Promise.resolve(_.flatten(this.props.store.filteredAndAnnotatedMutationCache.getAll(
                 getMutationQueries(this.horzSelection, this.vertSelection)
             ).map(p=>p.result!)).filter(x=>!!x));
         }
@@ -1552,7 +1552,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     }]}
                                     dontFade={true}
                                     style={{position:'absolute', right:10, top:10 }}
-                                    collapse={true}
+                                    type='button'
                                 />
                             )}
                             <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>

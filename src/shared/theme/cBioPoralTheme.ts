@@ -41,7 +41,7 @@ const baseProps = {
 // * Labels
 // *
 export const baseLabelStyles = {
-    fontFamily: `FreeSans, ${sansSerif}`,
+    fontFamily: sansSerif,
     fontSize,
     letterSpacing,
     padding,
@@ -233,7 +233,7 @@ const CBIOPORTAL_VICTORY_THEME = {
                 strokeWidth:1,
                 stroke:"black"
             },
-            labels: assign({}, baseLabelStyles, { fontFamily: sansSerif }),
+            labels: baseLabelStyles,
             title: assign({}, baseLabelStyles, { padding: 5 })
         }
     }

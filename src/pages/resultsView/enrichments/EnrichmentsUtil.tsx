@@ -11,7 +11,7 @@ import * as _ from "lodash";
 import {AlterationTypeConstants} from "../ResultsViewPageStore";
 import {filterAndSortProfiles} from "../coExpression/CoExpressionTabUtils";
 import {IMiniFrequencyScatterChartData} from "./MiniFrequencyScatterChart";
-import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import EllipsisTextTooltip from "../../../public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import { AlterationEnrichmentTableColumn, AlterationEnrichmentTableColumnType } from './AlterationEnrichmentsTable';
 import styles from "./styles.module.scss";
 import classNames from "classnames";
@@ -30,7 +30,7 @@ export enum GeneOptions {
     USER_DEFINED_OPTION='User-defined genes',
     HIGHEST_FREQUENCY='Genes with highest frequency in any group',
     AVERAGE_FREQUENCY='Genes with highest average frequency',
-    SIGNIFICANT_P_VALUE='Genes with most significant p-values'
+    SIGNIFICANT_P_VALUE='Genes with most significant p-value'
 }
 
 export const USER_DEFINED_OPTION:{label:string, genes:string[]} = {
@@ -544,15 +544,15 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[], includeAlter
     return [
         USER_DEFINED_OPTION,
         {
-            label: `Genes with highest frequency in any group`,
+            label: GeneOptions.HIGHEST_FREQUENCY,
             genes: _.map(dataSortedByAlteredPercentage, datum => datum.optionName || datum.hugoGeneSymbol)
         },
         {
-            label: `Genes with highest avgerage frequency`,
+            label: GeneOptions.AVERAGE_FREQUENCY,
             genes: _.map(dataSortedByAvgFrequency, datum => datum.optionName || datum.hugoGeneSymbol)
         },
         {
-            label: `Genes with most significant p-value`,
+            label: GeneOptions.SIGNIFICANT_P_VALUE,
             genes: _.map(dataSortedBypValue, datum => datum.optionName || datum.hugoGeneSymbol)
         }
     ];

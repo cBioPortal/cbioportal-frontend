@@ -22,11 +22,12 @@
  **/
 
 import * as React from 'react';
-import DefaultTooltip from '../defaultTooltip/DefaultTooltip';
+import DefaultTooltip from '../../../public-lib/components/defaultTooltip/DefaultTooltip';
 import { observer } from 'mobx-react';
-import { observable, computed } from "mobx";
+import { observable } from "mobx";
+import { JsonToTable } from 'react-json-to-table';
 import './StudyTagsTooltip.scss';
-import { remoteData } from '../../api/remoteData';
+import { remoteData } from 'public-lib/api/remoteData';
 import client from "shared/api/cbioportalClientInstance";
 import Loader from '../loadingIndicator/LoadingIndicator';
 
@@ -67,8 +68,7 @@ default class BuildOverlay extends React.Component<BuildOverlayTooltipProps, {}>
         else if (this.studyMetadata.isComplete) {
             const resultKeyLength = Object.keys(this.studyMetadata.result).length;
             const description = <div dangerouslySetInnerHTML={this.addHTMLDescription(this.props.studyDescription)}/>;
-            overlay = description; //resultKeyLength > 0 ? ([description, <br/>,
-                //<div className="studyTagsTooltip"> <JsonToTable json={this.studyMetadata.result}/></div>]) : description;
+            overlay = resultKeyLength > 0 ? ([description, <br/>, <div className="studyTagsTooltip"> <JsonToTable json={this.studyMetadata.result}/></div>]) : description;
         }
         else if (this.studyMetadata.isError) {
             overlay = 'error';

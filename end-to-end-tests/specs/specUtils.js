@@ -108,6 +108,13 @@ function toStudyViewClinicalDataTab() {
     }
 }
 
+function removeAllStudyViewFilters() {
+    const clearAllFilter = "[data-test='clear-all-filters']";
+    if (browser.isVisible(clearAllFilter)) {
+        browser.click(clearAllFilter);
+    }
+}
+
 function waitForStudyViewSelectedInfo() {
     browser.waitForVisible("[data-test='selected-info']", 5000);
     // pause to wait the animation finished
@@ -141,6 +148,34 @@ function checkOncoprintElement(selector) {
     return browser.checkElement(selector || "#oncoprintDiv", { hide:[".qtip", '.dropdown-menu', ".oncoprintjs__track_options__dropdown", ".oncoprintjs__cell_overlay_div"] });
 }
 
+function executeInBrowser(callback){
+    return browser.execute(callback).value;
+}
+
+function checkElementWithTemporaryClass(selectorForChecking, selectorForTemporaryClass, temporaryClass, pauseTime) {
+    browser.execute(function(selectorForTemporaryClass, temporaryClass){
+        $(selectorForTemporaryClass).addClass(temporaryClass);
+    }, selectorForTemporaryClass, temporaryClass);
+    browser.pause(pauseTime);
+    var res = browser.checkElement(selectorForChecking);
+    browser.execute(function(selectorForTemporaryClass, temporaryClass){
+        $(selectorForTemporaryClass).removeClass(temporaryClass);
+    }, selectorForTemporaryClass, temporaryClass);
+    return res;
+}
+
+function checkElementWithMouseDisabled(selector, pauseTime) {
+    return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0);
+}
+
+function clickQueryByGeneButton(){
+    browser.click('a=Query By Gene');
+    browser.scroll(0,0);
+};
+
+function clickModifyStudySelectionButton (){
+    browser.click('[data-test="modifyStudySelectionButton"]');
+}
 
 module.exports = {
     waitForOncoprint: waitForOncoprint,
@@ -152,6 +187,7 @@ module.exports = {
     getTextInOncoprintLegend: getTextInOncoprintLegend,
     toStudyViewSummaryTab: toStudyViewSummaryTab,
     toStudyViewClinicalDataTab: toStudyViewClinicalDataTab,
+    removeAllStudyViewFilters: removeAllStudyViewFilters,
     waitForStudyViewSelectedInfo: waitForStudyViewSelectedInfo,
     getTextFromElement: getTextFromElement,
     getNumberOfStudyViewCharts: getNumberOfStudyViewCharts,
@@ -159,7 +195,12 @@ module.exports = {
     getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements,
     setInputText: setInputText,
     pasteToElement: pasteToElement,
-    checkOncoprintElement: checkOncoprintElement
+    checkOncoprintElement: checkOncoprintElement,
+    executeInBrowser: executeInBrowser,
+    checkElementWithTemporaryClass: checkElementWithTemporaryClass,
+    checkElementWithMouseDisabled: checkElementWithMouseDisabled,
+    clickQueryByGeneButton:clickQueryByGeneButton,
+    clickModifyStudySelectionButton: clickModifyStudySelectionButton
 };
 
 
