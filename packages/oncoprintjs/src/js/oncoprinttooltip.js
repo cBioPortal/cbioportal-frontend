@@ -43,6 +43,7 @@ var OncoprintToolTip = (function() {
 	cancelScheduledShow(tt);
 	tt.show_timeout_id = undefined;
 	tt.$div.empty();
+	tt.$div.css({'top':0, 'left':0, 'z-index':9999}); // put up top left so that it doesnt cause any page expansion, before the position calculation which depends on page size
 	tt.$div.append($contents);
 	if (!fade) {
 	    tt.$div.show();
@@ -52,6 +53,13 @@ var OncoprintToolTip = (function() {
 	var container_offset = tt.$container.offset();
 	var x = page_x - container_offset.left - (tt.center ? tt.$div.width()/2 : 0);
 	var y = page_y - container_offset.top - tt.$div.height();
+	// clamp to visible area
+	var min_padding = 20;
+	y = Math.max(y, min_padding-(container_offset.top)); // make sure not too high
+	y = Math.min(y, $(window).height() - tt.$div.height() - min_padding - container_offset.top); // make sure not too low
+	x = Math.max(x, min_padding-(container_offset.left)); // make sure not too left
+	x = Math.min(x, $(window).width() - tt.$div.width() - min_padding - container_offset.left); // make sure not too right
+
 	tt.$div.css({'top':y, 'left':x, 'z-index':9999});
 	tt.shown = true;
     };
