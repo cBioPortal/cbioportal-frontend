@@ -45,6 +45,13 @@ describe('patient page', function(){
         assert.equal(browser.getText('[data-test="oncokb-card-title"]').toLowerCase(), 'ppp2r1a s256f in uterine serous carcinoma/uterine papillary serous carcinoma'.toLowerCase());
     });
 
+    it('should show all samples button for single sample view of multi sample patient', function(){
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&tab=summaryTab&sampleId=P04_Pri`);
+
+        browser.waitForExist('.//*[text()[contains(.,"Show all")]]');
+
+        assert.equal(browser.getText('.//*[text()[contains(.,"Show all")]]').toLowerCase(), 'show all 4 samples'.toLowerCase());
+    })
 });
 
 
