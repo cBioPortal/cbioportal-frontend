@@ -286,9 +286,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 );
             });
 
-            if (sampleHeader && sampleHeader.length > 0 && patientViewPageStore.pageMode === 'sample' && patientViewPageStore.patientId && patientViewPageStore.samples.result.length > 1) {
+            if (sampleHeader && sampleHeader.length > 0 && patientViewPageStore.pageMode === 'sample' &&
+                patientViewPageStore.patientId && patientViewPageStore.allSamplesForPatient && patientViewPageStore.allSamplesForPatient.result.length > 1) {
                 sampleHeader.push(
-                    <button className="btn btn-default btn-xs" onClick={()=>this.handlePatientClick(patientViewPageStore.patientId)}>Show all samples</button>
+                    <button className="btn btn-default btn-xs" onClick={()=>this.handlePatientClick(patientViewPageStore.patientId)}>Show all {patientViewPageStore.allSamplesForPatient.result.length} samples</button>
                 );
             }
         }
