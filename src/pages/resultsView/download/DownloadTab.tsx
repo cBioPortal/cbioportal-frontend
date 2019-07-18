@@ -18,7 +18,7 @@ import {
 
 import styles from "./styles.module.scss";
 import classNames from 'classnames';
-import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import WindowStore from "../../../shared/components/window/WindowStore";
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
 import {remoteData} from "../../../public-lib/api/remoteData";
@@ -27,6 +27,7 @@ import onMobxPromise from "shared/lib/onMobxPromise";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
+import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -249,6 +250,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                     <WindowWidthBox data-test="downloadTabDiv" offset={60}>
                         <div className={"tabMessageContainer"}>
                             <OqlStatusBanner className="download-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                            <AlterationFilterWarning store={this.props.store}/>
                         </div>
                         <div>
                             <FeatureTitle
