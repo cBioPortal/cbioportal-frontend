@@ -267,6 +267,21 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         }, {} as { [id: string]: string });
     }
 
+    @computed private get alterationFrequencyScatterData() {
+        if (this.isTwoGroupAnalysis) {
+            return getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.group1.name, this.group2.name);
+        }
+        return [];
+
+    }
+
+    @computed private get alterationScatterData() {
+        if (this.isTwoGroupAnalysis) {
+            return getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
+        }
+        return [];
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
@@ -276,9 +291,9 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return (
             <div className={styles.Container}>
                 <div className={styles.ChartsPanel} style={{maxWidth:WindowStore.size.width-60}}>
-                    {this.isTwoGroupAnalysis &&
+                    {this.alterationScatterData.length > 0 && 
                         <MiniScatterChart
-                            data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
+                            data={this.alterationScatterData}
                             xAxisLeftLabel={this.group2.nameOfEnrichmentDirection || this.group2.name}
                             xAxisRightLabel={this.group1.nameOfEnrichmentDirection || this.group1.name}
                             xAxisDomain={15}
@@ -290,9 +305,9 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         />
                     }
 
-                    {this.isTwoGroupAnalysis &&
+                    {this.alterationFrequencyScatterData.length > 0 && 
                         <MiniFrequencyScatterChart
-                            data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.group1.name, this.group2.name)}
+                            data={this.alterationFrequencyScatterData}
                             xGroupName={this.group1.name}
                             yGroupName={this.group2.name}
                             onGeneNameClick={this.onGeneNameClick}
@@ -339,11 +354,14 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             />Significant only
                         </label>
                     </div>
-                    <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
-                                               checkedGenes={this.props.store ? this.checkedGenes : undefined}
-                                               dataStore={this.dataStore}
-                                               visibleOrderedColumnNames={this.visibleOrderedColumnNames}
-                                               customColumns={_.keyBy(this.customColumns,column=>column.name)}
+                    <AlterationEnrichmentTable
+                        data={this.filteredData}
+                        onCheckGene={this.props.store ? this.onCheckGene : undefined}
+                        checkedGenes={this.props.store ? this.checkedGenes : undefined}
+                        dataStore={this.dataStore}
+                        visibleOrderedColumnNames={this.visibleOrderedColumnNames}
+                        customColumns={_.keyBy(this.customColumns, column => column.name)}
+                        groupsCount={this.props.groups.length}
                     />
                 </div>
             </div>

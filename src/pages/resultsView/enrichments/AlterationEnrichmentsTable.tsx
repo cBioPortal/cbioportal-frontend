@@ -22,6 +22,7 @@ export interface IAlterationEnrichmentTableProps {
     onCheckGene?: (hugoGeneSymbol: string) => void;
     onGeneNameClick?: (hugoGeneSymbol: string) => void;
     checkedGenes?:string[];
+    groupsCount:number
 }
 
 export enum AlterationEnrichmentTableColumnType {
@@ -120,17 +121,25 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.P_VALUE] = {
             name: "p-Value",
-            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
-            tooltip: <span>Derived from Fisher's exact test</span>,
-            sortBy: (d: AlterationEnrichmentRow) => d.pValue,
+            render: (d: AlterationEnrichmentRow) => {
+                const pValue = d.pValue == undefined ? 'NA' : toConditionalPrecision(d.pValue, 3, 0.01);
+                return <span style={{ whiteSpace: 'nowrap' }}>{pValue}</span>;
+            },
+            tooltip: <span>Derived from {this.props.groupsCount > 2 ? "Chi-Square" : "Fisher's exact"} test</span>,
+            // set to 0 when p-value is undefined. this happens when all the cases in all groups are altered
+            sortBy: (d: AlterationEnrichmentRow) => d.pValue || 0,
             download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.pValue, 3, 0.01)
         };
 
         columns[AlterationEnrichmentTableColumnType.Q_VALUE] = {
             name: "q-Value",
-            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{formatSignificanceValueWithStyle(d.qValue)}</span>,
+            render: (d: AlterationEnrichmentRow) => {
+                const qValue = d.qValue == undefined ? 'NA' : formatSignificanceValueWithStyle(d.qValue);
+                return <span style={{ whiteSpace: 'nowrap' }}>{qValue}</span>
+            },
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
-            sortBy: (d: AlterationEnrichmentRow) => d.qValue,
+            // set to 0 when q-value is undefined. this happens when all the cases in all groups are altered
+            sortBy: (d: AlterationEnrichmentRow) => d.qValue || 0,
             download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.qValue, 3, 0.01)
         };
 

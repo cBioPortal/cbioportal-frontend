@@ -150,8 +150,8 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                 </tbody>
 
             </table>
-            <strong>p-Value</strong>: {toConditionalPrecision(geneData.pValue, 3, 0.01)}<br />
-            <strong>q-Value</strong>: {toConditionalPrecision(geneData.qValue, 3, 0.01)}
+            <strong>p-Value</strong>: {geneData.pValue == undefined ? 'NA' : toConditionalPrecision(geneData.pValue, 3, 0.01)}<br />
+            <strong>q-Value</strong>: {geneData.qValue == undefined ? 'NA' : toConditionalPrecision(geneData.qValue, 3, 0.01)}
         </div>)
     }
 

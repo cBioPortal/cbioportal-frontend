@@ -87,30 +87,37 @@ function volcanoPlotYCoord(pValue:number) {
 
 export function getAlterationScatterData(alterationEnrichments: AlterationEnrichmentRow[], queryGenes: string[]): any[] {
 
-    return alterationEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((alterationEnrichment) => {
-        return {
-            x: roundLogRatio(Number(alterationEnrichment.logRatio), 10),
-            y: volcanoPlotYCoord(alterationEnrichment.pValue),
-            hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
-            pValue: alterationEnrichment.pValue,
-            qValue: alterationEnrichment.qValue,
-            logRatio: alterationEnrichment.logRatio,
-            hovered: false
-        };
-    });
+    // filter alterationEnrichments where all cases are altered i.e, p-value is undefined
+    return alterationEnrichments
+        .filter(a => a.pValue !== undefined && !queryGenes.includes(a.hugoGeneSymbol))
+        .map((alterationEnrichment) => {
+            return {
+                x: roundLogRatio(Number(alterationEnrichment.logRatio), 10),
+                y: volcanoPlotYCoord(alterationEnrichment.pValue),
+                hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
+                pValue: alterationEnrichment.pValue,
+                qValue: alterationEnrichment.qValue,
+                logRatio: alterationEnrichment.logRatio,
+                hovered: false
+            };
+        });
 }
 
 export function getAlterationFrequencyScatterData(alterationEnrichments: AlterationEnrichmentRow[], queryGenes: string[], group1:string, group2:string): IMiniFrequencyScatterChartData[] {
-    return alterationEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((alterationEnrichment) => {
-        return {
-            x: alterationEnrichment.groupsSet[group1].alteredPercentage,
-            y: alterationEnrichment.groupsSet[group2].alteredPercentage,
-            hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
-            pValue: alterationEnrichment.pValue,
-            qValue: alterationEnrichment.qValue,
-            logRatio: alterationEnrichment.logRatio!
-        };
-    });
+    
+    // filter alterationEnrichments where all cases are altered i.e, p-value is undefined
+    return alterationEnrichments
+        .filter(a => a.pValue !== undefined && !queryGenes.includes(a.hugoGeneSymbol))
+        .map((alterationEnrichment) => {
+            return {
+                x: alterationEnrichment.groupsSet[group1].alteredPercentage,
+                y: alterationEnrichment.groupsSet[group2].alteredPercentage,
+                hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
+                pValue: alterationEnrichment.pValue,
+                qValue: alterationEnrichment.qValue,
+                logRatio: alterationEnrichment.logRatio!
+            };
+        });
 }
 
 export function getExpressionScatterData(expressionEnrichments: ExpressionEnrichmentRow[], queryGenes: string[]): any[] {
@@ -538,7 +545,8 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[], includeAlter
     });
 
     let dataSortedBypValue = _.clone(dataWithOptionName).sort(function (kv1, kv2) {
-        return kv1.pValue - kv2.pValue;
+        // set to 0 when p-value is undefined. this happens when all the cases in all groups are altered
+        return (kv1.pValue || 0) - (kv2.pValue || 0);
     });
 
     return [
