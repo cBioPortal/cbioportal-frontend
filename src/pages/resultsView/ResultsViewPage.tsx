@@ -50,9 +50,6 @@ import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidat
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { alterationInfoForOncoprintTrackData } from "shared/components/oncoprint/OncoprintUtils";
 import { generateGeneAlterationData } from "./download/DownloadUtils";
-import AddCheckedGenes from "./enrichments/AddCheckedGenes";
-import LazyMobXTable, { Column } from "../../shared/components/lazyMobXTable/LazyMobXTable";
-import { QueryParameter } from "shared/lib/ExtendedRouterStore";
 
 function initStore(appStore: AppStore, genes?: string) {
     const resultsViewPageStore = new ResultsViewPageStore(
