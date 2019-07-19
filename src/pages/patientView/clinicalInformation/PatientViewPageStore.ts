@@ -47,7 +47,7 @@ import {
     fetchMutationData,
     fetchDiscreteCNAData,
     generateUniqueSampleKeyToTumorTypeMap,
-    findMutationMolecularProfileId,
+    findMutationMolecularProfile,
     findUncalledMutationMolecularProfileId,
     mergeMutationsIncludingUncalled,
     fetchGisticData,
@@ -191,11 +191,25 @@ export class PatientViewPageStore {
         return this.pageMode === 'sample' ? this.sampleId : this.patientId;
     }
 
+    readonly mutationMolecularProfile = remoteData({
+        await: () => [
+            this.molecularProfilesInStudy
+        ],
+        invoke: async() => findMutationMolecularProfile(this.molecularProfilesInStudy, this.studyId)
+    });
+
     readonly mutationMolecularProfileId = remoteData({
         await: () => [
             this.molecularProfilesInStudy
         ],
-        invoke: async() => findMutationMolecularProfileId(this.molecularProfilesInStudy, this.studyId)
+        invoke: async() => {
+            const profile = findMutationMolecularProfile(this.molecularProfilesInStudy, this.studyId);
+            if (profile) {
+                return profile.molecularProfileId;
+            } else {
+                return undefined;
+            }
+        }
     });
 
     readonly uncalledMutationMolecularProfileId = remoteData({

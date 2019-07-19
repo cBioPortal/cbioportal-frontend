@@ -47,6 +47,7 @@ import {QueryParams} from "url";
 import {AppStore} from "../../AppStore";
 import request from 'superagent';
 import {remoteData} from "../../public-lib/api/remoteData";
+import MutationOncoprint from "./oncoprint/MutationOncoprint";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -409,6 +410,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             </div>
                                         )
                                     }
+                                    
+                                    <MutationOncoprint store={patientViewPageStore}/>
 
                                     <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.uncalledMutationData.isPending || patientViewPageStore.oncoKbAnnotatedGenes.isPending || patientViewPageStore.studyIdToStudy.isPending} />
 

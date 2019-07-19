@@ -16,6 +16,7 @@ import {
     linebreakGenesetId
 } from "./TooltipUtils";
 import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
+import ifndef from "../../lib/ifndef";
 
 export function transition(
     nextProps:IOncoprintProps,
@@ -852,16 +853,16 @@ function transitionHeatmapTrack(
             label: nextSpec.label,
             track_label_color: nextSpec.labelColor || undefined,
             target_group: nextSpec.trackGroupIndex,
-            removable: true,
+            removable: !!nextSpec.onRemove,
             removeCallback: ()=>{
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
-                nextSpec.onRemove();
+                if (nextSpec.onRemove) nextSpec.onRemove();
             },
-            sort_direction_changeable: true,
+            sort_direction_changeable: ifndef(nextSpec.sortDirectionChangeable, true),
             sortCmpFn: heatmapTrackSortComparator,
-            init_sort_direction: 0 as 0,
+            init_sort_direction: ifndef(nextSpec.initSortDirection, (0 as 0)),
             description: `${nextSpec.label} data from ${nextSpec.molecularProfileId}`,
-            tooltipFn: makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true),
+            tooltipFn: nextSpec.tooltip || makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true),
             track_info: nextSpec.info || "",
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
             expansion_of: (
@@ -892,6 +893,6 @@ function transitionHeatmapTrack(
             oncoprint.setTrackInfo(trackId, nextSpec.info);
         }
         // set tooltip, its cheap
-        oncoprint.setTrackTooltipFn(trackId, makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true));
+        oncoprint.setTrackTooltipFn(trackId, nextSpec.tooltip || makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true));
     }
 }

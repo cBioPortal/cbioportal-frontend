@@ -694,7 +694,7 @@ export function isMutationProfile(profile:MolecularProfile):boolean {
     return profile.molecularAlterationType === "MUTATION_EXTENDED";
 }
 
-export function findMutationMolecularProfileId(molecularProfilesInStudy: MobxPromise<MolecularProfile[]>,
+export function findMutationMolecularProfile(molecularProfilesInStudy: MobxPromise<MolecularProfile[]>,
                                              studyId:string,
                                              suffix:string = MOLECULAR_PROFILE_MUTATIONS_SUFFIX)
 {
@@ -706,14 +706,19 @@ export function findMutationMolecularProfileId(molecularProfilesInStudy: MobxPro
         return p.molecularProfileId === `${studyId}${suffix}`;
     });
 
-    return profile ? profile.molecularProfileId : undefined;
+    return profile;
 }
 
 export function findUncalledMutationMolecularProfileId(molecularProfilesInStudy: MobxPromise<MolecularProfile[]>,
                                                      studyId:string,
                                                      suffix:string = MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX)
 {
-    return findMutationMolecularProfileId(molecularProfilesInStudy, studyId, suffix);
+    const profile = findMutationMolecularProfile(molecularProfilesInStudy, studyId, suffix);
+    if (profile) {
+        return profile.molecularProfileId;
+    } else {
+        return undefined;
+    }
 }
 
 export function findMrnaRankMolecularProfileId(molecularProfilesInStudy: MobxPromise<MolecularProfile[]>)

@@ -149,16 +149,25 @@ export function getHeatmapTrackRuleSetParams(molecularAlterationType: string) {
     let legend_label:string;
     let colors:[number, number, number, number][];
     let value_stop_points:number[];
-    if (molecularAlterationType === "METHYLATION") {
-        value_range = [0,1];
-        legend_label = "Methylation Heatmap";
-        value_stop_points = [0,0.35,1];
-        colors = [[0,0,255,1], [255,255,255,1], [255,0,0,1]];
-    } else {
-        value_range = [-3,3];
-        legend_label = "Expression Heatmap";
-        value_stop_points = [-3, 0, 3];
-        colors = [[0,0,255,1], [0,0,0,1], [255,0,0,1]];
+    switch (molecularAlterationType) {
+        case AlterationTypeConstants.METHYLATION:
+            value_range = [0,1];
+            legend_label = "Methylation Heatmap";
+            value_stop_points = [0,0.35,1];
+            colors = [[0,0,255,1], [255,255,255,1], [255,0,0,1]];
+            break;
+        case AlterationTypeConstants.MUTATION_EXTENDED:
+            value_range = [0,1];
+            legend_label = "VAF Heatmap";
+            value_stop_points = [0, 1];
+            colors = [[241,242,181,1],[19,80,88,1]];
+            break;
+        default:
+            value_range = [-3,3];
+            legend_label = "Expression Heatmap";
+            value_stop_points = [-3, 0, 3];
+            colors = [[0,0,255,1], [0,0,0,1], [255,0,0,1]];
+        break;
     }
     return {
         type: 'gradient' as 'gradient',

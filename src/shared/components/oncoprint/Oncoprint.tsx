@@ -1,5 +1,5 @@
 import * as React from "react";
-import OncoprintJS, {TrackId, CustomTrackOption} from "oncoprintjs";
+import OncoprintJS, {TrackId, CustomTrackOption, TrackSortDirection} from "oncoprintjs";
 import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
@@ -110,9 +110,12 @@ interface IBaseHeatmapTrackSpec {
 }
 export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGeneHeatmapTrackDatum[];
-    onRemove: () => void;
+    onRemove?: () => void;
     info?: string;
     labelColor?: string;
+    tooltip?:(dataUnderMouse:IGeneHeatmapTrackDatum[])=>JQuery;
+    initSortDirection?:TrackSortDirection;
+    sortDirectionChangeable?:boolean; // never updated
 }
 export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGenesetHeatmapTrackDatum[];
