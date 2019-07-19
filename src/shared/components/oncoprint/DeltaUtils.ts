@@ -16,6 +16,7 @@ import {
     linebreakGenesetId
 } from "./TooltipUtils";
 import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
+import ifndef from "../../lib/ifndef";
 
 export function transition(
     nextProps:IOncoprintProps,
@@ -468,6 +469,8 @@ function transitionTracks(
                                    () => undefined, oncoprint, nextProps, {}, trackIdForRuleSetSharing);
         }
     }
+    // Oncce tracks have been added and deleted, transition order
+    transitionHeatmapTrackOrder(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
 }
 
 function transitionGeneticTrackOrder(
@@ -487,6 +490,27 @@ function transitionGeneticTrackOrder(
         const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
         oncoprint.setTrackGroupOrder(GENETIC_TRACK_GROUP_INDEX, nextOrder.map(key=>trackSpecKeyToTrackId[key]));
     }
+}
+
+function transitionHeatmapTrackOrder(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS<any>,
+    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId}
+) {
+    const nextTracksMap = _.keyBy(nextProps.heatmapTracks, "key");
+    const prevTracksMap = _.keyBy(prevProps.heatmapTracks || [], "key");
+
+    _.forEach(nextProps.heatmapTracksOrder || {}, (groupOrder:string[], trackGroupIndex:string)=>{
+        const nextOrder = groupOrder.filter(key=>(key in nextTracksMap));
+        const prevOrder = ((prevProps.heatmapTracksOrder || {})[trackGroupIndex as any] || []).filter(key=>(key in prevTracksMap));
+
+        if (!_.isEqual(nextOrder, prevOrder)) {
+            const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
+           // debugger;
+            oncoprint.setTrackGroupOrder(parseInt(trackGroupIndex, 10), nextOrder.map(key=>trackSpecKeyToTrackId[key]));
+        }
+    });
 }
 
 function tryRemoveTrack(
@@ -852,16 +876,18 @@ function transitionHeatmapTrack(
             label: nextSpec.label,
             track_label_color: nextSpec.labelColor || undefined,
             target_group: nextSpec.trackGroupIndex,
-            removable: true,
+            removable: !!nextSpec.onRemove,
+            movable: nextSpec.movable,
+            na_legend_label: nextSpec.naLegendLabel,
             removeCallback: ()=>{
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
-                nextSpec.onRemove();
+                if (nextSpec.onRemove) nextSpec.onRemove();
             },
-            sort_direction_changeable: true,
+            sort_direction_changeable: ifndef(nextSpec.sortDirectionChangeable, true),
             sortCmpFn: heatmapTrackSortComparator,
-            init_sort_direction: 0 as 0,
+            init_sort_direction: ifndef(nextSpec.initSortDirection, (0 as 0)),
             description: `${nextSpec.label} data from ${nextSpec.molecularProfileId}`,
-            tooltipFn: makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true),
+            tooltipFn: nextSpec.tooltip || makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true),
             track_info: nextSpec.info || "",
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
             expansion_of: (
@@ -891,7 +917,10 @@ function transitionHeatmapTrack(
         if (nextSpec.info !== prevSpec.info && nextSpec.info !== undefined) {
             oncoprint.setTrackInfo(trackId, nextSpec.info);
         }
+        if (nextSpec.movable !== prevSpec.movable && nextSpec.movable !== undefined) {
+            oncoprint.setTrackMovable(trackId, nextSpec.movable);
+        }
         // set tooltip, its cheap
-        oncoprint.setTrackTooltipFn(trackId, makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true));
+        oncoprint.setTrackTooltipFn(trackId, nextSpec.tooltip || makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true));
     }
 }
