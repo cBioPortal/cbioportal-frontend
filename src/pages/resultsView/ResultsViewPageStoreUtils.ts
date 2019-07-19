@@ -191,9 +191,9 @@ export function getOncoKbOncogenic(response:IndicatorQueryResp):string {
 export function computeGenePanelInformation(
     genePanelData:GenePanelData[],
     genePanels:GenePanel[],
-    samples: Sample[],
-    patients: Patient[],
-    genes:Gene[]
+    samples: Pick<Sample, "uniqueSampleKey">[],
+    patients: Pick<Patient, "uniquePatientKey">[],
+    genes:Pick<Gene, "entrezGeneId"|"hugoGeneSymbol">[]
 ):CoverageInformation {
     const entrezToGene = _.keyBy(genes, gene=>gene.entrezGeneId);
     const genePanelToGenes = _.mapValues(_.keyBy(genePanels, panel=>panel.genePanelId), (panel:GenePanel)=>{

@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
     ClinicalData, MolecularProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
-    CopyNumberCount, ClinicalDataMultiStudyFilter
+    CopyNumberCount, ClinicalDataMultiStudyFilter, SampleMolecularIdentifier, GenePanelData, GenePanel
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
@@ -47,7 +47,7 @@ import {
     fetchMutationData,
     fetchDiscreteCNAData,
     generateUniqueSampleKeyToTumorTypeMap,
-    findMutationMolecularProfileId,
+    findMutationMolecularProfile,
     findUncalledMutationMolecularProfileId,
     mergeMutationsIncludingUncalled,
     fetchGisticData,
@@ -78,6 +78,7 @@ import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
 import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
+import {computeGenePanelInformation, CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
 
 type PageMode = 'patient' | 'sample';
 
@@ -191,11 +192,25 @@ export class PatientViewPageStore {
         return this.pageMode === 'sample' ? this.sampleId : this.patientId;
     }
 
+    readonly mutationMolecularProfile = remoteData({
+        await: () => [
+            this.molecularProfilesInStudy
+        ],
+        invoke: async() => findMutationMolecularProfile(this.molecularProfilesInStudy, this.studyId)
+    });
+
     readonly mutationMolecularProfileId = remoteData({
         await: () => [
             this.molecularProfilesInStudy
         ],
-        invoke: async() => findMutationMolecularProfileId(this.molecularProfilesInStudy, this.studyId)
+        invoke: async() => {
+            const profile = findMutationMolecularProfile(this.molecularProfilesInStudy, this.studyId);
+            if (profile) {
+                return profile.molecularProfileId;
+            } else {
+                return undefined;
+            }
+        }
     });
 
     readonly uncalledMutationMolecularProfileId = remoteData({
@@ -567,6 +582,49 @@ export class PatientViewPageStore {
         }
     }, []);
 
+    readonly coverageInformation = remoteData<CoverageInformation>({
+        await:()=>[
+            this.mutatedGenes,
+            this.samples,
+            this.molecularProfilesInStudy
+        ],
+        invoke:async()=>{
+            const sampleMolecularIdentifiers:SampleMolecularIdentifier[] = [];
+            this.samples.result!.forEach(sample=>{
+                const profiles = this.molecularProfilesInStudy.result!;
+                if (profiles) {
+                    const sampleId = sample.sampleId;
+                    for (const profile of profiles) {
+                        sampleMolecularIdentifiers.push({
+                            molecularProfileId: profile.molecularProfileId,
+                            sampleId
+                        });
+                    }
+                }
+            });
+            let genePanelData:GenePanelData[];
+            if (sampleMolecularIdentifiers.length && this.mutatedGenes.result!.length) {
+                genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
+                    genePanelMultipleStudyFilter:{
+                        sampleMolecularIdentifiers
+                    }
+                });
+            } else {
+                genePanelData = [];
+            }
+
+            const genePanelIds = _.uniq(genePanelData.map(gpData=>gpData.genePanelId).filter(id=>!!id));
+            let genePanels:GenePanel[] = [];
+            if (genePanelIds.length) {
+                genePanels = await client.fetchGenePanelsUsingPOST({
+                    genePanelIds,
+                    projection:"DETAILED"
+                });
+            }
+            return computeGenePanelInformation(genePanelData, genePanels, this.samples.result!, [{ uniquePatientKey:this.samples.result![0].uniquePatientKey }], this.mutatedGenes.result!);
+        }
+    }, { samples: {}, patients: {} });
+
     readonly mutationData = remoteData({
         await: () => [
             this.samples,
@@ -580,6 +638,18 @@ export class PatientViewPageStore {
             return fetchMutationData(mutationFilter, this.mutationMolecularProfileId.result);
         }
     }, []);
+
+    readonly mutatedGenes = remoteData({
+        await: ()=>[
+            this.mutationData
+        ],
+        invoke:()=>{
+            return Promise.resolve(
+                _.uniqBy(this.mutationData.result!, d=>d.entrezGeneId)
+                    .map(m=>({ hugoGeneSymbol:m.gene.hugoGeneSymbol, entrezGeneId: m.entrezGeneId }))
+            );
+        }
+    });
 
     readonly oncoKbCancerGenes = remoteData({
         invoke: () => {

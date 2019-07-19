@@ -47,6 +47,7 @@ import {QueryParams} from "url";
 import {AppStore} from "../../AppStore";
 import request from 'superagent';
 import {remoteData} from "../../public-lib/api/remoteData";
+import MutationOncoprint from "./oncoprint/MutationOncoprint";
 
 import 'cbioportal-frontend-commons/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
@@ -484,6 +485,54 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         )
                                     }
                                 </MSKTab>
+
+                    <MSKTab key={1} id="mutations" linkText="Mutations">
+                        <MutationOncoprint store={patientViewPageStore}/>
+                        <hr/>
+                        <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.uncalledMutationData.isPending || patientViewPageStore.oncoKbAnnotatedGenes.isPending || patientViewPageStore.studyIdToStudy.isPending} />
+
+                        {
+                            (patientViewPageStore.oncoKbAnnotatedGenes.isComplete && patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager && patientViewPageStore.studyIdToStudy.isComplete) && (
+                                <PatientViewMutationTable
+                                    studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
+                                    sampleManager={sampleManager}
+                                    sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                    uniqueSampleKeyToTumorType={patientViewPageStore.uniqueSampleKeyToTumorType}
+                                    molecularProfileIdToMolecularProfile={patientViewPageStore.molecularProfileIdToMolecularProfile.result}
+                                    variantCountCache={patientViewPageStore.variantCountCache}
+                                    indexedVariantAnnotations={patientViewPageStore.indexedVariantAnnotations}
+                                    discreteCNACache={patientViewPageStore.discreteCNACache}
+                                    mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                    oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                    pubMedCache={patientViewPageStore.pubMedCache}
+                                    genomeNexusCache={patientViewPageStore.genomeNexusCache}
+                                    genomeNexusMyVariantInfoCache={patientViewPageStore.genomeNexusMyVariantInfoCache}
+                                    mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
+                                    discreteCNAMolecularProfileId={patientViewPageStore.molecularProfileIdDiscrete.result}
+                                    data={patientViewPageStore.mergedMutationDataIncludingUncalled}
+                                    downloadDataFetcher={patientViewPageStore.downloadDataFetcher}
+                                    mutSigData={patientViewPageStore.mutSigData.result}
+                                    myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
+                                    hotspotData={patientViewPageStore.indexedHotspotData}
+                                    cosmicData={patientViewPageStore.cosmicData.result}
+                                    oncoKbData={patientViewPageStore.oncoKbData}
+                                    oncoKbCancerGenes={patientViewPageStore.oncoKbCancerGenes}
+                                    civicGenes={patientViewPageStore.civicGenes}
+                                    civicVariants={patientViewPageStore.civicVariants}
+                                    userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
+                                    enableOncoKb={AppConfig.serverConfig.show_oncokb}
+                                    enableFunctionalImpact={AppConfig.serverConfig.show_genomenexus}
+                                    enableHotspot={AppConfig.serverConfig.show_hotspot}
+                                    enableMyCancerGenome={AppConfig.serverConfig.mycancergenome_show}
+                                    enableCivic={AppConfig.serverConfig.show_civic}
+                                    columnVisibility={this.mutationTableColumnVisibility}
+                                    columnVisibilityProps={{
+                                        onColumnToggled: this.onMutationTableColumnVisibilityToggled
+                                    }}
+                                />
+                            )
+                        }
+                    </MSKTab>
 
                     <MSKTab key={2} id="clinicalData" linkText="Clinical Data">
 
