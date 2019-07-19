@@ -51,6 +51,7 @@ import { CancerStudyQueryUrlParams } from '../../shared/components/query/QuerySt
 import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidationError';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { alterationInfoForOncoprintTrackData } from "shared/components/oncoprint/OncoprintUtils";
+import { generateGeneAlterationData } from "./download/DownloadUtils";
 
 function initStore(appStore: AppStore) {
     const resultsViewPageStore = new ResultsViewPageStore(
@@ -450,15 +451,20 @@ export default class ResultsViewPage extends React.Component<
                 },
                 getTab: () => {
 
-                    const canShowPM = (store.molecularData.isComplete && store.nonOqlFilteredCaseAggregatedData.isComplete && store.molecularProfilesWithData.isComplete
-                        && store.alterationsBySelectedMolecularProfiles.isComplete &&
-                        store.molecularProfileIdToProfiledSampleCount.isComplete && store.studies.isComplete && store.samples.isComplete
-                        && store.mutations.isComplete && store.genes.isComplete && store.samples.isComplete);
+                    const canShowPM = ( store.sequencedSampleKeysByGene.isComplete &&
+                         store.oqlFilteredCaseAggregatedDataByOQLLine.isComplete &&
+                         store.genes.isComplete);
+                    let data;
+                    if(canShowPM){
+                        data = generateGeneAlterationData(
+                            store.oqlFilteredCaseAggregatedDataByOQLLine.result!,
+                            store.sequencedSampleKeysByGene.result!);
+                    }
 
                     return <MSKTab key={13} id={ResultsViewTab.PATHWAY_MAPPER} linkText={'PathwayMapper'}>
                         {
                                 canShowPM &&
-                                (<PathwayMapper isCBioPortal={true} isCollaborative={false} genes={store.genes.result as any} store={store}/>)
+                                (<PathwayMapper isCBioPortal={true} isCollaborative={false} genes={store.genes.result as any} cBioAlterationData={data}/>)
                         }
                         {
                                 !canShowPM &&
