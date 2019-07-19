@@ -5,7 +5,7 @@ script:
 - npm run build
 - npm run test
 # generate version in package.json using git describe --tags
-- sed -i "s/\"oncoprintjs\",/\"oncoprintjs\",\n\ \ \"version\":\"$(git describe --tags | sed 's/^v//g')\",/g" package.json
+- sed -i "s|\"version\".*|\"version\":\"$(git describe --tags | sed 's/^v//g')\",|g" package.json
 deploy:
   provider: npm
   email: cbioportal@gmail.com
