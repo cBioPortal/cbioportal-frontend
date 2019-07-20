@@ -52,6 +52,9 @@ import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidat
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { alterationInfoForOncoprintTrackData } from "shared/components/oncoprint/OncoprintUtils";
 import { generateGeneAlterationData } from "./download/DownloadUtils";
+import AddCheckedGenes from "./enrichments/AddCheckedGenes";
+import LazyMobXTable, { Column } from "../../shared/components/lazyMobXTable/LazyMobXTable";
+import { QueryParameter } from "shared/lib/ExtendedRouterStore";
 
 function initStore(appStore: AppStore) {
     const resultsViewPageStore = new ResultsViewPageStore(
@@ -464,7 +467,11 @@ export default class ResultsViewPage extends React.Component<
                     return <MSKTab key={13} id={ResultsViewTab.PATHWAY_MAPPER} linkText={'PathwayMapper'}>
                         {
                                 canShowPM &&
-                                (<PathwayMapper isCBioPortal={true} isCollaborative={false} genes={store.genes.result as any} cBioAlterationData={data}/>)
+                            <PathwayMapper isCBioPortal={true} isCollaborative={false}
+                                            genes={store.genes.result as any}
+                                            cBioAlterationData={data}
+                                            queryParameter={QueryParameter.GENE_LIST}
+                                            oncoPrintTab={ResultsViewTab.ONCOPRINT}/>
                         }
                         {
                                 !canShowPM &&
