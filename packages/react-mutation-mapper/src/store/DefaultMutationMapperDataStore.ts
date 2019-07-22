@@ -27,6 +27,11 @@ export class DefaultMutationMapperDataStore implements DataStore
     }
 
     @computed
+    public get allData() {
+        return this.data;
+    }
+
+    @computed
     public get filteredData() {
         return this.dataFilters.length > 0 ?
             this.data.filter(m => this.dataMainFilter(_.flatten([m])[0])): this.data;
@@ -62,6 +67,11 @@ export class DefaultMutationMapperDataStore implements DataStore
     @action
     public clearSelectionFilters() {
         this.selectionFilters = [];
+    }
+
+    @action
+    public clearDataFilters() {
+        this.dataFilters = [];
     }
 
     @action

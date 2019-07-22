@@ -68,3 +68,5 @@ export class ColumnSelector extends React.Component<ColumnSelectorProps, {}>
         }
     }
 }
+
+export default ColumnSelector;
