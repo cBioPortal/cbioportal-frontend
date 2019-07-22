@@ -3,6 +3,7 @@ import {observer} from "mobx-react";
 import * as React from "react";
 import {TableProps} from "react-table";
 
+import FilterResetPanel from "./component/FilterResetPanel";
 import {MobxCache} from "./model/MobxCache";
 import {Mutation} from "./model/Mutation";
 import MutationMapperStore from "./model/MutationMapperStore";
@@ -189,10 +190,29 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
         return this.props.mutationRates ? <DefaultMutationRateSummary rates={this.props.mutationRates!} /> : null;
     }
 
+    protected get isFiltered() {
+        return this.store.dataStore.selectionFilters.length > 0 || this.store.dataStore.dataFilters.length > 0;
+    }
+
     protected get isMutationTableDataLoading()
     {
         // Child classes should override this method
         return false;
+    }
+
+    protected get filterResetPanel(): JSX.Element | null
+    {
+        const dataStore = this.store.dataStore;
+        const tableData = dataStore.sortedFilteredSelectedData.length > 0 ?
+            dataStore.sortedFilteredSelectedData : dataStore.sortedFilteredData;
+        const allData = dataStore.allData;
+
+        return (
+            <FilterResetPanel
+                mutationsShown={`${tableData.length}/${allData.length}`}
+                resetFilters={this.resetFilters}
+            />
+        )
     }
 
     protected get mutationTable(): JSX.Element | null
@@ -238,7 +258,7 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
     {
         return this.isLoading ? this.loadingIndicator : (
             <div>
-                {/* TODO !this.props.store.dataStore.showingAllData && this.filterResetPanel()*/}
+                {this.isFiltered && this.filterResetPanel}
                 <div style={{ display:'flex' }}>
                     <div className="borderedChart" style={{ marginRight: "1rem" }}>
                         {this.mutationPlot}
@@ -271,5 +291,12 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
         else {
             this.lollipopPlotGeneX = offset;
         }
+    }
+
+    @action.bound
+    protected resetFilters() {
+        this.store.dataStore.clearDataFilters();
+        this.store.dataStore.clearSelectionFilters();
+        this.store.dataStore.clearHighlightFilters();
     }
 }

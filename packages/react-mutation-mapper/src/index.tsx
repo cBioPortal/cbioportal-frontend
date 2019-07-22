@@ -18,6 +18,8 @@ export {default as ReferenceList} from "./component/oncokb/ReferenceList";
 export {default as RefComponent} from "./component/oncokb/RefComponent";
 export {default as SummaryWithRefs} from "./component/oncokb/SummaryWithRefs";
 
+export * from "./component/ColumnSelector";
+export * from "./component/FilterResetPanel";
 export * from "./component/StatusHelpers";
 
 export {default as Domain} from "./Domain";
