@@ -12,7 +12,7 @@ import autobind from "autobind-decorator";
 import Timer = NodeJS.Timer;
 
 export interface IProgressIndicatorItem {
-    label: string;
+    label: any;
     style?:any;
     promises?:MobxPromise<any>[]; // if `promises` is not defined, then just show pending
     hideIcon?:boolean; // dont show any icon for this item if `hideIcon` is true
