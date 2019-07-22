@@ -8,6 +8,7 @@ import {Mutation} from "./model/Mutation";
 import MutationMapperStore from "./model/MutationMapperStore";
 import DefaultMutationMapperStore from "./store/DefaultMutationMapperStore";
 import {initDefaultTrackVisibility} from "./util/TrackUtils";
+import {getDefaultWindowInstance} from "./util/DefaultWindowInstance";
 import {DataTableColumn} from "./DataTable";
 import DefaultMutationRateSummary, {MutationRate} from "./DefaultMutationRateSummary";
 import DefaultMutationTable from "./DefaultMutationTable";
@@ -19,6 +20,7 @@ export type MutationMapperProps = {
     hugoSymbol?: string;
     data?: Partial<Mutation>[];
     store?: MutationMapperStore;
+    windowWrapper?: {size: {width: number, height: number}};
     trackVisibility?: TrackVisibility;
     tracks?: TrackName[];
     customMutationTableColumns?: DataTableColumn<Mutation>[];
@@ -56,11 +58,18 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
     @observable
     private _trackVisibility: TrackVisibility | undefined;
 
+    @observable
+    protected lollipopPlotGeneX: number | undefined;
+
     @computed
     protected get geneWidth()
     {
-        // TODO return WindowStore.size.width * 0.7 - this.lollipopPlotGeneX;
-        return 666;
+        if (this.lollipopPlotGeneX) {
+            return this.windowWrapper.size.width * 0.7 - this.lollipopPlotGeneX;
+        }
+        else {
+            return 666;
+        }
     }
 
     @computed
@@ -99,6 +108,11 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
                 getMutationCount: this.props.getMutationCount
             },
             () => (this.props.data || []) as Mutation[]);
+    }
+
+    @computed
+    protected get windowWrapper(): {size: {width: number, height: number}} {
+        return this.props.windowWrapper ? this.props.windowWrapper! : getDefaultWindowInstance();
     }
 
     // TODO for this we need to implement data table items label first
@@ -142,7 +156,7 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
                 showLegendToggle={this.props.showPlotLegendToggle}
                 showDownloadControls={this.props.showPlotDownloadControls}
                 trackDataStatus={this.trackDataStatus}
-                onXAxisOffset={this.props.onXAxisOffset}
+                onXAxisOffset={this.onXAxisOffset}
                 onTrackVisibilityChange={this.props.onTrackVisibilityChange}
                 getLollipopColor={this.props.getLollipopColor}
             />
@@ -247,5 +261,15 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
     {
         this.store.activeTranscript = transcriptId;
         // TODO this.close3dPanel();
+    }
+
+    @action.bound
+    protected onXAxisOffset(offset: number) {
+        if (this.props.onXAxisOffset) {
+            this.props.onXAxisOffset(offset);
+        }
+        else {
+            this.lollipopPlotGeneX = offset;
+        }
     }
 }
