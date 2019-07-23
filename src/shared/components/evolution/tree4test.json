@@ -1,0 +1,32 @@
+[
+    {
+        "clusterId": 0,
+        "parent": -1,
+        "blengths": 10,
+        "sample": [{"R1": ""}, {"R2": "*"}]
+    },
+    {
+        "clusterId": 1,
+        "parent": 0,
+        "blengths": 2.64,
+        "sample": [{"R1": "*"}, {"R2": "*"}]
+    },
+    {
+        "clusterId": 2,
+        "parent": 3,
+        "blengths": 5.7,
+        "sample": [{"R1": ""}, {"R2": ""}]
+    },
+    {
+        "clusterId": 3,
+        "parent": 4,
+        "blengths": 1,
+        "sample": [{"R1": ""}, {"R2": ""}]
+    },
+    {
+        "clusterId": 4,
+        "parent": 0,
+        "blengths": 1,
+        "sample": [{"R1": "*"}, {"R2": "*"}]
+    }
+]
