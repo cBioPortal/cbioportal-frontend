@@ -26,20 +26,20 @@ var OncoprintToolTip = (function() {
 	    self.hide();
 	});
     }
-    OncoprintToolTip.prototype.show = function(wait, page_x, page_y, $contents, fade) {
+    OncoprintToolTip.prototype.show = function(wait, viewport_x, viewport_y, $contents, fade) {
 	cancelScheduledHide(this);
 	
 	if (typeof wait !== 'undefined' && !this.shown) {
 	    var self = this;
 	    cancelScheduledShow(this);
 	    this.show_timeout_id = setTimeout(function() {
-		doShow(self, page_x, page_y, $contents, fade);
+		doShow(self, viewport_x, viewport_y, $contents, fade);
 	    }, wait);
 	} else {
-	    doShow(this, page_x, page_y, $contents, fade);
+	    doShow(this, viewport_x, viewport_y, $contents, fade);
 	}
     }
-    var doShow = function(tt, page_x, page_y, $contents, fade) {
+    var doShow = function(tt, viewport_x, viewport_y, $contents, fade) {
 	cancelScheduledShow(tt);
 	tt.show_timeout_id = undefined;
 	tt.$div.empty();
@@ -50,15 +50,15 @@ var OncoprintToolTip = (function() {
 	} else {
 	    tt.$div.stop().fadeIn('fast');
 	}
-	var container_offset = tt.$container.offset();
-	var x = page_x - container_offset.left - (tt.center ? tt.$div.width()/2 : 0);
-	var y = page_y - container_offset.top - tt.$div.height();
+	// adjust tooltip position based on size of contents
+	var x = viewport_x - (tt.center ? tt.$div.width()/2 : 0);
+	var y = viewport_y - tt.$div.height();
 	// clamp to visible area
 	var min_padding = 20;
-	y = Math.max(y, min_padding-(container_offset.top)); // make sure not too high
-	y = Math.min(y, $(window).height() - tt.$div.height() - min_padding - container_offset.top); // make sure not too low
-	x = Math.max(x, min_padding-(container_offset.left)); // make sure not too left
-	x = Math.min(x, $(window).width() - tt.$div.width() - min_padding - container_offset.left); // make sure not too right
+	y = Math.max(y, min_padding); // make sure not too high
+	y = Math.min(y, $(window).height() - tt.$div.height()); // make sure not too low
+	x = Math.max(x, min_padding); // make sure not too left
+	x = Math.min(x, $(window).width() - tt.$div.width() - min_padding); // make sure not too right
 
 	tt.$div.css({'top':y, 'left':x, 'z-index':9999});
 	tt.shown = true;
@@ -81,9 +81,9 @@ var OncoprintToolTip = (function() {
 	clearTimeout(tt.hide_timeout_id);
 	tt.hide_timeout_id = undefined;
     };
-    OncoprintToolTip.prototype.showIfNotAlreadyGoingTo = function(wait, page_x, page_y, $contents) {
+    OncoprintToolTip.prototype.showIfNotAlreadyGoingTo = function(wait, viewport_x, viewport_y, $contents) {
 	if (typeof this.show_timeout_id === 'undefined') {
-	    this.show(wait, page_x, page_y, $contents);
+	    this.show(wait, viewport_x, viewport_y, $contents);
 	}
     }
     OncoprintToolTip.prototype.hideIfNotAlreadyGoingTo = function(wait) {
@@ -108,8 +108,8 @@ var OncoprintToolTip = (function() {
 	    doHide(this);
 	}
     }
-    OncoprintToolTip.prototype.fadeIn = function(wait, page_x, page_y, $contents) {
-	this.show(wait, page_x, page_y, $contents, true);
+    OncoprintToolTip.prototype.fadeIn = function(wait, viewport_x, viewport_y, $contents) {
+	this.show(wait, viewport_x, viewport_y, $contents, true);
     }
     return OncoprintToolTip;
 })();

@@ -58,7 +58,7 @@ var OncoprintTrackInfoView = (function () {
 				$new_label.on("mousemove", function() {
 					var $tooltip_elt = model.$getTrackInfoTooltip(tracks[i]);
 					if ($tooltip_elt) {
-						var offset = $new_label.offset();
+						var offset = $new_label[0].getBoundingClientRect();
 						view.tooltip.fadeIn(200, offset.left, offset.top, $tooltip_elt);
 					}
 				}).on("mouseleave", function() {
