@@ -25,12 +25,13 @@ export default class ReferenceList extends React.Component<ReferenceListProps> {
 
                 if (articleContent) {
                     list.push(
-                        <PmidItem title={articleContent.title}
-                                  author={(_.isArray(articleContent.authors) && articleContent.authors.length > 0) ?
-                                      (articleContent.authors[0].name + ' et al.') : 'Unknown'}
-                                  source={articleContent.source}
-                                  date={(new Date(articleContent.pubdate)).getFullYear().toString()}
-                                  pmid={articleContent.uid}
+                        <PmidItem
+                            title={articleContent.title}
+                            author={(_.isArray(articleContent.authors) && articleContent.authors.length > 0) ?
+                                (articleContent.authors[0].name + ' et al.') : 'Unknown'}
+                            source={articleContent.source}
+                            date={(new Date(articleContent.pubdate)).getFullYear().toString()}
+                            pmid={articleContent.uid}
                         />
                     );
                 }

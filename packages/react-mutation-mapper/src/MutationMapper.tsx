@@ -3,6 +3,7 @@ import {observer} from "mobx-react";
 import * as React from "react";
 import {TableProps} from "react-table";
 
+import {DefaultPubMedCache} from "./cache/DefaultPubMedCache";
 import FilterResetPanel from "./component/FilterResetPanel";
 import {MobxCache} from "./model/MobxCache";
 import {Mutation} from "./model/Mutation";
@@ -50,7 +51,6 @@ export type MutationMapperProps = {
 export default class MutationMapper<P extends MutationMapperProps = MutationMapperProps> extends React.Component<P, {}>
 {
     public static defaultProps: Partial<MutationMapperProps> = {
-        // TODO pubMedCache
         showOnlyAnnotatedTranscriptsInDropdown: false,
         showTranscriptDropDown: false,
         filterMutationsBySelectedTranscript: false,
@@ -111,6 +111,10 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
             () => (this.props.data || []) as Mutation[]);
     }
 
+    protected get pubMedCache() {
+        return this.props.pubMedCache || new DefaultPubMedCache();
+    }
+
     @computed
     protected get windowWrapper(): {size: {width: number, height: number}} {
         return this.props.windowWrapper ? this.props.windowWrapper! : getDefaultWindowInstance();
@@ -140,6 +144,7 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
                 oncoKbData={this.store.oncoKbData}
                 oncoKbCancerGenes={this.store.oncoKbCancerGenes}
                 oncoKbEvidenceCache={this.store.oncoKbEvidenceCache}
+                pubMedCache={this.pubMedCache}
             />
         );
     }
@@ -149,7 +154,7 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
         return (
             <LollipopMutationPlot
                 store={this.store}
-                pubMedCache={this.props.pubMedCache}
+                pubMedCache={this.pubMedCache}
                 geneWidth={this.geneWidth}
                 trackVisibility={this.trackVisibility}
                 tracks={this.props.tracks}
