@@ -15,15 +15,17 @@ export const alterationTypeToProfiledForText:{[alterationType:string]:string} = 
 };
 
 export function getAnnotatingProgressMessage(usingOncokb:boolean, usingHotspot:boolean) {
+    let message;
     if (usingOncokb && usingHotspot) {
-        return <span>Annotating with OncoKB and <span style={{whiteSpace:"nowrap"}}>Cancer Hotspots</span></span>;
+        message = "Annotating with OncoKB and Cancer Hotspots";
     } else if (usingOncokb) {
-        return <span>Annotating with OncoKB</span>;
+        message = "Annotating with OncoKB";
     } else if (usingHotspot) {
-        return <span>Annotating with <span style={{whiteSpace:"nowrap"}}>Cancer Hotspots</span></span>
+        message = "Annotating with Cancer Hotspots";
     } else {
-        return <span>Processing data</span>;
+        message = "Processing data";
     }
+    return <span style={{whiteSpace:"nowrap"}}>{message}</span>;
 }
 
 export function convertComparisonGroupClinicalAttribute(
