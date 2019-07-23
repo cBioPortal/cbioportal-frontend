@@ -10,9 +10,13 @@ import {
     IPatientViewMutationTableProps 
 } from "../../../pages/patientView/mutation/PatientViewMutationTable";
 import SampleManager from "../../../pages/patientView/sampleManager";
+import {drawTreePlot} from "./plotTree";
+import * as d3 from 'd3';
 
 import TreePlot from "./treePlot"
 
+// load the treeJson
+const treeJson = require("./tree4test.json") as string;
 
 
 export interface IPatientViewEvolutionMutationTableProps extends IPatientViewMutationTableProps {
@@ -20,27 +24,42 @@ export interface IPatientViewEvolutionMutationTableProps extends IPatientViewMut
     columnVisibility: {[columnId: string]: boolean}|undefined;
 }
 
-export default class ClonalEvolutionParent extends React.Component<IPatientViewEvolutionMutationTableProps, {}> {
+export default class ClonalEvolutionParent extends React.Component<IPatientViewEvolutionMutationTableProps, {selectedMutationClusterId: number}> {
     constructor(props:IPatientViewEvolutionMutationTableProps) {
 
         super(props);
 
         this.state = {
             // TODO binding the setState to button
-//             selectedMutationClusterId: Number,
+            selectedMutationClusterId: -1,
         };
     }
 
-    selectedMutationClusterId = 1;
+    handleClick(currentSelectedMutationClusterId:number) {
+        const previousSelectedMutationClusterId = this.state.selectedMutationClusterId;
+        if (previousSelectedMutationClusterId === currentSelectedMutationClusterId) {
+            // remove filter;
+            this.setState({selectedMutationClusterId: -1});
+        } else {
+            // add filter
+            this.setState({selectedMutationClusterId: currentSelectedMutationClusterId});
+        }
+    }
 
-//     evolutionMutationDataStore = this.props.data;
+    // evolutionMutationDataStore = this.props.data;
     // TODO: Is this object possible to be undefined? Does it matter?
-    evolutionMutationDataStoreFiltered = this.props.data.filter((mutationPerPerson) => {return mutationPerPerson[0].clusterId == this.selectedMutationClusterId}); 
 
     public render() {
+        const evolutionMutationDataStoreFiltered = this.state.selectedMutationClusterId === -1 ? this.props.data : this.props.data.filter((mutationPerPerson) => {return mutationPerPerson[0].clusterId == this.state.selectedMutationClusterId}); 
         return(
             <div className="evolution">
-            <TreePlot/>
+            <TreePlot
+                selectNode={(currentSelectedMutationClusterId: number) => this.handleClick(currentSelectedMutationClusterId)}
+                treeData={treeJson}
+                height={300}
+                width={500}
+                margin={20}
+            />
             <PatientViewMutationTable
                 studyIdToStudy={this.props.studyIdToStudy}
                 sampleManager={this.props.sampleManager}
@@ -56,7 +75,7 @@ export default class ClonalEvolutionParent extends React.Component<IPatientViewE
                 genomeNexusCache={this.props.genomeNexusCache}
                 mrnaExprRankMolecularProfileId={this.props.mrnaExprRankMolecularProfileId}
                 discreteCNAMolecularProfileId={this.props.discreteCNAMolecularProfileId}
-                data={this.evolutionMutationDataStoreFiltered}
+                data={evolutionMutationDataStoreFiltered}
                 downloadDataFetcher={this.props.downloadDataFetcher}
                 mutSigData={this.props.mutSigData}
                 myCancerGenomeData={this.props.myCancerGenomeData}

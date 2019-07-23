@@ -577,7 +577,9 @@ export class PatientViewPageStore {
             } as MutationFilter;
 
             async function fetchMutationDataFromFile() {
-                var promise = $.getJSON("http://localhost:8081/backend/mutationData4test.json");
+                // Using local mutationDataFile as demo data
+                const demoJson = require("../../../shared/components/evolution/mutationData4test.json") as string;
+                var promise = demoJson;
                 return await promise; // wait till the promise resolves (*)
             };
             var mutationData = fetchMutationDataFromFile();
