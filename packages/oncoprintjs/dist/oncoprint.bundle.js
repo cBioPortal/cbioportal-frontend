@@ -12864,7 +12864,7 @@ var Oncoprint = (function () {
 			    .css({'position':'absolute', 'display':'inline-block'})
 			    .appendTo($ctr);
 		    
-	var $tooltip_ctr = $('<span></span>').css({'position':'absolute'}).appendTo(ctr_selector);
+	var $tooltip_ctr = $('<span></span>').css({'position':'fixed', 'top':0, 'left':0, "z-index":99999}).appendTo(ctr_selector);
 	var $legend_ctr = $('<div></div>').css({'position':'absolute', 'display':'inline-block', 'top':0, 'left':0, 'min-height':1})
 			    .appendTo($ctr);
 	
@@ -16392,7 +16392,8 @@ var OncoprintWebGLCellView = (function () {
 				overlayStrokeRect(self, left, model.getCellTops(tracks[i]) - self.scroll_y, model.getCellWidth() + (model.getTrackHasColumnSpacing(tracks[i]) ? 0 : cell_padding), model.getCellHeight(tracks[i]), "rgba(0,0,0,0.5)");
 			    }
 			}
-			tooltip.show(250, model.getZoomedColumnLeft(overlapping_cells.ids[0]) + model.getCellWidth() / 2 + offset.left - self.scroll_x, model.getCellTops(overlapping_cells.track) + offset.top - self.scroll_y, model.getTrackTooltipFn(overlapping_cells.track)(overlapping_data));
+            var clientRect = self.$overlay_canvas[0].getBoundingClientRect();
+			tooltip.show(250, model.getZoomedColumnLeft(overlapping_cells.ids[0]) + model.getCellWidth() / 2 + clientRect.left - self.scroll_x, model.getCellTops(overlapping_cells.track) + clientRect.top - self.scroll_y, model.getTrackTooltipFn(overlapping_cells.track)(overlapping_data));
 		    } else {
 			tooltip.hideIfNotAlreadyGoingTo(150);
 			overlapping_cells = null;
@@ -21756,7 +21757,7 @@ var OncoprintLabelView = (function () {
 		    var hovered_track = isMouseOnLabel(view, evt.pageY - view.$canvas.offset().top);
 		    if (hovered_track !== null) {
 			var $tooltip_div = $('<div>');
-			var offset = view.$canvas.offset();   
+			var offset = view.$canvas[0].getBoundingClientRect();
 			if (isNecessaryToShortenLabel(view, view.labels[hovered_track])
 				|| view.track_link_urls[hovered_track]) {
 			    $tooltip_div.append(formatTooltipHeader(
@@ -24355,20 +24356,20 @@ var OncoprintToolTip = (function() {
 	    self.hide();
 	});
     }
-    OncoprintToolTip.prototype.show = function(wait, page_x, page_y, $contents, fade) {
+    OncoprintToolTip.prototype.show = function(wait, viewport_x, viewport_y, $contents, fade) {
 	cancelScheduledHide(this);
 	
 	if (typeof wait !== 'undefined' && !this.shown) {
 	    var self = this;
 	    cancelScheduledShow(this);
 	    this.show_timeout_id = setTimeout(function() {
-		doShow(self, page_x, page_y, $contents, fade);
+		doShow(self, viewport_x, viewport_y, $contents, fade);
 	    }, wait);
 	} else {
-	    doShow(this, page_x, page_y, $contents, fade);
+	    doShow(this, viewport_x, viewport_y, $contents, fade);
 	}
     }
-    var doShow = function(tt, page_x, page_y, $contents, fade) {
+    var doShow = function(tt, viewport_x, viewport_y, $contents, fade) {
 	cancelScheduledShow(tt);
 	tt.show_timeout_id = undefined;
 	tt.$div.empty();
@@ -24379,15 +24380,15 @@ var OncoprintToolTip = (function() {
 	} else {
 	    tt.$div.stop().fadeIn('fast');
 	}
-	var container_offset = tt.$container.offset();
-	var x = page_x - container_offset.left - (tt.center ? tt.$div.width()/2 : 0);
-	var y = page_y - container_offset.top - tt.$div.height();
+	// adjust tooltip position based on size of contents
+	var x = viewport_x - (tt.center ? tt.$div.width()/2 : 0);
+	var y = viewport_y - tt.$div.height();
 	// clamp to visible area
 	var min_padding = 20;
-	y = Math.max(y, min_padding-(container_offset.top)); // make sure not too high
-	y = Math.min(y, $(window).height() - tt.$div.height() - min_padding - container_offset.top); // make sure not too low
-	x = Math.max(x, min_padding-(container_offset.left)); // make sure not too left
-	x = Math.min(x, $(window).width() - tt.$div.width() - min_padding - container_offset.left); // make sure not too right
+	y = Math.max(y, min_padding); // make sure not too high
+	y = Math.min(y, $(window).height() - tt.$div.height()); // make sure not too low
+	x = Math.max(x, min_padding); // make sure not too left
+	x = Math.min(x, $(window).width() - tt.$div.width() - min_padding); // make sure not too right
 
 	tt.$div.css({'top':y, 'left':x, 'z-index':9999});
 	tt.shown = true;
@@ -24410,9 +24411,9 @@ var OncoprintToolTip = (function() {
 	clearTimeout(tt.hide_timeout_id);
 	tt.hide_timeout_id = undefined;
     };
-    OncoprintToolTip.prototype.showIfNotAlreadyGoingTo = function(wait, page_x, page_y, $contents) {
+    OncoprintToolTip.prototype.showIfNotAlreadyGoingTo = function(wait, viewport_x, viewport_y, $contents) {
 	if (typeof this.show_timeout_id === 'undefined') {
-	    this.show(wait, page_x, page_y, $contents);
+	    this.show(wait, viewport_x, viewport_y, $contents);
 	}
     }
     OncoprintToolTip.prototype.hideIfNotAlreadyGoingTo = function(wait) {
@@ -24437,8 +24438,8 @@ var OncoprintToolTip = (function() {
 	    doHide(this);
 	}
     }
-    OncoprintToolTip.prototype.fadeIn = function(wait, page_x, page_y, $contents) {
-	this.show(wait, page_x, page_y, $contents, true);
+    OncoprintToolTip.prototype.fadeIn = function(wait, viewport_x, viewport_y, $contents) {
+	this.show(wait, viewport_x, viewport_y, $contents, true);
     }
     return OncoprintToolTip;
 })();
@@ -24510,7 +24511,7 @@ var OncoprintTrackInfoView = (function () {
 				$new_label.on("mousemove", function() {
 					var $tooltip_elt = model.$getTrackInfoTooltip(tracks[i]);
 					if ($tooltip_elt) {
-						var offset = $new_label.offset();
+						var offset = $new_label[0].getBoundingClientRect();
 						view.tooltip.fadeIn(200, offset.left, offset.top, $tooltip_elt);
 					}
 				}).on("mouseleave", function() {

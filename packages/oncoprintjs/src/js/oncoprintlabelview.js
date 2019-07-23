@@ -61,7 +61,7 @@ var OncoprintLabelView = (function () {
 		    var hovered_track = isMouseOnLabel(view, evt.pageY - view.$canvas.offset().top);
 		    if (hovered_track !== null) {
 			var $tooltip_div = $('<div>');
-			var offset = view.$canvas.offset();   
+			var offset = view.$canvas[0].getBoundingClientRect();
 			if (isNecessaryToShortenLabel(view, view.labels[hovered_track])
 				|| view.track_link_urls[hovered_track]) {
 			    $tooltip_div.append(formatTooltipHeader(
