@@ -15,8 +15,7 @@ import AppConfig from 'appConfig';
 import CNSegments from './cnSegments/CNSegments';
 import './styles.scss';
 import Network from './network/Network';
-import PathwayMapper from "react-pathway-mapper";
-import "react-pathway-mapper/dist/base.css";
+import ResultsViewPathwayMapper from "./pathwayMapper/ResultsViewPathwayMapper";
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
 import ExpressionWrapper from './expression/ExpressionWrapper';
@@ -477,11 +476,7 @@ export default class ResultsViewPage extends React.Component<
                     return <MSKTab key={13} id={ResultsViewTab.PATHWAY_MAPPER} linkText={'PathwayMapper'}>
                         {
                                 canShowPM &&
-                            <PathwayMapper isCBioPortal={true} isCollaborative={false}
-                                            genes={store.genes.result as any}
-                                            cBioAlterationData={data}
-                                            queryParameter={QueryParameter.GENE_LIST}
-                                            oncoPrintTab={ResultsViewTab.ONCOPRINT}/>
+                            <ResultsViewPathwayMapper store={store} storeForAllData={this.resultsViewPageStore2}/>
                         }
                         {
                                 !canShowPM &&
