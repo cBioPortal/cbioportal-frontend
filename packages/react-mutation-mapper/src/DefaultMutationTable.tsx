@@ -9,6 +9,7 @@ import MutationStatus from "./component/column/MutationStatus";
 import MutationType from "./component/column/MutationType";
 import ProteinChange, {proteinChangeSortMethod} from "./component/column/ProteinChange";
 import {IHotspotIndex} from "./model/CancerHotspot";
+import {MobxCache} from "./model/MobxCache";
 import {Mutation} from "./model/Mutation";
 import {CancerGene, IOncoKbData} from "./model/OncoKb";
 import {RemoteData} from "./model/RemoteData";
@@ -20,6 +21,7 @@ export type DefaultMutationTableProps = {
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
     oncoKbEvidenceCache?: SimpleCache;
+    pubMedCache?: MobxCache;
     columns?: Column<Mutation>[];
     appendColumns?: boolean;
 } & DataTableProps<Mutation>;
@@ -151,6 +153,7 @@ export default class DefaultMutationTable extends React.Component<DefaultMutatio
                         oncoKbData={this.props.oncoKbData}
                         oncoKbCancerGenes={this.props.oncoKbCancerGenes}
                         oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
+                        pubMedCache={this.props.pubMedCache}
                     />,
                 Header: HEADERS[MutationColumn.ANNOTATION],
                 sortMethod: annotationSortMethod

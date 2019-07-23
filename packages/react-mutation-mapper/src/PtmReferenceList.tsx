@@ -7,7 +7,7 @@ import {Cache} from "./model/MobxCache";
 
 type PtmReferenceListProps = {
     pubmedIds: string[];
-    pmidData: Cache
+    pmidData: Cache;
 };
 
 function extractNumericalPart(pmid: string) {
