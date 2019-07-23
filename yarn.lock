@@ -11060,10 +11060,10 @@ once@~1.3.0:
   dependencies:
     wrappy "1"
 
-oncoprintjs@2.0.6:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-2.0.6.tgz#7e61c0abdacbe308b27aaf4a9df7c0a3b6a795dd"
-  integrity sha512-kqt+KY7DCyzJqadyb/rAhSva4kMaTakFudwhlUuhYpT0M/JlnQJ4fwAlim7QGyenDf+aI2NrxI4S2UPnC7q47Q==
+oncoprintjs@2.0.7:
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-2.0.7.tgz#b0d20501f9441185c998408fa4aaeec7d38d20fe"
+  integrity sha512-TvPnFGUd//G5S1CIxjBbzWgR4/sp8G6LZLM0YugD93E6vfifLGtQs7vrpIBssPNQUz0nOw4POejC7cs1Ah8hPw==
   dependencies:
     express "^4.15.3"
     gl-matrix "2.3.2"
