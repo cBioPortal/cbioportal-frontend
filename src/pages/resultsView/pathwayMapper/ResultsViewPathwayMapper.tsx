@@ -65,6 +65,10 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
 
     addGenomicData: (alterationData: ICBioData[]) => void;
 
+    @observable selectedPathway: string = "";
+
+    pathwayHandler: Function;
+
     constructor(props: IResultsViewPathwayMapperProps){
         super(props);
         this.alterationFrequencyData = [];

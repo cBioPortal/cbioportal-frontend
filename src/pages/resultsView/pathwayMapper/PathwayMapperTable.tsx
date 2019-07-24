@@ -43,7 +43,6 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
     };
     @observable protected _columns: { [columnEnum: number]: PathwayMapperTableColumn };
     @observable selectedPathway: string = "";
-
     constructor(props: IPathwayMapperTableProps) {
         super(props);
         this._columns = {};
