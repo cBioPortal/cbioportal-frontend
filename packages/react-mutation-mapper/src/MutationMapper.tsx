@@ -25,7 +25,7 @@ export type MutationMapperProps = {
     windowWrapper?: {size: {width: number, height: number}};
     trackVisibility?: TrackVisibility;
     tracks?: TrackName[];
-    customMutationTableColumns?: DataTableColumn<Mutation>[];
+    customMutationTableColumns?: DataTableColumn<Partial<Mutation>>[];
     customMutationTableProps?: Partial<TableProps<Mutation>>;
     showPlotYMaxSlider?: boolean;
     showPlotLegendToggle?: boolean;
