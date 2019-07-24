@@ -466,13 +466,15 @@ export default class ResultsViewPage extends React.Component<
 
                     const canShowPM = ( this.resultsViewPageStore2.sequencedSampleKeysByGene.isComplete &&
                         this.resultsViewPageStore2.oqlFilteredCaseAggregatedDataByOQLLine.isComplete &&
-                        store.genes.isComplete);
-                    let data;
-                    if(canShowPM){
-                        data = generateGeneAlterationData(
-                            this.resultsViewPageStore2.oqlFilteredCaseAggregatedDataByOQLLine.result!,
-                            this.resultsViewPageStore2.sequencedSampleKeysByGene.result!);
-                    }
+                        store.genes.isComplete && 
+                        this.resultsViewPageStore2.samples.isComplete && 
+                        this.resultsViewPageStore2.patients.isComplete &&
+                        this.resultsViewPageStore2.coverageInformation.isComplete &&
+                        this.resultsViewPageStore2.sequencedSampleKeysByGene.isComplete &&
+                        this.resultsViewPageStore2.sequencedPatientKeysByGene.isComplete &&
+                        this.resultsViewPageStore2.selectedMolecularProfiles.isComplete && 
+                        this.resultsViewPageStore2.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.isComplete );
+                        
                     return <MSKTab key={13} id={ResultsViewTab.PATHWAY_MAPPER} linkText={'PathwayMapper'}>
                         {
                                 canShowPM &&
