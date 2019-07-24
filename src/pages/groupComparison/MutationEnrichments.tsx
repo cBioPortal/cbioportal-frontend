@@ -26,12 +26,12 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
         this.props.store.setMutationEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mutation", true);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mutation", true, true);
 
     private readonly enrichmentAnalysisGroups = remoteData({
-        await:()=>[this.props.store._activeGroupsOverlapRemoved],
+        await:()=>[this.props.store.activeGroups],
         invoke:()=>{
-            const groups = _.map(this.props.store._activeGroupsOverlapRemoved.result, group => {
+            const groups = _.map(this.props.store.activeGroups.result, group => {
                 return {
                     name:group.nameWithOrdinal,
                     description:`Number (percentage) of ${this.props.store.usePatientLevelEnrichments ? "patients" : "samples"} in ${group.nameWithOrdinal} that have a mutation in the listed gene.`,

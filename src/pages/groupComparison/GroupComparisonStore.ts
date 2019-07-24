@@ -577,13 +577,13 @@ export default class GroupComparisonStore {
     }
 
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
-        await: () => [this.mutationEnrichmentProfile, this._activeGroupsOverlapRemoved],
+        await: () => [this.mutationEnrichmentProfile, this.activeGroups],
         getSelectedProfile: () => this.mutationEnrichmentProfile.result,
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             let molecularProfile = this.mutationEnrichmentProfile.result!;
-            if (this._activeGroupsOverlapRemoved.result!.length > 1) {
-                let groups: MolecularProfileCasesGroupFilter[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
+            if (this.activeGroups.result!.length > 1) {
+                let groups: MolecularProfileCasesGroupFilter[] = _.map(this.activeGroups.result, group => {
                     const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
                         return _.map((this.usePatientLevelEnrichments ? study.patients : study.samples), caseId => {
                             return {
@@ -609,10 +609,10 @@ export default class GroupComparisonStore {
     });
 
     readonly copyNumberEnrichmentDataRequestGroups = remoteData({
-        await: () => [this.copyNumberEnrichmentProfile, this._activeGroupsOverlapRemoved],
+        await: () => [this.copyNumberEnrichmentProfile, this.activeGroups],
         invoke: async () => {
             let molecularProfile = this.copyNumberEnrichmentProfile.result!;
-            let groups: MolecularProfileCasesGroupFilter[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
+            let groups: MolecularProfileCasesGroupFilter[] = _.map(this.activeGroups.result, group => {
                 const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
                     return _.map((this.usePatientLevelEnrichments ? study.patients : study.samples), caseId => {
                         return {
