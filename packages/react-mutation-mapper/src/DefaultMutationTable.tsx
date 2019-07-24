@@ -22,9 +22,9 @@ export type DefaultMutationTableProps = {
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
     oncoKbEvidenceCache?: SimpleCache;
     pubMedCache?: MobxCache;
-    columns?: Column<Mutation>[];
+    columns?: Column<Partial<Mutation>>[];
     appendColumns?: boolean;
-} & DataTableProps<Mutation>;
+} & DataTableProps<Partial<Mutation>>;
 
 export enum MutationColumn {
     PROTEIN_CHANGE = "proteinChange",
@@ -81,7 +81,7 @@ const HEADERS = {
 };
 
 @observer
-class DefaultMutationTableComponent extends DataTable<Mutation> {}
+class DefaultMutationTableComponent extends DataTable<Partial<Mutation>> {}
 
 @observer
 export default class DefaultMutationTable extends React.Component<DefaultMutationTableProps, {}>
