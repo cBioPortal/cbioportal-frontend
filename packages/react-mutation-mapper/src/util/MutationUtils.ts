@@ -84,7 +84,7 @@ export function mutationTypeSort(typeA: CanonicalMutationType, typeB: CanonicalM
     }
 }
 
-export function getColorForProteinImpactType(mutations: Mutation[],
+export function getColorForProteinImpactType(mutations: Partial<Mutation>[],
                                              colors: IProteinImpactTypeColors = DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
                                              getMutationCount: (mutation: Partial<Mutation>) => number = () => 1): string
 {
