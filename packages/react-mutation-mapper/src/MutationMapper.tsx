@@ -164,6 +164,7 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
                 trackDataStatus={this.trackDataStatus}
                 onXAxisOffset={this.onXAxisOffset}
                 onTrackVisibilityChange={this.props.onTrackVisibilityChange}
+                getMutationCount={this.props.getMutationCount}
                 getLollipopColor={this.props.getLollipopColor}
             />
         );
