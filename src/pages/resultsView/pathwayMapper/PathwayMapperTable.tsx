@@ -4,6 +4,7 @@ import * as _ from "lodash";
 import { observer } from "mobx-react";
 import LazyMobXTable, { Column } from "shared/components/lazyMobXTable/LazyMobXTable";
 import { observable } from 'mobx';
+import { Radio } from 'react-bootstrap';
 
 export interface IPathwayMapperTable{
     name: string;
@@ -18,6 +19,8 @@ enum IPathwayMapperTableColumnType{
 
 interface IPathwayMapperTableProps{
     data: IPathwayMapperTable[];
+    selectedPathway: string;
+    changePathway: Function;
     initialSortColumn?: string;
 }
 
@@ -37,21 +40,35 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
         initialSortColumn: "name"
     };
     @observable protected _columns: { [columnEnum: number]: PathwayMapperTableColumn };
-
+    @observable selectedPathway: string = "";
     constructor(props: IPathwayMapperTableProps) {
         super(props);
         this._columns = {};
         this.generateColumns();
     }
 
-    
-
     generateColumns() {
+
+
+        const lengthThreshold = 13;
+
         this._columns = {};
 
         this._columns[IPathwayMapperTableColumnType.NAME] = {
             name: "Pathway name",
-            render: (d: IPathwayMapperTable) => <span><b>{d.name}</b></span>,
+            render: (d: IPathwayMapperTable) => {
+                const pwName = d.name;
+                const isPwNameShort = pwName.length < lengthThreshold;
+
+
+
+                return(
+                <span data-border="true" data-type="light" data-tip={pwName} data-place="top" data-effect="solid">
+                    <Radio checked={this.props.selectedPathway === d.name} onChange={(e: any) => {this.props.changePathway(d.name);}}>
+                        <b>{(isPwNameShort ? pwName : pwName.substring(0, lengthThreshold) + "...")}</b>
+                    </Radio>
+                </span>);
+                },
             tooltip: <span>Pathway name</span>,
             filter: (d: IPathwayMapperTable, filterString: string, filterStringUpper: string) =>
                 d.name.toUpperCase().includes(filterStringUpper),
@@ -71,7 +88,7 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
 
         this._columns[IPathwayMapperTableColumnType.GENES] = {
             name: "Genes matched",
-            render: (d: IPathwayMapperTable) => <span>{d.genes}</span>,
+            render: (d: IPathwayMapperTable) => <span>{d.genes.join(" ")}</span>,
             tooltip: <span>Genes matched</span>,
             sortBy: (d: IPathwayMapperTable) => d.genes,
             download: (d: IPathwayMapperTable) => d.genes.toString()

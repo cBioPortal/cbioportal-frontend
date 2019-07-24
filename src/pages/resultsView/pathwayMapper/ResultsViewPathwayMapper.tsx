@@ -16,6 +16,10 @@ import { isMergedTrackFilter } from "shared/lib/oql/oqlfilter";
 import { Sample, Patient, MolecularProfile } from "shared/api/generated/CBioPortalAPI";
 import { makeGeneticTrackData } from "shared/components/oncoprint/DataUtils";
 import { CoverageInformation } from "../ResultsViewPageStoreUtils";
+import { Grid, Col, Row } from "react-bootstrap";
+
+//import ReactTooltip from "react-tooltip";
+
 interface IResultsViewPathwayMapperProps{
     store: ResultsViewPageStore;
     storeForAllData: ResultsViewPageStore;
@@ -31,6 +35,10 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     @observable
     cBioData: ICBioData[];
 
+    @observable selectedPathway: string = "";
+
+    pathwayHandler: Function;
+
     constructor(props: IResultsViewPathwayMapperProps){
         super(props);
         this.cBioData = [];
@@ -38,11 +46,6 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     }
 
     render(){
-        /*const data = generateGeneAlterationData(
-            this.props.storeForAllData.oqlFilteredCaseAggregatedDataByOQLLine.result!,
-            this.props.storeForAllData.sequencedSampleKeysByGene.result!);*/
-
-            
         this.props.storeForAllData.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
 
             this.getOncoData(this.props.storeForAllData.samples.result,
@@ -56,20 +59,44 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
         )
         return(
 
-            <div>
-                <PathwayMapperTable data={this.tableData}/>
-                <PathwayMapper isCBioPortal={true} isCollaborative={false} 
-                                genes={this.props.store.genes.result as any}
-                                cBioAlterationData={this.cBioData}
-                                queryParameter={QueryParameter.GENE_LIST}
-                                oncoPrintTab={ResultsViewTab.ONCOPRINT}
-                                setTableData={this.setTableData}/>
+            <div style={{width: "99%"}}>
+                <Row>
+                
+                
+                    <Col xs={9}>
+                        <PathwayMapper isCBioPortal={true} isCollaborative={false} 
+                                    genes={this.props.store.genes.result as any}
+                                    cBioAlterationData={this.cBioData}
+                                    queryParameter={QueryParameter.GENE_LIST}
+                                    oncoPrintTab={ResultsViewTab.ONCOPRINT}
+                                    setTableData={this.setTableData}
+                                    changePathwayHandler={this.changePathwayHandler}/>
+                    </Col>
+                    <Col xs={3} style={{marginTop: "45px"}}>
+                        <PathwayMapperTable data={this.tableData} selectedPathway={this.selectedPathway} changePathway={this.changePathway}/>
+                    </Col>
+                </Row>
+
             </div>);
+    }
+
+
+
+    @autobind
+    changePathwayHandler(pathwayHandler: Function){
+        this.pathwayHandler = pathwayHandler;
     }
 
     @autobind
     setTableData(bestPathwayAlgos: any[][]){
         this.tableData = bestPathwayAlgos[0].map((data: any) => ({name: data.pathwayName, score: data.score, genes: data.genesMatched}));
+        this.selectedPathway = this.tableData[0].name;
+    }
+
+    @autobind
+    changePathway(selectedPathway: string){
+        this.selectedPathway = selectedPathway;
+        this.pathwayHandler(this.selectedPathway);
     }
 
     

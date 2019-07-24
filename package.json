@@ -206,7 +206,7 @@
     "react-sortable-hoc": "^1.9.1",
     "react-spinkit": "^3.0.0",
     "react-text-truncate": "^0.9.0",
-    "react-tooltip": "^3.2.2",
+    "react-tooltip": "^3.10.0",
     "react-transition-group": "^2.5.1",
     "react-twitter-widgets": "^1.7.1",
     "react-virtualized": "^9.20.1",
