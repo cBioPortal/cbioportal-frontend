@@ -29,7 +29,7 @@ const DEFAULT_PROTEIN_LENGTH = 10;
 export type LollipopMutationPlotProps = {
     store: MutationMapperStore;
     pubMedCache?: MobxCache;
-    getLollipopColor?: (mutations: Mutation[]) => string;
+    getLollipopColor?: (mutations: Partial<Mutation>[]) => string;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
     onXAxisOffset?: (offset:number) => void;
     geneWidth: number;
