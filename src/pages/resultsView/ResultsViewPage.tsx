@@ -55,7 +55,7 @@ import AddCheckedGenes from "./enrichments/AddCheckedGenes";
 import LazyMobXTable, { Column } from "../../shared/components/lazyMobXTable/LazyMobXTable";
 import { QueryParameter } from "shared/lib/ExtendedRouterStore";
 
-function initStore(appStore: AppStore, isSecond: boolean) {
+function initStore(appStore: AppStore, genes?: string) {
     const resultsViewPageStore = new ResultsViewPageStore(
         appStore,
         getBrowserWindow().globalStores.routing
@@ -70,16 +70,13 @@ function initStore(appStore: AppStore, isSecond: boolean) {
 
     const queryReactionDisposer = reaction(
         () => {
-
-            console.log("What is it");
-            console.log([getBrowserWindow().globalStores.routing.query, getBrowserWindow().globalStores.routing.location.pathname]);
             return [
                 getBrowserWindow().globalStores.routing.query,
                 getBrowserWindow().globalStores.routing.location.pathname,
             ];
         },
         (x: any) => {
-            const query = (isSecond) ? _.cloneDeep(x[0]) : x[0] as CancerStudyQueryUrlParams;
+            const query = (genes) ? _.cloneDeep(x[0]) : x[0] as CancerStudyQueryUrlParams;
             const pathname = x[1];
 
 
@@ -113,9 +110,11 @@ function initStore(appStore: AppStore, isSecond: boolean) {
 
                         const cancerStudyIds: string[] = cancer_study_list.split(",");
 
-                        if(isSecond){
-                            query.gene_list = " CDK4 RB1 CDKN2A TP53 MDM2 CCNE1 CTNNB1 MEN1 APC ZNRF3 KDM1A KDM6B KDM4B KDM1B KDM4A KDM5B KDM6A KDM5A ERBB2 NRAS TSC2 PIK3CA PTEN FGFR3" + " HRAS STK11 INPP4B MTOR EGFR TSC1 ERBB3 NF1 E2F3 CCND1 FBXW7 ATM CDKN1A BRCA2 BRCA1 PIK3R1 MAP3K1 IKBKB AKT1 MAP2K4 AKT3 PAK1 IGF1R MDM4 CHEK2 IRS2 KRAS IGF2 BRAF ACVR2A TGFBR2 SMAD2 SMAD4 MYC TGFBR1 ACVR1B SMAD3 DKK3 TCF7L2 TCF7 DKK4 DKK1 AXIN2" + " ARID1A FZD10 LRP5 DKK2 SOX9 CDK6 MET FGFR1 FGFR2 PTCH1 CCND2 CDKN2B CDKN2C PDGFRA TRAF3 FADD LTBR BIRC2 CASP8 E2F1 TP63 FAT1 AJUBA NFE2L2 KEAP1 CUL3 RHEB HIF1A GRB10 SQSTM1 VHL SETD2 ARID1B ARID2 SMARCA4 MAP2K1 ALK ROS1 RIT1 RET NOTCH1 FOXP1 NOTCH2 SOX2 ASCL4 AKT2 RASA1 MXD1 MXD4 MXI1 MGA MYCL MLXIPL MAX MXD3 MLXIP MLX MYCN MNT NRARP CUL1 CREBBP NCOR2 SPEN NOTCH3 CNTN6 KAT2B DNER NCOR1 JAG2 PSEN2 EP300 ARRDC1 NOTCH4 MAML3 JAG1 MAML1 MAML2 RPTOR" + " PIK3R2 PPP2R1A PIK3R3 RICTOR KIT PTPN11 CBL FLT3 NTRK2 ERRFI1 ARAF RAF1 RAC1 ERBB4 MAPK1 FGFR4 SOS1 MAP2K2 NTRK1 AURKA PPP6C IDH1 JAK2 ACVR2B BCL2 BAD RPS6KA3 SOX17 GSK3B TLE1 TLE4 SFRP1 TCF7L1 WIF1 TLE2 AXIN1 SFRP2 TLE3 RNF43 LRP6 SFRP5 AMER1 SFRP4";
+                        if(genes){
+                            query.gene_list = genes;
                         }
+                        console.log("query.gene_list");
+                        console.log(query.gene_list);
                         const oql = decodeURIComponent(query.gene_list);
 
                         let samplesSpecification = parseSamplesSpecifications(
@@ -187,15 +186,13 @@ export default class ResultsViewPage extends React.Component<
     {}
 > {
     private resultsViewPageStore: ResultsViewPageStore;
-    private resultsViewPageStore2: ResultsViewPageStore;
 
     @observable showTabs = true;
 
     constructor(props: IResultsViewPageProps) {
         super(props);
 
-        this.resultsViewPageStore = initStore(props.appStore, false);
-        this.resultsViewPageStore2 = initStore(props.appStore, true);
+        this.resultsViewPageStore = initStore(props.appStore);
 
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
@@ -464,21 +461,21 @@ export default class ResultsViewPage extends React.Component<
                 },
                 getTab: () => {
 
-                    const canShowPM = ( this.resultsViewPageStore2.sequencedSampleKeysByGene.isComplete &&
-                        this.resultsViewPageStore2.oqlFilteredCaseAggregatedDataByOQLLine.isComplete &&
+                    const canShowPM = ( store.sequencedSampleKeysByGene.isComplete &&
+                        store.oqlFilteredCaseAggregatedDataByOQLLine.isComplete &&
                         store.genes.isComplete && 
-                        this.resultsViewPageStore2.samples.isComplete && 
-                        this.resultsViewPageStore2.patients.isComplete &&
-                        this.resultsViewPageStore2.coverageInformation.isComplete &&
-                        this.resultsViewPageStore2.sequencedSampleKeysByGene.isComplete &&
-                        this.resultsViewPageStore2.sequencedPatientKeysByGene.isComplete &&
-                        this.resultsViewPageStore2.selectedMolecularProfiles.isComplete && 
-                        this.resultsViewPageStore2.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.isComplete );
+                        store.samples.isComplete &&
+                        store.patients.isComplete &&
+                        store.coverageInformation.isComplete &&
+                        store.sequencedSampleKeysByGene.isComplete &&
+                        store.sequencedPatientKeysByGene.isComplete &&
+                        store.selectedMolecularProfiles.isComplete &&
+                        store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.isComplete );
                         
                     return <MSKTab key={13} id={ResultsViewTab.PATHWAY_MAPPER} linkText={'PathwayMapper'}>
                         {
                                 canShowPM &&
-                            <ResultsViewPathwayMapper store={store} storeForAllData={this.resultsViewPageStore2}/>
+                            <ResultsViewPathwayMapper store={store} appStore={this.props.appStore} initStore={initStore}/>
                         }
                         {
                                 !canShowPM &&

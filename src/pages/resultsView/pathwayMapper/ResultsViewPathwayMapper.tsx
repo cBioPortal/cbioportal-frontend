@@ -10,7 +10,7 @@ import "react-pathway-mapper/dist/base.css";
 import PathwayMapperTable, { IPathwayMapperTable } from "./PathwayMapperTable";
 import { observer } from "mobx-react";
 import autobind from "autobind-decorator";
-import { observable, ObservableMap } from "mobx";
+import { observable, ObservableMap, computed } from "mobx";
 import { alterationInfoForOncoprintTrackData } from "shared/components/oncoprint/OncoprintUtils";
 import { isMergedTrackFilter } from "shared/lib/oql/oqlfilter";
 import { Sample, Patient, MolecularProfile } from "shared/api/generated/CBioPortalAPI";
@@ -18,11 +18,15 @@ import { makeGeneticTrackData } from "shared/components/oncoprint/DataUtils";
 import { CoverageInformation } from "../ResultsViewPageStoreUtils";
 import { Grid, Col, Row } from "react-bootstrap";
 
-//import ReactTooltip from "react-tooltip";
+import ReactTooltip from "react-tooltip";
+import { AppStore } from "AppStore";
+import { remoteData } from "cbioportal-frontend-commons";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 
 interface IResultsViewPathwayMapperProps{
     store: ResultsViewPageStore;
-    storeForAllData: ResultsViewPageStore;
+    initStore: Function;
+    appStore: AppStore;
 }
 
 @observer
@@ -32,73 +36,98 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     @observable
     tableData: IPathwayMapperTable[];
 
-    @observable
     cBioData: ICBioData[];
+
+    @observable storeForAllData: ResultsViewPageStore;
 
     @observable selectedPathway: string = "";
 
     pathwayHandler: Function;
 
+    @observable
+    isLoading: boolean;
+
+    addGenomicData: (alterationData: ICBioData[]) => void;
+
+
     constructor(props: IResultsViewPathwayMapperProps){
         super(props);
         this.cBioData = [];
         this.tableData = [];
+        this.isLoading = false;
     }
 
-    render(){
-        this.props.storeForAllData.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
 
-            this.getOncoData(this.props.storeForAllData.samples.result,
-                             this.props.storeForAllData.patients.result,
-                             this.props.storeForAllData.coverageInformation.result,
-                             this.props.storeForAllData.sequencedSampleKeysByGene.result!,
-                             this.props.storeForAllData.sequencedPatientKeysByGene.result!,
-                             this.props.storeForAllData.selectedMolecularProfiles.result!,
+    render(){
+        this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
+
+            this.getOncoData(this.props.store.samples.result,
+                             this.props.store.patients.result,
+                             this.props.store.coverageInformation.result,
+                             this.props.store.sequencedSampleKeysByGene.result!,
+                             this.props.store.sequencedPatientKeysByGene.result!,
+                             this.props.store.selectedMolecularProfiles.result!,
                              alterationData);
+        });
+        const isNewStoreReady = this.storeForAllData && this.storeForAllData.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.isComplete &&
+        this.storeForAllData.samples.isComplete &&
+        this.storeForAllData.patients.isComplete &&
+        this.storeForAllData.coverageInformation.isComplete &&
+        this.storeForAllData.sequencedSampleKeysByGene.isComplete &&
+        this.storeForAllData.sequencedPatientKeysByGene.isComplete &&
+        this.storeForAllData.selectedMolecularProfiles.isComplete;
+        if(isNewStoreReady){
+
+            this.storeForAllData.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
+                this.getOncoData(this.storeForAllData.samples.result,
+                                 this.storeForAllData.patients.result,
+                                 this.storeForAllData.coverageInformation.result,
+                                 this.storeForAllData.sequencedSampleKeysByGene.result!,
+                                 this.storeForAllData.sequencedPatientKeysByGene.result!,
+                                 this.storeForAllData.selectedMolecularProfiles.result!,
+                                 alterationData);
+                
+            });
+
+            this.addGenomicData(this.cBioData);
         }
-        )
         return(
 
             <div style={{width: "99%"}}>
                 <Row>
                 
-                
-                    <Col xs={9}>
-                        <PathwayMapper isCBioPortal={true} isCollaborative={false} 
-                                    genes={this.props.store.genes.result as any}
-                                    cBioAlterationData={this.cBioData}
-                                    queryParameter={QueryParameter.GENE_LIST}
-                                    oncoPrintTab={ResultsViewTab.ONCOPRINT}
-                                    setTableData={this.setTableData}
-                                    changePathwayHandler={this.changePathwayHandler}/>
-                    </Col>
-                    <Col xs={3} style={{marginTop: "45px"}}>
-                        <PathwayMapperTable data={this.tableData} selectedPathway={this.selectedPathway} changePathway={this.changePathway}/>
-                    </Col>
+                    { !this.isLoading ? 
+                    (<PathwayMapper isCBioPortal={true} isCollaborative={false} 
+                                genes={this.props.store.genes.result as any}
+                                cBioAlterationData={this.cBioData}
+                                queryParameter={QueryParameter.GENE_LIST}
+                                oncoPrintTab={ResultsViewTab.ONCOPRINT}
+                                changePathwayHandler={this.changePathwayHandler}
+                                addGenomicDataHandler={this.addGenomicDataHandler}
+                                tableComponent={PathwayMapperTable}/>)
+                    : (<LoadingIndicator isLoading={true} size={"big"} center={true}>
+                                </LoadingIndicator>)
+                    }
                 </Row>
-
             </div>);
     }
 
 
-
-    @autobind
-    changePathwayHandler(pathwayHandler: Function){
-        this.pathwayHandler = pathwayHandler;
+    setIsLoading(isLoading: boolean){
+        this.isLoading = isLoading;
     }
 
     @autobind
-    setTableData(bestPathwayAlgos: any[][]){
-        this.tableData = bestPathwayAlgos[0].map((data: any) => ({name: data.pathwayName, score: data.score, genes: data.genesMatched}));
-        this.selectedPathway = this.tableData[0].name;
+    addGenomicDataHandler(addGenomicData: (alterationData: ICBioData[]) => void){
+        this.addGenomicData = addGenomicData;
     }
 
     @autobind
-    changePathway(selectedPathway: string){
-        this.selectedPathway = selectedPathway;
-        this.pathwayHandler(this.selectedPathway);
-    }
+    changePathwayHandler(genes: string[]){
 
+        this.storeForAllData = this.props.initStore(this.props.appStore, genes.join(" "));
+        //this.setIsLoading(true);
+    }
     
     getOncoData(
         samples: Pick<Sample, 'sampleId'|'studyId'|'uniqueSampleKey'>[],

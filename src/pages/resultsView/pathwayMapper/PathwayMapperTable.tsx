@@ -64,7 +64,8 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
 
                 return(
                 <span data-border="true" data-type="light" data-tip={pwName} data-place="top" data-effect="solid">
-                    <Radio checked={this.props.selectedPathway === d.name} onChange={(e: any) => {this.props.changePathway(d.name);}}>
+                    <Radio checked={this.props.selectedPathway === d.name} onChange={(e: any) => {this.props.changePathway(d.name);}} 
+                        >
                         <b>{(isPwNameShort ? pwName : pwName.substring(0, lengthThreshold) + "...")}</b>
                     </Radio>
                 </span>);
@@ -82,13 +83,19 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
             tooltip: <span>Score</span>,
             filter: (d: IPathwayMapperTable, filterString: string, filterStringUpper: string) =>
                 (d.score + "").includes(filterStringUpper),
-            sortBy: (d: IPathwayMapperTable) => d.score,
+            sortBy: (d: IPathwayMapperTable) => d.score.toFixed(2),
             download: (d: IPathwayMapperTable) => d.score + ""
         };
 
         this._columns[IPathwayMapperTableColumnType.GENES] = {
             name: "Genes matched",
-            render: (d: IPathwayMapperTable) => <span>{d.genes.join(" ")}</span>,
+            render: (d: IPathwayMapperTable) => {
+
+
+                return (<span data-border="true" data-type="light" data-tip={d.genes.join(" ")} data-place="top" data-effect="solid">
+                    {this.calculateGeneStr(d.genes, lengthThreshold)}
+                </span>);
+                },
             tooltip: <span>Genes matched</span>,
             sortBy: (d: IPathwayMapperTable) => d.genes,
             download: (d: IPathwayMapperTable) => d.genes.toString()
@@ -101,6 +108,21 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
             <PathwayMapperTableComponent columns={orderedColumns} data={this.props.data} initialItemsPerPage={10}
                 initialSortColumn={this.props.initialSortColumn} paginationProps={{ itemsPerPageOptions: [10] }}/>
         );
+    }
+
+    private calculateGeneStr(genesMatched: string[], lengthThreshold: number){
+        let runningLength = 0;
+        let geneStr = "";
+        for(const geneName of genesMatched){
+            runningLength += geneName.length;
+            if(runningLength < lengthThreshold){
+                geneStr += geneName + " ";
+                runningLength++; //Whitespace is added
+            } else{
+                return geneStr + "...";
+            }
+        }
+        return geneStr;
     }
 
 
