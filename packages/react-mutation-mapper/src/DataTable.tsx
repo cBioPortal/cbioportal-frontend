@@ -5,13 +5,14 @@ import {
 } from "cbioportal-frontend-commons";
 import classnames from "classnames";
 import _ from "lodash";
-import {action, computed, observable} from "mobx";
+import {action, computed, IReactionPublic, observable, reaction} from "mobx";
 import {observer} from "mobx-react";
 import * as React from 'react';
 import ReactTable, {Column, RowInfo, TableProps} from "react-table";
 
 import {ColumnSelectorProps, ColumnVisibilityDef} from "./component/ColumnSelector";
 import DataTableToolbar from "./component/toolbar/DataTableToolbar";
+import {DataFilter} from "./model/DataFilter";
 import {DataStore} from "./model/DataStore";
 import {RemoteData} from "./model/RemoteData";
 import {getRemoteDataGroupStatus} from "./util/RemoteDataUtils";
@@ -88,7 +89,7 @@ export default class DataTable<T> extends React.Component<DataTableProps<T>, {}>
 
         if (this.props.dataStore) {
             data = this.props.dataStore.sortedFilteredSelectedData.length > 0 ?
-                this.props.dataStore.sortedFilteredSelectedData : this.props.dataStore.sortedFilteredData
+                this.props.dataStore.sortedFilteredSelectedData : this.props.dataStore.sortedFilteredData;
         }
 
         return data;
@@ -193,12 +194,31 @@ export default class DataTable<T> extends React.Component<DataTableProps<T>, {}>
                         expanded={this.expanded}
                         onExpandedChange={this.onExpandedChange}
                         onPageChange={this.resetExpander}
+                        onPageSizeChange={this.resetExpander}
                         onSortedChange={this.resetExpander}
                         {...this.props.reactTableProps}
                     />
                 </div>
             </div>
         );
+    }
+
+    componentWillReceiveProps(nextProps: Readonly<DataTableProps<T>>)
+    {
+        if (nextProps.dataStore) {
+            // this is to reset expander component every time the data or selection filters update
+            // it would be cleaner if we could do this with a ReactTable callback (something like onDataChange),
+            // but no such callback exists
+            reaction(
+                () => [nextProps.dataStore!.selectionFilters, nextProps.dataStore!.dataFilters],
+                (filters: DataFilter[][], disposer: IReactionPublic) => {
+                    if (filters.length > 0) {
+                        this.resetExpander();
+                    }
+                    disposer.dispose();
+                }
+            );
+        }
     }
 
     @autobind
