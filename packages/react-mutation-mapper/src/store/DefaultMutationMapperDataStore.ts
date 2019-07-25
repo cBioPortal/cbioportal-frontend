@@ -61,17 +61,23 @@ export class DefaultMutationMapperDataStore implements DataStore
 
     @action
     public clearHighlightFilters() {
-        this.highlightFilters = [];
+        if (this.highlightFilters.length > 0) {
+            this.highlightFilters = [];
+        }
     }
 
     @action
     public clearSelectionFilters() {
-        this.selectionFilters = [];
+        if (this.selectionFilters.length > 0) {
+            this.selectionFilters = [];
+        }
     }
 
     @action
     public clearDataFilters() {
-        this.dataFilters = [];
+        if (this.dataFilters.length > 0) {
+            this.dataFilters = [];
+        }
     }
 
     @action
