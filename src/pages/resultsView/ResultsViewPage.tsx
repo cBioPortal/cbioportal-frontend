@@ -69,9 +69,6 @@ function initStore(appStore: AppStore, genes?: string) {
 
     const queryReactionDisposer = reaction(
         () => {
-
-            console.log("What is it");
-            console.log([getBrowserWindow().globalStores.routing.query, getBrowserWindow().globalStores.routing.location.pathname]);
             return [
                 getBrowserWindow().globalStores.routing.query,
                 getBrowserWindow().globalStores.routing.location.pathname,
@@ -197,15 +194,13 @@ export default class ResultsViewPage extends React.Component<
     {}
 > {
     private resultsViewPageStore: ResultsViewPageStore;
-    private resultsViewPageStore2: ResultsViewPageStore;
 
     @observable showTabs = true;
 
     constructor(props: IResultsViewPageProps) {
         super(props);
 
-        this.resultsViewPageStore = initStore(props.appStore, false);
-        this.resultsViewPageStore2 = initStore(props.appStore, true);
+        this.resultsViewPageStore = initStore(props.appStore);
 
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
