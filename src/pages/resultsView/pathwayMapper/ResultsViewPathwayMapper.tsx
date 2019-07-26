@@ -57,7 +57,6 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
         this.isLoading = false;
     }
 
-
     render(){
         this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
 
@@ -90,6 +89,9 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
             });
 
             this.addGenomicData(this.cBioData);
+            console.log("here cbio");
+            console.log(this.cBioData);
+
         }
         return(
 
@@ -120,12 +122,14 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     @autobind
     addGenomicDataHandler(addGenomicData: (alterationData: ICBioData[]) => void){
         this.addGenomicData = addGenomicData;
+        console.log("here ADDGENO HANDLER");
     }
 
     @autobind
     changePathwayHandler(genes: string[]){
 
         this.storeForAllData = this.props.initStore(this.props.appStore, genes.join(" "));
+        console.log("store changed");
         //this.setIsLoading(true);
     }
     

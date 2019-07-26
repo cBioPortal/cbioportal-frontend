@@ -50,7 +50,7 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
     generateColumns() {
 
 
-        const lengthThreshold = 13;
+        const lengthThreshold = 20;
 
         this._columns = {};
 
@@ -64,8 +64,9 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
 
                 return(
                 <span data-border="true" data-type="light" data-tip={pwName} data-place="top" data-effect="solid">
-                    <Radio checked={this.props.selectedPathway === d.name} onChange={(e: any) => {this.props.changePathway(d.name);}} 
-                        >
+                    <Radio 
+                        style={{marginTop: 0, marginBottom: 0}}
+                        checked={this.props.selectedPathway === d.name} onChange={(e: any) => {this.props.changePathway(d.name);}} >
                         <b>{(isPwNameShort ? pwName : pwName.substring(0, lengthThreshold) + "...")}</b>
                     </Radio>
                 </span>);
