@@ -4,6 +4,10 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import TableCellStatusIndicator from "public-lib/components/TableCellStatus";
 import {TableCellStatus} from "public-lib/components/TableCellStatus";
 
+export function getFormattedFrequencyValue(frequency: number) {
+    return frequency < 0.01 ? frequency.toFixed(4) : frequency.toFixed(2);
+}
+
 export default class TumorAlleleFreqColumnFormatter
 {
     public static mainContent(frequency:number, altReads:number, refReads:number)
@@ -21,7 +25,7 @@ export default class TumorAlleleFreqColumnFormatter
                 arrowContent={<div className="rc-tooltip-arrow-inner"/>}
                 destroyTooltipOnHide={true}
             >
-                <span>{frequency.toFixed(2)}</span>
+                <span>{getFormattedFrequencyValue(frequency)}</span>
             </DefaultTooltip>
         );
     }
@@ -46,7 +50,7 @@ export default class TumorAlleleFreqColumnFormatter
         const frequency = TumorAlleleFreqColumnFormatter.getSortValue(mutations);
 
         if (frequency) {
-            return frequency.toFixed(2);
+            return getFormattedFrequencyValue(frequency);
         }
 
         return "";
