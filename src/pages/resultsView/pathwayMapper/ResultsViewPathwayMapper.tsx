@@ -196,6 +196,7 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     @autobind
     addGenomicDataHandler(addGenomicData: (alterationData: ICBioData[]) => void){
         this.addGenomicData = addGenomicData;
+        console.log("here ADDGENO HANDLER");
     }
 
     // When pathway changes in PathwayMapper this callback gets called
