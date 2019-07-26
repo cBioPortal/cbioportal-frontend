@@ -98,7 +98,7 @@ export default class DataTable<T> extends React.Component<DataTableProps<T>, {}>
     @computed
     get columns(): Column[] {
         return (this.props.columns || []).map(
-            c => ({...c, show: c.id ? this.columnVisibility[c.id] : c.show})
+            c => ({...c, show: c.id ? this.columnVisibility[c.id] : (c.expander || c.show)})
         );
     }
 
