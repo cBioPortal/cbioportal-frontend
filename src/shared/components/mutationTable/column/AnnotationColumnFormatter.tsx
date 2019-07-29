@@ -1,11 +1,16 @@
 import * as React from 'react';
 import {If} from 'react-if';
 import * as _ from "lodash";
+import {
+    HotspotAnnotation,
+    hotspotAnnotationSortValue,
+    OncoKB,
+    oncoKbAnnotationDownload,
+    oncoKbAnnotationSortValue
+} from "react-mutation-mapper";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import OncokbPubMedCache from "shared/cache/PubMedCache";
-import CancerHotspots from "shared/components/annotation/CancerHotspots";
 import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
-import OncoKB from "shared/components/annotation/oncokb/OncoKB";
 import Civic from "shared/components/annotation/Civic";
 import {IOncoKbCancerGenesWrapper, IOncoKbData, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
@@ -257,10 +262,10 @@ export default class AnnotationColumnFormatter
             data, oncoKbCancerGenes, hotspotData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
 
         return _.flatten([
-            OncoKB.sortValue(annotationData.oncoKbIndicator),
+            oncoKbAnnotationSortValue(annotationData.oncoKbIndicator),
             Civic.sortValue(annotationData.civicEntry),
             MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
-            CancerHotspots.sortValue(annotationData.isHotspot, annotationData.is3dHotspot), annotationData.isOncoKbCancerGene ? 1 : 0
+            hotspotAnnotationSortValue(annotationData.isHotspot, annotationData.is3dHotspot), annotationData.isOncoKbCancerGene ? 1 : 0
         ]);
     }
 
@@ -276,7 +281,7 @@ export default class AnnotationColumnFormatter
             data, oncoKbCancerGenes, hotspotData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
 
         return [
-            `OncoKB: ${OncoKB.download(annotationData.oncoKbIndicator)}`,
+            `OncoKB: ${oncoKbAnnotationDownload(annotationData.oncoKbIndicator)}`,
             `CIViC: ${Civic.download(annotationData.civicEntry)}`,
             `MyCancerGenome: ${MyCancerGenome.download(annotationData.myCancerGenomeLinks)}`,
             `CancerHotspot: ${annotationData.isHotspot ? 'yes' : 'no'}`,
@@ -346,7 +351,7 @@ export default class AnnotationColumnFormatter
                     />
                 </If>
                 <If condition={columnProps.enableHotspot || false}>
-                    <CancerHotspots
+                    <HotspotAnnotation
                         isHotspot={annotation.isHotspot}
                         is3dHotspot={annotation.is3dHotspot}
                         status={annotation.hotspotStatus}
