@@ -5,7 +5,7 @@ import {
 import {remoteData} from "public-lib/api/remoteData";
 import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
 import {IOncoKbData} from "shared/model/OncoKB";
-import {CancerGene} from "shared/api/generated/OncoKbAPI";
+import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import {ICivicGene, ICivicVariant} from "shared/model/Civic";
 import {
     fetchCosmicData, fetchCivicGenes, fetchCivicVariants
@@ -16,7 +16,7 @@ import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import MutationMapperStore, {IMutationMapperStoreConfig} from "shared/components/mutationMapper/MutationMapperStore";
-import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
+import { VariantAnnotation } from "public-lib/api/generated/GenomeNexusAPI";
 import {IServerConfig} from "../../../config/IAppConfig";
 
 

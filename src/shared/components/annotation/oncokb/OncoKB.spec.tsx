@@ -4,7 +4,7 @@ import {OncoKB, IOncoKbProps, oncoKbAnnotationSortValue} from "react-mutation-ma
 
 import {initQueryIndicator} from "test/OncoKbMockUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
-import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
+import {IndicatorQueryResp} from "public-lib/api/generated/OncoKbAPI";
 
 import React from 'react';
 import { assert } from 'chai';

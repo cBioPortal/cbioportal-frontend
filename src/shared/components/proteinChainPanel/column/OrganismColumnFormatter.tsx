@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
-import {PdbHeader} from "shared/api/generated/GenomeNexusAPI";
+import {PdbHeader} from "public-lib/api/generated/GenomeNexusAPI";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {IPdbChain} from "shared/model/Pdb";
 
