@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 import MutationAssessor from "shared/components/annotation/genomeNexus/MutationAssessor";
 import {MutationAssessor as MutationAssessorData} from 'shared/api/generated/GenomeNexusAPI';
 import Sift from "shared/components/annotation/genomeNexus/Sift";
