@@ -10,6 +10,25 @@ export {default as SVGAxis, Tick} from './components/SVGAxis';
 export {default as TableCellStatusIndicator, TableCellStatus} from './components/TableCellStatus';
 export {default as WindowWrapper} from './components/WindowWrapper';
 
+export {
+    default as GenomeNexusAPI,
+    EnsemblFilter,
+    GenomicLocation,
+    TranscriptConsequenceSummary,
+    VariantAnnotation,
+    VariantAnnotationSummary
+} from "./api/generated/GenomeNexusAPI";
+export {
+    default as GenomeNexusAPIInternal
+} from "./api/generated/GenomeNexusAPIInternal";
+export {
+    default as OncoKbAPI,
+    Evidence,
+    EvidenceQueries,
+    EvidenceQueryRes,
+    Query
+} from "./api/generated/OncoKbAPI";
+
 export {remoteData} from "./api/remoteData";
 
 export * from './lib/ColumnVisibilityResolver';

@@ -1,7 +1,7 @@
 // TODO remove this file and completely rely on react-mutation-mapper implementation?
 
 import * as _ from 'lodash';
-import {Evidence, EvidenceQueries, EvidenceQueryRes, IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
+import {Evidence, EvidenceQueries, EvidenceQueryRes, IndicatorQueryResp, Query} from "public-lib/api/generated/OncoKbAPI";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {
