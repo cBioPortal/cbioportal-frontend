@@ -226,7 +226,7 @@ describe('error messaging for 400 error', function(){
 
     it('should show error message for 400 query',function(){
         browser.waitForExist('.errorScreen');
-        var res = browser.checkElement('.errorScreen');
+        var res = browser.checkElement('.errorScreen', { hide:['.form-group'] });
         assertScreenShotMatch(res);
     });
 
