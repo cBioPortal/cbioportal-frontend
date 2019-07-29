@@ -80,7 +80,7 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
 
         this._columns[IPathwayMapperTableColumnType.SCORE] = {
             name: "Score",
-            render: (d: IPathwayMapperTable) => <span><b>{d.score}</b></span>,
+            render: (d: IPathwayMapperTable) => <span><b>{d.score.toFixed(2)}</b></span>,
             tooltip: <span>Score</span>,
             filter: (d: IPathwayMapperTable, filterString: string, filterStringUpper: string) =>
                 (d.score + "").includes(filterStringUpper),

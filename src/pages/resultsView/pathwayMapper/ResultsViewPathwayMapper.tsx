@@ -13,7 +13,7 @@ import autobind from "autobind-decorator";
 import { observable, ObservableMap, computed } from "mobx";
 import { alterationInfoForOncoprintTrackData } from "shared/components/oncoprint/OncoprintUtils";
 import { isMergedTrackFilter } from "shared/lib/oql/oqlfilter";
-import { Sample, Patient, MolecularProfile } from "shared/api/generated/CBioPortalAPI";
+import { Sample, Patient, MolecularProfile, Gene } from "shared/api/generated/CBioPortalAPI";
 import { makeGeneticTrackData } from "shared/components/oncoprint/DataUtils";
 import { CoverageInformation } from "../ResultsViewPageStoreUtils";
 import { Grid, Col, Row } from "react-bootstrap";
@@ -22,6 +22,8 @@ import ReactTooltip from "react-tooltip";
 import { AppStore } from "AppStore";
 import { remoteData } from "cbioportal-frontend-commons";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import { fetchGenes } from "shared/lib/StoreUtils";
+import { ErrorMessages } from "shared/enums/ErrorEnums";
 
 interface IResultsViewPathwayMapperProps{
     store: ResultsViewPageStore;
@@ -47,6 +49,26 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     @observable
     isLoading: boolean;
 
+    @observable
+    currentGenes: string[];
+
+    @observable
+    remoteGenes = remoteData<string[]>({
+        invoke: async () => {
+            console.log("here1.5");
+
+            const genes = await fetchGenes(this.currentGenes);
+
+            console.log("here2");
+            console.log(genes.map(gene => (gene.hugoGeneSymbol)));
+            // Check that the same genes are in the OQL query as in the API response (order doesnt matter).
+            return genes.map(gene => (gene.hugoGeneSymbol));
+        },
+        onResult:(genes:string[])=>{
+            //this.geneCache.addData(genes);
+            this.geneChangeHandler(genes);
+        }
+    });
     addGenomicData: (alterationData: ICBioData[]) => void;
 
 
@@ -68,6 +90,8 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
                              this.props.store.selectedMolecularProfiles.result!,
                              alterationData);
         });
+
+
         const isNewStoreReady = this.storeForAllData && this.storeForAllData.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.isComplete &&
         this.storeForAllData.samples.isComplete &&
         this.storeForAllData.patients.isComplete &&
@@ -75,6 +99,7 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
         this.storeForAllData.sequencedSampleKeysByGene.isComplete &&
         this.storeForAllData.sequencedPatientKeysByGene.isComplete &&
         this.storeForAllData.selectedMolecularProfiles.isComplete;
+
         if(isNewStoreReady){
 
             this.storeForAllData.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
@@ -89,10 +114,10 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
             });
 
             this.addGenomicData(this.cBioData);
-            console.log("here cbio");
-            console.log(this.cBioData);
-
         }
+
+        console.log("this.remoteGenes");
+        console.log(this.remoteGenes.result);
         return(
 
             <div style={{width: "99%"}}>
@@ -125,11 +150,14 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
         console.log("here ADDGENO HANDLER");
     }
 
-    @autobind
-    changePathwayHandler(genes: string[]){
-
+    geneChangeHandler(genes: string[]){
         this.storeForAllData = this.props.initStore(this.props.appStore, genes.join(" "));
-        console.log("store changed");
+    }
+
+    @autobind
+    changePathwayHandler(pathwayGenes: string[]){
+        this.currentGenes = pathwayGenes;
+        
         //this.setIsLoading(true);
     }
     
