@@ -106,7 +106,7 @@ import memoize from "memoize-weak-decorator";
 import request from "superagent";
 import {countMutations, mutationCountByPositionKey} from "./mutationCountHelpers";
 import {getPatientSurvivals} from "./SurvivalStoreHelper";
-import {QueryStore} from "shared/components/query/QueryStore";
+import {CancerStudyQueryUrlParams, QueryStore} from "shared/components/query/QueryStore";
 import {
     annotateMolecularDatum,
     computeCustomDriverAnnotationReport,
@@ -169,6 +169,7 @@ import {AppStore} from "../../AppStore";
 import {CLINICAL_TRACKS_URL_PARAM} from "../../shared/components/oncoprint/ResultsViewOncoprint";
 import {getNumSamples} from "../groupComparison/GroupComparisonUtils";
 import autobind from "autobind-decorator";
+import {GroupComparisonURLQuery} from "../groupComparison/GroupComparisonPage";
 import {DEFAULT_GENOME} from "pages/resultsView/ResultsViewPageStoreUtils";
 
 type Optional<T> = (
@@ -475,7 +476,6 @@ export class ResultsViewPageStore {
     @observable.ref public _selectedEnrichmentCopyNumberProfile: MolecularProfile;
     @observable.ref public _selectedEnrichmentMRNAProfile: MolecularProfile;
     @observable.ref public _selectedEnrichmentProteinProfile: MolecularProfile;
-    @observable private _usePatientLevelEnrichments = false;
 
     @computed get selectedEnrichmentMutationProfile() {
         if (!this._selectedEnrichmentMutationProfile && this.mutationEnrichmentProfiles.isComplete &&
@@ -514,12 +514,12 @@ export class ResultsViewPageStore {
     }
 
     public get usePatientLevelEnrichments() {
-        return this._usePatientLevelEnrichments;
+        return (this.routing.location.query as CancerStudyQueryUrlParams).patient_enrichments === "true";
     }
 
     @autobind
     @action public setUsePatientLevelEnrichments(e:boolean) {
-        this._usePatientLevelEnrichments = e;
+        this.routing.updateRoute({ patient_enrichments: e.toString()} as Partial<CancerStudyQueryUrlParams>);
     }
 
     @computed get hugoGeneSymbols(){
