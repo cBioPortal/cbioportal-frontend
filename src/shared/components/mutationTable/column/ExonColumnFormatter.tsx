@@ -3,7 +3,7 @@ import {Circle} from "better-react-spinkit";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
-import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
+import { VariantAnnotation } from 'public-lib/api/generated/GenomeNexusAPI';
 import GenomeNexusCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusCache";
 import styles from "./exon.module.scss";
 

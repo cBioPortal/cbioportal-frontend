@@ -9,7 +9,7 @@ import {IOncoKbCancerGenesWrapper, IOncoKbData, IOncoKbDataWrapper} from "shared
 import Civic from "shared/components/annotation/Civic";
 import {generateQueryVariant} from "shared/lib/OncoKbUtils";
 import {generateQueryVariantId} from "public-lib/lib/OncoKbUtils";
-import {CancerGene, IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
+import {CancerGene, IndicatorQueryResp, Query} from "public-lib/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {buildCivicEntry, getCivicCNAVariants} from "shared/lib/CivicUtils";

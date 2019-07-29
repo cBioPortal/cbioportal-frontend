@@ -18,7 +18,7 @@ import {
     OQLLineFilterOutput, MergedTrackLineFilterOutput
 } from "../../shared/lib/oql/oqlfilter";
 import {observable} from "mobx";
-import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
+import {IndicatorQueryResp} from "../../public-lib/api/generated/OncoKbAPI";
 import {AnnotatedMutation} from "./ResultsViewPageStore";
 import * as _ from 'lodash';
 import sinon from 'sinon';

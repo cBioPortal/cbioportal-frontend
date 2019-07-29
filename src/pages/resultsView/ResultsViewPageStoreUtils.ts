@@ -22,7 +22,7 @@ import {
     IQueriedCaseData,
     IQueriedMergedTrackCaseData, ResultsViewPageStore
 } from "./ResultsViewPageStore";
-import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
+import {IndicatorQueryResp} from "../../public-lib/api/generated/OncoKbAPI";
 import _ from "lodash";
 import client from "shared/api/cbioportalClientInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
