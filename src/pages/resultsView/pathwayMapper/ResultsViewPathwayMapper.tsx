@@ -74,6 +74,26 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     @observable
     isLoading: boolean;
 
+    @observable
+    currentGenes: string[];
+
+    @observable
+    remoteGenes = remoteData<string[]>({
+        invoke: async () => {
+            console.log("here1.5");
+
+            const genes = await fetchGenes(this.currentGenes);
+
+            console.log("here2");
+            console.log(genes.map(gene => (gene.hugoGeneSymbol)));
+            // Check that the same genes are in the OQL query as in the API response (order doesnt matter).
+            return genes.map(gene => (gene.hugoGeneSymbol));
+        },
+        onResult:(genes:string[])=>{
+            //this.geneCache.addData(genes);
+            this.geneChangeHandler(genes);
+        }
+    });
     addGenomicData: (alterationData: ICBioData[]) => void;
 
 
