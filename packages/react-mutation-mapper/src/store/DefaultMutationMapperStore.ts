@@ -40,6 +40,7 @@ interface DefaultMutationMapperStoreConfig {
     isoformOverrideSource?: string;
     filterMutationsBySelectedTranscript?: boolean;
     genomeNexusUrl?: string;
+    oncoKbUrl?: string;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
 }
 
@@ -134,7 +135,8 @@ class DefaultMutationMapperStore implements MutationMapperStore
     @computed
     public get dataFetcher(): DefaultMutationMapperDataFetcher {
         return new DefaultMutationMapperDataFetcher({
-            genomeNexusUrl: this.config.genomeNexusUrl
+            genomeNexusUrl: this.config.genomeNexusUrl,
+            oncoKbUrl: this.config.oncoKbUrl
         });
     }
 
