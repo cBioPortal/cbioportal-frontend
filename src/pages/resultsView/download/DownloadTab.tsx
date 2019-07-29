@@ -4,8 +4,8 @@ import {computed, observable, action} from "mobx";
 import {observer} from 'mobx-react';
 import fileDownload from 'react-file-download';
 import {AnnotatedExtendedAlteration, ExtendedAlteration, ResultsViewPageStore, ModifyQueryParams} from "../ResultsViewPageStore";
-import {CoverageInformation} from "../ResultsViewPageStoreUtils";
-import {OQLLineFilterOutput, unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
+import {CoverageInformation, getSingleGeneResultKey, getMultipleGeneResultKey} from "../ResultsViewPageStoreUtils";
+import {OQLLineFilterOutput, UnflattenedOQLLineFilterOutput, MergedTrackLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import FeatureTitle from "shared/components/featureTitle/FeatureTitle";
 import {SimpleCopyDownloadControls} from "shared/components/copyDownloadControls/SimpleCopyDownloadControls";
 import {default as GeneAlterationTable, IGeneAlteration} from "./GeneAlterationTable";
@@ -28,8 +28,6 @@ import {MolecularProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
-import { submitToPage } from 'pages/studyView/StudyViewUtils';
-import { parse, SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import { MakeMobxView } from 'shared/components/MobxView';
@@ -77,14 +75,17 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         await:()=>[
             this.props.store.selectedMolecularProfiles,
             this.props.store.oqlFilteredCaseAggregatedDataByOQLLine,
+            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
             this.props.store.coverageInformation,
             this.props.store.samples,
             this.geneAlterationDataByGene,
-            this.props.store.molecularProfileIdToMolecularProfile
+            this.props.store.molecularProfileIdToMolecularProfile,
         ],
         invoke: ()=>Promise.resolve(generateCaseAlterationData(
+            this.props.store.rvQuery.oqlQuery,
             this.props.store.selectedMolecularProfiles.result!,
             this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.result!,
+            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!,
             this.props.store.coverageInformation.result!,
             this.props.store.samples.result!,
             this.geneAlterationDataByGene.result!,
@@ -243,8 +244,26 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                         .map(data => data.oql))
     });
 
+    readonly trackLabels = remoteData({
+        await:()=>[this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
+        invoke:()=> {
+            const labels: string[] = [];
+            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach((data, index) => {
+                // mergedTrackOqlList is undefined means the data is for single track / oql
+                if (data.mergedTrackOqlList === undefined) {
+                    labels.push(getSingleGeneResultKey(index, this.props.store.rvQuery.oqlQuery, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>));
+                }
+                // or data is for merged track (group: list of oqls)
+                else {
+                    labels.push(getMultipleGeneResultKey(data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>));
+                }
+            })
+            return Promise.resolve(labels);
+        }
+    });
+
     public render() {
-        const status = getMobxPromiseGroupStatus(this.downloadableFilesTable, this.geneAlterationData, this.caseAlterationData, this.oqls);
+        const status = getMobxPromiseGroupStatus(this.downloadableFilesTable, this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.props.store.alterationsBySelectedMolecularProfiles);
 
         switch (status) {
             case "pending":
@@ -252,7 +271,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             case "error":
                 return <ErrorMessage/>;
             case "complete":
-            default:
                 return (
                     <WindowWidthBox data-test="downloadTabDiv" offset={60}>
                         <div className={"tabMessageContainer"}>
@@ -266,7 +284,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                 isLoading={false}
                                 style={{marginBottom:15}}
                             />
-                            {this.downloadableFilesTable.isComplete && this.downloadableFilesTable.result}
+                            {this.downloadableFilesTable.result}
                         </div>
                         <hr/>
                         <div className={styles["tables-container"]} data-test="dataDownloadGeneAlterationTable">
@@ -275,7 +293,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                 isLoading={false}
                                 className="pull-left forceHeaderStyle h4"
                             />
-                            {this.geneAlterationData.isComplete && (<GeneAlterationTable geneAlterationData={this.geneAlterationData.result} />)}
+                            <GeneAlterationTable geneAlterationData={this.geneAlterationData.result!} />
                         </div>
                         <hr/>
                         <div className={styles["tables-container"]}>
@@ -284,16 +302,17 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                 isLoading={false}
                                 className="pull-left forceHeaderStyle h4"
                             />
-                            {this.oqls.isComplete && this.caseAlterationData.isComplete && this.props.store.alterationsBySelectedMolecularProfiles.isComplete && (
-                                <CaseAlterationTable
-                                    caseAlterationData={this.caseAlterationData.result}
-                                    oqls={this.oqls.result}
-                                    alterationTypes={this.props.store.alterationsBySelectedMolecularProfiles.result}
-                                />
-                            )}
+                            <CaseAlterationTable
+                                caseAlterationData={this.caseAlterationData.result!}
+                                oqls={this.oqls.result!}
+                                trackLabels={this.trackLabels.result!}
+                                alterationTypes={this.props.store.alterationsBySelectedMolecularProfiles.result!}
+                            />
                         </div>
                     </WindowWidthBox>
                 );
+            default:
+                return <ErrorMessage/>;
         }
     }
 
@@ -318,14 +337,14 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     private cnaDownloadControls(): JSX.Element
     {
-        return this.downloadControlsRow("Copy-number Alterations",
+        return this.downloadControlsRow("Copy-number Alterations (OQL is not in effect)",
                                         this.handleCnaDownload,
                                         this.handleTransposedCnaDownload);
     }
 
     private mutationDownloadControls(): JSX.Element
     {
-        return this.downloadControlsRow("Mutations",
+        return this.downloadControlsRow("Mutations (OQL is not in effect)",
                                         this.handleMutationDownload,
                                         this.handleTransposedMutationDownload);
     }

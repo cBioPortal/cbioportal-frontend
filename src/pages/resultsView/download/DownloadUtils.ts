@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import {
     AlterationTypeConstants, AnnotatedExtendedAlteration, CaseAggregatedData, ExtendedAlteration,
-    IQueriedCaseData
+    IQueriedCaseData,
+    IQueriedMergedTrackCaseData
 } from "../ResultsViewPageStore";
 import {
     alterationInfoForCaseAggregatedDataByOQLLine
@@ -11,7 +12,8 @@ import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
 import {Sample, Gene, MolecularProfile, GenePanelData} from "shared/api/generated/CBioPortalAPI";
 import {ICaseAlteration, IOqlData, ISubAlteration} from "./CaseAlterationTable";
 import {IGeneAlteration} from "./GeneAlterationTable";
-import {CoverageInformation} from "../ResultsViewPageStoreUtils";
+import {CoverageInformation, getSingleGeneResultKey, getMultipleGeneResultKey} from "../ResultsViewPageStoreUtils";
+import { OQLLineFilterOutput, MergedTrackLineFilterOutput } from 'shared/lib/oql/oqlfilter';
 
 export interface IDownloadFileRow {
     studyId: string;
@@ -331,8 +333,10 @@ export function generateDownloadData(sampleAlterationDataByGene: {[key: string]:
 }
 
 export function generateCaseAlterationData(
+    oqlQuery: string,
     selectedMolecularProfiles:MolecularProfile[],
     caseAggregatedDataByOQLLine?: IQueriedCaseData<AnnotatedExtendedAlteration>[],
+    caseAggregatedDataByUnflattenedOQLLine?: IQueriedMergedTrackCaseData[],
     genePanelInformation?: CoverageInformation,
     samples: Sample[] = [],
     geneAlterationDataByGene?: {[gene: string]: IGeneAlteration},
@@ -340,6 +344,7 @@ export function generateCaseAlterationData(
 ): ICaseAlteration[] {
     const caseAlterationData: {[studyCaseId: string] : ICaseAlteration} = {};
 
+    // put gene data into oqlDataByGene
     if (caseAggregatedDataByOQLLine &&
         genePanelInformation)
     {
@@ -351,29 +356,11 @@ export function generateCaseAlterationData(
                 data.cases.samples, data.oql.gene, samples, genePanelInformation, selectedMolecularProfiles);
 
             geneticTrackData.forEach(datum => {
-                const studyId = datum.study_id;
-                const sampleId = datum.sample || (sampleIndex[datum.uid] ? sampleIndex[datum.uid].sampleId : "");
-                const key = studyId + ":" + datum.uid;
-
-                // initialize the row data
-                caseAlterationData[key] = caseAlterationData[key] || {
-                    studyId,
-                    sampleId,
-                    patientId: sampleIndex[datum.uid] ? sampleIndex[datum.uid].patientId : "",
-                    altered: false,
-                    oqlData: {},
-                    oqlDataByGene: {}
-                };
-
-                // update altered: a single alteration in any track means altered
-                caseAlterationData[key].altered = caseAlterationData[key].altered || datum.data.length > 0;
-
-                // for each track (for each oql line/gene) the oql data is different
+                const key = datum.study_id + ":" + datum.uid;
+                initializeCaseAlterationData(caseAlterationData, datum, sampleIndex);
+                // for each gene the oql data is different
                 // that's why we need a map here
                 const generatedOqlData = generateOqlData(datum, geneAlterationDataByGene, molecularProfileIdToMolecularProfile);
-                //generate and update oqlData in caseAlterationData
-                caseAlterationData[key].oqlData[data.oql.oql_line] = generatedOqlData
-                updateOqlData(datum, caseAlterationData[key].oqlData[data.oql.oql_line], molecularProfileIdToMolecularProfile);
                 //generate and update oqlDataByGene in caseAlterationData
                 if (caseAlterationData[key].oqlDataByGene[data.oql.gene] !== undefined) {
                     caseAlterationData[key].oqlDataByGene[data.oql.gene] = _.merge(generatedOqlData, caseAlterationData[key].oqlDataByGene[data.oql.gene]);
@@ -385,7 +372,61 @@ export function generateCaseAlterationData(
             });
         });
     }
+
+    // put track data into oqlData
+    if (caseAggregatedDataByUnflattenedOQLLine &&
+        genePanelInformation)
+    {
+        // we need the sample index for better performance
+        const sampleIndex = _.keyBy(samples, 'uniqueSampleKey');
+
+        caseAggregatedDataByUnflattenedOQLLine.forEach((data, index) => {
+            let genes;
+            let trackName: string;
+            // get genes and track mames
+            if (data.mergedTrackOqlList === undefined) {
+                genes = (data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>).gene;
+                trackName = getSingleGeneResultKey(index, oqlQuery, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>);
+            }
+            else {
+                genes = (data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>).list.map((oql) => oql.gene);
+                trackName = getMultipleGeneResultKey(data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>);
+            }
+            const geneticTrackData = makeGeneticTrackData(
+                data.cases.samples, genes, samples, genePanelInformation, selectedMolecularProfiles);
+
+            geneticTrackData.forEach(datum => {
+                const key = datum.study_id + ":" + datum.uid;
+                initializeCaseAlterationData(caseAlterationData, datum, sampleIndex);
+                // for each track (for each oql line/gene) the oql data is different
+                // that's why we need a map here
+                const generatedOqlData = generateOqlData(datum, geneAlterationDataByGene, molecularProfileIdToMolecularProfile);
+                //generate and update oqlData in caseAlterationData
+                caseAlterationData[key].oqlData[trackName] = generatedOqlData
+                updateOqlData(datum, caseAlterationData[key].oqlData[trackName], molecularProfileIdToMolecularProfile);
+            });
+        });
+    }
     return _.values(caseAlterationData);
+}
+
+export function initializeCaseAlterationData(caseAlterationData: {[studyCaseId: string] : ICaseAlteration}, datum: GeneticTrackDatum, sampleIndex: _.Dictionary<Sample>) {
+    const studyId = datum.study_id;
+    const sampleId = datum.sample || (sampleIndex[datum.uid] ? sampleIndex[datum.uid].sampleId : "");
+    const key = studyId + ":" + datum.uid;
+
+    // initialize the row data
+    caseAlterationData[key] = caseAlterationData[key] || {
+        studyId,
+        sampleId,
+        patientId: sampleIndex[datum.uid] ? sampleIndex[datum.uid].patientId : "",
+        altered: false,
+        oqlData: {},
+        oqlDataByGene: {}
+    };
+
+    // update altered: a single alteration in any track means altered
+    caseAlterationData[key].altered = caseAlterationData[key].altered || datum.data.length > 0;
 }
 
 export function hasValidData(sampleAlterationDataByGene: {[key: string]: ExtendedAlteration[]},
