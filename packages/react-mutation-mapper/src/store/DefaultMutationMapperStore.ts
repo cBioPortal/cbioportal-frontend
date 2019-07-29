@@ -3,10 +3,8 @@ import _ from "lodash";
 import {computed, observable} from "mobx";
 import MobxPromise, {cached} from "mobxpromise";
 
-import {remoteData} from "cbioportal-frontend-commons";
-
 // TODO define VariantAnnotation model?
-import {VariantAnnotation} from "../generated/GenomeNexusAPI";
+import {remoteData, VariantAnnotation} from "cbioportal-frontend-commons";
 
 import {AggregatedHotspots, GenomicLocation, Hotspot, IHotspotIndex} from "../model/CancerHotspot";
 import {DataFilter} from "../model/DataFilter";

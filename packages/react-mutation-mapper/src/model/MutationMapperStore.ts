@@ -1,5 +1,5 @@
 // TODO do not use generated models
-import {VariantAnnotation} from "../generated/GenomeNexusAPI";
+import {VariantAnnotation} from "cbioportal-frontend-commons";
 
 import {Hotspot, IHotspotIndex} from "./CancerHotspot";
 import DataStore from "./DataStore";

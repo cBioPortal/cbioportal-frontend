@@ -1,10 +1,10 @@
+import {VariantAnnotation} from "cbioportal-frontend-commons";
 import {assert} from "chai";
 import sinon from 'sinon';
 import * as _ from 'lodash';
 
 import {annotateMutations, resolveMissingProteinPositions} from "./MutationAnnotator";
 import {Mutation} from "../model/Mutation";
-import {VariantAnnotation} from "../generated/GenomeNexusAPI";
 import {fetchVariantAnnotationsIndexedByGenomicLocation} from "./DataFetcherUtils";
 
 describe("MutationAnnotator", () => {

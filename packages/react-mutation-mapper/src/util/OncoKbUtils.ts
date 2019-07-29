@@ -1,14 +1,14 @@
 import _ from "lodash";
+// TODO define models in OncoKb.ts
 import {
+    Evidence,
+    EvidenceQueryRes,
     generateQueryVariantId,
     LEVELS
 } from "cbioportal-frontend-commons";
 
 import {Mutation} from "../model/Mutation";
 import {IndicatorQueryResp, IOncoKbData, OncoKbTreatment} from "../model/OncoKb";
-
-// TODO define models in OncoKb.ts
-import {Evidence, EvidenceQueryRes} from "../generated/OncoKbAPI";
 
 // oncogenic value => oncogenic class name
 const ONCOGENIC_CLASS_NAMES:{[oncogenic:string]: string} = {

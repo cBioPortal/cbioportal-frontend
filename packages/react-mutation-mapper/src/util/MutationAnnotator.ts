@@ -1,9 +1,13 @@
 import * as _ from "lodash";
 import {toJS} from "mobx";
 
-import {getMutationTypeFromProteinChange, getProteinPositionFromProteinChange} from "cbioportal-frontend-commons";
-
-import {TranscriptConsequenceSummary, VariantAnnotation, VariantAnnotationSummary} from "../generated/GenomeNexusAPI";
+import {
+    getMutationTypeFromProteinChange,
+    getProteinPositionFromProteinChange,
+    TranscriptConsequenceSummary,
+    VariantAnnotation,
+    VariantAnnotationSummary
+} from "cbioportal-frontend-commons";
 
 import {Mutation} from "../model/Mutation";
 import {genomicLocationString, extractGenomicLocation} from "./MutationUtils";

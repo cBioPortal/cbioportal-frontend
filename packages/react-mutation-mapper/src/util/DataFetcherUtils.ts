@@ -1,8 +1,6 @@
+import {GenomeNexusAPI, GenomeNexusAPIInternal, OncoKbAPI} from "cbioportal-frontend-commons";
 import _ from "lodash";
 
-import GenomeNexusAPI from "../generated/GenomeNexusAPI";
-import GenomeNexusAPIInternal from "../generated/GenomeNexusAPIInternal";
-import OncoKbAPI from "../generated/OncoKbAPI";
 import {Mutation} from "../model/Mutation";
 import {IOncoKbData} from "../model/OncoKb";
 import {uniqueGenomicLocations} from "./MutationUtils";
