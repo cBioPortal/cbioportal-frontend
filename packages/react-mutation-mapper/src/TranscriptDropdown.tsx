@@ -4,7 +4,7 @@ import {observer} from "mobx-react";
 import * as React from "react";
 import Select from "react-select";
 
-import {VariantAnnotation} from "./generated/GenomeNexusAPI";
+import {VariantAnnotation} from "cbioportal-frontend-commons";
 
 import {EnsemblTranscript} from "./model/EnsemblTranscript";
 import {RemoteData} from "./model/RemoteData";

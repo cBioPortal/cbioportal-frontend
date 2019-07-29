@@ -1,6 +1,10 @@
-import {generatePartialEvidenceQuery, ICache, SimpleCache} from "cbioportal-frontend-commons";
-
-import OncoKbAPI, {EvidenceQueries} from "../generated/OncoKbAPI";
+import {
+    EvidenceQueries,
+    generatePartialEvidenceQuery,
+    ICache,
+    OncoKbAPI,
+    SimpleCache
+} from "cbioportal-frontend-commons";
 
 import {IEvidence, Query} from "../model/OncoKb";
 import {initOncoKbClient} from "../util/DataFetcherUtils";
