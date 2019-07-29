@@ -1,6 +1,6 @@
 {
   "name": "react-mutation-mapper",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Generic Mutation Mapper",
   "author": "cBioPortal",
   "license": "GNU Affero General Public License v3.0",
@@ -21,17 +21,11 @@
     "start": "rollup -c rollup.config.ts -w",
     "prepare": "yarn run build",
     "predeploy": "cd example && yarn install && yarn run build",
-    "deploy": "gh-pages -d example/build",
-    "updateGenomeNexusAPI": "yarn run fetchGenomeNexusAPI && yarn run buildGenomeNexusAPI",
-    "fetchGenomeNexusAPI": "curl https://www.genomenexus.org/v2/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > src/generated/GenomeNexusAPI-docs.json && curl https://www.genomenexus.org/v2/api-docs?group=internal | json | grep -v basePath | grep -v termsOfService | grep -v host > src/generated/GenomeNexusAPIInternal-docs.json",
-    "buildGenomeNexusAPI": "node scripts/generate-api.js src/generated GenomeNexusAPI GenomeNexusAPIInternal",
-    "updateOncoKbAPI": "yarn run fetchOncoKbAPI && yarn run buildOncoKbAPI",
-    "fetchOncoKbAPI": "curl https://www.oncokb.org/api/v1/v2/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > src/generated/OncoKbAPI-docs.json",
-    "buildOncoKbAPI": "node scripts/generate-api.js src/generated OncoKbAPI"
+    "deploy": "gh-pages -d example/build"
   },
   "dependencies": {
     "autobind-decorator": "^2.4.0",
-    "cbioportal-frontend-commons": "^0.0.13",
+    "cbioportal-frontend-commons": "^0.0.14",
     "classnames": "^2.2.6",
     "jquery": "^3.3.1",
     "lodash": "^4.17.11",

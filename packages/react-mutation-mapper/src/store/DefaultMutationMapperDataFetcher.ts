@@ -2,11 +2,17 @@ import _ from "lodash";
 import request from "superagent";
 import Response = request.Response;
 
-import {generatePartialEvidenceQuery, generateQueryVariant} from "cbioportal-frontend-commons";
-
-import GenomeNexusAPI, {EnsemblFilter} from "../generated/GenomeNexusAPI";
-import GenomeNexusAPIInternal, {GenomicLocation} from "../generated/GenomeNexusAPIInternal";
-import OncoKbAPI, {EvidenceQueries, Query} from "../generated/OncoKbAPI";
+import {
+    EnsemblFilter,
+    generatePartialEvidenceQuery,
+    generateQueryVariant,
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+    GenomicLocation,
+    OncoKbAPI,
+    Query,
+    EvidenceQueries
+} from "cbioportal-frontend-commons";
 
 import {AggregatedHotspots, Hotspot} from "../model/CancerHotspot";
 import {EnsemblTranscript} from "../model/EnsemblTranscript";
@@ -42,13 +48,13 @@ export class DefaultMutationMapperDataFetcher
 
     constructor(
         private config: MutationMapperDataFetcherConfig,
-        genomeNexusClient?: GenomeNexusAPI,
-        genomeNexusInternalClient?: GenomeNexusAPIInternal,
-        oncoKbClient?: OncoKbAPI
+        genomeNexusClient?: Partial<GenomeNexusAPI>,
+        genomeNexusInternalClient?: Partial<GenomeNexusAPIInternal>,
+        oncoKbClient?: Partial<OncoKbAPI>
     ) {
-        this.genomeNexusClient = genomeNexusClient || initGenomeNexusClient(config.genomeNexusUrl);
-        this.genomeNexusInternalClient = genomeNexusInternalClient || initGenomeNexusInternalClient(config.genomeNexusUrl);
-        this.oncoKbClient = oncoKbClient || initOncoKbClient(config.oncoKbUrl);
+        this.genomeNexusClient = genomeNexusClient as GenomeNexusAPI || initGenomeNexusClient(config.genomeNexusUrl);
+        this.genomeNexusInternalClient = genomeNexusInternalClient as GenomeNexusAPIInternal || initGenomeNexusInternalClient(config.genomeNexusUrl);
+        this.oncoKbClient = oncoKbClient as OncoKbAPI || initOncoKbClient(config.oncoKbUrl);
     }
 
     public async fetchSwissProtAccession(entrezGeneId: number)
