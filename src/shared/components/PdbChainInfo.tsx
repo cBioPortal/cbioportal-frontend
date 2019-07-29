@@ -2,7 +2,7 @@ import * as React from "react";
 import PdbHeaderCache from "../cache/PdbHeaderCache";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
-import TableCellStatusIndicator, {TableCellStatus} from "./TableCellStatus";
+import TableCellStatusIndicator, {TableCellStatus} from "public-lib/components/TableCellStatus";
 import {generatePdbInfoSummary} from "../lib/PdbUtils";
 import TextExpander from "./TextExpander";
 

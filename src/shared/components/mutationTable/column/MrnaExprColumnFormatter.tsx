@@ -6,7 +6,7 @@ import {
     default as MrnaExprRankCache
 } from "shared/cache/MrnaExprRankCache";
 import {Mutation, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 
 export default class MrnaExprColumnFormatter {
 

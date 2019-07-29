@@ -17,11 +17,12 @@ type CustomFilterApplier = (filter: DataFilter,
                             mutation: Mutation,
                             positions: {[position: string]: {position: number}}) => boolean;
 
-// TODO this is now mostly duplicate of DefaultMutationMapperDataStore in react-mutation-mapper
+// TODO this is now mostly duplicate of DefaultMutationMapperDataStore in react-mutation-mapper, reuse DefaultMutationMapperDataStore instead
 export default class MutationMapperDataStore
     extends SimpleLazyMobXTableApplicationDataStore<Mutation[]>
     implements DataStore
 {
+    @observable public dataFilters: DataFilter[] = [];
     @observable public selectionFilters: DataFilter[] = [];
     @observable public highlightFilters: DataFilter[] = [];
 
@@ -37,6 +38,11 @@ export default class MutationMapperDataStore
     @computed
     public get highlightedPositions() {
         return _.keyBy(findAllUniquePositions(this.highlightFilters).map(p => ({position: p})), 'position');
+    }
+
+    @action
+    public clearDataFilters() {
+        this.dataFilters = [];
     }
 
     @action
@@ -97,7 +103,7 @@ export default class MutationMapperDataStore
     }
 
     @autobind
-    private dataSelectFilter(d: Mutation[]): boolean
+    public dataSelectFilter(d: Mutation[]): boolean
     {
         return (
             this.selectionFilters.length > 0 &&
@@ -108,7 +114,7 @@ export default class MutationMapperDataStore
     }
 
     @autobind
-    private dataHighlightFilter(d: Mutation[]): boolean
+    public dataHighlightFilter(d: Mutation[]): boolean
     {
         return (
             this.highlightFilters.length > 0 &&
@@ -119,7 +125,7 @@ export default class MutationMapperDataStore
     }
 
     @autobind
-    private applyFilter(filter: DataFilter, mutation: Mutation, positions: {[position: string]: {position: number}})
+    public applyFilter(filter: DataFilter, mutation: Mutation, positions: {[position: string]: {position: number}})
     {
         if (this.applyCustomFilter) {
             // let the custom filter applier decide how to apply the given filter
