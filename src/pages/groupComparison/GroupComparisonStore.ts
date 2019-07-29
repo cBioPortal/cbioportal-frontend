@@ -57,6 +57,7 @@ import {stringListToIndexSet} from "../../public-lib/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
+import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
 import {fetchAllReferenceGenomeGenes} from "shared/lib/StoreUtils";
 
 export enum OverlapStrategy {
@@ -106,7 +107,7 @@ export default class GroupComparisonStore {
     }
 
     @action public updateOverlapStrategy(strategy:OverlapStrategy) {
-        this.routing.updateRoute({ overlapStrategy: strategy } as Partial<GroupComparisonURLQuery>)
+        this.routing.updateRoute({ overlapStrategy: strategy } as Partial<GroupComparisonURLQuery>);
     }
 
     @computed get overlapStrategy() {
@@ -115,12 +116,12 @@ export default class GroupComparisonStore {
     }
 
     public get usePatientLevelEnrichments() {
-        return this._usePatientLevelEnrichments;
+        return (this.routing.location.query as GroupComparisonURLQuery).patientEnrichments === "true";
     }
 
     @autobind
     @action public setUsePatientLevelEnrichments(e:boolean) {
-        this._usePatientLevelEnrichments = e;
+        this.routing.updateRoute({ patientEnrichments: e.toString()} as Partial<GroupComparisonURLQuery>)
     }
 
     @computed get groupOrder() {
