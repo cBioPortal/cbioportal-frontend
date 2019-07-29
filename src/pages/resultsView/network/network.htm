@@ -135,11 +135,11 @@
             switch(this.innerText) {
                 case "GraphML":
                     e.preventDefault();
-                    formSubmit(apiHost + "network.do?download=on", networkParams, "_self", "post");
+                    formSubmit(apiHost + "network.do?download=on&msgoff=t", networkParams, "_self", "post");
                     break;
                 case "SIF":
                     e.preventDefault();
-                    formSubmit(apiHost + "network.do?download=on&format=sif", networkParams, "_self", "post");
+                    formSubmit(apiHost + "network.do?download=on&format=sif&msgoff=t", networkParams, "_self", "post");
                     break;
             }
 
