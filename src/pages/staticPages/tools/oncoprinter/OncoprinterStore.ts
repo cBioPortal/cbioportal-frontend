@@ -23,7 +23,7 @@ import _ from "lodash";
 import {countMutations, mutationCountByPositionKey} from "../../../resultsView/mutationCountHelpers";
 import {Mutation, MutationCountByPosition} from "../../../../shared/api/generated/CBioPortalAPI";
 import {SampleAlteredMap} from "../../../resultsView/ResultsViewPageStoreUtils";
-import {CancerGene} from "shared/api/generated/OncoKbAPI";
+import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import { AlteredStatus } from "pages/resultsView/mutualExclusivity/MutualExclusivityUtil";
 
 export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "excludeVUS" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;

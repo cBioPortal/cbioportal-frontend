@@ -30,8 +30,8 @@ import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfo
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
-import { VariantAnnotation, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
-import {CancerGene} from "shared/api/generated/OncoKbAPI";
+import { VariantAnnotation, EnsemblTranscript } from "public-lib/api/generated/GenomeNexusAPI";
+import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 
 export default class MutationMapperToolStore
 {

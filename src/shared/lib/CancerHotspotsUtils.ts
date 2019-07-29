@@ -2,7 +2,7 @@ import MobxPromise from "mobxpromise";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {
     default as GenomeNexusAPIInternal, GenomicLocation
-} from "shared/api/generated/GenomeNexusAPIInternal";
+} from "public-lib/api/generated/GenomeNexusAPIInternal";
 import genomeNexusInternalClient from "shared/api/genomeNexusInternalClientInstance";
 import {concatMutationData} from "./StoreUtils";
 import {uniqueGenomicLocations} from "./MutationUtils";
