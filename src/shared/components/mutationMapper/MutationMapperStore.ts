@@ -10,6 +10,9 @@ import {
     IHotspotIndex
 } from "react-mutation-mapper";
 
+import genomeNexusClient from "shared/api/genomeNexusClientInstance";
+import internalGenomeNexusClient from "shared/api/genomeNexusInternalClientInstance";
+import oncoKBClient from "shared/api/oncokbClientInstance";
 import {Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IOncoKbData} from "shared/model/OncoKB";
 import ResidueMappingCache from "shared/cache/ResidueMappingCache";
@@ -20,8 +23,8 @@ import {
 import {
     EnsemblTranscript,
     VariantAnnotation
-} from "shared/api/generated/GenomeNexusAPI";
-import {CancerGene} from "shared/api/generated/OncoKbAPI";
+} from "public-lib/api/generated/GenomeNexusAPI";
+import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments, PDB_IGNORELIST} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
@@ -74,7 +77,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
             uniprotIdUrlTemplate: this.mutationMapperConfig.uniprot_id_url || undefined,
             genomeNexusUrl: this.mutationMapperConfig.genomenexus_url || undefined,
             oncoKbUrl: this.mutationMapperConfig.oncokb_public_api_url || undefined
-        });
+        }, genomeNexusClient, internalGenomeNexusClient, oncoKBClient);
     }
 
     readonly mutationData = remoteData({
