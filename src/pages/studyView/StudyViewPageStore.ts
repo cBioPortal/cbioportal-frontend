@@ -120,7 +120,7 @@ import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import jStat from 'jStat'
-import {CancerGene, Gene as OncokbGene} from "../../shared/api/generated/OncoKbAPI";
+import {CancerGene, Gene as OncokbGene} from "../../public-lib/api/generated/OncoKbAPI";
 
 
 export enum StudyViewPageTabKeyEnum {

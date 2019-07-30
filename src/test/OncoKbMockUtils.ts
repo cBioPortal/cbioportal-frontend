@@ -1,4 +1,4 @@
-import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
+import {IndicatorQueryResp} from "public-lib/api/generated/OncoKbAPI";
 import * as _ from 'lodash';
 
 export function emptyQueryIndicator(): IndicatorQueryResp

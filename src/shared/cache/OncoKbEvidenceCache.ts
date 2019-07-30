@@ -1,4 +1,4 @@
-import {Query} from "shared/api/generated/OncoKbAPI";
+import {Query} from "public-lib/api/generated/OncoKbAPI";
 import oncokbClient from "shared/api/oncokbClientInstance";
 import {generateEvidenceQuery, processEvidence} from "shared/lib/OncoKbUtils";
 import {IEvidence} from "shared/model/OncoKB";
