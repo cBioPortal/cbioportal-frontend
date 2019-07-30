@@ -94,6 +94,8 @@ describe('Mutation Table', function() {
             browser.click("button*=Columns");
             // scroll down to activated "GNOMAD" selection
             browser.scroll(1000, 1000);
+            // wait for gnomad checkbox appear
+            browser.waitForVisible("[data-id=gnomAD]",60000);
             // click "GNOMAD"
             browser.click('//*[text()="gnomAD"]');
             // find frequency
@@ -104,15 +106,16 @@ describe('Mutation Table', function() {
                 var textFrequency = browser.getText(frequency);
                 return textFrequency.length >= 1;
             }, 600000, "Frequency data not in Gnoamd column");
-            // check if the column has 1.1e-5
-            assert.equal(browser.getText(frequency), '4.1e-6');
             // mouse over the frequency
             browser.moveToObject(frequency,0,0);
             // wait for gnomad table showing up
             browser.waitForExist('[data-test="gnomad-table"]', 300000);
-            // check if the first allele number appears
-            let count = browser.getText('//*[text()[contains(.,"15304")]]');
-            assert.ok(count.length > 0);
+            // check if the gnomad table show up
+            let res;
+            browser.waitUntil(() => {
+                res =  executeInBrowser( ()=>$('[data-test="allele-frequency-data"]').length);
+                return res == 9
+            }, 60000, `Failed: There's 9 allele frequency rows in table (${res} found)`);
         });
 
     });
