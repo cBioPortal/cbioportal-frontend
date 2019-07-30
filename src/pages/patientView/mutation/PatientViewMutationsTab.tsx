@@ -12,6 +12,9 @@ import SampleManager from "../sampleManager";
 import {IColumnVisibilityDef} from "../../../shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import VAFLineChart from "./VAFLineChart";
+import {computed, observable} from "mobx";
+import autobind from "autobind-decorator";
+import {remoteData} from "../../../public-lib";
 
 export interface IPatientViewMutationsTabProps {
     store:PatientViewPageStore;
@@ -22,21 +25,39 @@ export interface IPatientViewMutationsTabProps {
 
 @observer
 export default class PatientViewMutationsTab extends React.Component<IPatientViewMutationsTabProps, {}> {
+    @observable.ref mutationsTable:PatientViewSelectableMutationTable|null = null;
+
+    @autobind
+    private tableRef(t:PatientViewSelectableMutationTable|null) {
+        this.mutationsTable = t;
+    }
+
+    readonly selectedMutations = remoteData({
+        await:()=>[this.props.store.mutationData, this.props.store.uncalledMutationData],
+        invoke:()=>{
+            if (!this.mutationsTable || this.mutationsTable.selectedMutations.length === 0) {
+                return Promise.resolve(this.props.store.mergedMutationDataIncludingUncalled);
+            } else {
+                return Promise.resolve(this.mutationsTable.selectedMutations);
+            }
+        }
+    });
+
     readonly vafLineChart = MakeMobxView({
         await:()=>[
-            this.props.store.mutationData,
-            this.props.store.uncalledMutationData,
+            this.selectedMutations,
             this.props.store.samples
         ],
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
         render:()=>(
             this.props.store.samples.result!.length > 1 ?
                 (<VAFLineChart
-                    mutations={this.props.store.mergedMutationDataIncludingUncalled}
+                    mutations={this.selectedMutations.result!}
                     samples={this.props.store.samples.result!}
                 />) :
                 null
-        )
+        ),
+        showLastRenderWhenPending:true
     });
 
     readonly table = MakeMobxView({
@@ -49,6 +70,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
         render:()=>(
             <PatientViewSelectableMutationTable
+                ref={this.tableRef}
                 studyIdToStudy={this.props.store.studyIdToStudy.result!}
                 sampleManager={this.props.sampleManager}
                 sampleIds={this.props.sampleManager ? this.props.sampleManager.getSampleIdsInOrder() : []}
