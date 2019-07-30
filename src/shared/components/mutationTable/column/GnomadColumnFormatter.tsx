@@ -18,7 +18,7 @@ export type GnomadData = {
 
         'alleleNumber': number
 
-        'homozygotes': number
+        'homozygotes': string | undefined
 
         'alleleFrequency': number
 };
@@ -134,7 +134,8 @@ export default class GnomadColumnFormatter {
                             'population': key,
                             'alleleCount': gnomadExome[key].alleleCount + gnomadGenome[key].alleleCount,
                             'alleleNumber': gnomadExome[key].alleleNumber + gnomadGenome[key].alleleNumber,
-                            'homozygotes': gnomadExome[key].homozygotes + gnomadGenome[key].homozygotes,
+                            'homozygotes': gnomadExome[key].homozygotes === undefined || gnomadGenome[key].homozygotes === undefined ? "N/A" 
+                                            : (parseInt(gnomadExome[key].homozygotes!) + parseInt(gnomadGenome[key].homozygotes!)).toString(),
                             'alleleFrequency': GnomadColumnFormatter.calculateAlleleFrequency(
                                                 gnomadExome[key].alleleCount + gnomadGenome[key].alleleCount, 
                                                 gnomadExome[key].alleleNumber + gnomadGenome[key].alleleNumber, null)
@@ -234,7 +235,7 @@ export default class GnomadColumnFormatter {
             'population' : key,
             'alleleCount': data.alleleCount[alleleCountName] ? data.alleleCount[alleleCountName] : 0,
             'alleleNumber': data.alleleNumber[alleleNumberName] ? data.alleleNumber[alleleNumberName] : 0,
-            'homozygotes': data.homozygotes[homozygotesName],
+            'homozygotes': data.homozygotes === undefined ? "N/A" : data.homozygotes[homozygotesName],
             'alleleFrequency': GnomadColumnFormatter.calculateAlleleFrequency(
                             data.alleleCount[alleleCountName], data.alleleNumber[alleleNumberName], data.alleleFrequency[alleleFrequencyName])
         } as GnomadData;
