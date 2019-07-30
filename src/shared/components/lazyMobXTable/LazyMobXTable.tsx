@@ -615,6 +615,10 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         showCountHeader: false
     };
 
+    public get dataStore() {
+        return this.store.dataStore;
+    }
+
     public getDownloadData(): string
     {
         return serializeData(this.store.downloadData);
