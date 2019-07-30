@@ -2,7 +2,7 @@ import * as React from 'react';
 import {observer} from "mobx-react";
 import {computed} from "mobx";
 
-import {EnsemblTranscript} from "shared/api/generated/GenomeNexusAPI";
+import {EnsemblTranscript} from "public-lib/api/generated/GenomeNexusAPI";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
