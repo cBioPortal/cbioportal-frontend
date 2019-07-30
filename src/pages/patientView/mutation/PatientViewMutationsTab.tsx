@@ -11,6 +11,7 @@ import PatientViewPage from "../PatientViewPage";
 import SampleManager from "../sampleManager";
 import {IColumnVisibilityDef} from "../../../shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
+import VAFLineChart from "./VAFLineChart";
 
 export interface IPatientViewMutationsTabProps {
     store:PatientViewPageStore;
@@ -21,6 +22,23 @@ export interface IPatientViewMutationsTabProps {
 
 @observer
 export default class PatientViewMutationsTab extends React.Component<IPatientViewMutationsTabProps, {}> {
+    readonly vafLineChart = MakeMobxView({
+        await:()=>[
+            this.props.store.mutationData,
+            this.props.store.uncalledMutationData,
+            this.props.store.samples
+        ],
+        renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
+        render:()=>(
+            this.props.store.samples.result!.length > 1 ?
+                (<VAFLineChart
+                    mutations={this.props.store.mergedMutationDataIncludingUncalled}
+                    samples={this.props.store.samples.result!}
+                />) :
+                null
+        )
+    });
+
     readonly table = MakeMobxView({
         await:()=>[
             this.props.store.mutationData,
@@ -29,7 +47,6 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
             this.props.store.studyIdToStudy
         ],
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
-        renderError:()=><ErrorMessage/>,
         render:()=>(
             <PatientViewSelectableMutationTable
                 studyIdToStudy={this.props.store.studyIdToStudy.result!}
@@ -71,6 +88,13 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         )
     });
     render() {
-        return this.table.component;
+        return (
+            <div>
+                <div style={{marginBottom:25}}>
+                    {this.vafLineChart.component}
+                </div>
+                {this.table.component}
+            </div>
+        );
     }
 }
