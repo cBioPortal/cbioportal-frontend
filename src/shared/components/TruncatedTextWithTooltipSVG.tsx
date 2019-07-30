@@ -9,6 +9,8 @@ import {truncateWithEllipsisReport} from "../../public-lib/lib/TextTruncationUti
 import {Portal} from "react-portal";
 
 export interface ITruncatedTextSVGProps {
+    x?:number;
+    y?:number;
     text?:string;
     prefixTspans?:any[]; // tspans. typescript doesn't play nice though so it has to be any
     renderTruncatedText?:(truncatedText:string)=>any[]; // tspans. typescript doesn't play nice though so it has to be any
@@ -22,6 +24,9 @@ export interface ITruncatedTextSVGProps {
     textRef?:(elt:SVGTextElement|null)=>void;
     //victory
     datum?:any;
+    transform?:(x:number, y:number)=>string;
+    verticalAnchor?:string;
+    textAnchor?:string;
     style?:{
         fontSize:number;
         fontFamily:string;
@@ -98,7 +103,13 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
     render() {
         const {text, maxWidth, datum, suffix, tooltip,
             prefixTspans, alwaysShowTooltip, renderTruncatedText,
-            tooltipPlacement, textRef, ...rest} = this.props;
+            transform, tooltipPlacement, textRef, ...rest} = this.props;
+
+        let transformApplied = undefined;
+        if (transform && this.props.x !== undefined && this.props.y !== undefined) {
+            transformApplied = transform(this.props.x, this.props.y);
+        }
+
         return (
             <>
                 <text
@@ -106,6 +117,7 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
                     onMouseOut={this.onMouseOut}
                     onMouseMove={this.onMouseMove}
                     ref={textRef}
+                    transform={transformApplied}
                     {...rest}
                 >
                     {this.props.prefixTspans}

@@ -250,3 +250,17 @@ export function uniqueGenomicLocations(mutations: Mutation[]): GenomicLocation[]
 
     return _.values(genomicLocationMap);
 }
+
+
+export function getVariantAlleleFrequency(m:Mutation) {
+    if (Number.isInteger(m.tumorRefCount) && Number.isInteger(m.tumorAltCount)) {
+        const vaf = m.tumorAltCount / (m.tumorAltCount + m.tumorRefCount);
+        if (isNaN(vaf)) {
+            return null;
+        } else {
+            return vaf;
+        }
+    } else {
+        return null;
+    }
+}
