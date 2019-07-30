@@ -101,9 +101,9 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             }));
         });
         // for now: take out any null values
-        const nonNull = allData.filter(dataForMutation=>_.every(dataForMutation, d=>(d.y !== null)));
-
-        return nonNull;
+        return allData.filter(dataForMutation=>{
+            return _.every(dataForMutation, d=>(d.y !== null));
+        });
     }
 
     private tooltipFunction(datum: any) {
@@ -144,72 +144,86 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     render() {
-        return (
-            <>
-                <svg
-                    style={{
-                        width: this.svgWidth,
-                        height: this.svgHeight,
-                        pointerEvents: "all"
-                    }}
-                    height={this.svgHeight}
-                    width={this.svgWidth}
-                    role="img"
-                    viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
-                    onMouseMove={this.onMouseMove}
-                >
-                    <VictoryChart
-                        theme={CBIOPORTAL_VICTORY_THEME}
-                        standalone={false}
-                        domain={{ y: [0, 1] }}
-                        width={this.chartWidth}
-                        height={this.chartHeight}
+        if (this.data.length > 0) {
+            return (
+                <>
+                    <svg
+                        style={{
+                            width: this.svgWidth,
+                            height: this.svgHeight,
+                            pointerEvents: "all"
+                        }}
+                        height={this.svgHeight}
+                        width={this.svgWidth}
+                        role="img"
+                        viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
+                        onMouseMove={this.onMouseMove}
                     >
-                        <VictoryAxis dependentAxis />
-                        <VictoryAxis
-                            style={{
-                                grid: {
-                                    strokeOpacity: (t:number, i:number)=>{ return i === 0 ? 0 : 1; },
-                                }
-                            }}
-                            tickValues={this.props.samples.map(s=>s.uniqueSampleKey)}
-                            tickFormat={(t:string)=>this.sampleMap[t].sampleId}
-                            tickLabelComponent={
-                                <TruncatedTextWithTooltipSVG
-                                    verticalAnchor="start"
-                                    textAnchor="start"
-                                    maxWidth={50}
-                                    transform={(x:number, y:number)=>`rotate(50, ${x}, ${y})`}
-                                    dx={5}
-                                />
-                            }
-                        />
-                        {this.data.map(dataForMutation=>
-                            <VictoryLine
+                        <VictoryChart
+                            theme={CBIOPORTAL_VICTORY_THEME}
+                            standalone={false}
+                            domain={{ y: [0, 1] }}
+                            width={this.chartWidth}
+                            height={this.chartHeight}
+                        >
+                            <VictoryAxis dependentAxis />
+                            <VictoryAxis
                                 style={{
-                                    data: { stroke: LINE_COLOR }
+                                    grid: {
+                                        strokeOpacity: (t:number, i:number)=>{ return i === 0 ? 0 : 1; },
+                                    }
                                 }}
-                                data={dataForMutation}
-                            />
-                        )}
-                        <VictoryScatter
-                            style={{
-                                data: {
-                                    stroke:LINE_COLOR,
-                                    fill:"white",
-                                    strokeWidth:2
+                                tickValues={this.props.samples.map(s=>s.uniqueSampleKey)}
+                                tickFormat={(t:string)=>this.sampleMap[t].sampleId}
+                                tickLabelComponent={
+                                    <TruncatedTextWithTooltipSVG
+                                        verticalAnchor="start"
+                                        textAnchor="start"
+                                        maxWidth={50}
+                                        transform={(x:number, y:number)=>`rotate(50, ${x}, ${y})`}
+                                        dx={5}
+                                    />
                                 }
-                            }}
-                            size={3}
-                            data={_.flatten(this.data)}
-                            events={this.mouseEvents}
-                        />
-                    </VictoryChart>
-                </svg>
-                <Observer>
-                    {this.getTooltipComponent}
-                </Observer>
-            </>
-        );
+                            />
+                            {this.data.map(dataForMutation=>
+                                <VictoryLine
+                                    style={{
+                                        data: { stroke: LINE_COLOR }
+                                    }}
+                                    data={dataForMutation}
+                                />
+                            )}
+                            <VictoryScatter
+                                style={{
+                                    data: {
+                                        stroke:LINE_COLOR,
+                                        fill:"white",
+                                        strokeWidth:2
+                                    }
+                                }}
+                                size={3}
+                                data={_.flatten(this.data)}
+                                events={this.mouseEvents}
+                            />
+                        </VictoryChart>
+                    </svg>
+                    <Observer>
+                        {this.getTooltipComponent}
+                    </Observer>
+                </>
+            );
+        } else {
+            return (
+                <div style={{
+                    display:"flex",
+                    justifyContent:"center",
+                    alignItems:"center",
+                    height:this.svgHeight,
+                    width:"100%"
+                }}>
+                    No mutations selected.
+                </div>
+            );
+        }
     }
 }
