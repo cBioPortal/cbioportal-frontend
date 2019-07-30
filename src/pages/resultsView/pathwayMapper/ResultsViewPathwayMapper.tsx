@@ -24,6 +24,7 @@ import { remoteData } from "cbioportal-frontend-commons";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { fetchGenes } from "shared/lib/StoreUtils";
 import { ErrorMessages } from "shared/enums/ErrorEnums";
+import OqlStatusBanner from "shared/components/oqlStatusBanner/OqlStatusBanner";
 
 interface IResultsViewPathwayMapperProps{
     store: ResultsViewPageStore;
@@ -122,16 +123,18 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
 
             <div style={{width: "99%"}}>
                 <Row>
-                
+
                     { !this.isLoading ? 
-                    (<PathwayMapper isCBioPortal={true} isCollaborative={false} 
+                    [<OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>,
+                        
+                     (<PathwayMapper isCBioPortal={true} isCollaborative={false} 
                                 genes={this.props.store.genes.result as any}
                                 cBioAlterationData={this.cBioData}
                                 queryParameter={QueryParameter.GENE_LIST}
                                 oncoPrintTab={ResultsViewTab.ONCOPRINT}
                                 changePathwayHandler={this.changePathwayHandler}
                                 addGenomicDataHandler={this.addGenomicDataHandler}
-                                tableComponent={PathwayMapperTable}/>)
+                                tableComponent={PathwayMapperTable}/>)]
                     : (<LoadingIndicator isLoading={true} size={"big"} center={true}>
                                 </LoadingIndicator>)
                     }

@@ -63,7 +63,7 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
 
 
                 return(
-                <span data-border="true" data-type="light" data-tip={pwName} data-place="top" data-effect="solid">
+                <span data-border="true" data-type="light" data-tip={pwName} data-place="top" data-effect="solid" data-tip-disable={isPwNameShort}>
                     <Radio 
                         style={{marginTop: 0, marginBottom: 0}}
                         checked={this.props.selectedPathway === d.name} onChange={(e: any) => {this.props.changePathway(d.name);}} >
@@ -91,9 +91,10 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
         this._columns[IPathwayMapperTableColumnType.GENES] = {
             name: "Genes matched",
             render: (d: IPathwayMapperTable) => {
+                const geneTextLength = d.genes.join(" ").length;
 
-
-                return (<span data-border="true" data-type="light" data-tip={d.genes.join(" ")} data-place="top" data-effect="solid">
+                return (<span data-border="true" data-type="light" data-tip={d.genes.join(" ")} 
+                        data-place="top" data-effect="solid" data-tip-disable={geneTextLength < lengthThreshold}>
                     {this.calculateGeneStr(d.genes, lengthThreshold)}
                 </span>);
                 },
