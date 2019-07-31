@@ -3,7 +3,7 @@ import $ from 'jquery';
 import * as _ from 'lodash';
 import 'qtip2';
 import 'qtip2/dist/jquery.qtip.css';
-import { Mutation } from "shared/api/generated/CBioPortalAPI";
+import {Mutation, ReferenceGenomeGene} from "shared/api/generated/CBioPortalAPI";
 import {DEFAULT_CHROMOSOME} from "pages/patientView/genomicOverview/Tracks";
 import {default as chromosomeSizes} from "./chromosomeSizes.json";
 
@@ -67,21 +67,28 @@ export const genomeBuilds: Map<string, string> = new Map([
 ]);
 
 export type ChromosomeSizes = {
-    build: string,
-    size: number[]
+    genomeBuild: string,
+    chromosomeSize: number[]
 };
+
+const chromSizes:ChromosomeSizes[] = chromosomeSizes;
+
+const referenceGenomeSizes:{[genomeBuild:string]:number[]} =
+    chromSizes.reduce(
+            (map:{[genomeBuild:string]:number[]}, next:ChromosomeSizes)=>
+            { map[next.genomeBuild] = next.chromosomeSize || [];return map;},
+            {});
 
 export function getChmInfo(genomeBuild:string) {
     const sel: any = {genomeRef:{}, total:0};
-    const chromSizes:ChromosomeSizes[] = chromosomeSizes;
     let referenceGenome = genomeBuilds.get(genomeBuild);
     if (!referenceGenome || referenceGenome === "") {
         referenceGenome = DEFAULT_CHROMOSOME;
     }
-    const genomeSize = chromSizes.find(c => c.build === referenceGenome);
+    const genomeSize = referenceGenomeSizes[genomeBuild];
     if (genomeSize) {
-        sel.genomeRef = genomeSize.size;
-        sel.total = _.sum(genomeSize.size);
+        sel.genomeRef = genomeSize;
+        sel.total = _.sum(genomeSize);
     }
 
     sel.perc = getChmEndsPerc(sel.genomeRef,sel.total);

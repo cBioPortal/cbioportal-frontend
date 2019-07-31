@@ -134,12 +134,6 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
         );
     });
 
-    @computed
-    get checkForSingleReferenceGenome() {
-        const referenceGenomes = _.uniq(this.store.selectableSelectedStudies.map(s => s.referenceGenome));
-        return (referenceGenomes.length === 1);
-    }
-
     private autosuggest: React.Component<any, any>;
 
     @autobind
@@ -232,12 +226,12 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                                 <Observer>
                                     {() => {
                                     const studyLimitReached = this.store.selectableSelectedStudyIds.length > 50;
-                                    const multipleReferenceGenomes = (!this.checkForSingleReferenceGenome);
+                                    const multipleReferenceGenomes = (!this.store.onlyOneReferenceGenome);
+                                    const limitReachedOrMulGenomesSelected = studyLimitReached||multipleReferenceGenomes;
                                     let tooltipMessage = <span>Open summary of selected studies in a new window.</span>;
                                     if (studyLimitReached) {
                                         tooltipMessage = <span>Studies selected for summary exceeded limit of 50</span>;
-                                    }
-                                    if (multipleReferenceGenomes) {
+                                    } else {
                                         tooltipMessage = <span>Studies selected came from different reference genomes</span>;
                                     }
 
@@ -249,7 +243,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                                                 mouseEnterDelay={0}
                                             >
 
-                                                <Button bsSize="xs" disabled={studyLimitReached||multipleReferenceGenomes} bsStyle="primary"
+                                                <Button bsSize="xs" disabled={limitReachedOrMulGenomesSelected} bsStyle="primary"
                                                         className={classNames('btn-primary')}
                                                         onClick={this.handlers.onSummaryClick}
                                                         style={{

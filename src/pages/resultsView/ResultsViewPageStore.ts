@@ -168,7 +168,7 @@ import {Group} from "../../shared/api/ComparisonGroupClient";
 import {AppStore} from "../../AppStore";
 import {CLINICAL_TRACKS_URL_PARAM} from "../../shared/components/oncoprint/ResultsViewOncoprint";
 import {getNumSamples} from "../groupComparison/GroupComparisonUtils";
-import {DEFAULT_GENOME} from "shared/lib/IGVUtils";
+import {DEFAULT_GENOME} from "pages/resultsView/ResultsViewPageStoreUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -2278,7 +2278,7 @@ export class ResultsViewPageStore {
             this.copyNumberAmpEnrichmentData,
             this.genes
         ],
-        invoke: async () => {
+        invoke: () => {
             const queryGenes = this.genes.result!.map((g:Gene)=>g.hugoGeneSymbol.toUpperCase());
             const mutGenes = this.mutationEnrichmentData.result!.map(
                                     (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
@@ -2289,25 +2289,17 @@ export class ResultsViewPageStore {
         }
     });
 
-    @computed get hugoGeneSymbolToCytoband() {
-        // build reference gene map
-        const result:{[hugosymbol:string]:string} =
-            _.reduce(this.referenceGenes.result,
-                (map:{[hugosymbol:string]:string}, next:ReferenceGenomeGene)=>
-                { map[next.hugoGeneSymbol] = next.cytoband || '';return map;},
-                {});
-        return result;
-    }
-
-    @computed get hugoGeneSymbolToChromosome() {
-        // build reference gene map
-        const result:{[hugosymbol:string]:string} =
-            _.reduce(this.referenceGenes.result,
-                (map:{[hugosymbol:string]:string}, next:ReferenceGenomeGene)=>
-                { map[next.hugoGeneSymbol] = next.chromosome;return map;},
-                {});
-        return result;
-    }
+    readonly hugoGeneSymbolToReferenceGene = remoteData({
+        await: ()=>[
+            this.referenceGenes
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            const result:{[hugosymbol:string]:ReferenceGenomeGene} =
+                _.keyBy(this.referenceGenes.result!, g=>g.hugoGeneSymbol);
+            return Promise.resolve(result);
+        }
+    });
 
     @computed get referenceGenome() {
         const study = this.studies.result?
@@ -2345,7 +2337,8 @@ export class ResultsViewPageStore {
             const res: GeneticEntity[] = [];
             for (const gene of this.genes.result!) {
                 res.push({geneticEntityName: gene.hugoGeneSymbol, geneticEntityType: GeneticEntityType.GENE,
-                    geneticEntityId: gene.entrezGeneId, cytoband: this.hugoGeneSymbolToCytoband[gene.hugoGeneSymbol],
+                    geneticEntityId: gene.entrezGeneId,
+                    cytoband: this.hugoGeneSymbolToReferenceGene.result![gene.hugoGeneSymbol].cytoband,
                     geneticEntityData: gene});
             }
             for (const geneset of this.genesets.result!) {
@@ -2964,6 +2957,7 @@ export class ResultsViewPageStore {
     private getCopyNumberEnrichmentData(copyNumberEventType: "HOMDEL" | "AMP"): Promise<AlterationEnrichment[]> {
 
         const molecularProfile = this.selectedEnrichmentCopyNumberProfile;
+
         return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             copyNumberEventType: copyNumberEventType,
             enrichmentType: "SAMPLE",

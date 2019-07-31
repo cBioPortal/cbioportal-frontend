@@ -279,6 +279,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return (
                         !this.resultsViewPageStore.studies.isComplete ||
                         !this.resultsViewPageStore.genes.isComplete ||
+                        !this.resultsViewPageStore.referenceGenes.isComplete ||
                         !doesQueryHaveCNSegmentData(this.resultsViewPageStore.samples.result)
                     );
                 },
@@ -286,7 +287,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return <MSKTab key={6} id={ResultsViewTab.CN_SEGMENTS}
                                    linkText="CN Segments">
                         <CNSegments store={store}/>
-                    </MSKTab>
+                    </MSKTab>;
                 }
             },
 

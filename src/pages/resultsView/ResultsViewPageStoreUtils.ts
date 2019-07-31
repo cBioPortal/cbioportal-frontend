@@ -1,7 +1,7 @@
 import {
     Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation, Patient, Sample, CancerStudy, ClinicalAttribute, PatientIdentifier,
-    PatientFilter
+    PatientFilter, ReferenceGenomeGene
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action, computed} from "mobx";
 import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
@@ -81,6 +81,8 @@ export function computeCustomDriverAnnotationReport(mutations:Mutation[]):Custom
         tiers: Object.keys(tiersMap)
     };
 }
+
+export const DEFAULT_GENOME = "hg19";
 
 export const initializeCustomDriverAnnotationSettings = action((
     report:CustomDriverAnnotationReport,
@@ -272,7 +274,7 @@ export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:C
                 queriedStudies.push(study);
                 delete unknownIds[study.studyId];
             })
-    
+
         }).catch(() => {}); //this is for private instances. it throws error when the study is not found
 
         queriedVirtualStudies.filter((vs:VirtualStudy) => unknownIds[vs.id]).forEach(virtualStudy=>{
@@ -428,7 +430,7 @@ export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackC
     filteredAlterationData.forEach((element, key) => {
         //1: is not group
         if (element.mergedTrackOqlList === undefined) {
-            const notGroupedOql = element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;                    
+            const notGroupedOql = element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
             const sampleKeysMap = _.keyBy(_.map(notGroupedOql.data, (data) => data.uniqueSampleKey));
             const unProfiledSampleKeysMap = _.keyBy(samples.filter((sample) => {
                 const molecularProfileIds = studyToMolecularProfiles[sample.studyId] ? _.intersection(studyToMolecularProfiles[sample.studyId].map((profile) => profile.molecularProfileId), selectedMolecularProfileIds) : selectedMolecularProfileIds;
@@ -476,9 +478,9 @@ export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackC
     return result;
 }
 
-export function getSingleGeneResultKey(key: number, oqlQuery: string, notGroupedOql: OQLLineFilterOutput<AnnotatedExtendedAlteration>){  
+export function getSingleGeneResultKey(key: number, oqlQuery: string, notGroupedOql: OQLLineFilterOutput<AnnotatedExtendedAlteration>){
     //only gene
-    if ((oql_parser.parse(oqlQuery)![key] as oql_parser.SingleGeneQuery).alterations === false) { 
+    if ((oql_parser.parse(oqlQuery)![key] as oql_parser.SingleGeneQuery).alterations === false) {
         return notGroupedOql.gene;
     }
     //gene with alteration type
@@ -491,7 +493,7 @@ export function getMultipleGeneResultKey(groupedOql: MergedTrackLineFilterOutput
     return groupedOql.label ? groupedOql.label : _.map(groupedOql.list, (data) => data.gene).join(' / ');
 }
 
-export function makeEnrichmentDataPromise<T extends {hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
+export function makeEnrichmentDataPromise<T extends {cytoband:string, hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
     store?:ResultsViewPageStore,
     await: MobxPromise_await,
     getSelectedProfile:()=>MolecularProfile|undefined,
@@ -509,13 +511,21 @@ export function makeEnrichmentDataPromise<T extends {hugoGeneSymbol:string, pVal
             const profile = params.getSelectedProfile();
             if (profile) {
                 let data = await params.fetchData();
-
                 // filter out query genes, if looking at a queried profile
                 // its important that we filter out *before* calculating Q values
                 if (params.store && params.store.selectedMolecularProfiles.result!
                         .findIndex(x=>x.molecularProfileId === profile.molecularProfileId) > -1) {
                     const queryGenes = _.keyBy(params.store.hugoGeneSymbols, x=>x.toUpperCase());
-                    data = data.filter(d=>!(d.hugoGeneSymbol.toUpperCase() in queryGenes));
+                    data = data.filter(d=>!(d.hugoGeneSymbol.toUpperCase() in queryGenes))
+                    data.forEach(
+                        d=> {
+                            if (params.store) {
+                                if (params.store.hugoGeneSymbolToReferenceGene.result) {
+                                    d.cytoband = params.store.hugoGeneSymbolToReferenceGene.result[d.hugoGeneSymbol].cytoband;
+                                }
+                            }
+                        }
+                    );
                 }
 
                 const sortedByPvalue = _.sortBy(data, c=>c.pValue);

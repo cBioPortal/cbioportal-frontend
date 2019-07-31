@@ -459,7 +459,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     <LoadingIndicator isLoading={(this.cnaTableStatus === 'loading' || patientViewPageStore.studyIdToStudy.isPending)} />
 
                                     {
-                                        (patientViewPageStore.studyIdToStudy.isComplete) && (
+                                        (patientViewPageStore.studyIdToStudy.isComplete &&
+                                            patientViewPageStore.referenceGenes.isComplete) && (
                                             <CopyNumberTableWrapper
                                             studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
                                             sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
