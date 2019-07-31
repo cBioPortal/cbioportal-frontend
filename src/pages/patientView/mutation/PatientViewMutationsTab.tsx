@@ -45,8 +45,10 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
 
     readonly vafLineChart = MakeMobxView({
         await:()=>[
+            this.props.store.coverageInformation,
             this.selectedMutations,
-            this.props.store.samples
+            this.props.store.samples,
+            this.props.store.mutationMolecularProfileId
         ],
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
         render:()=>(
@@ -54,6 +56,8 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                 (<VAFLineChart
                     mutations={this.selectedMutations.result!}
                     samples={this.props.store.samples.result!}
+                    coverageInformation={this.props.store.coverageInformation.result!}
+                    mutationProfileId={this.props.store.mutationMolecularProfileId.result!}
                 />) :
                 null
         ),
