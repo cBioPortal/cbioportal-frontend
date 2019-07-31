@@ -12,7 +12,7 @@ import IntegrativeGenomicsViewer from "shared/components/igv/IntegrativeGenomics
 import CNSegmentsDownloader from "shared/components/cnSegments/CNSegmentsDownloader";
 import WindowStore from "shared/components/window/WindowStore";
 import {
-    WHOLE_GENOME, DEFAULT_GENOME, calcSegmentTrackHeight, defaultSegmentTrackProps, generateSegmentFeatures
+    WHOLE_GENOME, calcSegmentTrackHeight, defaultSegmentTrackProps, generateSegmentFeatures
 } from "shared/lib/IGVUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {default as ProgressIndicator, IProgressIndicatorItem} from "shared/components/progressIndicator/ProgressIndicator";
@@ -52,7 +52,9 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
     }
 
     @computed get chromosome() {
-        return this.props.store.hugoGeneSymbolToChromosome[this.activeLocus];
+        if (this.props.store.hugoGeneSymbolToReferenceGene.result) {
+            return this.props.store.hugoGeneSymbolToReferenceGene.result[this.activeLocus].chromosome;
+        }
     }
 
     @computed get filename()
