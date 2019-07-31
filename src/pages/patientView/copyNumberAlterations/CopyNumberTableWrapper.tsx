@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
-import {action, computed} from "mobx";
+import {computed} from "mobx";
 import * as _ from 'lodash';
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import {CancerStudy, DiscreteCopyNumberData, Gene, ReferenceGenomeGene} from "shared/api/generated/CBioPortalAPI";
@@ -60,7 +60,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
     @computed get hugoGeneSymbolToCytoband() {
         // build reference gene map
         const result:{[hugosymbol:string]:string} =
-            _.reduce(this.props.referenceGenes,
+            this.props.referenceGenes!.reduce(
                 (map:{[hugosymbol:string]:string}, next:ReferenceGenomeGene)=>
                 { map[next.hugoGeneSymbol] = next.cytoband || '';return map;},
                 {});

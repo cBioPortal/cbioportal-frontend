@@ -3,7 +3,6 @@ import {CopyNumberSeg} from "shared/api/generated/CBioPortalAPI";
 import {TrackProps} from "shared/components/igv/IntegrativeGenomicsViewer";
 
 export const WHOLE_GENOME = "all";
-export const DEFAULT_GENOME = "hg19";
 
 export type SegmentTrackFeatures = {
     chr: string;
