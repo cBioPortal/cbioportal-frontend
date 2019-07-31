@@ -16,12 +16,15 @@ import autobind from "autobind-decorator";
 import {Portal} from "react-portal";
 import {CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
+import SampleLabelSVG from "../../../shared/components/sampleLabel/SampleLabel";
+import SampleManager from "../sampleManager";
 
 export interface IVAFLineChartProps {
     mutations:Mutation[][];
     samples:Sample[];
     coverageInformation:CoverageInformation;
     mutationProfileId:string;
+    sampleManager:SampleManager|null;
 }
 
 enum NoMutationReason {
@@ -52,20 +55,28 @@ class ScaleCapturer extends React.Component<any, any>{
 }
 
 class Tick extends React.Component<any, any>{
-
     render() {
-        let {samples, text, ...rest} = this.props;
-        text = samples[text].sampleId;
+        let {samples, sampleManager, text:index, ...rest} = this.props;
+        const sampleId = samples[index].sampleId;
         return (
-            <TruncatedTextWithTooltipSVG
-                text={text}
-                {...rest}
-                verticalAnchor="start"
-                textAnchor="start"
-                maxWidth={50}
-                transform={(x:number, y:number)=>`rotate(50, ${x}, ${y})`}
-                dx={5}
-            />
+            <g transform={`rotate(50, ${rest.x}, ${rest.y})`}>
+                <SampleLabelSVG
+                    label={index}
+                    color={sampleManager ? sampleManager.getColorForSample(sampleId) : "black"}
+                    x={rest.x+10}
+                    y={rest.y-5}
+                    r={6}
+                    textDy={-1}
+                />
+                <TruncatedTextWithTooltipSVG
+                    text={sampleId}
+                    {...rest}
+                    verticalAnchor="start"
+                    textAnchor="start"
+                    maxWidth={50}
+                    dx={20}
+                />
+            </g>
         );
     }
 
@@ -145,11 +156,11 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     @computed get svgWidth() {
-        return this.chartWidth;
+        return this.chartWidth + 35; // give room for labels
     }
 
     @computed get svgHeight() {
-        return this.chartHeight + 50; // give room for labels
+        return this.chartHeight + 35; // give room for labels
     }
 
     @computed get sampleOrder() {
@@ -282,10 +293,10 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         } else {
             switch (datum.noMutationReason) {
                 case NoMutationReason.NO_VAF_DATA:
-                    vafExplanation = `${datum.sampleId} has a ${datum.hugoGeneSymbol} ${datum.proteinChange} mutation, but we don't have VAF data for it.`;
+                    vafExplanation = `Mutated, but we don't have VAF data.`;
                     break;
                 case NoMutationReason.NOT_MUTATED:
-                    vafExplanation = `${datum.sampleId} does not have a ${datum.hugoGeneSymbol} ${datum.proteinChange} mutation.`;
+                    vafExplanation = `Not mutated (VAF: 0)`;
                     break;
                 case NoMutationReason.NOT_SEQUENCED:
                 default:
@@ -382,7 +393,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 }}
                                 tickValues={this.props.samples.map((s,i)=>i)}
                                 tickLabelComponent={
-                                    <Tick samples={this.props.samples}/>
+                                    <Tick samples={this.props.samples} sampleManager={this.props.sampleManager}/>
                                 }
                             />
                             {this.data.lineData.map(dataForSingleLine=>
@@ -403,7 +414,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                         strokeWidth:2
                                     }
                                 }}
-                                size={3}
+                                size={2.5}
                                 data={this.data.grayPoints}
                                 events={this.mouseEvents}
                             />
