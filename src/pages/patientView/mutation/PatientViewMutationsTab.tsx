@@ -58,6 +58,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     samples={this.props.store.samples.result!}
                     coverageInformation={this.props.store.coverageInformation.result!}
                     mutationProfileId={this.props.store.mutationMolecularProfileId.result!}
+                    sampleManager={this.props.sampleManager}
                 />) :
                 null
         ),
