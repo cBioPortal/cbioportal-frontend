@@ -112,6 +112,8 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
         );
     }
 
+
+    // It calculates truncated version of gene string
     private calculateGeneStr(genesMatched: string[], lengthThreshold: number){
         let runningLength = 0;
         let geneStr = "";
