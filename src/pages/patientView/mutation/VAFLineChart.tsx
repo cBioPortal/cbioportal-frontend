@@ -14,20 +14,89 @@ import classnames from "classnames";
 import styles from "../../resultsView/survival/styles.module.scss";
 import autobind from "autobind-decorator";
 import {Portal} from "react-portal";
+import {CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
+import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
 
 export interface IVAFLineChartProps {
     mutations:Mutation[][];
     samples:Sample[];
+    coverageInformation:CoverageInformation;
+    mutationProfileId:string;
+}
+
+enum NoMutationReason {
+    NO_VAF_DATA="NO_VAF_DATA",
+    NOT_SEQUENCED="NOT_SEQUENCED",
+    NOT_MUTATED="NOT_MUTATED"
+}
+
+interface IPoint {
+    x:number,
+    y:number,
+    sampleId:string,
+    proteinChange:string,
+    hugoGeneSymbol:string,
+    lineData:IPoint[],
+
+    noMutationReason?:NoMutationReason
 }
 
 const LINE_COLOR = "#c43a31";
+
+class ScaleCapturer extends React.Component<any, any>{
+    render() {
+        this.props.scaleCallback(this.props.scale);
+
+        return <g/>;
+    }
+}
+
+class Tick extends React.Component<any, any>{
+
+    render() {
+        let {samples, text, ...rest} = this.props;
+        text = samples[text].sampleId;
+        return (
+            <TruncatedTextWithTooltipSVG
+                text={text}
+                {...rest}
+                verticalAnchor="start"
+                textAnchor="start"
+                maxWidth={50}
+                transform={(x:number, y:number)=>`rotate(50, ${x}, ${y})`}
+                dx={5}
+            />
+        );
+    }
+
+}
+
+type VictoryScale = { x: (_x:number)=>number, y:(_y:number)=>number };
 
 @observer
 export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}> {
 
     @observable.ref private tooltipModel:any | null = null;
     private mouseEvents = this.makeMouseEvents();
-    @observable mousePosition = { x:0, y:0 };
+    @observable.ref mouseEvent:React.MouseEvent<any>|null = null;
+    @observable.ref private scale:VictoryScale | null = null;
+    @observable.ref private thickLineContainer:any | null = null;
+
+    @autobind
+    private thickLineContainerRef(thickLineContainer:any|null) {
+        this.thickLineContainer = thickLineContainer;
+    }
+
+    @autobind
+    private scaleCallback(scale:VictoryScale) {
+        this.scale = scale;
+    }
+
+    constructor(props:IVAFLineChartProps) {
+        super(props);
+
+        (window as any).vaf = this;
+    }
 
     private makeMouseEvents() {
         return [{
@@ -60,8 +129,8 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     @autobind private onMouseMove(e:React.MouseEvent<any>) {
-        this.mousePosition.x = e.pageX;
-        this.mousePosition.y = e.pageY;
+        e.persist();
+        this.mouseEvent = e;
     }
 
     @computed get chartWidth() {
@@ -92,47 +161,163 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     @computed get data() {
-        const allData = this.props.mutations.map(mutations=>{
-            const sorted = _.sortBy(mutations, m=>this.sampleOrder[m.uniqueSampleKey]);
-            return sorted.map(mutation=>({
-                x: mutation.uniqueSampleKey,
-                y: getVariantAlleleFrequency(mutation),
-                mutation
-            }));
-        });
-        // for now: take out any null values
-        return allData.filter(dataForMutation=>{
-            return _.every(dataForMutation, d=>(d.y !== null));
-        });
+
+        const grayPoints:IPoint[] = [];
+        const lineData:IPoint[][] = [];
+
+        for (const mergedMutation of this.props.mutations) {
+            // determine data points in line for this mutation
+
+            const proteinChange = mergedMutation[0].proteinChange;
+            const hugoGeneSymbol = mergedMutation[0].gene.hugoGeneSymbol;
+
+            // first add data points for each mutation
+            let thisLineData:Partial<IPoint>[] = [];
+            // keep track of which samples have mutations
+            const samplesWithData:{[uniqueSampleKey:string]:boolean} = {};
+            for (const mutation of mergedMutation) {
+                const sampleKey = mutation.uniqueSampleKey;
+                samplesWithData[sampleKey] = true;
+                const sampleId = mutation.sampleId;
+                const vaf = getVariantAlleleFrequency(mutation);
+                if (vaf !== null) {
+                    // has VAF data - add real point
+                    thisLineData.push({
+                        x: this.sampleOrder[sampleKey],
+                        y: vaf,
+                        sampleId,
+                        proteinChange,
+                        hugoGeneSymbol,
+                        lineData:[]
+                    });
+                } else {
+                    // no VAF data - add point which will be extrapolated
+                    thisLineData.push({
+                        x: this.sampleOrder[sampleKey],
+                        sampleId, proteinChange, hugoGeneSymbol,
+                        noMutationReason: NoMutationReason.NO_VAF_DATA,
+                        lineData:[]
+                    });
+                }
+            }
+            // add data points for samples without mutations
+            for (const sample of this.props.samples) {
+                if (!(sample.uniqueSampleKey in samplesWithData)) {
+                    if (!isSampleProfiled(
+                        sample.uniqueSampleKey,
+                        this.props.mutationProfileId,
+                        hugoGeneSymbol,
+                        this.props.coverageInformation
+                    )) {
+                        // not profiled
+                        thisLineData.push({
+                            x: this.sampleOrder[sample.uniqueSampleKey],
+                            sampleId: sample.sampleId, proteinChange, hugoGeneSymbol,
+                            noMutationReason: NoMutationReason.NOT_SEQUENCED,
+                            lineData:[]
+                        });
+                    } else {
+                        thisLineData.push({
+                            x: this.sampleOrder[sample.uniqueSampleKey],
+                            y: 0,
+                            sampleId: sample.sampleId, proteinChange, hugoGeneSymbol,
+                            noMutationReason: NoMutationReason.NOT_MUTATED,
+                            lineData:[]
+                        });
+                    }
+                }
+            }
+            // sort by sample order
+            thisLineData = _.sortBy(thisLineData, d=>d.x);
+            // interpolate missing y values
+            // take out anything from the left and right that dont have data - we'll only interpolate points with data to their left and right
+            while (thisLineData.length > 0 && thisLineData[0].y === undefined) {
+                thisLineData.shift();
+            }
+            while (thisLineData.length > 0 && thisLineData[thisLineData.length-1].y === undefined) {
+                thisLineData.pop();
+            }
+            // interpolate, and pull out interpolated points into gray points array
+            const thisLineDataWithoutGrayPoints:IPoint[] = [];
+            const thisGrayPoints:IPoint[] = [];
+            for (let i=0; i<thisLineData.length; i++) {
+                if (i !== 0 && i !== thisLineData.length-1 && thisLineData[i].y === undefined) {
+                    // find closest defined data to the left and right
+                    let leftIndex = 0, rightIndex = 0;
+                    for (leftIndex=i; leftIndex>=0; leftIndex--) {
+                        if (thisLineData[leftIndex].y !== undefined) {
+                            break;
+                        }
+                    }
+                    for (rightIndex=i; rightIndex<=thisLineData.length-1; rightIndex++) {
+                        if (thisLineData[rightIndex].y !== undefined) {
+                            break;
+                        }
+                    }
+                    const step = 1/(rightIndex - leftIndex);
+                    thisLineData[i].y = (i-leftIndex)*step*(thisLineData[leftIndex].y! + thisLineData[rightIndex].y!);
+                    // add to grayPoints
+                    thisGrayPoints.push(thisLineData[i] as IPoint);
+                } else {
+                    thisLineDataWithoutGrayPoints.push(thisLineData[i] as IPoint);
+                }
+            }
+            // add copy of line data for hover effect
+            for (const point of thisGrayPoints) {
+                point.lineData = thisLineDataWithoutGrayPoints;
+            }
+            for (const point of thisLineDataWithoutGrayPoints) {
+                point.lineData = thisLineDataWithoutGrayPoints;
+            }
+            grayPoints.push(...thisGrayPoints);
+            lineData.push(thisLineDataWithoutGrayPoints);
+        }
+        return { lineData, grayPoints};
     }
 
     private tooltipFunction(datum: any) {
+        let vafExplanation:string;
+        if (datum.noMutationReason === undefined) {
+            vafExplanation = `VAF: ${datum.y.toFixed(2)}`;
+        } else {
+            switch (datum.noMutationReason) {
+                case NoMutationReason.NO_VAF_DATA:
+                    vafExplanation = `${datum.sampleId} has a ${datum.hugoGeneSymbol} ${datum.proteinChange} mutation, but we don't have VAF data for it.`;
+                    break;
+                case NoMutationReason.NOT_MUTATED:
+                    vafExplanation = `${datum.sampleId} does not have a ${datum.hugoGeneSymbol} ${datum.proteinChange} mutation.`;
+                    break;
+                case NoMutationReason.NOT_SEQUENCED:
+                default:
+                    vafExplanation = `${datum.sampleId} is not sequenced for ${datum.hugoGeneSymbol} mutations.`;
+                    break;
+            }
+        }
         return (
             <div>
-                <span>Sample ID: {datum.mutation.sampleId}</span><br/>
-                <span>Protein Change: {datum.mutation.proteinChange}</span><br/>
-                <span>VAF: {datum.y.toFixed(2)} </span>
+                <span>Sample ID: {datum.sampleId}</span><br/>
+                <span>Gene: {datum.hugoGeneSymbol}</span><br/>
+                <span>Protein Change: {datum.proteinChange}</span><br/>
+                <span>{vafExplanation}</span>   
             </div>
         );
     }
 
     @autobind
     private getTooltipComponent() {
-        if (!this.tooltipModel) {
+        if (!this.tooltipModel || !this.mouseEvent) {
             return <span/>;
         } else {
-            const maxWidth = 400;
-            let tooltipPlacement = (this.mousePosition.x > WindowStore.size.width-maxWidth ? "left" : "right");
+            let tooltipPlacement = (this.mouseEvent.clientY < 250 ? "bottom" : "top");
             return (
                 <Portal isOpened={true} node={document.body}>
                     <Popover
-                        arrowOffsetTop={17}
                         className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)}
-                        positionLeft={this.mousePosition.x+(tooltipPlacement === "left" ? -8 : 8)}
-                        positionTop={this.mousePosition.y-17}
+                        positionLeft={this.mouseEvent.pageX}
+                        positionTop={this.mouseEvent.pageY+(tooltipPlacement === "top" ? -7 : 7)}
                         style={{
-                            transform: (tooltipPlacement === "left" ? "translate(-100%,0%)" : undefined),
-                            maxWidth
+                            transform: (tooltipPlacement === "top" ? "translate(-50%,-100%)" : "translate(-50%,0%)"),
+                            maxWidth:400
                         }}
                         placement={tooltipPlacement}
                     >
@@ -143,8 +328,30 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         }
     }
 
+    @autobind
+    private getThickLine() {
+        if (this.tooltipModel !== null && this.scale !== null && this.thickLineContainer !== null) {
+            const points = this.tooltipModel.datum.lineData;
+
+            let d = `M ${this.scale.x(points[0].x)} ${this.scale.y(points[0].y)}`;
+            for (let i=1; i<points.length; i++) {
+                d = `${d} L ${this.scale.x(points[i].x)} ${this.scale.y(points[i].y)}`;
+            }
+            return (
+                <Portal isOpened={true} node={this.thickLineContainer}>
+                    <path
+                        style={{ stroke:"#318ec4", strokeOpacity:1, strokeWidth:4, fillOpacity:0, pointerEvents:"none"}}
+                        d={d}
+                    />
+                </Portal>
+            );
+        } else {
+            return <g/>;
+        }
+    }
+
     render() {
-        if (this.data.length > 0) {
+        if (this.data.lineData.length > 0) {
             return (
                 <>
                     <svg
@@ -173,26 +380,33 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                         strokeOpacity: (t:number, i:number)=>{ return i === 0 ? 0 : 1; },
                                     }
                                 }}
-                                tickValues={this.props.samples.map(s=>s.uniqueSampleKey)}
-                                tickFormat={(t:string)=>this.sampleMap[t].sampleId}
+                                tickValues={this.props.samples.map((s,i)=>i)}
                                 tickLabelComponent={
-                                    <TruncatedTextWithTooltipSVG
-                                        verticalAnchor="start"
-                                        textAnchor="start"
-                                        maxWidth={50}
-                                        transform={(x:number, y:number)=>`rotate(50, ${x}, ${y})`}
-                                        dx={5}
-                                    />
+                                    <Tick samples={this.props.samples}/>
                                 }
                             />
-                            {this.data.map(dataForMutation=>
+                            {this.data.lineData.map(dataForSingleLine=>
                                 <VictoryLine
                                     style={{
-                                        data: { stroke: LINE_COLOR }
+                                        data: { stroke: LINE_COLOR, strokeOpacity:0.5 }
                                     }}
-                                    data={dataForMutation}
+                                    data={dataForSingleLine}
                                 />
                             )}
+                            <ScaleCapturer scaleCallback={this.scaleCallback}/>
+                            <g ref={this.thickLineContainerRef}/>
+                            <VictoryScatter
+                                style={{
+                                    data: {
+                                        stroke:"gray",
+                                        fill:"white",
+                                        strokeWidth:2
+                                    }
+                                }}
+                                size={3}
+                                data={this.data.grayPoints}
+                                events={this.mouseEvents}
+                            />
                             <VictoryScatter
                                 style={{
                                     data: {
@@ -202,10 +416,13 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                     }
                                 }}
                                 size={3}
-                                data={_.flatten(this.data)}
+                                data={_.flatten(this.data.lineData)}
                                 events={this.mouseEvents}
                             />
                         </VictoryChart>
+                        <Observer>
+                            {this.getThickLine}
+                        </Observer>
                     </svg>
                     <Observer>
                         {this.getTooltipComponent}

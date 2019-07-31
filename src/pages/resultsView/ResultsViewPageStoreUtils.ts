@@ -191,7 +191,7 @@ export function getOncoKbOncogenic(response:IndicatorQueryResp):string {
 export function computeGenePanelInformation(
     genePanelData:GenePanelData[],
     genePanels:GenePanel[],
-    samples: Pick<Sample, "uniqueSampleKey">[],
+    samples: Pick<Sample, "uniqueSampleKey"|"uniquePatientKey">[],
     patients: Pick<Patient, "uniquePatientKey">[],
     genes:Pick<Gene, "entrezGeneId"|"hugoGeneSymbol">[]
 ):CoverageInformation {
