@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import {
-    unescapeTabDelimited, longestCommonStartingSubstring, stringListToIndexSet, stringListToSet, unquote
+    unescapeTabDelimited, longestCommonStartingSubstring, stringListToIndexSet, stringListToSet, unquote, isUrl
 } from "./StringUtils";
 
 describe("longestCommonStartingSubstring", ()=>{
@@ -37,5 +37,17 @@ describe("unquote and decodeTabDelimited", () => {
     it("unquotes only wrapping quotes and replaces all \\t and \\n characters in a string", () => {
         assert.equal(unquote(unescapeTabDelimited("\"cBioPortal\\n'Redefining'\\t\"Data Analysis\"\"")),
             "cBioPortal\n\'Redefining\'\t\"Data Analysis\"");
+    });
+});
+
+
+describe("isUrl", () => {
+    it("gives correct result on various inputs", ()=>{
+        assert.isFalse(isUrl("example.com"))
+        assert.isFalse(isUrl("http"))
+        assert.isTrue(isUrl("http://example.com"))
+        assert.isTrue(isUrl("https://example.com"))
+        assert.isTrue(isUrl("http://www.example.com"))
+        assert.isTrue(isUrl("https://www.example.com"))
     });
 });
