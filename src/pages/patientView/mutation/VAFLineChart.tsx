@@ -45,6 +45,7 @@ interface IPoint {
 }
 
 const LINE_COLOR = "#c43a31";
+const THICK_LINE_STROKE_WIDTH = 6;
 
 class ScaleCapturer extends React.Component<any, any>{
     render() {
@@ -61,7 +62,7 @@ class Tick extends React.Component<any, any>{
         return (
             <g transform={`rotate(50, ${rest.x}, ${rest.y})`}>
                 <SampleLabelSVG
-                    label={index}
+                    label={index+1}
                     color={sampleManager ? sampleManager.getColorForSample(sampleId) : "black"}
                     x={rest.x+10}
                     y={rest.y-5}
@@ -87,7 +88,9 @@ type VictoryScale = { x: (_x:number)=>number, y:(_y:number)=>number };
 @observer
 export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}> {
 
-    @observable.ref private tooltipModel:any | null = null;
+    @observable.ref private tooltipDatum:any | null = null;
+    @observable private tooltipOnPoint = false;
+
     private mouseEvents = this.makeMouseEvents();
     @observable.ref mouseEvent:React.MouseEvent<any>|null = null;
     @observable.ref private scale:VictoryScale | null = null;
@@ -118,7 +121,13 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         {
                             target: "data",
                             mutation: (props: any) => {
-                                this.tooltipModel = props;
+                                if (props.datum) {
+                                    this.tooltipDatum = props.datum;
+                                    this.tooltipOnPoint = true;
+                                } else if (props.data.length > 0) {
+                                    this.tooltipDatum = props.data[0];
+                                    this.tooltipOnPoint = false;
+                                }
                                 return null;
                             }
                         }
@@ -129,7 +138,8 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         {
                             target: "data",
                             mutation: () => {
-                                this.tooltipModel = null;
+                                this.tooltipDatum = null;
+                                this.tooltipOnPoint = false;
                                 return null;
                             }
                         }
@@ -287,36 +297,45 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     private tooltipFunction(datum: any) {
-        let vafExplanation:string;
-        if (datum.noMutationReason === undefined) {
-            vafExplanation = `VAF: ${datum.y.toFixed(2)}`;
-        } else {
-            switch (datum.noMutationReason) {
-                case NoMutationReason.NO_VAF_DATA:
-                    vafExplanation = `Mutated, but we don't have VAF data.`;
-                    break;
-                case NoMutationReason.NOT_MUTATED:
-                    vafExplanation = `Not mutated (VAF: 0)`;
-                    break;
-                case NoMutationReason.NOT_SEQUENCED:
-                default:
-                    vafExplanation = `${datum.sampleId} is not sequenced for ${datum.hugoGeneSymbol} mutations.`;
-                    break;
+        let sampleSpecificSection:any = null;
+        if (this.tooltipOnPoint) {
+            // show tooltip when hovering a point
+            let vafExplanation:string;
+            if (datum.noMutationReason === undefined) {
+                vafExplanation = `VAF: ${datum.y.toFixed(2)}`;
+            } else {
+                switch (datum.noMutationReason) {
+                    case NoMutationReason.NO_VAF_DATA:
+                        vafExplanation = `Mutated, but we don't have VAF data.`;
+                        break;
+                    case NoMutationReason.NOT_MUTATED:
+                        vafExplanation = `Not mutated (VAF: 0)`;
+                        break;
+                    case NoMutationReason.NOT_SEQUENCED:
+                    default:
+                        vafExplanation = `${datum.sampleId} is not sequenced for ${datum.hugoGeneSymbol} mutations.`;
+                        break;
+                }
             }
+            sampleSpecificSection = (
+                <>
+                    <span>Sample ID: {datum.sampleId}</span><br/>
+                    <span>{vafExplanation}</span>
+                </>
+            );
         }
         return (
             <div>
-                <span>Sample ID: {datum.sampleId}</span><br/>
                 <span>Gene: {datum.hugoGeneSymbol}</span><br/>
                 <span>Protein Change: {datum.proteinChange}</span><br/>
-                <span>{vafExplanation}</span>   
+                {sampleSpecificSection}
             </div>
         );
     }
 
     @autobind
     private getTooltipComponent() {
-        if (!this.tooltipModel || !this.mouseEvent) {
+        if (!this.tooltipDatum || !this.mouseEvent) {
             return <span/>;
         } else {
             let tooltipPlacement = (this.mouseEvent.clientY < 250 ? "bottom" : "top");
@@ -332,7 +351,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         }}
                         placement={tooltipPlacement}
                     >
-                        {this.tooltipFunction(this.tooltipModel.datum)}
+                        {this.tooltipFunction(this.tooltipDatum)}
                     </Popover>
                 </Portal>
             );
@@ -341,8 +360,8 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
 
     @autobind
     private getThickLine() {
-        if (this.tooltipModel !== null && this.scale !== null && this.thickLineContainer !== null) {
-            const points = this.tooltipModel.datum.lineData;
+        if (this.tooltipDatum !== null && this.scale !== null && this.thickLineContainer !== null) {
+            const points = this.tooltipDatum.lineData;
 
             let d = `M ${this.scale.x(points[0].x)} ${this.scale.y(points[0].y)}`;
             for (let i=1; i<points.length; i++) {
@@ -351,7 +370,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             return (
                 <Portal isOpened={true} node={this.thickLineContainer}>
                     <path
-                        style={{ stroke:"#318ec4", strokeOpacity:1, strokeWidth:4, fillOpacity:0, pointerEvents:"none"}}
+                        style={{ stroke:"#318ec4", strokeOpacity:1, strokeWidth:THICK_LINE_STROKE_WIDTH, fillOpacity:0, pointerEvents:"none"}}
                         d={d}
                     />
                 </Portal>
@@ -397,12 +416,21 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 }
                             />
                             {this.data.lineData.map(dataForSingleLine=>
-                                <VictoryLine
-                                    style={{
-                                        data: { stroke: LINE_COLOR, strokeOpacity:0.5 }
-                                    }}
-                                    data={dataForSingleLine}
-                                />
+                                [
+                                    <VictoryLine
+                                        style={{
+                                            data: { stroke: LINE_COLOR, strokeOpacity:0.5, pointerEvents:"none" }
+                                        }}
+                                        data={dataForSingleLine}
+                                    />,
+                                    <VictoryLine
+                                        style={{
+                                            data: { strokeOpacity:0, pointerEvents:"stroke", strokeWidth:THICK_LINE_STROKE_WIDTH }
+                                        }}
+                                        data={dataForSingleLine}
+                                        events={this.mouseEvents}
+                                    />
+                                ]
                             )}
                             <ScaleCapturer scaleCallback={this.scaleCallback}/>
                             <g ref={this.thickLineContainerRef}/>
