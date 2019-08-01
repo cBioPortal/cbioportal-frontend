@@ -56,14 +56,21 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     currentGenes: string[];
 
     @observable
+    validGenes: {[gene: string] : boolean};
+
+    @observable
+    activeToasts: React.ReactText[];
+
+    @observable
     remoteGenes = remoteData<string[]>({
         invoke: async () => {
             const genes = await fetchGenes(this.currentGenes);
-
+            
             return genes.map(gene => (gene.hugoGeneSymbol));
         },
         onResult:(genes:string[])=>{
             this.geneChangeHandler(genes);
+            genes.forEach(gene => {this.validGenes[gene] = true;});
         }
     });
     addGenomicData: (alterationData: ICBioData[]) => void;
@@ -74,10 +81,11 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
         this.cBioData = [];
         this.tableData = [];
         this.isLoading = false;
+        this.validGenes = {};
+        this.activeToasts = [];
     }
 
     render(){
-
 
         // Alteration data of query genes are loaded.
         this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
@@ -116,7 +124,7 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
 
             this.addGenomicData(this.cBioData);
             // Toasts are removed with delay
-            setTimeout(() => {toast.dismiss();}, 1000);
+            setTimeout(() => {this.activeToasts.forEach(tId => {toast.dismiss(tId);});}, 1000);
         }
 
         // Call to this.remoteGenes.result helps remoteData to work.
@@ -137,7 +145,9 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
                                 oncoPrintTab={ResultsViewTab.ONCOPRINT}
                                 changePathwayHandler={this.changePathwayHandler}
                                 addGenomicDataHandler={this.addGenomicDataHandler}
-                                tableComponent={PathwayMapperTable}/>),
+                                tableComponent={PathwayMapperTable}
+                                isValidGene={this.isValidGene}
+                                toast={toast}/>),
                         (<ToastContainer/>)
                      ]
                     : (<LoadingIndicator isLoading={true} size={"big"} center={true}>
@@ -146,6 +156,12 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
                 </Row>
             </div>);
     }
+
+
+    @autobind
+    isValidGene(gene: string){
+        return this.validGenes.hasOwnProperty(gene);
+    }
     
     @autobind
     addGenomicDataHandler(addGenomicData: (alterationData: ICBioData[]) => void){
@@ -153,11 +169,11 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     }
 
     geneChangeHandler(genes: string[]){
-
         // If there is no new genes then no need to initiate a new store.
         if(genes.length > 0){
             this.storeForAllData = this.props.initStore(this.props.appStore, genes.join(" "));
-            toast("Alteration data of genes not listed in gene list might take a while to load!", {autoClose: false, position: "bottom-left"});
+            const tId = toast("Alteration data of genes not listed in gene list might take a while to load!", {autoClose: false, position: "bottom-left"});
+            this.activeToasts.push(tId);
         }
     }
 
