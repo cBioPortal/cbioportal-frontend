@@ -2274,18 +2274,21 @@ export class ResultsViewPageStore {
     readonly referenceGenes = remoteData<ReferenceGenomeGene[]>({
         await: ()=>[
             this.studies,
-            this.mutationEnrichmentData,
-            this.copyNumberAmpEnrichmentData,
+            this._mutationEnrichmentDataWithoutCytoband,
+            this._copyNumberHomdelEnrichmentData,
+            this._copyNumberAmpEnrichmentData,
             this.genes
         ],
         invoke: () => {
             const queryGenes = this.genes.result!.map((g:Gene)=>g.hugoGeneSymbol.toUpperCase());
-            const mutGenes = this.mutationEnrichmentData.result!.map(
+            const mutGenes = this._mutationEnrichmentDataWithoutCytoband.result!.map(
                                     (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
-            const cnvGenes = this.copyNumberAmpEnrichmentData.result!.map(
+            const cnvHomdelGenes = this._copyNumberHomdelEnrichmentData.result!.map(
                                         (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
+            const cnvGenes = this._copyNumberAmpEnrichmentData.result!.map(
+                (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
             return fetchReferenceGenomeGenes(this.studies.result[0].referenceGenome,
-                                             this.hugoGeneSymbols.concat(queryGenes, mutGenes, cnvGenes));
+                                             this.hugoGeneSymbols.concat(queryGenes, mutGenes, cnvGenes, cnvHomdelGenes));
         }
     });
 
@@ -2298,6 +2301,54 @@ export class ResultsViewPageStore {
             const result:{[hugosymbol:string]:ReferenceGenomeGene} =
                 _.keyBy(this.referenceGenes.result!, g=>g.hugoGeneSymbol);
             return Promise.resolve(result);
+        }
+    });
+
+    readonly mutationEnrichmentData  = remoteData({
+        await: ()=>[
+            this._mutationEnrichmentDataWithoutCytoband,
+            this.hugoGeneSymbolToReferenceGene
+        ],
+    invoke: ()=>{
+        // build reference gene map
+        const data = this._mutationEnrichmentDataWithoutCytoband.result!;
+        data.forEach((d=>{
+            d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
+        }))
+
+        return Promise.resolve(data);
+    }
+    });
+
+    readonly copyNumberHomdelEnrichmentData  = remoteData({
+        await: ()=>[
+            this._copyNumberHomdelEnrichmentData,
+            this.hugoGeneSymbolToReferenceGene
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            const data = this._copyNumberHomdelEnrichmentData.result!;
+            data.forEach((d=>{
+                d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
+            }))
+
+            return Promise.resolve(data);
+        }
+    });
+
+    readonly copyNumberAmpEnrichmentData  = remoteData({
+        await: ()=>[
+            this._copyNumberAmpEnrichmentData,
+            this.hugoGeneSymbolToReferenceGene
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            const data = this._copyNumberAmpEnrichmentData.result!;
+            data.forEach((d=>{
+                d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
+            }))
+
+            return Promise.resolve(data);
         }
     });
 
@@ -2898,7 +2949,7 @@ export class ResultsViewPageStore {
         invoke: async () => pickMutationEnrichmentProfiles(this.molecularProfilesInStudies.result!)
     });
 
-    readonly mutationEnrichmentData = makeEnrichmentDataPromise({
+    readonly _mutationEnrichmentDataWithoutCytoband = makeEnrichmentDataPromise({
         store:this,
         await: () => [
             this.alteredSamples,
@@ -2933,7 +2984,7 @@ export class ResultsViewPageStore {
         invoke: async () => pickCopyNumberEnrichmentProfiles(this.molecularProfilesInStudies.result!)
     });
 
-    readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
+    readonly _copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
         store:this,
         await: () => [
             this.alteredSamples,
@@ -2944,7 +2995,7 @@ export class ResultsViewPageStore {
         }
     );
 
-    readonly copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
+    readonly _copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
         store:this,
         await: () => [
             this.alteredSamples,
