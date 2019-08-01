@@ -106,12 +106,6 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         this.scale = scale;
     }
 
-    constructor(props:IVAFLineChartProps) {
-        super(props);
-
-        (window as any).vaf = this;
-    }
-
     private makeMouseEvents() {
         return [{
             target: "data",
