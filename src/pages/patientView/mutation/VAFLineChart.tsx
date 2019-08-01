@@ -57,8 +57,8 @@ class ScaleCapturer extends React.Component<any, any>{
 
 class Tick extends React.Component<any, any>{
     render() {
-        let {samples, sampleManager, text:index, ...rest} = this.props;
-        const sampleId = samples[index].sampleId;
+        let {sampleIdOrder, sampleManager, text:index, ...rest} = this.props;
+        const sampleId = sampleIdOrder[index];
         return (
             <g transform={`rotate(50, ${rest.x}, ${rest.y})`}>
                 <SampleLabelSVG
@@ -173,12 +173,18 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         return this.chartHeight + 35; // give room for labels
     }
 
-    @computed get sampleOrder() {
-        return stringListToIndexSet(this.props.samples.map(s=>s.uniqueSampleKey));
+    @computed get sampleIdOrder() {
+        let order:string[];
+        if (this.props.sampleManager) {
+            order = this.props.sampleManager.getSampleIdsInOrder();
+        } else {
+            order = this.props.samples.map(s=>s.sampleId);
+        }
+        return order;
     }
 
-    @computed get sampleMap() {
-        return _.keyBy(this.props.samples, s=>s.uniqueSampleKey);
+    @computed get sampleIdIndex() {
+        return stringListToIndexSet(this.sampleIdOrder);
     }
 
     @computed get data() {
@@ -204,7 +210,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                 if (vaf !== null) {
                     // has VAF data - add real point
                     thisLineData.push({
-                        x: this.sampleOrder[sampleKey],
+                        x: this.sampleIdIndex[sampleId],
                         y: vaf,
                         sampleId,
                         proteinChange,
@@ -214,7 +220,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                 } else {
                     // no VAF data - add point which will be extrapolated
                     thisLineData.push({
-                        x: this.sampleOrder[sampleKey],
+                        x: this.sampleIdIndex[sampleId],
                         sampleId, proteinChange, hugoGeneSymbol,
                         noMutationReason: NoMutationReason.NO_VAF_DATA,
                         lineData:[]
@@ -232,14 +238,14 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     )) {
                         // not profiled
                         thisLineData.push({
-                            x: this.sampleOrder[sample.uniqueSampleKey],
+                            x: this.sampleIdIndex[sample.sampleId],
                             sampleId: sample.sampleId, proteinChange, hugoGeneSymbol,
                             noMutationReason: NoMutationReason.NOT_SEQUENCED,
                             lineData:[]
                         });
                     } else {
                         thisLineData.push({
-                            x: this.sampleOrder[sample.uniqueSampleKey],
+                            x: this.sampleIdIndex[sample.sampleId],
                             y: 0,
                             sampleId: sample.sampleId, proteinChange, hugoGeneSymbol,
                             noMutationReason: NoMutationReason.NOT_MUTATED,
@@ -412,7 +418,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 }}
                                 tickValues={this.props.samples.map((s,i)=>i)}
                                 tickLabelComponent={
-                                    <Tick samples={this.props.samples} sampleManager={this.props.sampleManager}/>
+                                    <Tick sampleIdOrder={this.sampleIdOrder} sampleManager={this.props.sampleManager}/>
                                 }
                             />
                             {this.data.lineData.map(dataForSingleLine=>
