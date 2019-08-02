@@ -454,6 +454,11 @@ export default class ResultsViewPage extends React.Component<
             {
                 id:ResultsViewTab.PATHWAY_MAPPER,
                 hide:()=>{
+
+                    if(!AppConfig.serverConfig.show_pathway_mapper){
+                        return true;
+                    }
+
                     if (!this.resultsViewPageStore.studies.isComplete) {
                         return true;
                     } else {
