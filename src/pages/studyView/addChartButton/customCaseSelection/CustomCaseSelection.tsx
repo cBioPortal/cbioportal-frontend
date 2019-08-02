@@ -162,7 +162,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                         <span
                             className={styles.fillIds}
                             onClick={this.onClick}>
-                            Use currently selected samples/patients
+                            currently selected
                         </span>
 
                         <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
