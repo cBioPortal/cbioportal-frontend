@@ -575,7 +575,6 @@ export class PatientViewPageStore {
         invoke: async() => {
             const mutationFilter = {
                 sampleIds: this.sampleIds,
-                clusterId: "1",
             } as MutationFilter;
 
             async function fetchMutationDataFromFile() {
