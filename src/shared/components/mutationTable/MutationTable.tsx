@@ -45,9 +45,9 @@ import classnames from 'classnames';
 import {IPaginationControlsProps} from "../paginationControls/PaginationControls";
 import {IColumnVisibilityControlsProps} from "../columnVisibilityControls/ColumnVisibilityControls";
 import MobxPromise from "mobxpromise";
-import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
+import { VariantAnnotation } from "public-lib/api/generated/GenomeNexusAPI";
 import HgvscColumnFormatter from "./column/HgvscColumnFormatter";
-import {CancerGene} from "shared/api/generated/OncoKbAPI";
+import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import GnomadColumnFormatter from "./column/GnomadColumnFormatter";
 import ClinVarColumnFormatter from "./column/ClinVarColumnFormatter";
 

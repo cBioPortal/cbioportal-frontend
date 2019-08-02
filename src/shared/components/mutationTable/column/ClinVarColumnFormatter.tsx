@@ -2,8 +2,8 @@ import * as React from 'react';
 import {Circle} from "better-react-spinkit";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
-import {MyVariantInfoAnnotation} from 'shared/api/generated/GenomeNexusAPI';
+import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
+import {MyVariantInfoAnnotation} from 'public-lib/api/generated/GenomeNexusAPI';
 import GenomeNexusMyVariantInfoCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusMyVariantInfoCache";
 import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 

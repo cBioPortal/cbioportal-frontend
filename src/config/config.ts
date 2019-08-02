@@ -23,10 +23,10 @@ import {proxyAllPostMethodsOnClient} from "../shared/lib/proxyPost";
 import CBioPortalAPI from "../shared/api/generated/CBioPortalAPI";
 import CBioPortalAPIInternal from "../shared/api/generated/CBioPortalAPIInternal";
 import CivicAPI from "../shared/api/CivicAPI";
-import Genome2StructureAPI from "../shared/api/generated/Genome2StructureAPI";
-import GenomeNexusAPI from "../shared/api/generated/GenomeNexusAPI";
-import GenomeNexusAPIInternal from "../shared/api/generated/GenomeNexusAPIInternal";
-import OncoKbAPI from "../shared/api/generated/OncoKbAPI";
+import Genome2StructureAPI from "../public-lib/api/generated/Genome2StructureAPI";
+import GenomeNexusAPI from "../public-lib/api/generated/GenomeNexusAPI";
+import GenomeNexusAPIInternal from "../public-lib/api/generated/GenomeNexusAPIInternal";
+import OncoKbAPI from "../public-lib/api/generated/OncoKbAPI";
 
 
 const config:any = (window as any).frontendConfig || { serverConfig:{} };

@@ -1,19 +1,18 @@
 import * as _ from "lodash";
-import {computed, observable} from "mobx";
+import {computed} from "mobx";
 import MobxPromise, {cached, labelMobxPromises} from "mobxpromise";
 
 import {
-    DataFilter,
-    defaultHotspotFilter,
     DefaultMutationMapperDataFetcher,
     DefaultMutationMapperStore,
-    defaultOncoKbFilter,
     getMutationsToTranscriptId,
     groupOncoKbIndicatorDataByMutations,
-    IHotspotIndex,
-    isHotspot
+    IHotspotIndex
 } from "react-mutation-mapper";
 
+import genomeNexusClient from "shared/api/genomeNexusClientInstance";
+import internalGenomeNexusClient from "shared/api/genomeNexusInternalClientInstance";
+import oncoKBClient from "shared/api/oncokbClientInstance";
 import {Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IOncoKbData} from "shared/model/OncoKB";
 import ResidueMappingCache from "shared/cache/ResidueMappingCache";
@@ -23,11 +22,9 @@ import {
 } from "shared/lib/StoreUtils";
 import {
     EnsemblTranscript,
-    VariantAnnotation,
-    GenomicLocation,
-    TranscriptConsequence
-} from "shared/api/generated/GenomeNexusAPI";
-import {CancerGene} from "shared/api/generated/OncoKbAPI";
+    VariantAnnotation
+} from "public-lib/api/generated/GenomeNexusAPI";
+import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments, PDB_IGNORELIST} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
@@ -36,8 +33,6 @@ import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownload
 import PdbChainDataStore from "./PdbChainDataStore";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import {
-    uniqueGenomicLocations,
-    genomicLocationString,
     groupMutationsByProteinStartPos,
     countUniqueMutations
 } from "shared/lib/MutationUtils";
@@ -52,8 +47,6 @@ export interface IMutationMapperStoreConfig {
 
 export default class MutationMapperStore extends DefaultMutationMapperStore
 {
-    @observable public activeTranscript: string | undefined = undefined;
-
     constructor(
         protected mutationMapperConfig: IMutationMapperConfig,
         protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
@@ -84,44 +77,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
             uniprotIdUrlTemplate: this.mutationMapperConfig.uniprot_id_url || undefined,
             genomeNexusUrl: this.mutationMapperConfig.genomenexus_url || undefined,
             oncoKbUrl: this.mutationMapperConfig.oncokb_public_api_url || undefined
-        });
-    }
-
-    public get mutations(): Mutation[] {
-        const canonicalTranscriptId = this.canonicalTranscript.result &&
-            this.canonicalTranscript.result.transcriptId;
-
-        if (this.canonicalTranscript.isPending || (this.mutationMapperStoreConfig.filterMutationsBySelectedTranscript && (this.transcriptsWithAnnotations.isPending || this.indexedVariantAnnotations.isPending))) {
-            return [];
-        } else {
-            if (this.mutationMapperStoreConfig.filterMutationsBySelectedTranscript) {
-                // pick default transcript if not activeTranscript
-                if (this.activeTranscript === undefined) {
-                    if (this.transcriptsWithAnnotations.result && this.transcriptsWithAnnotations.result.length > 0 && canonicalTranscriptId && !this.transcriptsWithAnnotations.result.includes(canonicalTranscriptId)) {
-                        // if there are annotated transcripts and activeTranscipt does
-                        // not have any, change the active transcript
-                        this.activeTranscript = this.transcriptsWithAnnotations.result[0];
-                    } else {
-                        this.activeTranscript = canonicalTranscriptId;
-                    }
-                }
-                if (this.activeTranscript && this.indexedVariantAnnotations.result && !_.isEmpty(this.indexedVariantAnnotations.result)) {
-                    return getMutationsToTranscriptId(this.getMutations(), this.activeTranscript, this.indexedVariantAnnotations.result) as Mutation[];
-                } else {
-                    // this shouldn't happen unless error occurs with annotation
-                    // TODO: handle error in annotation more gracefully instead
-                    // of just showing all mutations
-                    return this.getMutations();
-                }
-            } else {
-                try {
-                    if (this.activeTranscript === undefined) {
-                        this.activeTranscript = canonicalTranscriptId;
-                    }
-                } catch (ex) {}
-                return this.getMutations();
-            }
-        }
+        }, genomeNexusClient, internalGenomeNexusClient, oncoKBClient);
     }
 
     readonly mutationData = remoteData({
@@ -133,7 +89,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
             }
         },
         invoke: async () => {
-            return this.mutations;
+            return this.mutations as Mutation[];
         }
     }, []);
 
@@ -154,44 +110,6 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
         }
     }, []);
 
-    readonly transcriptsWithAnnotations = remoteData<string[] | undefined>({
-        await: () => [
-            this.indexedVariantAnnotations,
-            this.allTranscripts,
-            this.transcriptsWithProteinLength
-        ],
-        invoke: async()=>{
-            if (this.indexedVariantAnnotations.result && this.allTranscripts.result && this.transcriptsWithProteinLength.result && this.transcriptsWithProteinLength.result.length > 0) {
-                // ignore transcripts without protein length
-                // TODO: better solution is to show only mutations table, not lollipop plot for those transcripts
-                const transcripts:string[] = _.uniq([].concat.apply([], uniqueGenomicLocations(this.getMutations()).map(
-                    (gl:GenomicLocation) => {
-                        if (this.indexedVariantAnnotations.result && this.indexedVariantAnnotations.result[genomicLocationString(gl)]) {
-                            return this.indexedVariantAnnotations.result[genomicLocationString(gl)].transcript_consequences.map(
-                                (tc:TranscriptConsequence) => tc.transcript_id
-                            ).filter(
-                                (transcriptId: string) => this.transcriptsWithProteinLength.result!!.includes(transcriptId)
-                            );
-                        } else {
-                            return [];
-                        }
-                })));
-                // makes sure the annotations are actually of the form we are
-                // displaying (e.g. nonsynonymous)
-                return transcripts.filter((t:string) => (
-                    getMutationsToTranscriptId(this.getMutations(),
-                                            t,
-                                            this.indexedVariantAnnotations.result!!).length > 0
-                ));
-            } else {
-                return [];
-            }
-        },
-        onError: (err: Error) => {
-            throw new Error("Failed to get transcriptsWithAnnotations");
-        }
-    }, undefined);
-
     public countUniqueMutations(mutations: Mutation[]): number
     {
         return countUniqueMutations(mutations);
@@ -207,44 +125,12 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
         return mutation.gene.entrezGeneId;
     }
 
-    @autobind
-    protected customFilterApplier(filter: DataFilter,
-                                  mutation: Mutation,
-                                  positions: {[position: string]: {position: number}})
-    {
-        let pick = false;
-
-        if (filter.position) {
-            pick = !!positions[mutation.proteinPosStart+""];
-        }
-
-        if (pick &&
-            filter.hotspot &&
-            this.indexedHotspotData.result)
-        {
-            // TODO for now ignoring the actual filter value and treating as a boolean
-            pick = isHotspot(mutation, this.indexedHotspotData.result, defaultHotspotFilter);
-        }
-
-        if (pick &&
-            filter.oncokb &&
-            this.oncoKbData.result &&
-            !(this.oncoKbData.result instanceof Error))
-        {
-            // TODO for now ignoring the actual filter value and treating as a boolean
-            pick = defaultOncoKbFilter(mutation,
-                this.oncoKbData.result,
-                this.getDefaultTumorType,
-                this.getDefaultEntrezGeneId);
-        }
-
-        return pick;
-    }
-
+    // TODO remove when done refactoring react-mutation-mapper
     @computed get unfilteredMutationsByPosition(): {[pos: number]: Mutation[]} {
         return groupMutationsByProteinStartPos(this.dataStore.sortedData);
     }
 
+    // TODO remove when done refactoring react-mutation-mapper
     @computed get oncoKbDataByProteinPosStart()
     {
         if (this.oncoKbData.result &&

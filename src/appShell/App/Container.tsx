@@ -11,8 +11,10 @@ import AppConfig from "appConfig";
 import Helmet from "react-helmet";
 import {computed} from "mobx";
 import { If, Else, Then } from 'react-if';
-import ErrorScreen from "./ErrorScreen";
 import UserMessager from "shared/components/userMessager/UserMessage";
+import {formatError} from "shared/lib/errorFormatter";
+import {buildCBioPortalPageUrl} from "shared/api/urls";
+import ErrorScreen from "shared/components/errorScreen/ErrorScreen";
 
 interface IContainerProps {
     location: Location;
@@ -44,6 +46,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     render() {
+
         return (
             <If condition={this.isSessionLoaded}>
                 <div>
@@ -62,7 +65,11 @@ export default class Container extends React.Component<IContainerProps, {}> {
                     <If condition={this.appStore.isErrorCondition}>
                        <Then>
                            <div className="contentWrapper">
-                               <ErrorScreen appStore={this.appStore}/>
+                               <ErrorScreen
+                                    title={"Oops. There was an error retrieving data."}
+                                    body={<a href={buildCBioPortalPageUrl("/")}>Return to homepage</a>}
+                                    errorLog={formatError(this.appStore.undismissedSiteErrors)}
+                               />
                            </div>
                        </Then>
                         <Else>
