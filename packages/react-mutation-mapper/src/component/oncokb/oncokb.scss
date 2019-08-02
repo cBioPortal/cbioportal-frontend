@@ -1,4 +1,5 @@
 @import "vars.module";
+
 .oncokb-tooltip {
   background: none;
 
@@ -6,8 +7,4 @@
     padding: 0;
     border-color: $oncokb-border-color;
   }
-}
-
-.oncokb-suggest-annotation-linkout > a:hover{
-  cursor: pointer;
 }
