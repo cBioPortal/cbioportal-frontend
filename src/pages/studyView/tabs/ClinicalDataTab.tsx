@@ -17,6 +17,7 @@ import {Else, If, Then} from 'react-if';
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
+import { isUrl } from "public-lib";
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -32,7 +33,12 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
         return {
             name: columnName || '',
             headerRender: (data: string) => <span data-test={data}>{data}</span>,
-            render: (data: { [id: string]: string }) => <span data-test={data[key]}>{data[key]}</span>,
+            render: (data: { [id: string]: string }) => {
+                if (isUrl(data[key])) {
+                    return <a href={data[key]} target="_blank">{data[key]}</a>
+                }
+                return <span data-test={data[key]}>{data[key]}</span>
+            },
             download: (data: { [id: string]: string }) => data[key] || '',
             sortBy: (data: { [id: string]: any }) => {
                 if (data[key]) {

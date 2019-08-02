@@ -66,3 +66,8 @@ export function capitalize(str:string) {
         return str[0].toLocaleUpperCase() + str.slice(1);
     }
 }
+
+export function isUrl(str:string) {
+    const pattern = /^http[s]?:\/\//;
+    return pattern.test(str);
+}
