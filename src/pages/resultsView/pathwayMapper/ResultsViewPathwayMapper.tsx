@@ -132,7 +132,7 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
         console.log(this.remoteGenes.result);
         return(
 
-            <div className="cBioMode" style={{width: "99%"}}>
+            <div data-test="pathwayMapperTabDiv" className="cBioMode" style={{width: "99%"}}>
                 <Row>
 
                     { !this.isLoading ? 

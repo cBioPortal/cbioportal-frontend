@@ -94,6 +94,13 @@ function runResultsTestSuite(prefix){
         assertScreenShotMatch(res);
     });
 
+    it(`${prefix} pathwaymapper tab`, function(){
+        browser.click("a.tabAnchor_pathwayMapper");
+        browser.waitForVisible('#cy',10000);
+        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', { hide:['.qtip'] } );
+        assertScreenShotMatch(res);
+    });
+
     it.skip(`${prefix} network tab`, function(){
         // TODO: unskip this when bug is fixed
 
