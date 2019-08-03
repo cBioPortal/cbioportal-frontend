@@ -796,7 +796,8 @@ export class ResultsViewPageStore {
     readonly cnSegmentsByChromosome = remoteData<{ [chromosome: string]: MobxPromise<CopyNumberSeg[]> }>({
         await: () => [
             this.genes,
-            this.samples
+            this.samples,
+            this.referenceGenes
         ],
         invoke: () => {
             if (this.referenceGenes.result) {
@@ -2273,22 +2274,10 @@ export class ResultsViewPageStore {
 
     readonly referenceGenes = remoteData<ReferenceGenomeGene[]>({
         await: ()=>[
-            this.studies,
-            this._mutationEnrichmentDataWithoutCytoband,
-            this._copyNumberHomdelEnrichmentData,
-            this._copyNumberAmpEnrichmentData,
-            this.genes
+            this.studies
         ],
         invoke: () => {
-            const queryGenes = this.genes.result!.map((g:Gene)=>g.hugoGeneSymbol.toUpperCase());
-            const mutGenes = this._mutationEnrichmentDataWithoutCytoband.result!.map(
-                                    (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
-            const cnvHomdelGenes = this._copyNumberHomdelEnrichmentData.result!.map(
-                                        (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
-            const cnvGenes = this._copyNumberAmpEnrichmentData.result!.map(
-                (a:AlterationEnrichment)=>a.hugoGeneSymbol.toUpperCase());
-            return fetchReferenceGenomeGenes(this.studies.result[0].referenceGenome,
-                                             this.hugoGeneSymbols.concat(queryGenes, mutGenes, cnvGenes, cnvHomdelGenes));
+            return fetchAllReferenceGenomeGenes(this.studies.result[0].referenceGenome);
         }
     });
 
