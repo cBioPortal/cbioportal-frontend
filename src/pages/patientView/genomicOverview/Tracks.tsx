@@ -14,7 +14,7 @@ interface TracksPropTypes {
     width:number;
 }
 
-export const DEFAULT_CHROMOSOME="GRCh37";
+export const DEFAULT_GENOME_BUILD="GRCh37";
 
 export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
@@ -32,7 +32,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         // --- end of raphael config ---
 
         // --- chromosome chart ---
-        let genomeBuild = DEFAULT_CHROMOSOME;
+        let genomeBuild = DEFAULT_GENOME_BUILD;
         if (this.props.mutations) {
             genomeBuild = this.props.mutations[0].ncbiBuild;
         }
