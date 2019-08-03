@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import 'qtip2';
 import 'qtip2/dist/jquery.qtip.css';
 import {Mutation, ReferenceGenomeGene} from "shared/api/generated/CBioPortalAPI";
-import {DEFAULT_CHROMOSOME} from "pages/patientView/genomicOverview/Tracks";
+import {DEFAULT_GENOME_BUILD} from "pages/patientView/genomicOverview/Tracks";
 import {default as chromosomeSizes} from "./chromosomeSizes.json";
 
 export function GenomicOverviewConfig(nRows: any,width: any) {
@@ -83,7 +83,7 @@ export function getChmInfo(genomeBuild:string) {
     const sel: any = {genomeRef:{}, total:0};
     let referenceGenome = genomeBuilds.get(genomeBuild);
     if (!referenceGenome || referenceGenome === "") {
-        referenceGenome = DEFAULT_CHROMOSOME;
+        referenceGenome = DEFAULT_GENOME_BUILD;
     }
     const genomeSize = referenceGenomeSizes[genomeBuild];
     if (genomeSize) {
