@@ -6,12 +6,13 @@ import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import $ from "jquery";
 import autobind from "autobind-decorator";
 
+// This is a block component
 @observer
-export default class EllipsisTextTooltip extends React.Component<{ text:any; style?:any; shownWidth?:number, hideTooltip?:boolean },{}> {
+export default class EllipsisTextTooltip extends React.Component<{ text:any; style?:any; hideTooltip?:boolean },{}> {
 
     @observable tooltipVisible = false;
 
-    el:HTMLSpanElement;
+    el:HTMLDivElement;
 
     @autobind
     @action
@@ -19,26 +20,14 @@ export default class EllipsisTextTooltip extends React.Component<{ text:any; sty
         // if shownWidth exist, using the shownWidth
         let shownWidth =  $(this.el).innerWidth();
         let actualWidth = this.el.scrollWidth;
-
-        if (this.props.shownWidth) {
-            shownWidth = this.props.shownWidth;
-        }
         
         const isOverflowed = (actualWidth - shownWidth) > 1;
         this.tooltipVisible = !this.props.hideTooltip && isVisible && isOverflowed;
     }
 
     @autobind
-    setRef(el:HTMLSpanElement){
+    setRef(el:HTMLDivElement){
         this.el = el;
-    }
-
-    @computed get style() {
-        const style:any = Object.assign({}, this.props.style);
-        if (this.props.shownWidth) {
-            style.maxWidth = this.props.shownWidth;
-        }
-        return style;
     }
 
     render(){
@@ -46,7 +35,7 @@ export default class EllipsisTextTooltip extends React.Component<{ text:any; sty
                                visible={this.tooltipVisible}
                                onVisibleChange={(this.onVisibleChange)}
         >
-            <span className={styles.text} style={this.style} ref={this.setRef}>{this.props.text}</span>
+            <div className={styles.text} style={this.props.style} ref={this.setRef}>{this.props.text}</div>
         </DefaultTooltip>
     }
 
