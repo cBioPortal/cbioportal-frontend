@@ -131,7 +131,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         if (this.props.alteredVsUnalteredMode) {
             return "Over-expressed";
         } else {
-            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group1Name!} shownWidth={100}/></span>;
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group1Name!}/></span>;
         }
     }
 
@@ -139,7 +139,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         if (this.props.alteredVsUnalteredMode) {
             return "Under-expressed";
         } else {
-            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group2Name!} shownWidth={100}/></span>;
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group2Name!}/></span>;
         }
     }
 

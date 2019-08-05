@@ -17,6 +17,7 @@ import styles from "./styles.module.scss";
 import classNames from "classnames";
 import { IMultipleCategoryBarPlotData } from 'shared/components/plots/MultipleCategoryBarPlot';
 import {getTextColor} from "../../groupComparison/OverlapUtils";
+import TruncatedText from "shared/components/TruncatedText";
 
 export type AlterationEnrichmentWithQ = AlterationEnrichment & { logRatio?:number, qValue:number, value?:number /* used for copy number in group comparison */ };
 export type ExpressionEnrichmentWithQ = ExpressionEnrichment & { qValue:number };
@@ -46,7 +47,7 @@ export enum AlterationContainerType {
 export function PERCENTAGE_IN_headerRender(name:string) {
     return (
         <div style={{display:"flex", alignItems:"center"}}>
-           <EllipsisTextTooltip text={name} shownWidth={100} hideTooltip={true}/>
+            <TruncatedText text={name} maxLength={20} addTooltip={"never"}/>
         </div>
     );
 }
@@ -54,7 +55,7 @@ export function PERCENTAGE_IN_headerRender(name:string) {
 export function STAT_IN_headerRender(stat:string, name:string) {
     return (
         <div style={{display:"flex", alignItems:"center"}}>
-            {stat}&nbsp;in&nbsp;<EllipsisTextTooltip text={name} shownWidth={100} hideTooltip={true}/>
+            {stat}&nbsp;in&nbsp;<TruncatedText text={name} maxLength={20} addTooltip={"never"}/>
         </div>
     );
 }
@@ -64,7 +65,7 @@ export function calculateExpressionTendency(logOddsRatio: number): string {
 }
 
 export function formatAlterationTendency(text: string) {
-    return <EllipsisTextTooltip style={{ display: "inline-block" }} text={text} shownWidth={100} />;
+    return <TruncatedText text={text} maxLength={20}/>;
 }
 
 export function formatPercentage(group: string, data: AlterationEnrichmentRow): string {
