@@ -4,77 +4,72 @@ import {observer} from "mobx-react";
 import * as d3 from 'd3';
 import $ from "jquery";
 
+
+interface Inode {
+    clusterId: string;
+    x: number; 
+    y: number;
+};
+
 // load the treeJson
 const treeJson = require("./tree4test.json") as string;
 
 // load the svg used as placeholder
 const demoSvg = require("./demo.svg") as string;
 
-export interface TreeNodeProps {
-    clusterId: number;
-    parent: number;
+export interface ItreeNode {
+    clusterId: string;
+    parent: string;
     blengths: number;
-    sample: [{string: string}]
-}
-
-function selectMutationClusterInMutationTable(props:any) {
-    props
-}
-
-export class TreeNode extends React.Component<TreeNodeProps> {
-    constructor(props:TreeNodeProps) {
-        super(props);
-    }
-
-    clusterSelected = 1;
-    renderNode(i:TreeNodeProps) {
-        return(
-            //             <button onClick={() => this.props.onClock(i)}>Cluster{this.props.nodeMutationClusterId}</button>
-            <button>Cluster1</button>
-        )
-    }
+    sample: [{string: string}];
 }
 
 
-function findCildOf(clusterId:any, treeTable:any) {
-    return treeTable.filter(function(cluster:any) {
+function findChildOf(clusterId:string, treeTable:Array<ItreeNode>): Array<string> {
+    return treeTable.filter(function(cluster: ItreeNode) {
         return cluster.parent == clusterId;
-    }).map(function(cluster:any) {
+    }).map(function(cluster: ItreeNode) {
         return cluster.clusterId
     })
 }
 
+function getNodeCoord(nodes:[Inode], nodeId:string): {x: number, y: number} {
+    var node = nodes.filter(function(x) { return x.clusterId == nodeId})[0];
+    return {x: node.x, y: node.y};
+}
 
-function getCoordination(treeTable:any) {
+function getCoordination(treeTable: Array<ItreeNode>) {
 
     // Parsing the tree 
     var tree = [];
 
-    tree.push({parent: "-1", child: findCildOf("-1", treeTable)});
+    // TODO: make a API
+    const length_factor = 20;
+
+    tree.push({parentNode: "-1", childNode: findChildOf("-1", treeTable)});
 
     var completed = false;
     var currentParentsIndex = 0;
 
     while (!completed && currentParentsIndex < 100) {
-        var newParents = tree[currentParentsIndex].child;
+        var newParents = tree[currentParentsIndex].childNode;
         if (currentParentsIndex == tree.length - 1 && newParents.length == 0) {
             completed = true;
         }
         for (var i in newParents) {
-            parent = newParents[i];
-            var newChild = findCildOf(parent, treeTable);
-            tree.push({parent: parent, child: newChild});
+            var newParent: string = newParents[i];
+            var newChild = findChildOf(newParent, treeTable);
+            tree.push({parentNode: newParent, childNode: newChild});
             if (newChild.length > 0) completed = false;
         }
         currentParentsIndex++;
     }
 
     // Get nodes coordination
-    var nodes = {"-1": {x: 0, y: 0}};
-    var length_factor = 20;
+    var nodes:[Inode] = [{clusterId: "-1", x: 0, y: 0}];
     const pi = Math.PI;
 
-    var angleList = [
+    var angleList: Array<Array<number>> = [
         [0],
         [pi / 4, -pi / 4],
         [0, pi / 6, -pi / 6],
@@ -82,49 +77,60 @@ function getCoordination(treeTable:any) {
         [0, pi / 12, -pi / 12, pi / 12, -pi / 12]
     ];
 
+    
     for (i in tree) {
-        var childs = tree[i].child;
+        var childs = tree[i].childNode;
         var childNum = childs.length;
         if (childNum > 0) {
-            var parentId = tree[i].parent;
+            var parentId = tree[i].parentNode;
             var sign = 1;
-            for (var j in childs) {
-                var angle = angleList[childs.length - 1];
-                var blength = treeTable.filter(function(x:any) { return x.clusterId == childs[j] })[0].blengths;
+            for (var j:number = 0; j < childs.length; j++) {
+                var angle: Array<number> = angleList[childs.length - 1];
+                var blength = treeTable.filter(function(x:ItreeNode) { return x.clusterId == childs[j] })[0].blengths;
+                var parentCoord = getNodeCoord(nodes, tree[i].parentNode);
+                var x = parentCoord.x + length_factor * blength * Math.cos(angle[j]);
+                var y = parentCoord.y + length_factor * blength * Math.sin(angle[j]);
 
-                //                blength = 3;
-
-                var x = nodes[tree[i].parent].x + length_factor * blength * Math.cos(angle[j]);
-                var y = nodes[tree[i].parent].y + length_factor * blength * Math.sin(angle[j]);
-
-                nodes[childs[j]] = { x: x, y: y };
+                nodes.push({clusterId: childs[j], x: x, y: y });
             }
         } 
     }
 
 
     // Get edges coordination
-    var edges = {1: {x_start: 0, x_end: 0, y_start: 0, y_end: 0}};
+    interface Iedge {
+        start: string;
+        end: string;
+        edgeId: string;
+        xStart: number;
+        yStart: number;
+        xEnd: number;
+        yEnd: number;
+    }
+
+    var edges: Array<Iedge> = []; //= [{edgeId: "1", xStart: 0, yStart: 0, xEnd: 0, yEnd: 0}];
     for (i in treeTable) {
         var start = treeTable[i].parent,
-            end = treeTable[i].clusterId,
-            coordStart = nodes[start],
-            coordEnd = nodes[end];
+            end = treeTable[i].clusterId;
 
-        edges[i] = {
+        var    coordStart = getNodeCoord(nodes, start),
+            coordEnd = getNodeCoord(nodes, end);
+
+        edges.push({
+            edgeId: i,
             start: start,
             end: end,
             xStart: coordStart.x,
             yStart: coordStart.y,
             xEnd: coordEnd.x,
             yEnd: coordEnd.y
-        }
+        });
     }
 
     return {nodes: nodes, edges: edges};
 }
 
-function getColor(i:any, colorList:any) {
+function getColor(i:number, colorList:Array<string>) {
     return colorList[i % colorList.length];
 }
 
@@ -138,7 +144,7 @@ export default class TreePlot extends React.Component<any, any> {
         this.drawTreePlot(this.props.treeData, this.props.height, this.props.width, this.props.margin);
     }
 
-    drawTreePlot(treeTable:any, height:any, width:any, margin:any) {
+    drawTreePlot(treeTable:Array<ItreeNode>, height:number, width:number, margin:number) {
 
         // Create svg canvas
         var svg = d3.select(this.ref)
@@ -162,7 +168,7 @@ export default class TreePlot extends React.Component<any, any> {
 
         var edgeColors = ["#6699CC", "#663366", "#CCCC99", "#996699", "#CCCC99", "#669999", "#996699", "#9999CC", "#CCCCFF"];
 
-        for (var i in coordination.edges) {
+        for (var i=0; i<coordination.edges.length; i++) {
             svg.append('g')
                 .attr("transform", "translate(" + margin +"," + height / 2 + ")")
                 .attr('class', 'line')
@@ -180,7 +186,7 @@ export default class TreePlot extends React.Component<any, any> {
         }
 
         // Draw the node
-        for (var i in nodes) {
+        for (var i=0; i<nodes.length; i++) {
             svg.append('circle')
                 .attr("transform", "translate(" + margin + "," + height / 2 + ")")
                 .attr("class", i)

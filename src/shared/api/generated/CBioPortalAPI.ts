@@ -350,7 +350,7 @@ export type Mutation = {
 
         'CCF': number
 
-        'clusterId': number 
+        'clusterId': string
 
         'patientId': string
 
@@ -401,8 +401,6 @@ export type MutationFilter = {
         'sampleIds': Array < string >
 
         'sampleListId': string
-
-        'clusterId': string
 
 };
 export type MutationMultipleStudyFilter = {

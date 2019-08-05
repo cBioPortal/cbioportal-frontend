@@ -81,6 +81,7 @@ export function getCnaData(): Array<DiscreteCopyNumberData>
 export function getMutationData(): Mutation
 {
     return {
+       CCF: 0, clusterId: "NA",
        center: "broad.mit.edu", endPosition: 178936091, entrezGeneId: 5290, fisValue: 1.4013e-45, functionalImpactScore:"", 
        gene: {chromosome: "3", cytoband: "3q26.3", entrezGeneId: 5290, hugoGeneSymbol: "PIK3CA", length: 9411, type: "protein-coding"},
        molecularProfileId: "ccle_mutations", keyword: "PIK3CA E545 missense", linkMsa:"", linkPdb: "", linkXvar: "", mutationStatus: "NA",
