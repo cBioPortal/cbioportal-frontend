@@ -18,6 +18,8 @@ import {CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
 import SampleLabelSVG from "../../../shared/components/sampleLabel/SampleLabel";
 import SampleManager from "../sampleManager";
+import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
+import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 
 export interface IVAFLineChartProps {
     mutations:Mutation[][];
@@ -25,6 +27,7 @@ export interface IVAFLineChartProps {
     coverageInformation:CoverageInformation;
     mutationProfileId:string;
     sampleManager:SampleManager|null;
+    dataStore:PatientViewMutationsDataStore;
 }
 
 enum NoMutationReason {
@@ -122,6 +125,10 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                     this.tooltipDatum = props.data[0];
                                     this.tooltipOnPoint = false;
                                 }
+                                this.props.dataStore.setHighlightModel({
+                                    proteinChange:this.tooltipDatum.proteinChange,
+                                    hugoGeneSymbol: this.tooltipDatum.hugoGeneSymbol
+                                });
                                 return null;
                             }
                         }
@@ -134,6 +141,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             mutation: () => {
                                 this.tooltipDatum = null;
                                 this.tooltipOnPoint = false;
+                                this.props.dataStore.setHighlightModel(null);
                                 return null;
                             }
                         }
@@ -296,6 +304,17 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         return { lineData, grayPoints};
     }
 
+    @computed get mutationToLineData() {
+        const map = new ComplexKeyMap<IPoint[]>();
+        for (const lineData of this.data.lineData) {
+            map.set({
+                hugoGeneSymbol: lineData[0].hugoGeneSymbol,
+                proteinChange: lineData[0].proteinChange
+            }, lineData);
+        }
+        return map;
+    }
+
     private tooltipFunction(datum: any) {
         let sampleSpecificSection:any = null;
         if (this.tooltipOnPoint) {
@@ -360,8 +379,13 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
 
     @autobind
     private getThickLine() {
-        if (this.tooltipDatum !== null && this.scale !== null && this.thickLineContainer !== null) {
-            const points = this.tooltipDatum.lineData;
+        if (this.props.dataStore.getHighlightModel() !== null && this.scale !== null && this.thickLineContainer !== null) {
+            const points = this.mutationToLineData.get(
+                this.props.dataStore.getHighlightModel()!, ["proteinChange","hugoGeneSymbol"]
+            );
+            if (!points) {
+                return <g/>
+            }
 
             let d = `M ${this.scale.x(points[0].x)} ${this.scale.y(points[0].y)}`;
             for (let i=1; i<points.length; i++) {

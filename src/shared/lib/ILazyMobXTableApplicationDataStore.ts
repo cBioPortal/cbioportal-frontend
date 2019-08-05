@@ -24,7 +24,7 @@ export interface ILazyMobXTableApplicationDataStore<T> {
 export class SimpleGetterLazyMobXTableApplicationDataStore<T> implements ILazyMobXTableApplicationDataStore<T> {
     @observable protected dataFilter:(d:T, filterString?:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
     @observable protected dataSelector:(d:T)=>boolean;
-    @observable protected dataHighlighter:(d:T)=>boolean;
+    @observable public dataHighlighter:(d:T)=>boolean;
 
     @observable public filterString:string;
     @observable public sortMetric:SortMetric<T>|undefined;

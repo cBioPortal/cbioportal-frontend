@@ -73,6 +73,8 @@ type LazyMobXTableProps<T> = {
     pageToHighlight?:boolean;
     showCountHeader?:boolean;
     onRowClick?:(d:T)=>void;
+    onRowMouseEnter?:(d:T)=>void;
+    onRowMouseLeave?:(d:T)=>void;
     filterPlaceholder?:string;
 };
 
@@ -211,6 +213,8 @@ export class LazyMobXTableStore<T> {
     @observable public dataStore:ILazyMobXTableApplicationDataStore<T>;
     @observable public downloadDataFetcher:ILazyMobXTableApplicationLazyDownloadDataFetcher|undefined;
     @observable private onRowClick:((d:T)=>void)|undefined;
+    @observable private onRowMouseEnter:((d:T)=>void)|undefined;
+    @observable private onRowMouseLeave:((d:T)=>void)|undefined;
 
     // this observable is intended to always refer to props.columnVisibility
     @observable private _columnVisibility:{[columnId: string]: boolean}|undefined;
@@ -478,6 +482,18 @@ export class LazyMobXTableStore<T> {
                     onRowClick(this.visibleData[i]);
                 };
             }
+            if (this.onRowMouseEnter) {
+                const onRowMouseEnter = this.onRowMouseEnter; // by the time its called this might be undefined again, so need to save ref
+                rowProps.onMouseEnter = ()=>{
+                    onRowMouseEnter!(this.visibleData[i]);
+                }
+            }
+            if (this.onRowMouseLeave) {
+                const onRowMouseLeave = this.onRowMouseLeave; // by the time its called this might be undefined again, so need to save ref
+                rowProps.onMouseLeave = ()=>{
+                    onRowMouseLeave!(this.visibleData[i]);
+                }
+            }
             if (classNames.length) {
                 rowProps.className = classNames.join(" ");
             }
@@ -536,6 +552,8 @@ export class LazyMobXTableStore<T> {
         this._columnVisibility = props.columnVisibility;
         this.downloadDataFetcher = props.downloadDataFetcher;
         this.onRowClick = props.onRowClick;
+        this.onRowMouseEnter = props.onRowMouseEnter;
+        this.onRowMouseLeave = props.onRowMouseLeave;
 
         if (props.dataStore) {
             this.dataStore = props.dataStore;

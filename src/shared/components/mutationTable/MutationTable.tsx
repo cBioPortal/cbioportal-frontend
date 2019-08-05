@@ -96,6 +96,8 @@ export interface IMutationTableProps {
     showCountHeader?:boolean;
     columnVisibility?: {[columnId: string]: boolean};
     columnVisibilityProps?: IColumnVisibilityControlsProps;
+    onRowMouseEnter?:(d:Mutation[])=>void;
+    onRowMouseLeave?:(d:Mutation[])=>void;
 }
 
 export enum MutationTableColumnType {
@@ -638,6 +640,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 showCountHeader={this.props.showCountHeader}
                 columnVisibility={this.props.columnVisibility}
                 columnVisibilityProps={this.props.columnVisibilityProps}
+                onRowMouseEnter={this.props.onRowMouseEnter}
+                onRowMouseLeave={this.props.onRowMouseLeave}
             />
         );
     }
