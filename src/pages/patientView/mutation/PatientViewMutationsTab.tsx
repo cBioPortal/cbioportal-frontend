@@ -15,6 +15,8 @@ import VAFLineChart from "./VAFLineChart";
 import {computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import {remoteData} from "../../../public-lib";
+import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
+import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 
 export interface IPatientViewMutationsTabProps {
     store:PatientViewPageStore;
@@ -25,6 +27,7 @@ export interface IPatientViewMutationsTabProps {
 
 @observer
 export default class PatientViewMutationsTab extends React.Component<IPatientViewMutationsTabProps, {}> {
+    private dataStore = new PatientViewMutationsDataStore(()=>this.props.store.mergedMutationDataIncludingUncalled);
     @observable.ref mutationsTable:PatientViewSelectableMutationTable|null = null;
 
     @autobind
@@ -55,6 +58,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
             this.props.store.samples.result!.length > 1 ?
                 (<VAFLineChart
                     mutations={this.selectedMutations.result!}
+                    dataStore={this.dataStore}
                     samples={this.props.store.samples.result!}
                     coverageInformation={this.props.store.coverageInformation.result!}
                     mutationProfileId={this.props.store.mutationMolecularProfileId.result!}
@@ -64,6 +68,20 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         ),
         showLastRenderWhenPending:true
     });
+
+    @autobind
+    private onTableRowMouseEnter(d:Mutation[]) {
+        if (d.length) {
+            this.dataStore.setHighlightModel({
+                proteinChange:d[0].proteinChange,
+                hugoGeneSymbol:d[0].gene.hugoGeneSymbol
+            });
+        }
+    }
+    @autobind
+    private onTableRowMouseLeave() {
+        this.dataStore.setHighlightModel(null);
+    }
 
     readonly table = MakeMobxView({
         await:()=>[
@@ -76,6 +94,9 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         render:()=>(
             <PatientViewSelectableMutationTable
                 ref={this.tableRef}
+                dataStore={this.dataStore}
+                onRowMouseEnter={this.onTableRowMouseEnter}
+                onRowMouseLeave={this.onTableRowMouseLeave}
                 studyIdToStudy={this.props.store.studyIdToStudy.result!}
                 sampleManager={this.props.sampleManager}
                 sampleIds={this.props.sampleManager ? this.props.sampleManager.getSampleIdsInOrder() : []}

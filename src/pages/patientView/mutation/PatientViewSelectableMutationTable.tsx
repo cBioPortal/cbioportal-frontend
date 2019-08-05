@@ -12,7 +12,6 @@ import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../shared/
 import autobind from "autobind-decorator";
 import _ from "lodash";
 
-
 @observer
 export default class PatientViewSelectableMutationTable extends PatientViewMutationTable {
     private _isMutationSelected = observable.shallowMap<boolean>();
@@ -53,14 +52,14 @@ export default class PatientViewSelectableMutationTable extends PatientViewMutat
         if (!this.table) {
             return false;
         }
-        return _.every(this.table!.dataStore.tableData, this.isMutationSelected);
+        return _.every(this.props.dataStore!.tableData, this.isMutationSelected);
     }
 
     @autobind
     @action
     private selectFilteredRows(e:React.MouseEvent<any, any>) {
         const allSelected = this.areAllFilteredMutationsSelected;
-        for (const mutation of this.table!.dataStore.tableData) {
+        for (const mutation of this.props.dataStore!.tableData) {
             this.setMutationSelected(mutation, !allSelected); // if all selected, deselect. otherwise, select.
         }
 
