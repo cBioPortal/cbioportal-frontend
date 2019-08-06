@@ -426,11 +426,15 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             domain={{ y: [0, 1] }}
                             width={this.chartWidth}
                             height={this.chartHeight}
+                            domainPadding={20}
+                            singleQuadrantDomainPadding={false}
                         >
                             <VictoryAxis
                                 dependentAxis
                                 label="Allele Freq"
                                 axisLabelComponent={<VictoryLabel dy={-28}/>}
+                                crossAxis={false}
+                                offsetX={50}
                             />
                             <VictoryAxis
                                 style={{
@@ -442,6 +446,8 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 tickLabelComponent={
                                     <Tick sampleIdOrder={this.sampleIdOrder} sampleManager={this.props.sampleManager}/>
                                 }
+                                crossAxis={false}
+                                offsetY={50}
                             />
                             {this.data.lineData.map(dataForSingleLine=>
                                 [
