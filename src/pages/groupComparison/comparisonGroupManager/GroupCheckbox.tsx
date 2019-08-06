@@ -92,7 +92,6 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
             <span style={{display:"flex", alignItems:"center"}}>
                 <EllipsisTextTooltip
                     text={this.props.group.name}
-                    shownWidth={100}
                 />
                 &nbsp;({caseCounts(getNumSamples(this.props.group), getNumPatients(this.props.group))})
             </span>
