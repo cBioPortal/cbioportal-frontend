@@ -47,7 +47,7 @@ interface IPoint {
     noMutationReason?:NoMutationReason
 }
 
-const LINE_COLOR = "#c43a31";
+const LINE_COLOR = "#000000";
 const THICK_LINE_STROKE_WIDTH = 6;
 
 class ScaleCapturer extends React.Component<any, any>{
