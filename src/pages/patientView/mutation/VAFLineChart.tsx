@@ -427,7 +427,11 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             width={this.chartWidth}
                             height={this.chartHeight}
                         >
-                            <VictoryAxis dependentAxis />
+                            <VictoryAxis
+                                dependentAxis
+                                label="Allele Freq"
+                                axisLabelComponent={<VictoryLabel dy={-28}/>}
+                            />
                             <VictoryAxis
                                 style={{
                                     grid: {
