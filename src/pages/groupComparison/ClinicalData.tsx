@@ -161,7 +161,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         return this.highlightedRow!.clinicalAttribute.datatype.toLowerCase() === 'number';
     }
 
-    private logScale = false;
+    @observable private logScale = false;
     @observable logScaleFunction:IAxisLogScaleParams|undefined;
     @observable swapAxes = false;
     @observable horizontalBars = false;
