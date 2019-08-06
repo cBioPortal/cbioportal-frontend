@@ -3,7 +3,7 @@ import {remoteData} from "../../public-lib/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import oncoKBClient from "shared/api/oncokbClientInstance";
-import {action, computed, IReactionDisposer, observable, ObservableMap, reaction, toJS} from "mobx";
+import {action, computed, IReactionDisposer, observable, reaction, toJS} from "mobx";
 import {
     ClinicalDataBinCountFilter,
     ClinicalDataBinFilter,
@@ -35,7 +35,7 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     CopyNumberSeg,
-    Gene, GenePanel, GenePanelData,
+    Gene, GenePanel,
     MolecularProfile,
     MolecularProfileFilter,
     Patient
@@ -119,10 +119,8 @@ import client from "../../shared/api/cbioportalClientInstance";
 import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
-import jStat from 'jStat'
-import {CancerGene, Gene as OncokbGene} from "../../shared/api/generated/OncoKbAPI";
+import {CancerGene, Gene as OncokbGene} from "../../public-lib/api/generated/OncoKbAPI";
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";
-
 
 export enum StudyViewPageTabKeyEnum {
     SUMMARY = 'summary',

@@ -7,7 +7,7 @@ var GeneratePackageJsonPlugin =require('generate-package-json-webpack-plugin');
 var TerserPlugin = require('terser-webpack-plugin');
 
 var commit = 'unknown';
-var version = '0.0.9';
+var version = '0.0.15';
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
@@ -131,7 +131,6 @@ var config = {
         //     manifest: require('./common-dist/common-manifest.json')
         // }),
         new CopyWebpackPlugin([
-            // {from: './src/commons/components/oncokb/level.module.scss', to: 'styleModules'}
             // {from: './common-dist', to: 'reactapp'},
             // {from: './src/rootImages', to: 'images'},
             // {from: './src/pages/resultsView/network', to: 'reactapp/network'},

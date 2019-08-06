@@ -73,11 +73,11 @@ import {
 import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../public-lib/lib/StringUtils";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
-import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
+import { VariantAnnotation } from 'public-lib/api/generated/GenomeNexusAPI';
 import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
 import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
-import {CancerGene} from "shared/api/generated/OncoKbAPI";
+import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 
 type PageMode = 'patient' | 'sample';
 
@@ -256,7 +256,9 @@ export class PatientViewPageStore {
     });
 
     readonly samples = remoteData(
-        async() => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
+        {
+            invoke: async () => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
+        },
         []
     );
 
@@ -314,7 +316,7 @@ export class PatientViewPageStore {
                             return getPathologyReport(patientId, i+1);
                         }, () => reports);
                 }
-                
+
                return getPathologyReport(this.patientId, 0);
             } else {
                 return Promise.resolve([]);

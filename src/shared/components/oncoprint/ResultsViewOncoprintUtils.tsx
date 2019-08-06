@@ -5,6 +5,7 @@ import _ from "lodash";
 import naturalSort from "javascript-natural-sort";
 import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 import {Group} from "../../api/ComparisonGroupClient";
+import * as React from "react";
 
 export const alterationTypeToProfiledForText:{[alterationType:string]:string} = {
     "MUTATION_EXTENDED": "mutations",
@@ -14,15 +15,17 @@ export const alterationTypeToProfiledForText:{[alterationType:string]:string} = 
 };
 
 export function getAnnotatingProgressMessage(usingOncokb:boolean, usingHotspot:boolean) {
+    let message;
     if (usingOncokb && usingHotspot) {
-        return "Annotating with OncoKB and Cancer Hotspots";
+        message = "Annotating with OncoKB and Cancer Hotspots";
     } else if (usingOncokb) {
-        return "Annotating with OncoKB";
+        message = "Annotating with OncoKB";
     } else if (usingHotspot) {
-        return "Annotating with Cancer Hotspots";
+        message = "Annotating with Cancer Hotspots";
     } else {
-        return "Processing data";
+        message = "Processing data";
     }
+    return <span style={{whiteSpace:"nowrap"}}>{message}</span>;
 }
 
 export function convertComparisonGroupClinicalAttribute(

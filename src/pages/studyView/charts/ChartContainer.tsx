@@ -37,6 +37,8 @@ import {getComparisonUrl} from "../../../shared/api/urls";
 import {DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
 import {MAX_GROUPS_IN_SESSION} from "../../groupComparison/GroupComparisonUtils";
 import {Modal} from "react-bootstrap";
+import Timer = NodeJS.Timer;
+import WindowStore from "shared/components/window/WindowStore";
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";
 
 export interface AbstractChart {
@@ -95,6 +97,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private handlers: any;
     private plot: AbstractChart;
 
+    private mouseLeaveTimeout:Timer;
+
     @observable mouseInChart: boolean = false;
     @observable placement: 'left' | 'right' = 'right';
     @observable chartType: ChartType;
@@ -132,12 +136,17 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.props.onValueSelection(value);
             }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
-                this.placement = event.nativeEvent.x > 800 ? 'left' : 'right';
+                if (this.mouseLeaveTimeout) {
+                    clearTimeout(this.mouseLeaveTimeout);
+                }
+                this.placement = event.nativeEvent.x > WindowStore.size.width - 400 ? 'left' : 'right';
                 this.mouseInChart = true;
             }),
             onMouseLeaveChart: action(() => {
-                this.placement = 'right'
-                this.mouseInChart = false;
+                this.mouseLeaveTimeout = setTimeout(() => {
+                    this.placement = 'right';
+                    this.mouseInChart = false;
+                }, 100);
             }),
             defaultDownload: {
                 SVG: () => Promise.resolve((new XMLSerializer()).serializeToString(this.toSVGDOMNode())),
@@ -206,8 +215,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
         return validChart &&
             this.props.promise.isComplete &&
-                this.props.promise.result!.length > 1 &&
-                (COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1);
+            this.props.promise.result!.length > 1 &&
+            (COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1);
     }
 
     @autobind
@@ -488,6 +497,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     getData={this.props.getData}
                     downloadTypes={this.props.downloadTypes}
                     openComparisonPage={this.openComparisonPage}
+                    placement={this.placement}
                 />
                 <div style={{display: 'flex', flexGrow: 1, margin: 'auto', alignItems: 'center'}}>
                     {(this.props.promise.isPending) && (

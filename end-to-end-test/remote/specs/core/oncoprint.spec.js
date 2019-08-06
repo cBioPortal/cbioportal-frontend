@@ -9,6 +9,14 @@ var useExternalFrontend = require('../../../shared/specUtils').useExternalFronte
 var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils').waitForNumberOfStudyCheckboxes;
 var setInputText = require('../../../shared/specUtils').setInputText;
 
+
+var {
+    clickQueryByGeneButton,
+    clickModifyStudySelectionButton
+} = require('./../../../shared/specUtils');
+
+
+
 const ONCOPRINT_TIMEOUT = 60000;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -238,6 +246,8 @@ describe('oncoprint', function() {
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
 
+            clickQueryByGeneButton();
+
             // query with BRCA1
             $('[data-test="geneSet"]').setValue('BRCA1');
 
@@ -375,6 +385,8 @@ describe('oncoprint', function() {
             var checkBox = $('[data-test="StudySelect"]');
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
+
+            clickQueryByGeneButton();
 
             browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
             browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);

@@ -22,7 +22,7 @@ import {
     IQueriedCaseData,
     IQueriedMergedTrackCaseData, ResultsViewPageStore
 } from "./ResultsViewPageStore";
-import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
+import {IndicatorQueryResp} from "../../public-lib/api/generated/OncoKbAPI";
 import _ from "lodash";
 import client from "shared/api/cbioportalClientInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
@@ -122,24 +122,61 @@ export function annotateMutationPutativeDriver(
     }, mutation) as AnnotatedMutation;
 }
 
+export type FilteredAndAnnotatedMutationsReport<T extends AnnotatedMutation = AnnotatedMutation> = {
+    data:T[],
+    vus:T[],
+    germline:T[],
+    vusAndGermline:T[]
+};
+
 export function filterAndAnnotateMutations(
     mutations: Mutation[],
     getPutativeDriverInfo:(mutation:Mutation)=>{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean, customDriverBinary:boolean, customDriverTier?:string},
-    entrezGeneIdToGene:{[entrezGeneId:number]:Gene},
-    excludeVUS:boolean,
-    excludeGermline:boolean
-):AnnotatedMutation[] {
-    return mutations.reduce((annotated:AnnotatedMutation[], mutation:Mutation)=>{
-        if (!excludeGermline || isNotGermlineMutation(mutation)) {
-            const annotatedMutation = annotateMutationPutativeDriver(mutation, getPutativeDriverInfo(mutation)); // annotate
-            annotatedMutation.hugoGeneSymbol = entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
-            if (annotatedMutation.putativeDriver || !excludeVUS) {
-                annotated.push(annotatedMutation);
-            }
+    entrezGeneIdToGene:{[entrezGeneId:number]:Gene}
+):FilteredAndAnnotatedMutationsReport<AnnotatedMutation> {
+    const vus:AnnotatedMutation[] = [];
+    const germline:AnnotatedMutation[] = [];
+    const vusAndGermline:AnnotatedMutation[] = [];
+    const filteredAnnotatedMutations = [];
+    for (const mutation of mutations) {
+        const annotatedMutation = annotateMutationPutativeDriver(mutation, getPutativeDriverInfo(mutation)); // annotate
+        annotatedMutation.hugoGeneSymbol = entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
+        const isGermline = !isNotGermlineMutation(mutation);
+        const isVus = !annotatedMutation.putativeDriver;
+        if (isGermline && isVus) {
+            vusAndGermline.push(annotatedMutation);
+        } else if (isGermline) {
+            germline.push(annotatedMutation);
+        } else if (isVus) {
+            vus.push(annotatedMutation);
+        } else {
+            filteredAnnotatedMutations.push(annotatedMutation);
         }
-        return annotated;
-    }, []);
+    }
+    return {
+        data: filteredAnnotatedMutations,
+        vus, germline, vusAndGermline
+    };
 }
+
+export function compileMutations<T extends AnnotatedMutation = AnnotatedMutation>(
+    report:FilteredAndAnnotatedMutationsReport<T>,
+    excludeVus:boolean,
+    excludeGermline:boolean
+) {
+    let mutations = report.data;
+    if (!excludeVus) {
+        mutations = mutations.concat(report.vus);
+    }
+    if (!excludeGermline) {
+        mutations = mutations.concat(report.germline);
+    }
+    if (!excludeVus && !excludeGermline) {
+        mutations = mutations.concat(report.vusAndGermline);
+    }
+    return mutations;
+}
+
 
 export const ONCOKB_ONCOGENIC_LOWERCASE = ["likely oncogenic", "predicted oncogenic", "oncogenic"];
 

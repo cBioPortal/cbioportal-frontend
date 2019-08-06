@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {Alignment} from "shared/api/generated/Genome2StructureAPI";
+import {Alignment} from "public-lib/api/generated/Genome2StructureAPI";
 
 /**
  * Utility functions to generate mock data.

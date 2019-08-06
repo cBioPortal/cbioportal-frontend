@@ -78,15 +78,15 @@ export function truncateWithEllipsis(text:string, maxWidth:number, fontFamily:st
 
 export function truncateWithEllipsisReport(text:string, maxWidth:number, fontFamily:string, fontSize:string) {
     const wrapped = splitTextByWidth(text, maxWidth, fontFamily, fontSize);
-    let truncated = false;
+    let isTruncated = false;
     if (wrapped.length > 1) {
         text = wrapped[0]+"...";
-        truncated = true;
+        isTruncated = true;
     } else {
         text = wrapped[0];
-        truncated = false;
+        isTruncated = false;
     }
     return {
-        text, truncated
+        text, isTruncated
     }
 }

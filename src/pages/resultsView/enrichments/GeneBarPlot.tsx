@@ -198,7 +198,7 @@ export default class GeneBarPlot extends React.Component<IGeneBarPlotProps, {}> 
                             getSvg={this.getSvg}
                             filename={SVG_ID}
                             dontFade={true}
-                            collapse={true}
+                            type='button'
                         />
                     </div>
                 </div>

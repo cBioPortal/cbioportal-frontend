@@ -178,7 +178,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                         getSvg={() => this.svgContainer}
                         filename="enrichments-volcano"
                         dontFade={true}
-                        collapse={true}
+                        type='button'
                         style={{position:"absolute", top:10, right:10, zIndex:0}}
                     />
                 </div>
