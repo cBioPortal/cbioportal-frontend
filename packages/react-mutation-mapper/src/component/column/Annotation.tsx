@@ -201,7 +201,7 @@ export default class Annotation extends React.Component<AnnotationProps, {}>
             this.props.resolveTumorType);
 
         return (
-            <span style={{display:'inline-block', minWidth:100}}>
+            <span style={{display: 'flex', minWidth:100}}>
                 {
                     this.props.enableOncoKb &&
                     <OncoKB

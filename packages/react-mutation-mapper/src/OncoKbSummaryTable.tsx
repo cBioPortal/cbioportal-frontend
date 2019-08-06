@@ -10,9 +10,7 @@ import {
 } from "cbioportal-frontend-commons";
 
 import {defaultSortMethod, defaultStringArraySortMethod} from "./util/ReactTableUtils";
-
-import levelStyles from "./component/oncokb/level.module.scss";
-import styles from "./oncokbSummaryTable.module.scss";
+import {levelIconClassNames} from "./util/OncoKbUtils";
 
 export type OncoKbSummaryTableProps = {
     data: OncoKbSummary[];
@@ -101,24 +99,19 @@ export default class OncoKbSummaryTable extends React.Component<OncoKbSummaryTab
                                 }}
                             >
                                 <i
-                                    className={
-                                        classnames(`${levelStyles["level-icon"]}`,
-                                            `${levelStyles[`level-${level.level}`]}`,
-                                            `${styles["level-icon"]}`)
-                                    }
+                                    className={levelIconClassNames(level.level)}
                                     style={{
                                         verticalAlign: "text-bottom",
                                         display: "inline-block"
                                     }}
                                 />
-                                <span style={{verticalAlign: "text-top"}}>: </span>
+                                <span>: </span>
                                 <EllipsisTextTooltip
                                     text={level.tumorTypes.join(", ")}
                                     style={{
                                         overflow: "hidden",
                                         whiteSpace: "nowrap",
                                         textOverflow: "ellipsis",
-                                        verticalAlign: "text-top"
                                     }}
                                 />
                             </div>

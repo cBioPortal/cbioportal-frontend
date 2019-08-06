@@ -12,9 +12,9 @@ import {IndicatorQueryResp, IOncoKbData, OncoKbTreatment} from "../model/OncoKb"
 
 // oncogenic value => oncogenic class name
 const ONCOGENIC_CLASS_NAMES:{[oncogenic:string]: string} = {
-    'Likely Neutral': 'likely-neutral',
-    'Unknown': 'unknown-oncogenic',
-    'Inconclusive': 'unknown-oncogenic',
+    'Likely Neutral': 'neutral',
+    'Unknown': 'unknown',
+    'Inconclusive': 'inconclusive',
     'Predicted Oncogenic': 'oncogenic',
     'Likely Oncogenic': 'oncogenic',
     'Oncogenic': 'oncogenic',
@@ -50,7 +50,7 @@ const RESISTANCE_LEVEL_SCORE:{[level:string]: number} = {
     'R1': 3,
 };
 
-export function normalizeLevel(level:string):string|null
+export function normalizeLevel(level:string|null):string|null
 {
     if (level)
     {
@@ -112,37 +112,35 @@ export function oncogenicYPosition(oncogenicity: string, isVUS: boolean, resista
     return -(7 + oncogenicityIndex * 120 + resistanceLevelIndex * 30);
 }
 
-export function oncogenicImageClassNames(oncogenic: string,
-                                         isVUS: boolean,
-                                         highestSensitiveLevel:string,
-                                         highestResistanceLevel:string):string[]
-{
-    const classNames = ["", ""];
+export function annotationIconClassNames(indicatorQueryResp: IndicatorQueryResp | undefined): string {
+    const classNames = ["oncokb", "annotation-icon", "unknown", "no-level"];
 
-    const sl = normalizeLevel(highestSensitiveLevel);
-    const rl = normalizeLevel(highestResistanceLevel);
+    if (indicatorQueryResp) {
+        const sl = normalizeLevel(indicatorQueryResp.highestSensitiveLevel);
+        const rl = normalizeLevel(indicatorQueryResp.highestResistanceLevel);
 
-    if (!rl && sl)
-    {
-        classNames[0] = 'level' + sl;
-    }
-    else if (rl && !sl)
-    {
-        classNames[0] = 'level' + rl;
-    }
-    else if (rl && sl)
-    {
-        classNames[0] = 'level' + sl + 'R';
-    }
+        classNames[2] = ONCOGENIC_CLASS_NAMES[indicatorQueryResp.oncogenic] || (indicatorQueryResp.vus ? "vus" : "unknown");
 
-    classNames[1] = ONCOGENIC_CLASS_NAMES[oncogenic] || "no-info-oncogenic";
+        if (sl || rl) {
+            let levelName = 'level';
 
-    if(classNames[1] === 'no-info-oncogenic' && isVUS)
-    {
-        classNames[1] = 'vus';
+            if (sl) {
+                levelName = `${levelName}-${sl}`;
+            }
+
+            if (rl) {
+                levelName = `${levelName}-${rl}`;
+            }
+
+            classNames[3] = levelName;
+        }
     }
 
-    return classNames;
+    return classNames.join(" ");
+}
+
+export function levelIconClassNames(level: string) {
+    return `oncokb level-icon level-${level}`;
 }
 
 export function calcOncogenicScore(oncogenic:string)
