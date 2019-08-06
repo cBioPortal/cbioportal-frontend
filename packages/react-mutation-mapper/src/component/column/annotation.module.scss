@@ -1,13 +1,3 @@
-.annotation-item {
-  width: 22px;
-  height: 24px;
-  float: left;
-  line-height: 24px;
-  display: inline-block;
-  margin-top: -4px;
-  margin-bottom: -4px;
-}
-
 .annotation-item-load {
     margin-left: 0.2em;
     margin-right: -0.2em;
@@ -29,6 +19,9 @@
   display: inline-block;
 }
 
-.annotation-item img {
-  margin: 4px 0 2px 6px;
+.annotation-item {
+    width: 22px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
 }

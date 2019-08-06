@@ -8,20 +8,18 @@ import {MobxCache} from "../../model/MobxCache";
 import {IndicatorQueryResp, Query} from "../../model/OncoKb";
 import {SimpleCache} from "../../model/SimpleCache";
 import {
+    annotationIconClassNames,
     calcOncogenicScore,
     calcResistanceLevelScore,
     calcSensitivityLevelScore,
-    normalizeLevel,
-    oncogenicXPosition,
-    oncogenicYPosition
 } from "../../util/OncoKbUtils";
 import {errorIcon, loaderIcon} from "../StatusHelpers";
 import OncoKbTooltip from "./OncoKbTooltip";
 import OncoKbFeedback from "./OncoKbFeedback";
 
 import annotationStyles from "../column/annotation.module.scss";
-import oncogenicIconStyles from "./main.module.scss";
 import './oncokb.scss';
+import 'oncokb-styles/dist/oncokb.css';
 
 export interface IOncoKbProps {
     status: "pending" | "error" | "complete";
@@ -34,17 +32,6 @@ export interface IOncoKbProps {
     hugoGeneSymbol:string;
     userEmailAddress?:string;
     disableFeedback?:boolean;
-}
-
-function getOncogenicIconsStyle(indicator: IndicatorQueryResp | undefined)
-{
-    return {
-        backgroundPositionX: oncogenicXPosition(
-            indicator ? normalizeLevel(indicator.highestSensitiveLevel) : ''),
-        backgroundPositionY: indicator ?
-            oncogenicYPosition(indicator.oncogenic, indicator.vus, normalizeLevel(indicator.highestResistanceLevel)) :
-            oncogenicYPosition('', false, '')
-    };
 }
 
 export function sortValue(indicator?: IndicatorQueryResp|undefined|null): number[]
@@ -100,8 +87,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
             oncoKbContent = (
                 <span className={`${annotationStyles["annotation-item"]}`}>
                     <i
-                        className={`${oncogenicIconStyles['oncogenic-icon-image']}`}
-                        style={getOncogenicIconsStyle(this.props.indicator)}
+                        className={annotationIconClassNames(this.props.indicator)}
                         data-test='oncogenic-icon-image'
                         data-test2={this.props.hugoGeneSymbol}
                     />

@@ -1,6 +1,6 @@
 {
   "name": "react-mutation-mapper",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Generic Mutation Mapper",
   "author": "cBioPortal",
   "license": "GNU Affero General Public License v3.0",
@@ -30,6 +30,7 @@
     "jquery": "^3.3.1",
     "lodash": "^4.17.11",
     "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
+    "oncokb-styles": "~0.1.0",
     "react-collapse": "^4.0.3",
     "react-motion": "^0.5.2",
     "react-select": "^3.0.4",
