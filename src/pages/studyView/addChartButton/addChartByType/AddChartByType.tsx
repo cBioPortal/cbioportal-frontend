@@ -85,7 +85,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                         }}
                         onChange={() => this.onOptionChange(option)}
                     >
-                        <EllipsisTextTooltip text={option.label} shownWidth={320}/>
+                        <EllipsisTextTooltip text={option.label}/>
                     </LabeledCheckbox>
                 </div>
             )
