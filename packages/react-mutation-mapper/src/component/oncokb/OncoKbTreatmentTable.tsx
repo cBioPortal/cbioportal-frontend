@@ -1,18 +1,16 @@
 import {DefaultTooltip, ICache, LEVELS} from "cbioportal-frontend-commons";
-import classnames from 'classnames';
 import {observer} from "mobx-react";
 import * as React from 'react';
 import ReactTable from "react-table";
 
 import {ArticleAbstract, OncoKbTreatment} from "../../model/OncoKb";
-import {mergeAlterations} from "../../util/OncoKbUtils";
+import {levelIconClassNames, mergeAlterations} from "../../util/OncoKbUtils";
 import {defaultArraySortMethod, defaultSortMethod} from "../../util/ReactTableUtils";
 import OncoKbHelper from "./OncoKbHelper";
 import ReferenceList from "./ReferenceList";
 import SummaryWithRefs from "./SummaryWithRefs";
 
 
-import levelStyles from './level.module.scss';
 import mainStyles from './main.module.scss';
 import "./oncoKbTreatmentTable.scss";
 
@@ -58,7 +56,8 @@ export default class OncoKbTreatmentTable extends React.Component<OncoKbTreatmen
                     destroyTooltipOnHide={true}
                 >
                     <i
-                        className={classnames(levelStyles['level-icon'], levelStyles[`level-${props.value}`])}
+                        className={levelIconClassNames(props.value)}
+                        style={{margin: 'auto'}}
                     />
                 </DefaultTooltip>
 
@@ -69,19 +68,30 @@ export default class OncoKbTreatmentTable extends React.Component<OncoKbTreatmen
             accessor: "variant",
             minWidth: 80,
             sortMethod: (a: string[], b: string[]) => defaultArraySortMethod(a, b),
-            Cell: (props: {value: string[]}) => <span>{mergeAlterations(props.value)}</span>
+            Cell: (props: { value: string[] }) =>
+                <div style={{whiteSpace: "normal", lineHeight: '1rem'}}>
+                    {mergeAlterations(props.value)}
+                </div>
 
         },
         {
             id: "treatment",
             Header: <span>Drug(s)</span>,
-            accessor: "treatment"
+            accessor: "treatment",
+            Cell: (props: {original: OncoKbTreatment}) =>
+                <div style={{whiteSpace: "normal", lineHeight: '1rem'}}>
+                    {props.original.treatment}
+                </div>
         },
         {
             id: "cancerType",
             Header: <span>Level-associated<br/>cancer type(s)</span>,
             accessor: "cancerType",
-            minWidth: 120
+            minWidth: 120,
+            Cell: (props: {original: OncoKbTreatment}) =>
+                <div style={{whiteSpace: "normal", lineHeight: '1rem'}}>
+                    {props.original.cancerType}
+                </div>
         },
         {
             id: "referenceList",
