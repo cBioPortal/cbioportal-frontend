@@ -43,6 +43,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @observable caseIdsMode: ClinicalDataType = ClinicalDataTypeEnum.SAMPLE;
     @observable content: string = '';
     @observable validContent: string = '';
+    @observable caseAllowed: boolean = true;
 
     public static defaultProps = {
         disableGrouping: false
@@ -74,13 +75,26 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @autobind
     @action
     onClick() {
-        let cases = this.props.selectedSamples.map(sample => {
+      let cases;
+      let caseInverted;
+        if(this.caseAllowed == true) {
+          cases = this.props.selectedSamples.map(sample => {
+              return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
+          });
+          if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
+              cases = _.uniq(cases);
+          }
+          this.content = cases.join("\n")
+        }
+        if(this.caseAllowed == false) {
+          caseInverted = this.props.allSamples.map(sample => {
             return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
         });
-        if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
-            cases = _.uniq(cases);
+          if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
+            caseInverted = _.uniq(cases);
+          }
+        this.content = caseInverted.join("\n")
         }
-        this.content = cases.join("\n")
         this.validateContent = false;
         this.validContent = this.content;
     }
@@ -161,8 +175,16 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                     <div style={{display: 'flex', justifyContent: 'space-between'}}>
                         <span
                             className={styles.fillIds}
-                            onClick={this.onClick}>
+                            onClick={this.caseAllowed = true;
+                              this.onClick}>
                             currently selected
+                        </span>
+                        
+                        <span
+                            className={styles.fillIds}
+                            onClick={this.caseAllowed = false; 
+                               this.onClick}>
+                            unselected
                         </span>
 
                         <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
