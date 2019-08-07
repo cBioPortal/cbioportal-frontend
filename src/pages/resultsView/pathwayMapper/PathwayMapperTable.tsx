@@ -83,7 +83,7 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
             tooltip: <span>Score</span>,
             filter: (d: IPathwayMapperTable, filterString: string, filterStringUpper: string) =>
                 (d.score + "").includes(filterStringUpper),
-            sortBy: (d: IPathwayMapperTable) => d.score.toFixed(2),
+            sortBy: (d: IPathwayMapperTable) => d.score,
             download: (d: IPathwayMapperTable) => d.score + ""
         };
 
