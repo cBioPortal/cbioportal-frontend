@@ -324,7 +324,7 @@ export default class AnnotationColumnFormatter
                               pubMedCache?:OncokbPubMedCache)
     {
         return (
-            <span style={{display:'inline-block', minWidth:100}}>
+            <span style={{display:'flex', minWidth:100}}>
                 <If condition={columnProps.enableOncoKb || false}>
                     <OncoKB
                         hugoGeneSymbol={annotation.hugoGeneSymbol}
