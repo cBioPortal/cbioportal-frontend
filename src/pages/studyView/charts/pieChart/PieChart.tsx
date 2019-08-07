@@ -8,7 +8,7 @@ import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
 import autobind from 'autobind-decorator';
-import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewUtils";
+import {ClinicalDataCountSummary} from "pages/studyView/StudyViewUtils";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
@@ -19,7 +19,7 @@ import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 export interface IPieChartProps {
     width: number;
     height: number;
-    data: ClinicalDataCountWithColor[];
+    data: ClinicalDataCountSummary[];
     filters: string[];
     onUserSelection: (values: string[]) => void;
     placement: 'left' | 'right';
@@ -102,7 +102,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @computed
     get fill() {
-        return (d: ClinicalDataCountWithColor) => {
+        return (d: ClinicalDataCountSummary) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
                 return DEFAULT_NA_COLOR;
             }
@@ -112,7 +112,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @computed
     get stroke() {
-        return (d: ClinicalDataCountWithColor) => {
+        return (d: ClinicalDataCountSummary) => {
             if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
                 return "#cccccc";
             }
@@ -122,7 +122,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @computed
     get strokeWidth() {
-        return (d: ClinicalDataCountWithColor) => {
+        return (d: ClinicalDataCountSummary) => {
             if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
                 return 3;
             }
@@ -132,7 +132,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @computed
     get fillOpacity() {
-        return (d: ClinicalDataCountWithColor) => {
+        return (d: ClinicalDataCountSummary) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
                 return '0.5';
             }
@@ -141,17 +141,17 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     @autobind
-    private x(d: ClinicalDataCountWithColor) {
+    private x(d: ClinicalDataCountSummary) {
         return d.value;
     }
 
     @autobind
-    private y(d: ClinicalDataCountWithColor) {
+    private y(d: ClinicalDataCountSummary) {
         return d.count;
     }
 
     @autobind
-    private label(d: ClinicalDataCountWithColor) {
+    private label(d: ClinicalDataCountSummary) {
         return d.count / this.totalCount > 0.5 ? d.count.toLocaleString() : (
             this.maxLength(d.count / this.totalCount, this.pieSliceRadius / 3) <
             getTextWidth(

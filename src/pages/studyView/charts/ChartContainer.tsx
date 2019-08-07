@@ -21,7 +21,7 @@ import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {
     AnalysisGroup,
-    ChartMeta, ChartType, ClinicalDataCountWithColor,
+    ChartMeta, ChartType, ClinicalDataCountSummary,
     getHeightByDimension,
     getTableHeightByDimension,
     getWidthByDimension,
@@ -34,7 +34,7 @@ import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPl
 import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {getComparisonUrl} from "../../../shared/api/urls";
-import {DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
+import {DataType, DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
 import {MAX_GROUPS_IN_SESSION} from "../../groupComparison/GroupComparisonUtils";
 import {Modal} from "react-bootstrap";
 import Timer = NodeJS.Timer;
@@ -64,7 +64,7 @@ export interface IChartContainerProps {
     setComparisonConfirmationModal:StudyViewPageStore["setComparisonConfirmationModal"];
     onValueSelection?: any;
     onDataBinSelection?: any;
-    getData?:()=>Promise<string|null>;
+    getData?:(dataType?: DataType)=>Promise<string|null>;
     downloadTypes?:DownloadControlsButton[];
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
@@ -232,9 +232,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 case ChartTypeEnum.TABLE:
                     const openComparison = ()=>this.props.openComparisonPage({
                         chartMeta: this.props.chartMeta,
-                        clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountWithColor[]),
+                        clinicalAttributeValues:(this.props.promise.result! as ClinicalDataCountSummary[]),
                     });
-                    const values = (this.props.promise.result! as ClinicalDataCountWithColor[]);
+                    const values = (this.props.promise.result! as ClinicalDataCountSummary[]);
                     if (values.length > MAX_GROUPS_IN_SESSION) {
                         this.props.setComparisonConfirmationModal((hideModal)=>{
                             return (

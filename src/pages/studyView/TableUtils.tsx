@@ -7,6 +7,7 @@ import {ICON_FILTER_OFF, ICON_FILTER_ON} from "shared/lib/Colors";
 import {GenePanelList} from "pages/studyView/table/GenePanelModal";
 import {getFrequencyStr} from "pages/studyView/StudyViewUtils";
 import {GenePanel, GenePanelToGene} from "shared/api/generated/CBioPortalAPIInternal";
+import {CSSProperties} from "react";
 
 export function getGeneColumnHeaderRender(cellMargin: number, headerName: string, cancerGeneListFilterEnabled: boolean, isFilteredByCancerGeneList: boolean, cancerGeneIconToggle: (event: any) => void) {
     return <div style={{marginLeft: cellMargin}} className={styles.displayFlex} data-test='gene-column-header'>
@@ -46,7 +47,7 @@ export function getCancerGeneFilterToggleIcon(isFilteredByCancerGeneList:boolean
     return <span data-test='cancer-gene-filter' className={classnames(styles.cancerGeneIcon, styles.displayFlex)} style={{color: isFilteredByCancerGeneList ? ICON_FILTER_ON : ICON_FILTER_OFF}}><i className='fa fa-filter'></i></span>;
 }
 
-export function getFreqColumnRender(type: 'mutation' | 'cna', numberOfSamplesProfiled: number, numberOfAlteredCases: number, matchingGenePanels: GenePanel[], toggleModal: (panelName: string, genes: GenePanelToGene[]) => void) {
+export function getFreqColumnRender(type: 'mutation' | 'cna', numberOfSamplesProfiled: number, numberOfAlteredCases: number, matchingGenePanels: GenePanel[], toggleModal: (panelName: string, genes: GenePanelToGene[]) => void, style?:CSSProperties) {
     const addTotalProfiledOverlay = () => (
         <span style={{display: 'flex', flexDirection: 'column'}}>
             <span>{`# of samples profiled for ${type === 'mutation' ? 'mutations' : 'copy number alterations'} in this gene: ${numberOfSamplesProfiled.toLocaleString()}`}</span>
@@ -62,7 +63,7 @@ export function getFreqColumnRender(type: 'mutation' | 'cna', numberOfSamplesPro
             overlay={addTotalProfiledOverlay}
             destroyTooltipOnHide={true}
         >
-            <span>
+            <span style={style}>
                 {getFrequencyStr(
                     (numberOfAlteredCases / numberOfSamplesProfiled) * 100
                 )}
