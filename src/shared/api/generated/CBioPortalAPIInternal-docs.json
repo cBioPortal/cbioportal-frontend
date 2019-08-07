@@ -594,6 +594,58 @@
         }
       }
     },
+    "/expression-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Expression Enrichments"
+        ],
+        "summary": "Fetch expression enrichments in a molecular profile",
+        "operationId": "fetchExpressionEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "groups",
+            "description": "List of groups containing sample and molecular profile identifiers",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExpressionEnrichment"
+              }
+            }
+          }
+        }
+      }
+    },
     "/filtered-samples/fetch": {
       "post": {
         "tags": [
@@ -1100,62 +1152,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CoExpression"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/molecular-profiles/{molecularProfileId}/expression-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Expression Enrichments"
-        ],
-        "summary": "Fetch expression enrichments in a molecular profile",
-        "operationId": "fetchExpressionEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "enrichmentFilter",
-            "description": "List of altered and unaltered Sample/Patient IDs",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/EnrichmentFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ExpressionEnrichment"
               }
             }
           }
@@ -2284,38 +2280,13 @@
       },
       "title": "DensityPlotBin"
     },
-    "EnrichmentFilter": {
-      "type": "object",
-      "required": [
-        "alteredIds",
-        "unalteredIds"
-      ],
-      "properties": {
-        "alteredIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "unalteredIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "EnrichmentFilter"
-    },
     "ExpressionEnrichment": {
       "type": "object",
       "required": [
         "entrezGeneId",
+        "groupsStatistics",
         "hugoGeneSymbol",
-        "meanExpressionInAlteredGroup",
-        "meanExpressionInUnalteredGroup",
-        "pValue",
-        "standardDeviationInAlteredGroup",
-        "standardDeviationInUnalteredGroup"
+        "pValue"
       ],
       "properties": {
         "cytoband": {
@@ -2325,22 +2296,16 @@
           "type": "integer",
           "format": "int32"
         },
+        "groupsStatistics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GroupStatistics"
+          }
+        },
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "meanExpressionInAlteredGroup": {
-          "type": "number"
-        },
-        "meanExpressionInUnalteredGroup": {
-          "type": "number"
-        },
         "pValue": {
-          "type": "number"
-        },
-        "standardDeviationInAlteredGroup": {
-          "type": "number"
-        },
-        "standardDeviationInUnalteredGroup": {
           "type": "number"
         }
       },
@@ -2573,6 +2538,26 @@
         }
       },
       "title": "GroupFilter"
+    },
+    "GroupStatistics": {
+      "type": "object",
+      "required": [
+        "meanExpression",
+        "name",
+        "standardDeviation"
+      ],
+      "properties": {
+        "meanExpression": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        },
+        "standardDeviation": {
+          "type": "number"
+        }
+      },
+      "title": "GroupStatistics"
     },
     "Info": {
       "type": "object",
