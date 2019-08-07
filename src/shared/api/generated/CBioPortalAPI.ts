@@ -36,6 +36,8 @@ export type CancerStudy = {
 
         'publicStudy': boolean
 
+        'referenceGenome': string
+
         'rppaSampleCount': number
 
         'sequencedSampleCount': number
@@ -210,11 +212,9 @@ export type DiscreteCopyNumberFilter = {
 
 };
 export type Gene = {
-    'chromosome': string
+    'entrezGeneId': number
 
-        'cytoband': string
-
-        'entrezGeneId': number
+        'geneticEntityId': number
 
         'hugoGeneSymbol': string
 
@@ -251,10 +251,6 @@ export type GenePanelDataFilter = {
     'sampleIds': Array < string >
 
         'sampleListId': string
-
-};
-export type GenePanelMultipleStudyFilter = {
-    'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
 
 };
 export type GenePanelToGene = {
@@ -311,6 +307,8 @@ export type Mutation = {
     'aminoAcidChange': string
 
         'center': string
+
+        'chr': string
 
         'driverFilter': string
 
@@ -459,6 +457,24 @@ export type PatientIdentifier = {
     'patientId': string
 
         'studyId': string
+
+};
+export type ReferenceGenomeGene = {
+    'chromosome': string
+
+        'cytoband': string
+
+        'end': number
+
+        'entrezGeneId': number
+
+        'hugoGeneSymbol': string
+
+        'length': number
+
+        'referenceGenomeId': number
+
+        'start': number
 
 };
 export type Sample = {
@@ -1388,7 +1404,7 @@ export default class CBioPortalAPI {
             });
         };
     fetchGenePanelDataInMultipleMolecularProfilesUsingPOSTURL(parameters: {
-        'genePanelMultipleStudyFilter': GenePanelMultipleStudyFilter,
+        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1408,10 +1424,10 @@ export default class CBioPortalAPI {
      * Fetch gene panel data
      * @method
      * @name CBioPortalAPI#fetchGenePanelDataInMultipleMolecularProfilesUsingPOST
-     * @param {} genePanelMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs
+     * @param {} sampleMolecularIdentifiers - List of Molecular Profile ID and Sample ID pairs
      */
     fetchGenePanelDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
-        'genePanelMultipleStudyFilter': GenePanelMultipleStudyFilter,
+        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier > ,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1427,12 +1443,12 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            if (parameters['genePanelMultipleStudyFilter'] !== undefined) {
-                body = parameters['genePanelMultipleStudyFilter'];
+            if (parameters['sampleMolecularIdentifiers'] !== undefined) {
+                body = parameters['sampleMolecularIdentifiers'];
             }
 
-            if (parameters['genePanelMultipleStudyFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: genePanelMultipleStudyFilter'));
+            if (parameters['sampleMolecularIdentifiers'] === undefined) {
+                reject(new Error('Missing required  parameter: sampleMolecularIdentifiers'));
                 return;
             }
 
@@ -1452,10 +1468,10 @@ export default class CBioPortalAPI {
      * Fetch gene panel data
      * @method
      * @name CBioPortalAPI#fetchGenePanelDataInMultipleMolecularProfilesUsingPOST
-     * @param {} genePanelMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs
+     * @param {} sampleMolecularIdentifiers - List of Molecular Profile ID and Sample ID pairs
      */
     fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(parameters: {
-            'genePanelMultipleStudyFilter': GenePanelMultipleStudyFilter,
+            'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenePanelData >
@@ -3954,6 +3970,262 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
+    getAllReferenceGenomeGenesUsingGETURL(parameters: {
+        'genomeName': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/reference-genome-genes/{genomeName}';
+
+        path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all reference genes
+     * @method
+     * @name CBioPortalAPI#getAllReferenceGenomeGenesUsingGET
+     * @param {string} genomeName - Name of Reference Genome hg19
+     */
+    getAllReferenceGenomeGenesUsingGETWithHttpInfo(parameters: {
+        'genomeName': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/reference-genome-genes/{genomeName}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+            if (parameters['genomeName'] === undefined) {
+                reject(new Error('Missing required  parameter: genomeName'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all reference genes
+     * @method
+     * @name CBioPortalAPI#getAllReferenceGenomeGenesUsingGET
+     * @param {string} genomeName - Name of Reference Genome hg19
+     */
+    getAllReferenceGenomeGenesUsingGET(parameters: {
+            'genomeName': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ReferenceGenomeGene >
+        > {
+            return this.getAllReferenceGenomeGenesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchReferenceGenomeGenesUsingPOSTURL(parameters: {
+        'genomeName': string,
+        'geneIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/reference-genome-genes/{genomeName}/fetch';
+
+        path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch genes of reference genome of interest
+     * @method
+     * @name CBioPortalAPI#fetchReferenceGenomeGenesUsingPOST
+     * @param {string} genomeName - Name of Reference Genome hg19
+     * @param {} geneIds - List of Entrez Gene IDs
+     */
+    fetchReferenceGenomeGenesUsingPOSTWithHttpInfo(parameters: {
+        'genomeName': string,
+        'geneIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/reference-genome-genes/{genomeName}/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+            if (parameters['genomeName'] === undefined) {
+                reject(new Error('Missing required  parameter: genomeName'));
+                return;
+            }
+
+            if (parameters['geneIds'] !== undefined) {
+                body = parameters['geneIds'];
+            }
+
+            if (parameters['geneIds'] === undefined) {
+                reject(new Error('Missing required  parameter: geneIds'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch genes of reference genome of interest
+     * @method
+     * @name CBioPortalAPI#fetchReferenceGenomeGenesUsingPOST
+     * @param {string} genomeName - Name of Reference Genome hg19
+     * @param {} geneIds - List of Entrez Gene IDs
+     */
+    fetchReferenceGenomeGenesUsingPOST(parameters: {
+            'genomeName': string,
+            'geneIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ReferenceGenomeGene >
+        > {
+            return this.fetchReferenceGenomeGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getReferenceGenomeGeneUsingGETURL(parameters: {
+        'genomeName': string,
+        'geneId': number,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/reference-genome-genes/{genomeName}/{geneId}';
+
+        path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+        path = path.replace('{geneId}', parameters['geneId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get a gene of a reference genome of interest
+     * @method
+     * @name CBioPortalAPI#getReferenceGenomeGeneUsingGET
+     * @param {string} genomeName - Name of Reference Genome hg19
+     * @param {integer} geneId - Entrez Gene ID 207
+     */
+    getReferenceGenomeGeneUsingGETWithHttpInfo(parameters: {
+        'genomeName': string,
+        'geneId': number,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/reference-genome-genes/{genomeName}/{geneId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+            if (parameters['genomeName'] === undefined) {
+                reject(new Error('Missing required  parameter: genomeName'));
+                return;
+            }
+
+            path = path.replace('{geneId}', parameters['geneId'] + '');
+
+            if (parameters['geneId'] === undefined) {
+                reject(new Error('Missing required  parameter: geneId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get a gene of a reference genome of interest
+     * @method
+     * @name CBioPortalAPI#getReferenceGenomeGeneUsingGET
+     * @param {string} genomeName - Name of Reference Genome hg19
+     * @param {integer} geneId - Entrez Gene ID 207
+     */
+    getReferenceGenomeGeneUsingGET(parameters: {
+        'genomeName': string,
+        'geneId': number,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < ReferenceGenomeGene > {
+        return this.getReferenceGenomeGeneUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     getAllSampleListsUsingGETURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
