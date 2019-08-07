@@ -43,7 +43,6 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @observable caseIdsMode: ClinicalDataType = ClinicalDataTypeEnum.SAMPLE;
     @observable content: string = '';
     @observable validContent: string = '';
-    @observable caseAllowed: boolean = true;
 
     public static defaultProps = {
         disableGrouping: false
@@ -74,10 +73,23 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @autobind
     @action
+    /*
     onClick() {
+        let cases = this.props.selectedSamples.map(sample => {
+            return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
+        });
+        if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
+            cases = _.uniq(cases);
+        }
+        this.content = cases.join("\n")
+        this.validateContent = false;
+        this.validContent = this.content;
+    }
+    */
+    onClick(event: any) {
       let cases;
       let caseInverted;
-        if(this.caseAllowed == true) {
+        if(event.target.id == "selected") {
           cases = this.props.selectedSamples.map(sample => {
               return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
           });
@@ -86,7 +98,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
           }
           this.content = cases.join("\n")
         }
-        if(this.caseAllowed == false) {
+        if(event.target.id == "unselected") {
           caseInverted = this.props.allSamples.map(sample => {
             return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
         });
@@ -173,17 +185,14 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
                 <span>
                     <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                        <span
+                        <span id={"selected"}
                             className={styles.fillIds}
-                            onClick={this.caseAllowed = true;
-                              this.onClick}>
+                            onClick={this.onClick}>
                             currently selected
                         </span>
-                        
-                        <span
+                        <span id={"unselected"}
                             className={styles.fillIds}
-                            onClick={this.caseAllowed = false; 
-                               this.onClick}>
+                            onClick={this.onClick}>
                             unselected
                         </span>
 
