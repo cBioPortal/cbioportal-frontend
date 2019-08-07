@@ -73,19 +73,6 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @autobind
     @action
-    /*
-    onClick() {
-        let cases = this.props.selectedSamples.map(sample => {
-            return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
-        });
-        if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
-            cases = _.uniq(cases);
-        }
-        this.content = cases.join("\n")
-        this.validateContent = false;
-        this.validContent = this.content;
-    }
-    */
     onClick(event: any) {
       let cases;
       let caseInverted;
