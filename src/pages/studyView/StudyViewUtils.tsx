@@ -26,6 +26,7 @@ import MobxPromise from 'mobxpromise';
 import {getTextWidth} from "../../public-lib/lib/TextTruncationUtils";
 import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
 import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
+import styles from './styles.module.scss';
 
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
@@ -208,10 +209,13 @@ const OPERATOR_MAP: {[op:string]: string} = {
     ">": ">"
 };
 
-export function getClinicalAttributeOverlay(displayName: string, description: string): JSX.Element {
-    return <div style={{maxWidth: '500px'}}>
-        <b>{displayName}</b><br/>
-        {description}
+export function getClinicalAttributeOverlay(displayName: string, description: string, clinicalAttributeId?: string): JSX.Element {
+    const comparisonDisplayName = displayName.toLowerCase().trim();
+    let comparisonDescription = description.toLowerCase().trim().replace(/.&/, '');
+    return <div style={{maxWidth: '300px'}}>
+        <div><b>{displayName}</b> {!!clinicalAttributeId &&
+        <span className={styles.titleMeta}>ID: {clinicalAttributeId}</span>}</div>
+        {comparisonDescription !== comparisonDisplayName && <div>{description}</div>}
     </div>;
 }
 

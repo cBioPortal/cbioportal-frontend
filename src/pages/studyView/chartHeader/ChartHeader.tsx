@@ -20,12 +20,6 @@ import DownloadControls, {DownloadControlsButton} from "public-lib/components/do
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 import {serializeEvent} from "shared/lib/tracking";
 
-// there's some incompatiblity with rc-tooltip and study view layout
-// these adjustments force tooltips to open top right because tooltips
-// were breaking at far right of page
-const tooltipPosition = "topRight";
-const tooltipAlign = { offset:[5,-6] };
-
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
     title: string;
@@ -194,6 +188,19 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         return items;
     }
 
+    // there's some incompatiblity with rc-tooltip and study view layout
+    // these adjustments force tooltips to open on different directions because tooltips
+    // were breaking at far right of page
+    @computed
+    get tooltipPosition() {
+        return  this.props.placement == 'left' ? 'topRight' : 'top';
+    }
+
+    @computed
+    get tooltipAlign() {
+        return this.props.placement == 'left' ? { offset:[0,-6] } : undefined;
+    }
+
     public render() {
         return (
             <div className={classnames(styles.header, 'chartHeader')}
@@ -204,20 +211,20 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 {this.active && (
                     <div className={classnames(styles.controls, 'controls')}>
                         <div className="btn-group">
-                            <If condition={!!this.props.chartMeta.description}>
+                            <If condition={!!this.props.chartMeta.clinicalAttribute || !!this.props.chartMeta.description}>
                                 <DefaultTooltip
                                     mouseEnterDelay={0}
                                     trigger={["hover"]}
-                                    placement={tooltipPosition}
-                                    align={tooltipAlign}
-                                    overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description)}
+                                    placement={this.tooltipPosition}
+                                    align={this.tooltipAlign}
+                                    overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description, this.props.chartMeta.clinicalAttribute ? this.props.chartMeta.clinicalAttribute.clinicalAttributeId : undefined)}
                                     destroyTooltipOnHide={true}
                                 >
                                     <div
                                         className={classnames("btn btn-xs btn-default", styles.item)}
                                     >
                                         <i
-                                            className={classnames("fa fa-xs", "fa-info-circle", styles.clickable)}
+                                            className={classnames("fa fa-xs", "fa-info-circle")}
                                             aria-hidden="true"
                                         />
                                     </div>
@@ -225,8 +232,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             </If>
                             <If condition={this.props.chartControls && !!this.props.chartControls.showResetIcon}>
                                 <DefaultTooltip
-                                    placement={tooltipPosition}
-                                    align={tooltipAlign}
+                                    placement={this.tooltipPosition}
+                                    align={this.tooltipAlign}
                                     overlay={<span>Reset filters in chart</span>}
                                     destroyTooltipOnHide={true}
                                 >
@@ -242,8 +249,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 </DefaultTooltip>
                             </If>
                             <DefaultTooltip
-                                placement={tooltipPosition}
-                                align={tooltipAlign}
+                                placement={this.tooltipPosition}
+                                align={this.tooltipAlign}
                                 overlay={<span>Delete chart</span>}
                             >
                                 <button
