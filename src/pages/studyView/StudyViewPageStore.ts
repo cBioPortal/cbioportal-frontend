@@ -1618,7 +1618,7 @@ export class StudyViewPageStore {
                     let data = _.find(result, {
                         attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
                         clinicalDataType: dataType
-                    });
+                    } as ClinicalDataCountItem);
                     let counts:ClinicalDataCount[] = [];
                     if (data !== undefined) {
                         counts = data.counts;
@@ -1649,14 +1649,18 @@ export class StudyViewPageStore {
                     // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
                     const dataBinMethod = DataBinMethodConstants.STATIC;
                     let result = [];
-                    if (this.isInitialFilterState && isDefaultAttr && !this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
+                    const attribute = this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!))!
+                    if (this.isInitialFilterState &&
+                        isDefaultAttr &&
+                        !this._clinicalDataIntervalFilterSet.has(uniqueKey) &&
+                        !attribute.disableLogScale) {// check if log scale is changed from default value(false)
                         result = this.initialVisibleAttributesClinicalDataBinCountData.result;
                     } else {
                         if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
                             result = await internalClient.fetchClinicalDataBinCountsUsingPOST({
                                 dataBinMethod,
                                 clinicalDataBinCountFilter: {
-                                    attributes: [this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!))!],
+                                    attributes: [attribute],
                                     studyViewFilter: this.filters
                                 } as ClinicalDataBinCountFilter
                             });
@@ -1993,6 +1997,14 @@ export class StudyViewPageStore {
         default: []
     });
 
+    private getDefaultClinicalDataBinFilter(attribute: ClinicalAttribute) {
+        return {
+            attributeId: attribute.clinicalAttributeId,
+            clinicalDataType: attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
+            disableLogScale: false
+        } as ClinicalDataBinFilter;
+    }
+
     readonly clinicalAttributes = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => _.uniqBy(await defaultClient.fetchClinicalAttributesUsingPOST({
@@ -2004,11 +2016,7 @@ export class StudyViewPageStore {
             clinicalAttributes.forEach((obj:ClinicalAttribute) => {
                 if(obj.datatype === 'NUMBER') {
                     const uniqueKey = getClinicalAttributeUniqueKey(obj);
-                    let filter = {
-                        attributeId: obj.clinicalAttributeId,
-                        clinicalDataType: obj.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                        disableLogScale: false
-                    } as ClinicalDataBinFilter;
+                    let filter = this.getDefaultClinicalDataBinFilter(obj);
 
                     if (STUDY_VIEW_CONFIG.initialBins[uniqueKey]) {
                         filter.customBins = STUDY_VIEW_CONFIG.initialBins[uniqueKey];
@@ -2451,11 +2459,11 @@ export class StudyViewPageStore {
     readonly initialVisibleAttributesClinicalDataBinCountData = remoteData<DataBin[]>({
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
-            const
-                    attributes= _.uniqBy( _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'NUMBER').map(attr => {
-                        return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey( attr))!;
-                    }),attr => `${attr.attributeId}_${attr.clinicalDataType}`
-            );
+            const attributes = _.chain(this.defaultVisibleAttributes.result)
+                .filter(attr => attr.datatype === 'NUMBER')
+                .map(this.getDefaultClinicalDataBinFilter)
+                .uniqBy(attr => `${attr.attributeId}_${attr.clinicalDataType}`)
+                .value();
 
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
                 dataBinMethod: 'STATIC',
