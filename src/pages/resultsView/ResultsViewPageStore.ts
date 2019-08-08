@@ -800,18 +800,14 @@ export class ResultsViewPageStore {
             this.referenceGenes
         ],
         invoke: () => {
-            if (this.referenceGenes.result) {
-                const uniqueReferenceGeneChromosomes = _.uniq(this.referenceGenes.result.map(g => g.chromosome));
-                return Promise.resolve(uniqueReferenceGeneChromosomes.reduce(
-                    (map: { [chromosome: string]: MobxPromise<CopyNumberSeg[]> }, chromosome: string) => {
-                        map[chromosome] = remoteData<CopyNumberSeg[]> ({
-                            invoke: () => fetchCopyNumberSegmentsForSamples(this.samples.result, chromosome)
-                        });
-                        return map;
-                    },{}));
-            } else {
-                return Promise.resolve({});
-            }
+            const uniqueReferenceGeneChromosomes = _.uniq(this.referenceGenes.result!.map(g => g.chromosome));
+            return Promise.resolve(uniqueReferenceGeneChromosomes.reduce(
+                (map: { [chromosome: string]: MobxPromise<CopyNumberSeg[]> }, chromosome: string) => {
+                    map[chromosome] = remoteData<CopyNumberSeg[]> ({
+                        invoke: () => fetchCopyNumberSegmentsForSamples(this.samples.result, chromosome)
+                    });
+                    return map;
+                },{}));
         }
     }, {});
 
@@ -2281,63 +2277,13 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly hugoGeneSymbolToReferenceGene = remoteData({
+    readonly hugoGeneSymbolToReferenceGene = remoteData<{[hugoSymbol:string]:ReferenceGenomeGene}>({
         await: ()=>[
             this.referenceGenes
         ],
         invoke: ()=>{
             // build reference gene map
-            const result:{[hugosymbol:string]:ReferenceGenomeGene} =
-                _.keyBy(this.referenceGenes.result!, g=>g.hugoGeneSymbol);
-            return Promise.resolve(result);
-        }
-    });
-
-    readonly mutationEnrichmentData  = remoteData({
-        await: ()=>[
-            this._mutationEnrichmentDataWithoutCytoband,
-            this.hugoGeneSymbolToReferenceGene
-        ],
-    invoke: ()=>{
-        // build reference gene map
-        const data = this._mutationEnrichmentDataWithoutCytoband.result!;
-        data.forEach((d=>{
-            d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
-        }))
-
-        return Promise.resolve(data);
-    }
-    });
-
-    readonly copyNumberHomdelEnrichmentData  = remoteData({
-        await: ()=>[
-            this._copyNumberHomdelEnrichmentData,
-            this.hugoGeneSymbolToReferenceGene
-        ],
-        invoke: ()=>{
-            // build reference gene map
-            const data = this._copyNumberHomdelEnrichmentData.result!;
-            data.forEach((d=>{
-                d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
-            }))
-
-            return Promise.resolve(data);
-        }
-    });
-
-    readonly copyNumberAmpEnrichmentData  = remoteData({
-        await: ()=>[
-            this._copyNumberAmpEnrichmentData,
-            this.hugoGeneSymbolToReferenceGene
-        ],
-        invoke: ()=>{
-            // build reference gene map
-            const data = this._copyNumberAmpEnrichmentData.result!;
-            data.forEach((d=>{
-                d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
-            }))
-
-            return Promise.resolve(data);
+            return Promise.resolve(_.keyBy(this.referenceGenes.result!, g=>g.hugoGeneSymbol));
         }
     });
 
@@ -2966,6 +2912,22 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly mutationEnrichmentData  = remoteData({
+        await: ()=>[
+            this._mutationEnrichmentDataWithoutCytoband,
+            this.hugoGeneSymbolToReferenceGene
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            const data = this._mutationEnrichmentDataWithoutCytoband.result!;
+            data.forEach((d=>{
+                d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
+            }))
+
+            return Promise.resolve(data);
+        }
+    });
+
     readonly copyNumberEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
             this.molecularProfilesInStudies,
@@ -2973,7 +2935,7 @@ export class ResultsViewPageStore {
         invoke: async () => pickCopyNumberEnrichmentProfiles(this.molecularProfilesInStudies.result!)
     });
 
-    readonly _copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
+    readonly _copyNumberHomdelEnrichmentDataWithoutCytoband = makeEnrichmentDataPromise({
         store:this,
         await: () => [
             this.alteredSamples,
@@ -2984,7 +2946,23 @@ export class ResultsViewPageStore {
         }
     );
 
-    readonly _copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
+    readonly copyNumberHomdelEnrichmentData  = remoteData({
+        await: ()=>[
+            this._copyNumberHomdelEnrichmentDataWithoutCytoband,
+            this.hugoGeneSymbolToReferenceGene
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            const data = this._copyNumberHomdelEnrichmentDataWithoutCytoband.result!;
+            data.forEach((d=>{
+                d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
+            }))
+
+            return Promise.resolve(data);
+        }
+    });
+
+    readonly _copyNumberAmpEnrichmentDataWithoutCytoband = makeEnrichmentDataPromise({
         store:this,
         await: () => [
             this.alteredSamples,
@@ -2994,10 +2972,25 @@ export class ResultsViewPageStore {
         fetchData:()=>this.getCopyNumberEnrichmentData("AMP")
     });
 
+    readonly copyNumberAmpEnrichmentData  = remoteData({
+        await: ()=>[
+            this._copyNumberAmpEnrichmentDataWithoutCytoband,
+            this.hugoGeneSymbolToReferenceGene
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            const data = this._copyNumberAmpEnrichmentDataWithoutCytoband.result!;
+            data.forEach((d=>{
+                d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
+            }))
+
+            return Promise.resolve(data);
+        }
+    });
+
     private getCopyNumberEnrichmentData(copyNumberEventType: "HOMDEL" | "AMP"): Promise<AlterationEnrichment[]> {
 
         const molecularProfile = this.selectedEnrichmentCopyNumberProfile;
-
         return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             copyNumberEventType: copyNumberEventType,
             enrichmentType: "SAMPLE",
@@ -3022,7 +3015,7 @@ export class ResultsViewPageStore {
         invoke:()=>Promise.resolve(pickMRNAEnrichmentProfiles(this.molecularProfilesInStudies.result!))
     });
 
-    readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
+    readonly _mRNAEnrichmentDataWithoutCytoband = makeEnrichmentDataPromise({
         store:this,
         await: () => [
             this.alteredSamples,
@@ -3050,12 +3043,28 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly mRNAEnrichmentData  = remoteData({
+        await: ()=>[
+            this._mRNAEnrichmentDataWithoutCytoband,
+            this.hugoGeneSymbolToReferenceGene
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            const data = this._mRNAEnrichmentDataWithoutCytoband.result!;
+            data.forEach((d=>{
+                d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
+            }))
+
+            return Promise.resolve(data);
+        }
+    });
+
     readonly proteinEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await:()=>[this.molecularProfilesInStudies],
         invoke:()=>Promise.resolve(pickProteinEnrichmentProfiles(this.molecularProfilesInStudies.result!))
     });
 
-    readonly proteinEnrichmentData = makeEnrichmentDataPromise({
+    readonly _proteinEnrichmentDataWithoutCytoband = makeEnrichmentDataPromise({
         store:this,
         await: () => [
             this.alteredSamples,
@@ -3078,6 +3087,22 @@ export class ResultsViewPageStore {
                 enrichmentType: "SAMPLE",
                 groups
             });
+        }
+    });
+
+    readonly proteinEnrichmentData  = remoteData({
+        await: ()=>[
+            this._proteinEnrichmentDataWithoutCytoband,
+            this.hugoGeneSymbolToReferenceGene
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            const data = this._proteinEnrichmentDataWithoutCytoband.result!;
+            data.forEach((d=>{
+                d.cytoband = this.hugoGeneSymbolToReferenceGene.result![d.hugoGeneSymbol].cytoband;
+            }))
+
+            return Promise.resolve(data);
         }
     });
 
