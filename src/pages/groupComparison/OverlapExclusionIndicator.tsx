@@ -1,9 +1,10 @@
 import * as React from "react";
 import {observer} from "mobx-react";
 import GroupComparisonStore, {OverlapStrategy} from "./GroupComparisonStore";
-import {caseCounts} from "./GroupComparisonUtils";
-import _ from "lodash";
+import {ComparisonGroup, IOverlapComputations} from "./GroupComparisonUtils";
 import {joinGroupNames} from "./OverlapUtils";
+import {computed} from "mobx";
+import {MakeMobxView} from "../../shared/components/MobxView";
 
 export interface IOverlapExclusionIndicatorProps {
     store:GroupComparisonStore;
@@ -12,8 +13,138 @@ export interface IOverlapExclusionIndicatorProps {
     survivalTabMode?:boolean;
 }
 
+function makeSurvivalTabMessage(count:number) {
+    return (
+        <span>Overlapping patients ({count}) are plotted as distinct groups below.</span>
+    );
+}
+
 @observer
 export default class OverlapExclusionIndicator extends React.Component<IOverlapExclusionIndicatorProps, {}> {
+
+    static defaultProps:Partial<IOverlapExclusionIndicatorProps> = {
+        overlapTabMode: false,
+        survivalTabMode: false
+    };
+
+    @computed get classNames() {
+        let icon = "";
+        let alert = "";
+        switch (this.props.store.overlapStrategy) {
+            case OverlapStrategy.INCLUDE:
+                if (this.props.survivalTabMode) {
+                    icon = "fa-info-circle";
+                    alert = "alert-info";
+                } else {
+                    icon = "fa-exclamation-triangle";
+                    alert = "alert-warning";
+                }
+                break;
+            case OverlapStrategy.EXCLUDE:
+                icon = "fa-info-circle";
+                alert = "alert-info";
+                break;
+        }
+        return { icon, alert };
+    }
+
+    readonly excludedGroupsSummary = MakeMobxView({
+        await:()=>[this.props.store.overlapComputations],
+        render:()=>{
+            let summary;
+            const selectionInfo = this.props.store.overlapComputations.result!;
+            const excludedGroups = selectionInfo.groups.filter(g=>(g.uid in selectionInfo.excludedFromAnalysis));
+            const groupNames = joinGroupNames(excludedGroups, "and");
+            const is =  excludedGroups.length === 1 ? "is" : "are";
+
+            if (excludedGroups.length > 0) {
+                summary = (
+                    <span>
+                        {groupNames}
+                        {` ${is} completely overlapping with other selected groups, so `}
+                        {this.props.overlapTabMode ?
+                            `${is} excluded from analysis in other tabs.` :
+                            `${excludedGroups.length === 1 ? "has" : "have"} been excluded from this analysis.`
+                        }
+                                </span>
+                );
+            }
+            if (summary) {
+                return (
+                    <div>
+                        <i
+                            className={`fa fa-md ${this.classNames.icon}`}
+                            style={{
+                                color: "#000000",
+                                marginRight:5
+                            }}
+                        />
+                        {summary}
+                    </div>
+                );
+            } else {
+                return null;
+            }
+        }
+    });
+
+    private makeOverlappingCasesMessage(
+        caseType:"sample"|"patient",
+        selectionInfo:IOverlapComputations<ComparisonGroup>
+    ) {
+        // determine count
+        const count = (caseType === "sample" ? selectionInfo.overlappingSamples.length : selectionInfo.overlappingPatients.length);
+
+        if (count === 0) {
+            // omit message if 0 overlap
+            return null;
+        }
+
+        let message;
+        if (this.props.survivalTabMode &&
+            selectionInfo.totalPatientOverlap > 0 &&
+            this.props.store.overlapStrategy === OverlapStrategy.INCLUDE) {
+
+            // handle survival mode
+            message = makeSurvivalTabMessage(count);
+        } else {
+            // determine groups
+            const includedGroups = selectionInfo.groups.filter(g=>!(g.uid in selectionInfo.excludedFromAnalysis));
+            const groupsAreExcluded = includedGroups.length < selectionInfo.groups.length;
+            let groupsSummary;
+            if (groupsAreExcluded) {
+                groupsSummary = <span>between {joinGroupNames(includedGroups, "and")}</span>;
+            } else {
+                groupsSummary = <span>in the selected groups</span>;
+            }
+
+            message = (
+                <span>
+                    {`${caseType === "sample" ? "Samples" : "Patients"} (${count}) that overlap `}
+                    {groupsSummary}
+                    {` are ${this.props.store.overlapStrategy === OverlapStrategy.INCLUDE ? "included in" : "excluded from"}`}
+                    {this.props.overlapTabMode ?
+                        ` ${caseType}-level analysis in other tabs.`:
+                        ` ${caseType}-level analysis below.`
+                    }
+                </span>
+            );
+        }
+
+        return (
+            <div>
+                <i
+                    className={`fa fa-md ${this.classNames.icon}`}
+                    style={{
+                        color: "#000000",
+                        marginRight:5
+                    }}
+                />
+                {message}
+            </div>
+        );
+    }
+
     render() {
         if (!this.props.store.overlapComputations.isComplete) {
             return null;
@@ -25,161 +156,11 @@ export default class OverlapExclusionIndicator extends React.Component<IOverlapE
                 return null;
             }
 
-            let caseCountsSummary:any = "";
-            const includedGroups = selectionInfo.groups.filter(g=>!(g.uid in selectionInfo.excludedFromAnalysis));
-            const groupsAreExcluded = includedGroups.length < selectionInfo.groups.length;
-
-            switch (this.props.only) {
-                case "sample":
-                case "patient":
-                    let count = 0;
-                    if (this.props.only === "sample") {
-                        count = selectionInfo.overlappingSamples.length;
-                    } else {
-                        count = selectionInfo.overlappingPatients.length;
-                    }
-                    const plural = (count !== 1);
-                    caseCountsSummary = (
-                        <span>
-                            {`${count} overlapping ${this.props.only}${plural ? "s" : ""}`}
-                            {groupsAreExcluded && [
-                                ` between `,
-                                joinGroupNames(includedGroups, "and")
-                            ]}
-                        </span>
-                    );
-                    break;
-                default:
-                    caseCountsSummary = (
-                        <span>
-                            {`${caseCounts(selectionInfo.overlappingSamples.length, selectionInfo.overlappingPatients.length, " and ", " overlapping ")}`}
-                            {groupsAreExcluded && [
-                                ` between `,
-                                joinGroupNames(includedGroups, "and")
-                            ]}
-                        </span>
-                    );
-                    break;
-            }
-
-            let excludedGroupsSummary:any = "";
-            const excludedGroups = selectionInfo.groups.filter(g=>(g.uid in selectionInfo.excludedFromAnalysis));
-            let iconClass;
-            let alertClass;
-            let message:any = "";
-
-            const existOverlapping =
-                (!this.props.only && (selectionInfo.overlappingSamples.length > 0 || selectionInfo.overlappingPatients.length > 0)) ||
-                (this.props.only === "sample" && selectionInfo.overlappingSamples.length > 0) ||
-                (this.props.only === "patient" && selectionInfo.overlappingPatients.length > 0);
-
-            switch (this.props.store.overlapStrategy) {
-                case OverlapStrategy.INCLUDE:
-                    if (this.props.survivalTabMode) {
-                        iconClass = "fa-info-circle";
-                        alertClass = "alert-info";
-
-                        if (selectionInfo.totalPatientOverlap > 0) {
-                            message = (
-                                <span>
-                                    Overlapping patients (n={selectionInfo.totalPatientOverlap}) are plotted as distinct groups below.
-                                </span>
-                            );
-                        }
-                    } else {
-                        iconClass = "fa-exclamation-triangle";
-                        alertClass = "alert-warning";
-
-                        if (existOverlapping) {
-                            message = (
-                                <span>
-                                    {groupsAreExcluded ? `There are ` : `The selected groups contain `}
-                                    {caseCountsSummary}.
-                                </span>
-                            );
-                        }
-                    }
-
-                    if (excludedGroups.length > 0) {
-                        excludedGroupsSummary = (
-                            <span>
-                                {joinGroupNames(excludedGroups, "and")} {excludedGroups.length === 1 ? "is" : "are"} completely overlapping with other selected groups.
-                            </span>
-                        );
-                    }
-                    break;
-                case OverlapStrategy.EXCLUDE:
-                    iconClass = "fa-info-circle";
-                    alertClass = "alert-info";
-
-                    if (existOverlapping) {
-                        const singular = (
-                            (this.props.only === "sample" && selectionInfo.overlappingSamples.length === 1) ||
-                            (this.props.only === "patient" && selectionInfo.overlappingPatients.length === 1)
-                        );
-                        message = (
-                            <span>
-                                {caseCountsSummary}
-                                {` ${singular ? "is" : "are"} excluded from `}
-                                {!this.props.overlapTabMode ? `this analysis.` : `analysis in other tabs.`}
-                            </span>
-                        );
-                    }
-
-                    if (excludedGroups.length > 0) {
-                        excludedGroupsSummary = (
-                            <span>
-                                {joinGroupNames(excludedGroups, "and")}&nbsp;{excludedGroups.length === 1 ? "is" : "are"}
-                                {` completely overlapping with other selected groups, so `}
-                                {this.props.overlapTabMode ?
-                                    `${excludedGroups.length === 1 ? "is" : "are"} excluded from analysis in other tabs.` :
-                                    `${excludedGroups.length === 1 ? "has" : "have"} been excluded from this analysis.`
-                                }
-                            </span>
-                        );
-                    }
-                    break;
-            }
-
             return (
-                <div className={`alert ${alertClass}`}>
-                    {this.props.overlapTabMode &&
-                    (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE) && (
-                        <div style={{marginBottom:15}}>
-                            <i
-                                className={`fa fa-md fa-exclamation-triangle`}
-                                style={{
-                                    color: "#000000",
-                                    marginRight:5
-                                }}
-                            />
-                            <span>Overlapping samples and patients are included for analyses in all tabs.</span>
-                        </div>
-                    )}
-                    {excludedGroupsSummary && (
-                        <div>
-                            <i
-                                className={`fa fa-md ${iconClass}`}
-                                style={{
-                                    color: "#000000",
-                                    marginRight:5
-                                }}
-                            />
-                            {excludedGroupsSummary}
-                        </div>
-                    )}
-                    {message && (
-                        <div>
-                            <i
-                                className={`fa fa-md ${iconClass}`}
-                                style={{
-                                    color: "#000000",
-                                    marginRight:5
-                                }}
-                            />
-                            {message}
-                        </div>
-                    )}
+                <div className={`alert ${this.classNames.alert}`}>
+                    {this.excludedGroupsSummary.component}
+                    {this.props.only !== "patient" && this.makeOverlappingCasesMessage("sample", selectionInfo)}
+                    {this.props.only !== "sample" && this.makeOverlappingCasesMessage("patient", selectionInfo)}
                 </div>
             );
         }
