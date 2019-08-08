@@ -493,7 +493,7 @@ export function getMultipleGeneResultKey(groupedOql: MergedTrackLineFilterOutput
     return groupedOql.label ? groupedOql.label : _.map(groupedOql.list, (data) => data.gene).join(' / ');
 }
 
-export function makeEnrichmentDataPromise<T extends {hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
+export function makeEnrichmentDataPromise<T extends {cytoband:string, hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
     store?:ResultsViewPageStore,
     await: MobxPromise_await,
     getSelectedProfile:()=>MolecularProfile|undefined,

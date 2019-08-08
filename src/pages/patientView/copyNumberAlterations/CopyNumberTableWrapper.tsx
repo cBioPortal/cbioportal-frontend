@@ -38,7 +38,7 @@ type ICopyNumberTableWrapperProps = {
     enableOncoKb?:boolean;
     enableCivic?:boolean;
     pubMedCache?:PubMedCache;
-    referenceGenes?:ReferenceGenomeGene[];
+    referenceGenes:ReferenceGenomeGene[];
     data:DiscreteCopyNumberData[][];
     copyNumberCountCache?:CopyNumberCountCache;
     mrnaExprRankCache?:MrnaExprRankCache;

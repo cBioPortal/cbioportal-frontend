@@ -16,6 +16,7 @@ import {
 } from "shared/lib/IGVUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {default as ProgressIndicator, IProgressIndicatorItem} from "shared/components/progressIndicator/ProgressIndicator";
+import {remoteData} from "public-lib";
 
 @observer
 export default class CNSegments extends React.Component<{ store: ResultsViewPageStore}, {}> {
@@ -51,11 +52,12 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
         return generateSegmentFeatures(segments);
     }
 
-    @computed get chromosome() {
-        if (this.props.store.hugoGeneSymbolToReferenceGene.result) {
-            return this.props.store.hugoGeneSymbolToReferenceGene.result[this.activeLocus].chromosome;
+    readonly chromosome = remoteData({
+        await: () => [this.props.store.hugoGeneSymbolToReferenceGene],
+        invoke: () => {
+            return Promise.resolve(this.props.store.hugoGeneSymbolToReferenceGene.result![this.activeLocus].chromosome);
         }
-    }
+    });
 
     @computed get filename()
     {
@@ -76,7 +78,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
             return this.props.store.cnSegments;
         }
         else if (this.props.store.cnSegmentsByChromosome.result && this.chromosome) {
-            return this.props.store.cnSegmentsByChromosome.result[this.chromosome];
+            return this.props.store.cnSegmentsByChromosome.result[this.chromosome.result!];
         }
         else {
             return undefined;
