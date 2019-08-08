@@ -285,45 +285,35 @@ describe('MutationUtils', () => {
         it('extracts unique genomic locations', () => {
             const mutations = [
                 initMutation({
-                    gene: {
-                        chromosome: "7"
-                    },
+                    chr:"7",
                     startPosition: 111,
                     endPosition: 111,
                     referenceAllele: "T",
                     variantAllele: "C",
                 }),
                 initMutation({
-                    gene: {
-                        chromosome: "7"
-                    },
+                    chr:"7",
                     startPosition: 111,
                     endPosition: 111,
                     referenceAllele: "T",
                     variantAllele: "C",
                 }),
                 initMutation({
-                    gene: {
-                        chromosome: "17"
-                    },
+                    chr:"17",
                     startPosition: 66,
                     endPosition: 66,
                     referenceAllele: "T",
                     variantAllele: "A",
                 }),
                 initMutation({
-                    gene: {
-                        chromosome: "17"
-                    },
+                    chr:"17",
                     startPosition: 66,
                     endPosition: 66,
                     referenceAllele: "T",
                     variantAllele: "A",
                 }),
                 initMutation({
-                    gene: {
-                        chromosome: "4"
-                    },
+                    chr:"4",
                     startPosition: 11,
                     endPosition: 11,
                     referenceAllele: "-",

@@ -216,7 +216,7 @@ describe("MutationInputParser", () => {
         assert.equal(mutations[mutations.length - 1].sampleId, "Unknown",
             "input order of mutations should be preserved");
 
-        assert.equal(mutations[0].gene!.hugoGeneSymbol, undefined,
+        assert.equal(mutations[0].gene, undefined,
             "gene instance should NOT have hugo symbol");
 
         assert.equal(mutations[1].sampleId, "TCGA-BS-A0UF",
