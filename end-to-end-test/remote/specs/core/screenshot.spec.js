@@ -97,6 +97,8 @@ function runResultsTestSuite(prefix){
     it(`${prefix} pathwaymapper tab`, function(){
         browser.click("a.tabAnchor_pathwayMapper");
         browser.waitForVisible('#cy',10000);
+        browser.waitForVisible('.Toastify__toast-container',4000);
+        browser.waitUntil(() => !$('.Toastify__toast-container').isVisible());
         var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
