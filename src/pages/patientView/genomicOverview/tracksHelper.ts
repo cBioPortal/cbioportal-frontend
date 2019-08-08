@@ -71,10 +71,8 @@ export type ChromosomeSizes = {
     chromosomeSize: number[]
 };
 
-const chromSizes:ChromosomeSizes[] = chromosomeSizes;
-
 const referenceGenomeSizes:{[genomeBuild:string]:number[]} =
-    chromSizes.reduce(
+    chromosomeSizes.reduce(
             (map:{[genomeBuild:string]:number[]}, next:ChromosomeSizes)=>
             { map[next.genomeBuild] = next.chromosomeSize || [];return map;},
             {});

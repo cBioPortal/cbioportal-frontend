@@ -6,7 +6,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     dat_uuid_revoke_other_tokens:true,
     dat_method:"none",
     disabled_tabs:"",
-    genomenexus_url:"v1.genomenexus.org",
+    genomenexus_url:"https://www.genomenexus.org",
     g2s_url:"https://g2s.genomenexus.org",
     mycancergenome_show:false,
 
