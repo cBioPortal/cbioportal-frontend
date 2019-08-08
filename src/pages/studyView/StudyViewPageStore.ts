@@ -615,6 +615,8 @@ export class StudyViewPageStore {
 
     @observable studyIds: string[] = [];
 
+    @observable private sampleIdentifiers: SampleIdentifier[] = [];
+
     private _clinicalDataEqualityFilterSet = observable.shallowMap<ClinicalDataEqualityFilter>();
     private _clinicalDataIntervalFilterSet = observable.shallowMap<ClinicalDataIntervalFilter>();
 
@@ -719,6 +721,9 @@ export class StudyViewPageStore {
                 return acc;
             }, [] as CopyNumberGeneFilter[]);
         }
+        if (_.isArray(filters.sampleIdentifiers) && filters.sampleIdentifiers.length > 0) {
+            this.sampleIdentifiers = filters.sampleIdentifiers;
+        }
         if(!_.isEqual(toJS(this.initialFiltersQuery), filters)) {
             this.initialFiltersQuery = filters;
         }
@@ -748,8 +753,10 @@ export class StudyViewPageStore {
         // We do not support studyIds in the query filters
         let filters: Partial<StudyViewFilter> = {};
         if (query.filters) {
-            filters = JSON.parse(decodeURIComponent(query.filters)) as Partial<StudyViewFilter>;
-            this.updateStoreByFilters(filters);
+            try {
+                filters = JSON.parse(decodeURIComponent(query.filters)) as Partial<StudyViewFilter>;
+                this.updateStoreByFilters(filters);
+            } catch (e) { }
         } else if (query.filterAttributeId && query.filterValues) {
             const clinicalAttributes = _.uniqBy(await defaultClient.fetchClinicalAttributesUsingPOST({
                 studyIds: studyIds
@@ -1848,7 +1855,6 @@ export class StudyViewPageStore {
     readonly queriedSampleIdentifiers = remoteData<SampleIdentifier[]>({
         await: () => [this.filteredPhysicalStudies, this.filteredVirtualStudies],
         invoke: async () => {
-
             let result = _.reduce(this.filteredVirtualStudies.result, (acc, next) => {
                 next.data.studies.forEach(study => {
                     let samples = study.samples;
@@ -1860,12 +1866,27 @@ export class StudyViewPageStore {
                 return acc;
             }, {} as { [id: string]: string[] });
 
-            if (!_.isEmpty(result)) {
+            if (!_.isEmpty(result) || this.sampleIdentifiers.length > 0) {
 
                 result = _.reduce(this.filteredPhysicalStudies.result, (acc, next) => {
                     acc[next.studyId] = [];
                     return acc;
                 }, result);
+
+                _.chain(this.sampleIdentifiers)
+                    .groupBy(sampleIdentifier => sampleIdentifier.studyId)
+                    .each((sampleIdentifiers, studyId) => {
+                        if (result[studyId] !== undefined) {
+                            if (result[studyId].length > 0) {
+                                const sampleIds = result[studyId];
+                                const filteredSampleIds = sampleIdentifiers.map(sampleIdentifier => sampleIdentifier.sampleId);
+                                result[studyId] = _.intersection(sampleIds, filteredSampleIds);
+                            } else {
+                                result[studyId] = sampleIdentifiers.map(sampleIdentifier => sampleIdentifier.sampleId);
+                            }
+                        }
+                    })
+                    .value();
 
                 let studySamplesToFetch = _.reduce(result, (acc, samples, studyId) => {
                     if (samples.length === 0) {

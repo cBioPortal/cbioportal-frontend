@@ -18,7 +18,7 @@ import AppConfig from "appConfig";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
 import {createQueryStore} from "../../home/HomePage";
 import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
-import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./QuerySummaryUtils";
+import {getAlterationSummary, getGeneSummary, getPatientSampleSummary, getStudyViewFilterHash} from "./QuerySummaryUtils";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
 import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
@@ -41,24 +41,35 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         return this.props.store.queryFormVisible || this.isQueryOrGeneInvalid;
     }
 
+    @computed get studyViewFilterHash() {
+        return getStudyViewFilterHash(
+            this.props.store.samples.result,
+            this.props.store.queriedVirtualStudies.result.length > 0,
+            this.props.store.sampleLists.result);
+    }
+
     readonly singleStudyUI = MakeMobxView({
         await:()=>[
             this.props.store.queriedStudies,
             this.props.store.sampleLists,
             this.props.store.samples,
-            this.props.store.patients,
-            this.props.store.genes
+            this.props.store.patients
         ],
         render:()=>{
             const sampleListName = (this.props.store.sampleLists.result!.length > 0) ?
                 (<span>{this.props.store.sampleLists.result![0].name}</span>) :
                 (<span>User-defined Patient List</span>);
 
-            const study = this.props.store.queriedStudies.result[0];
-
             return (
                 <div>
-                    <h3><StudyLink studyId={study.studyId}>{study.name}</StudyLink></h3>
+                    <h3>
+                        <a
+                            href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}, this.studyViewFilterHash)}
+                            target="_blank"
+                        >
+                            {this.props.store.queriedStudies.result[0].name}
+                        </a>
+                    </h3>
                     {sampleListName}&nbsp;({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
@@ -75,12 +86,13 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     }
 
     readonly multipleStudyUI = MakeMobxView({
-        await:()=>[this.props.store.samples, this.props.store.patients, this.props.store.queriedStudies],
-        render:()=>(
+        await:()=>[this.props.store.samples, this.props.store.patients, this.props.store.queriedStudies, this.props.store.sampleLists],
+        render:()=>{
+            return (
             <div>
                 <h3>
                     <a
-                        href={buildCBioPortalPageUrl(`study`, { id:this.props.store.queriedStudies.result.map(study => study.studyId).join(',')})}
+                        href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}, this.studyViewFilterHash)}
                         target="_blank"
                     >
                         Combined Study ({this.props.store.samples.result.length} samples)
@@ -99,7 +111,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                     </DefaultTooltip>
                 </span>
             </div>
-        )
+        )}
     });
 
     readonly cohortAndGeneSummary = MakeMobxView({
