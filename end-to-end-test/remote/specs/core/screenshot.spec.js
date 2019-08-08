@@ -21,7 +21,7 @@ function waitForAndCheckPlotsTab() {
 }
 
 function runResultsTestSuite(prefix){
-
+    
     it(`${prefix} render the oncoprint`, function(){
         waitForOncoprint(10000);
         var res = browser.checkElement('.oncoprintContainer', { hide:['.oncoprint__controls']}); // just hide the controls bc for some reason they keep showing up transparent in this test only
@@ -97,8 +97,8 @@ function runResultsTestSuite(prefix){
     it(`${prefix} pathwaymapper tab`, function(){
         browser.click("a.tabAnchor_pathwayMapper");
         browser.waitForVisible('#cy',10000);
-        browser.waitForVisible('.Toastify__toast-container',4000);
-        browser.waitUntil(() => !$('.Toastify__toast-container').isVisible());
+        browser.waitForExist('.Toastify__toast',4000);
+        browser.waitUntil(() => !$('.Toastify__toast').isExisting());
         var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
