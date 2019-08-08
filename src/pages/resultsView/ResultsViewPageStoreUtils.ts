@@ -496,6 +496,7 @@ export function getMultipleGeneResultKey(groupedOql: MergedTrackLineFilterOutput
 export function makeEnrichmentDataPromise<T extends {cytoband:string, hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
     store?:ResultsViewPageStore,
     await: MobxPromise_await,
+    referenceGenesPromise:MobxPromise<{[hugoGeneSymbol:string]:ReferenceGenomeGene}>,
     getSelectedProfile:()=>MolecularProfile|undefined,
     fetchData:()=>Promise<T[]>
 }):MobxPromise<(T & {qValue:number})[]> {
@@ -505,6 +506,7 @@ export function makeEnrichmentDataPromise<T extends {cytoband:string, hugoGeneSy
             if (params.store) {
                 ret.push(params.store.selectedMolecularProfiles);
             }
+            ret.push(params.referenceGenesPromise);
             return ret;
         },
         invoke:async()=>{
@@ -518,6 +520,11 @@ export function makeEnrichmentDataPromise<T extends {cytoband:string, hugoGeneSy
                     const queryGenes = _.keyBy(params.store.hugoGeneSymbols, x=>x.toUpperCase());
                     data = data.filter(d=>!(d.hugoGeneSymbol.toUpperCase() in queryGenes));
                 }
+
+                // add cytoband from reference gene
+                data.forEach((d=>{
+                    d.cytoband = params.referenceGenesPromise.result![d.hugoGeneSymbol].cytoband;
+                }));
 
                 const sortedByPvalue = _.sortBy(data, c=>c.pValue);
                 const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));
