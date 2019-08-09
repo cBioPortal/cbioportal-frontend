@@ -2321,7 +2321,8 @@ export class ResultsViewPageStore {
     readonly geneticEntities = remoteData<GeneticEntity[]>({
         await: ()=>[
             this.genes,
-            this.genesets
+            this.genesets,
+            this.hugoGeneSymbolToReferenceGene
         ],
         invoke: () => {
             const res: GeneticEntity[] = [];
