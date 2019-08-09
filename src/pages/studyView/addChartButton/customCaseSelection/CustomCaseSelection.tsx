@@ -73,27 +73,23 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @autobind
     @action
-    onClick(event: any) {
-      let cases;
-      let caseInverted;
-        if(event.target.id == "selected") {
-          cases = this.props.selectedSamples.map(sample => {
-              return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
-          });
-          if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
-              cases = _.uniq(cases);
-          }
-          this.content = cases.join("\n")
+    onClick(selectMode: 'selected' | 'unselected') {
+        let selectedCases;
+        if (selectMode === "selected") {
+            selectedCases = this.props.selectedSamples;
+        } else {
+            const _selectedCaseIds = this.props.selectedSamples.map(sample => sample.sampleId);
+            selectedCases = this.props.allSamples.filter(sample => {
+                return !_selectedCaseIds.includes(sample.sampleId);
+            });
         }
-        if(event.target.id == "unselected") {
-          caseInverted = this.props.allSamples.map(sample => {
+        let cases = selectedCases.map(sample => {
             return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
         });
-          if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
-            caseInverted = _.uniq(cases);
-          }
-        this.content = caseInverted.join("\n")
+        if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
+            cases = _.uniq(cases);
         }
+        this.content = cases.join("\n");
         this.validateContent = false;
         this.validContent = this.content;
     }
@@ -172,14 +168,18 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
                 <span>
                     <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                        <span id={"selected"}
+                        <span
                             className={styles.fillIds}
-                            onClick={this.onClick}>
+                            onClick={()=>{
+                                this.onClick("selected");
+                            }}>
                             currently selected
                         </span>
-                        <span id={"unselected"}
+                        <span
                             className={styles.fillIds}
-                            onClick={this.onClick}>
+                            onClick={() => {
+                                this.onClick("unselected");
+                            }}>
                             unselected
                         </span>
 
