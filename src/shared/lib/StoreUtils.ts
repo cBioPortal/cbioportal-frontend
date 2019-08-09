@@ -55,6 +55,7 @@ import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
 import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
 import {stringListToIndexSet} from "public-lib/lib/StringUtils";
 import {GeneticTrackDatum_Data} from "../components/oncoprint/Oncoprint";
+import {normalizeMutations} from "../components/mutationMapper/MutationMapperUtils";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     uniqueSampleKeyToTumorType : {},
@@ -88,7 +89,7 @@ export async function fetchVariantAnnotationsByMutation(mutations: Mutation[],
                                                         isoformOverrideSource: string = "uniprot",
                                                         client: GenomeNexusAPI = genomeNexusClient)
 {
-    return fetchDefaultVariantAnnotationsByMutation(mutations, fields, isoformOverrideSource, client);
+    return fetchDefaultVariantAnnotationsByMutation(normalizeMutations(mutations), fields, isoformOverrideSource, client);
 }
 
 export async function fetchVariantAnnotationsIndexedByGenomicLocation(mutations: Mutation[],
@@ -96,7 +97,7 @@ export async function fetchVariantAnnotationsIndexedByGenomicLocation(mutations:
                                                                       isoformOverrideSource: string = "uniprot",
                                                                       client: GenomeNexusAPI = genomeNexusClient)
 {
-    return fetchDefaultVariantAnnotationsIndexedByGenomicLocation(mutations, fields, isoformOverrideSource, client);
+    return fetchDefaultVariantAnnotationsIndexedByGenomicLocation(normalizeMutations(mutations), fields, isoformOverrideSource, client);
 }
 
 export async function fetchGenes(hugoGeneSymbols?: string[],
