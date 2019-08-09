@@ -32,6 +32,7 @@ import MutationMapperStore from "shared/components/mutationMapper/MutationMapper
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
 import {CancerGene} from "shared/api/generated/OncoKbAPI";
+import {normalizeMutations} from "../../../../shared/components/mutationMapper/MutationMapperUtils";
 
 export default class MutationMapperToolStore
 {
@@ -147,7 +148,7 @@ export default class MutationMapperToolStore
             let mutations: Partial<Mutation>[] = [];
 
             if (this.annotatedMutations) {
-                mutations =  this.annotatedMutations;
+                mutations = normalizeMutations(this.annotatedMutations as Pick<Mutation, "chr">[]) as Partial<Mutation>[];
                 resolveDefaultsForMissingValues(mutations);
                 updateMissingGeneInfo(mutations, this.genesByHugoSymbol);
             }
@@ -230,7 +231,7 @@ export default class MutationMapperToolStore
     @computed get annotatedMutations(): Partial<Mutation>[]
     {
         return this.indexedVariantAnnotations.result ?
-            annotateMutations(this.rawMutations, this.indexedVariantAnnotations.result) as Partial<Mutation>[]:
+            annotateMutations(normalizeMutations(this.rawMutations), this.indexedVariantAnnotations.result) as Partial<Mutation>[]:
             [];
     }
     @computed get mutationsNotAnnotated(): {lineNumber:number, mutationInput:Partial<MutationInput>}[]
