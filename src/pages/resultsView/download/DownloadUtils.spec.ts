@@ -13,25 +13,22 @@ describe('DownloadUtils', () => {
 
     const genes = [
         {
+            "geneticEntityId": 4598,
             "entrezGeneId": 5728,
             "hugoGeneSymbol": "PTEN",
-            "type": "protein-coding",
-            "cytoband": "10q23.31",
-            "chromosome": "10"
+            "type": "protein-coding"
         },
         {
+            "geneticEntityId": 5808,
             "entrezGeneId": 7157,
             "hugoGeneSymbol": "TP53",
-            "type": "protein-coding",
-            "cytoband": "17p13.1",
-            "chromosome": "17"
+            "type": "protein-coding"
         },
         {
+            "geneticEntityId": 1575,
             "entrezGeneId": 1956,
             "hugoGeneSymbol": "EGFR",
-            "type": "protein-coding",
-            "cytoband": "7p11.2",
-            "chromosome": "7"
+            "type": "protein-coding"
         }
     ];
 
@@ -64,10 +61,10 @@ describe('DownloadUtils', () => {
         value: 2.4745,
         entrezGeneId: 5728,
         gene: {
+            geneticEntityId: 4598,
             entrezGeneId: 5728,
             hugoGeneSymbol: "PTEN",
-            type: "protein-coding",
-            cytoband: "10q23.31"
+            type: "protein-coding"
         },
         molecularProfileAlterationType: "MRNA_EXPRESSION",
         alterationType: "MRNA_EXPRESSION",
@@ -85,10 +82,10 @@ describe('DownloadUtils', () => {
         value: 2.5406,
         entrezGeneId: 5728,
         gene: {
+            geneticEntityId: 4598,
             entrezGeneId: 5728,
             hugoGeneSymbol: "PTEN",
-            type: "protein-coding",
-            cytoband: "10q23.31"
+            type: "protein-coding"
         },
         molecularProfileAlterationType: "PROTEIN_LEVEL",
         alterationType: "PROTEIN_LEVEL",
@@ -106,10 +103,10 @@ describe('DownloadUtils', () => {
         value: -1,
         entrezGeneId: 7157,
         gene: {
+            geneticEntityId:5808,
             entrezGeneId: 7157,
             hugoGeneSymbol: "TP53",
-            type: "protein-coding",
-            cytoband: "17p13.1"
+            type: "protein-coding"
         }
     };
 
@@ -126,11 +123,10 @@ describe('DownloadUtils', () => {
             "patientId": "P-0000378",
             "entrezGeneId": 1956,
             "gene": {
+                "geneticEntityId": 1575,
                 "entrezGeneId": 1956,
                 "hugoGeneSymbol": "EGFR",
-                "type": "protein-coding",
-                "cytoband": "7p11.2",
-                "chromosome": "7"
+                "type": "protein-coding"
             },
             "studyId": "msk_impact_2017",
             "center": "NA",
@@ -177,11 +173,10 @@ describe('DownloadUtils', () => {
             "patientId": "P-0000378",
             "entrezGeneId": 1956,
             "gene": {
+                "geneticEntityId": 1575,
                 "entrezGeneId": 1956,
                 "hugoGeneSymbol": "EGFR",
-                "type": "protein-coding",
-                "cytoband": "7p11.2",
-                "chromosome": "7"
+                "type": "protein-coding"
             },
             "studyId": "msk_impact_2017",
             "center": "MSKCC-DMP",
@@ -224,11 +219,10 @@ describe('DownloadUtils', () => {
             "patientId": "P-0000378",
             "entrezGeneId": 1956,
             "gene": {
+                "geneticEntityId": 1575,
                 "entrezGeneId": 1956,
                 "hugoGeneSymbol": "EGFR",
-                "type": "protein-coding",
-                "cytoband": "7p11.2",
-                "chromosome": "7"
+                "type": "protein-coding"
             },
             "studyId": "msk_impact_2017",
             "center": "NA",
@@ -734,7 +728,7 @@ describe('DownloadUtils', () => {
                         } as GenePanelData
                     ],
                     "trackLabel": "EGFR",
-                    "data": []                
+                    "data": []
                 },
                 {
                     "sample": "TCGA-DU-6396-01",

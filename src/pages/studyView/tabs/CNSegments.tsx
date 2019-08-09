@@ -6,6 +6,7 @@ import autobind from "autobind-decorator";
 import {CopyNumberSeg} from "shared/api/generated/CBioPortalAPI";
 import IntegrativeGenomicsViewer from "shared/components/igv/IntegrativeGenomicsViewer";
 import {calcSegmentTrackHeight, defaultSegmentTrackProps, generateSegmentFeatures} from "shared/lib/IGVUtils";
+import {DEFAULT_GENOME} from "../../resultsView/ResultsViewPageStoreUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "shared/components/progressIndicator/ProgressIndicator";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import CNSegmentsDownloader from "shared/components/cnSegments/CNSegmentsDownloader";
@@ -69,6 +70,12 @@ export default class CNSegments extends React.Component<{ store: StudyViewPageSt
         return this.activePromise.isComplete && (!this.activePromise.result || this.activePromise.result.length === 0);
     }
 
+    @computed get genome() {
+        const study = this.props.store.allPhysicalStudies.result?
+            this.props.store.allPhysicalStudies.result[0]: undefined;
+        return study? study.referenceGenome: DEFAULT_GENOME;
+    }
+
     public render() {
         return (
             <div>
@@ -101,6 +108,7 @@ export default class CNSegments extends React.Component<{ store: StudyViewPageSt
                                 features: this.features
                             }
                         ]}
+                        genome={this.genome}
                         onRenderingStart={this.onIgvRenderingStart}
                         onRenderingComplete={this.onIgvRenderingComplete}
                         isVisible={this.props.store.currentTab === StudyViewPageTabKeyEnum.CN_SEGMENTS && !this.isHidden}

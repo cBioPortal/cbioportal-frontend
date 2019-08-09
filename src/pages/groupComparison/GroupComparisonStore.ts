@@ -20,7 +20,7 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     MolecularProfile,
-    MolecularProfileFilter,
+    MolecularProfileFilter, ReferenceGenomeGene,
     Sample,
     SampleFilter
 } from "../../shared/api/generated/CBioPortalAPI";
@@ -57,6 +57,7 @@ import {stringListToIndexSet} from "../../public-lib/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
+import {fetchAllReferenceGenomeGenes} from "shared/lib/StoreUtils";
 
 export enum OverlapStrategy {
     INCLUDE = "Include",
@@ -457,6 +458,29 @@ export default class GroupComparisonStore {
         }
     }, []);
 
+    readonly referenceGenes = remoteData<ReferenceGenomeGene[]>({
+        await: ()=>[
+            this.studies
+        ],
+        invoke: () => {
+            if (this.studies.result!.length > 0) {
+                return fetchAllReferenceGenomeGenes(this.studies.result[0].referenceGenome);
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    });
+
+    readonly hugoGeneSymbolToReferenceGene = remoteData<{[hugoSymbol:string]:ReferenceGenomeGene}>({
+        await: ()=>[
+            this.referenceGenes
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            return Promise.resolve(_.keyBy(this.referenceGenes.result!, g=>g.hugoGeneSymbol));
+        }
+    });
+
     public readonly mutationEnrichmentProfiles = remoteData({
         await:()=>[this.molecularProfilesInActiveStudies],
         invoke:()=>Promise.resolve(pickMutationEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!))
@@ -544,6 +568,7 @@ export default class GroupComparisonStore {
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         await: () => [this.mutationEnrichmentProfile, this._activeGroupsOverlapRemoved],
         getSelectedProfile: () => this.mutationEnrichmentProfile.result,
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             let molecularProfile = this.mutationEnrichmentProfile.result!;
             if (this._activeGroupsOverlapRemoved.result!.length > 1) {
@@ -569,7 +594,6 @@ export default class GroupComparisonStore {
             } else {
                 return Promise.resolve([]);
             }
-
         }
     });
 
@@ -625,9 +649,10 @@ export default class GroupComparisonStore {
         }
     });
 
-    public readonly copyNumberData = makeEnrichmentDataPromise({
+    public readonly copyNumberEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.copyNumberHomdelEnrichmentData, this.copyNumberAmpEnrichmentData],
         getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData:()=>{
             const ampData = this.copyNumberAmpEnrichmentData.result!.map(d=>{
                 (d as CopyNumberEnrichment).value = 2;
@@ -656,6 +681,7 @@ export default class GroupComparisonStore {
     readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.mRNAEnrichmentProfile, this.activeGroups],
         getSelectedProfile:()=>this.mRNAEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any mRNA profiles
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData:()=>{
             // assumes single study for now
             if (this.mRNAEnrichmentProfile.result) {
@@ -682,6 +708,7 @@ export default class GroupComparisonStore {
     readonly proteinEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.proteinEnrichmentProfile, this.activeGroups],
         getSelectedProfile:()=>this.proteinEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any mRNA profiles
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData:()=>{
             // assumes single study for now
             if (this.proteinEnrichmentProfile.result) {
@@ -705,7 +732,6 @@ export default class GroupComparisonStore {
             }
         }
     });
-
 
     @computed get survivalTabShowable() {
         return this.survivalClinicalDataExists.isComplete && this.survivalClinicalDataExists.result;
