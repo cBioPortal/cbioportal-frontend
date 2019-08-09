@@ -234,6 +234,12 @@ export class QueryStore {
         return _.pick(this, QueryParamsKeys);
     }
 
+    @computed
+    get onlyOneReferenceGenome() {
+        const referenceGenomes = _.uniq(this.selectableSelectedStudies.map(s => s.referenceGenome));
+        return (referenceGenomes.length === 1);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     // QUERY PARAMETERS
     ////////////////////////////////////////////////////////////////////////////////
@@ -385,7 +391,7 @@ export class QueryStore {
         this.genesetQueryErrorDisplayStatus = 'unfocused';
         this._genesetQuery = value;
 	}
-	
+
 	@observable _treatmentQuery = '';
     get treatmentQuery()
     {

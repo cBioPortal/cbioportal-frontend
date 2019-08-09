@@ -15,6 +15,7 @@ function getTable(samples:string[], mrnaMolecularProfileId?:string):ReactWrapper
         sampleIds={samples}
         gisticData={{}}
         status="available"
+        referenceGenes={[]}
         data={[]}
         mrnaExprRankMolecularProfileId={mrnaMolecularProfileId}
     />);
