@@ -7,7 +7,7 @@ var GeneratePackageJsonPlugin =require('generate-package-json-webpack-plugin');
 var TerserPlugin = require('terser-webpack-plugin');
 
 var commit = 'unknown';
-var version = '0.0.15';
+var version = '0.0.16';
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
