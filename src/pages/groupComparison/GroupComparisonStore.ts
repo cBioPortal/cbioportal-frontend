@@ -20,7 +20,7 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     MolecularProfile,
-    MolecularProfileFilter,
+    MolecularProfileFilter, ReferenceGenomeGene,
     Sample,
     SampleFilter
 } from "../../shared/api/generated/CBioPortalAPI";
@@ -57,6 +57,7 @@ import {stringListToIndexSet} from "../../public-lib/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
+import {fetchAllReferenceGenomeGenes} from "shared/lib/StoreUtils";
 
 export enum OverlapStrategy {
     INCLUDE = "Include",
@@ -387,16 +388,6 @@ export default class GroupComparisonStore {
         invoke:()=>Promise.resolve(this._originalGroups.result!.filter(group=>this.isGroupSelected(group.uid)))
     });
 
-    readonly enrichmentsGroup1 = remoteData({
-        await:()=>[this.activeGroups],
-        invoke:()=>Promise.resolve(this.activeGroups.result![0])
-    });
-
-    readonly enrichmentsGroup2 = remoteData({
-        await:()=>[this.activeGroups],
-        invoke:()=>Promise.resolve(this.activeGroups.result![1])
-    });
-
     readonly samples = remoteData({
         await:()=>[this._session],
         invoke:()=>{
@@ -466,6 +457,29 @@ export default class GroupComparisonStore {
             }
         }
     }, []);
+
+    readonly referenceGenes = remoteData<ReferenceGenomeGene[]>({
+        await: ()=>[
+            this.studies
+        ],
+        invoke: () => {
+            if (this.studies.result!.length > 0) {
+                return fetchAllReferenceGenomeGenes(this.studies.result[0].referenceGenome);
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    });
+
+    readonly hugoGeneSymbolToReferenceGene = remoteData<{[hugoSymbol:string]:ReferenceGenomeGene}>({
+        await: ()=>[
+            this.referenceGenes
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            return Promise.resolve(_.keyBy(this.referenceGenes.result!, g=>g.hugoGeneSymbol));
+        }
+    });
 
     public readonly mutationEnrichmentProfiles = remoteData({
         await:()=>[this.molecularProfilesInActiveStudies],
@@ -554,6 +568,7 @@ export default class GroupComparisonStore {
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         await: () => [this.mutationEnrichmentProfile, this._activeGroupsOverlapRemoved],
         getSelectedProfile: () => this.mutationEnrichmentProfile.result,
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             let molecularProfile = this.mutationEnrichmentProfile.result!;
             if (this._activeGroupsOverlapRemoved.result!.length > 1) {
@@ -579,7 +594,6 @@ export default class GroupComparisonStore {
             } else {
                 return Promise.resolve([]);
             }
-
         }
     });
 
@@ -635,9 +649,10 @@ export default class GroupComparisonStore {
         }
     });
 
-    public readonly copyNumberData = makeEnrichmentDataPromise({
+    public readonly copyNumberEnrichmentData = makeEnrichmentDataPromise({
         await:()=>[this.copyNumberHomdelEnrichmentData, this.copyNumberAmpEnrichmentData],
         getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData:()=>{
             const ampData = this.copyNumberAmpEnrichmentData.result!.map(d=>{
                 (d as CopyNumberEnrichment).value = 2;
@@ -664,18 +679,25 @@ export default class GroupComparisonStore {
     }
 
     readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
-        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.mRNAEnrichmentProfile],
+        await:()=>[this.mRNAEnrichmentProfile, this.activeGroups],
         getSelectedProfile:()=>this.mRNAEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any mRNA profiles
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData:()=>{
             // assumes single study for now
-            if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.mRNAEnrichmentProfile.result) {
-                return internalClient.fetchExpressionEnrichmentsUsingPOST({
-                    molecularProfileId: this.mRNAEnrichmentProfile.result.molecularProfileId,
-                    enrichmentType: "SAMPLE",
-                    enrichmentFilter: {
-                        alteredIds: _.flattenDeep<string>(this.enrichmentsGroup1.result.studies.map(study=>study.samples)),
-                        unalteredIds: _.flattenDeep<string>(this.enrichmentsGroup2.result.studies.map(study=>study.samples))
+            if (this.mRNAEnrichmentProfile.result) {
+                const molecularProfileId = this.mRNAEnrichmentProfile.result!.molecularProfileId;
+                const groups: MolecularProfileCasesGroupFilter[] = _.map(this.activeGroups.result, group => {
+                    const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
+                        return _.map(study.samples, sampleId => ({ caseId: sampleId, molecularProfileId }));
+                    });
+                    return {
+                        name: group.nameWithOrdinal,
+                        molecularProfileCaseIdentifiers
                     }
+                });
+                return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                    enrichmentType: "SAMPLE",
+                    groups
                 });
             } else {
                 return Promise.resolve([]);
@@ -684,25 +706,32 @@ export default class GroupComparisonStore {
     });
 
     readonly proteinEnrichmentData = makeEnrichmentDataPromise({
-        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.proteinEnrichmentProfile],
+        await:()=>[this.proteinEnrichmentProfile, this.activeGroups],
         getSelectedProfile:()=>this.proteinEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any mRNA profiles
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData:()=>{
             // assumes single study for now
-            if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.proteinEnrichmentProfile.result) {
-                return internalClient.fetchExpressionEnrichmentsUsingPOST({
-                    molecularProfileId: this.proteinEnrichmentProfile.result.molecularProfileId,
-                    enrichmentType: "SAMPLE",
-                    enrichmentFilter: {
-                        alteredIds: _.flattenDeep<string>(this.enrichmentsGroup1.result.studies.map(study=>study.samples)),
-                        unalteredIds: _.flattenDeep<string>(this.enrichmentsGroup2.result.studies.map(study=>study.samples))
+            if (this.proteinEnrichmentProfile.result) {
+                const molecularProfileId = this.proteinEnrichmentProfile.result!.molecularProfileId;
+                const groups: MolecularProfileCasesGroupFilter[] = _.map(this.activeGroups.result, group => {
+                    const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
+                        return _.map(study.samples, sampleId => ({ caseId: sampleId, molecularProfileId }));
+                    });
+                    return {
+                        name: group.nameWithOrdinal,
+                        molecularProfileCaseIdentifiers
                     }
+                });
+
+                return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                    enrichmentType: "SAMPLE",
+                    groups
                 });
             } else {
                 return Promise.resolve([]);
             }
         }
     });
-
 
     @computed get survivalTabShowable() {
         return this.survivalClinicalDataExists.isComplete && this.survivalClinicalDataExists.result;
@@ -713,7 +742,7 @@ export default class GroupComparisonStore {
             (this.activeGroups.isComplete && this.activeGroups.result!.length === 0 && this.tabHasBeenShown.get(GroupComparisonTab.SURVIVAL));
     }
 
-    @computed get survivalTabGrey() {
+    @computed get survivalTabUnavailable() {
         // grey out if more than 10 active groups
         return (this.activeGroups.isComplete && this.activeGroups.result.length > 10)
             || !this.survivalTabShowable;
@@ -728,13 +757,13 @@ export default class GroupComparisonStore {
             (this.activeGroups.isComplete && this.activeGroups.result!.length === 0 && this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS));
     }
 
-    @computed get mutationsTabGrey() {
+    @computed get mutationsTabUnavailable() {
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
             || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study
             || !this.mutationsTabShowable;
     }
 
-    @computed get clinicalTabGrey() {
+    @computed get clinicalTabUnavailable() {
         // grey out if active groups is less than 2
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2);
     }
@@ -748,7 +777,7 @@ export default class GroupComparisonStore {
             (this.activeGroups.isComplete && this.activeGroups.result!.length === 0 && this.tabHasBeenShown.get(GroupComparisonTab.CNA));
     }
 
-    @computed get copyNumberTabGrey() {
+    @computed get copyNumberUnavailable() {
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
             || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study
             || !this.copyNumberTabShowable;
@@ -763,10 +792,9 @@ export default class GroupComparisonStore {
             (this.activeGroups.isComplete && this.activeGroups.result!.length === 0 && this.tabHasBeenShown.get(GroupComparisonTab.MRNA));
     }
 
-    @computed get mRNATabGrey() {
-        // grey out if
-        return (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) // more than one active study
-            || (this.activeGroups.isComplete && this.activeGroups.result.length !== 2) // not two active groups
+    @computed get mRNATabUnavailable() {
+        return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
+            || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study
             || !this.mRNATabShowable;
     }
 
@@ -779,10 +807,9 @@ export default class GroupComparisonStore {
             (this.activeGroups.isComplete && this.activeGroups.result!.length === 0 && this.tabHasBeenShown.get(GroupComparisonTab.PROTEIN));
     }
 
-    @computed get proteinTabGrey() {
-        // grey out if
-        return (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) // more than one active study
-            || (this.activeGroups.isComplete && this.activeGroups.result.length !== 2) // not two active groups
+    @computed get proteinTabUnavailable() {
+        return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
+            || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study
             || !this.proteinTabShowable;
     }
 
@@ -978,7 +1005,7 @@ export default class GroupComparisonStore {
     public readonly clinicalDataEnrichments = remoteData({
         await: () => [this.activeGroups],
         invoke: () => {
-            if (this.clinicalTabGrey) {
+            if (this.clinicalTabUnavailable) {
                 return Promise.resolve([]);
             }
             let groups: Group[] = _.map(this.activeGroups.result, group => {

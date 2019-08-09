@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
     ClinicalData, MolecularProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
-    CopyNumberCount, ClinicalDataMultiStudyFilter
+    CopyNumberCount, ClinicalDataMultiStudyFilter, ReferenceGenomeGene
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
@@ -68,7 +68,8 @@ import {
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     concatMutationData,
     fetchOncoKbCancerGenes,
-    fetchVariantAnnotationsIndexedByGenomicLocation
+    fetchVariantAnnotationsIndexedByGenomicLocation,
+    fetchReferenceGenomeGenes
 } from "shared/lib/StoreUtils";
 import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../public-lib/lib/StringUtils";
@@ -314,7 +315,7 @@ export class PatientViewPageStore {
                             return getPathologyReport(patientId, i+1);
                         }, () => reports);
                 }
-                
+
                return getPathologyReport(this.patientId, 0);
             } else {
                 return Promise.resolve([]);
@@ -449,6 +450,21 @@ export class PatientViewPageStore {
         }
     }, {});
 
+    readonly referenceGenes = remoteData<ReferenceGenomeGene[]>({
+        await: ()=>[
+            this.studies,
+            this.discreteCNAData
+        ],
+        invoke: async () => {
+            return fetchReferenceGenomeGenes(this.studies.result[0].referenceGenome,
+                this.discreteCNAData.result.map(
+                    (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol.toUpperCase()));
+        },
+        onError:(err)=>{
+            // throwing this allows sentry to report it
+            throw(err);
+        }
+    });
 
     public readonly mrnaRankMolecularProfileId = remoteData({
         await: () => [
