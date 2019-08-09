@@ -134,8 +134,12 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
 
         this.props.groups.forEach(group => {
             columns.push(group.name + " mean");
+        });
+
+        this.props.groups.forEach(group => {
             columns.push(group.name + " standard deviation");
-        })
+        });
+
         if (this.isTwoGroupAnalysis) {
             columns.push(ExpressionEnrichmentTableColumnType.LOG_RATIO);
         }
