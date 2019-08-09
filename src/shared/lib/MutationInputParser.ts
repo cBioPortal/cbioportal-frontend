@@ -9,7 +9,7 @@ const LITERAL_TO_HEADER: {[attrName: string]: string} = {
     driverTiersFilter: "driver_tiers_filter",
     driverTiersFilterAnnotation: "driver_tiers_filter_annotation",
     entrezGeneId: "entrez_gene_id",
-    chromosome: "chromosome",
+    chr: "chromosome",
     hugoGeneSymbol: "hugo_symbol",
     molecularProfileId: "molecular_profile_id",
     mutationStatus: "mutation_status",
@@ -100,7 +100,7 @@ export function parseLine(line: string,
         const value = parseValue(key, values, indexMap);
 
         if (value) {
-            if (key === "chromosome" || key === "hugoGeneSymbol") {
+            if (key === "hugoGeneSymbol") {
                 mutation.gene = (mutation.gene || {}) as Gene;
                 mutation.gene[key] = value;
             }

@@ -15,8 +15,7 @@ describe('CohortColumnFormatter', () => {
             alteration: -2,
             entrezGeneId: 0,
             gene: {
-                chromosome: "22",
-                cytoband: "",
+                geneticEntityId:0,
                 entrezGeneId: 0,
                 hugoGeneSymbol: "BRCA2",
                 type: ""
@@ -32,8 +31,7 @@ describe('CohortColumnFormatter', () => {
             alteration: 2,
             entrezGeneId: 1,
             gene: {
-                chromosome: "20",
-                cytoband: "",
+                geneticEntityId:0,
                 entrezGeneId: 1,
                 hugoGeneSymbol: "SMURF2",
                 type: ""
