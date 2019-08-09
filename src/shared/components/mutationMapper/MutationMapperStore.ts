@@ -45,6 +45,7 @@ import {defaultOncoKbIndicatorFilter} from "shared/lib/OncoKbUtils";
 
 import {IMutationMapperConfig} from "./MutationMapper";
 import autobind from "autobind-decorator";
+import {normalizeMutation, normalizeMutations} from "./MutationMapperUtils";
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?:boolean
@@ -74,6 +75,9 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
                 filterMutationsBySelectedTranscript: mutationMapperStoreConfig.filterMutationsBySelectedTranscript
             },
             getMutations);
+
+        const unnormalizedGetMutations = this.getMutations;
+        this.getMutations = ()=>normalizeMutations(unnormalizedGetMutations());
         labelMobxPromises(this);
     }
 
@@ -212,6 +216,9 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
                                   mutation: Mutation,
                                   positions: {[position: string]: {position: number}})
     {
+
+        mutation = normalizeMutation(mutation);
+
         let pick = false;
 
         if (filter.position) {
