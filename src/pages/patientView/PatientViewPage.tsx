@@ -459,7 +459,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     <LoadingIndicator isLoading={(this.cnaTableStatus === 'loading' || patientViewPageStore.studyIdToStudy.isPending)} />
 
                                     {
-                                        (patientViewPageStore.studyIdToStudy.isComplete) && (
+                                        (patientViewPageStore.studyIdToStudy.isComplete &&
+                                            patientViewPageStore.referenceGenes.isComplete) && (
                                             <CopyNumberTableWrapper
                                             studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
                                             sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
@@ -473,6 +474,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             enableCivic={AppConfig.serverConfig.show_civic}
                                             userEmailAddress={AppConfig.serverConfig.user_email_address}
                                             pubMedCache={patientViewPageStore.pubMedCache}
+                                            referenceGenes={patientViewPageStore.referenceGenes.result}
                                             data={patientViewPageStore.mergedDiscreteCNAData}
                                             copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
                                             mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}

@@ -279,6 +279,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return (
                         !this.resultsViewPageStore.studies.isComplete ||
                         !this.resultsViewPageStore.genes.isComplete ||
+                        !this.resultsViewPageStore.referenceGenes.isComplete ||
                         !doesQueryHaveCNSegmentData(this.resultsViewPageStore.samples.result)
                     );
                 },
@@ -286,7 +287,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return <MSKTab key={6} id={ResultsViewTab.CN_SEGMENTS}
                                    linkText="CN Segments">
                         <CNSegments store={store}/>
-                    </MSKTab>
+                    </MSKTab>;
                 }
             },
 
@@ -305,7 +306,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             (store.studies.isComplete && store.sampleLists.isComplete && store.samples.isComplete) &&
                             (<Network genes={store.genes.result!}
                                       profileIds={store.rvQuery.selectedMolecularProfileIds}
-                                      cancerStudyId={store.studies.result[0].studyId}
+                                      cancerStudyId={(store.studies.result.length > 0) ? store.studies.result![0].studyId : ""}
                                       zScoreThreshold={store.rvQuery.zScoreThreshold}
                                       caseSetId={(store.sampleLists.result!.length > 0) ? store.sampleLists.result![0].sampleListId : "-1"}
                                       sampleIds={store.samples.result.map((sample)=>sample.sampleId)}

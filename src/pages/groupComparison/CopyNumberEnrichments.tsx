@@ -14,7 +14,7 @@ import _ from "lodash";
 import { AlterationContainerType } from "pages/resultsView/enrichments/EnrichmentsUtil";
 
 export interface ICopyNumberEnrichmentsProps {
-    store: GroupComparisonStore
+    store: GroupComparisonStore;
 }
 
 @observer
@@ -43,7 +43,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
-            this.props.store.copyNumberData,
+            this.props.store.copyNumberEnrichmentData,
             this.props.store.copyNumberEnrichmentProfile,
             this.enrichmentAnalysisGroups
         ],
@@ -52,7 +52,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                 <div data-test="GroupComparisonCopyNumberEnrichments">
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles} onChange={this.onChangeProfile}
                                                 selectedValue={this.props.store.copyNumberEnrichmentProfile.result!.molecularProfileId}/>
-                    <AlterationEnrichmentContainer data={this.props.store.copyNumberData.result!}
+                    <AlterationEnrichmentContainer data={this.props.store.copyNumberEnrichmentData.result!}
                         groups={this.enrichmentAnalysisGroups.result}
                         alteredVsUnalteredMode={false}
                         headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
