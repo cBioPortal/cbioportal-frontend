@@ -5,6 +5,7 @@ import {ICosmicData} from "shared/model/Cosmic";
 import {IMyCancerGenome, IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {Hotspot} from "../api/generated/GenomeNexusAPI";
+import {normalizeMutation} from "../components/mutationMapper/MutationMapperUtils";
 
 /**
  * Utility functions related to annotation data.
@@ -56,10 +57,10 @@ export function recurrentHotspotFilter(hotspot:Hotspot) {
 
 export function isRecurrentHotspot(mutation:Mutation, index:IHotspotIndex): boolean
 {
-    return isHotspot(mutation, index, recurrentHotspotFilter);
+    return isHotspot(normalizeMutation(mutation), index, recurrentHotspotFilter);
 }
 
 export function is3dHotspot(mutation:Mutation, index:IHotspotIndex): boolean
 {
-    return isHotspot(mutation, index, hotspot => hotspot.type.toLowerCase().includes("3d"));
+    return isHotspot(normalizeMutation(mutation), index, hotspot => hotspot.type.toLowerCase().includes("3d"));
 }

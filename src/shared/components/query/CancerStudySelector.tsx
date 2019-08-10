@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import ReactSelect from 'react-select';
 import StudyList from "./studyList/StudyList";
 import {observer, Observer} from "mobx-react";
-import {action, expr, runInAction} from 'mobx';
+import {action, computed, expr, runInAction} from 'mobx';
 import memoize from "memoize-weak-decorator";
 import {If, Then, Else} from 'react-if';
 import {QueryStore, QueryStoreComponent} from "./QueryStore";
@@ -225,13 +225,17 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                             {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
                                 <Observer>
                                     {() => {
+                                    const studyLimitReached = this.store.selectableSelectedStudyIds.length > 50;
+                                    const multipleReferenceGenomes = (!this.store.onlyOneReferenceGenome);
+                                    const limitReachedOrMulGenomesSelected = studyLimitReached||multipleReferenceGenomes;
+                                    let tooltipMessage = <span>Open summary of selected studies in a new window.</span>;
+                                    if (studyLimitReached) {
+                                        tooltipMessage = <span>Studies selected for summary exceeded limit of 50</span>;
+                                    } else {
+                                        tooltipMessage = <span>Studies selected came from different reference genomes</span>;
+                                    }
 
-                                        const studyLimitReached = (this.store.selectableSelectedStudyIds.length > 50);
-                                        const tooltipMessage = studyLimitReached ?
-                                            <span>Too many studies selected for study summary (limit: 50)</span> :
-                                            <span>Open summary of selected studies in a new window.</span>;
-
-                                        return (
+                                    return (
                                             <DefaultTooltip
                                                 placement="top"
                                                 overlay={tooltipMessage}
@@ -239,7 +243,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
                                                 mouseEnterDelay={0}
                                             >
 
-                                                <Button bsSize="xs" disabled={studyLimitReached} bsStyle="primary"
+                                                <Button bsSize="xs" disabled={limitReachedOrMulGenomesSelected} bsStyle="primary"
                                                         className={classNames('btn-primary')}
                                                         onClick={this.handlers.onSummaryClick}
                                                         style={{

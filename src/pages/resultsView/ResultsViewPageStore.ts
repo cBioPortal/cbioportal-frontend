@@ -24,7 +24,8 @@ import {
     SampleFilter,
     SampleIdentifier,
     SampleList,
-    SampleMolecularIdentifier
+    SampleMolecularIdentifier,
+    ReferenceGenomeGene
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {action, computed, observable, ObservableMap} from "mobx";
@@ -53,7 +54,8 @@ import {
     IDataQueryFilter,
     isMutationProfile,
     fetchVariantAnnotationsIndexedByGenomicLocation,
-    ONCOKB_DEFAULT
+    ONCOKB_DEFAULT,
+    fetchAllReferenceGenomeGenes, fetchReferenceGenomeGenes
 } from "shared/lib/StoreUtils"
 import {IHotspotIndex, indexHotspotsData} from "react-mutation-mapper";
 import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
@@ -94,7 +96,8 @@ import {
     GenesetDataFilterCriteria,
     GenesetMolecularData,
     Treatment,
-    TreatmentFilter
+    TreatmentFilter,
+    MolecularProfileCasesGroupFilter
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {CancerGene, IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
@@ -165,6 +168,7 @@ import {Group} from "../../shared/api/ComparisonGroupClient";
 import {AppStore} from "../../AppStore";
 import {CLINICAL_TRACKS_URL_PARAM} from "../../shared/components/oncoprint/ResultsViewOncoprint";
 import {getNumSamples} from "../groupComparison/GroupComparisonUtils";
+import {DEFAULT_GENOME} from "pages/resultsView/ResultsViewPageStoreUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -728,7 +732,7 @@ export class ResultsViewPageStore {
             let clinicalAttributeCountFilter:ClinicalAttributeCountFilter;
             if (this.studies.result.length === 1) {
                 // try using sample list id
-                const studyId = this.studies.result[0].studyId;
+                const studyId = this.studies.result![0].studyId;
                 const dqf = this.studyToDataQueryFilter.result[studyId];
                 if (dqf.sampleListId) {
                     clinicalAttributeCountFilter = {
@@ -792,20 +796,18 @@ export class ResultsViewPageStore {
     readonly cnSegmentsByChromosome = remoteData<{ [chromosome: string]: MobxPromise<CopyNumberSeg[]> }>({
         await: () => [
             this.genes,
-            this.samples
+            this.samples,
+            this.referenceGenes
         ],
         invoke: () => {
-            if (this.genes.result) {
-                return Promise.resolve(_.reduce(_.uniq(this.genes.result.map(g => g.chromosome)), (map: { [chromosome: string]: MobxPromise<CopyNumberSeg[]> }, chromosome: string) => {
+            const uniqueReferenceGeneChromosomes = _.uniq(this.referenceGenes.result!.map(g => g.chromosome));
+            return Promise.resolve(uniqueReferenceGeneChromosomes.reduce(
+                (map: { [chromosome: string]: MobxPromise<CopyNumberSeg[]> }, chromosome: string) => {
                     map[chromosome] = remoteData<CopyNumberSeg[]> ({
                         invoke: () => fetchCopyNumberSegmentsForSamples(this.samples.result, chromosome)
                     });
-
                     return map;
-                }, {}));
-            } else {
-                return Promise.resolve({});
-            }
+                },{}));
         }
     }, {});
 
@@ -1163,9 +1165,8 @@ export class ResultsViewPageStore {
             let genePanelData:GenePanelData[];
             if (sampleMolecularIdentifiers.length && this.genes.result!.length) {
                 genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
-                    genePanelMultipleStudyFilter:{
+                    sampleMolecularIdentifiers:
                         sampleMolecularIdentifiers
-                    }
                 });
             } else {
                 genePanelData = [];
@@ -2267,6 +2268,35 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly referenceGenes = remoteData<ReferenceGenomeGene[]>({
+        await: ()=>[
+            this.studies
+        ],
+        invoke: () => {
+            if (this.studies.result!.length > 0) {
+                return fetchAllReferenceGenomeGenes(this.studies.result[0].referenceGenome);
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    });
+
+    readonly hugoGeneSymbolToReferenceGene = remoteData<{[hugoSymbol:string]:ReferenceGenomeGene}>({
+        await: ()=>[
+            this.referenceGenes
+        ],
+        invoke: ()=>{
+            // build reference gene map
+            return Promise.resolve(_.keyBy(this.referenceGenes.result!, g=>g.hugoGeneSymbol));
+        }
+    });
+
+    @computed get referenceGenome() {
+        const study = this.studies.result?
+            this.studies.result[0]: undefined;
+        return study? study.referenceGenome: DEFAULT_GENOME;
+    }
+
     @computed get genesInvalid(){
         return this.genes.isError;
     }
@@ -2291,13 +2321,16 @@ export class ResultsViewPageStore {
     readonly geneticEntities = remoteData<GeneticEntity[]>({
         await: ()=>[
             this.genes,
-            this.genesets
+            this.genesets,
+            this.hugoGeneSymbolToReferenceGene
         ],
         invoke: () => {
             const res: GeneticEntity[] = [];
             for (const gene of this.genes.result!) {
                 res.push({geneticEntityName: gene.hugoGeneSymbol, geneticEntityType: GeneticEntityType.GENE,
-                    geneticEntityId: gene.entrezGeneId, cytoband: gene.cytoband, geneticEntityData: gene});
+                    geneticEntityId: gene.entrezGeneId,
+                    cytoband: this.hugoGeneSymbolToReferenceGene.result![gene.hugoGeneSymbol].cytoband,
+                    geneticEntityData: gene});
             }
             for (const geneset of this.genesets.result!) {
                 res.push({geneticEntityName: geneset.name, geneticEntityType: GeneticEntityType.GENESET,
@@ -2863,6 +2896,7 @@ export class ResultsViewPageStore {
             this.unalteredSamples
         ],
         getSelectedProfile:()=>this.selectedEnrichmentMutationProfile,
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData:()=>{
             const molecularProfile = this.selectedEnrichmentMutationProfile;
             return internalClient.fetchMutationEnrichmentsUsingPOST({
@@ -2893,6 +2927,7 @@ export class ResultsViewPageStore {
 
     readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
         store:this,
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         await: () => [
             this.alteredSamples,
             this.unalteredSamples
@@ -2904,6 +2939,7 @@ export class ResultsViewPageStore {
 
     readonly copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
         store:this,
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         await: () => [
             this.alteredSamples,
             this.unalteredSamples
@@ -2946,16 +2982,26 @@ export class ResultsViewPageStore {
             this.unalteredSamples
         ],
         getSelectedProfile:()=>this.selectedEnrichmentMRNAProfile,// returns an empty array if the selected study doesn't have any mRNA profiles
-        fetchData:()=>internalClient.fetchExpressionEnrichmentsUsingPOST({
-            molecularProfileId: this.selectedEnrichmentMRNAProfile.molecularProfileId,
-            enrichmentType: "SAMPLE",
-            enrichmentFilter: {
-                alteredIds: this.alteredSamples.result
-                    .filter(s=>(s.studyId === this.selectedEnrichmentMRNAProfile.studyId)).map(s => s.sampleId),
-                unalteredIds: this.unalteredSamples.result
-                    .filter(s=>(s.studyId === this.selectedEnrichmentMRNAProfile.studyId)).map(s => s.sampleId),
-            }
-        })
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+        fetchData: () => {
+            const molecularProfileId = this.selectedEnrichmentMRNAProfile.molecularProfileId;
+            const groups: MolecularProfileCasesGroupFilter[] = [{
+                molecularProfileCaseIdentifiers: this.alteredSamples.result!
+                    .filter(s => (s.studyId === this.selectedEnrichmentMRNAProfile.studyId))
+                    .map(s => ({ caseId: s.sampleId, molecularProfileId })),
+                name: "Altered group"
+            }, {
+                molecularProfileCaseIdentifiers: this.unalteredSamples.result
+                    .filter(s => (s.studyId === this.selectedEnrichmentMRNAProfile.studyId))
+                    .map(s => ({ caseId: s.sampleId, molecularProfileId })),
+                name: "Unaltered group"
+            }];
+
+            return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                enrichmentType: "SAMPLE",
+                groups
+            })
+        }
     });
 
     readonly proteinEnrichmentProfiles = remoteData<MolecularProfile[]>({
@@ -2970,14 +3016,24 @@ export class ResultsViewPageStore {
             this.unalteredSamples
         ],
         getSelectedProfile:()=>this.selectedEnrichmentProteinProfile, // returns an empty array if the selected study doesn't have any protein profiles
-        fetchData:()=>internalClient.fetchExpressionEnrichmentsUsingPOST({
-            molecularProfileId: this.selectedEnrichmentProteinProfile.molecularProfileId,
-            enrichmentType: "SAMPLE",
-            enrichmentFilter: {
-                alteredIds: this.alteredSamples.result.map(s => s.sampleId),
-                unalteredIds: this.unalteredSamples.result.map(s => s.sampleId),
-            }
-        })
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+        fetchData:()=>{
+            const molecularProfileId = this.selectedEnrichmentProteinProfile.molecularProfileId;
+            const groups: MolecularProfileCasesGroupFilter[] = [{
+                molecularProfileCaseIdentifiers: this.alteredSamples.result
+                    .map(s => ({ caseId: s.sampleId, molecularProfileId })),
+                name: "Altered group"
+            }, {
+                molecularProfileCaseIdentifiers: this.unalteredSamples.result
+                    .map(s => ({ caseId: s.sampleId, molecularProfileId })),
+                name: "Unaltered group"
+            }];
+
+            return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                enrichmentType: "SAMPLE",
+                groups
+            });
+        }
     });
 
     readonly molecularProfileIdToProfiledSampleCount = remoteData({
