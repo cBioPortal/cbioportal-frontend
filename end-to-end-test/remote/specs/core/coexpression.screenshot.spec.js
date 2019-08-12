@@ -68,4 +68,11 @@ describe("coexpression tab screenshot tests", function() {
         var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
+
+    it('coexpression tab coadread_tcga_pub with user defined case list', function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/coexpression?Action=Submit&cancer_study_list=coadread_tcga_pub&case_ids=coadread_tcga_pub%3ATCGA-A6-2672-01%2Bcoadread_tcga_pub%3ATCGA-A6-2678-01%2Bcoadread_tcga_pub%3ATCGA-A6-3809-01%2Bcoadread_tcga_pub%3ATCGA-AA-3502-01%2Bcoadread_tcga_pub%3ATCGA-AA-3510-01%2Bcoadread_tcga_pub%3ATCGA-AA-3672-01%2Bcoadread_tcga_pub%3ATCGA-AA-3673-01%2Bcoadread_tcga_pub%3ATCGA-AA-3850-01%2Bcoadread_tcga_pub%3ATCGA-AA-3852-01%2Bcoadread_tcga_pub%3ATCGA-AA-3862-01%2Bcoadread_tcga_pub%3ATCGA-AA-3877-01%2Bcoadread_tcga_pub%3ATCGA-AA-3986-01%2Bcoadread_tcga_pub%3ATCGA-AA-3989-01%2Bcoadread_tcga_pub%3ATCGA-AA-3994-01%2Bcoadread_tcga_pub%3ATCGA-AA-A00L-01%2Bcoadread_tcga_pub%3ATCGA-AA-A010-01%2Bcoadread_tcga_pub%3ATCGA-AA-A02O-01%2Bcoadread_tcga_pub%3ATCGA-CM-4748-01&case_set_id=-1&clinicallist=PROFILED_IN_coadread_tcga_pub_mutations%2CPROFILED_IN_coadread_tcga_pub_gistic&gene_list=KRAS%0AAPC&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&show_samples=false&tab_index=tab_visualize`);
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 60000); // wait for plot to show up
+        var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
+        assertScreenShotMatch(res);
+    });
 });
