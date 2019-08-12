@@ -1387,6 +1387,10 @@ export class QueryStore {
         return this.selectableSelectedStudyIds.length > 0;
     }
 
+    @computed get hasSelectedStudies(){
+        return this.selectableSelectedStudyIds.length > 0;
+    }
+
     @computed get oqlMessages(): string[] {
         let unrecognizedMutations = _.flatten(this.oql.query.map(result => {
             return (result.alterations || []).filter(alt => (alt.alteration_type === 'mut' && (alt.info as any).unrecognized)) as MUTCommand<any>[];

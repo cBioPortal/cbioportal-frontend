@@ -61,6 +61,7 @@ export interface ISurvivalChartProps {
     styleOpts?: any; // see victory styles, and styleOptsDefaultProps for examples
     className?: string;
     showCurveInTooltip?:boolean;
+    legendLabelComponent?:any;
 }
 
 // Start to down sampling when there are more than 1000 dots in the plot.
@@ -256,7 +257,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
             for (const grp of this.analysisGroupsWithData) {
                 data.push({
                     name: !!grp.legendText ? grp.legendText : grp.value,
-                    symbol: { fill: grp.color, strokeOpacity:0, type:"square", size: 6 }
+                    symbol: { fill: grp.color, strokeOpacity:0, type:"square", size: 6 },
                 });
             }
         }
@@ -422,7 +423,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     getSvg={this.getSvg}
                     getData={this.getData}
                     style={{position:'absolute', zIndex: 10, right: 10}}
-                    collapse={true}
+                    type='button'
                 />
                 }
 
@@ -445,7 +446,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     {this.showLegend &&
                     <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
                                    data={this.victoryLegendData}
-                                   labelComponent={<TruncatedTextWithTooltipSVG dy="0.3em" maxWidth={256}/>}
+                                   labelComponent={this.props.legendLabelComponent || <TruncatedTextWithTooltipSVG dy="0.3em" maxWidth={256}/>}
                                    groupComponent={<g className="survivalChartLegendHideForDownload"/>}
                     />
                     }

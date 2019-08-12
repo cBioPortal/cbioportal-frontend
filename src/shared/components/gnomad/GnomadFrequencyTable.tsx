@@ -60,7 +60,7 @@ export default class GnomadFrequencyTable extends React.Component<IGnomadFrequen
                         <td>{d.alleleCount}</td>
                         <td>{d.alleleNumber}</td>
                         <td>{d.homozygotes}</td>
-                        <td>{frequencyOutput(d.alleleFrequency)}</td>
+                        <td data-test="allele-frequency-data">{frequencyOutput(d.alleleFrequency)}</td>
                     </tr>
                     );
         });

@@ -11,6 +11,7 @@ import GroupComparisonStore from "./GroupComparisonStore";
 import autobind from "autobind-decorator";
 import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 import {truncateWithEllipsis} from "../../public-lib/lib/TextTruncationUtils";
+import {GroupLegendLabelComponent} from "./labelComponents/GroupLegendLabelComponent";
 
 export interface IVennProps {
     svgId?: string;
@@ -88,7 +89,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
     @computed get legendData() {
         return this.props.sampleGroups.map(sampleGroup=>{
             return {
-                name: truncateWithEllipsis(this.props.uidToGroup[sampleGroup.uid].nameWithOrdinal, 100, "Arial", "13px"),
+                name: sampleGroup.uid,
                 symbol: { fill: this.props.uidToGroup[sampleGroup.uid].color, strokeOpacity:0, type:"square", size: 6 }
             }
         });
@@ -180,6 +181,13 @@ export default class Venn extends React.Component<IVennProps, {}> {
                             x={this.vennPlotAreaWidth + PADDING_BTWN_VENN_AND_LEGEND}
                             y={100}
                             theme={CBIOPORTAL_VICTORY_THEME}
+                            labelComponent={
+                                <GroupLegendLabelComponent
+                                    maxLabelWidth={100}
+                                    uidToGroup={this.props.uidToGroup}
+                                    dy="0.4em"
+                                />
+                            }
                             standalone={false}
                             data={this.legendData}
                         />

@@ -115,6 +115,22 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         return this.props.groups[1];
     }
 
+    @computed get group1CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Over-expressed";
+        } else {
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group1Name!}/></span>;
+        }
+    }
+
+    @computed get group2CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Under-expressed";
+        } else {
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group2Name!}/></span>;
+        }
+    }
+
     @computed get selectedGenesSet() {
         return _.keyBy(this.selectedGenes || []);
     }

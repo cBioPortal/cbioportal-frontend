@@ -25,7 +25,7 @@ import {observer} from "mobx-react";
             }
             if (AppConfig.serverConfig.skin_footer && !_.isEmpty(AppConfig.serverConfig.skin_footer)) {
                 return (
-                    <div id="footer" dangerouslySetInnerHTML={{__html: 
+                    <div id="footer" dangerouslySetInnerHTML={{__html:
                         "<a href='http://www.cbioportal.org'>cBioPortal</a> | " +
                         `<a href='${AppConfig.apiRoot}api/info'>${version}</a> ` +
                         AppConfig.serverConfig.skin_footer +
@@ -39,7 +39,7 @@ import {observer} from "mobx-react";
                     <div id="footer">
                         <div className="footer-layout">
                             <div className="footer-elem">
-                                <img src={require("./cbioportal_logo.png")} style={{width: 142, filter:"grayscale(100%)"}} alt="cBioPortal Logo"/>
+                                <img src={require("../../globalStyles/images/cbioportal_logo.png")} style={{width: 142, filter:"grayscale(100%)"}} alt="cBioPortal Logo"/>
                                 {version && (
                                     <a href={`${AppConfig.apiRoot}api/info`}><div style={{paddingTop:9,textAlign:"center"}}>{version}</div></a>
                                 )}

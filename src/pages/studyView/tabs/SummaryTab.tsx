@@ -27,6 +27,7 @@ import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/compone
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {AnalysisGroup, ChartMeta, ChartType} from "../StudyViewUtils";
+import {DataType} from "public-lib/components/downloadControls/DownloadControls";
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -149,8 +150,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     props.onResetSelection = this.handlers.onValueSelection;
                 }
                 props.onChangeChartType = this.handlers.onChangeChartType;
-                props.getData = () => this.store.isCustomChart(chartMeta.uniqueKey) ? this.store.getCustomChartDownloadData(chartMeta) : this.store.getClinicalData(chartMeta);
-                props.downloadTypes = ["Data", "SVG", "PDF"];
+                props.getData = (dataType?: DataType) => this.store.getPieChartDataDownload(chartMeta, dataType);
+                props.downloadTypes = ["Summary Data", "Full Data", "SVG", "PDF"];
                 break;
             }
             case ChartTypeEnum.BAR_CHART: {
