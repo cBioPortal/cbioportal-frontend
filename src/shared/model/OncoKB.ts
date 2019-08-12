@@ -1,4 +1,4 @@
-import {CancerGene, IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
+import {CancerGene, IndicatorQueryResp} from "public-lib/api/generated/OncoKbAPI";
 
 export interface IEvidence {
     id: string;

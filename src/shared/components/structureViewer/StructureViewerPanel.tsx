@@ -12,7 +12,7 @@ import {IProteinImpactTypeColors} from "react-mutation-mapper";
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import ResidueMappingCache from "shared/cache/ResidueMappingCache";
-import {ResidueMapping} from "shared/api/generated/Genome2StructureAPI";
+import {ResidueMapping} from "public-lib/api/generated/Genome2StructureAPI";
 import {CacheData} from "shared/lib/LazyMobXCache";
 import {ILazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
 import MutationMapperDataStore from "shared/components/mutationMapper/MutationMapperDataStore";
