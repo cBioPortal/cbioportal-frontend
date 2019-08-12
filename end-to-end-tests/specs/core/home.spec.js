@@ -84,6 +84,7 @@ describe('homepage', function() {
 
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
+        browser.waitForExist(".autosuggest input[type=text]", 10000);
         setInputText(".autosuggest input[type=text]","breast -invasive");
 
         browser.pause(500);
