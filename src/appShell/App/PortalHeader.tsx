@@ -106,7 +106,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
     render(){
         return <header>
             <div id="leftHeaderContent">
-                <Link to="/" id="cbioportal-logo"><img src={require("./cbioportal_logo.png")} alt="cBioPortal Logo"/></Link>
+                <Link to="/" id="cbioportal-logo"><img src={require("../../globalStyles/images/cbioportal_logo.png")} alt="cBioPortal Logo"/></Link>
                 <nav id="main-nav">
                     <ul>
                         {
@@ -115,7 +115,6 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                     </ul>
                 </nav>
             </div>
-
             <div id="rightHeaderContent">
                 <If condition={!AppConfig.hide_login}>
                     <If condition={this.props.appStore.isLoggedIn}>

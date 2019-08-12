@@ -6,7 +6,7 @@ import {log} from "./consoleLog";
 import {StudyViewPageStore} from "../../pages/studyView/StudyViewPageStore";
 
 export type GAEvent = {
-  category:"studyPage"|"resultsView"|"quickSearch"|"download"|"groupComparison";
+  category:"studyPage"|"resultsView"|"quickSearch"|"download"|"groupComparison"|"homePage";
   action:string;
   label?:string|string[];
   fieldsObject?:{ [key:string]:string|number; }

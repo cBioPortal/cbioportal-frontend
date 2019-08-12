@@ -138,6 +138,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     @computed get queryForm(){
         return <div style={{margin:"10px -20px 0 -20px"}}>
             <QueryAndDownloadTabs onSubmit={this.onSubmit}
+                                  forkedMode={false}
                                   showQuickSearchTab={false}
                                   showDownloadTab={false}
                                   showAlerts={true}

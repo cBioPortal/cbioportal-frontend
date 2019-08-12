@@ -9,24 +9,24 @@ import classnames from "classnames";
 import styles from "./DownloadControls.module.scss";
 import {saveSvg, saveSvgAsPng} from "save-svg-as-png";
 import svgToPdfDownload from "../../lib/svgToPdfDownload";
-import {types} from "util";
 import {isPromiseLike} from "../../lib/PromiseUtils";
+import {CSSProperties} from "react";
 
 type ButtonSpec = { key:string, content:JSX.Element, onClick:()=>void, disabled?: boolean };
 
-export type DownloadControlsButton = "PDF" | "PNG" | "SVG" | "Data";
-
+export type DownloadControlsButton = "PDF" | "PNG" | "SVG" | "Data" | "Summary Data" | "Full Data";
+export type DataType='summary'|'full';
 interface IDownloadControlsProps {
     getSvg?:()=>SVGElement|null|PromiseLike<SVGElement|null>;
-    getData?:()=>string|null|PromiseLike<string|null>;
+    getData?:(dataType?:DataType)=>string|null|PromiseLike<string|null>;
     filename:string;
     buttons?: DownloadControlsButton[],
     additionalLeftButtons?:ButtonSpec[],
     additionalRightButtons?:ButtonSpec[]
     dontFade?:boolean;
-    collapse?:boolean;
-    collapseButtonGroup?:boolean;
-    style?:any;
+    type?:'button'|'buttonGroup'|'dropdown';
+    style?:CSSProperties;
+    className?:any;
 }
 
 function makeButton(spec:ButtonSpec) {
@@ -51,6 +51,19 @@ function makeMenuItem(spec:ButtonSpec) {
         >
             {spec.key}
         </div>
+    );
+}
+
+function makeDropdownItem(spec: ButtonSpec) {
+    return (
+        <li
+            key={spec.key}
+        >
+            <a className="dropdown-item"
+               onClick={spec.disabled ? () => {
+               } : spec.onClick}
+            >{spec.key}</a>
+        </li>
     );
 }
 
@@ -93,9 +106,9 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
     }
 
     @autobind
-    private downloadData() {
+    private downloadData(dataType?: DataType) {
         if (this.props.getData) {
-            const result = this.props.getData();
+            const result = this.props.getData(dataType);
             if (result !== null) {
                 if (isPromiseLike<string|null>(result)) {
                     result.then(data=>{
@@ -135,6 +148,18 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
                 content: <span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
                 onClick: this.downloadData,
                 disabled: !this.props.getData
+            },
+            "Summary Data": {
+                key: "Summary Data",
+                content: <span>Summary Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
+                onClick: () => this.downloadData('summary'),
+                disabled: !this.props.getData
+            },
+            "Full Data": {
+                key: "Full Data",
+                content: <span>Full Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
+                onClick: () => this.downloadData('full'),
+                disabled: !this.props.getData
             }
         };
     }
@@ -151,8 +176,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
 
     render() {
         let element:any = null
-        if (this.props.collapse) {
-            if (this.props.collapseButtonGroup) {
+        if (this.props.type === 'buttonGroup') {
                 element = (
                     <DefaultTooltip
                         mouseEnterDelay={0}
@@ -168,7 +192,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
                         </div>
                     </DefaultTooltip>
                 );
-            } else {
+        } else if (this.props.type === 'button') {
                 element = (
                     <div style={Object.assign({ zIndex:10 },this.props.style)}>
                         <DefaultTooltip
@@ -189,7 +213,13 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
                         </DefaultTooltip>
                     </div>
                 );
-            }
+        } else if (this.props.type === 'dropdown') {
+            element = (
+                <ul className={classnames("dropdown-menu", this.props.className || '')}
+                    style={this.props.style || {}}>
+                    {this.buttonSpecs.map(makeDropdownItem)}
+                </ul>
+            );
         } else {
             element = (
                 <div role="group" className="btn-group chartDownloadButtons" style={this.props.style||{}}>
