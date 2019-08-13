@@ -7,54 +7,54 @@ function bucketSort(array, getVector, compareEquals) {
     //               results of the final buckets before returning
     getVector = getVector || function(d) { return d; };
 
-  var current_sorted_array = array;
-  var current_bucket_ranges = [{lower_index_incl: 0, upper_index_excl: array.length}];
+    var current_sorted_array = array;
+    var current_bucket_ranges = [{lower_index_incl: 0, upper_index_excl: array.length}];
 
-  var new_sorted_array, new_bucket_ranges, bucket_range, sorted_result;
+    var new_sorted_array, new_bucket_ranges, bucket_range, sorted_result;
 
-  // find max length vector, to use as template for vector component types, and whose length will be the sort depth
-  var max_length_vector = [];
-  var proposed_vector;
-  for (var i=0; i<array.length; i++) {
-      proposed_vector = getVector(array[i]);
-      if (proposed_vector.length > max_length_vector.length) {
-          max_length_vector = proposed_vector;
-      }
-  }
-  var vector_length = max_length_vector.length;
-  for (var vector_index=0; vector_index<vector_length; vector_index++) {
-    new_sorted_array = [];
-    new_bucket_ranges = [];
-    // sort each bucket range, and collect sorted array and new bucket ranges
-    for (var j=0; j<current_bucket_ranges.length; j++) {
-      bucket_range = current_bucket_ranges[j];
-      sorted_result = bucketSortHelper(
-          current_sorted_array,
-          getVector,
-          bucket_range.lower_index_incl,
-          bucket_range.upper_index_excl,
-          vector_index,
-          (typeof max_length_vector[vector_index] === string_type)
-      );
-      extendArray(new_sorted_array, sorted_result.sorted_array);
-      extendArray(new_bucket_ranges, sorted_result.bucket_ranges);
+    // find max length vector, to use as template for vector component types, and whose length will be the sort depth
+    var max_length_vector = [];
+    var proposed_vector;
+    for (var i=0; i<array.length; i++) {
+        proposed_vector = getVector(array[i]);
+        if (proposed_vector.length > max_length_vector.length) {
+            max_length_vector = proposed_vector;
+        }
     }
-    current_sorted_array = new_sorted_array;
-    current_bucket_ranges = new_bucket_ranges;
-  }
-  // if compareEquals specified, sort remaining buckets with it
+    var vector_length = max_length_vector.length;
+    for (var vector_index=0; vector_index<vector_length; vector_index++) {
+        new_sorted_array = [];
+        new_bucket_ranges = [];
+        // sort each bucket range, and collect sorted array and new bucket ranges
+        for (var j=0; j<current_bucket_ranges.length; j++) {
+            bucket_range = current_bucket_ranges[j];
+            sorted_result = bucketSortHelper(
+                current_sorted_array,
+                getVector,
+                bucket_range.lower_index_incl,
+                bucket_range.upper_index_excl,
+                vector_index,
+                (typeof max_length_vector[vector_index] === string_type)
+            );
+            extendArray(new_sorted_array, sorted_result.sorted_array);
+            extendArray(new_bucket_ranges, sorted_result.bucket_ranges);
+        }
+        current_sorted_array = new_sorted_array;
+        current_bucket_ranges = new_bucket_ranges;
+    }
+    // if compareEquals specified, sort remaining buckets with it
     if (compareEquals) {
-      new_sorted_array = [];
-      var bucket_elts;
-      for (var j=0; j<current_bucket_ranges.length; j++) {
-          bucket_range = current_bucket_ranges[j];
-          bucket_elts = current_sorted_array.slice(bucket_range.lower_index_incl, bucket_range.upper_index_excl);
-          bucket_elts.sort(compareEquals);
-          extendArray(new_sorted_array, bucket_elts);
-      }
-      current_sorted_array = new_sorted_array;
+        new_sorted_array = [];
+        var bucket_elts;
+        for (var j=0; j<current_bucket_ranges.length; j++) {
+            bucket_range = current_bucket_ranges[j];
+            bucket_elts = current_sorted_array.slice(bucket_range.lower_index_incl, bucket_range.upper_index_excl);
+            bucket_elts.sort(compareEquals);
+            extendArray(new_sorted_array, bucket_elts);
+        }
+        current_sorted_array = new_sorted_array;
     }
-  return current_sorted_array;
+    return current_sorted_array;
 };
 
 function stringSort(array, getString) {
@@ -186,15 +186,15 @@ function bucketSortHelper(array, getVector, sort_range_lower_index_incl, sort_ra
     var vector, key;
     var sortFirst = [];
     for (var i=sort_range_lower_index_incl; i<sort_range_upper_index_excl; i++) {
-      vector = getVector(array[i]);
-      if (vector.length > vector_index) {
-          key = vector[vector_index];
-          buckets[key] = buckets[key] || [];
-          buckets[key].push(array[i]);
-      } else {
-          // if the vector has no entry at this index, sort earlier, in line w string sorting convention of shorter strings first
-          sortFirst.push(array[i]);
-      }
+        vector = getVector(array[i]);
+        if (vector.length > vector_index) {
+            key = vector[vector_index];
+            buckets[key] = buckets[key] || [];
+            buckets[key].push(array[i]);
+        } else {
+            // if the vector has no entry at this index, sort earlier, in line w string sorting convention of shorter strings first
+            sortFirst.push(array[i]);
+        }
     }
     // reduce in sorted order
     var keys = Object.keys(buckets);
@@ -222,21 +222,21 @@ function bucketSortHelper(array, getVector, sort_range_lower_index_incl, sort_ra
         extendArray(sorted_array, sortFirst);
     }
     for (var i=0; i<keys.length; i++) {
-      var bucket = buckets[keys[i]];
-      lower_index_incl = sort_range_lower_index_incl + sorted_array.length;
-      upper_index_excl = lower_index_incl + bucket.length;
-      bucket_ranges.push({lower_index_incl: lower_index_incl, upper_index_excl: upper_index_excl});
-      extendArray(sorted_array, bucket);
+        var bucket = buckets[keys[i]];
+        lower_index_incl = sort_range_lower_index_incl + sorted_array.length;
+        upper_index_excl = lower_index_incl + bucket.length;
+        bucket_ranges.push({lower_index_incl: lower_index_incl, upper_index_excl: upper_index_excl});
+        extendArray(sorted_array, bucket);
     }
 
     return { sorted_array: sorted_array, bucket_ranges: bucket_ranges };
 }
 
 module.exports = {
-  bucketSort: bucketSort,
+    bucketSort: bucketSort,
     stringSort: stringSort,
     compare: compare,
     compareFull: compareFull,
-  __bucketSortHelper: bucketSortHelper,
+    __bucketSortHelper: bucketSortHelper,
     __stringToVector:stringToVector
 };
