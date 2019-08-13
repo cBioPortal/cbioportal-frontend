@@ -14,6 +14,7 @@ import {trackEvent} from 'shared/lib/tracking';
 import {If} from "react-if";
 import AppConfig from "appConfig";
 import {PageLayout} from "shared/components/PageLayout/PageLayout";
+import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
 
 const styles = styles_any as {
     QueryAndDownloadTabs: string,
@@ -31,6 +32,7 @@ interface IQueryAndDownloadTabsProps {
     getQueryStore: () => QueryStore;
     showAlerts?: boolean;
     forkedMode?: boolean;
+    modifyQueryParams?: ModifyQueryParams | undefined;
 }
 
 
@@ -104,7 +106,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
                 <MSKTabs activeTabId={this.activeTabId} onTabClick={this.onSelectTab} className={"mainTabs"}>
                     <MSKTab id={"advanced"} linkText={"Query"} onTabDidMount={() => this.setDefaultTab(undefined)}>
                         <QueryContainer forkedMode={this.props.forkedMode} onSubmit={this.props.onSubmit}
-                                        store={this.store}/>
+                                        store={this.store} modifyQueryParams={this.props.modifyQueryParams}/>
                     </MSKTab>
                     <MSKTab id={QUICK_SEARCH_TAB_ID}
                             linkText={<span>Quick Search <strong className={"beta-text"}>Beta!</strong></span>}
