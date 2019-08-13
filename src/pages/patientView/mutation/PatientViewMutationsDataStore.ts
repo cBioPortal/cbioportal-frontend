@@ -66,8 +66,10 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
     @action
     public setSelectedMutations(muts:Readonly<MutationId[]>) {
         this.selectedMutationsMap.clear();
+        let count = 0;
         for (const m of muts) {
             this.toggleSelectedMutation(m);
+            count += 1;
         }
     }
 
