@@ -9,12 +9,12 @@ var ClusteringWorker = require('worker-loader?inline=true&fallback=false!./worke
  *
  * var a =
  *  {
-     *    "TCGA-AO-AA98-01":
-     *    {
-     *    	"TP53": 0.045,
-     *    	"BRA1": -0.89
-     *    }
-     *   },
+ *    "TCGA-AO-AA98-01":
+ *    {
+ *    	"TP53": 0.045,
+ *    	"BRA1": -0.89
+ *    }
+ *   },
  *   ...
  *
  * @return a deferred which gets resolved with the clustering result
