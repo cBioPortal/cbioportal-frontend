@@ -147,39 +147,39 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     {
                         this.store.showSurvivalTab &&
                         <MSKTab id={GroupComparisonTab.SURVIVAL} linkText="Survival"
-                                anchorClassName={this.store.survivalTabGrey ? "greyedOut" : ""}
+                                anchorClassName={this.store.survivalTabUnavailable ? "greyedOut" : ""}
                         >
                             <Survival store={this.store}/>
                         </MSKTab>
                     }
                     <MSKTab id={GroupComparisonTab.CLINICAL} linkText="Clinical"
-                        anchorClassName={this.store.clinicalTabGrey ? "greyedOut" : ""}>
+                        anchorClassName={this.store.clinicalTabUnavailable ? "greyedOut" : ""}>
                         <ClinicalData store={this.store}/>
                     </MSKTab>
                     {this.store.showMutationsTab && (
                         <MSKTab id={GroupComparisonTab.MUTATIONS} linkText="Mutations"
-                            anchorClassName={this.store.mutationsTabGrey ? "greyedOut" : ""}
+                            anchorClassName={this.store.mutationsTabUnavailable ? "greyedOut" : ""}
                         >
                             <MutationEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.showCopyNumberTab && (
                         <MSKTab id={GroupComparisonTab.CNA} linkText="Copy-number"
-                            anchorClassName={this.store.copyNumberTabGrey ? "greyedOut" : ""}
+                            anchorClassName={this.store.copyNumberUnavailable ? "greyedOut" : ""}
                         >
                             <CopyNumberEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (
                         <MSKTab id={GroupComparisonTab.MRNA} linkText="mRNA"
-                            anchorClassName={this.store.mRNATabGrey ? "greyedOut" : ""}
+                            anchorClassName={this.store.mRNATabUnavailable ? "greyedOut" : ""}
                         >
                             <MRNAEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.showProteinTab && (
                         <MSKTab id={GroupComparisonTab.PROTEIN} linkText="Protein"
-                            anchorClassName={this.store.proteinTabGrey ? "greyedOut" : ""}
+                            anchorClassName={this.store.proteinTabUnavailable ? "greyedOut" : ""}
                         >
                             <ProteinEnrichments store={this.store}/>
                         </MSKTab>
