@@ -57,6 +57,7 @@ import {stringListToIndexSet} from "../../public-lib/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
+import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
 import {fetchAllReferenceGenomeGenes} from "shared/lib/StoreUtils";
 
 export enum OverlapStrategy {
@@ -71,6 +72,8 @@ export default class GroupComparisonStore {
     @observable public newSessionPending = false;
     private tabHasBeenShown = observable.map<boolean>();
     private tabHasBeenShownReactionDisposer:IReactionDisposer;
+
+    @observable private _usePatientLevelEnrichments = false;
 
     constructor(sessionId:string, private appStore:AppStore, private routing:any) {
         this.sessionId = sessionId;
@@ -104,12 +107,21 @@ export default class GroupComparisonStore {
     }
 
     @action public updateOverlapStrategy(strategy:OverlapStrategy) {
-        this.routing.updateRoute({ overlapStrategy: strategy } as Partial<GroupComparisonURLQuery>)
+        this.routing.updateRoute({ overlapStrategy: strategy } as Partial<GroupComparisonURLQuery>);
     }
 
     @computed get overlapStrategy() {
         const param = (this.routing.location.query as GroupComparisonURLQuery).overlapStrategy;
         return param || OverlapStrategy.EXCLUDE;
+    }
+
+    public get usePatientLevelEnrichments() {
+        return (this.routing.location.query as GroupComparisonURLQuery).patientEnrichments === "true";
+    }
+
+    @autobind
+    @action public setUsePatientLevelEnrichments(e:boolean) {
+        this.routing.updateRoute({ patientEnrichments: e.toString()} as Partial<GroupComparisonURLQuery>)
     }
 
     @computed get groupOrder() {
@@ -566,17 +578,17 @@ export default class GroupComparisonStore {
     }
 
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
-        await: () => [this.mutationEnrichmentProfile, this._activeGroupsOverlapRemoved],
+        await: () => [this.mutationEnrichmentProfile, this.activeGroups],
         getSelectedProfile: () => this.mutationEnrichmentProfile.result,
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             let molecularProfile = this.mutationEnrichmentProfile.result!;
-            if (this._activeGroupsOverlapRemoved.result!.length > 1) {
-                let groups: MolecularProfileCasesGroupFilter[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
+            if (this.activeGroups.result!.length > 1) {
+                let groups: MolecularProfileCasesGroupFilter[] = _.map(this.activeGroups.result, group => {
                     const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
-                        return _.map(study.samples, sampleId => {
+                        return _.map((this.usePatientLevelEnrichments ? study.patients : study.samples), caseId => {
                             return {
-                                caseId: sampleId,
+                                caseId,
                                 molecularProfileId: molecularProfile.molecularProfileId
                             }
                         })
@@ -588,7 +600,7 @@ export default class GroupComparisonStore {
                 });
 
                 return internalClient.fetchMutationEnrichmentsUsingPOST({
-                    enrichmentType: "SAMPLE",
+                    enrichmentType: this.usePatientLevelEnrichments ? "PATIENT" : "SAMPLE",
                     groups
                 });
             } else {
@@ -598,14 +610,14 @@ export default class GroupComparisonStore {
     });
 
     readonly copyNumberEnrichmentDataRequestGroups = remoteData({
-        await: () => [this.copyNumberEnrichmentProfile, this._activeGroupsOverlapRemoved],
+        await: () => [this.copyNumberEnrichmentProfile, this.activeGroups],
         invoke: async () => {
             let molecularProfile = this.copyNumberEnrichmentProfile.result!;
-            let groups: MolecularProfileCasesGroupFilter[] = _.map(this._activeGroupsOverlapRemoved.result, group => {
+            let groups: MolecularProfileCasesGroupFilter[] = _.map(this.activeGroups.result, group => {
                 const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
-                    return _.map(study.samples, sampleId => {
+                    return _.map((this.usePatientLevelEnrichments ? study.patients : study.samples), caseId => {
                         return {
-                            caseId: sampleId,
+                            caseId,
                             molecularProfileId: molecularProfile.molecularProfileId
                         }
                     });
@@ -673,7 +685,7 @@ export default class GroupComparisonStore {
 
         return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             copyNumberEventType: copyNumberEventType,
-            enrichmentType: "SAMPLE",
+            enrichmentType: this.usePatientLevelEnrichments ? "PATIENT" : "SAMPLE",
             groups
         });
     }
