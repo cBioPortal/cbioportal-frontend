@@ -2,7 +2,7 @@ import * as React from "react";
 import {Observer, observer} from "mobx-react";
 import {VictoryAxis, VictoryChart, VictoryLabel, VictoryLine, VictoryScatter} from "victory";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
-import {computed, observable} from "mobx";
+import {action, computed, observable} from "mobx";
 import {Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {stringListToIndexSet} from "../../../public-lib";
 import _ from "lodash";
@@ -117,20 +117,24 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     return [
                         {
                             target: "data",
-                            mutation: (props: any) => {
+                            mutation: action((props: any) => {
+                                let datum;
                                 if (props.datum) {
-                                    this.tooltipDatum = props.datum;
+                                    // mouse over point
+                                    datum = props.datum;
                                     this.tooltipOnPoint = true;
                                 } else if (props.data.length > 0) {
-                                    this.tooltipDatum = props.data[0];
+                                    // mouse over line
+                                    datum = props.data[0];
                                     this.tooltipOnPoint = false;
                                 }
-                                this.props.dataStore.setHighlightModel({
-                                    proteinChange:this.tooltipDatum.proteinChange,
+                                this.tooltipDatum = datum;
+                                this.props.dataStore.setMouseOverMutation({
+                                    proteinChange: this.tooltipDatum.proteinChange,
                                     hugoGeneSymbol: this.tooltipDatum.hugoGeneSymbol
                                 });
                                 return null;
-                            }
+                            })
                         }
                     ];
                 },
@@ -138,15 +142,36 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     return [
                         {
                             target: "data",
-                            mutation: () => {
+                            mutation: action(() => {
                                 this.tooltipDatum = null;
                                 this.tooltipOnPoint = false;
-                                this.props.dataStore.setHighlightModel(null);
+                                this.props.dataStore.setMouseOverMutation(null);
                                 return null;
-                            }
+                            })
                         }
                     ];
                 },
+                onClick: ()=> {
+                    return [
+                        {
+                            target: "data",
+                            mutation: action((props:any)=>{
+                                let datum;
+                                if (props.datum) {
+                                    // click on point
+                                    datum = props.datum;
+                                } else if (props.data.length > 0) {
+                                    // click on line
+                                    datum = props.data[0];
+                                }
+                                this.props.dataStore.toggleSelectedMutation({
+                                    proteinChange:datum.proteinChange,
+                                    hugoGeneSymbol:datum.hugoGeneSymbol
+                                });
+                            })
+                        }
+                    ];
+                }
             }
         }];
     }
@@ -154,6 +179,13 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     @autobind private onMouseMove(e:React.MouseEvent<any>) {
         e.persist();
         this.mouseEvent = e;
+    }
+
+    @autobind private onClick(e:React.MouseEvent<any>) {
+        if ((e.target as SVGElement).nodeName.toLowerCase() === "svg") {
+            // reset selection if clicking on svg background
+            this.props.dataStore.setSelectedMutations([]);
+        }
     }
 
     @computed get chartWidth() {
@@ -378,27 +410,33 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     @autobind
-    private getThickLine() {
-        if (this.props.dataStore.getHighlightModel() !== null && this.scale !== null && this.thickLineContainer !== null) {
-            const points = this.mutationToLineData.get(
-                this.props.dataStore.getHighlightModel()!, ["proteinChange","hugoGeneSymbol"]
-            );
-            if (!points) {
-                return <g/>
-            }
+    private getThickLines() {
+        const highlightedMutations = this.props.dataStore.selectedMutations.slice();
+        if (this.props.dataStore.getMouseOverMutation()) {
+            highlightedMutations.push(this.props.dataStore.getMouseOverMutation()!);
+        }
+        if (highlightedMutations.length > 0 && this.scale !== null && this.thickLineContainer !== null) {
+            return highlightedMutations.map(highlightedMutation=>{
+                const points = this.mutationToLineData.get(
+                    highlightedMutation, ["proteinChange","hugoGeneSymbol"]
+                );
+                if (!points) {
+                    return <g/>
+                }
 
-            let d = `M ${this.scale.x(points[0].x)} ${this.scale.y(points[0].y)}`;
-            for (let i=1; i<points.length; i++) {
-                d = `${d} L ${this.scale.x(points[i].x)} ${this.scale.y(points[i].y)}`;
-            }
-            return (
-                <Portal isOpened={true} node={this.thickLineContainer}>
-                    <path
-                        style={{ stroke:"#318ec4", strokeOpacity:1, strokeWidth:THICK_LINE_STROKE_WIDTH, fillOpacity:0, pointerEvents:"none"}}
-                        d={d}
-                    />
-                </Portal>
-            );
+                let d = `M ${this.scale!.x(points[0].x)} ${this.scale!.y(points[0].y)}`;
+                for (let i=1; i<points.length; i++) {
+                    d = `${d} L ${this.scale!.x(points[i].x)} ${this.scale!.y(points[i].y)}`;
+                }
+                return (
+                    <Portal isOpened={true} node={this.thickLineContainer}>
+                        <path
+                            style={{ stroke:"#318ec4", strokeOpacity:1, strokeWidth:THICK_LINE_STROKE_WIDTH, fillOpacity:0, pointerEvents:"none"}}
+                            d={d}
+                        />
+                    </Portal>
+                );
+            });
         } else {
             return <g/>;
         }
@@ -419,6 +457,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         role="img"
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                         onMouseMove={this.onMouseMove}
+                        onClick={this.onClick}
                     >
                         <VictoryChart
                             theme={CBIOPORTAL_VICTORY_THEME}
@@ -494,7 +533,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             />
                         </VictoryChart>
                         <Observer>
-                            {this.getThickLine}
+                            {this.getThickLines}
                         </Observer>
                     </svg>
                     <Observer>

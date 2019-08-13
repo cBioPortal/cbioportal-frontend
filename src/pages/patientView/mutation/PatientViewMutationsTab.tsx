@@ -72,7 +72,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
     @autobind
     private onTableRowMouseEnter(d:Mutation[]) {
         if (d.length) {
-            this.dataStore.setHighlightModel({
+            this.dataStore.setMouseOverMutation({
                 proteinChange:d[0].proteinChange,
                 hugoGeneSymbol:d[0].gene.hugoGeneSymbol
             });
@@ -80,7 +80,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
     }
     @autobind
     private onTableRowMouseLeave() {
-        this.dataStore.setHighlightModel(null);
+        this.dataStore.setMouseOverMutation(null);
     }
 
     readonly table = MakeMobxView({
