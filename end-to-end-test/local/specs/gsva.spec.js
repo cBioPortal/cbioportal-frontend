@@ -9,6 +9,11 @@ var getReactSelectOptions = require('../../shared/specUtils').getReactSelectOpti
 var selectReactSelectOption = require('../../shared/specUtils').selectReactSelectOption;
 var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 
+var {
+    clickQueryByGeneButton,
+} = require('../../shared/specUtils');
+
+
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 const oncoprintTabUrl = CBIOPORTAL_URL+'/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=GO_ACYLGLYCEROL_HOMEOSTASIS%20GO_ANATOMICAL_STRUCTURE_FORMATION_INVOLVED_IN_MORPHOGENESIS%20GO_ANTEROGRADE_AXONAL_TRANSPORT%20GO_APICAL_PROTEIN_LOCALIZATION%20GO_ATP_DEPENDENT_CHROMATIN_REMODELING%20GO_CARBOHYDRATE_CATABOLIC_PROCESS%20GO_CARDIAC_CHAMBER_DEVELOPMENT&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_GENESET_SCORE=study_es_0_gsva_scores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&tab_index=tab_visualize&show_samples=false&clinicallist=PROFILED_IN_study_es_0_gsva_scores%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic';
 const plotsTabUrl = CBIOPORTAL_URL+'/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&clinicallist=PROFILED_IN_study_es_0_gsva_scores%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=GO_ACYLGLYCEROL_HOMEOSTASIS%20GO_ANATOMICAL_STRUCTURE_FORMATION_INVOLVED_IN_MORPHOGENESIS%20GO_ANTEROGRADE_AXONAL_TRANSPORT%20GO_APICAL_PROTEIN_LOCALIZATION%20GO_ATP_DEPENDENT_CHROMATIN_REMODELING%20GO_CARBOHYDRATE_CATABOLIC_PROCESS%20GO_CARDIAC_CHAMBER_DEVELOPMENT&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_GENESET_SCORE=study_es_0_gsva_scores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize';
@@ -25,7 +30,7 @@ describe('gsva feature', function() {
             beforeEach(()=>{
                 goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
                 waitForQueryPage();
-            });    
+            });
 
             it('shows GSVA-profile option when selecting study_es_0', () => {
 
@@ -98,20 +103,20 @@ describe('gsva feature', function() {
 
                 browser.$('[id=GSVAScore]').setValue('0');
                 browser.$('[id=filterButton]').click();
-                
+
                 browser.waitUntil(  () => $$('*=GO_').length > before.length );
                 var after = $$('*=GO_');
-                
+
                 assert.equal( after.length, 7);
             });
-            
+
             it('filters gene sets with the search input field', () => {
 
                 var before = $$('*=GO_');
 
                 browser.$('[id=GSVAScore]').setValue('0');
                 browser.$('[id=filterButton]').click();
-                
+
                 browser.waitUntil( () => $$('*=GO_').length > before.length );
 
                 $('[id=geneset-hierarchy-search]').setValue('GO_ACYLGLYCEROL_HOMEOSTASIS');
@@ -155,27 +160,27 @@ describe('gsva feature', function() {
                 checkTestStudy();
                 checkGSVAprofile();
             });
-            
+
             it('adds gene set name to entry component', () => {
-                
+
                 browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
                 $('div.modal-dialog').waitForExist();
 
                 // find the GO_ATP_DEPENDENT_CHROMATIN_REMODELING entry and check its checkbox
                 var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').$('..').$('..').$$('td')[3].$('label input');
                 checkBox.waitForVisible();
-                
+
                 checkBox.click();
                 checkBox.waitUntil(checkBox.isSelected());
-                
+
                 browser.$('button=Add selection to the query').click();
-                
+
                 $('span*=All gene sets are valid').waitForExist();
-                
+
                 var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
                 assert.equal(textArea.getText(), "GO_ATP_DEPENDENT_CHROMATIN_REMODELING");
             });
-            
+
             it('selects gene sets from query page text area', () => {
 
                 var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
@@ -212,11 +217,11 @@ describe('gsva feature', function() {
                 $('div.modal-dialog').waitForExist();
 
                 var before = $$('span*=GO_');
-                
+
                 $('input.tableSearchInput').setValue('GO_ACYL');
 
                 browser.waitUntil( () => $$('span*=GO_').length < before.length );
-                
+
                 var after = $$('span*=GO_');
 
                 assert.equal(after.length, 1);
@@ -243,7 +248,7 @@ describe('gsva feature', function() {
                 goToUrlAndSetLocalStorage(oncoprintTabUrl);
                 waitForOncoprint();
             });
-            
+
             it('has GSVA profile option in heatmap menu', () => {
                 var heatmapButton = browser.$('button[id=heatmapDropdown]');
                 heatmapButton.click();
@@ -300,15 +305,15 @@ describe('gsva feature', function() {
             });
 
             it('horizontal axis menu shows gene set entry in entity menu', () => {
-                
+
                 var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
                 horzDataSelect.$('.Select-value-label').click();
                 horzDataSelect.$('.Select-option=Gene Sets').click();
-                
+
                 var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
                 horzProfileSelect.$('.Select-value-label').click();
                 horzProfileSelect.$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets').click();
-                
+
                 var horzEntitySelect = $('[name=h-geneset-selector]').$('..');
                 horzEntitySelect.$('.Select-value-label').click();
 
@@ -316,15 +321,15 @@ describe('gsva feature', function() {
             });
 
             it('vertical axis menu shows gene set entry in entity menu', () => {
-                
+
                 var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
                 vertDataSelect.$('.Select-value-label').click();
                 vertDataSelect.$('.Select-option=Gene Sets').click();
-                
+
                 var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
                 vertProfileSelect.$('.Select-value-label').click();
                 vertProfileSelect.$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets').click();
-                
+
                 var vertEntitySelect = $('[name=v-geneset-selector]').$('..');
                 vertEntitySelect.$('.Select-value-label').click();
 
@@ -339,7 +344,7 @@ describe('gsva feature', function() {
                 goToUrlAndSetLocalStorage(coexpressionTabUrl);
                 waitForCoExpressionTab();
             });
-            
+
             it('shows buttons for genes', () => {
                 const genes = coexpressionTabUrl.match(/gene_list=(.*)\&/)[1].split('%20');
                 var container = $('//*[@id="coexpressionTabGeneTabs"]');
@@ -358,6 +363,7 @@ describe('gsva feature', function() {
                 var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
                 icon.click();
                 $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+                browser.debug();
                 assert.equal( getReactSelectOptions($('.coexpression-select-query-profile')).length, 2 );
                 assert( reactSelectOption($('.coexpression-select-query-profile'), 'mRNA expression (microarray) (526 samples)') );
                 assert( reactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)') );
@@ -419,6 +425,9 @@ const checkTestStudy = () => {
     $('span=Test study es_0').waitForExist();
     var checkbox = $('span=Test study es_0').$('..').$('input[type=checkbox]');
     checkbox.click();
+
+    clickQueryByGeneButton();
+
 }
 
 const checkGSVAprofile = () => {
