@@ -11,6 +11,7 @@ import {action, computed, observable} from "mobx";
 import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../shared/lib/StoreUtils";
 import autobind from "autobind-decorator";
 import _ from "lodash";
+import InputWithIndeterminate from "../../../shared/components/InputWithIndeterminate";
 
 @observer
 export default class PatientViewSelectableMutationTable extends PatientViewMutationTable {
@@ -49,10 +50,11 @@ export default class PatientViewSelectableMutationTable extends PatientViewMutat
     }
 
     @computed get areAllFilteredMutationsSelected() {
-        if (!this.table) {
-            return false;
-        }
         return _.every(this.props.dataStore!.tableData, this.isMutationSelected);
+    }
+
+    @computed get isSomeMutationSelected() {
+        return _.some(this.props.dataStore!.tableData, this.isMutationSelected);
     }
 
     @autobind
@@ -95,20 +97,12 @@ export default class PatientViewSelectableMutationTable extends PatientViewMutat
                 headerRender:()=>{
                     return (
                         <span>
-                            <input
+                            <InputWithIndeterminate
                                 type="checkbox"
+                                indeterminate={!this.areAllFilteredMutationsSelected && this.isSomeMutationSelected}
                                 checked={this.areAllFilteredMutationsSelected}
                                 onClick={this.selectFilteredRows}
                             />
-                            {this.selectedMutations.length > 0 && (
-                                <button
-                                    onClick={this.clearSelectedMutations}
-                                    style={{ marginLeft:5 }}
-                                    className="btn btn-xs btn-default"
-                                >
-                                    Deselect all
-                                </button>
-                            )}
                         </span>
                     );
                 }
