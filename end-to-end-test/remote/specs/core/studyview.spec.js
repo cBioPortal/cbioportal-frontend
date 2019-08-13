@@ -11,6 +11,12 @@ const getNumberOfStudyViewCharts = require('../../../shared/specUtils').getNumbe
 const getTextFromElement = require('../../../shared/specUtils').getTextFromElement;
 const waitForStudyViewSelectedInfo = require('../../../shared/specUtils').waitForStudyViewSelectedInfo;
 
+
+var {
+    checkElementWithMouseDisabled
+} = require('../../../shared/specUtils');
+
+
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 const CUSTOM_SELECTION_BUTTON = "[data-test='custom-selection-button']";
 const SELECTED_SAMPLES = "strong[data-test='selected-samples']";

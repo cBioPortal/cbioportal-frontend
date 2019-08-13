@@ -1182,12 +1182,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     readonly mutationPromise = remoteData({
-        await:()=>this.props.store.filteredAndAnnotatedMutationCache.getAll(
-            getMutationQueries(this.horzSelection, this.vertSelection)
+        await:()=>this.props.store.annotatedMutationCache.getAll(
+            getMutationQueries(this.horzSelection, this.vertSelection, this.utilitiesMenuSelection)
         ),
         invoke: ()=>{
-            return Promise.resolve(_.flatten(this.props.store.filteredAndAnnotatedMutationCache.getAll(
-                getMutationQueries(this.horzSelection, this.vertSelection)
+            return Promise.resolve(_.flatten(this.props.store.annotatedMutationCache.getAll(
+                getMutationQueries(this.horzSelection, this.vertSelection, this.utilitiesMenuSelection)
             ).map(p=>p.result!)).filter(x=>!!x));
         }
     });
