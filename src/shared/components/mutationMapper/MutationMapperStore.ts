@@ -3,11 +3,12 @@ import {computed} from "mobx";
 import MobxPromise, {cached, labelMobxPromises} from "mobxpromise";
 
 import {
+    DataFilter, defaultHotspotFilter,
     DefaultMutationMapperDataFetcher,
-    DefaultMutationMapperStore,
+    DefaultMutationMapperStore, defaultOncoKbFilter,
     getMutationsToTranscriptId,
     groupOncoKbIndicatorDataByMutations,
-    IHotspotIndex
+    IHotspotIndex, isHotspot
 } from "react-mutation-mapper";
 
 import genomeNexusClient from "shared/api/genomeNexusClientInstance";
