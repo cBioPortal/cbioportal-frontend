@@ -613,6 +613,7 @@ var GradientRuleSet = (function () {
 	 * - colors || colormap_name
          * - value_stop_points
 	 * - null_color
+	 * - null_legend_label
 	 */
 	LinearInterpRuleSet.call(this, params);
 
@@ -628,6 +629,20 @@ var GradientRuleSet = (function () {
 
 	this.value_stop_points = params.value_stop_points;
 	this.null_color = params.null_color || "rgba(211,211,211,1)";
+
+	var self = this;
+	var value_key = this.value_key;
+	this.addRule(function(d) {
+		return d[NA_STRING] !== true && d[value_key] === null;
+	}, {
+		shapes: [{
+			type: 'rectangle',
+			fill: self.null_color
+		}],
+		legend_label: params.null_legend_label || "Not a number",
+		exclude_from_legend:false,
+		legend_config: {'type':'rule', 'target':{ [value_key]:null } }
+	});
     }
     GradientRuleSet.prototype = Object.create(LinearInterpRuleSet.prototype);
 
@@ -684,17 +699,13 @@ var GradientRuleSet = (function () {
 	var null_color = this.null_color;
 
 	this.gradient_rule = this.addRule(function (d) {
-	    return d[NA_STRING] !== true;
+	    return d[NA_STRING] !== true && d[value_key] !== null;
 	},
 		{shapes: [{
 			    type: 'rectangle',
 			    fill: function(d) {
-				if (d[value_key]) {
 				    var t = interpFn(d[value_key]);
 				    return colorFn(t);
-				} else {
-				    return null_color;
-				}
 			    }
 			}],
 		    exclude_from_legend: false,

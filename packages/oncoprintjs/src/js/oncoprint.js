@@ -1051,6 +1051,12 @@ var Oncoprint = (function () {
 	Oncoprint.prototype.setTrackInfoTooltip = function(track_id, $tooltip_elt) {
     	this.model.setTrackInfoTooltip(track_id, $tooltip_elt);
 	}
+
+	Oncoprint.prototype.setTrackMovable = function(track_id, movable) {
+    	this.model.setTrackMovable(track_id, movable);
+    	this.track_options_view.setTrackMovable(this.model);
+        this.label_view.setTrackMovable(this.model);
+	}
     
     Oncoprint.prototype.toSVG = function(with_background) {
         if(this.webgl_unavailable || this.destroyed) {

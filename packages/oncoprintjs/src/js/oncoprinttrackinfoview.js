@@ -38,7 +38,7 @@ var OncoprintTrackInfoView = (function () {
 	    view.minimum_track_height = Math.min(view.minimum_track_height, model.getTrackHeight(tracks[i]));
 	}
 
-	view.width = 32;
+	view.width = 0;
 
 	var label_tops = model.getLabelTops();
 	scroll(view, model.getVertScroll());
@@ -51,7 +51,11 @@ var OncoprintTrackInfoView = (function () {
 			'font-weight': view.font_weight,
 			'font-size': font_size})
 				.addClass('noselect');
-			$new_label.text(model.getTrackInfo(tracks[i]));
+			var text = model.getTrackInfo(tracks[i]);
+			if (!text) {
+				return;
+			}
+			$new_label.text(text);
 			$new_label.appendTo(view.$text_ctr);
 			view.$label_elts.push($new_label);
 			setTimeout(function() {
@@ -67,8 +71,11 @@ var OncoprintTrackInfoView = (function () {
 			}, 0); // delay to give time for render before adding events
 			var top = label_tops[tracks[i]] + (model.getCellHeight(tracks[i]) - $new_label.outerHeight()) / 2;
 			$new_label.css({'top': top + 'px'});
-			view.width = Math.max(view.width, $new_label[0].clientWidth);
+			view.width = Math.max(32, view.width, $new_label[0].clientWidth);
 		})();
+	}
+	if (view.width > 0) {
+		view.width += 10;
 	}
     };
     var scroll = function (view, scroll_y) {
@@ -90,7 +97,7 @@ var OncoprintTrackInfoView = (function () {
 	return Math.max(Math.min(this.base_font_size, this.minimum_track_height), 7);
     }
     OncoprintTrackInfoView.prototype.getWidth = function () {
-	return this.width + 10;
+	return this.width;
     }
     OncoprintTrackInfoView.prototype.addTracks = function (model) {
 	renderAllInfo(this, model);

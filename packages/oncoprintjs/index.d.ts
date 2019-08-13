@@ -60,6 +60,7 @@ declare module "oncoprintjs"
         colormap_name?: string; // name of a colormap found in src/js/heatmapcolors.js
         value_stop_points: number[];
         null_color?: string;
+        null_legend_label?:string;
 
         log_scale?:boolean;
         value_key: string;
@@ -129,6 +130,7 @@ declare module "oncoprintjs"
         has_column_spacing?: boolean;
         data_id_key?: keyof D;
         tooltipFn?: TrackTooltipFn<D>;
+        movable?:boolean;
         removable?:boolean;
         removeCallback?:(track_id:TrackId)=>void;
         label?: string;
@@ -216,6 +218,7 @@ declare module "oncoprintjs"
         setTrackCustomOptions:(track_id:TrackId, custom_options?:CustomTrackOption[])=>void;
         setShowTrackSublabels:(show:boolean)=>void;
         clearMouseOverEffects:()=>void;
+        setTrackMovable:(track_id:TrackId, movable:boolean)=>void;
 
         constructor(ctr_selector:string, width:number);
         destroy:()=>void;

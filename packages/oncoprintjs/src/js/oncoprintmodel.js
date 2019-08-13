@@ -6,6 +6,8 @@ var clustering = require('./clustering.js');
 var $ = require('jquery');
 var BucketSort = require("./bucketsort.js");
 var doesCellIntersectPixel = require("./utils.js").doesCellIntersectPixel;
+var cloneShallow = require("./utils.js").cloneShallow;
+var _ = require("lodash");
 
 function ifndef(x, val) {
     return (typeof x === "undefined" ? val : x);
@@ -145,6 +147,7 @@ var OncoprintModel = (function () {
 	this.track_padding = {};
 	this.track_data_id_key = {};
 	this.track_tooltip_fn = {};
+	this.track_movable = {};
 	this.track_removable = {};
 	this.track_remove_callback = {};
 	this.track_sort_cmp_fn = {};
@@ -744,7 +747,7 @@ var OncoprintModel = (function () {
 	    var params = params_list[i];
 	    addTrack(this, params.track_id, params.target_group, params.track_group_header,
 		    params.cell_height, params.track_padding, params.has_column_spacing,
-		    params.data_id_key, params.tooltipFn, params.link_url, params.removable,
+		    params.data_id_key, params.tooltipFn, params.link_url, params.removable, params.movable,
 		    params.removeCallback, params.label, params.sublabel, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
 		    params.data, params.rule_set, params.track_label_color, params.html_label,
@@ -757,7 +760,7 @@ var OncoprintModel = (function () {
   
     var addTrack = function (model, track_id, target_group, track_group_header,
 	    cell_height, track_padding, has_column_spacing,
-	    data_id_key, tooltipFn, link_url, removable,
+	    data_id_key, tooltipFn, link_url, removable, movable,
 	    removeCallback, label, sublabel, description, track_info,
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
 	    data, rule_set, track_label_color, html_label,
@@ -778,6 +781,7 @@ var OncoprintModel = (function () {
 	model.track_tooltip_fn[track_id] = ifndef(tooltipFn, function (d) {
 	    return d + '';
 	});
+	model.track_movable[track_id] = ifndef(movable, true);
 	model.track_removable[track_id] = ifndef(removable, false);
 	model.track_remove_callback[track_id] = ifndef(removeCallback, function() {});
 	
@@ -920,6 +924,7 @@ var OncoprintModel = (function () {
 	delete this.track_padding[track_id];
 	delete this.track_data_id_key[track_id];
 	delete this.track_tooltip_fn[track_id];
+	delete this.track_movable[track_id];
 	delete this.track_removable[track_id];
 	delete this.track_remove_callback[track_id];
 	delete this.track_sort_cmp_fn[track_id];
@@ -1349,6 +1354,7 @@ var OncoprintModel = (function () {
     }
 
     OncoprintModel.prototype.clusterTrackGroup = function(track_group_index, clusterValueFn) {
+    	var sort_config_at_call = cloneShallow(this.sort_config);
     	// Prepare input
 	var self = this;
 		var def = new $.Deferred();
@@ -1379,13 +1385,17 @@ var OncoprintModel = (function () {
 	}
 
 	// unset sorting by tracks in this group
-	track_group.forEach(function (track_id) {
+	/*track_group.forEach(function (track_id) {
 	    self.setTrackSortDirection(track_id, 0, true);
-	});
+	});*/
 
 	//do hierarchical clustering in background:
         $.when(clustering.hclusterColumns(cluster_input), clustering.hclusterTracks(cluster_input)).then(
             function (columnClusterOrder, trackClusterOrder) {
+            	// cancel if sort config is no longer what it was
+				if (!_.isEqual(self.sort_config, sort_config_at_call)) {
+					return;
+				}
 		// set clustered column order
 		self.setIdOrder(columnClusterOrder.map(function (c) {return c.caseId;}));
 		// determine clustered row order
@@ -1518,6 +1528,14 @@ var OncoprintModel = (function () {
     
     OncoprintModel.prototype.setSortConfig = function(params) {
 	this.sort_config = params;
+    }
+
+    OncoprintModel.prototype.getTrackMovable = function(track_id) {
+    	return this.track_movable[track_id];
+	}
+
+    OncoprintModel.prototype.setTrackMovable = function(track_id, movable) {
+        this.track_movable[track_id] = movable;
     }
 
     OncoprintModel.prototype.isTrackInClusteredGroup = function(track_id) {

@@ -55,7 +55,7 @@
     "gl-matrix": "2.3.2",
     "jquery": "^3.0.0",
     "jstat": "^1.7.1",
-    "tayden-clusterfck": "^0.7.0",
-    "underscore": "^1.7.0"
+    "lodash": "^4.17.15",
+    "tayden-clusterfck": "^0.7.0"
   }
 }
