@@ -19,7 +19,10 @@ import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
 import SampleLabelSVG from "../../../shared/components/sampleLabel/SampleLabel";
 import SampleManager from "../sampleManager";
 import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
+import $ from "jquery";
 import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
+import invertIncreasingFunction, {invertDecreasingFunction} from "../../../shared/lib/invertIncreasingFunction";
+
 
 export interface IVAFLineChartProps {
     mutations:Mutation[][];
@@ -49,6 +52,7 @@ interface IPoint {
 
 const LINE_COLOR = "#000000";
 const THICK_LINE_STROKE_WIDTH = 6;
+const DRAG_COVER_CLASSNAME = "draggingCover";
 
 class ScaleCapturer extends React.Component<any, any>{
     render() {
@@ -98,6 +102,11 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     @observable.ref mouseEvent:React.MouseEvent<any>|null = null;
     @observable.ref private scale:VictoryScale | null = null;
     @observable.ref private thickLineContainer:any | null = null;
+
+    @observable dragRect = {
+        startX:0, startY:0, currentX:0, currentY:0
+    };
+    @observable dragging = false;
 
     @autobind
     private thickLineContainerRef(thickLineContainer:any|null) {
@@ -176,15 +185,71 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         }];
     }
 
-    @autobind private onMouseMove(e:React.MouseEvent<any>) {
-        e.persist();
-        this.mouseEvent = e;
+    @action
+    private selectPointsInDragRect() {
+        if (this.scale) {
+            const points = this.data.grayPoints.concat(_.flatten(this.data.lineData));
+
+            const rectBoundsSvgSpace = {
+                x:[Math.min(this.dragRect.startX, this.dragRect.currentX), Math.max(this.dragRect.startX, this.dragRect.currentX)],
+                // y inverted because svg y goes top to bottom
+                y:[Math.max(this.dragRect.startY, this.dragRect.currentY), Math.min(this.dragRect.startY, this.dragRect.currentY)]
+            };
+
+            const rectBoundsDataSpace = {
+                x:rectBoundsSvgSpace.x.map(v=>invertIncreasingFunction(this.scale!.x, v)),
+                y:rectBoundsSvgSpace.y.map(v=>invertDecreasingFunction(this.scale!.y, v)) // y is decreasing function because svg y goes top to bottom
+            };
+
+            const selectedPoints = points.filter(p=>{
+                return p.x >= rectBoundsDataSpace.x[0] && p.x <= rectBoundsDataSpace.x[1] &&
+                    p.y >= rectBoundsDataSpace.y[0] && p.y <= rectBoundsDataSpace.y[1];
+            });
+
+            this.props.dataStore.setSelectedMutations(selectedPoints.map(p=>({
+                proteinChange: p.proteinChange,
+                hugoGeneSymbol: p.hugoGeneSymbol
+            })));
+        }
     }
 
-    @autobind private onClick(e:React.MouseEvent<any>) {
+    @autobind
+    @action
+    private onMouseMove(e:React.MouseEvent<any>) {
+        e.persist();
+        this.mouseEvent = e;
+
+        if (this.dragging && (e.target as SVGElement).classList.contains(DRAG_COVER_CLASSNAME)) {
+            // only update drag coordinates based on SVG events
+            const offset = $(e.target).offset();
+            this.dragRect.currentX = e.pageX - offset.left;
+            this.dragRect.currentY = e.pageY - offset.top;
+        }
+    }
+
+    @autobind
+    @action
+    private onMouseDown(e:React.MouseEvent<any>) {
         if ((e.target as SVGElement).nodeName.toLowerCase() === "svg") {
-            // reset selection if clicking on svg background
-            this.props.dataStore.setSelectedMutations([]);
+            // start drag if clicking on background
+            this.dragging = true;
+
+            const offset = $(e.target).offset();
+            this.dragRect.startX = e.pageX - offset.left;
+            this.dragRect.startY = e.pageY - offset.top;
+            this.dragRect.currentX = this.dragRect.startX;
+            this.dragRect.currentY = this.dragRect.startY;
+        }
+    }
+
+    @autobind
+    @action
+    private onMouseUp(e:React.MouseEvent<any>) {
+        // finish drag
+        if (this.dragging) {
+            this.dragging = false;
+
+            this.selectPointsInDragRect();
         }
     }
 
@@ -442,6 +507,39 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         }
     }
 
+    @autobind
+    private getDragRect() {
+        if (this.dragging) {
+            const x = Math.min(this.dragRect.startX, this.dragRect.currentX);
+            const y = Math.min(this.dragRect.startY, this.dragRect.currentY);
+            const width = Math.abs(this.dragRect.startX - this.dragRect.currentX);
+            const height = Math.abs(this.dragRect.startY - this.dragRect.currentY);
+
+            return ([
+                <rect
+                    fill="black"
+                    fillOpacity="0"
+                    x={0}
+                    y={0}
+                    width={this.svgWidth}
+                    height={this.svgHeight}
+                    className={DRAG_COVER_CLASSNAME}
+                />, // cover svg so text doesnt get selected during drag
+                <rect
+                    style={{"pointerEvents":"none"}}
+                    fill="red"
+                    fillOpacity="0.5"
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                />
+            ]);
+        } else {
+            return <g/>;
+        }
+    }
+
     render() {
         if (this.data.lineData.length > 0) {
             return (
@@ -457,7 +555,8 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         role="img"
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                         onMouseMove={this.onMouseMove}
-                        onClick={this.onClick}
+                        onMouseDown={this.onMouseDown}
+                        onMouseUp={this.onMouseUp}
                     >
                         <VictoryChart
                             theme={CBIOPORTAL_VICTORY_THEME}
@@ -483,7 +582,10 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 }}
                                 tickValues={this.props.samples.map((s,i)=>i)}
                                 tickLabelComponent={
-                                    <Tick sampleIdOrder={this.sampleIdOrder} sampleManager={this.props.sampleManager}/>
+                                    <Tick
+                                        sampleIdOrder={this.sampleIdOrder}
+                                        sampleManager={this.props.sampleManager}
+                                    />
                                 }
                                 crossAxis={false}
                                 offsetY={50}
@@ -506,7 +608,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 ]
                             )}
                             <ScaleCapturer scaleCallback={this.scaleCallback}/>
-                            <g ref={this.thickLineContainerRef}/>
+                            <g ref={this.thickLineContainerRef}/> {/*We put this container here so that the highlight layers properly with other elements*/}
                             <VictoryScatter
                                 style={{
                                     data: {
@@ -534,6 +636,9 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         </VictoryChart>
                         <Observer>
                             {this.getThickLines}
+                        </Observer>
+                        <Observer>
+                            {this.getDragRect}
                         </Observer>
                     </svg>
                     <Observer>
