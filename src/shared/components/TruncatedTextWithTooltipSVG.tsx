@@ -69,7 +69,7 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
 
     @computed get fontFamily() {
         let font = "Arial";
-        if (this.props.style) {
+        if (this.props.style && this.props.style.fontFamily) {
             font = this.props.style.fontFamily.split(", ")[0];
         }
         return font;
@@ -77,7 +77,7 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
 
     @computed get fontSize() {
         let size = "13px";
-        if (this.props.style) {
+        if (this.props.style && this.props.style.fontSize) {
             size = this.props.style.fontSize + "px";
         }
         return size;
