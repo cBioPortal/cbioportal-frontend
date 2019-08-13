@@ -56,7 +56,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.TUMORS,
             MutationTableColumnType.EXON,
             MutationTableColumnType.HGVSC,
-            MutationTableColumnType.GNOMAD
+            MutationTableColumnType.GNOMAD,
+            MutationTableColumnType.CLINVAR
         ]
     };
 
@@ -143,6 +144,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.EXON].order = 185;
         this._columns[MutationTableColumnType.HGVSC].order = 186;
         this._columns[MutationTableColumnType.GNOMAD].order = 187;
+        this._columns[MutationTableColumnType.CLINVAR].order = 188;
 
         // exclusions
         this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = ()=>{
