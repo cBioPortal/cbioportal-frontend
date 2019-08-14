@@ -20,11 +20,11 @@ export interface ICopyNumberEnrichmentsProps {
 @observer
 export default class CopyNumberEnrichments extends React.Component<ICopyNumberEnrichmentsProps, {}> {
     @autobind
-    private onChangeProfile(m:MolecularProfile) {
-        this.props.store.setCopyNumberEnrichmentProfile(m);
+    private onChangeProfile(profileMap:{[studyId:string]:MolecularProfile}) {
+        this.props.store.setCopyNumberEnrichmentProfileMap(profileMap);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "copy-number", true, true);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "copy-number", true, true, true);
 
     private readonly enrichmentAnalysisGroups = remoteData({
         await:()=>[this.props.store.activeGroups],
@@ -44,18 +44,30 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
             this.props.store.copyNumberEnrichmentData,
-            this.props.store.copyNumberEnrichmentProfile,
-            this.enrichmentAnalysisGroups
+            this.enrichmentAnalysisGroups,
+            this.props.store.selectedStudyCopyNumberEnrichmentProfileMap,
+            this.enrichmentAnalysisGroups,
+            this.props.store.studies
         ],
         render:()=>{
+            let headerName = "Copy number";
+            let studyIds = Object.keys(this.props.store.selectedStudyCopyNumberEnrichmentProfileMap.result!);
+            if (studyIds.length === 1) {
+                headerName = this.props.store.selectedStudyCopyNumberEnrichmentProfileMap.result![studyIds[0]].name
+            }
             return (
                 <div data-test="GroupComparisonCopyNumberEnrichments">
-                    <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles} onChange={this.onChangeProfile}
-                                                selectedValue={this.props.store.copyNumberEnrichmentProfile.result!.molecularProfileId}/>
+                    <EnrichmentsDataSetDropdown
+                        dataSets={this.props.store.copyNumberEnrichmentProfiles}
+                        onChange={this.onChangeProfile}
+                        selectedProfileByStudyId={this.props.store.selectedStudyCopyNumberEnrichmentProfileMap.result!}
+                        studies={this.props.store.studies.result!}
+                    />
+
                     <AlterationEnrichmentContainer data={this.props.store.copyNumberEnrichmentData.result!}
                         groups={this.enrichmentAnalysisGroups.result}
                         alteredVsUnalteredMode={false}
-                        headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
+                        headerName={headerName}
                         showCNAInTable={true}
                         containerType={AlterationContainerType.COPY_NUMBER}
                         patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
