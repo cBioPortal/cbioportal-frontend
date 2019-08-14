@@ -24,30 +24,22 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import { fetchGenes } from "shared/lib/StoreUtils";
 import { ErrorMessages } from "shared/enums/ErrorEnums";
 import OqlStatusBanner from "shared/components/oqlStatusBanner/OqlStatusBanner";
-
+import {getAlterationData} from "shared/components/oncoprint/OncoprintUtils";
 import 'react-toastify/dist/ReactToastify.css';
 import {ToastContainer, toast} from 'react-toastify';
 
-interface IResultsViewPathwayMapperProps{
+interface IResultsViewPathwayMapperProps {
     store: ResultsViewPageStore;
-    initStore: Function;
+    initStore: (appStore: AppStore, genes: string) => ResultsViewPageStore;
     appStore: AppStore;
 }
 
 @observer
-export default class ResultsViewPathwayMapper extends React.Component<IResultsViewPathwayMapperProps, {}>{
+export default class ResultsViewPathwayMapper extends React.Component<IResultsViewPathwayMapperProps> {
     
+    alterationFrequencyData: ICBioData[];
 
-    @observable
-    tableData: IPathwayMapperTable[];
-
-    cBioData: ICBioData[];
-
-    @observable storeForAllData: ResultsViewPageStore;
-
-    @observable selectedPathway: string = "";
-
-    pathwayHandler: Function;
+    @observable selectedPathway = "";
 
     @observable
     isLoading: boolean;
@@ -56,47 +48,45 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     currentGenes: string[];
 
     @observable
-    validGenes: {[gene: string] : boolean};
-
-    @observable
     activeToasts: React.ReactText[];
 
+    // This accumulates valid genes
+    validGenesAccumulator: {[gene: string]: boolean};
+
     @observable
-    remoteGenes = remoteData<string[]>({
+    validNonQueryGenes = remoteData<string[]>({
         invoke: async () => {
             const genes = await fetchGenes(this.currentGenes);
             
             return genes.map(gene => (gene.hugoGeneSymbol));
-        },
-        onResult:(genes:string[])=>{
-            this.geneChangeHandler(genes);
-            genes.forEach(gene => {this.validGenes[gene] = true;});
         }
     });
-    addGenomicData: (alterationData: ICBioData[]) => void;
 
+    addGenomicData: (alterationData: ICBioData[]) => void;
 
     constructor(props: IResultsViewPathwayMapperProps){
         super(props);
-        this.cBioData = [];
-        this.tableData = [];
+        this.alterationFrequencyData = [];
         this.isLoading = false;
-        this.validGenes = {};
         this.activeToasts = [];
+        this.validGenesAccumulator = {};
     }
 
-    render(){
+    render() {
 
         // Alteration data of query genes are loaded.
         this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
 
-            this.getOncoData(this.props.store.samples.result,
-                             this.props.store.patients.result,
-                             this.props.store.coverageInformation.result,
-                             this.props.store.sequencedSampleKeysByGene.result!,
-                             this.props.store.sequencedPatientKeysByGene.result!,
-                             this.props.store.selectedMolecularProfiles.result!,
-                             alterationData);
+            getAlterationData(this.props.store.samples.result,
+                              this.props.store.patients.result,
+                              this.props.store.coverageInformation.result,
+                              this.props.store.sequencedSampleKeysByGene.result!,
+                              this.props.store.sequencedPatientKeysByGene.result!,
+                              this.props.store.selectedMolecularProfiles.result!,
+                              alterationData,
+                              true,
+                              this.alterationFrequencyData,
+                              this.props.store.genes.result!);
         });
 
 
@@ -111,25 +101,30 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
 
         if(isNewStoreReady){
 
-            this.storeForAllData.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
-                this.getOncoData(this.storeForAllData.samples.result,
-                                 this.storeForAllData.patients.result,
-                                 this.storeForAllData.coverageInformation.result,
-                                 this.storeForAllData.sequencedSampleKeysByGene.result!,
-                                 this.storeForAllData.sequencedPatientKeysByGene.result!,
-                                 this.storeForAllData.selectedMolecularProfiles.result!,
-                                 alterationData);
+            this.storeForAllData!.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, _) => {
+                getAlterationData(this.storeForAllData!.samples.result,
+                                  this.storeForAllData!.patients.result,
+                                  this.storeForAllData!.coverageInformation.result,
+                                  this.storeForAllData!.sequencedSampleKeysByGene.result!,
+                                  this.storeForAllData!.sequencedPatientKeysByGene.result!,
+                                  this.storeForAllData!.selectedMolecularProfiles.result!,
+                                  alterationData,
+                                  false,
+                                  this.alterationFrequencyData,
+                                  this.props.store.genes.result!);
                 
             });
 
-            this.addGenomicData(this.cBioData);
+            this.addGenomicData(this.alterationFrequencyData);
             // Toasts are removed with delay
             setTimeout(() => {this.activeToasts.forEach(tId => {toast.dismiss(tId);});}, 1000);
         }
 
         // Call to this.remoteGenes.result helps remoteData to work.
-        console.log("this.remoteGenes");
-        console.log(this.remoteGenes.result);
+        //console.log("this.remoteGenes");
+        //console.log(this.validNonQueryGenes.result);
+        console.log("this.validGenes");
+        console.log(this.validGenes);
         return(
 
             <div className="pathwayMapper">
@@ -137,84 +132,59 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
                 <Row>
 
                     { !this.isLoading ? 
-                    [<OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>,
-                        
-                     (<PathwayMapper isCBioPortal={true} isCollaborative={false} 
-                                genes={this.props.store.genes.result as any}
-                                cBioAlterationData={this.cBioData}
-                                queryParameter={QueryParameter.GENE_LIST}
-                                oncoPrintTab={ResultsViewTab.ONCOPRINT}
-                                changePathwayHandler={this.changePathwayHandler}
-                                addGenomicDataHandler={this.addGenomicDataHandler}
-                                tableComponent={PathwayMapperTable}
-                                isValidGene={this.isValidGene}
-                                toast={toast}/>),
-                        (<ToastContainer/>)
-                     ]
-                    : (<LoadingIndicator isLoading={true} size={"big"} center={true}>
-                                </LoadingIndicator>)
+
+                        <React.Fragment>
+                            <OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
+
+                            <PathwayMapper isCBioPortal={true} isCollaborative={false}
+                                    genes={this.props.store.genes.result as any}
+                                    cBioAlterationData={this.alterationFrequencyData}
+                                    queryParameter={QueryParameter.GENE_LIST}
+                                    oncoPrintTab={ResultsViewTab.ONCOPRINT}
+                                    changePathwayHandler={this.changePathwayHandler}
+                                    addGenomicDataHandler={this.addGenomicDataHandler}
+                                    tableComponent={PathwayMapperTable}
+                                    validGenes={this.validGenes}
+                                    toast={toast}/>
+                            <ToastContainer/>
+                        </React.Fragment>
+                    :   <LoadingIndicator isLoading={true} size={"big"} center={true}/>
                     }
                 </Row>
             </div>
             </div>);
     }
 
+    @computed get storeForAllData(){
+        if(this.validNonQueryGenes.isComplete && this.validNonQueryGenes.result.length > 0){
+            const tId = toast("Alteration data of genes not listed in gene list might take a while to load!", {autoClose: false, position: "bottom-left"});
+            this.activeToasts.push(tId);
+            return this.props.initStore(this.props.appStore, this.validNonQueryGenes.result.join(" "));
+        }
 
-    @autobind
-    isValidGene(gene: string){
-        return this.validGenes.hasOwnProperty(gene);
     }
-    
+
+    @computed get validGenes(){
+        if(this.validNonQueryGenes.isComplete){
+            // Valid genes are accumulated.
+            this.validNonQueryGenes.result.forEach(gene => {this.validGenesAccumulator[gene] = true;});
+        }
+        return this.validGenesAccumulator;
+    }
+
+    // addGenomicData function is implemented in PathwayMapper component and overlays
+    // alteration data onto genes. Through this function callback, the function implemented
+    // in PathwayMapper is copied here.
     @autobind
     addGenomicDataHandler(addGenomicData: (alterationData: ICBioData[]) => void){
         this.addGenomicData = addGenomicData;
     }
 
-    geneChangeHandler(genes: string[]){
-        // If there is no new genes then no need to initiate a new store.
-        if(genes.length > 0){
-            this.storeForAllData = this.props.initStore(this.props.appStore, genes.join(" "));
-            const tId = toast("Alteration data of genes not listed in gene list might take a while to load!", {autoClose: false, position: "bottom-left"});
-            this.activeToasts.push(tId);
-        }
-    }
-
-
     // When pathway changes in PathwayMapper this callback gets called
     @autobind
     changePathwayHandler(pathwayGenes: string[]){
+        // Pathway genes here are the genes that are in the pathway and valid whose alteration data is not calculated yet.
+        // Hence it does not necessarily mean
         this.currentGenes = pathwayGenes;
-    }
-    
-
-    // Below is the same as alteration calculation of oncodata.
-    getOncoData(
-        samples: Pick<Sample, 'sampleId'|'studyId'|'uniqueSampleKey'>[],
-        patients: Pick<Patient, 'patientId'|'studyId'|'uniquePatientKey'>[],
-        coverageInformation: CoverageInformation,
-        sequencedSampleKeysByGene: any,
-        sequencedPatientKeysByGene: any,
-        selectedMolecularProfiles: MolecularProfile[],
-        caseData:IQueriedMergedTrackCaseData | (IQueriedCaseData<any> & { mergedTrackOqlList?:never })){
-        
-        const sampleMode = false;
-        const oql = caseData.oql;
-        const geneSymbolArray = (isMergedTrackFilter(oql)
-            ? oql.list.map(({gene}) => gene)
-            : [oql.gene]
-        );
-        const dataByCase = caseData.cases;
-        const data = makeGeneticTrackData(dataByCase.patients, geneSymbolArray, patients as Patient[], coverageInformation, selectedMolecularProfiles);
-
-        const alterationInfo = alterationInfoForOncoprintTrackData(
-            sampleMode,
-            {trackData: data, oql: geneSymbolArray},
-            sequencedSampleKeysByGene,
-            sequencedPatientKeysByGene
-        );
-
-        // console.log(alterationInfo);
-        // console.log(oql);
-        this.cBioData.push({gene: (oql as any).gene, altered: alterationInfo.altered, sequenced: alterationInfo.sequenced, percentAltered: alterationInfo.percent});
     }
 }

@@ -75,8 +75,16 @@ function initStore(appStore: AppStore, genes?: string) {
                 getBrowserWindow().globalStores.routing.location.pathname,
             ];
         },
-        (x: any) => {
-            const query = (genes) ? _.cloneDeep(x[0]) : x[0] as CancerStudyQueryUrlParams;
+        (x:any) => {
+
+
+
+            // Genes exist means initStore is called to initiate a secondary store that will be used by pathway mapper
+            // to get alteration data of non-queried genes.
+            // This is needed because of the following: Couple of lines below query.gene_list is modified. If it is
+            // not deep copied then x[0] will also be modified that will change URL as well which is not wanted.
+            // Hence, deep copying makes sure that URL stays intact.
+            const query = (genes) ? _.cloneDeep(x[0]) : x[0]as CancerStudyQueryUrlParams;
             const pathname = x[1];
 
 
@@ -112,6 +120,8 @@ function initStore(appStore: AppStore, genes?: string) {
                         const cancerStudyIds: string[] = cancer_study_list.split(",");
 
                         if(genes){
+                            // If query is shallow copied, this line also updates URL which was not intended.
+                            // deepCopying x[0] above solves the problem.
                             query.gene_list = genes;
                         }
                         
@@ -191,7 +201,6 @@ export default class ResultsViewPage extends React.Component<
 
     constructor(props: IResultsViewPageProps) {
         super(props);
-
 
         this.resultsViewPageStore = initStore(props.appStore);
 
@@ -453,21 +462,10 @@ export default class ResultsViewPage extends React.Component<
             },
             {
                 id:ResultsViewTab.PATHWAY_MAPPER,
-                hide:()=>{
-
-                    if(!AppConfig.serverConfig.show_pathway_mapper){
-                        return true;
-                    }
-
-                    if (!this.resultsViewPageStore.studies.isComplete) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                },
+                hide:() => !AppConfig.serverConfig.show_pathway_mapper || !this.resultsViewPageStore.studies.isComplete,
                 getTab: () => {
 
-                    const canShowPM = ( store.sequencedSampleKeysByGene.isComplete &&
+                    const showPM = ( store.sequencedSampleKeysByGene.isComplete &&
                         store.oqlFilteredCaseAggregatedDataByOQLLine.isComplete &&
                         store.genes.isComplete && 
                         store.samples.isComplete &&
@@ -480,13 +478,9 @@ export default class ResultsViewPage extends React.Component<
                         
                     return <MSKTab key={13} id={ResultsViewTab.PATHWAY_MAPPER} linkText={'PathwayMapper'}>
                         {
-                                canShowPM &&
-                            <ResultsViewPathwayMapper store={store} appStore={this.props.appStore} initStore={initStore}/>
-                        }
-                        {
-                                !canShowPM &&
-                                (<LoadingIndicator isLoading={true} size={"big"} center={true}>
-                                </LoadingIndicator>)
+                                showPM ?
+                                (<ResultsViewPathwayMapper store={store} appStore={this.props.appStore} initStore={initStore}/>):
+                                (<LoadingIndicator isLoading={true} size={"big"} center={true}/>)
                         }
                     </MSKTab>;
                 }

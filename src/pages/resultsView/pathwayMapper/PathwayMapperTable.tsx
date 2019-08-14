@@ -6,18 +6,19 @@ import LazyMobXTable, { Column } from "shared/components/lazyMobXTable/LazyMobXT
 import { observable } from 'mobx';
 import { Radio } from 'react-bootstrap';
 
-export interface IPathwayMapperTable{
+export interface IPathwayMapperTable {
     name: string;
     score: number;
     genes: string[];
 }
-enum IPathwayMapperTableColumnType{
+
+enum IPathwayMapperTableColumnType {
     NAME,
     SCORE,
     GENES
 }
 
-interface IPathwayMapperTableProps{
+interface IPathwayMapperTableProps {
     data: IPathwayMapperTable[];
     selectedPathway: string;
     changePathway: Function;
@@ -30,7 +31,7 @@ class PathwayMapperTableComponent extends LazyMobXTable<IPathwayMapperTable> {
 }
 
 @observer
-export default class PathwayMapperTable extends React.Component<IPathwayMapperTableProps>{
+export default class PathwayMapperTable extends React.Component<IPathwayMapperTableProps> {
     public static defaultProps = {
         columns: [
             IPathwayMapperTableColumnType.NAME,
@@ -59,9 +60,6 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
             render: (d: IPathwayMapperTable) => {
                 const pwName = d.name;
                 const isPwNameShort = pwName.length < lengthThreshold;
-
-
-
                 return(
                 <span data-border="true" data-type="light" data-tip={pwName} data-place="top" data-effect="solid" data-tip-disable={isPwNameShort}>
                     <Radio 
