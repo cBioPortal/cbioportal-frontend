@@ -17,7 +17,7 @@ import {
     MutationCountByPosition,
     MutationFilter,
     MutationMultipleStudyFilter,
-    NumericGeneMolecularData,
+    NumericGeneMolecularData, Patient,
     PatientFilter,
     PatientIdentifier,
     Sample,
@@ -106,7 +106,7 @@ import memoize from "memoize-weak-decorator";
 import request from "superagent";
 import {countMutations, mutationCountByPositionKey} from "./mutationCountHelpers";
 import {getPatientSurvivals} from "./SurvivalStoreHelper";
-import {QueryStore} from "shared/components/query/QueryStore";
+import {CancerStudyQueryUrlParams, QueryStore} from "shared/components/query/QueryStore";
 import {
     annotateMolecularDatum,
     computeCustomDriverAnnotationReport,
@@ -168,6 +168,8 @@ import {Group} from "../../shared/api/ComparisonGroupClient";
 import {AppStore} from "../../AppStore";
 import {CLINICAL_TRACKS_URL_PARAM} from "../../shared/components/oncoprint/ResultsViewOncoprint";
 import {getNumSamples} from "../groupComparison/GroupComparisonUtils";
+import autobind from "autobind-decorator";
+import {GroupComparisonURLQuery} from "../groupComparison/GroupComparisonPage";
 import {DEFAULT_GENOME} from "pages/resultsView/ResultsViewPageStoreUtils";
 
 type Optional<T> = (
@@ -509,6 +511,15 @@ export class ResultsViewPageStore {
         } else {
             return this._selectedEnrichmentProteinProfile;
         }
+    }
+
+    public get usePatientLevelEnrichments() {
+        return (this.routing.location.query as CancerStudyQueryUrlParams).patient_enrichments === "true";
+    }
+
+    @autobind
+    @action public setUsePatientLevelEnrichments(e:boolean) {
+        this.routing.updateRoute({ patient_enrichments: e.toString()} as Partial<CancerStudyQueryUrlParams>);
     }
 
     @computed get hugoGeneSymbols(){
@@ -1279,7 +1290,7 @@ export class ResultsViewPageStore {
         }
     }, []);
 
-    readonly alteredPatientKeys = remoteData({
+    readonly alteredPatients = remoteData({
         await:()=>[
             this.patients,
             this.oqlFilteredCaseAggregatedData
@@ -1287,9 +1298,14 @@ export class ResultsViewPageStore {
         invoke:()=>{
             const caseAggregatedData = this.oqlFilteredCaseAggregatedData.result!;
             return Promise.resolve(
-                this.patients.result!.map(s=>s.uniquePatientKey).filter(patientKey=>!!caseAggregatedData.patients[patientKey].length)
+                this.patients.result!.filter(patient=>!!caseAggregatedData.patients[patient.uniquePatientKey].length)
             );
         }
+    });
+
+    readonly alteredPatientKeys = remoteData({
+        await:()=>[this.alteredPatients],
+        invoke:()=>Promise.resolve(this.alteredPatients.result!.map(p=>p.uniquePatientKey))
     });
 
     readonly unalteredSampleKeys = remoteData({
@@ -1318,6 +1334,11 @@ export class ResultsViewPageStore {
     }, []);
 
     readonly unalteredPatientKeys = remoteData({
+        await:()=>[this.unalteredPatients],
+        invoke:()=>Promise.resolve(this.unalteredPatients.result!.map(p=>p.uniquePatientKey))
+    });
+
+    readonly unalteredPatients = remoteData({
         await:()=>[
             this.patients,
             this.oqlFilteredCaseAggregatedData
@@ -1325,7 +1346,7 @@ export class ResultsViewPageStore {
         invoke:()=>{
             const caseAggregatedData = this.oqlFilteredCaseAggregatedData.result!;
             return Promise.resolve(
-                this.patients.result!.map(s=>s.uniquePatientKey).filter(patientKey=>!caseAggregatedData.patients[patientKey].length)
+                this.patients.result!.filter(patient=>!caseAggregatedData.patients[patient.uniquePatientKey].length)
             );
         }
     });
@@ -2893,24 +2914,34 @@ export class ResultsViewPageStore {
         store:this,
         await: () => [
             this.alteredSamples,
-            this.unalteredSamples
+            this.unalteredSamples,
+            this.alteredPatients,
+            this.unalteredPatients
         ],
         getSelectedProfile:()=>this.selectedEnrichmentMutationProfile,
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData:()=>{
             const molecularProfile = this.selectedEnrichmentMutationProfile;
+            const alteredGroup:(Sample|Patient)[]= (this.usePatientLevelEnrichments ? this.alteredPatients.result! : this.alteredSamples.result!);
+            const unalteredGroup:(Sample|Patient)[] = (this.usePatientLevelEnrichments ? this.unalteredPatients.result! : this.unalteredSamples.result!);
             return internalClient.fetchMutationEnrichmentsUsingPOST({
-                enrichmentType: "SAMPLE",
+                enrichmentType: this.usePatientLevelEnrichments ? "PATIENT" : "SAMPLE",
                 groups: [
                     {
-                        molecularProfileCaseIdentifiers: this.alteredSamples.result!
+                        molecularProfileCaseIdentifiers: alteredGroup
                             .filter(s => s.studyId === molecularProfile.studyId)
-                            .map(s => ({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                            .map(c => ({
+                                caseId:(this.usePatientLevelEnrichments ? c.patientId : (c as Sample).sampleId),
+                                molecularProfileId: molecularProfile.molecularProfileId
+                            })),
                         name: 'Altered group'
                     }, {
-                        molecularProfileCaseIdentifiers: this.unalteredSamples.result!
+                        molecularProfileCaseIdentifiers: unalteredGroup
                             .filter(s => s.studyId === molecularProfile.studyId)
-                            .map(s => ({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                            .map(c => ({
+                                caseId:(this.usePatientLevelEnrichments ? c.patientId : (c as Sample).sampleId),
+                                molecularProfileId: molecularProfile.molecularProfileId
+                            })),
                         name: 'Unaltered group'
                     }
                 ]
@@ -2951,19 +2982,27 @@ export class ResultsViewPageStore {
     private getCopyNumberEnrichmentData(copyNumberEventType: "HOMDEL" | "AMP"): Promise<AlterationEnrichment[]> {
 
         const molecularProfile = this.selectedEnrichmentCopyNumberProfile;
+        const alteredGroup:(Sample|Patient)[]= (this.usePatientLevelEnrichments ? this.alteredPatients.result! : this.alteredSamples.result!);
+        const unalteredGroup:(Sample|Patient)[] = (this.usePatientLevelEnrichments ? this.unalteredPatients.result! : this.unalteredSamples.result!);
         return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             copyNumberEventType: copyNumberEventType,
-            enrichmentType: "SAMPLE",
+            enrichmentType: this.usePatientLevelEnrichments ? "PATIENT" : "SAMPLE",
             groups: [
                 {
-                    molecularProfileCaseIdentifiers: this.alteredSamples.result!
+                    molecularProfileCaseIdentifiers: alteredGroup
                         .filter(s => s.studyId === molecularProfile.studyId)
-                        .map(s => ({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                        .map(c => ({
+                            caseId:(this.usePatientLevelEnrichments ? c.patientId : (c as Sample).sampleId),
+                            molecularProfileId: molecularProfile.molecularProfileId
+                        })),
                     name: 'Altered group'
                 }, {
-                    molecularProfileCaseIdentifiers: this.unalteredSamples.result!
+                    molecularProfileCaseIdentifiers: unalteredGroup
                         .filter(s => s.studyId === molecularProfile.studyId)
-                        .map(s => ({ caseId: s.sampleId, molecularProfileId: molecularProfile.molecularProfileId })),
+                        .map(c => ({
+                            caseId:(this.usePatientLevelEnrichments ? c.patientId : (c as Sample).sampleId),
+                            molecularProfileId: molecularProfile.molecularProfileId
+                        })),
                     name: 'Unaltered group'
                 }
             ]

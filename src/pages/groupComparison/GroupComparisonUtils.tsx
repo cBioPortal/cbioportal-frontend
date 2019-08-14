@@ -312,7 +312,8 @@ export function MakeEnrichmentsTabUI(
     getStore:()=>GroupComparisonStore,
     getEnrichmentsUI:()=>MobxViewAlwaysComponent,
     enrichmentType:string,
-    multiGroupAnalysisPossible?:boolean
+    multiGroupAnalysisPossible?:boolean,
+    patientAnalysisPossible?:boolean
 ) {
     return MakeMobxView({
         await:()=>{
@@ -340,7 +341,7 @@ export function MakeEnrichmentsTabUI(
                 return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentType)}</span>;
             } else {
                 const content:any = [];
-                content.push(<OverlapExclusionIndicator store={store} only="sample"/>);
+                content.push(<OverlapExclusionIndicator store={store} only={(patientAnalysisPossible && store.usePatientLevelEnrichments) ? "patient" : "sample"}/>);
                 content.push(getEnrichmentsUI().component);
                 return content;
             }

@@ -32,6 +32,7 @@ import {AppStore} from "../../AppStore";
 import {updateResultsViewQuery} from "./ResultsViewQuery";
 import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
+import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
 
 function initStore(appStore:AppStore) {
 
@@ -48,7 +49,7 @@ function initStore(appStore:AppStore) {
         },
         (x:any) => {
 
-            const query = x[0];
+            const query = x[0] as CancerStudyQueryUrlParams;
             const pathname = x[1];
 
             // escape from this if queryies are deeply equal

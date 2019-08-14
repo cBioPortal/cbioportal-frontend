@@ -24,15 +24,15 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
         this.props.store.setCopyNumberEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "copy-number", true);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "copy-number", true, true);
 
     private readonly enrichmentAnalysisGroups = remoteData({
-        await:()=>[this.props.store._activeGroupsOverlapRemoved],
+        await:()=>[this.props.store.activeGroups],
         invoke:()=>{
-            const groups = _.map(this.props.store._activeGroupsOverlapRemoved.result, group => {
+            const groups = _.map(this.props.store.activeGroups.result, group => {
                 return {
                     name:group.nameWithOrdinal,
-                    description:`Number (percentage) of samples in ${group.nameWithOrdinal} that have the listed alteration in the listed gene.`,
+                    description:`Number (percentage) of ${this.props.store.usePatientLevelEnrichments ? "patients" : "samples"} in ${group.nameWithOrdinal} that have the listed alteration in the listed gene.`,
                     count: getNumSamples(group),
                     color: group.color
                 }
@@ -58,6 +58,8 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                         headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
                         showCNAInTable={true}
                         containerType={AlterationContainerType.COPY_NUMBER}
+                        patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
+                        onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
                     />
                 </div>
             );

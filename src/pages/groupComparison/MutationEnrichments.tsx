@@ -26,15 +26,15 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
         this.props.store.setMutationEnrichmentProfile(m);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mutation", true);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mutation", true, true);
 
     private readonly enrichmentAnalysisGroups = remoteData({
-        await:()=>[this.props.store._activeGroupsOverlapRemoved],
+        await:()=>[this.props.store.activeGroups],
         invoke:()=>{
-            const groups = _.map(this.props.store._activeGroupsOverlapRemoved.result, group => {
+            const groups = _.map(this.props.store.activeGroups.result, group => {
                 return {
                     name:group.nameWithOrdinal,
-                    description:`Number (percentage) of samples in ${group.nameWithOrdinal} that have a mutation in the listed gene.`,
+                    description:`Number (percentage) of ${this.props.store.usePatientLevelEnrichments ? "patients" : "samples"} in ${group.nameWithOrdinal} that have a mutation in the listed gene.`,
                     count: getNumSamples(group),
                     color: group.color
                 }
@@ -59,6 +59,8 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                         alteredVsUnalteredMode={false}
                         headerName={this.props.store.mutationEnrichmentProfile.result!.name}
                         containerType={AlterationContainerType.MUTATION}
+                        patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
+                        onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
                     />
                 </div>
             );
