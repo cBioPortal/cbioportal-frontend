@@ -10,7 +10,6 @@ import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupComparisonStore from "./GroupComparisonStore";
 import {MakeEnrichmentsTabUI, getNumSamples} from "./GroupComparisonUtils";
 import { remoteData } from "cbioportal-frontend-commons";
-import _ from "lodash";
 
 export interface IProteinEnrichmentsProps {
     store: GroupComparisonStore
@@ -19,8 +18,8 @@ export interface IProteinEnrichmentsProps {
 @observer
 export default class ProteinEnrichments extends React.Component<IProteinEnrichmentsProps, {}> {
     @autobind
-    private onChangeProfile(m:MolecularProfile) {
-        this.props.store.setProteinEnrichmentProfile(m);
+    private onChangeProfile(profileMap:{[studyId:string]:MolecularProfile}) {
+        this.props.store.setProteinEnrichmentProfileMap(profileMap);
     }
 
     private readonly enrichmentAnalysisGroups = remoteData({
@@ -36,23 +35,33 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
         }
     });
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "protein");
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "protein", true, true, false);
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
             this.props.store.proteinEnrichmentData,
-            this.props.store.proteinEnrichmentProfile,
-            this.enrichmentAnalysisGroups
+            this.props.store.selectedProteinEnrichmentProfileMap,
+            this.enrichmentAnalysisGroups,
+            this.props.store.studies
         ],
         render:()=>{
+            // since protein enrichments tab is enabled only for one study, selectedProteinEnrichmentProfileMap
+            // would contain only one key.
+            const studyIds = Object.keys(this.props.store.selectedProteinEnrichmentProfileMap.result!);
+            const selectedProfile = this.props.store.selectedProteinEnrichmentProfileMap.result![studyIds[0]];
             return (
                 <div data-test="GroupComparisonProteinEnrichments">
-                    <EnrichmentsDataSetDropdown dataSets={this.props.store.proteinEnrichmentProfiles} onChange={this.onChangeProfile}
-                                                selectedValue={this.props.store.proteinEnrichmentProfile.result!.molecularProfileId}/>
+                    <EnrichmentsDataSetDropdown
+                        dataSets={this.props.store.proteinEnrichmentProfiles}
+                        onChange={this.onChangeProfile}
+                        selectedProfileByStudyId={this.props.store.selectedProteinEnrichmentProfileMap.result!}
+                        alwaysShow={true}
+                        studies={this.props.store.studies.result!}
+                    />
                     <ExpressionEnrichmentContainer
                         data={this.props.store.proteinEnrichmentData.result!}
                         groups={this.enrichmentAnalysisGroups.result}
-                        selectedProfile={this.props.store.proteinEnrichmentProfile.result!}
+                        selectedProfile={selectedProfile}
                         alteredVsUnalteredMode={false}
                     />
                 </div>
