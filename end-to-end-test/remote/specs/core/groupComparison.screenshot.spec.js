@@ -121,7 +121,17 @@ describe("group comparison page screenshot tests", function () {
             assertScreenShotMatch(res);
         });
 
+        it("group comparison page mutation enrichments tab patient mode", function() {
+            browser.execute(function() { groupComparisonStore.setUsePatientLevelEnrichments(true); });
+            browser.waitForVisible('div[data-test="GroupComparisonMutationEnrichments"]', 10000);
+            browser.moveToObject("body", 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+            assertScreenShotMatch(res);
+        });
+
         it("group comparison page mutation enrichments tab 20 genes with highest frequency in any group", function() {
+            browser.execute(function() { groupComparisonStore.setUsePatientLevelEnrichments(false); });
+            browser.waitForVisible('div[data-test="GroupComparisonMutationEnrichments"]', 10000);
             browser.click('[data-test="selectGenes"]')
             var input = $("input[data-test=numberOfGenes]");
             input.setValue('20\n');
@@ -194,6 +204,14 @@ describe("group comparison page screenshot tests", function () {
         it("group comparison page cna enrichments tab two groups", function() {
             browser.click('.tabAnchor_cna');
             browser.waitForVisible('div[data-test="GroupComparisonCopyNumberEnrichments"]', 10000);
+            browser.moveToObject("body", 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+            assertScreenShotMatch(res);
+        });
+
+        it("group comparison page cna enrichments tab patient mode", function() {
+            browser.execute(function() { groupComparisonStore.setUsePatientLevelEnrichments(true); });
+            browser.waitForVisible('div[data-test="GroupComparisonCopyNumberEnrichments"]', 30000);
             browser.moveToObject("body", 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
             assertScreenShotMatch(res);

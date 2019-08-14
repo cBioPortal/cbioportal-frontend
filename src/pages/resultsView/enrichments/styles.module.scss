@@ -56,6 +56,9 @@
 
 .DataSet {
     padding-bottom: $standardMargin;
+    :global(div.Select-menu-outer) {
+        z-index: 99 !important;
+    }
 }
 
 .ScatterTooltip div:last-child {
