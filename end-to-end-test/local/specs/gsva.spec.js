@@ -21,7 +21,7 @@ const coexpressionTabUrl = CBIOPORTAL_URL+'/results/coexpression?Action=Submit&R
 
 describe('gsva feature', function() {
 
-    this.retries(2);
+    //this.retries(2);
 
     if (useExternalFrontend) {
 
@@ -363,7 +363,7 @@ describe('gsva feature', function() {
                 var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
                 icon.click();
                 $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-                browser.debug();
+                //browser.debug();
                 assert.equal( getReactSelectOptions($('.coexpression-select-query-profile')).length, 2 );
                 assert( reactSelectOption($('.coexpression-select-query-profile'), 'mRNA expression (microarray) (526 samples)') );
                 assert( reactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)') );
