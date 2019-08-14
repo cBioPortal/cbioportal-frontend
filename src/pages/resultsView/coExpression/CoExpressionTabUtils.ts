@@ -53,12 +53,16 @@ export function getGenesetProfiles(profiles:MolecularProfile[]) {
     return profs;
 }
 
-export function getProfileOptions(profiles:MolecularProfile[], 
-    molecularProfileIdToProfiledSampleCount: {[molecularProfileId: string]: number;}) {
-    return profiles.map(profile=>{
-        const profiledSampleCount = molecularProfileIdToProfiledSampleCount[profile.molecularProfileId];
+export function getProfileOptions(profiles: MolecularProfile[],
+    molecularProfileIdToProfiledSampleCount?: { [molecularProfileId: string]: number; }) {
+    return profiles.map(profile => {
+        let label = profile.name;
+        if (molecularProfileIdToProfiledSampleCount) {
+            const profiledSampleCount = molecularProfileIdToProfiledSampleCount[profile.molecularProfileId];
+            label += ` (${profiledSampleCount} sample${profiledSampleCount !== 1 ? "s" : ""})`;
+        }
         return {
-            label: `${profile.name} (${profiledSampleCount} sample${profiledSampleCount !== 1 ? "s" : ""})`,
+            label,
             value: profile.molecularProfileId
         };
     });

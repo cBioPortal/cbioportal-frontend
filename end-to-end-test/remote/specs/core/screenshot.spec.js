@@ -73,6 +73,15 @@ function runResultsTestSuite(prefix){
         assertScreenShotMatch(res);
     });
 
+    it(`${prefix} enrichments tab patient mode`, function(){
+        browser.execute(function() { resultsViewPageStore.setUsePatientLevelEnrichments(true); });
+        browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
+        browser.click('b=CDK14');
+        browser.waitForExist('[data-test="enrichmentsTabDiv"]', 10000);
+        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
+        assertScreenShotMatch(res);
+    });
+
     it(`${prefix} survival tab`, function(){
         browser.click("a.tabAnchor_survival");
         browser.waitForVisible('[data-test=SurvivalChart] svg',10000);
@@ -177,6 +186,25 @@ describe("enrichments tab screenshot tests", function() {
         browser.waitForVisible('b=MERTK', 10000);
         browser.click('b=MERTK');
         browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
+        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
+        assertScreenShotMatch(res);
+    });
+});
+
+describe("multi-study enrichments tab screenshot tests", function() {
+    before(function() {
+        var url = `${CBIOPORTAL_URL}/results/enrichments?Action=Submit&cancer_study_list=coadread_tcga_pub%2Cgbm_tcga_pub&case_set_id=all&clinicallist=CANCER_STUDY%2CPROFILED_IN_COPY_NUMBER_ALTERATION%2CPROFILED_IN_MUTATION_EXTENDED&data_priority=0&gene_list=APC%0ACDKN2B&show_samples=false&tab_index=tab_visualize`;
+        goToUrlAndSetLocalStorage(url);
+    });
+    it('multi-study mutation enrichments tab', function(){
+        browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
+        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
+        assertScreenShotMatch(res);
+    });
+
+    it('multi-study copy-number enrichments tab', function(){
+        browser.click('a=Copy-number');
+        browser.waitForVisible('div[data-test="CopyNumberEnrichmentsTab"]',20000);
         var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
