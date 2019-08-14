@@ -200,7 +200,6 @@ export default class ResultsViewPage extends React.Component<
     constructor(props: IResultsViewPageProps) {
         super(props);
 
-
         this.resultsViewPageStore = initStore(props.appStore);
 
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;

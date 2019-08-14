@@ -78,25 +78,21 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     currentGenes: string[];
 
     @observable
-    validGenes: {[gene: string] : boolean};
-
-    @observable
     activeToasts: React.ReactText[];
 
+    // This accumulates valid genes
+    validGenesAccumulator: {[gene: string]: boolean};
+
     @observable
-    remoteGenes = remoteData<string[]>({
+    validNonQueryGenes = remoteData<string[]>({
         invoke: async () => {
             const genes = await fetchGenes(this.currentGenes);
             
             return genes.map(gene => (gene.hugoGeneSymbol));
-        },
-        onResult:(genes:string[])=>{
-            this.geneChangeHandler(genes);
-            genes.forEach(gene => {this.validGenes[gene] = true;});
         }
     });
-    addGenomicData: (alterationData: ICBioData[]) => void;
 
+    addGenomicData: (alterationData: ICBioData[]) => void;
 
     constructor(props: IResultsViewPathwayMapperProps){
         super(props);
