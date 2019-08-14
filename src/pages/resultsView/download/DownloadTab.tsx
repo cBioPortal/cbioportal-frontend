@@ -262,8 +262,79 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         }
     });
 
+    readonly trackAlterationTypesMap = remoteData({
+        await:()=>[this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
+        invoke:()=> {
+            const trackAlterationTypesMap: {[label:string]: string[]} = {};
+            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach((data, index) => {
+                // mergedTrackOqlList is undefined means the data is for single track / oql
+                if (data.mergedTrackOqlList === undefined) {
+                    const singleTrackOql = data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+                    const label = getSingleGeneResultKey(index, this.props.store.rvQuery.oqlQuery, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>);
+                    // put types for single track into the map, key is track label
+                    if (singleTrackOql.parsed_oql_line.alterations) {
+                        trackAlterationTypesMap[label] = _.uniq(_.map(singleTrackOql.parsed_oql_line.alterations, (alteration) => alteration.alteration_type.toUpperCase()));
+                    }
+                }
+                // or data is for merged track (group: list of oqls)
+                else {
+                    const mergedTrackOql = data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
+                    const label = getMultipleGeneResultKey(data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>);
+                    // put types for merged track into the map, key is track label
+                    let alterations: string[] = [];
+                    _.forEach(mergedTrackOql.list, (oql: OQLLineFilterOutput<AnnotatedExtendedAlteration>) => {
+                        if (oql.parsed_oql_line.alterations) {
+                            const types: string[] = _.map(oql.parsed_oql_line.alterations, (alteration) => alteration.alteration_type.toUpperCase());
+                            alterations.push(...types);
+                        }
+                    })
+                    trackAlterationTypesMap[label] = _.uniq(alterations);
+                }
+            })
+            return Promise.resolve(trackAlterationTypesMap);
+        }
+    });
+
+    readonly geneAlterationTypesMap = remoteData({
+        await:()=>[this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
+        invoke:()=> {
+            const geneAlterationTypesMap: {[label:string]: string[]} = {};
+            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach((data, index) => {
+                // mergedTrackOqlList is undefined means the data is for single track / oql
+                if (data.mergedTrackOqlList === undefined) {
+                    const singleTrackOql = data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+                    // put types for single track into the map, key is gene name
+                    if (singleTrackOql.parsed_oql_line.alterations) {
+                        geneAlterationTypesMap[singleTrackOql.gene] = _.chain(singleTrackOql.parsed_oql_line.alterations)
+                                                                       .map((alteration) => alteration.alteration_type.toUpperCase())
+                                                                       .union(geneAlterationTypesMap[singleTrackOql.gene])
+                                                                       .uniq()
+                                                                       .value();
+                    }
+                }
+                // or data is for merged track (group: list of oqls)
+                else {
+                    const mergedTrackOql = data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
+                    // put types for merged track into the map, key is gene name
+                    let alterations: string[] = [];
+                    _.forEach(mergedTrackOql.list, (oql: OQLLineFilterOutput<AnnotatedExtendedAlteration>) => {
+                        if (oql.parsed_oql_line.alterations) {
+                            const types: string[] = _.map(oql.parsed_oql_line.alterations, (alteration) => alteration.alteration_type);
+                            geneAlterationTypesMap[oql.gene] = _.chain(oql.parsed_oql_line.alterations)
+                                                                .map((alteration) => alteration.alteration_type.toUpperCase())
+                                                                .union(geneAlterationTypesMap[oql.gene])
+                                                                .uniq()
+                                                                .value();
+                        }
+                    })
+                }
+            })
+            return Promise.resolve(geneAlterationTypesMap);
+        }
+    });
+
     public render() {
-        const status = getMobxPromiseGroupStatus(this.downloadableFilesTable, this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.props.store.alterationsBySelectedMolecularProfiles);
+        const status = getMobxPromiseGroupStatus(this.downloadableFilesTable, this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationTypesMap);
 
         switch (status) {
             case "pending":
@@ -306,7 +377,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                 caseAlterationData={this.caseAlterationData.result!}
                                 oqls={this.oqls.result!}
                                 trackLabels={this.trackLabels.result!}
-                                alterationTypes={this.props.store.alterationsBySelectedMolecularProfiles.result!}
+                                trackAlterationTypesMap={this.trackAlterationTypesMap.result!}
+                                geneAlterationTypesMap={this.geneAlterationTypesMap.result!}
                             />
                         </div>
                     </WindowWidthBox>

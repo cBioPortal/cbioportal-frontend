@@ -44,7 +44,8 @@ export interface ICaseAlterationTableProps {
     caseAlterationData: ICaseAlteration[];
     oqls: OQLLineFilterOutput<AnnotatedExtendedAlteration>[];
     trackLabels: string[];
-    alterationTypes: string[];
+    trackAlterationTypesMap: {[label:string]: string[]};
+    geneAlterationTypesMap: {[label:string]: string[]};
 }
 
 export type PseudoOqlSummary = {
@@ -217,13 +218,13 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
                 tooltip: <span>{trackLabel}</span>,
                 headerDownload: (name: string) => `${trackLabel}`,
                 render: (data: ICaseAlteration) => {
-                    const pseudoOqlSummary = getPseudoOqlSummaryByAlterationTypes(data.oqlData, trackLabel, this.props.alterationTypes); 
+                    const pseudoOqlSummary = getPseudoOqlSummaryByAlterationTypes(data.oqlData, trackLabel, this.props.trackAlterationTypesMap[trackLabel]); 
                     return <span className={pseudoOqlSummary.summaryClass}>{pseudoOqlSummary.summaryContent}</span>;
                 },
-                download: (data: ICaseAlteration) => getPseudoOqlSummaryByAlterationTypes(data.oqlData, trackLabel, this.props.alterationTypes)!.summaryContent,
-                sortBy: (data: ICaseAlteration) => getPseudoOqlSummaryByAlterationTypes(data.oqlData, trackLabel, this.props.alterationTypes)!.summaryContent,
+                download: (data: ICaseAlteration) => getPseudoOqlSummaryByAlterationTypes(data.oqlData, trackLabel, this.props.trackAlterationTypesMap[trackLabel])!.summaryContent,
+                sortBy: (data: ICaseAlteration) => getPseudoOqlSummaryByAlterationTypes(data.oqlData, trackLabel, this.props.trackAlterationTypesMap[trackLabel])!.summaryContent,
                 filter: (data: ICaseAlteration, filterString: string) => {
-                    return (new RegExp(filterString, 'i')).test(getPseudoOqlSummaryByAlterationTypes(data.oqlData, trackLabel, this.props.alterationTypes)!.summaryContent);
+                    return (new RegExp(filterString, 'i')).test(getPseudoOqlSummaryByAlterationTypes(data.oqlData, trackLabel, this.props.trackAlterationTypesMap[trackLabel])!.summaryContent);
                 },
                 visible: true
             });
@@ -234,7 +235,7 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
 
         _.forEach(uniqGenes, (gene) => {
             //add column for each gene alteration combination
-            this.props.alterationTypes.forEach(alterationType => {
+            this.props.geneAlterationTypesMap[gene].forEach(alterationType => {
                 columns.push({
                     name: `${gene} ${alterationType}`,
                     tooltip: <span>{`${gene} ${alterationType}`}</span>,
