@@ -493,7 +493,7 @@ export function getMultipleGeneResultKey(groupedOql: MergedTrackLineFilterOutput
     return groupedOql.label ? groupedOql.label : _.map(groupedOql.list, (data) => data.gene).join(' / ');
 }
 
-export function makeEnrichmentDataPromise<T extends {cytoband:string, hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
+export function makeEnrichmentDataPromise<T extends {cytoband?:string, hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
     store?:ResultsViewPageStore,
     await: MobxPromise_await,
     referenceGenesPromise:MobxPromise<{[hugoGeneSymbol:string]:ReferenceGenomeGene}>,
@@ -522,9 +522,12 @@ export function makeEnrichmentDataPromise<T extends {cytoband:string, hugoGeneSy
                 }
 
                 // add cytoband from reference gene
-                data.forEach((d=>{
-                    d.cytoband = params.referenceGenesPromise.result![d.hugoGeneSymbol].cytoband;
-                }));
+                for (const d of data) {
+                    const refGene = params.referenceGenesPromise.result![d.hugoGeneSymbol];
+
+                    if (refGene)
+                        d.cytoband = refGene.cytoband;
+                }
 
                 const sortedByPvalue = _.sortBy(data, c=>c.pValue);
                 const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));

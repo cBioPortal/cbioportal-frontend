@@ -35,6 +35,7 @@ export type GroupComparisonURLQuery = {
     groupOrder?:string; // json stringified array of names
     unselectedGroups?:string; // json stringified array of names
     overlapStrategy?:OverlapStrategy;
+    patientEnrichments?:string;
 };
 
 @inject('routing', 'appStore')
