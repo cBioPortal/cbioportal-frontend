@@ -363,6 +363,10 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             while (thisLineData.length > 0 && thisLineData[thisLineData.length-1].y === undefined) {
                 thisLineData.pop();
             }
+            if (thisLineData.length === 0) {
+                // skip this mutation if theres no line data left to plot
+                continue;
+            }
             // interpolate, and pull out interpolated points into gray points array
             const thisLineDataWithoutGrayPoints:IPoint[] = [];
             const thisGrayPoints:IPoint[] = [];
@@ -388,6 +392,9 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     thisLineDataWithoutGrayPoints.push(thisLineData[i] as IPoint);
                 }
             }
+            // we know thisLineDataWithoutGrayPoints is nonempty because it could only be empty if every point in
+            //  it was gray, in which case it would have been made empty and skipped above.
+            
             // add copy of line data for hover effect
             for (const point of thisGrayPoints) {
                 point.lineData = thisLineDataWithoutGrayPoints;
