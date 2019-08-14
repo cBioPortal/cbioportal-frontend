@@ -1670,20 +1670,17 @@
         "customBins": {
           "type": "array",
           "items": {
-            "type": "number",
-            "format": "double"
+            "type": "number"
           }
         },
         "disableLogScale": {
           "type": "boolean"
         },
         "end": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         },
         "start": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         }
       },
       "title": "ClinicalDataBinFilter"
@@ -1826,12 +1823,10 @@
       "type": "object",
       "properties": {
         "end": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         },
         "start": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         },
         "value": {
           "type": "string"
@@ -2048,15 +2043,13 @@
           "format": "int32"
         },
         "end": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         },
         "specialValue": {
           "type": "string"
         },
         "start": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         }
       },
       "title": "DataBin"

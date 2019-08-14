@@ -10,7 +10,6 @@ import GroupComparisonStore from "./GroupComparisonStore";
 import ExpressionEnrichmentContainer from "../resultsView/enrichments/ExpressionEnrichmentsContainer";
 import {MakeEnrichmentsTabUI, getNumSamples} from "./GroupComparisonUtils";
 import { remoteData } from "cbioportal-frontend-commons";
-import _ from "lodash";
 
 export interface IMRNAEnrichmentsProps {
     store: GroupComparisonStore
@@ -19,8 +18,8 @@ export interface IMRNAEnrichmentsProps {
 @observer
 export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsProps, {}> {
     @autobind
-    private onChangeProfile(m:MolecularProfile) {
-        this.props.store.setMRNAEnrichmentProfile(m);
+    private onChangeProfile(profileMap:{[studyId:string]:MolecularProfile}) {
+        this.props.store.setMRNAEnrichmentProfileMap(profileMap);
     }
 
     private readonly enrichmentAnalysisGroups = remoteData({
@@ -36,23 +35,33 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
         }
     });
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mRNA", true);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mRNA", true, true, false);
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
             this.props.store.mRNAEnrichmentData,
-            this.props.store.mRNAEnrichmentProfile,
-            this.enrichmentAnalysisGroups
+            this.props.store.selectedmRNAEnrichmentProfileMap,
+            this.enrichmentAnalysisGroups,
+            this.props.store.studies
         ],
         render:()=>{
+            // since mRNA enrichments tab is enabled only for one study, selectedProteinEnrichmentProfileMap
+            // would contain only one key.
+            const studyIds = Object.keys(this.props.store.selectedmRNAEnrichmentProfileMap.result!);
+            const selectedProfile = this.props.store.selectedmRNAEnrichmentProfileMap.result![studyIds[0]];
             return (
                 <div data-test="GroupComparisonMRNAEnrichments">
-                    <EnrichmentsDataSetDropdown dataSets={this.props.store.mRNAEnrichmentProfiles} onChange={this.onChangeProfile}
-                                                selectedValue={this.props.store.mRNAEnrichmentProfile.result!.molecularProfileId}/>
+                    <EnrichmentsDataSetDropdown
+                        dataSets={this.props.store.mRNAEnrichmentProfiles}
+                        onChange={this.onChangeProfile}
+                        selectedProfileByStudyId={this.props.store.selectedmRNAEnrichmentProfileMap.result!}
+                        alwaysShow={true}
+                        studies={this.props.store.studies.result!}
+                    />
                     <ExpressionEnrichmentContainer
                         data={this.props.store.mRNAEnrichmentData.result!}
                         groups={this.enrichmentAnalysisGroups.result}
-                        selectedProfile={this.props.store.mRNAEnrichmentProfile.result!}
+                        selectedProfile={selectedProfile}
                         alteredVsUnalteredMode={false}
                     />
                 </div>
