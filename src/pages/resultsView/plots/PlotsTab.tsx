@@ -5,7 +5,7 @@ import "./styles.scss";
 import {AlterationTypeConstants, DataTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
 import {FormControl} from "react-bootstrap";
 import LockIcon from "../../../shared/components/LockIcon";
-import ReactSelect from "react-select";
+import ReactSelect from "react-select1";
 import _ from "lodash";
 import {
     getAxisDescription,
