@@ -1078,27 +1078,45 @@ export function getDefaultChartDimension(): ChartDimension {
     return {w: 1, h: 1};
 }
 
-export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, chartsDimension:{[uniqueId:string]:ChartDimension}, currentGridLayout?: Layout[], currentFocusedChartByUser?: ChartMeta, currentFocusedChartByUserDimension?: ChartDimension): Layout[] {
+export function calculateLayout(
+    visibleAttributes: ChartMeta[],
+    cols: number,
+    chartsDimension: { [uniqueId: string]: ChartDimension },
+    currentGridLayout: Layout[],
+    currentFocusedChartByUser?: ChartMeta,
+    currentFocusedChartByUserDimension?: ChartDimension): Layout[] {
     let layout: Layout[] = [];
+    let availableChartLayoutsMap:{[chartId:string]:boolean} = {}
     let matrix = [new Array(cols).fill('')] as string[][];
     // sort the visibleAttributes by priority
     visibleAttributes.sort(chartMetaComparator);
-
     // look if we need to put the chart to a fixed position and add the position to the matrix
-    if (currentGridLayout && currentGridLayout.length > 0 && currentFocusedChartByUser && currentFocusedChartByUserDimension) {
-        const currentChartLayout = currentGridLayout.find((layout) => layout.i === currentFocusedChartByUser.uniqueKey)!;
-        if (currentChartLayout) {
-            const newChartLayout = calculateNewLayoutForFocusedChart(currentChartLayout, currentFocusedChartByUser, cols, currentFocusedChartByUserDimension);
-            layout.push(newChartLayout);
-            matrix = generateMatrixByLayout(newChartLayout, cols);
-        }
-        else {
-            throw(new Error("cannot find matching unique key in the grid layout"));
+    if (currentGridLayout.length > 0) {
+        if (currentFocusedChartByUser && currentFocusedChartByUserDimension) {
+            const currentChartLayout = currentGridLayout.find((layout) => layout.i === currentFocusedChartByUser.uniqueKey)!;
+            if (currentChartLayout) {
+                const newChartLayout = calculateNewLayoutForFocusedChart(currentChartLayout, currentFocusedChartByUser, cols, currentFocusedChartByUserDimension);
+                layout.push(newChartLayout);
+                availableChartLayoutsMap[currentFocusedChartByUser.uniqueKey] = true;
+                matrix = generateMatrixByLayout(newChartLayout, cols);
+            }
+            else {
+                throw (new Error("cannot find matching unique key in the grid layout"));
+            }
+        } else {
+            const visibleAttributeMap = _.map(visibleAttributes, attribute => attribute.uniqueKey);
+            currentGridLayout.forEach(chartLayout => {
+                //add only visible charts
+                if (chartLayout.i && visibleAttributeMap.includes(chartLayout.i)) {
+                    layout.push(chartLayout);
+                    availableChartLayoutsMap[chartLayout.i] = true;
+                }
+            });
         }
     }
 
     // filter out the fixed position chart then calculate layout
-    _.forEach(_.filter(visibleAttributes, (chart: ChartMeta) => currentFocusedChartByUser ? chart.uniqueKey !== currentFocusedChartByUser.uniqueKey : true), (chart: ChartMeta) => {
+    _.forEach(_.filter(visibleAttributes, (chart: ChartMeta) => !availableChartLayoutsMap[chart.uniqueKey]), (chart: ChartMeta) => {
         const dimension = chartsDimension[chart.uniqueKey] || getDefaultChartDimension();
         const position = findSpot(matrix, dimension);
         while ((position.y + dimension.h) >= matrix.length) {
