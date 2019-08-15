@@ -2,8 +2,7 @@ import * as request from "superagent";
 import {
     fetchComparisonGroupsServiceUrl,
     getComparisonGroupServiceUrl,
-    getComparisonSessionServiceUrl,
-    getVirtualStudyServiceUrl
+    getComparisonSessionServiceUrl
 } from "./urls";
 import {VirtualStudy, VirtualStudyData} from "../model/VirtualStudy";
 import {ClinicalAttribute} from "./generated/CBioPortalAPI";
