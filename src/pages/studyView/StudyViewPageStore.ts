@@ -3387,8 +3387,9 @@ export class StudyViewPageStore {
 
     @autobind
     onSubmitQuery() {
+        const unknownQueriedIdsMap = stringListToSet(this.unknownQueriedIds.result);
         let formOps: { [id: string]: string } = {
-            cancer_study_list: this.queriedPhysicalStudyIds.result.join(','),
+            cancer_study_list: this.studyIds.filter(studyId => !unknownQueriedIdsMap[studyId]).join(','),
             tab_index: 'tab_visualize',
         }
 
@@ -3414,7 +3415,7 @@ export class StudyViewPageStore {
             formOps.data_priority = data_priority;
         }
 
-        if (this.chartsAreFiltered || this.filteredVirtualStudies.result.length > 0) {
+        if (this.chartsAreFiltered) {
             formOps.case_set_id = '-1'
             formOps.case_ids = _.map(this.selectedSamples.result, sample => {
                 return sample.studyId + ":" + sample.sampleId;
