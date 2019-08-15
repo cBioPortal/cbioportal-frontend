@@ -5,7 +5,9 @@ import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import {action, computed, observable} from 'mobx';
 import {ButtonGroup, Modal, Radio} from 'react-bootstrap';
-import {NewChart} from "../../StudyViewPageStore";
+import { CustomChart} from "../../StudyViewPageStore";
+import ErrorBox from "../../../../shared/components/errorBox/ErrorBox";
+import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import {
     DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, CodeEnum,
     parseContent,
@@ -21,7 +23,7 @@ export interface ICustomCaseSelectionProps {
     allSamples: Sample[];
     selectedSamples: Sample[];
     submitButtonText: string;
-    onSubmit: (chart: NewChart) => void;
+    onSubmit: (chart: CustomChart) => void;
     queriedStudies: string[];
     disableGrouping?: boolean;
     getDefaultChartName?: () => string;
@@ -64,9 +66,10 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     }
 
     @computed
-    get newChartInfo(): NewChart {
+    get newChartInfo(): CustomChart {
         return {
             name: this.chartName ? this.chartName : this.props.getDefaultChartName ? this.props.getDefaultChartName() : '',
+            patientAttribute: this.caseIdsMode === ClinicalDataTypeEnum.PATIENT,
             groups: this.result.validationResult.error.length === 0 ? this.result.groups : []
         }
     }
