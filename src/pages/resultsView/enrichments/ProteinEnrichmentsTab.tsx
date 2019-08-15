@@ -9,6 +9,7 @@ import autobind from 'autobind-decorator';
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import { makeUniqueColorGetter } from 'shared/components/plots/PlotUtils';
 import { remoteData } from 'public-lib';
+import { MakeMobxView } from 'shared/components/MobxView';
 
 export interface IProteinEnrichmentsTabProps {
     store: ResultsViewPageStore
@@ -18,8 +19,8 @@ export interface IProteinEnrichmentsTabProps {
 export default class ProteinEnrichmentsTab extends React.Component<IProteinEnrichmentsTabProps, {}> {
 
     @autobind
-    private onProfileChange(molecularProfile: MolecularProfile) {
-        this.props.store._selectedEnrichmentProteinProfile = molecularProfile;
+    private onProfileChange(profileMap:{[studyId:string]:MolecularProfile}) {
+        this.props.store.setProteinEnrichmentProfile(profileMap);
     }
 
     private readonly enrichmentAnalysisGroups = remoteData({
@@ -42,24 +43,36 @@ export default class ProteinEnrichmentsTab extends React.Component<IProteinEnric
             return Promise.resolve(groups);
         }
     });
-
-    public render() {
-
-        if (this.props.store.proteinEnrichmentData.isPending || this.enrichmentAnalysisGroups.isPending) {
-            return <Loader isLoading={true} center={true} size={"big"} />;
-        } else if (this.props.store.proteinEnrichmentData.isError || this.enrichmentAnalysisGroups.isError) {
-            return <ErrorMessage />
-        } else {
+    
+    readonly tabUI = MakeMobxView({
+        await: () => [this.props.store.studies,  this.props.store.proteinEnrichmentData, this.props.store.selectedProteinEnrichmentProfileMap, this.enrichmentAnalysisGroups],
+        render: () => {
+            // since protein enrichments tab is enabled only for one study, selectedProteinEnrichmentProfileMap
+            // would contain only one key.
+            const studyIds = Object.keys(this.props.store.selectedProteinEnrichmentProfileMap.result!);
+            const selectedProfile = this.props.store.selectedProteinEnrichmentProfileMap.result![studyIds[0]];
             return (
                 <div>
-                    <EnrichmentsDataSetDropdown dataSets={this.props.store.proteinEnrichmentProfiles} onChange={this.onProfileChange}
-                        selectedValue={this.props.store.selectedEnrichmentProteinProfile.molecularProfileId}
-                        molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount} />
-                    <ExpressionEnrichmentContainer data={this.props.store.proteinEnrichmentData.result!}
+                    <EnrichmentsDataSetDropdown
+                        dataSets={this.props.store.proteinEnrichmentProfiles}
+                        onChange={this.onProfileChange}
+                        selectedProfileByStudyId={this.props.store.selectedProteinEnrichmentProfileMap.result!}
+                        molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}
+                        studies={this.props.store.studies.result!}
+                    />
+                    <ExpressionEnrichmentContainer
+                        data={this.props.store.proteinEnrichmentData.result!}
                         groups={this.enrichmentAnalysisGroups.result}
-                        selectedProfile={this.props.store.selectedEnrichmentProteinProfile} store={this.props.store} />
+                        selectedProfile={selectedProfile}
+                        store={this.props.store} />
                 </div>
             );
-        }
+        },
+        renderPending: () => <Loader isLoading={true} center={true} size={"big"}/>,
+        renderError: ()=> <ErrorMessage/>
+    });
+
+    public render() {
+        return this.tabUI.component;
     }
 }

@@ -72,6 +72,7 @@ export type CancerStudyQueryUrlParams = {
     tab_index: 'tab_download' | 'tab_visualize',
     transpose_matrix?: 'on',
     Action: 'Submit',
+    patient_enrichments?:string
 };
 
 export type GeneReplacement = { alias: string, genes: Gene[] };
