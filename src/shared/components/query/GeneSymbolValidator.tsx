@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
 import {observer} from "mobx-react";
 import FontAwesome from "react-fontawesome";
-import ReactSelect from 'react-select';
+import ReactSelect from 'react-select1';
 import {GeneReplacement, QueryStoreComponent} from "./QueryStore";
 import AppConfig from "appConfig";
 
