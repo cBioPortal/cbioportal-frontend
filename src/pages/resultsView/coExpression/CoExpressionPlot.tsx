@@ -281,7 +281,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                     getSvg={this.getSvg}
                     filename="coexpression"
                     dontFade={true}
-                    collapse={true}
+                    type='button'
                     style={{position:"absolute", top:0, right:0}}
                 />
 

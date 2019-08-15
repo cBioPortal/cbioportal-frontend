@@ -70,6 +70,7 @@ export interface IServerConfig {
     "skin_footer": string|null;
     "skin_login_contact_html": string|null;
     "skin_login_saml_registration_html": string|null;
+    "skin_citation_rule_text": string|null;
     "skin_documentation_news": string|null;
     "skin_documentation_oql": string|null;
     "skin_query_max_tree_depth": string;

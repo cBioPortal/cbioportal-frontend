@@ -6,13 +6,14 @@ import { observer } from "mobx-react";
 import styles from "./styles.module.scss";
 import {remoteData} from "../../../public-lib/api/remoteData";
 import {ALTERED_GROUP_VALUE, getSurvivalChartDataByAlteredStatus, UNALTERED_GROUP_VALUE} from "./SurvivalUtil";
-import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import classnames from 'classnames';
 import _ from 'lodash';
 import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
 import SurvivalDescriptionTable from './SurvivalDescriptionTable';
 import NotUsingGenePanelWarning from "../NotUsingGenePanelWarning";
+import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 
 export interface ISurvivalTabProps {
     store: ResultsViewPageStore
@@ -188,6 +189,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="survival-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                     <NotUsingGenePanelWarning store={this.props.store}/>
+                    <AlterationFilterWarning store={this.props.store}/>
                 </div>
                 {content}
             </div>
