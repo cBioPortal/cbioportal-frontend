@@ -513,83 +513,98 @@ export default class GroupComparisonStore {
         invoke:()=>Promise.resolve(pickProteinEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!))
     });
 
-    @observable.ref private _mutationEnrichmentProfile:MolecularProfile|undefined = undefined;
-    readonly mutationEnrichmentProfile = remoteData({
+    @observable.ref private _mutationEnrichmentProfileMap:{[studyId:string]:MolecularProfile} = {};
+    @observable.ref private _copyNumberEnrichmentProfileMap:{[studyId:string]:MolecularProfile} = {};
+    @observable.ref private _mRNAEnrichmentProfileMap:{[studyId:string]:MolecularProfile} = {};
+    @observable.ref private _proteinEnrichmentProfileMap:{[studyId:string]:MolecularProfile} = {};
+
+    readonly selectedStudyMutationEnrichmentProfileMap = remoteData({
         await:()=>[this.mutationEnrichmentProfiles],
         invoke:()=>{
-            if (!this._mutationEnrichmentProfile && this.mutationEnrichmentProfiles.result!.length > 0) {
-                return Promise.resolve(this.mutationEnrichmentProfiles.result![0]);
+            if (_.isEmpty(this._mutationEnrichmentProfileMap)) {
+                const molecularProfilesbyStudyId = _.groupBy(this.mutationEnrichmentProfiles.result!, profile => profile.studyId);
+                // Select only one molecular profile for each study
+                return Promise.resolve(_.mapValues(molecularProfilesbyStudyId, molecularProfiles => molecularProfiles[0]));
             } else {
-                return Promise.resolve(this._mutationEnrichmentProfile);
+                return Promise.resolve(this._mutationEnrichmentProfileMap);
             }
         }
     });
-    @action
-    public setMutationEnrichmentProfile(profile:MolecularProfile|undefined) {
-        this._mutationEnrichmentProfile = profile;
-    }
 
-    @observable.ref private _copyNumberEnrichmentProfile:MolecularProfile|undefined = undefined;
-    readonly copyNumberEnrichmentProfile = remoteData({
+    readonly selectedStudyCopyNumberEnrichmentProfileMap = remoteData({
         await:()=>[this.copyNumberEnrichmentProfiles],
         invoke:()=>{
-            if (!this._copyNumberEnrichmentProfile && this.copyNumberEnrichmentProfiles.result!.length > 0) {
-                return Promise.resolve(this.copyNumberEnrichmentProfiles.result![0]);
+            if (_.isEmpty(this._copyNumberEnrichmentProfileMap)) {
+                const molecularProfilesbyStudyId = _.groupBy(this.copyNumberEnrichmentProfiles.result!, profile => profile.studyId);
+                // Select only one molecular profile for each study
+                return Promise.resolve(_.mapValues(molecularProfilesbyStudyId, molecularProfiles => molecularProfiles[0]));
             } else {
-                return Promise.resolve(this._copyNumberEnrichmentProfile);
+                return Promise.resolve(this._copyNumberEnrichmentProfileMap);
             }
         }
     });
-    @action
-    public setCopyNumberEnrichmentProfile(profile:MolecularProfile|undefined) {
-        this._copyNumberEnrichmentProfile = profile;
-    }
 
-    @observable.ref private _mRNAEnrichmentProfile:MolecularProfile|undefined = undefined;
-    readonly mRNAEnrichmentProfile = remoteData({
+    readonly selectedmRNAEnrichmentProfileMap = remoteData({
         await:()=>[this.mRNAEnrichmentProfiles],
         invoke:()=>{
-            if (!this._mRNAEnrichmentProfile && this.mRNAEnrichmentProfiles.result!.length > 0) {
-                return Promise.resolve(this.mRNAEnrichmentProfiles.result![0]);
+            if (_.isEmpty(this._mRNAEnrichmentProfileMap)) {
+                const molecularProfilesbyStudyId = _.groupBy(this.mRNAEnrichmentProfiles.result!, profile => profile.studyId);
+                // Select only one molecular profile for each study
+                return Promise.resolve(_.mapValues(molecularProfilesbyStudyId, molecularProfiles => molecularProfiles[0]));
             } else {
-                return Promise.resolve(this._mRNAEnrichmentProfile);
+                return Promise.resolve(this._mRNAEnrichmentProfileMap);
             }
         }
     });
-    @action
-    public setMRNAEnrichmentProfile(profile:MolecularProfile|undefined) {
-        this._mRNAEnrichmentProfile = profile;
-    }
 
-    @observable.ref private _proteinEnrichmentProfile:MolecularProfile|undefined = undefined;
-    readonly proteinEnrichmentProfile = remoteData({
+    readonly selectedProteinEnrichmentProfileMap = remoteData({
         await:()=>[this.proteinEnrichmentProfiles],
         invoke:()=>{
-            if (!this._proteinEnrichmentProfile && this.proteinEnrichmentProfiles.result!.length > 0) {
-                return Promise.resolve(this.proteinEnrichmentProfiles.result![0]);
+            if (_.isEmpty(this._proteinEnrichmentProfileMap)) {
+                const molecularProfilesbyStudyId = _.groupBy(this.proteinEnrichmentProfiles.result!, profile => profile.studyId);
+                // Select only one molecular profile for each study
+                return Promise.resolve(_.mapValues(molecularProfilesbyStudyId, molecularProfiles => molecularProfiles[0]));
             } else {
-                return Promise.resolve(this._proteinEnrichmentProfile);
+                return Promise.resolve(this._proteinEnrichmentProfileMap);
             }
         }
     });
+
     @action
-    public setProteinEnrichmentProfile(profile:MolecularProfile|undefined) {
-        this._proteinEnrichmentProfile = profile;
+    public setMutationEnrichmentProfileMap(profileMap:{[studyId:string]:MolecularProfile}) {
+        this._mutationEnrichmentProfileMap = profileMap;
     }
 
+    @action
+    public setCopyNumberEnrichmentProfileMap(profileMap:{[studyId:string]:MolecularProfile}) {
+        this._copyNumberEnrichmentProfileMap = profileMap;
+    }
+
+    @action
+    public setMRNAEnrichmentProfileMap(profiles:{[studyId:string]:MolecularProfile}) {
+        this._mRNAEnrichmentProfileMap = profiles;
+    }
+
+    @action
+    public setProteinEnrichmentProfileMap(profileMap:{[studyId:string]:MolecularProfile}) {
+        this._proteinEnrichmentProfileMap = profileMap;
+    }
+
+    //
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
-        await: () => [this.mutationEnrichmentProfile, this.activeGroups],
-        getSelectedProfile: () => this.mutationEnrichmentProfile.result,
+        await: () => [this.selectedStudyMutationEnrichmentProfileMap, this.activeGroups],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+        getSelectedProfileMap: () => this.selectedStudyMutationEnrichmentProfileMap.result!,
         fetchData: () => {
-            let molecularProfile = this.mutationEnrichmentProfile.result!;
+            let molecularProfiles = this.selectedStudyMutationEnrichmentProfileMap.result!;
+            let studyMolecularProfileMap = _.keyBy(molecularProfiles, molecularProfile=>molecularProfile.studyId);
             if (this.activeGroups.result!.length > 1) {
                 let groups: MolecularProfileCasesGroupFilter[] = _.map(this.activeGroups.result, group => {
                     const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
                         return _.map((this.usePatientLevelEnrichments ? study.patients : study.samples), caseId => {
                             return {
                                 caseId,
-                                molecularProfileId: molecularProfile.molecularProfileId
+                                molecularProfileId: studyMolecularProfileMap[study.id].molecularProfileId
                             }
                         })
                     });
@@ -610,15 +625,15 @@ export default class GroupComparisonStore {
     });
 
     readonly copyNumberEnrichmentDataRequestGroups = remoteData({
-        await: () => [this.copyNumberEnrichmentProfile, this.activeGroups],
+        await: () => [this.selectedStudyCopyNumberEnrichmentProfileMap, this.activeGroups],
         invoke: async () => {
-            let molecularProfile = this.copyNumberEnrichmentProfile.result!;
+            let molecularProfile = this.selectedStudyCopyNumberEnrichmentProfileMap.result!;
             let groups: MolecularProfileCasesGroupFilter[] = _.map(this.activeGroups.result, group => {
                 const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
                     return _.map((this.usePatientLevelEnrichments ? study.patients : study.samples), caseId => {
                         return {
                             caseId,
-                            molecularProfileId: molecularProfile.molecularProfileId
+                            molecularProfileId: molecularProfile[study.id].molecularProfileId
                         }
                     });
                 });
@@ -647,7 +662,7 @@ export default class GroupComparisonStore {
     });
 
     readonly copyNumberAmpEnrichmentData = remoteData<AlterationEnrichment[]>({
-        await:()=>[this.copyNumberEnrichmentDataRequestGroups, this.copyNumberEnrichmentProfile],
+        await:()=>[this.copyNumberEnrichmentDataRequestGroups],
         invoke:()=>{
             // assumes single study for now
             if (this.copyNumberEnrichmentDataRequestGroups.result && this.copyNumberEnrichmentDataRequestGroups.result.length>1) {
@@ -662,8 +677,8 @@ export default class GroupComparisonStore {
     });
 
     public readonly copyNumberEnrichmentData = makeEnrichmentDataPromise({
-        await:()=>[this.copyNumberHomdelEnrichmentData, this.copyNumberAmpEnrichmentData],
-        getSelectedProfile:()=>this.copyNumberEnrichmentProfile.result,
+        await:()=>[this.copyNumberHomdelEnrichmentData, this.copyNumberAmpEnrichmentData, this.selectedStudyCopyNumberEnrichmentProfileMap],
+        getSelectedProfileMap:()=> this.selectedStudyCopyNumberEnrichmentProfileMap.result!,
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData:()=>{
             const ampData = this.copyNumberAmpEnrichmentData.result!.map(d=>{
@@ -691,13 +706,14 @@ export default class GroupComparisonStore {
     }
 
     readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
-        await:()=>[this.mRNAEnrichmentProfile, this.activeGroups],
-        getSelectedProfile:()=>this.mRNAEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any mRNA profiles
+        await:()=>[this.selectedmRNAEnrichmentProfileMap, this.activeGroups],
+        getSelectedProfileMap:()=> this.selectedmRNAEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData:()=>{
+            let studyIds =  Object.keys(this.selectedmRNAEnrichmentProfileMap.result!);
             // assumes single study for now
-            if (this.mRNAEnrichmentProfile.result) {
-                const molecularProfileId = this.mRNAEnrichmentProfile.result!.molecularProfileId;
+            if (studyIds.length === 1) {
+                const molecularProfileId = this.selectedmRNAEnrichmentProfileMap.result![studyIds[0]].molecularProfileId;
                 const groups: MolecularProfileCasesGroupFilter[] = _.map(this.activeGroups.result, group => {
                     const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
                         return _.map(study.samples, sampleId => ({ caseId: sampleId, molecularProfileId }));
@@ -707,6 +723,7 @@ export default class GroupComparisonStore {
                         molecularProfileCaseIdentifiers
                     }
                 });
+
                 return internalClient.fetchExpressionEnrichmentsUsingPOST({
                     enrichmentType: "SAMPLE",
                     groups
@@ -718,13 +735,14 @@ export default class GroupComparisonStore {
     });
 
     readonly proteinEnrichmentData = makeEnrichmentDataPromise({
-        await:()=>[this.proteinEnrichmentProfile, this.activeGroups],
-        getSelectedProfile:()=>this.proteinEnrichmentProfile.result,// returns an empty array if the selected study doesn't have any mRNA profiles
+        await:()=>[this.selectedProteinEnrichmentProfileMap, this.activeGroups],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+        getSelectedProfileMap:()=> this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
         fetchData:()=>{
+            let studyIds =  Object.keys(this.selectedProteinEnrichmentProfileMap.result!);
             // assumes single study for now
-            if (this.proteinEnrichmentProfile.result) {
-                const molecularProfileId = this.proteinEnrichmentProfile.result!.molecularProfileId;
+            if (studyIds.length === 1) {
+                const molecularProfileId = this.selectedProteinEnrichmentProfileMap.result![studyIds[0]].molecularProfileId
                 const groups: MolecularProfileCasesGroupFilter[] = _.map(this.activeGroups.result, group => {
                     const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
                         return _.map(study.samples, sampleId => ({ caseId: sampleId, molecularProfileId }));
@@ -734,7 +752,6 @@ export default class GroupComparisonStore {
                         molecularProfileCaseIdentifiers
                     }
                 });
-
                 return internalClient.fetchExpressionEnrichmentsUsingPOST({
                     enrichmentType: "SAMPLE",
                     groups
@@ -771,7 +788,6 @@ export default class GroupComparisonStore {
 
     @computed get mutationsTabUnavailable() {
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
-            || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study
             || !this.mutationsTabShowable;
     }
 
@@ -791,7 +807,6 @@ export default class GroupComparisonStore {
 
     @computed get copyNumberUnavailable() {
         return (this.activeGroups.isComplete && this.activeGroups.result.length < 2) //less than two active groups
-            || (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) //more than one active study
             || !this.copyNumberTabShowable;
     }
 

@@ -191,6 +191,25 @@ describe("enrichments tab screenshot tests", function() {
     });
 });
 
+describe("multi-study enrichments tab screenshot tests", function() {
+    before(function() {
+        var url = `${CBIOPORTAL_URL}/results/enrichments?Action=Submit&cancer_study_list=coadread_tcga_pub%2Cgbm_tcga_pub&case_set_id=all&clinicallist=CANCER_STUDY%2CPROFILED_IN_COPY_NUMBER_ALTERATION%2CPROFILED_IN_MUTATION_EXTENDED&data_priority=0&gene_list=APC%0ACDKN2B&show_samples=false&tab_index=tab_visualize`;
+        goToUrlAndSetLocalStorage(url);
+    });
+    it('multi-study mutation enrichments tab', function(){
+        browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
+        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
+        assertScreenShotMatch(res);
+    });
+
+    it('multi-study copy-number enrichments tab', function(){
+        browser.click('a=Copy-number');
+        browser.waitForVisible('div[data-test="CopyNumberEnrichmentsTab"]',20000);
+        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
+        assertScreenShotMatch(res);
+    });
+});
+
 
 describe('result page tabs, loading from session id', function(){
     before(function(){
