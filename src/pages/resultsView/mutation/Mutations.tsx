@@ -6,11 +6,12 @@ import ResultsViewMutationMapper from "./ResultsViewMutationMapper";
 import MutationMapperUserSelectionStore from "shared/components/mutationMapper/MutationMapperUserSelectionStore";
 import {observable} from "mobx";
 import AppConfig from 'appConfig';
-import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../../AppStore";
 
 import "./mutations.scss";
+import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -34,7 +35,17 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
     @autobind
     private onToggleOql() {
-        this.props.store.mutationsTabShouldUseOql = !this.props.store.mutationsTabShouldUseOql;
+        this.props.store.mutationsTabFilteringSettings.useOql = !this.props.store.mutationsTabFilteringSettings.useOql;
+    }
+
+    @autobind
+    private onToggleVUS() {
+        this.props.store.mutationsTabFilteringSettings.excludeVus = !this.props.store.mutationsTabFilteringSettings.excludeVus;
+    }
+
+    @autobind
+    private onToggleGermline() {
+        this.props.store.mutationsTabFilteringSettings.excludeGermline = !this.props.store.mutationsTabFilteringSettings.excludeGermline;
     }
 
     public render() {
@@ -44,16 +55,6 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
         return (
             <div data-test="mutationsTabDiv">
-                <div className={"tabMessageContainer"}>
-                    <OqlStatusBanner
-                        className="mutations-oql-status-banner"
-                        store={this.props.store}
-                        tabReflectsOql={this.props.store.mutationsTabShouldUseOql}
-                        isUnaffected={!this.props.store.queryContainsMutationOql}
-                        onToggle={this.onToggleOql}
-                    />
-                </div>
-
                 {(this.props.store.mutationMapperStores.isComplete) && (
                     <MSKTabs
                         id="mutationsPageTabs"
@@ -87,6 +88,25 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
                 tabs.push(
                     <MSKTab key={gene} id={gene} linkText={gene} anchorStyle={anchorStyle}>
+                        <div className={"tabMessageContainer"}>
+                            <OqlStatusBanner
+                                className="mutations-oql-status-banner"
+                                store={this.props.store}
+                                tabReflectsOql={this.props.store.mutationsTabFilteringSettings.useOql}
+                                isUnaffected={!this.props.store.queryContainsMutationOql}
+                                onToggle={this.onToggleOql}
+                            />
+                            <AlterationFilterWarning
+                                store={this.props.store}
+                                mutationsTabModeSettings={{
+                                    excludeVUS: this.props.store.mutationsTabFilteringSettings.excludeVus,
+                                    excludeGermline: this.props.store.mutationsTabFilteringSettings.excludeGermline,
+                                    toggleExcludeVUS: this.onToggleVUS,
+                                    toggleExcludeGermline: this.onToggleGermline,
+                                    hugoGeneSymbol: gene
+                                }}
+                            />
+                        </div>
                         <ResultsViewMutationMapper
                             store={mutationMapperStore}
                             trackVisibility={this.userSelectionStore.trackVisibility}

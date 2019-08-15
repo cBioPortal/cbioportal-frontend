@@ -20,6 +20,7 @@ import * as _ from "lodash";
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import CheckedSelect, { Option } from 'public-lib/components/checkedSelect/CheckedSelect';
+import EllipsisTextTooltip from "public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];
@@ -113,6 +114,22 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     //used in 2 groups analysis
     @computed get group2() {
         return this.props.groups[1];
+    }
+
+    @computed get group1CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Over-expressed";
+        } else {
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.group1.name!}/></span>;
+        }
+    }
+
+    @computed get group2CheckboxLabel() {
+        if (this.props.alteredVsUnalteredMode) {
+            return "Under-expressed";
+        } else {
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.group2.name!}/></span>;
+        }
     }
 
     @computed get selectedGenesSet() {

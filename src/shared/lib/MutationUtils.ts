@@ -4,7 +4,7 @@ import {
     IProteinImpactTypeColors
 } from "react-mutation-mapper";
 import {Gene, MolecularProfile, Mutation, SampleIdentifier} from "shared/api/generated/CBioPortalAPI";
-import {GenomicLocation} from "shared/api/generated/GenomeNexusAPIInternal";
+import {GenomicLocation} from "public-lib/api/generated/GenomeNexusAPIInternal";
 import {MUTATION_STATUS_GERMLINE, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import {toSampleUuid} from "./UuidUtils";
 import {stringListToSet} from "public-lib/lib/StringUtils";
