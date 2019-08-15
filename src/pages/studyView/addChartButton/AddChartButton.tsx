@@ -4,7 +4,7 @@ import {observer} from "mobx-react";
 import {ChildButton, MainButton, Menu} from 'react-mfb';
 import 'react-mfb/mfb.css';
 import {
-    NewChart,
+    CustomChart,
     StudyViewPageStore, StudyViewPageTabKey,
     StudyViewPageTabKeyEnum
 } from "../StudyViewPageStore";
@@ -260,7 +260,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
                         isChartNameValid={this.props.store.isChartNameValid}
                         getDefaultChartName={this.props.store.getDefaultCustomChartName}
-                        onSubmit={(chart: NewChart) => {
+                        onSubmit={(chart: CustomChart) => {
                             this.infoMessage = `${chart.name} has been added.`;
                             this.props.store.addCustomChart(chart);
 
