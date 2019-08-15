@@ -88,13 +88,14 @@ export default class sessionServiceAPI {
     }
 
 
-    fetchUserSettings(studyIds:string[]): Promise<StudyPageSettings> {
+    fetchUserSettings(studyIds:string[]): Promise<StudyPageSettings|undefined> {
         return request
             .post(`${this.getUserSettingUrl()}/fetch`)
             .send({page:'study_view', origin:studyIds})
             // @ts-ignore: this method comes from caching plugin and isn't in typing
             .forceUpdate(true)
             .then((res:any) => {
+                //can be undefined if noting was saved previously
                 return res.body;
             });
     }

@@ -77,7 +77,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     constructor(props: IStudyViewPageProps) {
         super(props);
-        this.store = new StudyViewPageStore(this.props.appStore);
+        this.store = new StudyViewPageStore(this.props.appStore, ServerConfigHelpers.sessionServiceIsEnabled());
 
         this.queryReaction = reaction(
             () => props.routing.location.query,
