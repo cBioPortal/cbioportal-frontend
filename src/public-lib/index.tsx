@@ -12,8 +12,16 @@ export {default as WindowWrapper} from './components/WindowWrapper';
 
 export {
     default as GenomeNexusAPI,
+    AlleleCount,
+    AlleleFrequency,
+    AlleleNumber,
+    ClinVar,
+    Dbsnp,
     EnsemblFilter,
     GenomicLocation,
+    Gnomad,
+    Homozygotes,
+    MyVariantInfo,
     TranscriptConsequenceSummary,
     VariantAnnotation,
     VariantAnnotationSummary
