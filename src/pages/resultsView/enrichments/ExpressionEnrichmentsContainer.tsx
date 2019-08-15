@@ -194,7 +194,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
 
     public render() {
 
-        if (this.props.data.length === 0) {
+        if (_.isEmpty(this.props.data!)) {
             return <div className={'alert alert-info'}>No data/result available</div>;
         }
 
