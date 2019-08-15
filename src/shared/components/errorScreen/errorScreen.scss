@@ -1,10 +1,9 @@
 .errorScreen {
-
   position:absolute;
-  top:0;
   left:0;
   right:0;
   bottom:0;
+  top:0;
   background:$body-bg;
   min-height:300px;
   padding:100px;
@@ -13,7 +12,11 @@
 
   h4 {
     margin:30px 0;
-    font-size:50px;
+    font-size:20px;
+  }
+
+  .errorLogo img {
+    height:50px;
   }
 
   p {

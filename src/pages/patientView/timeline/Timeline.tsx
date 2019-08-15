@@ -104,7 +104,7 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
                 getSvg={this.getSvg}
                 filename="timeline"
                 dontFade={true}
-                collapse={true}
+                type='button'
                 style={{position:"absolute", top:0, right:5}}
                 />
             </div>

@@ -37,7 +37,7 @@ import {
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
 import {getSampleViewUrl} from "../../../shared/api/urls";
 import {AnnotatedMutation, ResultsViewPageStore} from "../ResultsViewPageStore";
-import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import {remoteData} from "../../../public-lib/api/remoteData";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
 import {MobxPromise} from "mobxpromise";
@@ -47,6 +47,7 @@ import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
 import {ViewType, PlotType} from "../plots/PlotsTab";
 import {maxPage} from "../../../shared/components/lazyMobXTable/utils";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
+import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 
 export interface ExpressionWrapperProps {
     store:ResultsViewPageStore;
@@ -541,6 +542,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             <div data-test="expressionTabDiv">
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="expression-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:-1, marginBottom:12}}/>
+                    <AlterationFilterWarning store={this.props.store}/>
                 </div>
                 { (this.studySelectorModalVisible) && this.studySelectionModal }
                 <div style={{marginBottom:15}}>

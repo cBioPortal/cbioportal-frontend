@@ -6,8 +6,8 @@ import styles from "./gnomad.module.scss";
 import generalStyles from "./styles.module.scss";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
-import {MyVariantInfo, MyVariantInfoAnnotation, Gnomad, AlleleCount, AlleleNumber, Homozygotes, AlleleFrequency} from 'shared/api/generated/GenomeNexusAPI';
+import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
+import {MyVariantInfo, MyVariantInfoAnnotation, Gnomad, AlleleCount, AlleleNumber, Homozygotes, AlleleFrequency} from 'public-lib/api/generated/GenomeNexusAPI';
 import GenomeNexusMyVariantInfoCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusMyVariantInfoCache";
 import GnomadFrequencyTable from 'shared/components/gnomad/GnomadFrequencyTable';
 
@@ -18,7 +18,7 @@ export type GnomadData = {
 
         'alleleNumber': number
 
-        'homozygotes': number
+        'homozygotes': string | undefined
 
         'alleleFrequency': number
 };
@@ -134,7 +134,8 @@ export default class GnomadColumnFormatter {
                             'population': key,
                             'alleleCount': gnomadExome[key].alleleCount + gnomadGenome[key].alleleCount,
                             'alleleNumber': gnomadExome[key].alleleNumber + gnomadGenome[key].alleleNumber,
-                            'homozygotes': gnomadExome[key].homozygotes + gnomadGenome[key].homozygotes,
+                            'homozygotes': gnomadExome[key].homozygotes === undefined || gnomadGenome[key].homozygotes === undefined ? "N/A" 
+                                            : (parseInt(gnomadExome[key].homozygotes!) + parseInt(gnomadGenome[key].homozygotes!)).toString(),
                             'alleleFrequency': GnomadColumnFormatter.calculateAlleleFrequency(
                                                 gnomadExome[key].alleleCount + gnomadGenome[key].alleleCount, 
                                                 gnomadExome[key].alleleNumber + gnomadGenome[key].alleleNumber, null)
@@ -234,7 +235,7 @@ export default class GnomadColumnFormatter {
             'population' : key,
             'alleleCount': data.alleleCount[alleleCountName] ? data.alleleCount[alleleCountName] : 0,
             'alleleNumber': data.alleleNumber[alleleNumberName] ? data.alleleNumber[alleleNumberName] : 0,
-            'homozygotes': data.homozygotes[homozygotesName],
+            'homozygotes': data.homozygotes === undefined ? "N/A" : data.homozygotes[homozygotesName],
             'alleleFrequency': GnomadColumnFormatter.calculateAlleleFrequency(
                             data.alleleCount[alleleCountName], data.alleleNumber[alleleNumberName], data.alleleFrequency[alleleFrequencyName])
         } as GnomadData;

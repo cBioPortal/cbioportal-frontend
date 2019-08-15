@@ -80,7 +80,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                     if (chartMeta.clinicalAttribute !== undefined) {
                         acc.push({
                             ...this.getDefaultColumnConfig(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute), chartMeta.clinicalAttribute.displayName, chartMeta.clinicalAttribute.datatype === "NUMBER"),
-                            tooltip: getClinicalAttributeOverlay(chartMeta.clinicalAttribute.displayName, chartMeta.description ? chartMeta.description : '')
+                            tooltip: getClinicalAttributeOverlay(chartMeta.clinicalAttribute.displayName, chartMeta.description ? chartMeta.description : '', chartMeta.clinicalAttribute ? chartMeta.clinicalAttribute.clinicalAttributeId : undefined)
                         });
                     }
                     return acc;

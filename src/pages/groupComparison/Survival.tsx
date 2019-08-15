@@ -16,6 +16,10 @@ import styles from "./styles.module.scss";
 import { ClinicalData, ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import _ from 'lodash';
 import SurvivalDescriptionTable from 'pages/resultsView/survival/SurvivalDescriptionTable';
+import {
+    GroupLegendLabelComponent,
+    SurvivalTabGroupLegendLabelComponent
+} from "./labelComponents/GroupLegendLabelComponent";
 
 export interface ISurvivalProps {
     store: GroupComparisonStore
@@ -75,7 +79,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             name,
                             color: blendColors(partitionGroupUids.map(uid => uidToGroup[uid].color)),
                             value,
-                            legendText: name
+                            legendText: JSON.stringify(partitionGroupUids),
                         });
                     }
                 }
@@ -87,7 +91,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         name,
                         color: group.color,
                         value: group.uid,
-                        legendText: name
+                        legendText: group.uid
                     });
                     const patientIdentifiers = getPatientIdentifiers([group]);
                     for (const identifier of patientIdentifiers) {
@@ -143,7 +147,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.diseaseFreeSurvivalDescriptions,
             this.props.store.activeStudiesClinicalAttributes,
             this.analysisGroupsComputations,
-            this.props.store.overlapComputations
+            this.props.store.overlapComputations,
+            this.props.store.uidToGroup
         ],
         render:()=>{
             let content: any = [];
@@ -197,6 +202,19 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 xLabelWithoutEventTooltip="Time of last observation"
                                 fileName="Overall_Survival"
                                 showCurveInTooltip={true}
+                                legendLabelComponent={
+                                    this.props.store.overlapStrategy === OverlapStrategy.INCLUDE ? (
+                                        <SurvivalTabGroupLegendLabelComponent
+                                            maxLabelWidth={256}
+                                            uidToGroup={this.props.store.uidToGroup.result!}
+                                            dy="0.3em"
+                                        />
+                                    ) : <GroupLegendLabelComponent
+                                        maxLabelWidth={256}
+                                        uidToGroup={this.props.store.uidToGroup.result!}
+                                        dy="0.3em"
+                                    />
+                                }
                             />
                         </div>
                     </div>
@@ -248,6 +266,19 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 xLabelWithoutEventTooltip="Time of Last Observation"
                                 fileName="Disease_Free_Survival"
                                 showCurveInTooltip={true}
+                                legendLabelComponent={
+                                    this.props.store.overlapStrategy === OverlapStrategy.INCLUDE ? (
+                                        <SurvivalTabGroupLegendLabelComponent
+                                            maxLabelWidth={256}
+                                            uidToGroup={this.props.store.uidToGroup.result!}
+                                            dy="0.3em"
+                                        />
+                                    ) : <GroupLegendLabelComponent
+                                        maxLabelWidth={256}
+                                        uidToGroup={this.props.store.uidToGroup.result!}
+                                        dy="0.3em"
+                                    />
+                                }
                             />
                         </div>
                     </div>

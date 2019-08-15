@@ -74,8 +74,7 @@ let getBlankPage = function(){
  */
 function handleEnter(){
     const hash = getBrowserWindow().location.hash;
-    // if hash is bigger than 50, probably not a deep link but some kind of data
-    if (hash.length > 0 && hash.length < 50) {
+    if (hash.length > 0) {
         seekUrlHash(hash.replace("#",""));
     } else {
         $(document).scrollTop(0);
