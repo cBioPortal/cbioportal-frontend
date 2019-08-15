@@ -46,6 +46,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_right_nav_show_examples:true,
     skin_right_nav_show_testimonials:true,
     skin_right_nav_show_whats_new:true,
+    skin_citation_rule_text:"Please cite: <a href=\"http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract\" target=\"_blank\">Cerami et al., 2012</a> &amp; <a href=\"http://www.ncbi.nlm.nih.gov/pubmed/23550210\" target=\"_blank\">Gao et al., 2013</a>",
     skin_show_about_tab:true,
     skin_show_data_tab:true,
     skin_show_faqs_tab:true,
@@ -68,13 +69,6 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         "ucec_tcga_pan_can_atlas_2018,uvm_tcga_pan_can_atlas_2018",
     default_cross_cancer_study_list_name: "TCGA PanCancer Atlas studies",
     skin_title:"cBioPortal for Cancer Genomics",
-
-    skin_blurb:`The cBioPortal for Cancer Genomics provides 
-        <b>visualization</b>, <b>analysis</b> and <b>download</b> of large-scale cancer genomics data sets.
-        <p><b>Please cite</b> <a href=\"http://www.ncbi.nlm.nih.gov/pubmed/23550210\">Gao 
-        et al. <i>Sci. Signal.</i> 2013</a> &amp; 
-        <a href=\"http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract\">
-        Cerami et al. <i>Cancer Discov.</i> 2012</a> when publishing results based on cBioPortal.</p>`,
 
     skin_data_sets_footer:`Data sets of TCGA studies were downloaded from Broad 
             Firehose (http://gdac.broadinstitute.org) and updated monthly. In some studies, data sets were from the 

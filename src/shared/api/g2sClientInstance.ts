@@ -1,4 +1,4 @@
-import Genome2StructureAPI from "./generated/Genome2StructureAPI";
+import Genome2StructureAPI from "../../public-lib/api/generated/Genome2StructureAPI";
 
 const client = new Genome2StructureAPI();
 

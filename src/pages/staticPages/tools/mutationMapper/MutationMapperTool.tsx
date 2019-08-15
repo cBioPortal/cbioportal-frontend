@@ -383,7 +383,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                             pdbHeaderCache={this.store.pdbHeaderCache}
                             myCancerGenomeData={this.store.myCancerGenomeData}
                             config={AppConfig.serverConfig}
-                            showDropDown={true}
+                            showTranscriptDropDown={true}
                             showOnlyAnnotatedTranscriptsInDropdown={!this.store.hasInputWithProteinChanges}
                         />
                     </MSKTab>
