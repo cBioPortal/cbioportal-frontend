@@ -22,11 +22,11 @@ export interface IMutationEnrichmentsProps {
 export default class MutationEnrichments extends React.Component<IMutationEnrichmentsProps, {}> {
 
     @autobind
-    private onChangeProfile(m:MolecularProfile) {
-        this.props.store.setMutationEnrichmentProfile(m);
+    private onChangeProfile(profileMap:{[studyId:string]:MolecularProfile}) {
+        this.props.store.setMutationEnrichmentProfileMap(profileMap);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mutation", true, true);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mutation", true, true, true);
 
     private readonly enrichmentAnalysisGroups = remoteData({
         await:()=>[this.props.store.activeGroups],
@@ -46,18 +46,28 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
             this.props.store.mutationEnrichmentData,
-            this.props.store.mutationEnrichmentProfile,
-            this.enrichmentAnalysisGroups
+            this.props.store.selectedStudyMutationEnrichmentProfileMap,
+            this.enrichmentAnalysisGroups,
+            this.props.store.studies
         ],
         render:()=>{
+            let headerName = "Mutation";
+            let studyIds = Object.keys(this.props.store.selectedStudyMutationEnrichmentProfileMap.result!);
+            if (studyIds.length === 1) {
+                headerName = this.props.store.selectedStudyMutationEnrichmentProfileMap.result![studyIds[0]].name
+            }
             return (
                 <div data-test="GroupComparisonMutationEnrichments">
-                    <EnrichmentsDataSetDropdown dataSets={this.props.store.mutationEnrichmentProfiles} onChange={this.onChangeProfile}
-                                                selectedValue={this.props.store.mutationEnrichmentProfile.result!.molecularProfileId}/>
+                    <EnrichmentsDataSetDropdown
+                        dataSets={this.props.store.mutationEnrichmentProfiles}
+                        onChange={this.onChangeProfile}
+                        selectedProfileByStudyId={this.props.store.selectedStudyMutationEnrichmentProfileMap.result!}
+                        studies={this.props.store.studies.result!}
+                    />
                     <AlterationEnrichmentContainer data={this.props.store.mutationEnrichmentData.result!}
                         groups={this.enrichmentAnalysisGroups.result}
                         alteredVsUnalteredMode={false}
-                        headerName={this.props.store.mutationEnrichmentProfile.result!.name}
+                        headerName={headerName}
                         containerType={AlterationContainerType.MUTATION}
                         patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
                         onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
