@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
 import {Modal} from 'react-bootstrap';
-import ReactSelect from 'react-select';
+import ReactSelect from 'react-select1';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";

@@ -3,7 +3,7 @@ import {MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
 import {action, computed, observable} from "mobx";
 import {observer, Observer} from "mobx-react";
 import {AlterationTypeConstants, ResultsViewPageStore, GeneticEntity, GeneticEntityType} from "../ResultsViewPageStore";
-import Select from "react-select";
+import Select from "react-select1";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 import {CoExpression, CoExpressionFilter} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import _ from "lodash";
