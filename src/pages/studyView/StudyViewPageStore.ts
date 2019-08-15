@@ -250,7 +250,7 @@ export type CopyNumberCountByGeneWithCancerGene = CopyNumberCountByGene & Oncokb
 export class StudyViewPageStore {
     private reactionDisposers:IReactionDisposer[] = [];
 
-    constructor(private appStore:AppStore) {
+    constructor(private appStore: AppStore, private sessionServiceIsEnabled: boolean) {
         this.reactionDisposers.push(reaction(() => this.loadingInitialDataForSummaryTab, () => {
             if (!this.loadingInitialDataForSummaryTab) {
                 this.updateChartStats();
@@ -275,16 +275,11 @@ export class StudyViewPageStore {
 
         this.reactionDisposers.push(reaction(() => this.fetchUserSettings.isComplete, (isComplete) => {
             //execute if user log in from study page
-            if (isComplete && this.isLoggedIn && !this._loadUserSettingsInitially) {
+            if (isComplete && this.isSavingUserPreferencePossible && !this._loadUserSettingsInitially) {
                 this.previousSettings = this.currentChartSettingsMap;
                 this.loadUserSettings();
             }
         }));
-
-
-
-
-
 
         // Include special charts into custom charts list
        SPECIAL_CHARTS.forEach((chartMeta:ChartMetaWithDimensionAndChartType) => {
@@ -315,6 +310,10 @@ export class StudyViewPageStore {
 
     @computed get isLoggedIn() {
         return this.appStore.isLoggedIn;
+    }
+
+    @computed get isSavingUserPreferencePossible() {
+        return this.isLoggedIn && this.sessionServiceIsEnabled;
     }
 
     @observable hideRestoreSettingsMsg = this.isLoggedIn;
@@ -2355,7 +2354,7 @@ export class StudyViewPageStore {
 
     @computed
     get showSettingRestoreMsg() {
-        return this.isLoggedIn &&
+        return this.isSavingUserPreferencePossible &&
             !this.hideRestoreSettingsMsg &&
             this.fetchUserSettings.isComplete &&
             !_.isEqual(this.previousSettings, _.keyBy(this.fetchUserSettings.result, chartUserSetting => chartUserSetting.id));
@@ -2363,7 +2362,7 @@ export class StudyViewPageStore {
 
     @computed
     get isSavingUserSettingsPossible() {
-        return this.isLoggedIn && this.fetchUserSettings.isComplete &&
+        return this.isSavingUserPreferencePossible && this.fetchUserSettings.isComplete &&
             (!this.showSettingRestoreMsg || !_.isEqual(this.currentChartSettingsMap, _.keyBy(this.fetchUserSettings.result, chartSetting => chartSetting.id)))
     }
 
@@ -2396,7 +2395,7 @@ export class StudyViewPageStore {
     // return contains settings for all visible charts each chart setting
     @computed private get currentChartSettingsMap() {
         let chartSettingsMap: { [chartId: string]: ChartUserSetting } = {};
-        if(this.isLoggedIn) {
+        if(this.isSavingUserPreferencePossible) {
             this.visibleAttributes.forEach(attribute => {
                 const id = attribute.uniqueKey
                 chartSettingsMap[attribute.uniqueKey] = {
@@ -2430,10 +2429,11 @@ export class StudyViewPageStore {
 
     readonly fetchUserSettings = remoteData<ChartUserSetting[]>({
         invoke: async () => {
-            if (this.isLoggedIn && this.studyIds.length > 0) {
+            if (this.isSavingUserPreferencePossible && this.studyIds.length > 0) {
                 let userSettings = await sessionServiceClient.fetchUserSettings(toJS(this.studyIds));
-                //this.currentGridLayoutUpdated = true
-                return userSettings.chartSettings || [];
+                if(userSettings) {
+                    return userSettings.chartSettings || [];
+                }
             }
             return [];
         },
@@ -2454,7 +2454,7 @@ export class StudyViewPageStore {
     @autobind
     @action
     loadUserSettings() {
-        if (this.isLoggedIn && !_.isEmpty(this.fetchUserSettings.result)) {
+        if (this.isSavingUserPreferencePossible && !_.isEmpty(this.fetchUserSettings.result)) {
             this.loadSettings(this.fetchUserSettings.result);
             // set previousSettings only if user is already logged in
             if(this._loadUserSettingsInitially){
