@@ -36,6 +36,7 @@ import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 import QueryAndDownloadTabs from "shared/components/query/QueryAndDownloadTabs";
 import {createQueryStore} from "pages/home/HomePage";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
+import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
 
 function initStore(appStore:AppStore) {
 
@@ -52,7 +53,7 @@ function initStore(appStore:AppStore) {
         },
         (x:any) => {
 
-            const query = x[0];
+            const query = x[0] as CancerStudyQueryUrlParams;
             const pathname = x[1];
 
             // escape from this if queryies are deeply equal
@@ -251,11 +252,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:ResultsViewTab.ENRICHMENTS,
                 hide:()=>{
-                    if (!this.resultsViewPageStore.studies.isComplete) {
-                        return true;
-                    } else {
-                        return this.resultsViewPageStore.studies.result!.length > 1;
-                    }
+                    return !this.resultsViewPageStore.studies.isComplete;
                 },
                 getTab: () => {
                     return <MSKTab key={10} id={ResultsViewTab.ENRICHMENTS} linkText={'Enrichments'}>
