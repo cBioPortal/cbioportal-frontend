@@ -248,11 +248,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:ResultsViewTab.ENRICHMENTS,
                 hide:()=>{
-                    if (!this.resultsViewPageStore.studies.isComplete) {
-                        return true;
-                    } else {
-                        return this.resultsViewPageStore.studies.result!.length > 1;
-                    }
+                    return !this.resultsViewPageStore.studies.isComplete;
                 },
                 getTab: () => {
                     return <MSKTab key={10} id={ResultsViewTab.ENRICHMENTS} linkText={'Enrichments'}>

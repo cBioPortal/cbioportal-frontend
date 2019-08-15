@@ -9,6 +9,7 @@ import autobind from 'autobind-decorator';
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import { makeUniqueColorGetter } from 'shared/components/plots/PlotUtils';
 import { remoteData } from 'public-lib';
+import { MakeMobxView } from 'shared/components/MobxView';
 
 export interface IMRNAEnrichmentsTabProps {
     store: ResultsViewPageStore
@@ -18,8 +19,8 @@ export interface IMRNAEnrichmentsTabProps {
 export default class MRNAEnrichmentsTab extends React.Component<IMRNAEnrichmentsTabProps, {}> {
 
     @autobind
-    private onProfileChange(molecularProfile: MolecularProfile) {
-        this.props.store._selectedEnrichmentMRNAProfile = molecularProfile;
+    private onChangeProfile(profileMap:{[studyId:string]:MolecularProfile}) {
+        this.props.store.setmRNAEnrichmentProfile(profileMap);
     }
 
     private readonly enrichmentAnalysisGroups = remoteData({
@@ -42,25 +43,33 @@ export default class MRNAEnrichmentsTab extends React.Component<IMRNAEnrichments
             return Promise.resolve(groups);
         }
     });
-
-    public render() {
-
-        if (this.props.store.mRNAEnrichmentData.isPending || this.enrichmentAnalysisGroups.isPending) {
-            return <Loader isLoading={true} center={true} size={"big"} />;
-        } else if (this.props.store.mRNAEnrichmentData.isError || this.enrichmentAnalysisGroups.isError) {
-            return <ErrorMessage />
-        } else {
-
+    readonly tabUI = MakeMobxView({
+        await: () => [this.props.store.studies,  this.props.store.mRNAEnrichmentData, this.props.store.selectedmRNAEnrichmentProfileMap, this.enrichmentAnalysisGroups],
+        render: () => {
+            // since mRNA enrichments tab is enabled only for one study, selectedProteinEnrichmentProfileMap
+            // would contain only one key.
+            const studyIds = Object.keys(this.props.store.selectedmRNAEnrichmentProfileMap.result!);
+            const selectedProfile = this.props.store.selectedmRNAEnrichmentProfileMap.result![studyIds[0]];
             return (
                 <div data-test="MRNAEnrichmentsTab">
-                    <EnrichmentsDataSetDropdown dataSets={this.props.store.mRNAEnrichmentProfiles} onChange={this.onProfileChange}
-                        selectedValue={this.props.store.selectedEnrichmentMRNAProfile.molecularProfileId}
-                        molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount} />
+                    <EnrichmentsDataSetDropdown
+                        dataSets={this.props.store.mRNAEnrichmentProfiles}
+                        onChange={this.onChangeProfile}
+                        selectedProfileByStudyId={this.props.store.selectedmRNAEnrichmentProfileMap.result!}
+                        molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}
+                        studies={this.props.store.studies.result!}
+                    />
                     <ExpressionEnrichmentContainer data={this.props.store.mRNAEnrichmentData.result!}
-                        groups={this.enrichmentAnalysisGroups.result}
-                        selectedProfile={this.props.store.selectedEnrichmentMRNAProfile} store={this.props.store} />
+                     groups={this.enrichmentAnalysisGroups.result}
+                        selectedProfile={selectedProfile} store={this.props.store} />
                 </div>
             );
-        }
+        },
+        renderPending: () => <Loader isLoading={true} center={true} size={"big"}/>,
+        renderError: ()=> <ErrorMessage/>
+    });
+
+    public render() {
+        return this.tabUI.component;
     }
 }
