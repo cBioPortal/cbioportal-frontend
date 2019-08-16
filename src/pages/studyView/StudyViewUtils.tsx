@@ -26,6 +26,7 @@ import MobxPromise from 'mobxpromise';
 import {getTextWidth} from "../../public-lib/lib/TextTruncationUtils";
 import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
 import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
+import styles from './styles.module.scss';
 
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
@@ -208,10 +209,13 @@ const OPERATOR_MAP: {[op:string]: string} = {
     ">": ">"
 };
 
-export function getClinicalAttributeOverlay(displayName: string, description: string): JSX.Element {
-    return <div style={{maxWidth: '500px'}}>
-        <b>{displayName}</b><br/>
-        {description}
+export function getClinicalAttributeOverlay(displayName: string, description: string, clinicalAttributeId?: string): JSX.Element {
+    const comparisonDisplayName = displayName.toLowerCase().trim();
+    let comparisonDescription = description.toLowerCase().trim().replace(/.&/, '');
+    return <div style={{maxWidth: '300px'}}>
+        <div><b>{displayName}</b> {!!clinicalAttributeId &&
+        <span className={styles.titleMeta}>ID: {clinicalAttributeId}</span>}</div>
+        {comparisonDescription !== comparisonDisplayName && <div>{description}</div>}
     </div>;
 }
 
@@ -1078,27 +1082,45 @@ export function getDefaultChartDimension(): ChartDimension {
     return {w: 1, h: 1};
 }
 
-export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, chartsDimension:{[uniqueId:string]:ChartDimension}, currentGridLayout?: Layout[], currentFocusedChartByUser?: ChartMeta, currentFocusedChartByUserDimension?: ChartDimension): Layout[] {
+export function calculateLayout(
+    visibleAttributes: ChartMeta[],
+    cols: number,
+    chartsDimension: { [uniqueId: string]: ChartDimension },
+    currentGridLayout: Layout[],
+    currentFocusedChartByUser?: ChartMeta,
+    currentFocusedChartByUserDimension?: ChartDimension): Layout[] {
     let layout: Layout[] = [];
+    let availableChartLayoutsMap:{[chartId:string]:boolean} = {}
     let matrix = [new Array(cols).fill('')] as string[][];
     // sort the visibleAttributes by priority
     visibleAttributes.sort(chartMetaComparator);
-
     // look if we need to put the chart to a fixed position and add the position to the matrix
-    if (currentGridLayout && currentGridLayout.length > 0 && currentFocusedChartByUser && currentFocusedChartByUserDimension) {
-        const currentChartLayout = currentGridLayout.find((layout) => layout.i === currentFocusedChartByUser.uniqueKey)!;
-        if (currentChartLayout) {
-            const newChartLayout = calculateNewLayoutForFocusedChart(currentChartLayout, currentFocusedChartByUser, cols, currentFocusedChartByUserDimension);
-            layout.push(newChartLayout);
-            matrix = generateMatrixByLayout(newChartLayout, cols);
-        }
-        else {
-            throw(new Error("cannot find matching unique key in the grid layout"));
+    if (currentGridLayout.length > 0) {
+        if (currentFocusedChartByUser && currentFocusedChartByUserDimension) {
+            const currentChartLayout = currentGridLayout.find((layout) => layout.i === currentFocusedChartByUser.uniqueKey)!;
+            if (currentChartLayout) {
+                const newChartLayout = calculateNewLayoutForFocusedChart(currentChartLayout, currentFocusedChartByUser, cols, currentFocusedChartByUserDimension);
+                layout.push(newChartLayout);
+                availableChartLayoutsMap[currentFocusedChartByUser.uniqueKey] = true;
+                matrix = generateMatrixByLayout(newChartLayout, cols);
+            }
+            else {
+                throw (new Error("cannot find matching unique key in the grid layout"));
+            }
+        } else {
+            const visibleAttributeMap = _.map(visibleAttributes, attribute => attribute.uniqueKey);
+            currentGridLayout.forEach(chartLayout => {
+                //add only visible charts
+                if (chartLayout.i && visibleAttributeMap.includes(chartLayout.i)) {
+                    layout.push(chartLayout);
+                    availableChartLayoutsMap[chartLayout.i] = true;
+                }
+            });
         }
     }
 
     // filter out the fixed position chart then calculate layout
-    _.forEach(_.filter(visibleAttributes, (chart: ChartMeta) => currentFocusedChartByUser ? chart.uniqueKey !== currentFocusedChartByUser.uniqueKey : true), (chart: ChartMeta) => {
+    _.forEach(_.filter(visibleAttributes, (chart: ChartMeta) => !availableChartLayoutsMap[chart.uniqueKey]), (chart: ChartMeta) => {
         const dimension = chartsDimension[chart.uniqueKey] || getDefaultChartDimension();
         const position = findSpot(matrix, dimension);
         while ((position.y + dimension.h) >= matrix.length) {
@@ -1238,15 +1260,19 @@ export function pickClinicalAttrFixedColors(data: ClinicalDataCount[]): {[attrib
     }, {});
 }
 
-export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
+export type ClinicalDataCountSummary = ClinicalDataCount & { color: string , percentage: number, freq: string}
 
-export function getClinicalDataCountWithColorByClinicalDataCount(counts:ClinicalDataCount[]):ClinicalDataCountWithColor[] {
+export function getClinicalDataCountWithColorByClinicalDataCount(counts:ClinicalDataCount[]):ClinicalDataCountSummary[] {
     counts.sort(clinicalDataCountComparator);
     const colors = pickClinicalDataColors(counts);
-    return counts.map(slice =>{
+    const sum = _.sumBy(counts, count => count.count);
+    return counts.map(slice => {
+        const percentage = slice.count / sum;
         return {
             ...slice,
-            color: colors[slice.value]
+            color: colors[slice.value],
+            percentage: percentage,
+            freq: getFrequencyStr(percentage * 100)
         };
     });
 }
@@ -1489,7 +1515,7 @@ export function getClinicalEqualityFilterValuesByString(filterValues: string):st
     return filterValues.replace(/\\,/g,'$@$').split(",").map(val=>val.trim().replace(/\$@\$/g,','));
 }
 
-export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, noCount: number):ClinicalDataCountWithColor[] {
+export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, noCount: number):ClinicalDataCountSummary[] {
 
     let dataCountSet: { [id: string]: ClinicalDataCount } = {};
     if (yesCount > 0) {

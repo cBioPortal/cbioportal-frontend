@@ -27,6 +27,8 @@ import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/compone
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {AnalysisGroup, ChartMeta, ChartType} from "../StudyViewUtils";
+import {DataType} from "public-lib/components/downloadControls/DownloadControls";
+
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -149,8 +151,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     props.onResetSelection = this.handlers.onValueSelection;
                 }
                 props.onChangeChartType = this.handlers.onChangeChartType;
-                props.getData = () => this.store.isCustomChart(chartMeta.uniqueKey) ? this.store.getCustomChartDownloadData(chartMeta) : this.store.getClinicalData(chartMeta);
-                props.downloadTypes = ["Data", "SVG", "PDF"];
+                props.getData = (dataType?: DataType) => this.store.getPieChartDataDownload(chartMeta, dataType);
+                props.downloadTypes = ["Summary Data", "Full Data", "SVG", "PDF"];
                 break;
             }
             case ChartTypeEnum.BAR_CHART: {
@@ -331,6 +333,34 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                             </ul>
                         </div>
                     </div>
+                }
+                {
+                    this.store.showSettingRestoreMsg &&
+                    <div>
+                        <div className="alert alert-info">
+                            <button type="button" className="close"
+                                    onClick={() => {
+                                        this.store.hideRestoreSettingsMsg = true;
+                                    }
+                                   }>&times;</button>
+                            You previously saved layout preferences have been applied. Undo?
+                            <button className='btn btn-primary btn-sm'
+                                    onClick={() => {
+                                        this.store.hideRestoreSettingsMsg = true;
+                                        this.store.undoUserSettings();
+                                    }}
+                                    style={{marginLeft: '10px'}}>Yes
+                            </button>
+
+                            <button className='btn btn-primary btn-sm'
+                                    onClick={() => {
+                                        this.store.hideRestoreSettingsMsg = true;
+                                    }}
+                                    style={{marginLeft: '10px'}}>No
+                            </button>
+                        </div>
+                    </div>
+
                 }
 
                 {!this.store.loadingInitialDataForSummaryTab &&

@@ -34,7 +34,7 @@ export function createQueryStore(currentQuery?:any) {
     const win:any = window;
 
     const queryStore = new QueryStore(currentQuery);
-    
+
     queryStore.singlePageAppSubmitRoutine = function(query:CancerStudyQueryUrlParams) {
 
         // normalize this
@@ -80,6 +80,7 @@ export default class HomePage extends React.Component<IResultsViewPageProps, {}>
             <PageLayout className="homePageLayout" noMargin={true} rightBar={<RightBar queryStore={this.queryStore} />}>
 
                 <div className={"headBlock"} dangerouslySetInnerHTML={{__html:AppConfig.serverConfig.skin_blurb!}}></div>
+
                 <QueryAndDownloadTabs getQueryStore={this.getQueryStore} showQuickSearchTab={AppConfig.serverConfig.quick_search_enabled} showDownloadTab={true}/>
 
             </PageLayout>

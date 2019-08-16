@@ -1,11 +1,15 @@
 var assert = require('assert');
 var expect = require('chai').expect;
-var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
-var getTextInOncoprintLegend = require('../../../shared/specUtils').getTextInOncoprintLegend;
-var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils').setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
-var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
-var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils').waitForNumberOfStudyCheckboxes;
+
+var {
+    clickQueryByGeneButton,
+    waitForNumberOfStudyCheckboxes,
+    waitForOncoprint,
+    getTextInOncoprintLegend,
+    goToUrlAndSetLocalStorage,
+    useExternalFrontend,
+    setOncoprintMutationsMenuOpen,
+} =
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -20,8 +24,6 @@ var searchInputSelector = ".autosuggest input[type=text]";
 
 describe('cross cancer query', function() {
 
-    this.retries(2);
-
     it('should show cross cancer bar chart with TP53 in title when selecting multiple studies and querying for TP53', function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
 
@@ -35,9 +37,15 @@ describe('cross cancer query', function() {
             }
         });
 
+        clickQueryByGeneButton();
+
         // query tp53
         $('[data-test="geneSet"]').setValue('TP53');
+
         browser.waitForEnabled('[data-test="queryButton"]', 30000);
+
+        browser.scroll(0,0);
+
         browser.click('[data-test="queryButton"]');
 
         // wait for cancer types summary to appear
@@ -70,6 +78,8 @@ describe('single study query', function() {
             checkBox.waitForExist(10000);
 
             browser.click('[data-test="StudySelect"]');
+
+            clickQueryByGeneButton();
 
             // query BRCA1 and BRCA2
             $('[data-test="geneSet"]').setValue('BRCA1 BRCA2');

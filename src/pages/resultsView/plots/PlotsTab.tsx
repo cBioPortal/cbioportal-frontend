@@ -44,7 +44,7 @@ import {
     makeWaterfallPlotData,
     IWaterfallPlotData,
     waterfallPlotTooltip,
-    getWaterfallPlotDownloadData, 
+    getWaterfallPlotDownloadData,
     WATERFALLPLOT_BASE_SIDELENGTH,
     WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR,
     IAxisLogScaleParams,
@@ -72,7 +72,7 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
 import {SpecialAttribute} from "../../../shared/cache/ClinicalDataCache";
-import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 import {scatterPlotSize, dataPointIsLimited} from "../../../shared/components/plots/PlotUtils";
 import {getTablePlotDownloadData} from "../../../shared/components/plots/TablePlotUtils";
@@ -85,6 +85,7 @@ import { AlterationTypeConstants, ResultsViewPageStore } from "../ResultsViewPag
 import "./styles.scss";
 import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
+import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 
 enum EventKey {
     horz_logScale,
@@ -303,21 +304,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         // one axis molecular profile
         if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE ||
             this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
-            //  establish whether data may contain limit values 
-            // (for now only supported for treatment data) 
+            //  establish whether data may contain limit values
+            // (for now only supported for treatment data)
             if (this.limitValuesCanBeShown) {
                 return PotentialViewType.LimitValMutationTypeAndCopyNumber;
             }
             return PotentialViewType.MutationTypeAndCopyNumber;
         }
-        
-        
+
+
         //  establish whether data may contain limit values
-        // (for now only supported for treatment data) 
+        // (for now only supported for treatment data)
         if (this.limitValuesCanBeShown) {
             return PotentialViewType.LimitVal;
         }
-        
+
         // neither axis gene or treatment
         return PotentialViewType.None;
     }
@@ -809,7 +810,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         // // listen to updates of `horzGeneOptions` or the selected data type for the horzontal axis
         // if (this.horzGeneOptions || this.horzSelection.dataType) {
             // when the data type on the horizontal axis is a gene  profile
-            // add an option to select the same gene 
+            // add an option to select the same gene
         if (this.horzSelection.dataType && this.showGeneSelectBox(this.horzSelection.dataType)
             && this.horzSelection.selectedGeneOption && this.horzSelection.selectedGeneOption.value !== NONE_SELECTED_OPTION_NUMERICAL_VALUE) {
             sameGeneOption = [{ value: SAME_SELECTED_OPTION_NUMERICAL_VALUE, label: `Same gene (${this.horzSelection.selectedGeneOption.label})`}];
@@ -836,7 +837,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         // listen to updates of `horzGenesetOptions` or the selected data type for the horzontal axis
         if (this.horzGenesetOptions || this.horzSelection.dataType) {
             // when the data type on the horizontal axis is a gene  profile
-            // add an option to select the same gene 
+            // add an option to select the same gene
             if (this.horzSelection.dataType && this.showGenesetSelectBox(this.horzSelection.dataType)
                 && this.horzSelection.selectedGenesetOption && this.horzSelection.selectedGenesetOption.value !== NONE_SELECTED_OPTION_STRING_VALUE) {
                 sameGenesetOption = [{ value: SAME_SELECTED_OPTION_STRING_VALUE, label: `Same gene set (${this.horzSelection.selectedGenesetOption.label})`}];
@@ -886,7 +887,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return dataType !== NONE_SELECTED_OPTION_STRING_VALUE
                 && dataType === AlterationTypeConstants.GENERIC_ASSAY;
     }
-    
+
     private showDatasourceBox(dataType:string):boolean {
         return dataType !== NONE_SELECTED_OPTION_STRING_VALUE;
     }
@@ -999,7 +1000,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
         this.viewLimitValues = true;
     }
-    
+
     @autobind
     @action
     public onHorizontalAxisDataTypeSelect(option:any) {
@@ -1011,35 +1012,35 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
         this.viewLimitValues = true;
     }
-    
+
     @autobind
     @action
     public onVerticalAxisDataSourceSelect(option:any) {
         this.vertSelection.selectedDataSourceOption = option;
         this.viewLimitValues = true;
     }
-    
+
     @autobind
     @action
     public onHorizontalAxisDataSourceSelect(option:any) {
         this.horzSelection.selectedDataSourceOption = option;
         this.viewLimitValues = true;
     }
-    
+
     @autobind
     @action
     public onVerticalAxisMutationCountBySelect(option:any) {
         this.vertSelection.mutationCountBy = option.value;
         this.viewLimitValues = true;
     }
-    
+
     @autobind
     @action
     public onHorizontalAxisMutationCountBySelect(option:any) {
         this.horzSelection.mutationCountBy = option.value;
         this.viewLimitValues = true;
     }
-    
+
     @autobind
     @action
     private onDiscreteVsDiscretePlotTypeSelect(option:any){
@@ -1110,7 +1111,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get limitValuesCanBeShown():boolean {
         return this.limitValueTypes.length > 0;
     }
-    
+
     @computed get limitValueTypes():string[] {
         return _.uniq(this.horzLimitValueTypes.concat(this.vertLimitValueTypes));
     }
@@ -1181,11 +1182,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     readonly mutationPromise = remoteData({
-        await:()=>this.props.store.filteredAndAnnotatedMutationCache.getAll(
+        await:()=>this.props.store.annotatedMutationCache.getAll(
             getMutationQueries(this.horzSelection, this.vertSelection, this.utilitiesMenuSelection)
         ),
         invoke: ()=>{
-            return Promise.resolve(_.flatten(this.props.store.filteredAndAnnotatedMutationCache.getAll(
+            return Promise.resolve(_.flatten(this.props.store.annotatedMutationCache.getAll(
                 getMutationQueries(this.horzSelection, this.vertSelection, this.utilitiesMenuSelection)
             ).map(p=>p.result!)).filter(x=>!!x));
         }
@@ -1316,7 +1317,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         const treatment = this.horzSelection.treatmentId || this.vertSelection.treatmentId;
         const gene = this.utilitiesMenuSelection.selectedGeneOption!.label;
         const profileName = this.horzSelection.selectedDataSourceOption ? this.horzSelection.selectedDataSourceOption!.label : this.vertSelection.selectedDataSourceOption!.label;
-        let geneStyle = ""; 
+        let geneStyle = "";
         if (this.viewMutationType) {
             geneStyle = ` x ${gene} mutation types`;
         } else if (this.viewCopyNumber) {
@@ -1332,7 +1333,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
         return WATERFALLPLOT_BASE_SIDELENGTH + Math.round(noSamples * WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR);
     }
-    
+
     @computed get waterfallPlotHeigth():number {
         const noSamples = this.waterfallPlotData.isComplete ? this.waterfallPlotData.result.data.length : 0;
         if (this.isHorizontalWaterfallPlot) {
@@ -1551,7 +1552,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
 
         let dataTypeDescription:string = "";
-        if (axisSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE) { 
+        if (axisSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE) {
             const otherDataSourceId = vertical ? this.horzSelection.dataSourceId : this.vertSelection.dataSourceId;
             const otherProfileName = this.props.store.molecularProfileIdToMolecularProfile.result![otherDataSourceId!].name;
             dataTypeDescription = `Sample order determined by values on the '${otherProfileName}' axis`;
@@ -1584,7 +1585,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     { this.showSortOrderButton(!vertical) && (
                         <div className="checkbox">
                             <label>
-                                <Button 
+                                <Button
                                     className="btn btn-default sort-order"
                                     data-test="changeSortOrderButton"
                                     type="button"
@@ -1917,7 +1918,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 const axisData = this.isHorizontalWaterfallPlot? horzAxisData : vertAxisData;
 
                 // Note: for treatment profiles the identity of the selected gene is not
-                // naturally embedded in the genetic profile. Instead, the user selects 
+                // naturally embedded in the genetic profile. Instead, the user selects
                 // the gene of interest from a select box in the Utilities menu.
                 const ensemblGeneId = this.utilitiesMenuSelection.selectedGeneOption!.value;
                 const selectedGene = this.props.store.entrezGeneIdToGene.result![ensemblGeneId];
@@ -1959,7 +1960,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             return this.props.store.molecularProfileIdToMolecularProfile.result![dataSourceId!].sortOrder;
         }
         return this._waterfallPlotSortOrder!;
-    }   
+    }
 
     @computed get isHorizontalWaterfallPlot():boolean {
         return this.isWaterfallPlot && !!(this.vertAxisDataPromise.result) && this.vertAxisDataPromise.result['datatype'] === NONE_SELECTED_OPTION_STRING_VALUE;
@@ -2308,7 +2309,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     }]}
                                     dontFade={true}
                                     style={{position:'absolute', right:10, top:10 }}
-                                    collapse={true}
+                                    type='button'
                                 />
                             )}
                             <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>
@@ -2350,6 +2351,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             <div data-test="PlotsTabEntireDiv">
                 <div className={'tabMessageContainer'}>
                     <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} />
+                    <AlterationFilterWarning store={this.props.store} isUnaffected={true}/>
                 </div>
                 <div className={"plotsTab"} style={{display:"flex"}}>
                     <div className="leftColumn">

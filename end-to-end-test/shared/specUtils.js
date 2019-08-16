@@ -194,6 +194,14 @@ function checkElementWithMouseDisabled(selector, pauseTime) {
     return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0);
 }
 
+function clickQueryByGeneButton(){
+    browser.click('a=Query By Gene');
+    browser.scroll(0,0);
+};
+
+function clickModifyStudySelectionButton (){
+    browser.click('[data-test="modifyStudySelectionButton"]');
+}
 
 module.exports = {
     waitForPlotsTab: waitForPlotsTab,
@@ -220,6 +228,8 @@ module.exports = {
     executeInBrowser: executeInBrowser,
     checkElementWithTemporaryClass: checkElementWithTemporaryClass,
     checkElementWithMouseDisabled: checkElementWithMouseDisabled,
+    clickQueryByGeneButton:clickQueryByGeneButton,
+    clickModifyStudySelectionButton: clickModifyStudySelectionButton,
     selectReactSelectOption: selectReactSelectOption,
     reactSelectOption: reactSelectOption,
     getReactSelectOptions: getReactSelectOptions,

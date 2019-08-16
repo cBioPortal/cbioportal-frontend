@@ -1,12 +1,19 @@
 var assert = require('assert');
-var expect = require('chai').expect
-var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
-var getTextInOncoprintLegend = require('../../../shared/specUtils').getTextInOncoprintLegend;
-var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils').setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
-var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
-var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils').waitForNumberOfStudyCheckboxes;
-var setInputText = require('../../../shared/specUtils').setInputText;
+var expect = require('chai').expect;
+var waitForOncoprint = require('./../specUtils').waitForOncoprint;
+
+var {
+    goToUrlAndSetLocalStorage,
+    clickQueryByGeneButton,
+    useExternalFrontend,
+    setInputText,
+    clickQueryByGeneButton,
+    setOncoprintMutationsMenuOpen,
+    getTextInOncoprintLegend,
+    waitForNumberOfStudyCheckboxes,
+    clickModifyStudySelectionButton
+} = require('../../../shared/specUtils);
+
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -17,8 +24,6 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 var searchInputSelector = ".autosuggest input[type=text]";
 
 describe('homepage', function() {
-
-    this.retries(2);
 
     before(()=>{
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
@@ -69,6 +74,8 @@ describe('homepage', function() {
 
         browser.click('[data-test="StudySelect"]');
 
+        clickQueryByGeneButton();
+
         var caseSetSelector = $(caseSetSelectorClass);
         caseSetSelector.waitForExist(10000);
 
@@ -78,11 +85,16 @@ describe('homepage', function() {
 
     it('should not allow submission if OQL contains EXP or PROT for multiple studies', ()=>{
 
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+
+        browser.waitForExist(".autosuggest input[type=text]", 10000);
         setInputText(".autosuggest input[type=text]","breast -invasive");
 
         browser.pause(500);
         browser.waitForExist('[data-test="StudySelect"]', 10000);
         browser.click('[data-test="selectAllStudies"]');
+
+        clickQueryByGeneButton();
 
         var oqlEntrySel = 'textarea[data-test="geneSet"]';
         setInputText(oqlEntrySel, 'PTEN: EXP>1');
@@ -227,6 +239,8 @@ describe('case set selection in front page query form', function(){
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
 
+        clickQueryByGeneButton();
+
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation and CNA data (316)"), 5000);
     });
@@ -240,11 +254,12 @@ describe('case set selection in front page query form', function(){
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
 
-        //browser.debug();
+        clickQueryByGeneButton();
 
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation data (160)"), 10000);
 
+        clickModifyStudySelectionButton();
 
         // select Adrenocortical Carcinoma
         browser.waitForExist(input, 10000);
@@ -253,11 +268,15 @@ describe('case set selection in front page query form', function(){
         checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
+
+        clickQueryByGeneButton();
+
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
-        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
 
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 10000);
+
+        clickModifyStudySelectionButton();
 
         // Deselect Ampullary Carcinoma
         browser.waitForExist(input, 10000);
@@ -266,6 +285,8 @@ describe('case set selection in front page query form', function(){
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
+
+        clickQueryByGeneButton();
 
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation and CNA data (88)"), 10000);
@@ -280,8 +301,12 @@ describe('case set selection in front page query form', function(){
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
 
+        clickQueryByGeneButton();
+
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation data (160)"), 10000);
+
+        clickModifyStudySelectionButton();
 
         // select all TCGA non-provisional
         browser.waitForExist(input, 10000);
@@ -289,10 +314,14 @@ describe('case set selection in front page query form', function(){
         browser.pause(500);
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
 
+        clickQueryByGeneButton();
+
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
         browser.waitUntil(()=>(/All \(\d+\)/.test(browser.getText(selectedCaseSet_sel))), 10000); // since sample #s change across studies, dont depend this test on specific number
+
+        clickModifyStudySelectionButton();
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
@@ -306,10 +335,14 @@ describe('case set selection in front page query form', function(){
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
 
+        clickQueryByGeneButton();
+
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
         browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 10000);
+
+        clickModifyStudySelectionButton();
 
         // Deselect Ampullary Carcinoma
         browser.waitForExist(input, 10000);
@@ -318,6 +351,8 @@ describe('case set selection in front page query form', function(){
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
+
+        clickQueryByGeneButton();
 
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Samples with mutation and CNA data (88)"), 10000);
@@ -340,12 +375,16 @@ describe('genetic profile selection in front page query form', ()=>{
         browser.click('[data-test="StudySelect"] input');
         browser.pause(200);
 
+        clickQueryByGeneButton();
+
         // wait for profiles selector to load
-        browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 3000);
+        browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 6000);
         // mutations, CNA should be selected
         assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'), "mutation profile should be selected");
         assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'), "cna profile should be selected");
         assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
+
+        clickModifyStudySelectionButton();
 
         // select another study
         browser.waitForExist(input, 10000);
@@ -355,14 +394,20 @@ describe('genetic profile selection in front page query form', ()=>{
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
 
+        clickQueryByGeneButton();
+
         // wait for data type priority selector to load
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'), "'Mutation' should be selected");
         assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'), "'Copy number alterations' should be selected");
 
+        clickModifyStudySelectionButton();
+
         //deselect other study
         browser.click('[data-test="StudySelect"] input');
+
+        clickQueryByGeneButton();
 
         // wait for profiles selector to load
         browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 3000);
@@ -371,11 +416,15 @@ describe('genetic profile selection in front page query form', ()=>{
         assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'), "cna profile should be selected");
         assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
 
+        clickModifyStudySelectionButton();
+
         // select all tcga provisional
         browser.waitForExist(input, 10000);
         setInputText(input, 'tcga provisional');
         browser.pause(500);
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+
+        clickQueryByGeneButton();
 
         // wait for data type priority selector to load
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
@@ -383,9 +432,13 @@ describe('genetic profile selection in front page query form', ()=>{
         assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'), "'Mutation' should be selected");
         assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'), "'Copy number alterations' should be selected");
 
+        clickModifyStudySelectionButton();
+
         // Deselect all tcga provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
         browser.pause(100);
+
+        clickQueryByGeneButton();
 
         // wait for profiles selector to load
         browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 3000);
