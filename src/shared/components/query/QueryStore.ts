@@ -99,8 +99,7 @@ export type CancerStudyQueryParams = Pick<QueryStore,
     'caseIds' |
     'caseIdsMode' |
     'geneQuery' |
-    'genesetQuery' |
-	'treatmentQuery'>;
+    'genesetQuery'>;
 export const QueryParamsKeys: (keyof CancerStudyQueryParams)[] = [
     'searchText',
     'selectableSelectedStudyIds',
@@ -112,8 +111,7 @@ export const QueryParamsKeys: (keyof CancerStudyQueryParams)[] = [
     'caseIds',
     'caseIdsMode',
     'geneQuery',
-    'genesetQuery',
-	'treatmentQuery'
+    'genesetQuery'
 ];
 
 type GenesetId = string;
@@ -393,25 +391,12 @@ export class QueryStore {
         this._genesetQuery = value;
 	}
 
-	@observable _treatmentQuery = '';
-    get treatmentQuery()
-    {
-        return this._treatmentQuery;
-    }
-    set treatmentQuery(value:string)
-    {
-        // clear error when gene query is modified
-        this.treatmentQueryErrorDisplayStatus = 'unfocused';
-        this._treatmentQuery = value;
-    }
-
     ////////////////////////////////////////////////////////////////////////////////
     // VISUAL OPTIONS
     ////////////////////////////////////////////////////////////////////////////////
 
     @observable geneQueryErrorDisplayStatus: 'unfocused' | 'shouldFocus' | 'focused' = 'unfocused';
     @observable genesetQueryErrorDisplayStatus: 'unfocused' | 'shouldFocus' | 'focused' = 'unfocused';
-    @observable treatmentQueryErrorDisplayStatus: 'unfocused' | 'shouldFocus' | 'focused' = 'unfocused';
     @observable showMutSigPopup = false;
     @observable showGisticPopup = false;
     @observable showGenesetsHierarchyPopup = false;
@@ -1578,7 +1563,6 @@ export class QueryStore {
         this.caseIdsMode = 'sample'; // url always contains sample IDs
         this.geneQuery = normalizeQuery(decodeURIComponent(params.gene_list || ''));
         this.genesetQuery = normalizeQuery(decodeURIComponent(params[QueryParameter.GENESET_LIST] || ''));
-        this.treatmentQuery = decodeURIComponent(params[QueryParameter.TREATMENT_LIST] || ''); // pvannierop: removed the conversion to uppercase
         this.forDownloadTab = params.tab_index === 'tab_download';
         this.initiallySelected.profileIds = true;
         this.initiallySelected.sampleListId = true;
