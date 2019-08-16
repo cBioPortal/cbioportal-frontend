@@ -4,7 +4,6 @@ import GroupComparisonStore, {OverlapStrategy} from "./GroupComparisonStore";
 import MutationEnrichments from "./MutationEnrichments";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
-import 'react-select/dist/react-select.css';
 import Survival from "./Survival";
 import Overlap from "./Overlap";
 import CopyNumberEnrichments from "./CopyNumberEnrichments";
@@ -22,7 +21,7 @@ import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
 import _ from "lodash";
 import ClinicalData from "./ClinicalData";
-import ReactSelect from "react-select2";
+import ReactSelect from "react-select";
 import {trackEvent} from "shared/lib/tracking";
 import URL from "url";
 

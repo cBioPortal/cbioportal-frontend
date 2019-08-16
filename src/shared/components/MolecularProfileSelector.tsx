@@ -3,7 +3,7 @@ import * as React from "react";
 import {MolecularProfile} from "../api/generated/CBioPortalAPI";
 import {MobxPromise} from "mobxpromise";
 import {remoteData} from "public-lib/api/remoteData";
-import Select from "react-select";
+import Select from "react-select1";
 import LoadingIndicator from "./loadingIndicator/LoadingIndicator";
 
 

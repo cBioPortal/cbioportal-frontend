@@ -1,6 +1,6 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import Select, { components } from 'react-select2';
+import Select, { components } from 'react-select';
 import client from "shared/api/cbioportalClientInstance";
 import {OptionType} from "./OptionType";
 import autobind from 'autobind-decorator';
