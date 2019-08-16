@@ -9,6 +9,8 @@ import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
 import styles from "./styles.module.scss"
 import { getMultipleGeneResultKey } from "../ResultsViewPageStoreUtils";
 import { AlteredStatus } from 'pages/resultsView/mutualExclusivity/MutualExclusivityUtil';
+import { Alteration } from 'shared/lib/oql/oql-parser';
+import { parsedOQLAlterationToSourceOQL } from "shared/lib/oql/oqlfilter";
 
 export interface ISubAlteration {
     type: string;
@@ -45,7 +47,7 @@ export interface ICaseAlterationTableProps {
     oqls: OQLLineFilterOutput<AnnotatedExtendedAlteration>[];
     trackLabels: string[];
     trackAlterationTypesMap: {[label:string]: string[]};
-    geneAlterationTypesMap: {[label:string]: string[]};
+    geneAlterationTypesMap: {[label:string]: Alteration[]};
 }
 
 export type PseudoOqlSummary = {
@@ -113,7 +115,7 @@ export function generateOqlValue(data: IOqlData, alterationType: string): Pseudo
     if (generator) {
         const alterationData = generator.getAlterationData(data);
         if (alterationData.length > 0) {
-            pseudoOqlSummary = {summaryContent: generator.getValues(alterationData).join(","), summaryClass: styles.alterationSpan, summaryAlteredStatus: AlteredStatus.ALTERED};
+            pseudoOqlSummary = {summaryContent: generator.getValues(alterationData).join(", "), summaryClass: styles.alterationSpan, summaryAlteredStatus: AlteredStatus.ALTERED};
         }
         if (generator.isNotProfiled(data)) {
             pseudoOqlSummary = {summaryContent: "not profiled", summaryClass: styles.notProfiledSpan, summaryAlteredStatus: AlteredStatus.UNPROFILED};
@@ -159,7 +161,7 @@ export function getPseudoOqlSummaryByAlterationTypes(oqlData: {[oqlLine: string]
     }
     // altered and no alteration
     const alteredPseudoOqlSummaries = _.filter(pseudoOqlSummaries, (summary) => summary ? summary.summaryAlteredStatus === AlteredStatus.ALTERED : false);
-    const alteredPseudoOqlSummaryContent = _.map(alteredPseudoOqlSummaries, (summary : PseudoOqlSummary)=>summary.summaryContent).join(",");
+    const alteredPseudoOqlSummaryContent = _.map(alteredPseudoOqlSummaries, (summary : PseudoOqlSummary)=>summary.summaryContent).join(", ");
     if (alteredPseudoOqlSummaries.length > 0) {
         return {summaryContent: alteredPseudoOqlSummaryContent, summaryClass: styles.alterationSpan, summaryAlteredStatus: AlteredStatus.ALTERED};
     } else {
@@ -215,7 +217,6 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
             // add column for each track
             columns.push({
                 name: `${trackLabel}`,
-                tooltip: <span>{trackLabel}</span>,
                 headerDownload: (name: string) => `${trackLabel}`,
                 render: (data: ICaseAlteration) => {
                     const pseudoOqlSummary = getPseudoOqlSummaryByAlterationTypes(data.oqlData, trackLabel, this.props.trackAlterationTypesMap[trackLabel]); 
@@ -235,23 +236,27 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
 
         _.forEach(uniqGenes, (gene) => {
             //add column for each gene alteration combination
-            this.props.geneAlterationTypesMap[gene].forEach(alterationType => {
-                columns.push({
-                    name: `${gene} ${alterationType}`,
-                    tooltip: <span>{`${gene} ${alterationType}`}</span>,
-                    headerDownload: (name: string) => `${gene} ${alterationType}`,
-                    render: (data: ICaseAlteration) => {
-                        const pseudoOqlSummary = generatePseudoOqlSummary(data.oqlDataByGene, gene, alterationType); 
-
-                        return <span className={pseudoOqlSummary!.summaryClass}>{pseudoOqlSummary!.summaryContent}</span>;
-                    },
-                    download: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlDataByGene, gene, alterationType)!.summaryContent,
-                    sortBy: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlDataByGene, gene, alterationType)!.summaryContent,
-                    filter: (data: ICaseAlteration, filterString: string) => {
-                        return (new RegExp(filterString, 'i')).test(generatePseudoOqlSummary(data.oqlDataByGene, gene, alterationType)!.summaryContent);
-                    },
-                    visible: false
-                });
+            this.props.geneAlterationTypesMap[gene].forEach(alteration => {
+                const oql_line = parsedOQLAlterationToSourceOQL(alteration);
+                const alterationType = alteration.alteration_type.toUpperCase();
+                const alterationName = `${gene}: ${oql_line}`;
+                if (_.isEmpty(columns.find((column) => column.name === alterationName))) {
+                    columns.push({
+                        name: `${gene}: ${oql_line}`,
+                        headerDownload: (name: string) => `${gene}: ${oql_line}`,
+                        render: (data: ICaseAlteration) => {
+                            const pseudoOqlSummary = generatePseudoOqlSummary(data.oqlDataByGene, gene, alterationType); 
+    
+                            return <span className={pseudoOqlSummary!.summaryClass}>{pseudoOqlSummary!.summaryContent}</span>;
+                        },
+                        download: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlDataByGene, gene, alterationType)!.summaryContent,
+                        sortBy: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlDataByGene, gene, alterationType)!.summaryContent,
+                        filter: (data: ICaseAlteration, filterString: string) => {
+                            return (new RegExp(filterString, 'i')).test(generatePseudoOqlSummary(data.oqlDataByGene, gene, alterationType)!.summaryContent);
+                        },
+                        visible: false
+                    });
+                }
             });
         });
 
