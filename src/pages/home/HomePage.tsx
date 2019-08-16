@@ -5,7 +5,7 @@ import {observer, inject, Observer } from "mobx-react";
 import { observable } from 'mobx';
 import Chart from 'chart.js';
 import AppConfig from 'appConfig';
-import 'react-select/dist/react-select.css';
+import 'react-select1/dist/react-select.css';
 import {CancerStudyQueryUrlParams, QueryStore} from "../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
