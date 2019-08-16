@@ -70,6 +70,15 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
     });
 
     @autobind
+    private onTableRowClick(d:Mutation[]) {
+        if (d.length) {
+            this.dataStore.toggleSelectedMutation({
+                proteinChange:d[0].proteinChange,
+                hugoGeneSymbol:d[0].gene.hugoGeneSymbol
+            });
+        }
+    }
+    @autobind
     private onTableRowMouseEnter(d:Mutation[]) {
         if (d.length) {
             this.dataStore.setMouseOverMutation({
@@ -95,6 +104,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
             <PatientViewSelectableMutationTable
                 ref={this.tableRef}
                 dataStore={this.dataStore}
+                onRowClick={this.onTableRowClick}
                 onRowMouseEnter={this.onTableRowMouseEnter}
                 onRowMouseLeave={this.onTableRowMouseLeave}
                 studyIdToStudy={this.props.store.studyIdToStudy.result!}

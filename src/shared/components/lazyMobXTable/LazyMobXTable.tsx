@@ -473,9 +473,7 @@ export class LazyMobXTableStore<T> {
                  classNames.push("highlighted");
             }
             if (this.onRowClick) {
-                if (!rowIsHighlighted) {
-                    classNames.push("clickable");
-                }
+                classNames.push("clickable");
 
                 const onRowClick = this.onRowClick; // by the time its called this might be undefined again, so need to save ref
                 rowProps.onClick = ()=>{

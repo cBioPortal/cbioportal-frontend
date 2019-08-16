@@ -86,7 +86,10 @@ export default class PatientViewSelectableMutationTable extends PatientViewMutat
                         <input
                             type="checkbox"
                             checked={this.isMutationSelected(d)}
-                            onClick={()=>this.setMutationSelected(d, !this.isMutationSelected(d))}
+                            onClick={(e:React.MouseEvent<any, any>)=>{
+                                this.setMutationSelected(d, !this.isMutationSelected(d));
+                                e.stopPropagation();
+                            }}
                         />
                     </span>
                 ),
