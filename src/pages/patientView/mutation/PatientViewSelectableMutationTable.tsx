@@ -106,9 +106,11 @@ export default class PatientViewSelectableMutationTable extends PatientViewMutat
                                 checked={this.areAllFilteredMutationsSelected}
                                 onClick={this.selectFilteredRows}
                             />
+                            <i className="fa fa-eye" style={{marginLeft:4}}/>
                         </span>
                     );
-                }
+                },
+                tooltip: <span>Select which mutations to show in the VAF line chart.</span>
             }
         );
     }
