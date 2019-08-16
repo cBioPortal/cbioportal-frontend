@@ -20,10 +20,47 @@ function mutationIdKey(m:MutationId) {
 
 export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<Mutation[]> {
     @observable.ref private mouseOverMutation:Readonly<MutationId>|null = null;
-    private selectedMutationsMap = observable.map<MutationId>();
+    private highlightedMutationsMap = observable.map<MutationId>();
+    @observable private _onlyShowHighlightedInTable = false;
 
     public getMouseOverMutation() {
         return this.mouseOverMutation;
+    }
+
+    public getOnlyShowHighlightedInTable() {
+        return this._onlyShowHighlightedInTable;
+    }
+
+    public setMouseOverMutation(m:Readonly<MutationId>|null) {
+        this.mouseOverMutation = m;
+    }
+
+    public setOnlyShowHighlightedInTable(o:boolean) {
+        this._onlyShowHighlightedInTable = o;
+    }
+
+    @action
+    public toggleHighlightedMutation(m:Readonly<MutationId>) {
+        const key = mutationIdKey(m);
+        if (this.highlightedMutationsMap.has(key)) {
+            this.highlightedMutationsMap.delete(key);
+        } else {
+            this.highlightedMutationsMap.set(key, m);
+        }
+    }
+
+    @action
+    public setHighlightedMutations(muts:Readonly<MutationId[]>) {
+        this.highlightedMutationsMap.clear();
+        let count = 0;
+        for (const m of muts) {
+            this.toggleHighlightedMutation(m);
+            count += 1;
+        }
+    }
+
+    @computed public get highlightedMutations():Readonly<MutationId[]> {
+        return this.highlightedMutationsMap.entries().map(x=>x[1]);
     }
 
     @computed get sortedFilteredData() {
@@ -31,9 +68,11 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         const filterStringLower = this.filterString.toLowerCase();
         return this.sortedData.filter((d:Mutation[])=>{
             const stringFilter = this.dataFilter(d, this.filterString, filterStringUpper, filterStringLower);
-            const selectionFilter = this.selectedMutations.length === 0 || _.some(this.selectedMutations, m=>mutationMatch(d, m));
 
-            return stringFilter && selectionFilter;
+            // filter out non-highlighted mutations if onlyShowHighlighted is true, or if there are no highlighted mutations
+            const highlightFilter = !this._onlyShowHighlightedInTable || this.highlightedMutations.length === 0 || _.some(this.highlightedMutations, m=>mutationMatch(d, m));
+
+            return stringFilter && highlightFilter;
         });
     }
 
@@ -41,39 +80,13 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         super(getData);
 
         this.dataHighlighter = (d:Mutation[])=>{
-            if (!this.mouseOverMutation || !d.length) {
-                return false;
-            } else {
-                return mutationMatch(d, this.mouseOverMutation);
+            const highlightedMutations = this.highlightedMutations.slice();
+            if (this.mouseOverMutation) {
+                highlightedMutations.push(this.mouseOverMutation);
             }
+            return _.some(highlightedMutations, m=>mutationMatch(d,m));
         }
     }
 
-    public setMouseOverMutation(m:Readonly<MutationId>|null) {
-        this.mouseOverMutation = m;
-    }
 
-    @action
-    public toggleSelectedMutation(m:Readonly<MutationId>) {
-        const key = mutationIdKey(m);
-        if (this.selectedMutationsMap.has(key)) {
-            this.selectedMutationsMap.delete(key);
-        } else {
-            this.selectedMutationsMap.set(key, m);
-        }
-    }
-
-    @action
-    public setSelectedMutations(muts:Readonly<MutationId[]>) {
-        this.selectedMutationsMap.clear();
-        let count = 0;
-        for (const m of muts) {
-            this.toggleSelectedMutation(m);
-            count += 1;
-        }
-    }
-
-    @computed public get selectedMutations():Readonly<MutationId[]> {
-        return this.selectedMutationsMap.entries().map(x=>x[1]);
-    }
 }
