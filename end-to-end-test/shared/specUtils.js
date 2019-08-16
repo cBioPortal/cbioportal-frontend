@@ -45,6 +45,7 @@ function goToUrlAndSetLocalStorage(url) {
         browser.url(url);
     } else {
         var urlparam = useLocalDist? 'localdist' : 'localdev';
+        urlparam = 'localdist';
         var prefix = (url.indexOf("?") > 0)? '&' : '?';
         browser.url(`${url}${prefix}${urlparam}=true`);
     }
