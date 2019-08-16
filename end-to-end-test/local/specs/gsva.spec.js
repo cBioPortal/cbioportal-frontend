@@ -97,7 +97,7 @@ describe('gsva feature', function() {
                 assert.equal(textArea.getText(), "GO_ATP_DEPENDENT_CHROMATIN_REMODELING");
             });
 
-            it('filters gene sets with the GSVA score input field', () => {
+            it.only('filters gene sets with the GSVA score input field', () => {
 
                 var before = $$('*=GO_');
 
