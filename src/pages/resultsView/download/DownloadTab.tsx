@@ -33,6 +33,7 @@ import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import { MakeMobxView } from 'shared/components/MobxView';
 import { CUSTOM_CASE_LIST_ID } from 'shared/components/query/QueryStore';
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
+import { Alteration } from 'shared/lib/oql/oql-parser';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -295,19 +296,18 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         }
     });
 
-    readonly geneAlterationTypesMap = remoteData({
+    readonly geneAlterationMap = remoteData({
         await:()=>[this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
         invoke:()=> {
-            const geneAlterationTypesMap: {[label:string]: string[]} = {};
+            const geneAlterationMap: {[label:string]: Alteration[]} = {};
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach((data, index) => {
                 // mergedTrackOqlList is undefined means the data is for single track / oql
                 if (data.mergedTrackOqlList === undefined) {
                     const singleTrackOql = data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
                     // put types for single track into the map, key is gene name
                     if (singleTrackOql.parsed_oql_line.alterations) {
-                        geneAlterationTypesMap[singleTrackOql.gene] = _.chain(singleTrackOql.parsed_oql_line.alterations)
-                                                                       .map((alteration) => alteration.alteration_type.toUpperCase())
-                                                                       .union(geneAlterationTypesMap[singleTrackOql.gene])
+                        geneAlterationMap[singleTrackOql.gene] = _.chain(singleTrackOql.parsed_oql_line.alterations)
+                                                                       .union(geneAlterationMap[singleTrackOql.gene])
                                                                        .uniq()
                                                                        .value();
                     }
@@ -320,21 +320,20 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                     _.forEach(mergedTrackOql.list, (oql: OQLLineFilterOutput<AnnotatedExtendedAlteration>) => {
                         if (oql.parsed_oql_line.alterations) {
                             const types: string[] = _.map(oql.parsed_oql_line.alterations, (alteration) => alteration.alteration_type);
-                            geneAlterationTypesMap[oql.gene] = _.chain(oql.parsed_oql_line.alterations)
-                                                                .map((alteration) => alteration.alteration_type.toUpperCase())
-                                                                .union(geneAlterationTypesMap[oql.gene])
+                            geneAlterationMap[oql.gene] = _.chain(oql.parsed_oql_line.alterations)
+                                                                .union(geneAlterationMap[oql.gene])
                                                                 .uniq()
                                                                 .value();
                         }
                     })
                 }
             })
-            return Promise.resolve(geneAlterationTypesMap);
+            return Promise.resolve(geneAlterationMap);
         }
     });
 
     public render() {
-        const status = getMobxPromiseGroupStatus(this.downloadableFilesTable, this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationTypesMap);
+        const status = getMobxPromiseGroupStatus(this.downloadableFilesTable, this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationMap);
 
         switch (status) {
             case "pending":
@@ -378,7 +377,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                 oqls={this.oqls.result!}
                                 trackLabels={this.trackLabels.result!}
                                 trackAlterationTypesMap={this.trackAlterationTypesMap.result!}
-                                geneAlterationTypesMap={this.geneAlterationTypesMap.result!}
+                                geneAlterationTypesMap={this.geneAlterationMap.result!}
                             />
                         </div>
                     </WindowWidthBox>
