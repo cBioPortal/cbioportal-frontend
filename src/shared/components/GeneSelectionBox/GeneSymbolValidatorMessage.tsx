@@ -4,7 +4,7 @@ import FontAwesome from "react-fontawesome";
 import {GeneValidationResult} from "shared/components/GeneSelectionBox/GeneSymbolValidator";
 import {OQL} from "shared/components/GeneSelectionBox/GeneSelectionBox";
 import {GeneReplacement, normalizeQuery} from "shared/components/query/QueryStore";
-import ReactSelect from "react-select";
+import ReactSelect from "react-select1";
 import classNames from 'classnames';
 import {Gene} from "shared/api/generated/CBioPortalAPI";
 
