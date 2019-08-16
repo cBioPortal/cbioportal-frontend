@@ -112,7 +112,7 @@ export default class GenesetsSelector extends QueryStoreComponent<GenesetsSelect
                         title="Enter Gene Sets"
                         value={this.store.genesetQuery}
                         onChange={event => this.store.genesetQuery = event.currentTarget.value}
-                        data-test='GENESETS_TEXT_AREA'
+                        data-test={'GENESETS_TEXT_AREA'}
                     />
 
                     <GenesetsValidator/>
