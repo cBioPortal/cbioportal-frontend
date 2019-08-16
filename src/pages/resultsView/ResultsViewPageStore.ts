@@ -3493,9 +3493,7 @@ export class ResultsViewPageStore {
         return new GenesetCache();
     }
 
-    @cached get treatmentCache() {
-        return new TreatmentCache();
-    }
+    readonly treatmentCache = new TreatmentCache();
 
     public numericGeneMolecularDataCache = new MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>(
         q=>({
