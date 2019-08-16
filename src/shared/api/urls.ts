@@ -1,6 +1,6 @@
 import {default as URL, QueryParams} from "url";
 import AppConfig from "appConfig";
-import getBrowserWindow from "../lib/getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import * as _ from 'lodash';
 import {GroupComparisonURLQuery} from "../../pages/groupComparison/GroupComparisonPage";
 import {GroupComparisonLoadingParams} from "../../pages/groupComparison/GroupComparisonLoading";
