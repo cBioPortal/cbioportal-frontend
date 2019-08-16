@@ -1,4 +1,4 @@
-import getBrowserWindow from "./getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 
 // this is the only way to solve issue in SPA where content doesn't exist when URL changes
 // thus anchors corresponding to url hash may not be in DOM to scroll to

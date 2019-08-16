@@ -1,8 +1,5 @@
 import getBrowserWindow from "./getBrowserWindow";
 import sizeof from "object-sizeof";
-import {sendSentryMessage} from "./tracking";
-import AppConfig from "appConfig";
-import {log} from "./consoleLog";
 
 function hash(str:string) {
     var hash = 0, i, chr;
@@ -13,7 +10,7 @@ function hash(str:string) {
         hash |= 0; // Convert to 32bit integer
     }
     return hash;
-};
+}
 
 function getHash(obj:any){
     return hash(JSON.stringify(obj));
@@ -32,17 +29,21 @@ type SizeQueueElt = {methodName:string, storeKey:number, size:number};
 const sizeQueue:SizeQueueElt[] = [];
 let cacheSize = 0;
 
-function tryFreeCache() {
-
-    const maxCacheSize = megabytes(AppConfig.serverConfig.api_cache_limit); // set to Number.POSITIVE_INFINITY to disable cache clearing
+// set apiCacheLimit to Number.POSITIVE_INFINITY to disable cache clearing
+function tryFreeCache(apiCacheLimit: number = Number.POSITIVE_INFINITY,
+                      log?: (message: string) => void,
+                      sentryLog?: (message: string) => void)
+{
+    const maxCacheSize = megabytes(apiCacheLimit);
 
     // delete data to free up memory, starting from the front of the line (least recently used)
     let elt:any;
     try {
-        if (cacheSize > maxCacheSize) {
+        if (sentryLog && cacheSize > maxCacheSize) {
             // log this
-            sendSentryMessage(`Clearing cache after reaching cache limit of ${maxCacheSize} bytes (${(maxCacheSize/Math.pow(10,6)).toFixed(2)} Mb)`);
+            sentryLog(`Clearing cache after reaching cache limit of ${maxCacheSize} bytes (${(maxCacheSize/Math.pow(10,6)).toFixed(2)} Mb)`);
         }
+
         while (cacheSize > maxCacheSize) {
             elt = undefined;
             // remove least recently used element from front, skipping over
@@ -54,9 +55,13 @@ function tryFreeCache() {
                     break;
                 }
             }
+
             // delete it from cache
             // at this point we'll encounter an error if elt is undefined - this should never happen
-            log(`POST cache max size exceeded: ${cacheSize} > ${maxCacheSize}. Deleting entries.`);
+            if (log) {
+                log(`POST cache max size exceeded: ${cacheSize} > ${maxCacheSize}. Deleting entries.`);
+            }
+
             delete postCacheStore[elt.methodName][elt.storeKey];
             // update cacheSize
             cacheSize -= elt.size;
@@ -67,8 +72,12 @@ function tryFreeCache() {
     }
 }
 
-export function proxyPost(targetObj:any, methodName:string){
-
+export function proxyPost(targetObj:any,
+                          methodName:string,
+                          apiCacheLimit?: number,
+                          log?: (message: string) => void,
+                          sentryLog?: (message: string) => void)
+{
     const oldMethod = targetObj[methodName];
 
     //prepare store with entry for this method
@@ -100,14 +109,19 @@ export function proxyPost(targetObj:any, methodName:string){
                 cacheSize += sizeQueueElement.size;
                 //console.log(`Added entry to cache from ${sizeQueueElement.methodName} of size ${sizeQueueElement.size}. cacheSize is now ${cacheSize}`);
                 // free memory if necessary
-                tryFreeCache();
+                tryFreeCache(apiCacheLimit, log, sentryLog);
             });
         }
         return storeNode[hash];
     }
 }
 
-export function proxyAllPostMethodsOnClient(obj: any, excluded: string[] = []) {
+export function proxyAllPostMethodsOnClient(obj: any,
+                                            excluded: string[] = [],
+                                            apiCacheLimit?: number,
+                                            log?: (message: string) => void,
+                                            sentryLog?: (message: string) => void)
+{
     const postMethods = Object.getOwnPropertyNames(obj.prototype).filter((methodName) => /UsingPOST$/.test(methodName) && !excluded.includes(methodName));
-    postMethods.forEach((n)=>proxyPost(obj.prototype, n));
+    postMethods.forEach(n => proxyPost(obj.prototype, n, apiCacheLimit, log, sentryLog));
 }
