@@ -173,7 +173,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                     // click on line
                                     datum = props.data[0];
                                 }
-                                this.props.dataStore.toggleSelectedMutation({
+                                this.props.dataStore.toggleHighlightedMutation({
                                     proteinChange:datum.proteinChange,
                                     hugoGeneSymbol:datum.hugoGeneSymbol
                                 });
@@ -206,7 +206,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     p.y >= rectBoundsDataSpace.y[0] && p.y <= rectBoundsDataSpace.y[1];
             });
 
-            this.props.dataStore.setSelectedMutations(selectedPoints.map(p=>({
+            this.props.dataStore.setHighlightedMutations(selectedPoints.map(p=>({
                 proteinChange: p.proteinChange,
                 hugoGeneSymbol: p.hugoGeneSymbol
             })));
@@ -483,7 +483,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
 
     @autobind
     private getThickLines() {
-        const highlightedMutations = this.props.dataStore.selectedMutations.slice();
+        const highlightedMutations = this.props.dataStore.highlightedMutations.slice();
         if (this.props.dataStore.getMouseOverMutation()) {
             highlightedMutations.push(this.props.dataStore.getMouseOverMutation()!);
         }
