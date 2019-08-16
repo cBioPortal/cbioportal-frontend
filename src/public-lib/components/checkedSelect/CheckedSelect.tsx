@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
-import ReactSelect from "react-select2";
+import ReactSelect from "react-select";
 import autobind from "autobind-decorator";
 import {computed} from "mobx";
 import {observer} from "mobx-react";
