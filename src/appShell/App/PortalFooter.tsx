@@ -10,7 +10,7 @@ import {
 } from "shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {AppStore} from "../../AppStore";
-import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import {observer} from "mobx-react";
 
 @observer export default class PortalFooter extends React.Component<{appStore:AppStore}, {}> {
