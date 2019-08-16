@@ -30,12 +30,14 @@ import tabularDownload from "./tabularDownload";
 import classNames from 'classnames';
 import FadeInteraction from "public-lib/components/fadeInteraction/FadeInteraction";
 import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/ClinicalDataCache";
-import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "../banners/OqlStatusBanner";
 import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import { MobxPromiseUnionTypeWithDefault } from "mobxpromise";
+import {parseOQLQuery} from "../../lib/oql/oqlfilter";
+import AlterationFilterWarning from "../banners/AlterationFilterWarning";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -72,8 +74,8 @@ export const TREATMENT_LIST_URL_PARAM = "treatment_list";
 const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
 
 /*  Each heatmap track group can hold tracks of a single entity type.
-    Implemented entity types are genes and treatments. In the 
-    HeatmapTrackGroupRecord type the `entities` member refers to 
+    Implemented entity types are genes and treatments. In the
+    HeatmapTrackGroupRecord type the `entities` member refers to
     hugo_gene_symbols (for genes) or to treatment_id's (for treatments). */
 type HeatmapTrackGroupRecord = {
     trackGroupIndex:number,
@@ -502,7 +504,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             }),
             onSelectHeatmapProfile:(id:string)=>{this.selectedHeatmapProfile = id;},
             onClickAddGenesToHeatmap:()=>{
-                this.addHeatmapTracks(this.selectedHeatmapProfile, this.heatmapGeneInputValue.toUpperCase().trim().split(/\s+/));
+                const genes = parseOQLQuery(this.heatmapGeneInputValue.toUpperCase().trim()).map(q=>q.gene);
+                this.addHeatmapTracks(this.selectedHeatmapProfile, genes);
             },
             onClickAddTreatmentsToHeatmap:(treatmentIds:string[])=>{
                 this.addHeatmapTracks(this.selectedHeatmapProfile, treatmentIds);
@@ -1064,6 +1067,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                    <AlterationFilterWarning store={this.props.store}/>
                 </div>
 
                 <div className={classNames('oncoprintContainer', { fadeIn: !this.isHidden })}

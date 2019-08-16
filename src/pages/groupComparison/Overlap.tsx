@@ -292,7 +292,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                         filename={'overlap'}
                         dontFade={true}
                         style={{ position: 'absolute', right: 10, top: 10 }}
-                        collapse={true}
+                        type='button'
                     />
                 )}
                 <div style={{ position: "relative", display: "inline-block" }}>

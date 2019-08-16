@@ -70,12 +70,13 @@ export default class AddClinicalTracks extends React.Component<IAddClinicalTrack
     readonly options = remoteData({
         await:()=>[this.props.store.clinicalAttributes, this.clinicalAttributeIdToAvailableFrequency],
         invoke:()=>{
+            const uniqueAttributes = _.uniqBy(this.props.store.clinicalAttributes.result!, a=>a.clinicalAttributeId);
             const availableFrequency = this.clinicalAttributeIdToAvailableFrequency.result!;
             const sortedAttributes = {
                 clinical:[] as ClinicalAttribute[],
                 groups: [] as ClinicalAttribute[]
             };
-            for (const attr of this.props.store.clinicalAttributes.result!) {
+            for (const attr of uniqueAttributes) {
                 if (clinicalAttributeIsINCOMPARISONGROUP(attr)) {
                     sortedAttributes.groups.push(attr);
                 } else {

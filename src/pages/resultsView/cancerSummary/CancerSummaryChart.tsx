@@ -510,7 +510,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                     getSvg={() => this.svg}
                     filename="cancer_types_summary"
                     dontFade={true}
-                    collapse={true}
+                    type='button'
                     style={{ position: "absolute", top: 10, right: 10 }}
                 />
             </div>)

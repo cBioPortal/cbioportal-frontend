@@ -11,6 +11,7 @@ import {observable} from "mobx";
 import {ReactChild} from "react";
 import {observer} from "mobx-react";
 import {JsxElement} from "typescript";
+import MemoizedHandlerFactory from "../../lib/MemoizedHandlerFactory";
 
 export interface IMSKTabProps {
     inactive?:boolean;
@@ -100,6 +101,7 @@ interface IMSKTabsProps {
     id?:string;
     activeTabId?:string;
     onTabClick?:(tabId:string, datum:any)=>void;
+    getTabHref?:(tabId:string)=>string;
     enablePagination?:boolean;
     // only used when pagination is true to style arrows
     arrowStyle?:{[k:string]:string|number|boolean};
@@ -118,6 +120,11 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         unmountOnHide: true,
         loadingComponent:<LoadingIndicator isLoading={true} center={true} size={"big"}/>
     };
+
+    private tabClickHandlers = MemoizedHandlerFactory((e:React.MouseEvent<any>, tabProps:Pick<IMSKTabProps, "id"|"datum">)=>{
+        e.preventDefault();
+        this.setActiveTab(tabProps.id, tabProps.datum);
+    });
 
     constructor(props:IMSKTabsProps){
         super(props);
@@ -319,7 +326,14 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     ref={this.tabRefHandler.bind(this, tab.props.id)}
                     className={activeClass}
                 >
-                    <a className={classnames("tabAnchor", `tabAnchor_${tab.props.id}`, tab.props.anchorClassName)} onClick={this.setActiveTab.bind(this,tab.props.id, tab.props.datum)} style={tab.props.anchorStyle}>{tab.props.linkText}</a>
+                    <a
+                        className={classnames("tabAnchor", `tabAnchor_${tab.props.id}`, tab.props.anchorClassName)}
+                        onClick={this.tabClickHandlers(tab.props)}
+                        href={this.props.getTabHref && this.props.getTabHref(tab.props.id)}
+                        style={tab.props.anchorStyle}
+                    >
+                        {tab.props.linkText}
+                    </a>
                 </li>
             );
         });

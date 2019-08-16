@@ -11,6 +11,12 @@ const getNumberOfStudyViewCharts = require('../../../shared/specUtils').getNumbe
 const getTextFromElement = require('../../../shared/specUtils').getTextFromElement;
 const waitForStudyViewSelectedInfo = require('../../../shared/specUtils').waitForStudyViewSelectedInfo;
 
+
+var {
+    checkElementWithMouseDisabled
+} = require('../../../shared/specUtils');
+
+
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 const CUSTOM_SELECTION_BUTTON = "[data-test='custom-selection-button']";
 const SELECTED_SAMPLES = "strong[data-test='selected-samples']";
@@ -86,7 +92,7 @@ describe('study laml_tcga tests', () => {
 
         // Pause a bit time to let the page render the charts
         browser.pause();
-        const res = browser.checkElement('#mainColumn', { hide });
+        const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
 
@@ -228,7 +234,7 @@ describe('check the filters are working properly', ()=>{
         waitForNetworkQuiet(60000);
     });
     it('filter study from url', function() {
-        const res = browser.checkElement('#mainColumn', { hide});
+        const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
 
@@ -278,14 +284,14 @@ describe('cancer gene filter', () => {
     });
 
     it('the cancer gene filter should remove non cancer gene', () => {
-        assertScreenShotMatch(browser.checkElement(CNA_GENES_TABLE), { hide });
+        assertScreenShotMatch(checkElementWithMouseDisabled(CNA_GENES_TABLE));
     });
 
     it('non cancer gene should show up when the cancer gene filter is disabled', () => {
         // disable the filter and check
         browser.click(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`);
         assert.equal(browser.getCssProperty(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`, 'color').parsed.hex, '#bebebe');
-        assertScreenShotMatch(browser.checkElement(CNA_GENES_TABLE), { hide });
+        assertScreenShotMatch(checkElementWithMouseDisabled(CNA_GENES_TABLE));
     });
 });
 
@@ -315,7 +321,7 @@ describe('crc_msk_2017 study tests', () => {
 
         browser.waitForVisible("[data-test='chart-container-SAMPLE_MSI_SCORE']", WAIT_FOR_VISIBLE_TIMEOUT);
 
-        const res = browser.checkElement("[data-test='chart-container-SAMPLE_MSI_SCORE'] svg", { hide });
+        const res = checkElementWithMouseDisabled("[data-test='chart-container-SAMPLE_MSI_SCORE'] svg");
         assertScreenShotMatch(res);
 
         toStudyViewClinicalDataTab();
@@ -341,6 +347,12 @@ describe('study view lgg_tcga study tests', () => {
             browser.waitUntil(() => {
                 return browser.isExisting(barChart + ' .controls');
             }, 10000);
+
+            // move to hamburger icon
+            browser.moveToObject("[data-test='chart-header-hamburger-icon']");
+
+            // wait for the menu available
+            browser.waitForVisible("[data-test='chart-header-hamburger-icon-menu']", WAIT_FOR_VISIBLE_TIMEOUT);
 
             assert(browser.isSelected(barChart + ' .chartHeader .logScaleCheckbox input'));
         });
@@ -370,6 +382,7 @@ describe('study view lgg_tcga study tests', () => {
                 assert(browser.isExisting(table + ' .controls .fa-pie-chart'));
             });
 
+
             it('table should be sorted by Freq in the default setting', ()=>{
                 // we need to move to the top of the page, otherwise the offset of add chart button is calculated wrong
                 browser.moveToObject("body", 0, 0);
@@ -391,7 +404,7 @@ describe('study view lgg_tcga study tests', () => {
                 // Close the tooltip
                 browser.click(ADD_CHART_BUTTON);
 
-                const res = browser.checkElement(table, { hide });
+                const res = checkElementWithMouseDisabled(table);
                 assertScreenShotMatch(res);
             })
         })
@@ -417,7 +430,8 @@ describe('check the simple filter(filterAttributeId, filterValues) is working pr
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet();
         browser.moveToObject("body", 0, 0);
-        const res = browser.checkElement("[data-test='study-view-header']", { hide });
+
+        const res = checkElementWithMouseDisabled("[data-test='study-view-header']");
         assertScreenShotMatch(res);
     });
 });

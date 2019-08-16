@@ -122,7 +122,7 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                                     buttons={["SVG", "PNG", "Data"]}
                                     getSvg={this.getSvg}
                                     getData={this.getData}
-                                    collapse={true}
+                                    type='button'
                                     dontFade={true}
                                     style={{position:'absolute', zIndex:10, right: 10 }}
                                     filename={FILE_NAME}

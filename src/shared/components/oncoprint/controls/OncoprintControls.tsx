@@ -870,7 +870,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 checked={this.props.state.hidePutativePassengers}
                                 onClick={this.onInputClick}
                                 disabled={!this.props.state.distinguishDrivers}
-                            /> Hide VUS (variants of unknown significance)
+                            /> Hide mutations and copy number alterations of unknown significance
                         </label></div>
                         <div className="checkbox"><label>
                             <input

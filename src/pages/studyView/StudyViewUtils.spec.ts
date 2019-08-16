@@ -1336,13 +1336,13 @@ describe('StudyViewUtils', () => {
         }
 
         it("Empty array should be returned when no attributes given", () => {
-            let layout: Layout[] = calculateLayout([], 6, visibleAttrsChartDimensions);
+            let layout: Layout[] = calculateLayout([], 6, visibleAttrsChartDimensions, []);
             assert.isArray(layout);
             assert.equal(layout.length, 0);
         });
 
         it("The layout is not expected - 1", () => {
-            let layout: Layout[] = calculateLayout(visibleAttrs, 6, visibleAttrsChartDimensions);
+            let layout: Layout[] = calculateLayout(visibleAttrs, 6, visibleAttrsChartDimensions, []);
             assert.equal(layout.length, 8);
             assert.equal(layout[0].i, 'test0');
             assert.equal(layout[0].x, 0);
@@ -1371,7 +1371,7 @@ describe('StudyViewUtils', () => {
         });
 
         it("The layout is not expected - 2", () => {
-            let layout: Layout[] = calculateLayout(visibleAttrs, 2, visibleAttrsChartDimensions);
+            let layout: Layout[] = calculateLayout(visibleAttrs, 2, visibleAttrsChartDimensions, []);
             assert.equal(layout.length, 8);
             assert.equal(layout[0].i, 'test0');
             assert.equal(layout[0].x, 0);
@@ -1423,7 +1423,7 @@ describe('StudyViewUtils', () => {
             visibleAttrsChartDimensions['test0'] = {w: 2, h: 2};
             visibleAttrsChartDimensions['test1'] = {w: 1, h: 1};
 
-            let layout: Layout[] = calculateLayout(visibleAttrs, 4, visibleAttrsChartDimensions);
+            let layout: Layout[] = calculateLayout(visibleAttrs, 4, visibleAttrsChartDimensions, []);
             assert.equal(layout.length, 2);
             assert.equal(layout[0].i, 'test1');
             assert.equal(layout[0].x, 0);
@@ -1468,7 +1468,7 @@ describe('StudyViewUtils', () => {
             visibleAttrsChartDimensions['test1'] = {w: 2, h: 2};
             visibleAttrsChartDimensions['test2'] = {w: 1, h: 1};
 
-            let layout: Layout[] = calculateLayout(visibleAttrs, 4, visibleAttrsChartDimensions);
+            let layout: Layout[] = calculateLayout(visibleAttrs, 4, visibleAttrsChartDimensions, []);
             assert.equal(layout.length, 3);
             assert.equal(layout[0].i, 'test0');
             assert.equal(layout[0].x, 0);
@@ -1538,7 +1538,7 @@ describe('StudyViewUtils', () => {
             visibleAttrsChartDimensions['test3'] = {w: 1, h: 1};
             visibleAttrsChartDimensions['test4'] = {w: 1, h: 1};
 
-            let layout: Layout[] = calculateLayout(visibleAttrs, 4, visibleAttrsChartDimensions);
+            let layout: Layout[] = calculateLayout(visibleAttrs, 4, visibleAttrsChartDimensions, []);
             assert.equal(layout.length, 5);
             assert.equal(layout[0].i, 'test0');
             assert.equal(layout[0].x, 0);
@@ -1979,16 +1979,16 @@ describe('StudyViewUtils', () => {
             assert.deepEqual([], getClinicalDataCountWithColorByCategoryCounts(0, 0))
         });
         it('When only yesCount is > 0', () => {
-            assert.deepEqual([{ count: 10, value: "YES", color: CLI_YES_COLOR }], getClinicalDataCountWithColorByCategoryCounts(10, 0))
+            assert.deepEqual([{ count: 10, value: "YES", color: CLI_YES_COLOR, freq: '100.0%', percentage: 1 }], getClinicalDataCountWithColorByCategoryCounts(10, 0))
         });
         it('When only noCount is > 0', () => {
-            assert.deepEqual([{ count: 10, value: "NO", color: CLI_NO_COLOR }], getClinicalDataCountWithColorByCategoryCounts(0, 10))
+            assert.deepEqual([{ count: 10, value: "NO", color: CLI_NO_COLOR, freq: '100.0%', percentage: 1 }], getClinicalDataCountWithColorByCategoryCounts(0, 10))
         });
         it('When both counts are > 0', () => {
             assert.deepEqual(
                 [
-                    { count: 10, value: "YES", color: CLI_YES_COLOR },
-                    { count: 10, value: "NO", color: CLI_NO_COLOR }
+                    { count: 10, value: "YES", color: CLI_YES_COLOR, freq: '50.0%', percentage: 0.5 },
+                    { count: 10, value: "NO", color: CLI_NO_COLOR , freq: '50.0%', percentage: 0.5}
                 ], getClinicalDataCountWithColorByCategoryCounts(10, 10))
         });
     });
