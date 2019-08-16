@@ -25,6 +25,8 @@ type CheckedSelectProps = {
     onClearAll?: () => void;
     isAddAllDisabled?: boolean;
     addAllLabel?: string | JSX.Element;
+    clearAllLabel?: string | JSX.Element;
+    showControls?: boolean;
     height?:number;
 };
 
@@ -34,7 +36,8 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
     public static defaultProps: Partial<CheckedSelectProps> = {
         isClearable: false,
         isDisabled: false,
-        isAddAllDisabled: false
+        isAddAllDisabled: false,
+        showControls: true
     };
 
     @computed
@@ -49,6 +52,16 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
         }
         else {
             return `Add all (${this.props.options.length})`;
+        }
+    }
+
+    @computed
+    get clearAllLabel() {
+        if (this.props.clearAllLabel) {
+            return this.props.clearAllLabel;
+        }
+        else {
+            return "Clear";
         }
     }
 
@@ -100,7 +113,7 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                     disabled={this.props.value.length === 0}
                     onClick={this.props.onClearAll || this.defaultOnClearAll}
                 >
-                    Clear
+                    {this.clearAllLabel}
                 </button>
             </div>
         );
@@ -147,7 +160,7 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                             //primary: theme.colors.primary50
                         },
                     })}
-                    components={{ GroupHeading: this.buttonsSection }}
+                    components={this.props.showControls ? {GroupHeading: this.buttonsSection } : undefined}
                     name={this.props.name}
                     isMulti={true}
                     isClearable={this.props.isClearable}
@@ -158,7 +171,9 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                     placeholder={this.props.placeholder}
                     onChange={this.props.onChange}
                     options={[{
-                        label:"dummy label, this is only here to create group so we can add the buttons section as the group label component",
+                        label: this.props.showControls ?
+                            "dummy label, this is only here to create group so we can add the buttons section as the group label component" :
+                            undefined,
                         options: this.props.options
                     }]}
                     getOptionLabel={this.getOptionLabel}

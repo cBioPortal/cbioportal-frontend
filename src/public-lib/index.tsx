@@ -6,11 +6,32 @@ export {default as DownloadControls} from './components/downloadControls/Downloa
 export {default as EditableSpan} from './components/editableSpan/EditableSpan';
 export {default as EllipsisTextTooltip} from './components/ellipsisTextTooltip/EllipsisTextTooltip';
 export * from './components/HitZone';
-export {default as ReferenceList} from './components/oncokb/ReferenceList';
 export {default as SVGAxis, Tick} from './components/SVGAxis';
+export {default as TableCellStatusIndicator, TableCellStatus} from './components/TableCellStatus';
+export {default as WindowWrapper} from './components/WindowWrapper';
+
+export {
+    default as GenomeNexusAPI,
+    EnsemblFilter,
+    GenomicLocation,
+    TranscriptConsequenceSummary,
+    VariantAnnotation,
+    VariantAnnotationSummary
+} from "./api/generated/GenomeNexusAPI";
+export {
+    default as GenomeNexusAPIInternal
+} from "./api/generated/GenomeNexusAPIInternal";
+export {
+    default as OncoKbAPI,
+    Evidence,
+    EvidenceQueries,
+    EvidenceQueryRes,
+    Query
+} from "./api/generated/OncoKbAPI";
 
 export {remoteData} from "./api/remoteData";
 
+export * from './lib/ColumnVisibilityResolver';
 export * from './lib/findFirstMostCommonElt';
 export * from './lib/getCanonicalMutationType';
 export * from './lib/OncoKbUtils';

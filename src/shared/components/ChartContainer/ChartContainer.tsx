@@ -17,7 +17,7 @@ export default class ChartContainer extends React.Component<IChartContainer, {}>
                     filename={this.props.exportFileName || "chart-download"}
                     dontFade={true}
                     getSvg={this.props.getSVGElement!}
-                    collapse={true}
+                    type='button'
                     style={{position:"absolute", top:10, right:10, zIndex:10}}
                 />
                 <div style={{ overflowX:'auto', overflowY:'hidden'}}>

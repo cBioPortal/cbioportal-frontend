@@ -18,7 +18,7 @@ export default class StandaloneMutationMapper extends MutationMapper<IStandalone
         super(props);
     }
 
-    protected mutationTableComponent(): JSX.Element|null
+    protected get mutationTableComponent(): JSX.Element | null
     {
         return (
             <StandaloneMutationTable
