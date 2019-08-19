@@ -129,7 +129,10 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
     }
 
 
-    // It calculates truncated version of gene string
+    // It calculates truncated version of gene string without truncating gene names.
+    // That is, instead of truncating a gene name, it removes it all.
+    // For example, if the gene string is MDM2 CDKN2A, instead of truncating it as "MDM2 CKDN ...",
+    // it produces "MDM2 ..."
     private calculateGeneStr(genesMatched: string[], lengthThreshold: number){
         let runningLength = 0;
         let geneStr = "";
