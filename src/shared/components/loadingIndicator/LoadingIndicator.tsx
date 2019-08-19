@@ -2,7 +2,7 @@ import * as React from 'react';
 import {ThreeBounce} from 'better-react-spinkit';
 import {If, Else, Then} from 'react-if';
 import Spinner from "react-spinkit";
-import Portal from 'react-portal';
+import {Portal} from 'react-portal';
 import classNames from 'classnames';
 import styles from './styles.module.scss';
 
