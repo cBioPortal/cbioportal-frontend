@@ -22,6 +22,8 @@ var OncoprintLabelView = (function () {
         this.sublabels = {};
         this.show_sublabels = model.getShowTrackSublabels();
         this.label_colors = {};
+        this.label_circle_colors = {};
+        this.label_font_weight = {};
         this.html_labels = {};
         this.track_link_urls = {};
         this.track_descriptions = {};
@@ -193,11 +195,19 @@ var OncoprintLabelView = (function () {
             }
         }
         var font_size = view.getFontSize();
-        view.ctx.font = 'bold '+font_size +'px Arial';
-        view.ctx.fillStyle = 'black';
         var tracks = view.tracks;
         var sublabelX = {};
         for (var i=0; i<tracks.length; i++) {
+            if (view.label_circle_colors[tracks[i]]) {
+                // draw circle if specified
+                view.ctx.fillStyle = view.label_circle_colors[tracks[i]];
+                view.ctx.beginPath();
+                view.ctx.arc(25, view.label_middles_view_space[tracks[i]], view.minimum_track_height*0.8, 0, 2*Math.PI);
+                view.ctx.fill();
+            }
+
+            view.ctx.font = (view.label_font_weight[tracks[i]] || 'bold')+' '+font_size +'px Arial';
+            view.ctx.fillStyle = 'black';
             if (view.label_colors && view.label_colors[tracks[i]]) {
                 //override color, if set:
                 view.ctx.fillStyle = view.label_colors[tracks[i]];
@@ -338,6 +348,8 @@ var OncoprintLabelView = (function () {
             this.labels[track_ids[i]] = model.getTrackLabel(track_ids[i]);
             this.sublabels[track_ids[i]] = model.getTrackSublabel(track_ids[i]);
             this.label_colors[track_ids[i]] = model.getTrackLabelColor(track_ids[i]);
+            this.label_circle_colors[track_ids[i]] = model.getTrackLabelCircleColor(track_ids[i]);
+            this.label_font_weight[track_ids[i]] = model.getTrackLabelFontWeight(track_ids[i]);
             this.html_labels[track_ids[i]] = model.getOptionalHtmlTrackLabel(track_ids[i]);
             this.track_link_urls[track_ids[i]] = model.getTrackLinkUrl(track_ids[i]);
         }
@@ -387,6 +399,12 @@ var OncoprintLabelView = (function () {
 
     OncoprintLabelView.prototype.setTrackMovable = function(model) {
         renderAllLabels(this, model);
+    }
+
+    OncoprintLabelView.prototype.sort = function(model) {
+        updateFromModel(this, model);
+        resizeAndClear(this, model);
+        renderAllLabels(this);
     }
 
     OncoprintLabelView.prototype.suppressRendering = function() {
