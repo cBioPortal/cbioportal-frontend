@@ -52,7 +52,6 @@ import MutationOncoprint from "./oncoprint/MutationOncoprint";
 import 'cbioportal-frontend-commons/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
-import PatientViewSelectableMutationTable from "./mutation/PatientViewSelectableMutationTable";
 import PatientViewMutationsTab from "./mutation/PatientViewMutationsTab";
 
 const patientViewPageStore = new PatientViewPageStore();
@@ -496,14 +495,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         )
                                     }
                                 </MSKTab>
-                    <MSKTab key={1} id="mutations" linkText="Mutations">
-                        <PatientViewMutationsTab
-                            store={patientViewPageStore}
-                            mutationTableColumnVisibility={this.mutationTableColumnVisibility}
-                            onMutationTableColumnVisibilityToggled={this.onMutationTableColumnVisibilityToggled}
-                            sampleManager={sampleManager}
-                        />
-                    </MSKTab>
+                    {patientViewPageStore.samples.isComplete && patientViewPageStore.samples.result.length > 1 && (
+                        <MSKTab key={1} id="mutations" linkText="Mutations">
+                            <PatientViewMutationsTab
+                                store={patientViewPageStore}
+                                mutationTableColumnVisibility={this.mutationTableColumnVisibility}
+                                onMutationTableColumnVisibilityToggled={this.onMutationTableColumnVisibilityToggled}
+                                sampleManager={sampleManager}
+                            />
+                        </MSKTab>
+                    )}
 
                     <MSKTab key={1} id="mutations" linkText="Mutations">
                         <MutationOncoprint store={patientViewPageStore} sampleManager={sampleManager}/>
