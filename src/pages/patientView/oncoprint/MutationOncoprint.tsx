@@ -105,6 +105,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     naLegendLabel:"Not sequenced",
                     labelColor: circleColor ? "white" : "black",
                     labelCircleColor: circleColor,
+                    labelFontWeight: "normal",
                     tooltip:(data:IMutationOncoprintTrackDatum[])=>{
                         const d = data[0];
                         let vafSection:string;
