@@ -487,7 +487,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 </MSKTab>
 
                     <MSKTab key={1} id="mutations" linkText="Mutations">
-                        <MutationOncoprint store={patientViewPageStore}/>
+                        <MutationOncoprint store={patientViewPageStore} sampleManager={sampleManager}/>
                         <hr/>
                         <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.uncalledMutationData.isPending || patientViewPageStore.oncoKbAnnotatedGenes.isPending || patientViewPageStore.studyIdToStudy.isPending} />
 

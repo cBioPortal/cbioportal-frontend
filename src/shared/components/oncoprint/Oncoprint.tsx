@@ -106,6 +106,7 @@ interface IBaseHeatmapTrackSpec {
     molecularAlterationType: MolecularProfile["molecularAlterationType"];
     datatype: MolecularProfile["datatype"];
     data: IBaseHeatmapTrackDatum[];
+    description?: string;
     trackGroupIndex: number;
 }
 export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
@@ -114,6 +115,7 @@ export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     onRemove?: () => void;
     info?: string;
     labelColor?: string;
+    labelCircleColor?: string;
     tooltip?:(dataUnderMouse:IGeneHeatmapTrackDatum[])=>JQuery;
     initSortDirection?:TrackSortDirection;
     movable?:boolean;
