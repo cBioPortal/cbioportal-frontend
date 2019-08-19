@@ -99,7 +99,6 @@ export default class TranscriptDropdown extends React.Component<TranscriptDropdo
         return (
             <div>
                 <Select
-                    className="transcripts-dropdown-select"
                     value={{
                         label: activeRefseqMrnaId? activeRefseqMrnaId : activeTranscript,
                         value:activeTranscript
@@ -108,7 +107,6 @@ export default class TranscriptDropdown extends React.Component<TranscriptDropdo
                     // need to explicitly set delteRemoves for cleable
                     // https://github.com/JedWatson/react-select/issues/1560
                     deleteRemoves={false}
-                    style={{width:160}}
                     options={this.sortTranscripts(allTranscripts).map(
                         (t:string) => {
                             const length = transcriptsByTranscriptId[t].proteinLength;
