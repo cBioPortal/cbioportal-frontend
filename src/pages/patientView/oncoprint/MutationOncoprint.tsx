@@ -14,14 +14,16 @@ import {
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import {computed, observable} from "mobx";
-import ReactSelect from "react-select2";
+import ReactSelect from "react-select";
 import OncoprintJS from "oncoprintjs";
 import autobind from "autobind-decorator";
 import DownloadControls, {DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
 import _ from "lodash";
+import SampleManager from "../sampleManager";
 
 export interface IMutationOncoprintProps {
     store:PatientViewPageStore;
+    sampleManager:SampleManager|null;
 }
 
 const TRACK_GROUP_INDEX = 2;
@@ -59,8 +61,16 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             return undefined;
         } else {
             return {
-                [TRACK_GROUP_INDEX]:this.props.store.samples.result!.map(s=>s.uniqueSampleKey)
+                [TRACK_GROUP_INDEX]:this.sampleIdOrder
             };
+        }
+    }
+
+    @computed get sampleIdOrder() {
+        if (this.props.sampleManager) {
+            return this.props.sampleManager.getSampleIdsInOrder();
+        } else {
+            return this.props.store.samples.result!.map(s=>s.sampleId);
         }
     }
 
@@ -69,7 +79,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             this.props.store.samples,
             this.props.store.mutationData,
             this.props.store.mutationMolecularProfile,
-            this.props.store.coverageInformation
+            this.props.store.coverageInformation,
         ],
         invoke:()=>{
             if (this.props.store.mutationData.result!.length === 0) {
@@ -81,16 +91,20 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                 this.props.store.mutationData.result!,
                 this.props.store.coverageInformation.result!
             );
-            return Promise.resolve(this.props.store.samples.result!.map(sample=>{
+            return Promise.resolve(this.sampleIdOrder.map((sampleId, index)=>{
+                const circleColor = this.props.sampleManager ? this.props.sampleManager.getColorForSample(sampleId) : undefined;
                 return {
-                    key: sample.uniqueSampleKey,
-                    label: sample.sampleId,
+                    key: sampleId,
+                    label: `${index + 1 < 10 ? "  " : " " /* pad with spaces depending on num digits */}${index + 1}`,
+                    description: `${sampleId} data from ${this.props.store.mutationMolecularProfileId.result!}`,
                     molecularProfileId: this.props.store.mutationMolecularProfileId.result!,
                     molecularAlterationType: profile.molecularAlterationType,
                     datatype: profile.datatype,
-                    data: data[sample.uniqueSampleKey],
+                    data: data[sampleId],
                     trackGroupIndex:TRACK_GROUP_INDEX,
                     naLegendLabel:"Not sequenced",
+                    labelColor: circleColor ? "white" : "black",
+                    labelCircleColor: circleColor,
                     tooltip:(data:IMutationOncoprintTrackDatum[])=>{
                         const d = data[0];
                         let vafSection:string;
