@@ -213,8 +213,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             case ChartTypeEnum.SURVIVAL: {
                 props.promise = this.store.survivalPlotData;
                 props.getData = () => this.store.getSurvivalDownloadData(chartMeta);
-                // only want to pass these in when necessary, otherwise charts will unnecessarily update when they change
-                props.patientKeysWithNAInSelectedClinicalData = this.store.patientKeysWithNAInSelectedClinicalData;
                 props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;
                 props.downloadTypes = ["Data", "SVG", "PDF"];
                 break;
