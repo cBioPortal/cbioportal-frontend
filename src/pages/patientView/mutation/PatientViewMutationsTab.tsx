@@ -95,11 +95,11 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
 
     private highlightedInTableOptions:{[value:string]:{label:string, value:boolean}} = {
         "true": {
-            label: "Only show highlighted mutations",
+            label: "Only show highlighted mutations in table",
             value: true
         },
         "false": {
-            label: "Show all mutations",
+            label: "Show all mutations in table",
             value: false
         }
     };
@@ -114,7 +114,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
         render:()=>(
             <div>
-                <div style={{ width: 263, float: "left", marginRight: 15, marginTop: -6 }} >
+                <div style={{ width: 314, float: "left", marginRight: 15, marginTop: -6 }} >
                     <ReactSelect
                         name="select whether table filters out non-highlighted mutations"
                         onChange={(option:any|null)=>{
