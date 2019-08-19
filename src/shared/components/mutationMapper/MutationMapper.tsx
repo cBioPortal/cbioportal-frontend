@@ -14,8 +14,6 @@ import {
 } from "react-mutation-mapper";
 
 import 'react-mutation-mapper/dist/styles.css';
-import './styles.scss';
-
 import 'cbioportal-frontend-commons/styles.css';
 import 'react-table/react-table.css';
 
