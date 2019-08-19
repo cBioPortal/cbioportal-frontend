@@ -885,6 +885,7 @@ var Oncoprint = (function () {
         }
         var self = this;
         this.model.sort().then(function(x) {;
+            self.label_view.sort(self.model);
             self.cell_view.sort(self.model);
             self.minimap_view.sort(self.model, self.cell_view);
 
