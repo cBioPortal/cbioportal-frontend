@@ -72,11 +72,11 @@ function tryFreeCache(apiCacheLimit: number = Number.POSITIVE_INFINITY,
     }
 }
 
-export function proxyPost(targetObj:any,
-                          methodName:string,
-                          apiCacheLimit?: number,
-                          log?: (message: string) => void,
-                          sentryLog?: (message: string) => void)
+export function cachePostMethod(targetObj:any,
+                                methodName:string,
+                                apiCacheLimit?: number,
+                                log?: (message: string) => void,
+                                sentryLog?: (message: string) => void)
 {
     const oldMethod = targetObj[methodName];
 
@@ -116,12 +116,15 @@ export function proxyPost(targetObj:any,
     }
 }
 
-export function proxyAllPostMethodsOnClient(obj: any,
-                                            excluded: string[] = [],
-                                            apiCacheLimit?: number,
-                                            log?: (message: string) => void,
-                                            sentryLog?: (message: string) => void)
+export function cachePostMethodsOnClient(obj: any,
+                                         excluded: string[] = [],
+                                         postMethodNameRegex: RegExp = /UsingPOST$/,
+                                         apiCacheLimit?: number,
+                                         log?: (message: string) => void,
+                                         sentryLog?: (message: string) => void)
 {
-    const postMethods = Object.getOwnPropertyNames(obj.prototype).filter((methodName) => /UsingPOST$/.test(methodName) && !excluded.includes(methodName));
-    postMethods.forEach(n => proxyPost(obj.prototype, n, apiCacheLimit, log, sentryLog));
+    const postMethods = Object.getOwnPropertyNames(obj.prototype).filter(methodName =>
+        postMethodNameRegex.test(methodName) && !excluded.includes(methodName));
+
+    postMethods.forEach(methodName => cachePostMethod(obj.prototype, methodName, apiCacheLimit, log, sentryLog));
 }
