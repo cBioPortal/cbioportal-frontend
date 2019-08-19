@@ -19,7 +19,7 @@ import client from "../shared/api/cbioportalClientInstance";
 import internalClient from "../shared/api/cbioportalInternalClientInstance";
 import $ from "jquery";
 import {AppStore} from "../AppStore";
-import {proxyAllPostMethodsOnClient} from "../public-lib/lib/proxyPost";
+import {cachePostMethodsOnClient} from "public-lib/lib/apiClientCache";
 import CBioPortalAPI from "../shared/api/generated/CBioPortalAPI";
 import CBioPortalAPIInternal from "../shared/api/generated/CBioPortalAPIInternal";
 import CivicAPI from "../shared/api/CivicAPI";
@@ -140,10 +140,11 @@ export class ServerConfigHelpers {
 
 };
 
-function proxyAllPostMethods(obj: any,
-                             excluded: string[] = [])
+function cachePostMethods(obj: any,
+                          excluded: string[] = [],
+                          regex: RegExp = /UsingPOST$/)
 {
-    proxyAllPostMethodsOnClient(obj, excluded, AppConfig.serverConfig.api_cache_limit, sendSentryMessage, log);
+    cachePostMethodsOnClient(obj, excluded, regex, AppConfig.serverConfig.api_cache_limit, sendSentryMessage, log);
 }
 
 export function initializeAPIClients(){
@@ -157,13 +158,13 @@ export function initializeAPIClients(){
     (genome2StructureClient as any).domain = getG2SApiUrl();
 
     // add POST caching
-    proxyAllPostMethods(CBioPortalAPI);
-    proxyAllPostMethods(CBioPortalAPIInternal, ['fetchMutatedGenesUsingPOST', 'fetchCNAGenesUsingPOST']);
-    proxyAllPostMethods(CivicAPI);
-    proxyAllPostMethods(Genome2StructureAPI);
-    proxyAllPostMethods(GenomeNexusAPI);
-    proxyAllPostMethods(GenomeNexusAPIInternal);
-    proxyAllPostMethods(OncoKbAPI);
+    cachePostMethods(CBioPortalAPI);
+    cachePostMethods(CBioPortalAPIInternal, ['fetchMutatedGenesUsingPOST', 'fetchCNAGenesUsingPOST']);
+    cachePostMethods(CivicAPI);
+    cachePostMethods(Genome2StructureAPI);
+    cachePostMethods(GenomeNexusAPI, [], /POST$/);
+    cachePostMethods(GenomeNexusAPIInternal, [], /POST$/);
+    cachePostMethods(OncoKbAPI);
 }
 
 export function initializeConfiguration() {
