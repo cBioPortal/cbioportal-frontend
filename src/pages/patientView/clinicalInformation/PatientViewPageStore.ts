@@ -272,7 +272,7 @@ export class PatientViewPageStore {
 
     readonly samples = remoteData(
         {
-            invoke: async () => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
+            invoke: () => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
         },
         []
     );
