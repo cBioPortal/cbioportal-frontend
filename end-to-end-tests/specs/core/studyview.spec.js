@@ -212,7 +212,7 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
     it('check', () => {
         // This is one of the studies have MDACC heatmap enabled
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
-        waitForNetworkQuiet(20000);
+        waitForNetworkQuiet(30000);
         browser.waitForVisible("#studyViewTabs a.tabAnchor_heatmaps", WAIT_FOR_VISIBLE_TIMEOUT);
         browser.click("#studyViewTabs a.tabAnchor_heatmaps");
         assert(!browser.isExisting(ADD_CHART_BUTTON));
