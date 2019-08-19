@@ -334,8 +334,8 @@ if (doBrowserstack) {
 }
 
 // config.specs = [
-//     './remote/specs/**/mutationTable.spec.js'
-// ];
+//     './local/specs/**/gsva.spec.js'
+//  ];
 
 exports.config  = config;
 

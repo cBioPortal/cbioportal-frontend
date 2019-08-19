@@ -75,6 +75,7 @@ describe('gsva feature', function() {
                 waitForQueryPage();
                 checkTestStudy();
                 checkGSVAprofile();
+                browser.waitForExist('button[data-test=GENESET_HIERARCHY_BUTTON]');
                 browser.$('button[data-test=GENESET_HIERARCHY_BUTTON]').click();
                 $('div.modal-dialog').waitForExist();
             });
