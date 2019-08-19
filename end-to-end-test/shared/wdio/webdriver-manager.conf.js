@@ -333,9 +333,9 @@ if (doBrowserstack) {
     config.key = process.env.BROWSERSTACK_KEY;
 }
 
-// config.specs = [
-//     './remote/specs/**/mutationTable.spec.js'
-// ];
+config.specs = [
+    './local/specs/**/gsva.spec.js'
+ ];
 
 exports.config  = config;
 

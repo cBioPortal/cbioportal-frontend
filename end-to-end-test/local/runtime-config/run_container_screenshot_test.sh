@@ -10,6 +10,7 @@ docker run -it --rm \
     --network="$DOCKER_NETWORK_NAME" \
     -e CBIOPORTAL_URL="$CBIOPORTAL_URL" \
     -e SCREENSHOT_DIRECTORY="$SCREENSHOT_DIRECTORY"\
+    -e FRONTEND_TEST_USE_LOCAL_DIST=true \
     -e SPEC_FILE_PATTERN="$SPEC_FILE_PATTERN" \
     -e JUNIT_REPORT_PATH="$JUNIT_REPORT_PATH" \
     -v "$PORTAL_SOURCE_DIR:/cbioportal-frontend/" \
