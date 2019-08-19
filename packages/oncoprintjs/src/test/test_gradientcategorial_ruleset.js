@@ -32,7 +32,7 @@ describe("GradientCategoricalRuleSet", function() {
 
     var naDatum = {
         category: undefined,
-        profile_data: undefined,
+        profile_data: null,
         truncation: undefined
     }
 
@@ -54,7 +54,7 @@ describe("GradientCategoricalRuleSet", function() {
     it("Suppresses duplicate No Data rules", function() {
         var mixRuleSet = new OncoprintRuleSet(mixParams);
         var elements = mixRuleSet.getRulesWithId();
-        assert.equal(elements.length, 1);
+        assert.equal(elements.length, 2);
     });
 
 });
