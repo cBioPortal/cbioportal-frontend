@@ -72,9 +72,9 @@ export function makeMutationHeatmapData(
                 na: !isProfiledForGene
             });
         }
-        map[sample.uniqueSampleKey] = data;
+        map[sample.sampleId] = data;
         return map;
-    }, {} as {[uniqueSampleKey:string]:IMutationOncoprintTrackDatum[]});
+    }, {} as {[sampleId:string]:IMutationOncoprintTrackDatum[]});
 }
 
 export function getDownloadData(
