@@ -116,6 +116,7 @@ export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     info?: string;
     labelColor?: string;
     labelCircleColor?: string;
+    labelFontWeight?:string;
     tooltip?:(dataUnderMouse:IGeneHeatmapTrackDatum[])=>JQuery;
     initSortDirection?:TrackSortDirection;
     movable?:boolean;
