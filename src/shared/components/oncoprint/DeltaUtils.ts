@@ -34,6 +34,7 @@ export function transition(
         oncoprint.keepSorted(false);
     }
     trySuppressRendering(nextProps, prevProps, oncoprint);
+    transitionWidth(nextProps, prevProps, oncoprint);
     transitionWhitespaceBetweenColumns(nextProps, prevProps, oncoprint);
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
@@ -120,6 +121,16 @@ function tryReleaseRendering(
 ){
     if (!nextProps.suppressRendering && prevProps.suppressRendering) {
         doReleaseRendering(nextProps, oncoprint);
+    }
+}
+
+function transitionWidth(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS<any>
+) {
+    if (nextProps.width !== prevProps.width) {
+        oncoprint.setWidth(nextProps.width);
     }
 }
 
