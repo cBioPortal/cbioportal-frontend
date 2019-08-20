@@ -17,6 +17,7 @@ import FadeInteraction from "public-lib/components/fadeInteraction/FadeInteracti
 import OncoprinterStore from "./OncoprinterStore";
 import autobind from "autobind-decorator";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
+import WindowStore from "../../../../shared/components/window/WindowStore";
 
 interface IOncoprinterProps {
     divId: string;
@@ -316,7 +317,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                                 genesetHeatmapTracks={[]}
                                 heatmapTracks={[]}
                                 divId={this.props.divId}
-                                width={1050}
+                                width={WindowStore.size.width - 100}
                                 caseLinkOutInTooltips={false}
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}

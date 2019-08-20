@@ -20,6 +20,7 @@ import autobind from "autobind-decorator";
 import DownloadControls, {DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
 import _ from "lodash";
 import SampleManager from "../sampleManager";
+import WindowStore from "../../../shared/components/window/WindowStore";
 
 export interface IMutationOncoprintProps {
     store:PatientViewPageStore;
@@ -150,7 +151,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             } else {
                 return (
                     <div>
-                        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:5}}>
+                        <div style={{display:"inline-flex", alignItems:"center", marginBottom:5}}>
                             <div style={{display:"flex", alignItems:"center"}}>
                                 <span>Sort configuration:&nbsp;</span>
                                 <div style={{ width: 250, marginRight: 7 }} >
@@ -217,7 +218,11 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                                     return getDownloadData(data);
                                 }}
                                 buttons={["SVG", "PNG", "PDF", "Data"]}
+                                type="button"
                                 dontFade
+                                style={{
+                                    marginLeft:10
+                                }}
                             />
                         </div>
                         <Oncoprint
@@ -228,7 +233,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                             heatmapTracks={this.heatmapTracks.result!}
                             heatmapTracksOrder={this.heatmapTracksOrder}
                             divId="MutationHeatmap"
-                            width={900}
+                            width={WindowStore.size.width - 100}
                             caseLinkOutInTooltips={false}
                             sortConfig={this.sortConfig}
                         />
