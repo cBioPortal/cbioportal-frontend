@@ -220,9 +220,24 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
     });
 
-    public render() {
+    readonly sampleManager = remoteData({
+        await:()=>[
+            patientViewPageStore.patientViewData,
+            patientViewPageStore.clinicalEvents
+        ],
+        invoke:()=>{
+            const patientData = patientViewPageStore.patientViewData.result;
+            if (patientViewPageStore.clinicalEvents.result!.length > 0) {
+                return Promise.resolve(new SampleManager(patientData.samples!, patientViewPageStore.clinicalEvents.result));
+            } else {
+                return Promise.resolve(new SampleManager(patientData.samples!));
+            }
+        },
+        default: null
+    });
 
-        let sampleManager: SampleManager | null = null;
+    public render() {
+        const sampleManager = this.sampleManager.result!;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
         let cohortNav: JSX.Element | null = null;
         let studyName: JSX.Element | null = null;
@@ -236,13 +251,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             studyName = <StudyLink studyId={study.studyId}>{study.name}</StudyLink>;
         }
 
-        if (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.studyMetaData.isComplete) {
-            let patientData = patientViewPageStore.patientViewData.result;
-            if (patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) {
-                sampleManager = new SampleManager(patientData.samples!, patientViewPageStore.clinicalEvents.result);
-            } else {
-                sampleManager = new SampleManager(patientData.samples!);
-            }
+        if (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.studyMetaData.isComplete && sampleManager !== null) {
 
             sampleHeader = _.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
                 const isPDX:boolean = (sampleManager &&
