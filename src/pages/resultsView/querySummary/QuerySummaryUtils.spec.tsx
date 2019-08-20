@@ -47,17 +47,17 @@ describe("QuerySummaryUtils", () => {
             assert.equal(getStudyViewFilterHash([{
                 studyId: "studyId1",
                 sampleId: "sampleId1"
-            }], false), 'filters={"sampleIdentifiers":[{"sampleId":"sampleId1","studyId":"studyId1"}]}');
+            }], false), 'filterJson={"sampleIdentifiers":[{"sampleId":"sampleId1","studyId":"studyId1"}]}');
 
             assert.equal(getStudyViewFilterHash([{
                 studyId: "studyId1",
                 sampleId: "sampleId1"
-            }], true), 'filters={"sampleIdentifiers":[{"sampleId":"sampleId1","studyId":"studyId1"}]}');
+            }], true), 'filterJson={"sampleIdentifiers":[{"sampleId":"sampleId1","studyId":"studyId1"}]}');
 
             assert.equal(getStudyViewFilterHash([{
                 studyId: "studyId1",
                 sampleId: "sampleId1"
-            }], true, [{ category: "all_cases_in_study" }]), 'filters={"sampleIdentifiers":[{"sampleId":"sampleId1","studyId":"studyId1"}]}');
+            }], true, [{ category: "all_cases_in_study" }]), 'filterJson={"sampleIdentifiers":[{"sampleId":"sampleId1","studyId":"studyId1"}]}');
 
 
         });
