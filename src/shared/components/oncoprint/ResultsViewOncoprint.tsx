@@ -36,6 +36,7 @@ import autobind from "autobind-decorator";
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
+import WindowStore from "../window/WindowStore";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1034,7 +1035,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 genesetHeatmapTracks={this.genesetHeatmapTracks.result}
                                 heatmapTracks={this.heatmapTracks.result}
                                 divId={this.props.divId}
-                                width={900}
+                                width={WindowStore.size.width - 100}
                                 caseLinkOutInTooltips={true}
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
