@@ -39,7 +39,7 @@ import AppConfig from "appConfig";
 import {getBasePath} from "shared/api/urls";
 import $ from "jquery";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
-import getBrowserWindow from "shared/lib/getBrowserWindow";
+import getBrowserWindow from "public-lib/lib/getBrowserWindow";
 import {seekUrlHash} from "shared/lib/seekUrlHash";
 import queryString from "query-string";
 
