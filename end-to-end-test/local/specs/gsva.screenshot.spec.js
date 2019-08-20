@@ -12,6 +12,12 @@ var oncoprintTabUrl = require('./gsva.spec').oncoprintTabUrl;
 var coexpressionTabUrl = require('./gsva.spec').coexpressionTabUrl;
 var selectReactSelectOption = require('../../shared/specUtils').selectReactSelectOption;
 
+var {
+    clickVolcanoButton,
+    clickQueryByGeneButton,
+} = require('../../shared/specUtils');
+
+
 describe('gsva feature', () => {
 
     describe('GenesetVolcanoPlotSelector', () => {
@@ -21,7 +27,7 @@ describe('gsva feature', () => {
             waitForQueryPage(20000);
             checkTestStudy();
             checkGSVAprofile();
-            browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+            clickVolcanoButton();
             $('div.modal-dialog').waitForExist();
         });
 
@@ -29,7 +35,7 @@ describe('gsva feature', () => {
             var res = browser.checkElement('div.VictoryContainer');
             assertScreenShotMatch(res);
         });
-        
+
         it('updates volcano plot after change of `percentile of score calculation`', () => {
             var modal = $('div.modal-body');
             modal.$('.Select-value-label').waitForExist();
@@ -66,7 +72,7 @@ describe('gsva feature', () => {
             var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
             horzDataSelect.$('.Select-value-label').click();
             horzDataSelect.$('.Select-option=Gene Sets').click();
-            
+
             var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
             vertDataSelect.$('.Select-value-label').click();
             vertDataSelect.$('.Select-option=Gene Sets').click();
