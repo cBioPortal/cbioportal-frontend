@@ -178,6 +178,12 @@ function executeInBrowser(callback){
     return browser.execute(callback).value;
 }
 
+function clickVolcanoButton(){
+    browser.pause(200);
+    browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+    $('div.modal-dialog').waitForExist();
+}
+
 function checkElementWithTemporaryClass(selectorForChecking, selectorForTemporaryClass, temporaryClass, pauseTime) {
     browser.execute(function(selectorForTemporaryClass, temporaryClass){
         $(selectorForTemporaryClass).addClass(temporaryClass);
@@ -233,6 +239,7 @@ module.exports = {
     selectReactSelectOption: selectReactSelectOption,
     reactSelectOption: reactSelectOption,
     getReactSelectOptions: getReactSelectOptions,
+    clickVolcanoButton: clickVolcanoButton,
 };
 
 

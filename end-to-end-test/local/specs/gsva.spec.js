@@ -10,8 +10,11 @@ var selectReactSelectOption = require('../../shared/specUtils').selectReactSelec
 var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 
 var {
+    clickVolcanoButton,
     clickQueryByGeneButton,
 } = require('../../shared/specUtils');
+
+
 
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
@@ -164,7 +167,9 @@ describe('gsva feature', function() {
 
             it('adds gene set name to entry component', () => {
 
-                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+
+                clickVolcanoButton();
+
                 $('div.modal-dialog').waitForExist();
 
                 // find the GO_ATP_DEPENDENT_CHROMATIN_REMODELING entry and check its checkbox
@@ -187,7 +192,7 @@ describe('gsva feature', function() {
                 var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
                 textArea.setValue('GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
 
-                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                clickVolcanoButton();
 
                 $('div.modal-dialog').waitForExist();
 
@@ -201,7 +206,7 @@ describe('gsva feature', function() {
                 var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
                 textArea.setValue('GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
 
-                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                clickVolcanoButton();
 
                 $('div.modal-dialog').waitForExist();
 
@@ -213,7 +218,7 @@ describe('gsva feature', function() {
 
             it('searchbox filters gene set list', () => {
 
-                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                clickVolcanoButton();
 
                 $('div.modal-dialog').waitForExist();
 
