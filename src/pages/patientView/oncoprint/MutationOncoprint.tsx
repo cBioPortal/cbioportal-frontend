@@ -93,9 +93,10 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             );
             return Promise.resolve(this.sampleIdOrder.map((sampleId, index)=>{
                 const circleColor = this.props.sampleManager ? this.props.sampleManager.getColorForSample(sampleId) : undefined;
+                const labelNumber = index + 1;
                 return {
                     key: sampleId,
-                    label: `${index + 1 < 10 ? "  " : " " /* pad with spaces depending on num digits */}${index + 1}`,
+                    label: `${labelNumber}`,
                     description: `${sampleId} data from ${this.props.store.mutationMolecularProfileId.result!}`,
                     molecularProfileId: this.props.store.mutationMolecularProfileId.result!,
                     molecularAlterationType: profile.molecularAlterationType,
@@ -106,6 +107,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     labelColor: circleColor ? "white" : "black",
                     labelCircleColor: circleColor,
                     labelFontWeight: "normal",
+                    labelLeftPadding:(labelNumber < 10 ? 20 : 17), // label padding depending on how many digits in number
                     tooltip:(data:IMutationOncoprintTrackDatum[])=>{
                         const d = data[0];
                         let vafSection:string;

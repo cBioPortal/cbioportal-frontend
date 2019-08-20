@@ -877,6 +877,7 @@ function transitionHeatmapTrack(
             track_label_color: nextSpec.labelColor,
             track_label_circle_color: nextSpec.labelCircleColor,
             track_label_font_weight: nextSpec.labelFontWeight,
+            track_label_left_padding: nextSpec.labelLeftPadding,
             target_group: nextSpec.trackGroupIndex,
             removable: !!nextSpec.onRemove,
             movable: nextSpec.movable,
