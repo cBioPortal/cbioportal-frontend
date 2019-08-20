@@ -299,8 +299,13 @@ var Oncoprint = (function () {
         this.horz_zoom_callbacks = [];
         this.minimap_close_callbacks = [];
 
+        this.last_width = null;
+
         this.onWindowResize = function() {
-            resizeAndOrganize(self);
+            var new_width = $(self.ctr_selector).width();
+            if (new_width !== self.last_width) {
+                resizeAndOrganize(self);
+            }
         };
 
         $(window).on("resize", this.onWindowResize);
@@ -342,6 +347,7 @@ var Oncoprint = (function () {
             oncoprint.pending_resize_and_organize = true;
             return;
         }
+        oncoprint.last_width = ctr_width;
         oncoprint.$track_options_div.css({'left': oncoprint.label_view.getWidth()});
         oncoprint.$track_info_div.css({'left': oncoprint.label_view.getWidth() + oncoprint.track_options_view.getWidth()});
         var cell_div_left = oncoprint.label_view.getWidth() + oncoprint.track_options_view.getWidth() + oncoprint.track_info_view.getWidth();

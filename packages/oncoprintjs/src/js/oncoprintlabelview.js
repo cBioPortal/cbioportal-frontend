@@ -1,5 +1,11 @@
 var svgfactory = require('./svgfactory.js');
 var $ = require('jquery');
+var makeSvgElement = require('./makesvgelement.js');
+
+var CIRCLE_X = 25;
+function circleRadius(view) {
+    return view.minimum_track_height*0.8/2;
+}
 
 var OncoprintLabelView = (function () {
     function OncoprintLabelView($canvas, model, tooltip) {
@@ -18,6 +24,7 @@ var OncoprintLabelView = (function () {
         this.cell_heights = {};
         this.cell_heights_view_space = {};
         this.label_middles_view_space = {};
+        this.label_left_padding = {};
         this.labels = {};
         this.sublabels = {};
         this.show_sublabels = model.getShowTrackSublabels();
@@ -202,7 +209,7 @@ var OncoprintLabelView = (function () {
                 // draw circle if specified
                 view.ctx.fillStyle = view.label_circle_colors[tracks[i]];
                 view.ctx.beginPath();
-                view.ctx.arc(25, view.label_middles_view_space[tracks[i]], view.minimum_track_height*0.8, 0, 2*Math.PI);
+                view.ctx.arc(CIRCLE_X*view.supersampling_ratio, view.label_middles_view_space[tracks[i]], view.supersampling_ratio*circleRadius(view), 0, 2*Math.PI);
                 view.ctx.fill();
             }
 
@@ -213,7 +220,7 @@ var OncoprintLabelView = (function () {
                 view.ctx.fillStyle = view.label_colors[tracks[i]];
             }
             var label = shortenLabelIfNecessary(view, view.labels[tracks[i]]);
-            view.ctx.fillText(label, 0, view.label_middles_view_space[tracks[i]]);
+            view.ctx.fillText(label, view.label_left_padding[tracks[i]]*view.supersampling_ratio, view.label_middles_view_space[tracks[i]]);
             sublabelX[tracks[i]] = view.ctx.measureText(label).width;
         }
         if (view.show_sublabels) {
@@ -251,7 +258,7 @@ var OncoprintLabelView = (function () {
 
             var min_rect_height = 4;
             rect_height = Math.max(rect_height, min_rect_height);
-            view.ctx.fillRect(0, rect_y, view.getWidth()*view.supersampling_ratio, rect_height);
+            view.ctx.fillRect(view.label_left_padding[tracks[i]]*view.supersampling_ratio, rect_y, view.getWidth()*view.supersampling_ratio, rect_height);
         }
     }
 
@@ -349,6 +356,7 @@ var OncoprintLabelView = (function () {
             this.sublabels[track_ids[i]] = model.getTrackSublabel(track_ids[i]);
             this.label_colors[track_ids[i]] = model.getTrackLabelColor(track_ids[i]);
             this.label_circle_colors[track_ids[i]] = model.getTrackLabelCircleColor(track_ids[i]);
+            this.label_left_padding[track_ids[i]] = model.getTrackLabelLeftPadding(track_ids[i]);
             this.label_font_weight[track_ids[i]] = model.getTrackLabelFontWeight(track_ids[i]);
             this.html_labels[track_ids[i]] = model.getOptionalHtmlTrackLabel(track_ids[i]);
             this.track_link_urls[track_ids[i]] = model.getTrackLinkUrl(track_ids[i]);
@@ -426,7 +434,24 @@ var OncoprintLabelView = (function () {
             var track_id = tracks[i];
             var y = cell_tops[track_id] + model.getCellHeight(track_id)/2;
             var label = model.getTrackLabel(track_id);
-            var text_elt = svgfactory.text((full_labels ? label : shortenLabelIfNecessary(this, label)), 0, y, this.getFontSize(true), 'Arial', 'bold', "bottom");
+            var circleColor = model.getTrackLabelCircleColor(track_id);
+            if (circleColor) {
+                // add circle
+                root.appendChild(makeSvgElement("ellipse",{
+                    cx: CIRCLE_X.toString(),
+                    cy: y.toString(),
+                    rx: circleRadius(this).toString(),
+                    ry: circleRadius(this).toString(),
+                    stroke:"rgba(0,0,0,0)",
+                    fill:circleColor
+                }, 0, 0));
+            }
+            var text_elt = svgfactory.text(
+                (full_labels ? label : shortenLabelIfNecessary(this, label)),
+                model.getTrackLabelLeftPadding(track_id), y,
+                this.getFontSize(true),
+                'Arial', model.getTrackLabelFontWeight(track_id) || 'bold', "bottom", circleColor ? "white" : "black"
+            );
             text_elt.setAttribute("dy", "0.35em");
             root.appendChild(text_elt);
         }
