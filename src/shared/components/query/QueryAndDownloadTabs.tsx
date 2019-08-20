@@ -8,7 +8,7 @@ import {observable, action} from "mobx";
 import {MSKTab, MSKTabs} from "../MSKTabs/MSKTabs";
 import QuickSearch from "./quickSearch/QuickSearch";
 import HomePageSummary from "./quickSearch/HomePageSummary";
-import getBrowserWindow from "../../lib/getBrowserWindow";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import autobind from "autobind-decorator";
 import {trackEvent} from 'shared/lib/tracking';
 import {If} from "react-if";

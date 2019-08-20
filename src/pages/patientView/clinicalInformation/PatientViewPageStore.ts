@@ -75,7 +75,7 @@ import {stringListToSet} from "../../../public-lib/lib/StringUtils";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation } from 'public-lib/api/generated/GenomeNexusAPI';
 import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
-import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
 import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 

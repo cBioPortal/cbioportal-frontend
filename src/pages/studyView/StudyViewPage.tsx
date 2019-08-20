@@ -12,7 +12,7 @@ import {
 } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
-import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
