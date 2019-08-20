@@ -27,7 +27,7 @@ function makeIdCounter() {
 var gradientId = makeIdCounter();
 
 module.exports = {
-    text: function(content,x,y,size,family,weight,alignment_baseline) {
+    text: function(content,x,y,size,family,weight,alignment_baseline,fill) {
         size = size || 12;
         var alignment_baseline_y_offset = size;
         if (alignment_baseline === "middle") {
@@ -42,6 +42,7 @@ module.exports = {
             'font-family':(family || 'serif'),
             'font-weight':(weight || 'normal'),
             'text-anchor':'start',
+            'fill':fill
         });
         elt.textContent = content + '';
         return elt;
