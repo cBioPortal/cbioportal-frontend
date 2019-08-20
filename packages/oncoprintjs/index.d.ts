@@ -221,6 +221,7 @@ declare module "oncoprintjs"
         setShowTrackSublabels:(show:boolean)=>void;
         clearMouseOverEffects:()=>void;
         setTrackMovable:(track_id:TrackId, movable:boolean)=>void;
+        setWidth:(width:number)=>void;
 
         constructor(ctr_selector:string, width:number);
         destroy:()=>void;

@@ -13134,22 +13134,12 @@ var Oncoprint = (function () {
         this.horz_zoom_callbacks = [];
         this.minimap_close_callbacks = [];
 
-        this.last_width = null;
-
-        this.onWindowResize = function() {
-            var new_width = $(self.ctr_selector).width();
-            if (new_width !== self.last_width) {
-                resizeAndOrganize(self);
-            }
-        };
-
-        $(window).on("resize", this.onWindowResize);
-
-
         this.id_clipboard = [];
         this.clipboard_change_callbacks = [];
 
         this.pending_resize_and_organize = false;
+
+        this.width = width;
     }
 
     var _SetLegendTop = function (oncoprint) {
@@ -13182,18 +13172,17 @@ var Oncoprint = (function () {
             oncoprint.pending_resize_and_organize = true;
             return;
         }
-        oncoprint.last_width = ctr_width;
         oncoprint.$track_options_div.css({'left': oncoprint.label_view.getWidth()});
         oncoprint.$track_info_div.css({'left': oncoprint.label_view.getWidth() + oncoprint.track_options_view.getWidth()});
         var cell_div_left = oncoprint.label_view.getWidth() + oncoprint.track_options_view.getWidth() + oncoprint.track_info_view.getWidth();
         oncoprint.$cell_div.css('left', cell_div_left);
-        oncoprint.cell_view.setWidth(ctr_width - cell_div_left - 20, oncoprint.model);
+        oncoprint.cell_view.setWidth(oncoprint.width - cell_div_left - 20, oncoprint.model);
 
         _SetLegendTop(oncoprint);
-        oncoprint.legend_view.setWidth(ctr_width - oncoprint.$minimap_div.outerWidth() - 20, oncoprint.model);
+        oncoprint.legend_view.setWidth(oncoprint.width - oncoprint.$minimap_div.outerWidth() - 20, oncoprint.model);
 
         setHeight(oncoprint);
-        oncoprint.$ctr.css({'min-width': ctr_width});
+        oncoprint.$ctr.css({'min-width': oncoprint.width});
 
         setTimeout(function () {
             if (oncoprint.keep_horz_zoomed_to_fit) {
@@ -13900,6 +13889,12 @@ var Oncoprint = (function () {
         this.label_view.setTrackMovable(this.model);
     }
 
+    Oncoprint.prototype.setWidth = function(width) {
+        this.width = width;
+
+        resizeAndOrganize(this);
+    }
+
     Oncoprint.prototype.toSVG = function(with_background) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
@@ -14031,7 +14026,6 @@ var Oncoprint = (function () {
         this.cell_view.destroy();
         this.track_options_view.destroy();
         this.track_info_view.destroy();
-        $(window).off("resize", this.onWindowResize);
         this.destroyed = true;
     }
 
