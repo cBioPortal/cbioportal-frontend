@@ -51,6 +51,8 @@ export function emptyMutation(): Mutation
         validationStatus: "",
         variantAllele: "",
         variantType: "",
+		CCF: -1,
+		clusterId: "",
         driverFilter: "",
         driverFilterAnnotation: "",
         driverTiersFilter: "",

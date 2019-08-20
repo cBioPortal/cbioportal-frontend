@@ -1,0 +1,36 @@
+.visulization {
+	display: flex;
+	width: 1000px;
+	margin: auto;
+}
+
+.mutClusterLinePlot {
+	display: inherit;
+	margin-right: 30px;
+}
+
+.clusterNumRange {
+	margin: 40px;
+}
+
+.clusterNumRange {
+	display: block;
+	width: 170px;
+}
+
+.treePlot {
+	display: flex;
+}
+
+.treeEdgeSelected {
+	stroke-width: 10;
+}
+
+.linePlotSelected {
+	stroke-width: 4;
+}
+
+.linePlotMouseOver {
+	stroke-width: 6;
+}
+

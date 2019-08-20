@@ -579,7 +579,7 @@ export class PatientViewPageStore {
 
             async function fetchMutationDataFromFile() {
                 // Using local mutationDataFile as demo data
-                const demoJson = require("../../../shared/components/evolution/mutationData4test.json") as string;
+                const demoJson = require("../../../shared/components/evolution/mutationData4test_CRUK0034.json") as string;
                 var promise = demoJson;
                 return await promise; // wait till the promise resolves (*)
             };

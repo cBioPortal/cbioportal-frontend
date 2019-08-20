@@ -4,15 +4,12 @@ import {observer} from "mobx-react";
 import * as d3 from 'd3';
 import $ from "jquery";
 
-
 interface Inode {
     clusterId: string;
     x: number; 
     y: number;
 };
 
-// load the treeJson
-const treeJson = require("./tree4test.json") as string;
 
 // load the svg used as placeholder
 const demoSvg = require("./demo.svg") as string;
@@ -23,7 +20,6 @@ export interface ItreeNode {
     blengths: number;
     sample: [{string: string}];
 }
-
 
 function findChildOf(clusterId:string, treeTable:Array<ItreeNode>): Array<string> {
     return treeTable.filter(function(cluster: ItreeNode) {
@@ -44,7 +40,7 @@ function getCoordination(treeTable: Array<ItreeNode>) {
     var tree = [];
 
     // TODO: make a API
-    const length_factor = 20;
+    const length_factor = 7;
 
     tree.push({parentNode: "-1", childNode: findChildOf("-1", treeTable)});
 
@@ -135,18 +131,25 @@ function getColor(i:number, colorList:Array<string>) {
 }
 
 
-export default class TreePlot extends React.Component<any, any> {
+export default class TreePlot extends React.Component<{treeData: any, height: number, width: number, margin: number, selectNode: any}> {
     // load the tree plot svg
     // In this commit: using "Button" to represent the node in the tree
+	constructor(props:any) {
+		super(props)
+	}
 
     ref: SVGSVGElement;
     componentDidMount() {
-        this.drawTreePlot(this.props.treeData, this.props.height, this.props.width, this.props.margin);
+		this.drawTreePlot(this.props.treeData, this.props.height, this.props.width, this.props.margin);
     }
+	componentDidUpdate() {
+		this.drawTreePlot(this.props.treeData, this.props.height, this.props.width, this.props.margin);
+	}
 
     drawTreePlot(treeTable:Array<ItreeNode>, height:number, width:number, margin:number) {
 
         // Create svg canvas
+        d3.select(this.ref).select('g').remove();
         var svg = d3.select(this.ref)
             .attr('width', width)
             .attr('height', height)
@@ -178,7 +181,7 @@ export default class TreePlot extends React.Component<any, any> {
                 .attr('y1', edges[i].yStart)
                 .attr('y2', edges[i].yEnd)
                 .attr("stroke-width", 7)
-                .attr("stroke", getColor(i, edgeColors))
+                .attr("stroke", getColor(Number(edges[i].end), edgeColors))
                 .attr('clusterId', edges[i].end)
                 .on("click", edgeHandleMouseClick)
                 .on("mouseover", edgeHandleMouseOver)
@@ -205,40 +208,37 @@ export default class TreePlot extends React.Component<any, any> {
         function edgeHandleMouseClick() {
             const class_name = $(this).attr("clusterId");
             selectNode(class_name);
-            $(this).attr("stroke-width", function(index, attr) { 
-                return attr == "10" ? "7" : "10";
-            });
+//             $(this).addClass("treeEdgeSelected");
+			$(".mutClusterLinePlot #linePlotMutClusterId_" + class_name + " path").toggleClass("linePlotSelected");
+		}
             // $(`tr.${class_name}`).css({ background: 'red' });
-        }
 
         function edgeHandleMouseOver() {
-            $(this).attr("stroke-width", function(index, attr) { 
-                return attr == "10" ? "10" : "9";
-            });
+			const class_name = $(this).attr("clusterId");
+            $(this).addClass("treeEdgeSelected");
+			$(".mutClusterLinePlot #linePlotMutClusterId_" + class_name + " path").addClass("linePlotMouseOver");
             // $(`tr.${class_name}`).css({ background: 'red' });
         }
 
 
         function edgeHandleMouseOut() {
-            $(this).attr("stroke-width", function(index, attr) { 
-                return attr == "10" ? "10" : "7";
-            });
+			const class_name = $(this).attr("clusterId");
+            $(this).removeClass("treeEdgeSelected");
+			$(".mutClusterLinePlot #linePlotMutClusterId_" + class_name + " path").removeClass("linePlotMouseOver");
             // const class_name = $(this).attr('id');
             // $(`tr.${class_name}`).css({ background: 'white' });
         }
     }
 
-
-    render() {
+	render() {
         return(
-            <div className="treePlot">
-                <div className="demoTree">
-                    <svg className="container" ref={(ref: SVGSVGElement) => this.ref = ref}> 
-                    </svg>
-                </div>
-                <div className="popUp">
-                </div>
-            </div>
+		<div className="treePlot">
+			<div className="demoTree">
+				<svg className="container" ref={(ref: SVGSVGElement) => this.ref = ref}></svg>
+			</div>
+			<div className="popUp">
+			</div>
+		</div>
         )
     }
 }

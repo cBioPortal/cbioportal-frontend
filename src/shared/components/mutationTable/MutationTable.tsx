@@ -337,7 +337,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         };
 
         this._columns[MutationTableColumnType.CCF] = {
-            name: "Cancer Cell Fraction 4 Test",
+            name: "CCF",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "CCF"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "CCF"),
             sortBy:(d:Mutation[])=>d.map(m=>m.CCF),
@@ -346,7 +346,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         };
         
         this._columns[MutationTableColumnType.MUTATION_CLUSTER] = {
-            name: "Mutation Cluster ID 4 Test",
+            name: "Mutation Cluster",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "clusterId"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "clusterId"),
             sortBy:(d:Mutation[])=>d.map(m=>m.clusterId),

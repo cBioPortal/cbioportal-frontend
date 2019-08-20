@@ -1,0 +1,64 @@
+.axis path {
+	fill:none;
+	stroke:#777;
+	shape-rendering:crispEdges
+}
+
+.axis text {
+	font-size: 13px;
+}
+
+.tick text {
+	font-family:Lato;
+	font-size:13px
+}
+
+.svg-line-chart-point {
+	fill:#fff;
+	stroke-width:2px;
+	cursor:pointer
+}
+
+div.svg-line-chart-tooltip {
+	position:fixed;
+	text-align:center;
+	width:100px;
+	padding-top:5px;
+	padding-bottom:5px;
+	font:12px sans-serif;
+	background:#f5f5f5;
+	border:0;
+	pointer-events:none;
+	opacity:0
+}
+
+.svg-line-chart-label {
+	text-anchor:middle;
+	font-weight:700;
+	font-size:28px;
+	font-family:Ubuntu,sans-serif
+}
+
+/*Input Range Side bar*/
+.clusterNumRange {
+	width: 15%;
+}
+
+.sliderticks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+}
+
+.sliderticks p {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  width: 1px;
+  background: #D3D3D3;
+  height: 5px;
+  line-height: 30px;
+  margin: 0 0 20px 0;
+}
+/*# sourceMappingURL=styles.css.map*/
