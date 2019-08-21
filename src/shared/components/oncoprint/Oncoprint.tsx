@@ -108,6 +108,7 @@ interface IBaseHeatmapTrackSpec {
     data: IBaseHeatmapTrackDatum[];
     description?: string;
     trackGroupIndex: number;
+    hasColumnSpacing?:boolean;
 }
 export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGeneHeatmapTrackDatum[];
@@ -145,6 +146,7 @@ export interface IOncoprintProps {
     divId:string;
     width:number;
     initCellWidth?:number;
+    initCellPadding?:number;
     caseLinkOutInTooltips:boolean;
 
     molecularProfileIdToMolecularProfile?:{[molecularProfileId:string]:MolecularProfile};
@@ -217,7 +219,10 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private refreshOncoprint(props:IOncoprintProps) {
         if (!this.oncoprint) {
             // instantiate new one
-            this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width, props.initCellWidth);
+            this.oncoprint = new OncoprintJS<any>(`#${props.divId}`, props.width, {
+                init_cell_width: props.initCellWidth,
+                init_cell_padding: props.initCellPadding
+            });
             this.oncoprint.setTrackGroupLegendOrder([GENETIC_TRACK_GROUP_INDEX, CLINICAL_TRACK_GROUP_INDEX]);
             (window as any).frontendOnc = this.oncoprint;
             if (props.oncoprintRef) {

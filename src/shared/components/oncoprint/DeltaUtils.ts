@@ -893,7 +893,7 @@ function transitionHeatmapTrack(
             rule_set_params: getHeatmapTrackRuleSetParams(nextSpec.molecularAlterationType),
             data: nextSpec.data,
             data_id_key: "uid",
-            has_column_spacing: false,
+            has_column_spacing: ifndef(nextSpec.hasColumnSpacing, false),
             track_padding: 0,
             label: nextSpec.label,
             track_label_color: nextSpec.labelColor,
