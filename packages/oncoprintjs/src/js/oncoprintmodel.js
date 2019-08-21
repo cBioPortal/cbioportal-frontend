@@ -107,9 +107,7 @@ var clamp = function(x, lower, upper) {
 var OncoprintModel = (function () {
     var MIN_ZOOM_PIXELS = 100;
     var MIN_CELL_HEIGHT_PIXELS = 3;
-    function OncoprintModel(init_cell_padding, init_cell_padding_on,
-                            init_horz_zoom, init_vert_zoom,
-                            init_cell_width, init_track_group_padding) {
+    function OncoprintModel(params) {
 
         var model = this;
 
@@ -119,21 +117,22 @@ var OncoprintModel = (function () {
 
         // Rendering Properties
         this.max_height = 500;
-        this.cell_width = ifndef(init_cell_width, 6);
-        this.horz_zoom = ifndef(init_horz_zoom, 1);
-        this.vert_zoom = ifndef(init_vert_zoom, 1);
+        this.cell_width = ifndef(params.init_cell_width, 6);
+        this.horz_zoom = ifndef(params.init_horz_zoom, 1);
+        this.vert_zoom = ifndef(params.init_vert_zoom, 1);
         this.horz_scroll = 0;
         this.vert_scroll = 0;
         this.bottom_padding = 0;
-        this.track_group_padding = ifndef(init_track_group_padding, 10);
-        this.cell_padding = ifndef(init_cell_padding, 3);
-        this.cell_padding_on = ifndef(init_cell_padding_on, true);
+        this.track_group_padding = ifndef(params.init_track_group_padding, 10);
+        this.cell_padding = ifndef(params.init_cell_padding, 3);
+        this.cell_padding_on = ifndef(params.init_cell_padding_on, true);
         this.cell_padding_off_cell_width_threshold = 2;
         this.cell_padding_off_because_of_zoom = (this.getCellWidth() < this.cell_padding_off_cell_width_threshold);
         this.id_order = [];
         this.hidden_ids = {};
         this.track_group_legend_order = [];
         this.show_track_sublabels = false;
+        this.column_labels = {};
 
         // Track Properties
         this.track_important_ids = {}; // a set of "important" ids - only these ids will cause a used rule to become active and thus shown in the legend
@@ -1151,9 +1150,14 @@ var OncoprintModel = (function () {
         return Math.min(this.max_height, this.getOncoprintHeight());
     }
 
-    OncoprintModel.prototype.getCellViewWidth = function() {
-        return this.getOncoprintWidth();
+    OncoprintModel.prototype.getColumnLabels = function() {
+        return this.column_labels;
     }
+
+    OncoprintModel.prototype.setColumnLabels = function(labels) {
+        this.column_labels = labels;
+    }
+
     OncoprintModel.prototype.moveTrack = function (track_id, new_previous_track) {
 
         function moveContiguousValues(uniqArray, first_value, last_value, new_predecessor) {
