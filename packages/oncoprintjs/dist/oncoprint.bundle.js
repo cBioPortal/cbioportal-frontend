@@ -12862,7 +12862,9 @@ var Oncoprint = (function () {
             return ctr;
         }
     })();
-    function Oncoprint(ctr_selector, width, init_cell_width) {
+    function Oncoprint(ctr_selector, width, params) {
+        params = params || {};
+
         var self = this;
 
         this.destroyed = false;
@@ -12993,7 +12995,10 @@ var Oncoprint = (function () {
         this.$cell_canvas = $cell_canvas;
         this.$cell_overlay_canvas = $cell_overlay_canvas;
 
-        this.model = new OncoprintModel({ init_cell_width: init_cell_width });
+        this.model = new OncoprintModel({
+            init_cell_width: params.init_cell_width,
+            init_cell_padding: params.init_cell_padding
+        });
 
         this.cell_view = new OncoprintWebGLCellView($cell_div, $cell_canvas, $cell_overlay_canvas, $column_label_canvas, $dummy_scroll_div_contents, this.model, new OncoprintToolTip($tooltip_ctr), function(left, right) {
                 var enclosed_ids = self.model.getIdsInLeftInterval(left, right);
