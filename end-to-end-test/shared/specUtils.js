@@ -1,7 +1,13 @@
 const clipboardy = require('clipboardy');
 
-function waitForQueryPage(timeout) {
+function waitForStudyQueryPage(timeout) {
     $('div[data-test="cancerTypeListContainer"]').waitForExist(timeout || 10000);
+}
+
+function waitForGeneQueryPage(timeout) {
+    // wait until fade effect on studyList has finished (if running in forkedMode)
+    $("[data-test=studyList]").waitForExist(timeout, true);
+    $('div[data-test="molecularProfileSelector"]').waitForExist(timeout || 10000);
 }
 
 function waitForPlotsTab(timeout) {
@@ -195,6 +201,7 @@ function checkElementWithMouseDisabled(selector, pauseTime) {
 }
 
 function clickQueryByGeneButton(){
+    browser.waitForEnabled('a=Query By Gene');
     browser.click('a=Query By Gene');
     browser.scroll(0,0);
 };
@@ -205,7 +212,8 @@ function clickModifyStudySelectionButton (){
 
 module.exports = {
     waitForPlotsTab: waitForPlotsTab,
-    waitForQueryPage: waitForQueryPage,
+    waitForStudyQueryPage: waitForStudyQueryPage,
+    waitForGeneQueryPage: waitForGeneQueryPage,
     waitForOncoprint: waitForOncoprint,
     waitForCoExpressionTab: waitForCoExpressionTab,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
