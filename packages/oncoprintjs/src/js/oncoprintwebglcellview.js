@@ -489,6 +489,7 @@ var OncoprintWebGLCellView = (function () {
         view.column_label_ctx.fillStyle = "rgba(0,0,0,1)";
         view.column_label_ctx.font = (view.supersampling_ratio*font_size)+"px "+font_family;
         view.column_label_ctx.textAlign = "left";
+        view.column_label_ctx.textBaseline = "middle";
         for (var i=0; i<ids.length; i++) {
             if (ids[i] in labels) {
                 var x = (x_map[ids[i]] + cell_width/2 - scroll_x)*view.supersampling_ratio;
@@ -1031,7 +1032,8 @@ var OncoprintWebGLCellView = (function () {
                 "font-weight":"normal",
                 "text-anchor":"start",
                 "fill":"black",
-                "transform":"rotate("+COLUMN_LABEL_ANGLE+","+x+","+column_label_y+")"
+                "transform":"rotate("+COLUMN_LABEL_ANGLE+","+x+","+column_label_y+")",
+                "alignment-baseline":"middle"
             });
             textElt.textContent = labels[id];
             root.appendChild(textElt);
