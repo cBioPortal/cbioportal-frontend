@@ -46,8 +46,10 @@ export interface ICNAGenesTablePros {
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
-    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     cancerGeneFilterEnabled?: boolean;
+    filterByCancerGenes: boolean;
+    onChangeCancerGeneFilter: (filtered: boolean) => void;
+    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
 }
 
 class CNAGenesTableComponent extends FixedHeaderTable<CopyNumberCountByGeneWithCancerGene> {}
@@ -65,7 +67,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @observable private preSelectedRows: CNAGenesTableUserSelectionWithIndex[] = [];
     @observable private sortBy: string = ColumnKey.FREQ;
     @observable private sortDirection: SortDirection;
-    @observable private cancerGeneFilterIconEnabled = true;
 
     @observable private modalSettings: {
         modalOpen: boolean;
@@ -109,11 +110,11 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @autobind
     toggleCancerGeneFilter(event:any) {
         event.stopPropagation();
-        this.cancerGeneFilterIconEnabled=!this.cancerGeneFilterIconEnabled;
+        this.props.onChangeCancerGeneFilter(!this.props.filterByCancerGenes)
     }
 
     @computed get isFilteredByCancerGeneList() {
-        return this.props.cancerGeneFilterEnabled! && this.cancerGeneFilterIconEnabled;
+        return !!this.props.cancerGeneFilterEnabled && this.props.filterByCancerGenes;
     }
 
     @computed get tableData() {
