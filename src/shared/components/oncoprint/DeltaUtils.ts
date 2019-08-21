@@ -35,6 +35,7 @@ export function transition(
     }
     trySuppressRendering(nextProps, prevProps, oncoprint);
     transitionWidth(nextProps, prevProps, oncoprint);
+    transitionColumnLabels(nextProps, prevProps, oncoprint);
     transitionWhitespaceBetweenColumns(nextProps, prevProps, oncoprint);
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
@@ -121,6 +122,16 @@ function tryReleaseRendering(
 ){
     if (!nextProps.suppressRendering && prevProps.suppressRendering) {
         doReleaseRendering(nextProps, oncoprint);
+    }
+}
+
+function transitionColumnLabels(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS<any>
+) {
+    if (!_.isEqual(nextProps.columnLabels, prevProps.columnLabels)) {
+        oncoprint.setColumnLabels(nextProps.columnLabels || {});
     }
 }
 
