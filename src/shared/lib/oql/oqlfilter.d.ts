@@ -9,6 +9,7 @@
 import {SingleGeneQuery, MergedGeneQuery} from "./oql-parser";
 import {AnnotatedMutation, ExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import {NumericGeneMolecularData, Mutation} from "../../api/generated/CBioPortalAPI";
+import { Alteration } from 'shared/lib/oql/oql-parser';
 
 type OQLAlterationFilterString = string;
 
@@ -40,6 +41,10 @@ export declare function parseOQLQuery(
     oql_query: string,
     opt_default_oql?: OQLAlterationFilterString
 ): SingleGeneQuery[];
+
+export declare function parsedOQLAlterationToSourceOQL(
+    alteration:Alteration
+): string;
 
 export declare function unparseOQLQueryLine(
     parsed_oql_line:SingleGeneQuery
