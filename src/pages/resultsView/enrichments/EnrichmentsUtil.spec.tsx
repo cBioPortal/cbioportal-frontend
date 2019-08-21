@@ -730,14 +730,15 @@ describe("EnrichmentsUtil", () => {
     describe("#getGeneListOptions()", () => {
         it("returns correct options", () => {
             //empty requests
-            assert.deepEqual(getGeneListOptions([]), [{ "label": "User-defined genes", "genes": [] }]);
+            assert.deepEqual(getGeneListOptions([]), [{ "label": "User-defined genes", "genes": [] }] as any);
 
             //non empty requests
             assert.deepEqual(getGeneListOptions(exampleAlterationEnrichmentRowData), [
                 { "label": "User-defined genes", "genes": [] },
                 { "label": "Genes with highest frequency in any group", "genes": ["EGFR", "FBXW4", "CAND2"] },
                 { "label": "Genes with highest average frequency", "genes": ["EGFR", "FBXW4", "CAND2"] },
-                { "label": "Genes with most significant p-value", "genes": ["EGFR", "FBXW4", "CAND2"] }
+                { "label": "Genes with most significant p-value", "genes": ["EGFR", "FBXW4", "CAND2"] },
+                { "label": "Sync with table (up to 100 genes)", "genes": [] }
             ]);
 
             //non empty requests
@@ -755,7 +756,8 @@ describe("EnrichmentsUtil", () => {
                 { "label": "User-defined genes", "genes": [] },
                 { "label": "Genes with highest frequency in any group", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
                 { "label": "Genes with highest average frequency", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
-                { "label": "Genes with most significant p-value", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] }
+                { "label": "Genes with most significant p-value", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
+                { "label": "Sync with table (up to 100 genes)", "genes": [] }
             ]);
 
         });
