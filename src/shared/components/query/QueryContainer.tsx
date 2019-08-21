@@ -104,7 +104,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
         const control =  <CancerStudySelector queryStore={this.store} forkedMode={this.props.forkedMode!}  />;
         //NOTE: we have to wrap with div in order to deal with margin applied by css selector
         //react-reveal does not allow us to add inline-css to it's wrapper
-        return this.props.forkedMode ? <div style={{ marginTop:0 }}><Fade duration={500}
+        return this.props.forkedMode ? <div style={{ marginTop:0 }}><Fade duration={0}
                                                    collapse={false}
                                                    className={"monkeys"}
                                                    unmountOnExit={true}
