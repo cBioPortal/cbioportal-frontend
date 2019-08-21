@@ -144,6 +144,7 @@ export interface IOncoprintProps {
     heatmapTracksOrder?:{[trackGroupIndex:number]:string[]}; // track keys
     divId:string;
     width:number;
+    initCellWidth?:number;
     caseLinkOutInTooltips:boolean;
 
     molecularProfileIdToMolecularProfile?:{[molecularProfileId:string]:MolecularProfile};
@@ -216,7 +217,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private refreshOncoprint(props:IOncoprintProps) {
         if (!this.oncoprint) {
             // instantiate new one
-            this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width);
+            this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width, props.initCellWidth);
             this.oncoprint.setTrackGroupLegendOrder([GENETIC_TRACK_GROUP_INDEX, CLINICAL_TRACK_GROUP_INDEX]);
             (window as any).frontendOnc = this.oncoprint;
             if (props.oncoprintRef) {
