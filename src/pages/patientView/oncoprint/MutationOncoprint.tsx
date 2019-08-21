@@ -110,6 +110,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     labelCircleColor: circleColor,
                     labelFontWeight: "normal",
                     labelLeftPadding:(labelNumber < 10 ? 20 : 17), // label padding depending on how many digits in number
+                    hasColumnSpacing:true,
                     tooltip:(data:IMutationOncoprintTrackDatum[])=>{
                         const d = data[0];
                         let vafSection:string;
@@ -241,6 +242,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                         <Oncoprint
                             oncoprintRef={this.oncoprintRef}
                             initCellWidth={20}
+                            initCellPadding={1}
                             columnLabels={this.columnLabels.result!}
                             clinicalTracks={[]}
                             geneticTracks={[]}
