@@ -91,17 +91,18 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
 
 
         // Alteration data of non-query genes are loaded.
-        const isNewStoreReady = this.storeForAllData && this.storeForAllData.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.isComplete &&
-        this.storeForAllData.samples.isComplete &&
-        this.storeForAllData.patients.isComplete &&
-        this.storeForAllData.coverageInformation.isComplete &&
-        this.storeForAllData.sequencedSampleKeysByGene.isComplete &&
-        this.storeForAllData.sequencedPatientKeysByGene.isComplete &&
-        this.storeForAllData.selectedMolecularProfiles.isComplete;
+        const isNewStoreReady = this.storeForAllData &&
+                                this.storeForAllData.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.isComplete &&
+                                this.storeForAllData.samples.isComplete &&
+                                this.storeForAllData.patients.isComplete &&
+                                this.storeForAllData.coverageInformation.isComplete &&
+                                this.storeForAllData.sequencedSampleKeysByGene.isComplete &&
+                                this.storeForAllData.sequencedPatientKeysByGene.isComplete &&
+                                this.storeForAllData.selectedMolecularProfiles.isComplete;
 
         if(isNewStoreReady){
 
-            this.storeForAllData!.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, _) => {
+            this.storeForAllData!.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
                 getAlterationData(this.storeForAllData!.samples.result,
                                   this.storeForAllData!.patients.result,
                                   this.storeForAllData!.coverageInformation.result,
@@ -120,11 +121,6 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
             setTimeout(() => {this.activeToasts.forEach(tId => {toast.dismiss(tId);});}, 1000);
         }
 
-        // Call to this.remoteGenes.result helps remoteData to work.
-        //console.log("this.remoteGenes");
-        //console.log(this.validNonQueryGenes.result);
-        console.log("this.validGenes");
-        console.log(this.validGenes);
         return(
 
             <div className="pathwayMapper">
@@ -136,16 +132,19 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
                         <React.Fragment>
                             <OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
 
-                            <PathwayMapper isCBioPortal={true} isCollaborative={false}
-                                    genes={this.props.store.genes.result as any}
-                                    cBioAlterationData={this.alterationFrequencyData}
-                                    queryParameter={QueryParameter.GENE_LIST}
-                                    oncoPrintTab={ResultsViewTab.ONCOPRINT}
-                                    changePathwayHandler={this.changePathwayHandler}
-                                    addGenomicDataHandler={this.addGenomicDataHandler}
-                                    tableComponent={PathwayMapperTable}
-                                    validGenes={this.validGenes}
-                                    toast={toast}/>
+                            <PathwayMapper
+                                isCBioPortal={true}
+                                isCollaborative={false}
+                                genes={this.props.store.genes.result as any}
+                                cBioAlterationData={this.alterationFrequencyData}
+                                queryParameter={QueryParameter.GENE_LIST}
+                                oncoPrintTab={ResultsViewTab.ONCOPRINT}
+                                changePathwayHandler={this.changePathwayHandler}
+                                addGenomicDataHandler={this.addGenomicDataHandler}
+                                tableComponent={PathwayMapperTable}
+                                validGenes={this.validGenes}
+                                toast={toast}
+                            />
                             <ToastContainer/>
                         </React.Fragment>
                     :   <LoadingIndicator isLoading={true} size={"big"} center={true}/>
@@ -157,7 +156,8 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
 
     @computed get storeForAllData(){
         if(this.validNonQueryGenes.isComplete && this.validNonQueryGenes.result.length > 0){
-            const tId = toast("Alteration data of genes not listed in gene list might take a while to load!", {autoClose: false, position: "bottom-left"});
+            const tId = toast("Alteration data of genes not listed in gene list might take a while to load!",
+                              {autoClose: false, position: "bottom-left"});
             this.activeToasts.push(tId);
             return this.props.initStore(this.props.appStore, this.validNonQueryGenes.result.join(" "));
         }

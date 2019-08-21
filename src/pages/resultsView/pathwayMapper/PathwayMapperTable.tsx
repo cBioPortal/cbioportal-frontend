@@ -25,7 +25,7 @@ interface IPathwayMapperTableProps {
     initialSortColumn?: string;
 }
 
-type PathwayMapperTableColumn = Column<IPathwayMapperTable> & { order?: number, shouldExclude?: () => boolean };
+type PathwayMapperTableColumn = Column<IPathwayMapperTable>;
 
 class PathwayMapperTableComponent extends LazyMobXTable<IPathwayMapperTable> {
 }
@@ -49,8 +49,6 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
     }
 
     generateColumns() {
-
-
         const lengthThreshold = 20;
 
         this._columns = {};
@@ -60,15 +58,23 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
             render: (d: IPathwayMapperTable) => {
                 const pwName = d.name;
                 const isPwNameShort = pwName.length < lengthThreshold;
-                return(
-                <span data-border="true" data-type="light" data-tip={pwName} data-place="top" data-effect="solid" data-tip-disable={isPwNameShort}>
-                    <Radio 
-                        style={{marginTop: 0, marginBottom: 0}}
-                        checked={this.props.selectedPathway === d.name} onChange={(e: any) => {this.props.changePathway(d.name);}} >
-                        <b>{(isPwNameShort ? pwName : pwName.substring(0, lengthThreshold) + "...")}</b>
-                    </Radio>
-                </span>);
-                },
+                return (
+                    <span 
+                        data-border="true" 
+                        data-type="light" 
+                        data-tip={pwName}
+                        data-place="top"
+                        data-effect="solid"
+                        data-tip-disable={isPwNameShort}>
+                        <Radio 
+                            style={{marginTop: 0, marginBottom: 0}}
+                            checked={this.props.selectedPathway === d.name} 
+                            onChange={(e: any) => {this.props.changePathway(d.name);}}>
+                            <b>{(isPwNameShort ? pwName : pwName.substring(0, lengthThreshold) + "...")}</b>
+                        </Radio>
+                    </span>
+                );
+            },
             tooltip: <span>Pathway name</span>,
             filter: (d: IPathwayMapperTable, filterString: string, filterStringUpper: string) =>
                 d.name.toUpperCase().includes(filterStringUpper),
@@ -91,11 +97,18 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
             render: (d: IPathwayMapperTable) => {
                 const geneTextLength = d.genes.join(" ").length;
 
-                return (<span data-border="true" data-type="light" data-tip={d.genes.join(" ")} 
-                        data-place="top" data-effect="solid" data-tip-disable={geneTextLength < lengthThreshold}>
-                    {this.calculateGeneStr(d.genes, lengthThreshold)}
-                </span>);
-                },
+                return (
+                    <span
+                        data-border="true"
+                        data-type="light"
+                        data-tip={d.genes.join(" ")} 
+                        data-place="top"
+                        data-effect="solid"
+                        data-tip-disable={geneTextLength < lengthThreshold}>
+                        {this.calculateGeneStr(d.genes, lengthThreshold)}
+                    </span>
+                );
+            },
             tooltip: <span>Genes matched</span>,
             sortBy: (d: IPathwayMapperTable) => d.genes,
             download: (d: IPathwayMapperTable) => d.genes.toString()
@@ -103,10 +116,15 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
     }
 
     render() {
-        const orderedColumns = _.sortBy(this._columns, (c: PathwayMapperTableColumn) => c.order);
+        const columns = _.sortBy(this._columns);
         return (
-            <PathwayMapperTableComponent columns={orderedColumns} data={this.props.data} initialItemsPerPage={10}
-                initialSortColumn={this.props.initialSortColumn} paginationProps={{ itemsPerPageOptions: [10] }}/>
+            <PathwayMapperTableComponent 
+                columns={columns}
+                data={this.props.data}
+                initialItemsPerPage={10}
+                initialSortColumn={this.props.initialSortColumn}
+                paginationProps={{ itemsPerPageOptions: [10] }}
+            />
         );
     }
 
