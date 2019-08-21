@@ -3485,17 +3485,9 @@ export class ResultsViewPageStore {
         )
     });
 
-    @cached get geneCache() {
-        return new GeneCache();
-    }
-
-    @cached get genesetCache() {
-        return new GenesetCache();
-    }
-
-    @cached get treatmentCache() {
-        return new TreatmentCache();
-    }
+    readonly geneCache = new GeneCache();
+    readonly genesetCache = new GenesetCache();
+    readonly treatmentCache = new TreatmentCache();
 
     public numericGeneMolecularDataCache = new MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>(
         q=>({
