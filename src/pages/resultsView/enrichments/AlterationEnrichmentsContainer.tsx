@@ -271,7 +271,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     public render() {
-
         if (this.props.data.length === 0) {
             return <div className={'alert alert-info'}>No data/result available</div>;
         }
@@ -313,6 +312,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             showCNAInTable={this.props.showCNAInTable}
                             containerType={this.props.containerType}
                             categoryToColor={this.categoryToColor}
+                            dataStore={this.dataStore}
                         />
                     </div>
                 </div>
