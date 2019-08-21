@@ -47,5 +47,10 @@ export default {
     commonjs(),
     resolve(),
     sourcemaps()
-  ]
+  ],
+  watch: {
+    chokidar: {
+      usePolling: true
+    }
+  }
 }
