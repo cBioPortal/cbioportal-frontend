@@ -1,5 +1,6 @@
 var gl_matrix = require('gl-matrix');
 var svgfactory = require('./svgfactory.js');
+var makeSvgElement = require('./makesvgelement.js');
 var shapeToVertexes = require('./oncoprintshapetovertexes.js');
 var CachedProperty = require('./CachedProperty.js');
 var Shape = require('./oncoprintshape.js');
@@ -30,7 +31,7 @@ var getNewCanvas = function(view) {
     var new_canvas = old_canvas.cloneNode();
     var parent_node = old_canvas.parentNode;
     parent_node.removeChild(old_canvas);
-    parent_node.insertBefore(new_canvas, view.$overlay_canvas[0]);
+    parent_node.prepend(new_canvas); // keep on bottom since we need overlays to not be hidden
     view.$canvas = $(new_canvas);
     view.ctx = null;
 };
@@ -86,11 +87,17 @@ var createShader = function (view, source, type) {
     return shader;
 };
 
+var COLUMN_LABEL_ANGLE = 65;
+var COLUMN_LABEL_MARGIN = 30;
+
 var OncoprintWebGLCellView = (function () {
-    function OncoprintWebGLCellView($container, $canvas, $overlay_canvas, $dummy_scroll_div_contents, model, tooltip, highlight_area_callback, cell_over_callback) {
+    function OncoprintWebGLCellView($container, $canvas, $overlay_canvas, $column_label_canvas, $dummy_scroll_div_contents, model, tooltip, highlight_area_callback, cell_over_callback) {
         this.$container = $container;
         this.$canvas = $canvas;
         this.$overlay_canvas = $overlay_canvas;
+        this.$column_label_canvas = $column_label_canvas;
+
+        this.maximum_label_width = 0;
 
         this.supersampling_ratio = 2;
 
@@ -263,6 +270,10 @@ var OncoprintWebGLCellView = (function () {
         clearOverlay(view);
     };
 
+    var getColumnLabelsContext = function(view) {
+        view.column_label_ctx = view.$column_label_canvas[0].getContext('2d');
+    };
+
     var getWebGLContextAndSetUpMatrices = function(view) {
         view.ctx = getWebGLCanvasContext(view);
         (function initializeMatrices(self) {
@@ -348,7 +359,7 @@ var OncoprintWebGLCellView = (function () {
     };
 
     var resizeAndClear = function(view, model) {
-        var height = model.getCellViewHeight();
+        var height = view.getHeight(model);
         var total_width = view.getTotalWidth(model);
         var visible_area_width = view.visible_area_width;
         var scrollbar_slack = 20;
@@ -359,15 +370,20 @@ var OncoprintWebGLCellView = (function () {
         view.$canvas[0].style.height = height + 'px';
         view.$overlay_canvas[0].height = view.supersampling_ratio*height;
         view.$overlay_canvas[0].style.height = height + 'px';
+        view.$column_label_canvas[0].height = view.supersampling_ratio*height;
+        view.$column_label_canvas[0].style.height = height + 'px';
         view.$canvas[0].width = view.supersampling_ratio*visible_area_width;
         view.$canvas[0].style.width = visible_area_width + 'px';
         view.$overlay_canvas[0].width = view.supersampling_ratio*visible_area_width;
         view.$overlay_canvas[0].style.width = visible_area_width + 'px';
+        view.$column_label_canvas[0].width = view.supersampling_ratio*visible_area_width;
+        view.$column_label_canvas[0].style.width = visible_area_width + 'px';
         view.$container.css('height', height);
         view.$container.css('width', visible_area_width);
         getWebGLContextAndSetUpMatrices(view);
         setUpShaders(view);
         getOverlayContextAndClear(view);
+        getColumnLabelsContext(view);
     };
     var renderAllTracks = function (view, model, dont_resize) {
         if (view.rendering_suppressed) {
@@ -388,7 +404,8 @@ var OncoprintWebGLCellView = (function () {
         var id_order = model.getIdOrder();
         var horz_first_id_in_window_index = arrayFindIndex(id_order, function(id) { return id_to_left[id] >= window_left; });
         var horz_first_id_after_window_index = arrayFindIndex(id_order, function(id) { return id_to_left[id] > window_right; }, horz_first_id_in_window_index+1);
-        var horz_first_id_in_window = (horz_first_id_in_window_index < 1 ? id_order[0] : id_order[horz_first_id_in_window_index - 1]);
+        horz_first_id_in_window_index = (horz_first_id_in_window_index < 1 ? 0 : horz_first_id_in_window_index - 1);
+        var horz_first_id_in_window = id_order[horz_first_id_in_window_index];
         var horz_first_id_after_window = (horz_first_id_after_window_index === -1 ? null : id_order[horz_first_id_after_window_index]);
 
         if (!dont_resize) {
@@ -439,6 +456,53 @@ var OncoprintWebGLCellView = (function () {
             view.ctx.uniform1f(view.shader_program.positionBitPackBaseUniform, view.position_bit_pack_base);
 
             view.ctx.drawArrays(view.ctx.TRIANGLES, first_index, first_index_out - first_index);
+        }
+
+        renderColumnLabels(view, model, id_order.slice(horz_first_id_in_window_index, horz_first_id_after_window_index === -1 ? undefined : horz_first_id_after_window_index));
+    };
+
+    var getColumnLabelsFontSize = function(model) {
+        return model.getCellWidth()/2 + 2;
+    };
+
+    var renderColumnLabels = function(view, model, ids) {
+        // first clear
+        view.column_label_ctx.fillStyle = "rgba(0,0,0,0)";
+        view.column_label_ctx.clearRect(0,0, view.$column_label_canvas[0].width, view.$column_label_canvas[0].height);
+        view.maximum_label_width = 0;
+
+        // render labels
+        var labels = model.getColumnLabels();
+
+        // dont do anything if theres no labels
+        if (Object.keys(labels).length === 0) {
+            return;
+        }
+
+        var y = (model.getOncoprintHeight() + 10)*view.supersampling_ratio;
+        var x_map = model.getZoomedColumnLeft();
+        var scroll_x = view.scroll_x;
+        var font_size = getColumnLabelsFontSize(model);
+        var font_family = "Arial";
+        var cell_width = model.getCellWidth();
+
+        view.column_label_ctx.fillStyle = "rgba(0,0,0,1)";
+        view.column_label_ctx.font = (view.supersampling_ratio*font_size)+"px "+font_family;
+        view.column_label_ctx.textAlign = "left";
+        for (var i=0; i<ids.length; i++) {
+            if (ids[i] in labels) {
+                var x = (x_map[ids[i]] + cell_width/2 - scroll_x)*view.supersampling_ratio;
+                view.column_label_ctx.save();
+                view.column_label_ctx.translate(x, y);
+                view.column_label_ctx.rotate(COLUMN_LABEL_ANGLE*(Math.PI/180));
+                view.column_label_ctx.fillText(labels[ids[i]], 0, 0);
+                view.maximum_label_width = Math.max(
+                    view.maximum_label_width,
+                    view.column_label_ctx.measureText(labels[ids[i]]).width/view.supersampling_ratio
+                );
+
+                view.column_label_ctx.restore();
+            }
         }
     };
 
@@ -699,6 +763,12 @@ var OncoprintWebGLCellView = (function () {
         renderAllTracks(this, model);
     }
 
+    OncoprintWebGLCellView.prototype.setColumnLabels = function(model) {
+        if (!this.rendering_suppressed) {
+            renderAllTracks(this, model);
+        }
+    }
+
     OncoprintWebGLCellView.prototype.addTracks = function (model, track_ids) {
         if (this.rendering_suppressed) {
             return;
@@ -864,7 +934,13 @@ var OncoprintWebGLCellView = (function () {
     }
 
     OncoprintWebGLCellView.prototype.getTotalWidth = function(model, base) {
-        return (model.getCellWidth(base) + model.getCellPadding(base))*model.getIdOrder().length;
+        var width = (model.getCellWidth(base) + model.getCellPadding(base))*model.getIdOrder().length;
+
+        if (this.maximum_label_width > 0) {
+            width += this.maximum_label_width*Math.cos(COLUMN_LABEL_ANGLE*Math.PI/180);
+        }
+
+        return width;
     }
 
     OncoprintWebGLCellView.prototype.getWidth = function() {
@@ -877,6 +953,19 @@ var OncoprintWebGLCellView = (function () {
             return;
         };
         renderAllTracks(this, model); // in the process it will call resizeAndClear
+    }
+
+    OncoprintWebGLCellView.prototype.getHeight = function(model) {
+        // for now just add fixed height for column labels
+        // TODO: dont show if zoom is too small
+        var height = model.getCellViewHeight();
+
+        if (this.maximum_label_width > 0) {
+            height += COLUMN_LABEL_MARGIN;
+            height += this.maximum_label_width*Math.sin(COLUMN_LABEL_ANGLE*Math.PI/180);
+        }
+
+        return height;
     }
 
     OncoprintWebGLCellView.prototype.setCellPaddingOn = function(model) {
@@ -905,6 +994,7 @@ var OncoprintWebGLCellView = (function () {
         var cell_tops = model.getCellTops();
         var tracks = model.getTracks();
         var zoomedColumnLeft = model.getZoomedColumnLeft();
+        // add cell shapes
         for (var i=0; i<tracks.length; i++) {
             var track_id = tracks[i];
             var offset_y = cell_tops[track_id];
@@ -923,6 +1013,30 @@ var OncoprintWebGLCellView = (function () {
                 }
             }
         }
+        // add column labels
+        var labels = model.getColumnLabels();
+        var left = model.getZoomedColumnLeft();
+        var ids_with_labels = Object.keys(labels);
+        var column_label_y = model.getOncoprintHeight() + 10;
+        var font_size = getColumnLabelsFontSize(model);
+        var cell_width = model.getCellWidth();
+        for (var i=0; i<ids_with_labels.length; i++) {
+            var id = ids_with_labels[i];
+            var x = left[id] + cell_width/2;
+            var textElt = makeSvgElement("text", {
+                x:x,
+                y:column_label_y,
+                "font-size":font_size,
+                "font-family":"Arial",
+                "font-weight":"normal",
+                "text-anchor":"start",
+                "fill":"black",
+                "transform":"rotate("+COLUMN_LABEL_ANGLE+","+x+","+column_label_y+")"
+            });
+            textElt.textContent = labels[id];
+            root.appendChild(textElt);
+        }
+
         return root;
     }
 

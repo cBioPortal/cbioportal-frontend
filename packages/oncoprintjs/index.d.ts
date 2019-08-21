@@ -222,8 +222,9 @@ declare module "oncoprintjs"
         clearMouseOverEffects:()=>void;
         setTrackMovable:(track_id:TrackId, movable:boolean)=>void;
         setWidth:(width:number)=>void;
+        setColumnLabels:(labels:{[uid:string]:string})=>void;
 
-        constructor(ctr_selector:string, width:number);
+        constructor(ctr_selector:string, width:number, init_cell_width:number);
         destroy:()=>void;
     }
 }
