@@ -240,6 +240,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                         </div>
                         <Oncoprint
                             oncoprintRef={this.oncoprintRef}
+                            initCellWidth={20}
                             columnLabels={this.columnLabels.result!}
                             clinicalTracks={[]}
                             geneticTracks={[]}
