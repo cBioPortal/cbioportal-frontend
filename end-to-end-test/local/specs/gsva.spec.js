@@ -12,6 +12,7 @@ var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 var {
     clickVolcanoButton,
     clickQueryByGeneButton,
+    clickGeneSetHeirarchyButton,
 } = require('../../shared/specUtils');
 
 
@@ -78,9 +79,8 @@ describe('gsva feature', function() {
                 waitForQueryPage();
                 checkTestStudy();
                 checkGSVAprofile();
-                browser.waitForExist('button[data-test=GENESET_HIERARCHY_BUTTON]');
-                browser.$('button[data-test=GENESET_HIERARCHY_BUTTON]').click();
-                $('div.modal-dialog').waitForExist();
+                clickGeneSetHeirarchyButton();
+                $('div.modal-dialog').waitForExist(120000);
             });
 
             it('adds gene set name to entry component from hierachy selector', () => {
@@ -170,7 +170,7 @@ describe('gsva feature', function() {
 
                 clickVolcanoButton();
 
-                $('div.modal-dialog').waitForExist();
+                $('div.modal-dialog').waitForExist(120000);
 
                 // find the GO_ATP_DEPENDENT_CHROMATIN_REMODELING entry and check its checkbox
                 var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').$('..').$('..').$$('td')[3].$('label input');
@@ -194,7 +194,7 @@ describe('gsva feature', function() {
 
                 clickVolcanoButton();
 
-                $('div.modal-dialog').waitForExist();
+                $('div.modal-dialog').waitForExist(120000);
 
                 var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').$('..').$('..').$$('td')[3].$('label input');
 
@@ -208,7 +208,7 @@ describe('gsva feature', function() {
 
                 clickVolcanoButton();
 
-                $('div.modal-dialog').waitForExist();
+                $('div.modal-dialog').waitForExist(120000);
 
                 var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').$('..').$('..').$$('td')[3].$('label input');
                 $('button=Clear selection').click();
@@ -220,7 +220,7 @@ describe('gsva feature', function() {
 
                 clickVolcanoButton();
 
-                $('div.modal-dialog').waitForExist();
+                $('div.modal-dialog').waitForExist(120000);
 
                 var before = $$('span*=GO_');
 

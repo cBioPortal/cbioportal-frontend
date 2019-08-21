@@ -178,11 +178,21 @@ function executeInBrowser(callback){
     return browser.execute(callback).value;
 }
 
+function clickGeneSetHeirarchyButton(){
+    browser.waitForExist('button[data-test=GENESET_HIERARCHY_BUTTON]');
+    browser.pause(500);
+    browser.$('button[data-test=GENESET_HIERARCHY_BUTTON]').click();
+    $('div.modal-dialog').waitForExist();
+}
+
 function clickVolcanoButton(){
-    browser.pause(200);
+    browser.pause(500);
     browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
     $('div.modal-dialog').waitForExist();
 }
+
+
+
 
 function checkElementWithTemporaryClass(selectorForChecking, selectorForTemporaryClass, temporaryClass, pauseTime) {
     browser.execute(function(selectorForTemporaryClass, temporaryClass){
@@ -240,6 +250,7 @@ module.exports = {
     reactSelectOption: reactSelectOption,
     getReactSelectOptions: getReactSelectOptions,
     clickVolcanoButton: clickVolcanoButton,
+    clickGeneSetHeirarchyButton: clickGeneSetHeirarchyButton,
 };
 
 
