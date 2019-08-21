@@ -137,7 +137,8 @@ export type ChartUserSetting = {
         w: number;
         h: number;
     },
-    patientAttribute: boolean
+    patientAttribute: boolean,
+    filterByCancerGenes?:boolean
 }
 
 export type StudyPageSettings = {
@@ -919,6 +920,27 @@ export class StudyViewPageStore {
 
     @observable numberOfSelectedSamplesInCustomSelection: number = 0;
     @observable _filterComparisonGroups:StudyViewComparisonGroup[] = [];
+
+    @observable private _filterMutatedGenesTableByCancerGenes: boolean = true;
+    @observable private _filterCNAGenesTableByCancerGenes: boolean = true;
+
+    @autobind
+    @action updateMutatedGenesTableByCancerGenesFilter(filtered: boolean) {
+        this._filterMutatedGenesTableByCancerGenes = filtered;
+    }
+
+    @autobind
+    @action updateCNAGenesTableByCancerGenesFilter(filtered: boolean) {
+        this._filterCNAGenesTableByCancerGenes = filtered;
+    }
+
+    @computed get filterMutatedGenesTableByCancerGenes() {
+        return this.oncokbCancerGeneFilterEnabled && this._filterMutatedGenesTableByCancerGenes;
+    }
+
+    @computed get filterCNAGenesTableByCancerGenes() {
+        return this.oncokbCancerGeneFilterEnabled && this._filterCNAGenesTableByCancerGenes;
+    }
 
     public get filterComparisonGroups() {
         return this._filterComparisonGroups;
@@ -2398,12 +2420,17 @@ export class StudyViewPageStore {
         if(this.isSavingUserPreferencePossible) {
             this.visibleAttributes.forEach(attribute => {
                 const id = attribute.uniqueKey
+                const chartType = this.chartsType.get(id);
                 chartSettingsMap[attribute.uniqueKey] = {
                     id,
-                    chartType: this.chartsType.get(id), // add chart type
+                    chartType,
                     patientAttribute: this.chartMetaSet[id].patientAttribute // add chart attribute type
                 }
-
+                if(chartType === UniqueKey.MUTATED_GENES_TABLE) {
+                    chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = this._filterMutatedGenesTableByCancerGenes;
+                } else if(chartType === UniqueKey.CNA_GENES_TABLE) {
+                    chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = this._filterCNAGenesTableByCancerGenes;
+                }
                 const customChart = this._customChartMap.get(id);
                 if (customChart) { // if its custom chart add groups and name
                     chartSettingsMap[id].groups = customChart.groups;
@@ -2449,6 +2476,8 @@ export class StudyViewPageStore {
         this.currentGridLayout = [];
         this.currentFocusedChartByUser = undefined;
         this.currentFocusedChartByUserDimension = undefined;
+        this._filterMutatedGenesTableByCancerGenes = true;
+        this._filterCNAGenesTableByCancerGenes = true;
     }
 
     @autobind
@@ -2495,6 +2524,12 @@ export class StudyViewPageStore {
                     w: chartUserSettings.layout.w,
                     h: chartUserSettings.layout.h
                 });
+            }
+
+            if (chartUserSettings.chartType === UniqueKey.MUTATED_GENES_TABLE) {
+                this._filterMutatedGenesTableByCancerGenes = chartUserSettings.filterByCancerGenes === undefined ? true : chartUserSettings.filterByCancerGenes;
+            } else if (chartUserSettings.chartType === UniqueKey.CNA_GENES_TABLE) {
+                this._filterCNAGenesTableByCancerGenes = chartUserSettings.filterByCancerGenes === undefined ? true : chartUserSettings.filterByCancerGenes;
             }
             this.changeChartVisibility(chartUserSettings.id, true);
             chartUserSettings.chartType && this.chartsType.set(chartUserSettings.id, chartUserSettings.chartType);
