@@ -124,6 +124,7 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
                 initialItemsPerPage={10}
                 initialSortColumn={this.props.initialSortColumn}
                 paginationProps={{ itemsPerPageOptions: [10] }}
+                showColumnVisibility={false}
             />
         );
     }
