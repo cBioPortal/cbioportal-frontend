@@ -21,6 +21,7 @@ import DownloadControls, {DownloadControlsButton} from "../../../public-lib/comp
 import _ from "lodash";
 import SampleManager from "../sampleManager";
 import WindowStore from "../../../shared/components/window/WindowStore";
+import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../shared/lib/StoreUtils";
 
 export interface IMutationOncoprintProps {
     store:PatientViewPageStore;
@@ -143,8 +144,20 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         }
     });
 
+    private readonly columnLabels = remoteData({
+        await:()=>[this.props.store.mutationData],
+        invoke:()=>{
+            // TODO: make it toggleable and return empty if so
+            const ret:{[uid:string]:string} = {};
+            for (const mutation of this.props.store.mutationData.result!) {
+                ret[generateMutationIdByGeneAndProteinChangeAndEvent(mutation)] = `${mutation.gene.hugoGeneSymbol} ${mutation.proteinChange}`;
+            }
+            return Promise.resolve(ret);
+        }
+    });
+
     private readonly oncoprintUI = MakeMobxView({
-        await:()=>[this.heatmapTracks],
+        await:()=>[this.heatmapTracks, this.columnLabels],
         render:()=>{
             if (this.heatmapTracks.result!.length === 0) {
                 return null;
@@ -227,6 +240,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                         </div>
                         <Oncoprint
                             oncoprintRef={this.oncoprintRef}
+                            columnLabels={this.columnLabels.result!}
                             clinicalTracks={[]}
                             geneticTracks={[]}
                             genesetHeatmapTracks={[]}

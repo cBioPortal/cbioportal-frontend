@@ -151,6 +151,7 @@ export interface IOncoprintProps {
     horzZoomToFitIds?:string[];
 
     hiddenIds?:string[];
+    columnLabels?:{[uid:string]:string};
 
     alterationTypesInQuery?:string[];
 
