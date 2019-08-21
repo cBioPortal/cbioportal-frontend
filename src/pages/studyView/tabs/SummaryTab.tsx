@@ -196,6 +196,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.getData = () => this.store.getMutatedGenesDownloadData();
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ["Data"];
+                props.filterByCancerGenes= this.store.filterMutatedGenesTableByCancerGenes;
+                props.onChangeCancerGeneFilter = this.store.updateMutatedGenesTableByCancerGenesFilter
                 break;
             }
             case ChartTypeEnum.CNA_GENES_TABLE: {
@@ -209,6 +211,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.getData = () => this.store.getGenesCNADownloadData();
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ["Data"];
+                props.filterByCancerGenes= this.store.filterCNAGenesTableByCancerGenes;
+                props.onChangeCancerGeneFilter = this.store.updateCNAGenesTableByCancerGenesFilter
                 break;
             }
             case ChartTypeEnum.SURVIVAL: {
