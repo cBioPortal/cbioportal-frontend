@@ -35,7 +35,7 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     CopyNumberSeg,
-    Gene,
+    Gene, GenePanel, GenePanelData,
     MolecularProfile,
     MolecularProfileFilter,
     Patient
@@ -120,6 +120,7 @@ import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import jStat from 'jStat'
+import MobxPromiseCache from "shared/lib/MobxPromiseCache";
 import {CancerGene, Gene as OncokbGene} from "../../public-lib/api/generated/OncoKbAPI";
 import {DataType} from "public-lib/components/downloadControls/DownloadControls";
 
@@ -2691,6 +2692,12 @@ export class StudyViewPageStore {
         onError: (error => {}),
         default: []
     });
+
+    public genePanelCache = new MobxPromiseCache<{ genePanelId: string }, GenePanel>(q => ({
+        invoke: () => {
+            return defaultClient.getGenePanelUsingGET(q);
+        }
+    }));
 
     readonly mutatedGeneData = remoteData<MutationCountByGeneWithCancerGene[]>({
         await: () => this.oncokbCancerGeneFilterEnabled ?
