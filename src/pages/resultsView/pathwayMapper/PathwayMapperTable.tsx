@@ -5,6 +5,8 @@ import { observer } from "mobx-react";
 import LazyMobXTable, { Column } from "shared/components/lazyMobXTable/LazyMobXTable";
 import { observable } from 'mobx';
 import { Radio } from 'react-bootstrap';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
+import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
 
 export interface IPathwayMapperTable {
     name: string;
@@ -59,20 +61,14 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
                 const pwName = d.name;
                 const isPwNameShort = pwName.length < lengthThreshold;
                 return (
-                    <span 
-                        data-border="true" 
-                        data-type="light" 
-                        data-tip={pwName}
-                        data-place="top"
-                        data-effect="solid"
-                        data-tip-disable={isPwNameShort}>
                         <Radio 
                             style={{marginTop: 0, marginBottom: 0}}
                             checked={this.props.selectedPathway === d.name} 
                             onChange={(e: any) => {this.props.changePathway(d.name);}}>
-                            <b>{(isPwNameShort ? pwName : pwName.substring(0, lengthThreshold) + "...")}</b>
+                            <DefaultTooltip overlay={pwName} disabled={isPwNameShort}>
+                                <b>{(isPwNameShort ? pwName : pwName.substring(0, lengthThreshold) + "...")}</b>
+                            </DefaultTooltip>
                         </Radio>
-                    </span>
                 );
             },
             tooltip: <span>Pathway name</span>,
@@ -98,15 +94,11 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
                 const geneTextLength = d.genes.join(" ").length;
 
                 return (
-                    <span
-                        data-border="true"
-                        data-type="light"
-                        data-tip={d.genes.join(" ")} 
-                        data-place="top"
-                        data-effect="solid"
-                        data-tip-disable={geneTextLength < lengthThreshold}>
-                        {this.calculateGeneStr(d.genes, lengthThreshold)}
-                    </span>
+                    <DefaultTooltip overlay={d.genes.join(" ")} disabled={geneTextLength < lengthThreshold}>
+                        <span>
+                            {this.calculateGeneStr(d.genes, lengthThreshold)}
+                        </span>
+                    </DefaultTooltip>
                 );
             },
             tooltip: <span>Genes matched</span>,
