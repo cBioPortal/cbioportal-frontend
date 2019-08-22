@@ -621,8 +621,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         }, []);
 
         let parameters = {
-            name: "visual study",
-            description: "visual study",
+            name: "virtual study",
+            description: "virtual study",
             origin: studies.map(study => study.id),
             studies: studies
         }
