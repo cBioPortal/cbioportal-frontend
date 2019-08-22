@@ -37,10 +37,12 @@ import {action, IObservableArray, ObservableMap, runInAction} from "mobx";
 import {MobxPromise} from "mobxpromise";
 import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
 import {isMergedTrackFilter, UnflattenedOQLLineFilterOutput} from "../../lib/oql/oqlfilter";
-import {ClinicalAttribute, MolecularProfile, Patient, Sample} from "../../api/generated/CBioPortalAPI";
+import {ClinicalAttribute, MolecularProfile, Patient, Sample, Gene} from "../../api/generated/CBioPortalAPI";
 import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 import {ISelectOption} from "./controls/OncoprintControls";
+import {ICBioData} from "pathway-mapper";
+
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IHeatmapTrackSpec[];

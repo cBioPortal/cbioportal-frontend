@@ -5,7 +5,7 @@ import { QueryParameter } from "../../../shared/lib/ExtendedRouterStore";
 import {ResultsViewPageStore, SamplesSpecificationElement, IQueriedMergedTrackCaseData, IQueriedCaseData} from "../ResultsViewPageStore";
 import { ResultsViewTab } from "../ResultsViewPageHelpers";
 import { generateGeneAlterationData } from "../download/DownloadUtils";
-import PathwayMapper, {ICBioData} from "react-pathway-mapper";
+import PathwayMapper, {ICBioData} from "pathway-mapper";
 import "react-pathway-mapper/dist/base.css";
 import PathwayMapperTable, { IPathwayMapperTable } from "./PathwayMapperTable";
 import { observer } from "mobx-react";
@@ -65,34 +65,7 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
 
     addGenomicData: (alterationData: ICBioData[]) => void;
 
-    @observable storeForAllData: ResultsViewPageStore;
-
-    @observable selectedPathway: string = "";
-
     pathwayHandler: Function;
-
-    @observable
-    isLoading: boolean;
-
-    @observable
-    currentGenes: string[];
-
-    @observable
-    activeToasts: React.ReactText[];
-
-    // This accumulates valid genes
-    validGenesAccumulator: {[gene: string]: boolean};
-
-    @observable
-    validNonQueryGenes = remoteData<string[]>({
-        invoke: async () => {
-            const genes = await fetchGenes(this.currentGenes);
-            
-            return genes.map(gene => (gene.hugoGeneSymbol));
-        }
-    });
-
-    addGenomicData: (alterationData: ICBioData[]) => void;
 
     constructor(props: IResultsViewPathwayMapperProps){
         super(props);
