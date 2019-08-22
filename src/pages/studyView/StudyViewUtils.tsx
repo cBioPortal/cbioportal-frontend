@@ -1384,6 +1384,15 @@ export function getRequestedAwaitPromisesForClinicalData(isDefaultVisibleAttribu
     }
 }
 
+export function customBinsAreValid(newBins: string[]): boolean {
+    if (newBins.length === 0) {
+        return false;
+    }
+    return !_.some(newBins, bin => {
+        return isNaN(Number(bin));
+    });
+}
+
 export async function getHugoSymbolByEntrezGeneId(entrezGeneId: number): Promise<string> {
     const gene: Gene = await defaultClient.getGeneUsingGET({
         geneId: entrezGeneId.toString()
