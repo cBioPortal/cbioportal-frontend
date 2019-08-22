@@ -152,7 +152,7 @@ describe("download tab screenshot tests", function() {
         assertScreenShotMatch(res);
     });
 
-    it("download tab - nsclc_tcga_broad_2016 with CDKN2A, MDM2 and merged track MDM4, TP53", function() {
+    it("download tab - nsclc_tcga_broad_2016 with CDKN2A MDM2 and merged track MDM4 TP53", function() {
         var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=CDKN2A%2520MDM2%2520%255B%2522MERGED%2522%2520MDM4%2520TP53%255D&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
         goToUrlAndSetLocalStorage(url);
         browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
