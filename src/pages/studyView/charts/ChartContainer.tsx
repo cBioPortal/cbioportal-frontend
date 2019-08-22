@@ -5,7 +5,7 @@ import {action, computed, observable} from "mobx";
 import _ from "lodash";
 import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
 import {
-    StudyViewPageStore
+    StudyViewPageStore, SurvivalType
 } from "pages/studyView/StudyViewPageStore";
 import {DataBin, StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
@@ -84,7 +84,6 @@ export interface IChartContainerProps {
         clinicalAttributeValues?:{ value:string, color:string }[]
     })=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
-    patientKeysWithNAInSelectedClinicalData?:MobxPromise<string[]>; // patients which have NA values for filtered clinical attributes
     patientToAnalysisGroup?:MobxPromise<{[uniquePatientKey:string]:string}>;
     sampleToAnalysisGroup?:MobxPromise<{[uniqueSampleKey:string]:string}>;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
@@ -104,7 +103,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable chartType: ChartType;
 
     @observable newlyAdded = false;
-    @observable naPatientsHiddenInSurvival = true; // only relevant for survival charts - whether cases with NA clinical value are shown
 
     constructor(props: IChartContainerProps) {
         super(props);
@@ -221,12 +219,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @autobind
     @action
-    toggleSurvivalHideNAPatients() {
-        this.naPatientsHiddenInSurvival = !this.naPatientsHiddenInSurvival;
-    }
-
-    @autobind
-    @action
     openComparisonPage() {
         if (this.comparisonPagePossible) {
             switch (this.props.chartType) {
@@ -273,17 +265,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @computed get survivalChartData() {
         // need to put this in @computed instead of a remoteData, because in a remoteData any changes to props trigger
         //   a rerender with delay
-        if (this.props.promise.isComplete && this.props.patientToAnalysisGroup && this.props.patientToAnalysisGroup.isComplete &&
-            (!this.props.patientKeysWithNAInSelectedClinicalData || this.props.patientKeysWithNAInSelectedClinicalData.isComplete)) {
-            const survivalData = _.find(this.props.promise.result!, (survivalPlot) => {
+        if (this.props.promise.isComplete && this.props.patientToAnalysisGroup && this.props.patientToAnalysisGroup.isComplete) {
+            const survival:SurvivalType = _.find(this.props.promise.result!, (survivalPlot) => {
                 return survivalPlot.id === this.props.chartMeta.uniqueKey;
             });
-            return makeSurvivalChartData(
-                survivalData.alteredGroup.concat(survivalData.unalteredGroup),
+            return  makeSurvivalChartData(survival.survivalData,
                 this.props.analysisGroupsSettings.groups,
-                this.props.patientToAnalysisGroup!.result!,
-                this.naPatientsHiddenInSurvival,
-                this.props.patientKeysWithNAInSelectedClinicalData && this.props.patientKeysWithNAInSelectedClinicalData.result!,
+                this.props.patientToAnalysisGroup!.result!
             );
         } else {
             return undefined;
@@ -381,9 +369,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        patientSurvivals={data.patientSurvivals}
                                        patientToAnalysisGroups={data.patientToAnalysisGroups}
                                        analysisGroups={data.analysisGroups}
-                                       naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
-                                       showNaPatientsHiddenToggle={this.props.patientKeysWithNAInSelectedClinicalData!.result!.length > 0}
-                                       toggleSurvivalHideNAPatients={this.toggleSurvivalHideNAPatients}
                                        legendLocation={LegendLocation.TOOLTIP}
                                        title={this.props.title}
                                        xAxisLabel="Months Survival"
@@ -415,7 +400,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                                }
                                            }
                                        }}
-                                       fileName="Overall_Survival"
+                                       fileName={this.props.title.replace(' ', '_')}
                         />
                     );
                 } else {
