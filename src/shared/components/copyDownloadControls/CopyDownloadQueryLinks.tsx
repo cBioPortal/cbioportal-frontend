@@ -23,7 +23,7 @@ export class CopyDownloadQueryLinks extends React.Component<ICopyDownloadLinksPr
         copyButtonLabel: "Copy",
         downloadButtonLabel: "Download",
         queryButtonLabel: "Query",
-        virtualStudyButtonLabel: "Visual Study",
+        virtualStudyButtonLabel: "Virtual Study",
         showCopy: true,
         showDownload: true,
         showQuery: false,
