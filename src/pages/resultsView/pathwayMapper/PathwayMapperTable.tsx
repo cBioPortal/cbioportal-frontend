@@ -6,7 +6,6 @@ import LazyMobXTable, { Column } from "shared/components/lazyMobXTable/LazyMobXT
 import { observable } from 'mobx';
 import { Radio } from 'react-bootstrap';
 import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
-import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
 
 export interface IPathwayMapperTable {
     name: string;
