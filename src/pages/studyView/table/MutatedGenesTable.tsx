@@ -21,10 +21,11 @@ import {
 } from "../StudyViewUtils";
 import {Column, SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import { DEFAULT_SORTING_COLUMN } from "../StudyViewConfig";
-import { GenePanelToGene } from "shared/api/generated/CBioPortalAPI";
-import { GenePanelModal, GenePanelList } from "./GenePanelModal";
+import {GenePanel, GenePanelToGene} from "shared/api/generated/CBioPortalAPI";
+import { GenePanelModal } from "./GenePanelModal";
 import {getFreqColumnRender, getGeneColumnHeaderRender} from "pages/studyView/TableUtils";
 import {GeneCell} from "pages/studyView/table/GeneCell";
+import MobxPromiseCache from "shared/lib/MobxPromiseCache";
 
 export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutationCountByGeneWithCancerGene[]>;
@@ -36,6 +37,7 @@ export interface IMutatedGenesTablePros {
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
     cancerGeneFilterEnabled?: boolean;
+    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
 }
 
 type MutatedGenesTableUserSelectionWithIndex = {
@@ -62,11 +64,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     @observable private modalSettings: {
         modalOpen: boolean;
         modalPanelName: string;
-        modalPanelGenes: GenePanelToGene[];
     } = {
         modalOpen: false,
-        modalPanelName: "",
-        modalPanelGenes: []
+        modalPanelName: ""
     };
 
     public static defaultProps = {
@@ -75,13 +75,12 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
 
     @autobind
     @action
-    toggleModal(panelName: string, genes: GenePanelToGene[]) {
+    toggleModal(panelName: string) {
         this.modalSettings.modalOpen = !this.modalSettings.modalOpen;
         if (!this.modalSettings.modalOpen) {
             return;
         }
         this.modalSettings.modalPanelName = panelName;
-        this.modalSettings.modalPanelGenes = genes;
     }
 
     @autobind
@@ -241,7 +240,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                     return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
                 },
                 render: (data: MutationCountByGeneWithCancerGene) => {
-                    return getFreqColumnRender('mutation', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanels, this.toggleModal, {marginLeft: this.cellMargin[ColumnKey.FREQ]});
+                    return getFreqColumnRender('mutation', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanelIds, this.toggleModal, {marginLeft: this.cellMargin[ColumnKey.FREQ]});
                 },
                 sortBy: (data: MutationCountByGeneWithCancerGene) =>
                     (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100,
@@ -395,7 +394,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 )}
                 <GenePanelModal
                     show={this.modalSettings.modalOpen}
-                    genes={this.modalSettings.modalPanelGenes}
+                    genePanelCache={this.props.genePanelCache}
                     panelName={this.modalSettings.modalPanelName}
                     hide={this.closeModal}
                 />

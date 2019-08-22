@@ -428,3 +428,32 @@ describe('check the simple filter(filterAttributeId, filterValues) is working pr
         assertScreenShotMatch(res);
     });
 });
+
+describe('the gene panel is loaded properly', () => {
+    before(() => {
+        const url = `${CBIOPORTAL_URL}/study?id=msk_impact_2017`;
+        goToUrlAndSetLocalStorage(url);
+    });
+    it('check the mutated genes table has gene panel info', () => {
+        const tooltipSelector = '[data-test="freq-cell-tooltip"]';
+        browser.waitForVisible(`${CNA_GENES_TABLE} [data-test='freq-cell']`, WAIT_FOR_VISIBLE_TIMEOUT);
+
+        browser.moveToObject(`${CNA_GENES_TABLE} [data-test='freq-cell']:first-child`);
+
+        browser.waitForVisible(tooltipSelector, WAIT_FOR_VISIBLE_TIMEOUT);
+
+        // the gene panel ID IMPACT341 should be listed
+        browser.getText(tooltipSelector).includes('IMPACT341');
+
+        browser.click(`${tooltipSelector} a[data-test='gene-panel-linkout-IMPACT341']`);
+
+        // the modal title should show gene panel ID
+        browser.waitForVisible(`[data-test="gene-panel-modal-title"]`, WAIT_FOR_VISIBLE_TIMEOUT);
+        assert.equal(browser.getText(`[data-test="gene-panel-modal-title"]`), "IMPACT341");
+
+        // test whether the gene info has been loaded correctly
+        browser.waitForVisible(`[data-test="gene-panel-modal-body"]`, WAIT_FOR_VISIBLE_TIMEOUT);
+        assert.equal(browser.getText('[data-test="gene-panel-modal-body"] p:first-child'), "ABL1");
+
+    })
+});
