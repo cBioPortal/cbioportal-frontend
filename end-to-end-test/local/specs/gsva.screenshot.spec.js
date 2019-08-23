@@ -1,6 +1,6 @@
 var goToUrlAndSetLocalStorage = require('../../shared/specUtils').goToUrlAndSetLocalStorage;
 var assertScreenShotMatch = require('../../shared/lib/testUtils').assertScreenShotMatch;
-var waitForQueryPage = require('../../shared/specUtils').waitForQueryPage;
+var waitForStudyQueryPage = require('../../shared/specUtils').waitForStudyQueryPage;
 var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
 var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
 var waitForCoExpressionTab = require('../../shared/specUtils').waitForCoExpressionTab;
@@ -18,7 +18,7 @@ describe('gsva feature', () => {
 
         beforeEach(()=>{
             goToUrlAndSetLocalStorage(queryPageUrl);
-            waitForQueryPage(20000);
+            waitForStudyQueryPage(20000);
             checkTestStudy();
             checkGSVAprofile();
             browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();

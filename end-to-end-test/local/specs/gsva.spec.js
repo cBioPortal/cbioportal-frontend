@@ -1,6 +1,7 @@
 var assert = require('assert');
 var goToUrlAndSetLocalStorage = require('../../shared/specUtils').goToUrlAndSetLocalStorage;
-var waitForQueryPage = require('../../shared/specUtils').waitForQueryPage;
+var waitForStudyQueryPage = require('../../shared/specUtils').waitForStudyQueryPage;
+var waitForGeneQueryPage = require('../../shared/specUtils').waitForGeneQueryPage;
 var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
 var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
 var waitForCoExpressionTab = require('../../shared/specUtils').waitForCoExpressionTab;
@@ -29,7 +30,7 @@ describe('gsva feature', function() {
 
             beforeEach(()=>{
                 goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-                waitForQueryPage();
+                waitForStudyQueryPage();
             });
 
             it('shows GSVA-profile option when selecting study_es_0', () => {
@@ -56,10 +57,10 @@ describe('gsva feature', function() {
                 checkTestStudy();
                 checkGSVAprofile();
 
-                browser.setValue('[data-test=geneSet]', 'TP53');
                 browser.setValue('[data-test=GENESETS_TEXT_AREA]', 'GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
+                browser.setValue('[data-test=geneSet]', 'TP53');
                 var queryButton = browser.$('[data-test=queryButton]');
-                queryButton.waitForEnabled(1000);
+                queryButton.waitForEnabled();
                 queryButton.click();
                 var url = browser.url().value;
                 var regex = /geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING/;
@@ -72,7 +73,7 @@ describe('gsva feature', function() {
 
             beforeEach(()=>{
                 goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-                waitForQueryPage();
+                waitForStudyQueryPage();
                 checkTestStudy();
                 checkGSVAprofile();
                 browser.$('button[data-test=GENESET_HIERARCHY_BUTTON]').click();
@@ -156,7 +157,7 @@ describe('gsva feature', function() {
 
             beforeEach(()=>{
                 goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-                waitForQueryPage();
+                waitForStudyQueryPage();
                 checkTestStudy();
                 checkGSVAprofile();
             });
@@ -425,15 +426,15 @@ const checkTestStudy = () => {
     $('span=Test study es_0').waitForExist();
     var checkbox = $('span=Test study es_0').$('..').$('input[type=checkbox]');
     checkbox.click();
-
     clickQueryByGeneButton();
-
+    waitForGeneQueryPage();
 }
 
 const checkGSVAprofile = () => {
     $("[data-test=GENESET_SCORE]").waitForExist();
     var gsvaProfileCheckbox = browser.$("[data-test=GENESET_SCORE]");
     gsvaProfileCheckbox.click();
+    $('[data-test=GENESETS_TEXT_AREA]').waitForExist();
 }
 
 module.exports = {
