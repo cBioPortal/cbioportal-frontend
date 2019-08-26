@@ -28,7 +28,7 @@ import AddClinicalTracks from "../../../../pages/resultsView/oncoprint/AddClinic
 import {Treatment} from "shared/api/generated/CBioPortalAPIInternal";
 import TextIconArea, { ITextIconAreaItemProps } from "shared/components/textIconArea/TextIconArea";
 import { extractTreatmentSelections } from "../OncoprintUtils";
-import {CheckedSelect} from "react-select-checked";
+import CheckedSelect from "shared/components/react-select-checked-temp/lib/elements/CheckedSelect";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -443,8 +443,8 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     @computed get treatmentSelectOptions():ISelectOption[] {
         // Note: name and desc are optional fields for treatment entities
-        // When not provided in the data file, these fields are assigned the 
-        // value of the entity_stable_id. The code below hides fields when 
+        // When not provided in the data file, these fields are assigned the
+        // value of the entity_stable_id. The code below hides fields when
         // indentical to the entity_stable_id.
         if (this.props.state.treatmentsPromise && this.props.state.treatmentsPromise.result) {
             return _.map(this.props.state.treatmentsPromise.result, (d:Treatment) => {
@@ -463,7 +463,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
                 // For searching, react-select-checked performs a search in the value
                 // field and displays the label field. To allow searching in all words
-                // that appear in the label field, the value field is made identical to 
+                // that appear in the label field, the value field is made identical to
                 // the label field. The id field is added to track the unique identifier
                 // of the treatment.
                 return {
@@ -517,7 +517,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         const showItemSelectionElements = this.props.state.heatmapIsDynamicallyQueried;
         const showGenesTextArea = showItemSelectionElements && this.props.state.selectedHeatmapProfileAlterationType !== AlterationTypeConstants.GENERIC_ASSAY;
         const showTreatmentsTextArea = showItemSelectionElements && this.props.state.selectedHeatmapProfileAlterationType === AlterationTypeConstants.GENERIC_ASSAY;
-        
+
         if (this.props.oncoprinterMode || this.props.state.hideHeatmapMenu || !this.props.state.heatmapProfilesPromise) {
             return <span/>;
         }
