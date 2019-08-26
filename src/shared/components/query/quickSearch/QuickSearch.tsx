@@ -1,11 +1,11 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import Select, { components } from 'react-select2';
+import Select, { components } from 'react-select';
 import client from "shared/api/cbioportalClientInstance";
 import {OptionType} from "./OptionType";
 import autobind from 'autobind-decorator';
 import "./styles.scss";
-import getBrowserWindow from "shared/lib/getBrowserWindow";
+import getBrowserWindow from "public-lib/lib/getBrowserWindow";
 import { sleep } from "shared/lib/TimeUtils";
 import { Label } from 'react-bootstrap';
 import * as moduleStyles from "./styles.module.scss";

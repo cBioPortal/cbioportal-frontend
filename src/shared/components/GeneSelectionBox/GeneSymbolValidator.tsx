@@ -4,7 +4,7 @@ import {observer} from "mobx-react";
 import { GeneReplacement, normalizeQuery } from 'shared/components/query/QueryStore';
 import { action, computed } from '../../../../node_modules/mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
-import 'react-select/dist/react-select.css';
+import 'react-select1/dist/react-select.css';
 import {remoteData} from "public-lib/api/remoteData";
 import client from "shared/api/cbioportalClientInstance";
 import memoize from 'memoize-weak-decorator';
