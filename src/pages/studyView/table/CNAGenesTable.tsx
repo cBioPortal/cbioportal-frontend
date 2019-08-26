@@ -46,10 +46,10 @@ export interface ICNAGenesTablePros {
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
+    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     cancerGeneFilterEnabled?: boolean;
     filterByCancerGenes: boolean;
     onChangeCancerGeneFilter: (filtered: boolean) => void;
-    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
 }
 
 class CNAGenesTableComponent extends FixedHeaderTable<CopyNumberCountByGeneWithCancerGene> {}

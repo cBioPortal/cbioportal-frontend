@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {getAlterationSummary, getGeneSummary} from "./QuerySummaryUtils";
+import {getAlterationSummary, getGeneSummary, getStudyViewFilterHash} from "./QuerySummaryUtils";
 import * as React from "react";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
@@ -31,6 +31,35 @@ describe("QuerySummaryUtils", () => {
             expect(getAlterationSummary(8, 8, 0, 0, 1)).toEqualJSX(<strong><span>
                 Queried gene is altered in 0 (0%) of queried patients/samples
             </span></strong>, "none altered, same number samples and patients");
+        });
+    });
+    describe("getStudyViewFilterHash", () => {
+        it("gives correct summary for various inputs", () => {
+            assert.equal(getStudyViewFilterHash([], false), undefined);
+            assert.equal(getStudyViewFilterHash([], false, []), undefined);
+            assert.equal(getStudyViewFilterHash([], true), undefined);
+
+            assert.equal(getStudyViewFilterHash([{
+                studyId: "studyId1",
+                sampleId: "sampleId1"
+            }], false, [{ category: "all_cases_in_study" }]), undefined);
+
+            assert.equal(getStudyViewFilterHash([{
+                studyId: "studyId1",
+                sampleId: "sampleId1"
+            }], false), 'filterJson={"sampleIdentifiers":[{"sampleId":"sampleId1","studyId":"studyId1"}]}');
+
+            assert.equal(getStudyViewFilterHash([{
+                studyId: "studyId1",
+                sampleId: "sampleId1"
+            }], true), 'filterJson={"sampleIdentifiers":[{"sampleId":"sampleId1","studyId":"studyId1"}]}');
+
+            assert.equal(getStudyViewFilterHash([{
+                studyId: "studyId1",
+                sampleId: "sampleId1"
+            }], true, [{ category: "all_cases_in_study" }]), 'filterJson={"sampleIdentifiers":[{"sampleId":"sampleId1","studyId":"studyId1"}]}');
+
+
         });
     });
 });

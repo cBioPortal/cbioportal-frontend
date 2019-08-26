@@ -1,8 +1,7 @@
 import * as React from 'react';
-import getBrowserWindow from "../../lib/getBrowserWindow";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {observer} from "mobx-react";
 import './errorScreen.scss';
-import Portal from 'react-portal';
 import AppConfig from "appConfig";
 import {buildCBioPortalPageUrl} from "shared/api/urls";
 

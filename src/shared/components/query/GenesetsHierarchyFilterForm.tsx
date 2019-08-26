@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {observable} from "mobx";
 import {observer} from "mobx-react";
-import ReactSelect from 'react-select';
+import ReactSelect from 'react-select1';
 
 export type validPercentile = 50|75|100;
 

@@ -1,9 +1,11 @@
-import _ from "lodash";
-import { action, computed, observable } from "mobx";
-import { Observer, observer } from "mobx-react";
 import * as React from "react";
-import { FormControl, Button } from "react-bootstrap";
-import ReactSelect from "react-select";
+import {action, computed, observable} from "mobx";
+import {Observer, observer} from "mobx-react";
+import "./styles.scss";
+import {AlterationTypeConstants, DataTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
+import {FormControl,Button} from "react-bootstrap";
+import ReactSelect from "react-select1";
+import _ from "lodash";
 import {
     getAxisDescription,
     getAxisLabel,
@@ -64,24 +66,18 @@ import TablePlot from "shared/components/plots/TablePlot";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import InfoIcon from "../../../shared/components/InfoIcon";
 import {remoteData} from "../../../public-lib/api/remoteData";
-import {MobxPromise} from "mobxpromise";
 import BoxScatterPlot, {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
 import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
-import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
-import {SpecialAttribute} from "../../../shared/cache/ClinicalDataCache";
 import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 import {scatterPlotSize, dataPointIsLimited} from "../../../shared/components/plots/PlotUtils";
 import {getTablePlotDownloadData} from "../../../shared/components/plots/TablePlotUtils";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import MultipleCategoryBarPlot from "../../../shared/components/plots/MultipleCategoryBarPlot";
-import {STUDY_VIEW_CONFIG} from "../../studyView/StudyViewConfig";
 import {RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
-import { AlterationTypeConstants, ResultsViewPageStore } from "../ResultsViewPageStore";
 import "./styles.scss";
 import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';

@@ -8,6 +8,7 @@ import './styles.scss';
 import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {action, computed, observable} from "mobx";
+import {QueryStore, CUSTOM_CASE_LIST_ID} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
 import autobind from "autobind-decorator";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
@@ -16,8 +17,8 @@ import {ServerConfigHelpers} from "../../../config/config";
 import AppConfig from "appConfig";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
 import {createQueryStore} from "../../home/HomePage";
-import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
-import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./QuerySummaryUtils";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
+import {getAlterationSummary, getGeneSummary, getPatientSampleSummary, getStudyViewFilterHash} from "./QuerySummaryUtils";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
 import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
@@ -26,15 +27,25 @@ import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore, onToggleQueryFormVisiblity:(visible:boolean)=>void }, {}> {
 
     @autobind
+    @action
     private toggleQueryFormVisibility() {
-        this.props.onToggleQueryFormVisiblity(this._queryFormVisible);
-        this._queryFormVisible = !this._queryFormVisible;
+        this.props.onToggleQueryFormVisiblity(this.props.store.queryFormVisible);
+        // if clicked the query button in the download tab and want to close the query form, clear the selected sample ids
+        if (this.props.store.modifyQueryParams && this.props.store.queryFormVisible === true) {
+            this.props.store.modifyQueryParams = undefined;
+        }
+        this.props.store.queryFormVisible = !this.props.store.queryFormVisible;
     }
 
-    @observable _queryFormVisible: boolean = false;
-
     @computed get queryFormVisible(){
-        return this._queryFormVisible || this.isQueryOrGeneInvalid;
+        return this.props.store.queryFormVisible || this.isQueryOrGeneInvalid;
+    }
+
+    @computed get studyViewFilterHash() {
+        return getStudyViewFilterHash(
+            this.props.store.samples.result,
+            this.props.store.queriedVirtualStudies.result.length > 0,
+            this.props.store.sampleLists.result);
     }
 
     readonly singleStudyUI = MakeMobxView({
@@ -42,19 +53,23 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
             this.props.store.queriedStudies,
             this.props.store.sampleLists,
             this.props.store.samples,
-            this.props.store.patients,
-            this.props.store.genes
+            this.props.store.patients
         ],
         render:()=>{
             const sampleListName = (this.props.store.sampleLists.result!.length > 0) ?
                 (<span>{this.props.store.sampleLists.result![0].name}</span>) :
                 (<span>User-defined Patient List</span>);
 
-            const study = this.props.store.queriedStudies.result[0];
-
             return (
                 <div>
-                    <h3><StudyLink studyId={study.studyId}>{study.name}</StudyLink></h3>
+                    <h3>
+                        <a
+                            href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}, this.studyViewFilterHash)}
+                            target="_blank"
+                        >
+                            {this.props.store.queriedStudies.result[0].name}
+                        </a>
+                    </h3>
                     {sampleListName}&nbsp;({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
@@ -71,12 +86,13 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     }
 
     readonly multipleStudyUI = MakeMobxView({
-        await:()=>[this.props.store.samples, this.props.store.patients, this.props.store.queriedStudies],
-        render:()=>(
+        await:()=>[this.props.store.samples, this.props.store.patients, this.props.store.queriedStudies, this.props.store.sampleLists],
+        render:()=>{
+            return (
             <div>
                 <h3>
                     <a
-                        href={buildCBioPortalPageUrl(`study`, { id:this.props.store.queriedStudies.result.map(study => study.studyId).join(',')})}
+                        href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}, this.studyViewFilterHash)}
                         target="_blank"
                     >
                         Combined Study ({this.props.store.samples.result.length} samples)
@@ -95,7 +111,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                     </DefaultTooltip>
                 </span>
             </div>
-        )
+        )}
     });
 
     readonly cohortAndGeneSummary = MakeMobxView({
@@ -142,6 +158,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                                   showQuickSearchTab={false}
                                   showDownloadTab={false}
                                   showAlerts={true}
+                                  modifyQueryParams={this.props.store.modifyQueryParams}
                                   getQueryStore={()=>createQueryStore(getBrowserWindow().routingStore.query)}
             />
         </div>

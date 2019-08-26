@@ -4,7 +4,7 @@ import { observable, action, computed } from 'mobx';
 import DownloadControls from 'public-lib/components/downloadControls/DownloadControls';
 import autobind from 'autobind-decorator';
 import MultipleCategoryBarPlot from 'shared/components/plots/MultipleCategoryBarPlot';
-import ReactSelect from "react-select2";
+import ReactSelect from "react-select";
 import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
 import _ from "lodash";
 import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';

@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
-import ReactSelect from "react-select2";
+import ReactSelect from "react-select";
 import autobind from "autobind-decorator";
 import {computed} from "mobx";
 import {observer} from "mobx-react";
@@ -19,6 +19,7 @@ type CheckedSelectProps = {
     value: {value: string}[];
     options: Option[];
     placeholder?: string | JSX.Element;
+    reactSelectComponents?: {[componentType: string]: (props: any) => JSX.Element};
     isClearable?: boolean;
     isDisabled?: boolean;
     onAddAll?: () => void;
@@ -63,6 +64,16 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
         else {
             return "Clear";
         }
+    }
+
+    @computed
+    get components() {
+        return this.props.showControls ?
+            {
+                GroupHeading: this.buttonsSection,
+                ...this.props.reactSelectComponents
+            }:
+            this.props.reactSelectComponents;
     }
 
     @autobind
@@ -160,7 +171,7 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                             //primary: theme.colors.primary50
                         },
                     })}
-                    components={this.props.showControls ? {GroupHeading: this.buttonsSection } : undefined}
+                    components={this.components}
                     name={this.props.name}
                     isMulti={true}
                     isClearable={this.props.isClearable}
