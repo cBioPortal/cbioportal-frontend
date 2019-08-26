@@ -1,4 +1,4 @@
-import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
 import {observer} from "mobx-react";
 import * as React from "react";
