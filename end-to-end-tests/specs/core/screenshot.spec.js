@@ -142,6 +142,42 @@ describe("download tab screenshot tests", function() {
         var res = browser.checkElement('[data-test="downloadTabDiv"]',{hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
+
+    it("download tab - nsclc_tcga_broad_2016 with TP53", function() {
+        var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&case_set_id=nsclc_tcga_broad_2016_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations&tab_index=tab_visualize`;
+        goToUrlAndSetLocalStorage(url);
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
+        browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
+        var res = browser.checkElement('[data-test="downloadTabDiv"]',{hide:['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+
+    it("download tab - nsclc_tcga_broad_2016 with CDKN2A MDM2 and merged track MDM4 TP53", function() {
+        var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=CDKN2A%2520MDM2%2520%255B%2522MERGED%2522%2520MDM4%2520TP53%255D&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
+        goToUrlAndSetLocalStorage(url);
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
+        browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
+        var res = browser.checkElement('[data-test="downloadTabDiv"]',{hide:['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+
+    it("download tab - nsclc_tcga_broad_2016 for query EGFR: MUT=T790M AMP", function() {
+        var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=EGFR%253A%2520MUT%253DT790M%2520AMP&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
+        goToUrlAndSetLocalStorage(url);
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
+        browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
+        var res = browser.checkElement('[data-test="downloadTabDiv"]',{hide:['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+
+    it("download tab - nsclc_tcga_broad_2016 with overlapping TP53", function() {
+        var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=TP53%250ATP53%253A%2520AMP%250ATP53%253A%2520MUT&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
+        goToUrlAndSetLocalStorage(url);
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
+        browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
+        var res = browser.checkElement('[data-test="downloadTabDiv"]',{hide:['.qtip'] });
+        assertScreenShotMatch(res);
+    });
 });
 
 describe('patient view page screenshot test', function(){

@@ -26,6 +26,7 @@ import MobxPromise from 'mobxpromise';
 import {getTextWidth} from "../../public-lib/lib/TextTruncationUtils";
 import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
 import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
+import styles from './styles.module.scss';
 
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
@@ -208,10 +209,13 @@ const OPERATOR_MAP: {[op:string]: string} = {
     ">": ">"
 };
 
-export function getClinicalAttributeOverlay(displayName: string, description: string): JSX.Element {
-    return <div style={{maxWidth: '500px'}}>
-        <b>{displayName}</b><br/>
-        {description}
+export function getClinicalAttributeOverlay(displayName: string, description: string, clinicalAttributeId?: string): JSX.Element {
+    const comparisonDisplayName = displayName.toLowerCase().trim();
+    let comparisonDescription = description.toLowerCase().trim().replace(/.&/, '');
+    return <div style={{maxWidth: '300px'}}>
+        <div><b>{displayName}</b> {!!clinicalAttributeId &&
+        <span className={styles.titleMeta}>ID: {clinicalAttributeId}</span>}</div>
+        {comparisonDescription !== comparisonDisplayName && <div>{description}</div>}
     </div>;
 }
 
@@ -1238,15 +1242,19 @@ export function pickClinicalAttrFixedColors(data: ClinicalDataCount[]): {[attrib
     }, {});
 }
 
-export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
+export type ClinicalDataCountSummary = ClinicalDataCount & { color: string , percentage: number, freq: string}
 
-export function getClinicalDataCountWithColorByClinicalDataCount(counts:ClinicalDataCount[]):ClinicalDataCountWithColor[] {
+export function getClinicalDataCountWithColorByClinicalDataCount(counts:ClinicalDataCount[]):ClinicalDataCountSummary[] {
     counts.sort(clinicalDataCountComparator);
     const colors = pickClinicalDataColors(counts);
-    return counts.map(slice =>{
+    const sum = _.sumBy(counts, count => count.count);
+    return counts.map(slice => {
+        const percentage = slice.count / sum;
         return {
             ...slice,
-            color: colors[slice.value]
+            color: colors[slice.value],
+            percentage: percentage,
+            freq: getFrequencyStr(percentage * 100)
         };
     });
 }
@@ -1376,6 +1384,15 @@ export function getRequestedAwaitPromisesForClinicalData(isDefaultVisibleAttribu
     }
 }
 
+export function customBinsAreValid(newBins: string[]): boolean {
+    if (newBins.length === 0) {
+        return false;
+    }
+    return !_.some(newBins, bin => {
+        return isNaN(Number(bin));
+    });
+}
+
 export async function getHugoSymbolByEntrezGeneId(entrezGeneId: number): Promise<string> {
     const gene: Gene = await defaultClient.getGeneUsingGET({
         geneId: entrezGeneId.toString()
@@ -1489,7 +1506,7 @@ export function getClinicalEqualityFilterValuesByString(filterValues: string):st
     return filterValues.replace(/\\,/g,'$@$').split(",").map(val=>val.trim().replace(/\$@\$/g,','));
 }
 
-export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, noCount: number):ClinicalDataCountWithColor[] {
+export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, noCount: number):ClinicalDataCountSummary[] {
 
     let dataCountSet: { [id: string]: ClinicalDataCount } = {};
     if (yesCount > 0) {

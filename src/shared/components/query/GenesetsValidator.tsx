@@ -2,7 +2,6 @@ import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
 import {observer} from "mobx-react";
 import FontAwesome from "react-fontawesome";
-import ReactSelect from 'react-select';
 import {GeneReplacement, QueryStoreComponent} from "./QueryStore";
 
 const styles = styles_any as {

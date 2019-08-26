@@ -1,117 +1,117 @@
 import * as _ from 'lodash';
 
+export enum CanonicalMutationType {
+    MISSENSE = "missense",
+    FRAME_SHIFT_INS = "frame_shift_ins",
+    FRAME_SHIFT_DEL = "frame_shift_del",
+    FRAMESHIFT = "frameshift",
+    NONSENSE = "nonsense",
+    SPLICE_SITE = "splice_site",
+    NONSTART = "nonstart",
+    NONSTOP = "nonstop",
+    IN_FRAME_DEL = "in_frame_del",
+    IN_FRAME_INS = "in_frame_ins",
+    INFRAME = "inframe",
+    TRUNCATING = "truncating",
+    FUSION = "fusion",
+    SILENT = "silent",
+    OTHER = "other"
+}
 
-type MISSENSE = "missense";
-type FRAME_SHIFT_INS = "frame_shift_ins";
-type FRAME_SHIFT_DEL = "frame_shift_del";
-type FRAMESHIFT = "frameshift";
-type NONSENSE = "nonsense";
-type SPLICE_SITE = "splice_site";
-type NONSTART = "nonstart";
-type NONSTOP = "nonstop";
-type IN_FRAME_DEL = "in_frame_del";
-type IN_FRAME_INS = "in_frame_ins";
-type INFRAME = "inframe";
-type TRUNCATING = "truncating";
-type FUSION = "fusion";
-type SILENT = "silent";
-type OTHER = "other";
+export enum ProteinImpactType {
+    MISSENSE = CanonicalMutationType.MISSENSE,
+    TRUNCATING = CanonicalMutationType.TRUNCATING,
+    INFRAME = CanonicalMutationType.INFRAME,
+    OTHER = CanonicalMutationType.OTHER
+}
 
-export type CanonicalMutationType =
-    MISSENSE | FRAME_SHIFT_INS | FRAME_SHIFT_DEL | FRAMESHIFT |
-        NONSENSE | SPLICE_SITE | NONSTART | NONSTOP | IN_FRAME_DEL |
-        IN_FRAME_INS | INFRAME | TRUNCATING | FUSION | SILENT | OTHER;
-
-
-export type ProteinImpactType =
-    MISSENSE | TRUNCATING | INFRAME | OTHER;
-
-const canonicalType:{ [lowerCaseType:string]:CanonicalMutationType } = {
-    "missense_mutation": "missense",
-    "missense": "missense",
-    "missense_variant": "missense",
-    "frame_shift_ins": "frame_shift_ins",
-    "frame_shift_del": "frame_shift_del",
-    "frameshift": "frameshift",
-    "frameshift_deletion": "frame_shift_del",
-    "frameshift_insertion": "frame_shift_ins",
-    "de_novo_start_outofframe": "frameshift",
-    "frameshift_variant": "frameshift",
-    "nonsense_mutation": "nonsense",
-    "nonsense": "nonsense",
-    "stopgain_snv": "nonsense",
-    "stop_gained": "nonsense",
-    "splice_site": "splice_site",
-    "splice": "splice_site",
-    "splice site": "splice_site",
-    "splicing": "splice_site",
-    "splice_site_snp": "splice_site",
-    "splice_site_del": "splice_site",
-    "splice_site_indel": "splice_site",
-    "splice_region_variant": "splice_site",
-    "splice_region": "splice_site",
-    "translation_start_site":  "nonstart",
-    "initiator_codon_variant": "nonstart",
-    "start_codon_snp": "nonstart",
-    "start_codon_del": "nonstart",
-    "nonstop_mutation": "nonstop",
-    "stop_lost": "nonstop",
-    "inframe_del": "in_frame_del",
-    "inframe_deletion": "in_frame_del",
-    "in_frame_del": "in_frame_del",
-    "in_frame_deletion": "in_frame_del",
-    "inframe_ins": "in_frame_ins",
-    "inframe_insertion": "in_frame_ins",
-    "in_frame_ins": "in_frame_ins",
-    "in_frame_insertion": "in_frame_ins",
-    "indel": "in_frame_del",
-    "nonframeshift_deletion": "inframe",
-    "nonframeshift": "inframe",
-    "nonframeshift insertion": "inframe",
-    "nonframeshift_insertion": "inframe",
-    "targeted_region": "other",
-    "inframe": "inframe",
-    "truncating": "truncating",
-    "feature_truncation": "truncating",
-    "fusion": "fusion",
-    "silent": "silent",
-    "synonymous_variant": "silent",
-    "any": "other",
-    "other": "other"
+export const CANONICAL_MUTATION_TYPE_MAP: {[lowerCaseType: string]: CanonicalMutationType} = {
+    "missense_mutation": CanonicalMutationType.MISSENSE,
+    "missense": CanonicalMutationType.MISSENSE,
+    "missense_variant": CanonicalMutationType.MISSENSE,
+    "frame_shift_ins": CanonicalMutationType.FRAME_SHIFT_INS,
+    "frame_shift_del": CanonicalMutationType.FRAME_SHIFT_DEL,
+    "frameshift": CanonicalMutationType.FRAMESHIFT,
+    "frameshift_deletion": CanonicalMutationType.FRAME_SHIFT_DEL,
+    "frameshift_insertion": CanonicalMutationType.FRAME_SHIFT_INS,
+    "de_novo_start_outofframe": CanonicalMutationType.FRAMESHIFT,
+    "frameshift_variant": CanonicalMutationType.FRAMESHIFT,
+    "nonsense_mutation": CanonicalMutationType.NONSENSE,
+    "nonsense": CanonicalMutationType.NONSENSE,
+    "stopgain_snv": CanonicalMutationType.NONSENSE,
+    "stop_gained": CanonicalMutationType.NONSENSE,
+    "splice_site": CanonicalMutationType.SPLICE_SITE,
+    "splice": CanonicalMutationType.SPLICE_SITE,
+    "splice site": CanonicalMutationType.SPLICE_SITE,
+    "splicing": CanonicalMutationType.SPLICE_SITE,
+    "splice_site_snp": CanonicalMutationType.SPLICE_SITE,
+    "splice_site_del": CanonicalMutationType.SPLICE_SITE,
+    "splice_site_indel": CanonicalMutationType.SPLICE_SITE,
+    "splice_region_variant": CanonicalMutationType.SPLICE_SITE,
+    "splice_region": CanonicalMutationType.SPLICE_SITE,
+    "translation_start_site":  CanonicalMutationType.NONSTART,
+    "initiator_codon_variant": CanonicalMutationType.NONSTART,
+    "start_codon_snp": CanonicalMutationType.NONSTART,
+    "start_codon_del": CanonicalMutationType.NONSTART,
+    "nonstop_mutation": CanonicalMutationType.NONSTOP,
+    "stop_lost": CanonicalMutationType.NONSTOP,
+    "inframe_del": CanonicalMutationType.IN_FRAME_DEL,
+    "inframe_deletion": CanonicalMutationType.IN_FRAME_DEL,
+    "in_frame_del": CanonicalMutationType.IN_FRAME_DEL,
+    "in_frame_deletion": CanonicalMutationType.IN_FRAME_DEL,
+    "inframe_ins": CanonicalMutationType.IN_FRAME_INS,
+    "inframe_insertion": CanonicalMutationType.IN_FRAME_INS,
+    "in_frame_ins": CanonicalMutationType.IN_FRAME_INS,
+    "in_frame_insertion": CanonicalMutationType.IN_FRAME_INS,
+    "indel": CanonicalMutationType.IN_FRAME_DEL,
+    "nonframeshift_deletion": CanonicalMutationType.INFRAME,
+    "nonframeshift": CanonicalMutationType.INFRAME,
+    "nonframeshift insertion": CanonicalMutationType.INFRAME,
+    "nonframeshift_insertion": CanonicalMutationType.INFRAME,
+    "targeted_region": CanonicalMutationType.OTHER,
+    "inframe": CanonicalMutationType.INFRAME,
+    "truncating": CanonicalMutationType.TRUNCATING,
+    "feature_truncation": CanonicalMutationType.TRUNCATING,
+    "fusion": CanonicalMutationType.FUSION,
+    "silent": CanonicalMutationType.SILENT,
+    "synonymous_variant": CanonicalMutationType.SILENT,
+    "any": CanonicalMutationType.OTHER,
+    "other": CanonicalMutationType.OTHER
 };
 
-export function getProteinImpactType(mutationType:string):ProteinImpactType {
+export function getProteinImpactType(mutationType:string): ProteinImpactType {
     return getProteinImpactTypeFromCanonical(getCanonicalMutationType(mutationType));
 }
 
-export function getProteinImpactTypeFromCanonical(mutationType:CanonicalMutationType):ProteinImpactType {
+export function getProteinImpactTypeFromCanonical(mutationType:CanonicalMutationType): ProteinImpactType {
     switch(mutationType) {
-        case "missense":
-            return "missense";
-        case "frame_shift_ins":
-        case "frame_shift_del":
-        case "frameshift":
-        case "nonsense":
-        case "splice_site":
-        case "nonstop":
-        case "truncating":
-            return "truncating";
-        case "in_frame_ins":
-        case "in_frame_del":
-        case "inframe":
-            return "inframe";
-        case "nonstart":
-        case "fusion":
-        case "silent":
-        case "other":
+        case CanonicalMutationType.MISSENSE:
+            return ProteinImpactType.MISSENSE;
+        case CanonicalMutationType.FRAME_SHIFT_INS:
+        case CanonicalMutationType.FRAME_SHIFT_DEL:
+        case CanonicalMutationType.FRAMESHIFT:
+        case CanonicalMutationType.NONSENSE:
+        case CanonicalMutationType.SPLICE_SITE:
+        case CanonicalMutationType.NONSTOP:
+        case CanonicalMutationType.TRUNCATING:
+            return ProteinImpactType.TRUNCATING;
+        case CanonicalMutationType.IN_FRAME_INS:
+        case CanonicalMutationType.IN_FRAME_DEL:
+        case CanonicalMutationType.INFRAME:
+            return ProteinImpactType.INFRAME;
+        case CanonicalMutationType.NONSTART:
+        case CanonicalMutationType.FUSION:
+        case CanonicalMutationType.SILENT:
+        case CanonicalMutationType.OTHER:
         default:
-            return "other";
+            return ProteinImpactType.OTHER;
     }
 }
-export function getCanonicalMutationType(mutationType:string):CanonicalMutationType {
-    return canonicalType[mutationType.toLowerCase()] || "other";
+export function getCanonicalMutationType(mutationType:string): CanonicalMutationType {
+    return CANONICAL_MUTATION_TYPE_MAP[mutationType.toLowerCase()] || CanonicalMutationType.OTHER;
 }
 
-export const CanonicalMutationTypeList: CanonicalMutationType[] = _.chain(canonicalType).values().uniq().value();
+export const CanonicalMutationTypeList: CanonicalMutationType[] =
+    _.chain(CANONICAL_MUTATION_TYPE_MAP).values().uniq().value();
 
 export default getCanonicalMutationType;

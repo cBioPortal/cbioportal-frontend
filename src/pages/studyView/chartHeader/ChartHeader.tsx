@@ -16,18 +16,19 @@ import {ChartMeta, getClinicalAttributeOverlay} from "../StudyViewUtils";
 import svgToPdfDownload from "public-lib/lib/svgToPdfDownload";
 import {Dropdown, MenuItem} from "react-bootstrap";
 import Timer = NodeJS.Timer;
-import DownloadControls, {DownloadControlsButton} from "public-lib/components/downloadControls/DownloadControls";
+import DownloadControls, {
+    DataType,
+    DownloadControlsButton
+} from "public-lib/components/downloadControls/DownloadControls";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 import {serializeEvent} from "shared/lib/tracking";
-
-// there's some incompatiblity with rc-tooltip and study view layout
-// these adjustments force tooltips to open top right because tooltips
-// were breaking at far right of page
-const tooltipPosition = "topRight";
-const tooltipAlign = { offset:[5,-6] };
+import CustomBinsModal from "pages/studyView/charts/barChart/CustomBinsModal";
+import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
+    chartType: ChartType;
+    store: StudyViewPageStore;
     title: string;
     height: number;
     placement: 'left' | 'right',
@@ -39,7 +40,7 @@ export interface IChartHeaderProps {
     chartControls?   : ChartControls;
     changeChartType  : (chartType: ChartType) => void;
     getSVG?          : ()=>Promise<SVGElement | null>;
-    getData?         : ()=>Promise<string | null>;
+    getData?         : (dataType?:DataType)=>Promise<string | null>;
     downloadTypes?   : DownloadControlsButton[];
     openComparisonPage : () => void;
 }
@@ -58,6 +59,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     @observable menuOpen = false;
     @observable downloadSubmenuOpen = false;
+    @observable showCustomBinModal:boolean = false;
     private closeMenuTimeout:number|undefined = undefined;
 
     @computed
@@ -111,7 +113,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <a className="dropdown-item"
                         onClick={() => this.props.changeChartType(ChartTypeEnum.TABLE)}
                     >
-                        <i className={classnames("fa", "fa-table", styles.menuItemIcon)}
+                        <i className={classnames("fa fa-xs fa-fw", "fa-table", styles.menuItemIcon)}
                            aria-hidden="true"
                         />
                         Show Table
@@ -126,7 +128,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <a className="dropdown-item"
                         onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}
                     >
-                        <i className={classnames("fa", "fa-pie-chart", styles.menuItemIcon)}
+                        <i className={classnames("fa fa-xs fa-fw", "fa-pie-chart", styles.menuItemIcon)}
                            aria-hidden="true"
                         />
                         Show Pie
@@ -140,12 +142,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 <li>
                     <a className="dropdown-item"
                         onClick={this.props.openComparisonPage}
-
                     >
                         <img src={require("../../../rootImages/compare_vs.svg")}
-                             width={13}
-                             style={{marginTop:-2}}
-                             className={styles.menuItemIcon}
+                             className={classnames('fa fa-fw', styles.menuItemIcon) }
                         />
                         Compare Groups
                     </a>
@@ -153,24 +152,45 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
-        const downloadSubmenuWidth = 70;
-        items.push(
-            <li style={{position: 'relative'}}>
-                <div className={classnames('dropdown-item', styles.dropdownHoverEffect)}
-                   style={{'display': 'flex', justifyContent:'space-between', padding: '3px 20px'}}
-                   onMouseEnter={() => this.downloadSubmenuOpen = true}
-                   onMouseLeave={() => this.downloadSubmenuOpen = false}
-                >
-                    <div>
-                        <i className={classnames("fa fa-xs", "fa-download", styles.menuItemIcon)}
+        if (this.props.chartType === ChartTypeEnum.BAR_CHART) {
+            items.push(
+                <li>
+                    <a className="dropdown-item" onClick={()=>this.showCustomBinModal=true}>
+                        <i className={classnames("fa fa-xs fa-fw", "fa-bar-chart", styles.menuItemIcon)}
                            aria-hidden="true"
                         />
-                        <span>Download</span>
-                    </div>
-                    <i className={classnames("fa fa-xs", this.props.placement === 'left' ? 'fa-caret-left' : 'fa-caret-right')}
-                       style={{lineHeight: 'inherit'}}/>
+                        Custom Bins
+                    </a>
+                    <CustomBinsModal
+                        show={this.showCustomBinModal}
+                        onHide={() => this.showCustomBinModal = false}
+                        chartMeta={this.props.chartMeta}
+                        currentBins={this.props.store.geCurrentBins(this.props.chartMeta)}
+                        updateCustomBins={this.props.store.updateCustomBins}
+                    />
+                </li>
+            );
+        }
 
-                    {this.downloadSubmenuOpen &&
+        if (this.props.chartControls && this.props.downloadTypes && this.props.downloadTypes.length > 0) {
+            const downloadSubmenuWidth = 70;
+            items.push(
+                <li style={{position: 'relative'}}>
+                    <div className={classnames('dropdown-item', styles.dropdownHoverEffect)}
+                         style={{'display': 'flex', justifyContent: 'space-between', padding: '3px 20px'}}
+                         onMouseEnter={() => this.downloadSubmenuOpen = true}
+                         onMouseLeave={() => this.downloadSubmenuOpen = false}
+                    >
+                        <div>
+                            <i className={classnames("fa fa-xs", "fa-download", styles.menuItemIcon)}
+                               aria-hidden="true"
+                            />
+                            <span>Download</span>
+                        </div>
+                        <i className={"fa fa-xs fa-fw fa-caret-right"}
+                           style={{lineHeight: 'inherit'}}/>
+
+                        {this.downloadSubmenuOpen &&
                         <DownloadControls
                             filename={this.fileName}
                             buttons={this.props.downloadTypes}
@@ -186,12 +206,25 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             }}
                             dontFade={true}
                         />
-                    }
-                </div>
-            </li>
-        );
-
+                        }
+                    </div>
+                </li>
+            );
+        }
         return items;
+    }
+
+    // there's some incompatiblity with rc-tooltip and study view layout
+    // these adjustments force tooltips to open on different directions because tooltips
+    // were breaking at far right of page
+    @computed
+    get tooltipPosition() {
+        return  this.props.placement == 'left' ? 'topRight' : 'top';
+    }
+
+    @computed
+    get tooltipAlign() {
+        return this.props.placement == 'left' ? { offset:[0,-6] } : undefined;
     }
 
     public render() {
@@ -204,20 +237,20 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 {this.active && (
                     <div className={classnames(styles.controls, 'controls')}>
                         <div className="btn-group">
-                            <If condition={!!this.props.chartMeta.description}>
+                            <If condition={!!this.props.chartMeta.clinicalAttribute || !!this.props.chartMeta.description}>
                                 <DefaultTooltip
                                     mouseEnterDelay={0}
                                     trigger={["hover"]}
-                                    placement={tooltipPosition}
-                                    align={tooltipAlign}
-                                    overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description)}
+                                    placement={this.tooltipPosition}
+                                    align={this.tooltipAlign}
+                                    overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description, this.props.chartMeta.clinicalAttribute ? this.props.chartMeta.clinicalAttribute.clinicalAttributeId : undefined)}
                                     destroyTooltipOnHide={true}
                                 >
                                     <div
                                         className={classnames("btn btn-xs btn-default", styles.item)}
                                     >
                                         <i
-                                            className={classnames("fa fa-xs", "fa-info-circle", styles.clickable)}
+                                            className={classnames("fa fa-xs fa-fw", "fa-info-circle")}
                                             aria-hidden="true"
                                         />
                                     </div>
@@ -225,8 +258,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             </If>
                             <If condition={this.props.chartControls && !!this.props.chartControls.showResetIcon}>
                                 <DefaultTooltip
-                                    placement={tooltipPosition}
-                                    align={tooltipAlign}
+                                    placement={this.tooltipPosition}
+                                    align={this.tooltipAlign}
                                     overlay={<span>Reset filters in chart</span>}
                                     destroyTooltipOnHide={true}
                                 >
@@ -235,22 +268,22 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         onClick={this.props.resetChart}
                                     >
                                         <i
-                                            className={classnames("fa fa-xs", "fa-undo", styles.undo, styles.clickable)}
+                                            className={classnames("fa fa-xs fa-fw", "fa-undo", styles.undo, styles.clickable)}
                                             aria-hidden="true"
                                         />
                                     </button>
                                 </DefaultTooltip>
                             </If>
                             <DefaultTooltip
-                                placement={tooltipPosition}
-                                align={tooltipAlign}
+                                placement={this.tooltipPosition}
+                                align={this.tooltipAlign}
                                 overlay={<span>Delete chart</span>}
                             >
                                 <button
                                     className={classnames("btn btn-xs btn-default", styles.item)}
                                     onClick={this.props.deleteChart}
                                 >
-                                    <i className={classnames("fa fa-xs", "fa-times", styles.clickable)}
+                                    <i className={classnames("fa fa-xs fa-fw", "fa-times", styles.clickable)}
                                        aria-hidden="true"></i>
                                 </button>
                             </DefaultTooltip>
@@ -263,7 +296,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 >
                                     <button className={classnames("btn btn-xs btn-default dropdown-toggle", {active:this.menuOpen})}>
                                         <i
-                                            className={classnames("fa fa-xs fa-bars")}
+                                            className={classnames("fa fa-xs fa-fw fa-bars")}
                                         />
                                     </button>
                                     <ul data-test='chart-header-hamburger-icon-menu'

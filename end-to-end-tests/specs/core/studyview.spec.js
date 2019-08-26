@@ -212,7 +212,7 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
     it('check', () => {
         // This is one of the studies have MDACC heatmap enabled
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
-        waitForNetworkQuiet(20000);
+        waitForNetworkQuiet(30000);
         browser.waitForVisible("#studyViewTabs a.tabAnchor_heatmaps", WAIT_FOR_VISIBLE_TIMEOUT);
         browser.click("#studyViewTabs a.tabAnchor_heatmaps");
         assert(!browser.isExisting(ADD_CHART_BUTTON));
@@ -375,6 +375,7 @@ describe('study view lgg_tcga study tests', () => {
                 assert(browser.isExisting(table + ' .controls .fa-pie-chart'));
             });
 
+
             it('table should be sorted by Freq in the default setting', ()=>{
                 // we need to move to the top of the page, otherwise the offset of add chart button is calculated wrong
                 browser.moveToObject("body", 0, 0);
@@ -426,4 +427,33 @@ describe('check the simple filter(filterAttributeId, filterValues) is working pr
         const res = checkElementWithMouseDisabled("[data-test='study-view-header']");
         assertScreenShotMatch(res);
     });
+});
+
+describe('the gene panel is loaded properly', () => {
+    before(() => {
+        const url = `${CBIOPORTAL_URL}/study?id=msk_impact_2017`;
+        goToUrlAndSetLocalStorage(url);
+    });
+    it('check the mutated genes table has gene panel info', () => {
+        const tooltipSelector = '[data-test="freq-cell-tooltip"]';
+        browser.waitForVisible(`${CNA_GENES_TABLE} [data-test='freq-cell']`, WAIT_FOR_VISIBLE_TIMEOUT);
+
+        browser.moveToObject(`${CNA_GENES_TABLE} [data-test='freq-cell']:first-child`);
+
+        browser.waitForVisible(tooltipSelector, WAIT_FOR_VISIBLE_TIMEOUT);
+
+        // the gene panel ID IMPACT341 should be listed
+        browser.getText(tooltipSelector).includes('IMPACT341');
+
+        browser.click(`${tooltipSelector} a[data-test='gene-panel-linkout-IMPACT341']`);
+
+        // the modal title should show gene panel ID
+        browser.waitForVisible(`[data-test="gene-panel-modal-title"]`, WAIT_FOR_VISIBLE_TIMEOUT);
+        assert.equal(browser.getText(`[data-test="gene-panel-modal-title"]`), "IMPACT341");
+
+        // test whether the gene info has been loaded correctly
+        browser.waitForVisible(`[data-test="gene-panel-modal-body"]`, WAIT_FOR_VISIBLE_TIMEOUT);
+        assert.equal(browser.getText('[data-test="gene-panel-modal-body"] p:first-child'), "ABL1");
+
+    })
 });

@@ -50,6 +50,8 @@ import HgvscColumnFormatter from "./column/HgvscColumnFormatter";
 import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import GnomadColumnFormatter from "./column/GnomadColumnFormatter";
 import ClinVarColumnFormatter from "./column/ClinVarColumnFormatter";
+import DbsnpColumnFormatter from "./column/DbsnpColumnFormatter";
+
 
 export interface IMutationTableProps {
     studyIdToStudy?: {[studyId:string]:CancerStudy};
@@ -129,7 +131,8 @@ export enum MutationTableColumnType {
     EXON,
     HGVSC,
     GNOMAD,
-    CLINVAR
+    CLINVAR,
+    DBSNP
 }
 
 type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=>boolean};
@@ -578,6 +581,23 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             download: (d:Mutation[]) => ClinVarColumnFormatter.download(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
             tooltip: (<span><a href="https://www.ncbi.nlm.nih.gov/clinvar/" target="_blank">ClinVar</a>
             &nbsp;aggregates information about genomic variation and its relationship to human health.</span>),
+            defaultSortDirection: "desc",
+            visible: false,
+            align: "right"
+        };
+
+        this._columns[MutationTableColumnType.DBSNP] = {
+            name: "dbSNP",
+            render: (d:Mutation[]) => DbsnpColumnFormatter.renderFunction(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+            sortBy: (d:Mutation[]) => DbsnpColumnFormatter.getSortValue(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+            download: (d:Mutation[]) => DbsnpColumnFormatter.download(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+            tooltip: (
+                <span style={{maxWidth:370, display:"block", textAlign:"left"}}>
+                    The Single Nucleotide Polymorphism Database (<a href="https://www.ncbi.nlm.nih.gov/snp/" target="_blank">dbSNP</a>) 
+                    is a free public archive for genetic variation within and across different species. 
+                    <br />NOTE: Currently only SNPs, single base deletions and insertions are supported.
+                </span>
+            ),
             defaultSortDirection: "desc",
             visible: false,
             align: "right"
