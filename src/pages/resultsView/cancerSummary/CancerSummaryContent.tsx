@@ -8,7 +8,7 @@ import { ControlLabel, FormControl } from 'react-bootstrap';
 import {If, Then, Else} from 'react-if';
 import classnames from 'classnames';
 
-import 'react-select/dist/react-select.css';
+import 'react-select1/dist/react-select.css';
 import 'react-rangeslider/lib/index.css';
 
 import { CancerSummaryChart } from "./CancerSummaryChart";

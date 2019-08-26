@@ -22,9 +22,13 @@ import DownloadControls, {
 } from "public-lib/components/downloadControls/DownloadControls";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
 import {serializeEvent} from "shared/lib/tracking";
+import CustomBinsModal from "pages/studyView/charts/barChart/CustomBinsModal";
+import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
+    chartType: ChartType;
+    store: StudyViewPageStore;
     title: string;
     height: number;
     placement: 'left' | 'right',
@@ -55,6 +59,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     @observable menuOpen = false;
     @observable downloadSubmenuOpen = false;
+    @observable showCustomBinModal:boolean = false;
     private closeMenuTimeout:number|undefined = undefined;
 
     @computed
@@ -108,7 +113,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <a className="dropdown-item"
                         onClick={() => this.props.changeChartType(ChartTypeEnum.TABLE)}
                     >
-                        <i className={classnames("fa", "fa-table", styles.menuItemIcon)}
+                        <i className={classnames("fa fa-xs fa-fw", "fa-table", styles.menuItemIcon)}
                            aria-hidden="true"
                         />
                         Show Table
@@ -123,7 +128,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <a className="dropdown-item"
                         onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}
                     >
-                        <i className={classnames("fa", "fa-pie-chart", styles.menuItemIcon)}
+                        <i className={classnames("fa fa-xs fa-fw", "fa-pie-chart", styles.menuItemIcon)}
                            aria-hidden="true"
                         />
                         Show Pie
@@ -137,15 +142,32 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 <li>
                     <a className="dropdown-item"
                         onClick={this.props.openComparisonPage}
-
                     >
                         <img src={require("../../../rootImages/compare_vs.svg")}
-                             width={13}
-                             style={{marginTop:-2}}
-                             className={styles.menuItemIcon}
+                             className={classnames('fa fa-fw', styles.menuItemIcon) }
                         />
                         Compare Groups
                     </a>
+                </li>
+            );
+        }
+
+        if (this.props.chartType === ChartTypeEnum.BAR_CHART) {
+            items.push(
+                <li>
+                    <a className="dropdown-item" onClick={()=>this.showCustomBinModal=true}>
+                        <i className={classnames("fa fa-xs fa-fw", "fa-bar-chart", styles.menuItemIcon)}
+                           aria-hidden="true"
+                        />
+                        Custom Bins
+                    </a>
+                    <CustomBinsModal
+                        show={this.showCustomBinModal}
+                        onHide={() => this.showCustomBinModal = false}
+                        chartMeta={this.props.chartMeta}
+                        currentBins={this.props.store.geCurrentBins(this.props.chartMeta)}
+                        updateCustomBins={this.props.store.updateCustomBins}
+                    />
                 </li>
             );
         }
@@ -165,7 +187,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             />
                             <span>Download</span>
                         </div>
-                        <i className="fa fa-xs fa-caret-right"
+                        <i className={"fa fa-xs fa-fw fa-caret-right"}
                            style={{lineHeight: 'inherit'}}/>
 
                         {this.downloadSubmenuOpen &&
@@ -228,7 +250,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         className={classnames("btn btn-xs btn-default", styles.item)}
                                     >
                                         <i
-                                            className={classnames("fa fa-xs", "fa-info-circle")}
+                                            className={classnames("fa fa-xs fa-fw", "fa-info-circle")}
                                             aria-hidden="true"
                                         />
                                     </div>
@@ -246,7 +268,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         onClick={this.props.resetChart}
                                     >
                                         <i
-                                            className={classnames("fa fa-xs", "fa-undo", styles.undo, styles.clickable)}
+                                            className={classnames("fa fa-xs fa-fw", "fa-undo", styles.undo, styles.clickable)}
                                             aria-hidden="true"
                                         />
                                     </button>
@@ -261,7 +283,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     className={classnames("btn btn-xs btn-default", styles.item)}
                                     onClick={this.props.deleteChart}
                                 >
-                                    <i className={classnames("fa fa-xs", "fa-times", styles.clickable)}
+                                    <i className={classnames("fa fa-xs fa-fw", "fa-times", styles.clickable)}
                                        aria-hidden="true"></i>
                                 </button>
                             </DefaultTooltip>
@@ -274,7 +296,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 >
                                     <button className={classnames("btn btn-xs btn-default dropdown-toggle", {active:this.menuOpen})}>
                                         <i
-                                            className={classnames("fa fa-xs fa-bars")}
+                                            className={classnames("fa fa-xs fa-fw fa-bars")}
                                         />
                                     </button>
                                     <ul data-test='chart-header-hamburger-icon-menu'

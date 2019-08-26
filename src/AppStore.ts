@@ -4,7 +4,7 @@ import {initializeAPIClients} from "./config/config";
 import * as _ from 'lodash';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {sendSentryMessage} from "./shared/lib/tracking";
-import getBrowserWindow from "./shared/lib/getBrowserWindow";
+import getBrowserWindow from "./public-lib/lib/getBrowserWindow";
 
 export type SiteError = {
     errorObj:any;

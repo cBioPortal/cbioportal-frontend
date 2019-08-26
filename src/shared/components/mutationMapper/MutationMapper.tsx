@@ -13,11 +13,7 @@ import {
     TrackVisibility
 } from "react-mutation-mapper";
 
-// tslint:disable-next-line:no-import-side-effect
-import 'react-select/dist/react-select.css';
 import 'react-mutation-mapper/dist/styles.css';
-import './styles.scss';
-
 import 'cbioportal-frontend-commons/styles.css';
 import 'react-table/react-table.css';
 
