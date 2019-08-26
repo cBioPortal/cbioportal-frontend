@@ -1,5 +1,5 @@
 import load from 'little-loader';
-import getBrowserWindow from "./getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import {ICustomTabConfiguration} from "../model/ITabConfiguration";
 import {autorun} from "mobx";
 

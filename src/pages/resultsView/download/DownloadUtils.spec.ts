@@ -584,16 +584,18 @@ describe('DownloadUtils', () => {
             const selectedMolecularProfiles = [{molecularProfileId:"AsdfasD"} as MolecularProfile];
 
             const caseAlterationData = generateCaseAlterationData(
+                "EGFR TP53 PTEN",
                 selectedMolecularProfiles,
+                caseAggregatedDataByOQLLine,
                 caseAggregatedDataByOQLLine,
                 genePanelInformation,
                 samples,
                 geneAlterationData);
 
-            assert.isFalse(caseAlterationData[0].oqlData["EGFR: AMP HOMDEL MUT FUSION;"].sequenced,
+            assert.isFalse(caseAlterationData[0].oqlData["EGFR"].sequenced,
                 "cases with the gene EGFR should be marked as not sequenced");
 
-            assert.isTrue(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].sequenced,
+            assert.isTrue(caseAlterationData[1].oqlData["PTEN"].sequenced,
                 "cases with the gene other than EGFR should be marked as sequenced");
         });
 
@@ -620,7 +622,7 @@ describe('DownloadUtils', () => {
 
             const selectedMolecularProfiles = [{molecularProfileId:"AsdfasD"} as MolecularProfile];
 
-            const caseAlterationData = generateCaseAlterationData(selectedMolecularProfiles, caseAggregatedDataByOQLLine, genePanelInformation, samples);
+            const caseAlterationData = generateCaseAlterationData("EGFR TP53 PTEN", selectedMolecularProfiles, caseAggregatedDataByOQLLine, caseAggregatedDataByOQLLine, genePanelInformation, samples);
 
             assert.equal(caseAlterationData.length, 2,
                 "case alteration data has correct size");
@@ -631,10 +633,10 @@ describe('DownloadUtils', () => {
                 "study id is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3");
             assert.isTrue(caseAlterationData[0].altered,
                 "sample UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3 is altered");
-            assert.deepEqual(caseAlterationData[0].oqlData["EGFR: AMP HOMDEL MUT FUSION;"].mutation,
+            assert.deepEqual(caseAlterationData[0].oqlData["EGFR"].mutation,
                 ["G598A", "G239C"],
                 "mutation data is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3");
-            assert.deepEqual(caseAlterationData[0].oqlData["EGFR: AMP HOMDEL MUT FUSION;"].fusion,
+            assert.deepEqual(caseAlterationData[0].oqlData["EGFR"].fusion,
                 ["EGFR-intragenic"],
                 "fusion data is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3");
 
@@ -644,10 +646,10 @@ describe('DownloadUtils', () => {
                 "study id is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
             assert.isTrue(caseAlterationData[1].altered,
                 "sample VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ is altered");
-            assert.deepEqual(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].mrnaExp,
+            assert.deepEqual(caseAlterationData[1].oqlData["PTEN"].mrnaExp,
                 [{type: 'HIGH', value: 2.4745}],
                 "mRNA data is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
-            assert.deepEqual(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].proteinLevel,
+            assert.deepEqual(caseAlterationData[1].oqlData["PTEN"].proteinLevel,
                 [{type: 'HIGH', value: 2.5406}],
                 "protein data is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
         });

@@ -526,7 +526,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
         });
     });
 
-    describe.only("filterAndAnnotateMutations", ()=>{
+    describe("filterAndAnnotateMutations", ()=>{
         it("returns empty list for empty input", ()=>{
             assert.deepEqual(filterAndAnnotateMutations([], ()=>({}) as any, {}), {
                 data: [], germline: [], vus: [], vusAndGermline:[]

@@ -46,7 +46,7 @@ import {
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from "../../lib/formSubmit";
 import {ServerConfigHelpers} from "../../../config/config";
-import getBrowserWindow from "../../lib/getBrowserWindow";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {QueryParameter} from "../../lib/ExtendedRouterStore";
 import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 

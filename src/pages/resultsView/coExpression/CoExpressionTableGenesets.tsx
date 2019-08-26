@@ -4,7 +4,7 @@ import {Gene} from "../../../shared/api/generated/CBioPortalAPI";
 import {correlationColor, correlationSortBy} from "./CoExpressionTableUtils";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import {CoExpressionDataStore, TableMode} from "./CoExpressionViz";
-import Select from "react-select";
+import Select from "react-select1";
 import {observer} from "mobx-react";
 import {CoExpressionWithQ, tableSearchInformation} from "./CoExpressionTabUtils";
 import InfoIcon from "../../../shared/components/InfoIcon";
