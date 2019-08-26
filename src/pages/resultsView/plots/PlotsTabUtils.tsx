@@ -2016,7 +2016,7 @@ export function makeAxisLogScaleFunction(axisSelection:AxisMenuSelection):IAxisL
         return undefined;
     }
 
-    let label;          // suffix that will appear in the axis label
+    let label;         // suffix that will appear in the axis label
     let fLogScale;     // function for (log-)transforming a value
     let fInvLogScale;  // function for back-transforming a value transformed with fLogScale
 
@@ -2035,6 +2035,10 @@ export function makeAxisLogScaleFunction(axisSelection:AxisMenuSelection):IAxisL
             // this is done by pre-application of a externally provided offset.
             if (!offset) {
                 offset = 0;
+            }
+            if (x+offset === 0) {
+                // 0 cannot be log-transformed, return 0 when input is 0
+                return 0;
             }
             return Math.log10(x+offset);
         };
