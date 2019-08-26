@@ -173,6 +173,7 @@ export const NONE_SELECTED_OPTION_LABEL = "Ordered samples";
 export const ALL_SELECTED_OPTION_NUMERICAL_VALUE = -3;
 export const SAME_SELECTED_OPTION_STRING_VALUE = "same";
 export const SAME_SELECTED_OPTION_NUMERICAL_VALUE = -2;
+const LEGEND_TO_BOTTOM_WIDTH_THRESHOLD = 900; // when plot is wider than this value, the legend moves from right to bottom of screen
 
 const mutationCountByOptions = [
     { value: MutationCountBy.MutationType, label: "Mutation Type" },
@@ -2182,7 +2183,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     labelVisibility={this.waterfallPlotLimitValueSymbolVisibility}
                                     zIndexSortBy={this.zIndexSortBy}
                                     useLogSpaceTicks={true}
-                                    legendLocationWidthThreshold={550}
+                                    legendLocationWidthThreshold={LEGEND_TO_BOTTOM_WIDTH_THRESHOLD}
                                     sortOrder={this.waterfallPlotSortOrder}
                                     pivotThreshold={this.waterfallPlotPivotThreshold}
                                     legendData={scatterPlotLegendData(
