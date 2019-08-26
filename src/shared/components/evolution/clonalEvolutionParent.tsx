@@ -30,84 +30,82 @@ export interface ISummrizedMutTable {
 }
 
 function summaryCCF(
-	data: Mutation[][] | undefined, 
+	data: Mutation[][], 
 	sampleIds: string[] | undefined, 
 	mutClusterNum: number
-): ISummrizedMutTable | undefined {
-	if (data) {
+): ISummrizedMutTable {
 
-		var mutNumber = data.length;
-		var summarizedCCF: {[key:string]: {[key:string] : number[]}} = {};
-		var mutClusterSize: {[key:string]: number } = {};
-		var sampleNum = sampleIds ? sampleIds.length : 0;
+	var mutNumber = data.length;
+	var summarizedCCF: {[key:string]: {[key:string] : number[]}} = {};
+	var mutClusterSize: {[key:string]: number } = {};
+	var sampleNum = sampleIds ? sampleIds.length : 0;
 
-		for (var j=0; j<sampleNum; j++) {
-			var sampleId = sampleIds ? sampleIds[j] : "";
-			summarizedCCF[sampleId] = {};
-			for (var i=0; i<data.length; i++) {
-				var mutClusterId:string = data[i][0].clusterId.toString();
-				mutClusterSize[mutClusterId] = (mutClusterSize[mutClusterId] == undefined) ? 1 : (mutClusterSize[mutClusterId] + 1);
-				summarizedCCF[sampleId][mutClusterId] = [];
-			}
-		}
-
+	for (var j=0; j<sampleNum; j++) {
+		var sampleId = sampleIds ? sampleIds[j] : "";
+		summarizedCCF[sampleId] = {};
 		for (var i=0; i<data.length; i++) {
 			var mutClusterId:string = data[i][0].clusterId.toString();
-			for (var j=0; j<data[i].length; j++) {
-				var dataPerMutPerSample = data[i][j];
-				var sampleId = dataPerMutPerSample.sampleId,
-					CCF = dataPerMutPerSample.CCF;
-				summarizedCCF[sampleId][mutClusterId].push(CCF);
-			}
+			mutClusterSize[mutClusterId] = (mutClusterSize[mutClusterId] == undefined) ? 1 : (mutClusterSize[mutClusterId] + 1);
+			summarizedCCF[sampleId][mutClusterId] = [];
 		}
+	}
 
-		var mutClusterSizeArray: {mutClusterId: string, size: number}[] = [];
-		var sampleIdKey: string;
-		for (sampleIdKey in mutClusterSize) {
-			mutClusterSizeArray.push({
-				mutClusterId: sampleIdKey,
-				size: mutClusterSize[sampleIdKey]
-			});
+	for (var i=0; i<data.length; i++) {
+		var mutClusterId:string = data[i][0].clusterId.toString();
+		for (var j=0; j<data[i].length; j++) {
+			var dataPerMutPerSample = data[i][j];
+			var sampleId = dataPerMutPerSample.sampleId,
+				CCF = dataPerMutPerSample.CCF;
+			summarizedCCF[sampleId][mutClusterId].push(CCF);
 		}
+	}
 
-		mutClusterSizeArray.sort(function(x, y) {
-			if (x.size == y.size) return 0;
-			else if (x.size < y.size) return 1;
-			else return -1;
-		})
-
-		var filtertedMutClusterSize: {[key:string]: number } = {};
-		var filtertedCluster:string[] = [];
-		for (var i=0; i<mutClusterNum; i++) {
-			filtertedMutClusterSize[mutClusterSizeArray[i].mutClusterId] = mutClusterSizeArray[i].size;
-			filtertedCluster.push(mutClusterSizeArray[i].mutClusterId);
-		}
-
-		var sampleIdKey: string,
-			mutClusterIdKey: string,
-			mutClusterCCF: {sampleId: string, mutClusterId: string, CCF: number}[] = [];
-		for (sampleIdKey in summarizedCCF) {
-			for (var i=0; i<filtertedCluster.length; i++) {
-				mutClusterIdKey = filtertedCluster[i];
-				var CCFarray = summarizedCCF[sampleIdKey][mutClusterIdKey],
-					meanCCF = 0;
-				for (var j=0; j<CCFarray.length; j++) {
-					meanCCF += CCFarray[j];
-				}
-				meanCCF = meanCCF / filtertedMutClusterSize[mutClusterIdKey] * sampleIds.length;
-				mutClusterCCF.push({
-					sampleId: sampleIdKey, 
-					mutClusterId: mutClusterIdKey, 
-					CCF: meanCCF
-				})
-			}
-		}
-
-		return({
-			mutClusterCCF: mutClusterCCF,
-			mutClusterSize: filtertedMutClusterSize
+	var mutClusterSizeArray: {mutClusterId: string, size: number}[] = [];
+	var sampleIdKey: string;
+	for (sampleIdKey in mutClusterSize) {
+		mutClusterSizeArray.push({
+			mutClusterId: sampleIdKey,
+			size: mutClusterSize[sampleIdKey]
 		});
 	}
+
+	mutClusterSizeArray.sort(function(x, y) {
+		if (x.size == y.size) return 0;
+		else if (x.size < y.size) return 1;
+		else return -1;
+	})
+
+	var filtertedMutClusterSize: {[key:string]: number } = {};
+	var filtertedCluster:string[] = [];
+	for (var i=0; i<mutClusterNum; i++) {
+		filtertedMutClusterSize[mutClusterSizeArray[i].mutClusterId] = mutClusterSizeArray[i].size;
+		filtertedCluster.push(mutClusterSizeArray[i].mutClusterId);
+	}
+
+	var sampleIdKey: string,
+		mutClusterIdKey: string,
+		mutClusterCCF: {sampleId: string, mutClusterId: string, CCF: number}[] = [];
+	for (sampleIdKey in summarizedCCF) {
+		for (var i=0; i<filtertedCluster.length; i++) {
+			mutClusterIdKey = filtertedCluster[i];
+			var CCFarray = summarizedCCF[sampleIdKey][mutClusterIdKey],
+				meanCCF = 0;
+			for (var j=0; j<CCFarray.length; j++) {
+				meanCCF += CCFarray[j];
+			}
+			meanCCF = meanCCF / filtertedMutClusterSize[mutClusterIdKey] * sampleNum;
+			mutClusterCCF.push({
+				sampleId: sampleIdKey, 
+				mutClusterId: mutClusterIdKey, 
+				CCF: meanCCF
+			})
+		}
+	}
+
+	return({
+		mutClusterCCF: mutClusterCCF,
+		mutClusterSize: filtertedMutClusterSize
+		});
 }
 
 function findParent(sortedMutClusterCCF: {sampleId: string, mutClusterId: string, CCF: number, parent: string, remain: number}[], currentClusterIndex: number) {
@@ -198,7 +196,8 @@ export default class ClonalEvolutionParent extends React.Component<IPatientViewE
     }
 
 	handleChange4ClusterNum() {
-		var mutClusterNum = Number($(".clusterNumRange input.slider")[0].value);
+		let slider = $(".clusterNumRange input.slider")[0] as HTMLInputElement;
+		var mutClusterNum = Number(slider.value);
 		this.setState({
 			selectedMutClusterNum: mutClusterNum
 		});
@@ -209,16 +208,21 @@ export default class ClonalEvolutionParent extends React.Component<IPatientViewE
     // TODO: Is this object possible to be undefined? Does it matter?
 
     public render() {
-        const evolutionMutationDataStoreFiltered:Mutation[][] | undefined = this.state.selectedMutationClusterId === "-1" ? this.props.data : this.props.data.filter((mutationPerPerson) => {return mutationPerPerson[0].clusterId == this.state.selectedMutationClusterId}); 
+		var mutData4LinePlot: ISummrizedMutTable = {mutClusterSize: {}, mutClusterCCF: []};
+		var treeTable = {};
+		var evolutionMutationDataStoreFiltered:Mutation[][] | undefined;
+		if (this.props.data && this.props.sampleIds) {
+			evolutionMutationDataStoreFiltered = this.state.selectedMutationClusterId === "-1" ? this.props.data : this.props.data.filter((mutationPerPerson) => {return mutationPerPerson[0].clusterId == this.state.selectedMutationClusterId}); 
 
-		const mutData4LinePlot = summaryCCF(this.props.data, this.props.sampleIds, this.state.selectedMutClusterNum);
+			mutData4LinePlot = summaryCCF(this.props.data, this.props.sampleIds, this.state.selectedMutClusterNum);
 
-		var orderedClonalPerSample = [];
-		for (var i=0; i<this.props.sampleIds.length; i++) {
-			orderedClonalPerSample.push( orderClonal(mutData4LinePlot, this.props.sampleIds[i]));
+			var orderedClonalPerSample = [];
+			for (var i=0; i<this.props.sampleIds.length; i++) {
+				orderedClonalPerSample.push( orderClonal(mutData4LinePlot, this.props.sampleIds[i]));
+			}
+
+			treeTable = findConsensusOrdering(orderedClonalPerSample, mutData4LinePlot.mutClusterSize);
 		}
-
-		const treeTable = findConsensusOrdering(orderedClonalPerSample, mutData4LinePlot.mutClusterSize);
 
         return(
             <div className="evolution">
