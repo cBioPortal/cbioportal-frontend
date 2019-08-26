@@ -1,11 +1,11 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {computed, observable} from "mobx";
+import {computed, observable, action} from "mobx";
 import {observer} from 'mobx-react';
 import fileDownload from 'react-file-download';
-import {AnnotatedExtendedAlteration, ExtendedAlteration, ResultsViewPageStore} from "../ResultsViewPageStore";
-import {CoverageInformation} from "../ResultsViewPageStoreUtils";
-import {OQLLineFilterOutput} from "shared/lib/oql/oqlfilter";
+import {AnnotatedExtendedAlteration, ExtendedAlteration, ResultsViewPageStore, ModifyQueryParams} from "../ResultsViewPageStore";
+import {CoverageInformation, getSingleGeneResultKey, getMultipleGeneResultKey} from "../ResultsViewPageStoreUtils";
+import {OQLLineFilterOutput, UnflattenedOQLLineFilterOutput, MergedTrackLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import FeatureTitle from "shared/components/featureTitle/FeatureTitle";
 import {SimpleCopyDownloadControls} from "shared/components/copyDownloadControls/SimpleCopyDownloadControls";
 import {default as GeneAlterationTable, IGeneAlteration} from "./GeneAlterationTable";
@@ -24,10 +24,16 @@ import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWi
 import {remoteData} from "../../../public-lib/api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
-import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
+import {MolecularProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
+import sessionServiceClient from "shared/api//sessionServiceInstance";
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import { MakeMobxView } from 'shared/components/MobxView';
+import { CUSTOM_CASE_LIST_ID } from 'shared/components/query/QueryStore';
+import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
+import { Alteration } from 'shared/lib/oql/oql-parser';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -70,14 +76,17 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         await:()=>[
             this.props.store.selectedMolecularProfiles,
             this.props.store.oqlFilteredCaseAggregatedDataByOQLLine,
+            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
             this.props.store.coverageInformation,
             this.props.store.samples,
             this.geneAlterationDataByGene,
-            this.props.store.molecularProfileIdToMolecularProfile
+            this.props.store.molecularProfileIdToMolecularProfile,
         ],
         invoke: ()=>Promise.resolve(generateCaseAlterationData(
+            this.props.store.rvQuery.oqlQuery,
             this.props.store.selectedMolecularProfiles.result!,
             this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.result!,
+            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!,
             this.props.store.coverageInformation.result!,
             this.props.store.samples.result!,
             this.geneAlterationDataByGene.result!,
@@ -193,16 +202,16 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         invoke:()=>Promise.resolve(stringify2DArray(this.transposedCnaDownloadData.result!))
     });
 
-    readonly alteredSamples = remoteData<string[]>({
+    readonly alteredCaseAlterationData = remoteData<ICaseAlteration[]>({
         await:()=>[this.caseAlterationData],
         invoke:()=>Promise.resolve(this.caseAlterationData.result!
-            .filter(caseAlteration => caseAlteration.altered)
-            .map(caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`))
+            .filter(caseAlteration => caseAlteration.altered))
     });
 
-    readonly alteredSamplesText = remoteData<string>({
-        await: ()=>[this.alteredSamples],
-        invoke:()=>Promise.resolve(this.alteredSamples.result!.join("\n"))
+    readonly unalteredCaseAlterationData = remoteData<ICaseAlteration[]>({
+        await:()=>[this.caseAlterationData],
+        invoke:()=>Promise.resolve(this.caseAlterationData.result!
+            .filter(caseAlteration => !caseAlteration.altered))
     });
 
     readonly sampleMatrix = remoteData<string[][]>({
@@ -236,8 +245,95 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                         .map(data => data.oql))
     });
 
+    readonly trackLabels = remoteData({
+        await:()=>[this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
+        invoke:()=> {
+            const labels: string[] = [];
+            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach((data, index) => {
+                // mergedTrackOqlList is undefined means the data is for single track / oql
+                if (data.mergedTrackOqlList === undefined) {
+                    labels.push(getSingleGeneResultKey(index, this.props.store.rvQuery.oqlQuery, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>));
+                }
+                // or data is for merged track (group: list of oqls)
+                else {
+                    labels.push(getMultipleGeneResultKey(data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>));
+                }
+            })
+            return Promise.resolve(labels);
+        }
+    });
+
+    readonly trackAlterationTypesMap = remoteData({
+        await:()=>[this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
+        invoke:()=> {
+            const trackAlterationTypesMap: {[label:string]: string[]} = {};
+            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach((data, index) => {
+                // mergedTrackOqlList is undefined means the data is for single track / oql
+                if (data.mergedTrackOqlList === undefined) {
+                    const singleTrackOql = data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+                    const label = getSingleGeneResultKey(index, this.props.store.rvQuery.oqlQuery, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>);
+                    // put types for single track into the map, key is track label
+                    if (singleTrackOql.parsed_oql_line.alterations) {
+                        trackAlterationTypesMap[label] = _.uniq(_.map(singleTrackOql.parsed_oql_line.alterations, (alteration) => alteration.alteration_type.toUpperCase()));
+                    }
+                }
+                // or data is for merged track (group: list of oqls)
+                else {
+                    const mergedTrackOql = data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
+                    const label = getMultipleGeneResultKey(data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>);
+                    // put types for merged track into the map, key is track label
+                    let alterations: string[] = [];
+                    _.forEach(mergedTrackOql.list, (oql: OQLLineFilterOutput<AnnotatedExtendedAlteration>) => {
+                        if (oql.parsed_oql_line.alterations) {
+                            const types: string[] = _.map(oql.parsed_oql_line.alterations, (alteration) => alteration.alteration_type.toUpperCase());
+                            alterations.push(...types);
+                        }
+                    })
+                    trackAlterationTypesMap[label] = _.uniq(alterations);
+                }
+            })
+            return Promise.resolve(trackAlterationTypesMap);
+        }
+    });
+
+    readonly geneAlterationMap = remoteData({
+        await:()=>[this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
+        invoke:()=> {
+            const geneAlterationMap: {[label:string]: Alteration[]} = {};
+            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach((data, index) => {
+                // mergedTrackOqlList is undefined means the data is for single track / oql
+                if (data.mergedTrackOqlList === undefined) {
+                    const singleTrackOql = data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+                    // put types for single track into the map, key is gene name
+                    if (singleTrackOql.parsed_oql_line.alterations) {
+                        geneAlterationMap[singleTrackOql.gene] = _.chain(singleTrackOql.parsed_oql_line.alterations)
+                                                                       .union(geneAlterationMap[singleTrackOql.gene])
+                                                                       .uniq()
+                                                                       .value();
+                    }
+                }
+                // or data is for merged track (group: list of oqls)
+                else {
+                    const mergedTrackOql = data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
+                    // put types for merged track into the map, key is gene name
+                    let alterations: string[] = [];
+                    _.forEach(mergedTrackOql.list, (oql: OQLLineFilterOutput<AnnotatedExtendedAlteration>) => {
+                        if (oql.parsed_oql_line.alterations) {
+                            const types: string[] = _.map(oql.parsed_oql_line.alterations, (alteration) => alteration.alteration_type);
+                            geneAlterationMap[oql.gene] = _.chain(oql.parsed_oql_line.alterations)
+                                                                .union(geneAlterationMap[oql.gene])
+                                                                .uniq()
+                                                                .value();
+                        }
+                    })
+                }
+            })
+            return Promise.resolve(geneAlterationMap);
+        }
+    });
+
     public render() {
-        const status = getMobxPromiseGroupStatus(this.downloadableFilesTable, this.geneAlterationData, this.caseAlterationData, this.oqls);
+        const status = getMobxPromiseGroupStatus(this.downloadableFilesTable, this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationMap);
 
         switch (status) {
             case "pending":
@@ -245,7 +341,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             case "error":
                 return <ErrorMessage/>;
             case "complete":
-            default:
                 return (
                     <WindowWidthBox data-test="downloadTabDiv" offset={60}>
                         <div className={"tabMessageContainer"}>
@@ -259,7 +354,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                 isLoading={false}
                                 style={{marginBottom:15}}
                             />
-                            {this.downloadableFilesTable.isComplete && this.downloadableFilesTable.result}
+                            {this.downloadableFilesTable.result}
                         </div>
                         <hr/>
                         <div className={styles["tables-container"]} data-test="dataDownloadGeneAlterationTable">
@@ -268,7 +363,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                 isLoading={false}
                                 className="pull-left forceHeaderStyle h4"
                             />
-                            {this.geneAlterationData.isComplete && (<GeneAlterationTable geneAlterationData={this.geneAlterationData.result} />)}
+                            <GeneAlterationTable geneAlterationData={this.geneAlterationData.result!} />
                         </div>
                         <hr/>
                         <div className={styles["tables-container"]}>
@@ -277,23 +372,24 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                 isLoading={false}
                                 className="pull-left forceHeaderStyle h4"
                             />
-                            {this.oqls.isComplete && this.caseAlterationData.isComplete && this.props.store.alterationsBySelectedMolecularProfiles.isComplete && (
-                                <CaseAlterationTable
-                                    caseAlterationData={this.caseAlterationData.result}
-                                    oqls={this.oqls.result}
-                                    alterationTypes={this.props.store.alterationsBySelectedMolecularProfiles.result}
-                                />
-                            )}
+                            <CaseAlterationTable
+                                caseAlterationData={this.caseAlterationData.result!}
+                                oqls={this.oqls.result!}
+                                trackLabels={this.trackLabels.result!}
+                                trackAlterationTypesMap={this.trackAlterationTypesMap.result!}
+                                geneAlterationTypesMap={this.geneAlterationMap.result!}
+                            />
                         </div>
                     </WindowWidthBox>
                 );
+            default:
+                return <ErrorMessage/>;
         }
     }
 
     readonly downloadableFilesTable = remoteData({
         await:()=>[
-            this.cnaData, this.mutationData, this.mrnaData, this.proteinData,
-            this.alteredSamplesDownloadControls, this.sampleMatrixDownloadControls
+            this.cnaData, this.mutationData, this.mrnaData, this.proteinData
         ],
         invoke:()=>Promise.resolve(
             <table className={ classNames("table", "table-striped", styles.downloadCopyTable) }>
@@ -302,8 +398,9 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                     {hasValidMutationData(this.mutationData.result!) && this.mutationDownloadControls()}
                     {hasValidData(this.mrnaData.result!) && this.mrnaExprDownloadControls()}
                     {hasValidData(this.proteinData.result!) && this.proteinExprDownloadControls()}
-                    {this.alteredSamplesDownloadControls.result!}
-                    {this.sampleMatrixDownloadControls.result!}
+                    {this.alteredSamplesDownloadControls.component}
+                    {this.unalteredSamplesDownloadControls.component}
+                    {this.sampleMatrixDownloadControls.component}
                 </tbody>
             </table>
         )
@@ -311,14 +408,14 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     private cnaDownloadControls(): JSX.Element
     {
-        return this.downloadControlsRow("Copy-number Alterations",
+        return this.downloadControlsRow("Copy-number Alterations (OQL is not in effect)",
                                         this.handleCnaDownload,
                                         this.handleTransposedCnaDownload);
     }
 
     private mutationDownloadControls(): JSX.Element
     {
-        return this.downloadControlsRow("Mutations",
+        return this.downloadControlsRow("Mutations (OQL is not in effect)",
                                         this.handleMutationDownload,
                                         this.handleTransposedMutationDownload);
     }
@@ -375,26 +472,91 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         );
     }
 
-    readonly alteredSamplesDownloadControls = remoteData({
-        await:()=>[this.alteredSamplesText],
-        invoke:()=>{
-            const handleDownload = () => this.alteredSamplesText.result!;
+    private copyDownloadQueryControlsRow(title:string,
+                                    handleDownload: () => string,
+                                    filename: string,
+                                    handleQuery: () => void,
+                                    virtualStudyParams: any)
+    {
+        return (
+            <tr>
+                <td>{title}</td>
+                <td>
+                    <SimpleCopyDownloadControls
+                        controlsStyle='QUERY'
+                        downloadData={handleDownload}
+                        downloadFilename={filename}
+                        handleQuery={handleQuery}
+                        virtualStudyParams={virtualStudyParams}
+                    />
+                </td>
+            </tr>
+        );
+    }
 
-            return Promise.resolve(this.copyDownloadControlsRow("Samples affected: Only samples with an alteration are included",
+    readonly alteredSamplesDownloadControls = MakeMobxView({
+        await: ()=>[this.alteredCaseAlterationData, this.props.store.virtualStudyParams],
+        render: () => {
+            const alteredSampleCaseIds = _.map(this.alteredCaseAlterationData.result!, caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`);
+            const handleDownload = () => alteredSampleCaseIds.join("\n");
+            const handleQuery = () => this.handleQueryButtonClick(alteredSampleCaseIds);
+            const alteredSamplesVirtualStudyParams = {
+                    "user": this.props.store.virtualStudyParams.result!.user,
+                    "name": this.props.store.virtualStudyParams.result!.name,
+                    "description": this.props.store.virtualStudyParams.result!.description,
+                    "studyWithSamples": this.props.store.virtualStudyParams.result!.studyWithSamples,
+                    "selectedSamples": _.filter(this.props.store.virtualStudyParams.result!.selectedSamples, ((sample: Sample) => alteredSampleCaseIds.includes(`${sample.studyId}:${sample.sampleId}`))),
+                    "filter": this.props.store.virtualStudyParams.result!.filter,
+                    "attributesMetaSet": this.props.store.virtualStudyParams.result!.attributesMetaSet
+                } as IVirtualStudyProps
+
+            return (this.copyDownloadQueryControlsRow("Altered samples: List of samples with alterations",
                                                 handleDownload,
-                                                "affected_samples.txt"));
-        }
+                                                "altered_samples.txt",
+                                                handleQuery,
+                                                alteredSamplesVirtualStudyParams));
+        },
+        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true}/>,
+        renderError: ()=> <ErrorMessage/>
     });
 
-    readonly sampleMatrixDownloadControls = remoteData({
+    readonly unalteredSamplesDownloadControls = MakeMobxView({
+        await:()=>[this.unalteredCaseAlterationData, this.props.store.virtualStudyParams],
+        render: () => {
+            const unalteredSampleCaseIds = _.map(this.unalteredCaseAlterationData.result!, caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`);
+            const handleDownload = () => unalteredSampleCaseIds.join("\n");
+            const handleQuery = () => this.handleQueryButtonClick(unalteredSampleCaseIds);
+            const unalteredSamplesVirtualStudyParams = {
+                "user": this.props.store.virtualStudyParams.result!.user,
+                "name": this.props.store.virtualStudyParams.result!.name,
+                "description": this.props.store.virtualStudyParams.result!.description,
+                "studyWithSamples": this.props.store.virtualStudyParams.result!.studyWithSamples,
+                "selectedSamples": _.filter(this.props.store.virtualStudyParams.result!.selectedSamples, ((sample: Sample) => unalteredSampleCaseIds.includes(`${sample.studyId}:${sample.sampleId}`))),
+                "filter": this.props.store.virtualStudyParams.result!.filter,
+                "attributesMetaSet": this.props.store.virtualStudyParams.result!.attributesMetaSet
+            } as IVirtualStudyProps
+
+            return (this.copyDownloadQueryControlsRow("Unaltered samples: List of samples without any alteration",
+                                                handleDownload,
+                                                "unaltered_samples.txt",
+                                                handleQuery,
+                                                unalteredSamplesVirtualStudyParams));
+        },
+        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true}/>,
+        renderError: ()=> <ErrorMessage/>
+    });
+
+    readonly sampleMatrixDownloadControls = MakeMobxView({
         await:()=>[this.sampleMatrixText],
-        invoke:()=>{
+        render: () => {
             const handleDownload = () => this.sampleMatrixText.result!;
 
-            return Promise.resolve(this.copyDownloadControlsRow("Sample matrix: 1 = Sample harbors alteration in one of the input genes",
+            return (this.copyDownloadControlsRow("Sample matrix: List of all samples where 1=altered and 0=unaltered",
                                                 handleDownload,
                                                 "sample_matrix.txt"));
-        }
+        },
+        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true}/>,
+        renderError: ()=> <ErrorMessage/>
     });
 
     private handleMutationDownload()
@@ -435,5 +597,38 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     private handleTransposedCnaDownload()
     {
         onMobxPromise(this.transposedCnaDataText, text=>fileDownload(text, "cna_transposed.txt"));
+    }
+
+    @action
+    private handleQueryButtonClick(querySampleIds: string[]) {
+        const modifyQueryParams: ModifyQueryParams = {
+            selectedSampleListId: CUSTOM_CASE_LIST_ID,
+            selectedSampleIds: querySampleIds,
+            caseIdsMode: "sample"
+        }
+        this.props.store.modifyQueryParams = modifyQueryParams;
+        this.props.store.queryFormVisible = true;
+    }
+
+    @action
+    private async handleVirtualStudyButtonClick(alterations: ICaseAlteration[]) {
+        let studies = _.reduce(_.groupBy(alterations, "studyId"), (acc: { id: string; samples: string[] }[], alteration, studyId) => {
+            acc.push({
+                id: studyId,
+                samples: alterations.map(alteration => alteration.sampleId)
+            })
+            return acc;
+        }, []);
+
+        let parameters = {
+            name: "virtual study",
+            description: "virtual study",
+            origin: studies.map(study => study.id),
+            studies: studies
+        }
+        const saveStudyResult = await sessionServiceClient.saveVirtualStudy(parameters, false);
+        if (saveStudyResult && saveStudyResult.id) {
+            window.open(buildCBioPortalPageUrl({pathname:'study', query: {id: saveStudyResult.id}}), "_blank");
+        }
     }
 }

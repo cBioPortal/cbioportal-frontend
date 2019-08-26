@@ -34,8 +34,7 @@ import OqlStatusBanner from "../banners/OqlStatusBanner";
 import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
-import getBrowserWindow from "../../lib/getBrowserWindow";
-import { MobxPromiseUnionTypeWithDefault } from "mobxpromise";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
 
