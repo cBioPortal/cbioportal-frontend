@@ -6,7 +6,7 @@ import {Popover} from "react-bootstrap";
 import classnames from "classnames";
 import styles from "../../pages/resultsView/survival/styles.module.scss";
 import {truncateWithEllipsisReport} from "../../public-lib/lib/TextTruncationUtils";
-import Portal from "react-portal";
+import {Portal} from "react-portal";
 
 export interface ITruncatedTextSVGProps {
     text?:string;

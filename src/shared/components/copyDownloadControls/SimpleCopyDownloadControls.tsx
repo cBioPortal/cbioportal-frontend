@@ -5,10 +5,15 @@ import {observable} from "mobx";
 import {CopyDownloadLinks} from "./CopyDownloadLinks";
 import {CopyDownloadButtons} from "./CopyDownloadButtons";
 import {ICopyDownloadControlsProps} from "./ICopyDownloadControls";
+import { CopyDownloadQueryLinks } from './CopyDownloadQueryLinks';
 const Clipboard = require('clipboard');
 
 export interface ISimpleCopyDownloadControlsProps extends ICopyDownloadControlsProps {
     downloadData?: () => string;
+    showQuery?: boolean;
+    showVirtualStudy?: boolean;
+    handleQuery?: () => void;
+    virtualStudyParams?: any;
 }
 
 @observer
@@ -19,6 +24,8 @@ export class SimpleCopyDownloadControls extends React.Component<ISimpleCopyDownl
         showCopy: true,
         copyMessageDuration: 3000,
         showDownload: true,
+        showQuery: true,
+        showVirtualStudy: true,
         copyLabel: "Copy",
         downloadLabel: "Download",
         downloadFilename: "data.tsv",
@@ -50,6 +57,23 @@ export class SimpleCopyDownloadControls extends React.Component<ISimpleCopyDownl
                     copyLabel={this.props.copyLabel}
                     downloadLabel={this.props.downloadLabel}
                     showCopyMessage={this.showCopyMessage}
+                />
+            );
+        }
+        else if (this.props.controlsStyle === 'QUERY') {
+            return (
+                <CopyDownloadQueryLinks
+                    className={this.props.className}
+                    handleDownload={this.handleDownload}
+                    copyLinkRef={this.copyLinkRef}
+                    handleCopy={this.handleAfterCopy}
+                    copyLabel={this.props.copyLabel}
+                    downloadLabel={this.props.downloadLabel}
+                    showCopyMessage={this.showCopyMessage}
+                    showQuery={this.props.showQuery}
+                    handleQuery={this.props.handleQuery}
+                    showVirtualStudy={this.props.showVirtualStudy}
+                    virtualStudyParams={this.props.virtualStudyParams}
                 />
             );
         }
