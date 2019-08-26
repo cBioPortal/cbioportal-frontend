@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import '../../globalStyles/prefixed-global.scss';
 import PortalHeader from "./PortalHeader";
-import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import {observer} from "mobx-react";
 
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";

@@ -23,6 +23,7 @@ import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip"
 import {StudySelectorStats} from "shared/components/query/StudySelectorStats";
 import $ from "jquery";
 import {serializeEvent} from "shared/lib/tracking";
+import { ModifyQueryParams } from "pages/resultsView/ResultsViewPageStore";
 
 const styles = styles_any as {
     QueryContainer: string,
@@ -43,6 +44,7 @@ interface QueryContainerProps {
     store: QueryStore;
     onSubmit?: () => void;
     forkedMode?:boolean;
+    modifyQueryParams?: ModifyQueryParams | undefined;
 }
 
 @providesStoreContext(QueryStore)
@@ -188,7 +190,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
                                     }
 
                                     {(this.store.selectableSelectedStudyIds.length > 0) && (
-                                        <CaseSetSelector/>
+                                        <CaseSetSelector modifyQueryParams={this.props.modifyQueryParams}/>
                                     )}
 
                                     <GeneSetSelector/>

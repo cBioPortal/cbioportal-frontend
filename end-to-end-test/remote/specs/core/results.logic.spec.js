@@ -262,7 +262,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.waitUntil(()=>{ return browser.getText(selectedCaseSet_sel) === "All (2263)"; }, 5000);
+        browser.waitUntil(()=>{ return browser.getText(selectedCaseSet_sel) === "All (2358)"; }, 5000);
 
         // Deselect all filtered studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');

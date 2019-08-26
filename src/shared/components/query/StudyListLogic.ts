@@ -6,7 +6,7 @@ import {QueryStore} from "./QueryStore";
 import {computed, action} from "mobx";
 import {parse_search_query, perform_search_single, SearchResult} from "../../lib/textQueryUtils";
 import {cached} from 'mobxpromise';
-import getBrowserWindow from "../../lib/getBrowserWindow";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import AppConfig from "appConfig";
 import {ServerConfigHelpers} from "../../../config/config";
 import memoize from "memoize-weak-decorator";

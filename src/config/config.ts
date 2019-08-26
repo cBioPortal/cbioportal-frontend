@@ -19,7 +19,7 @@ import client from "../shared/api/cbioportalClientInstance";
 import internalClient from "../shared/api/cbioportalInternalClientInstance";
 import $ from "jquery";
 import {AppStore} from "../AppStore";
-import {proxyAllPostMethodsOnClient} from "../shared/lib/proxyPost";
+import {cachePostMethodsOnClient} from "public-lib/lib/apiClientCache";
 import CBioPortalAPI from "../shared/api/generated/CBioPortalAPI";
 import CBioPortalAPIInternal from "../shared/api/generated/CBioPortalAPIInternal";
 import CivicAPI from "../shared/api/CivicAPI";
@@ -27,6 +27,9 @@ import Genome2StructureAPI from "../public-lib/api/generated/Genome2StructureAPI
 import GenomeNexusAPI from "../public-lib/api/generated/GenomeNexusAPI";
 import GenomeNexusAPIInternal from "../public-lib/api/generated/GenomeNexusAPIInternal";
 import OncoKbAPI from "../public-lib/api/generated/OncoKbAPI";
+import AppConfig from "appConfig";
+import {sendSentryMessage} from "../shared/lib/tracking";
+import {log} from "../shared/lib/consoleLog";
 
 
 const config:any = (window as any).frontendConfig || { serverConfig:{} };
@@ -137,6 +140,13 @@ export class ServerConfigHelpers {
 
 };
 
+function cachePostMethods(obj: any,
+                          excluded: string[] = [],
+                          regex: RegExp = /UsingPOST$/)
+{
+    cachePostMethodsOnClient(obj, excluded, regex, AppConfig.serverConfig.api_cache_limit, sendSentryMessage, log);
+}
+
 export function initializeAPIClients(){
 
     // we need to set the domain of our api clients
@@ -148,13 +158,13 @@ export function initializeAPIClients(){
     (genome2StructureClient as any).domain = getG2SApiUrl();
 
     // add POST caching
-    proxyAllPostMethodsOnClient(CBioPortalAPI);
-    proxyAllPostMethodsOnClient(CBioPortalAPIInternal, ['fetchMutatedGenesUsingPOST', 'fetchCNAGenesUsingPOST']);
-    proxyAllPostMethodsOnClient(CivicAPI);
-    proxyAllPostMethodsOnClient(Genome2StructureAPI);
-    proxyAllPostMethodsOnClient(GenomeNexusAPI);
-    proxyAllPostMethodsOnClient(GenomeNexusAPIInternal);
-    proxyAllPostMethodsOnClient(OncoKbAPI);
+    cachePostMethods(CBioPortalAPI);
+    cachePostMethods(CBioPortalAPIInternal, ['fetchMutatedGenesUsingPOST', 'fetchCNAGenesUsingPOST']);
+    cachePostMethods(CivicAPI);
+    cachePostMethods(Genome2StructureAPI);
+    cachePostMethods(GenomeNexusAPI, [], /POST$/);
+    cachePostMethods(GenomeNexusAPIInternal, [], /POST$/);
+    cachePostMethods(OncoKbAPI);
 }
 
 export function initializeConfiguration() {
