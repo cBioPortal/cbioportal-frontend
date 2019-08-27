@@ -47,6 +47,7 @@ import {
     IWaterfallPlotData,
     waterfallPlotTooltip,
     getWaterfallPlotDownloadData,
+    WATERFALLPLOT_SIDELENGTH,
     WATERFALLPLOT_BASE_SIDELENGTH,
     WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR,
     IAxisLogScaleParams,
