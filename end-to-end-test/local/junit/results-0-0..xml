@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="study_select_page" timestamp="2019-08-24T16:24:16" time="136.496" tests="0" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="c8bc24fffebfcab1a66b54197020e735"/>
+      <property name="suiteName" value="study select page"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/core/querypage.spec.js"/>
+    </properties>
+  </testsuite>
+  <testsuite name="error_messaging_for_invalid_study_id_s" timestamp="2019-08-24T16:24:16" time="136.495" tests="2" failures="0" errors="1" skipped="0">
+    <properties>
+      <property name="specId" value="c8bc24fffebfcab1a66b54197020e735"/>
+      <property name="suiteName" value="error messaging for invalid study id(s)"/>
+      <property name="capabilities" value=""/>
+      <property name="file" value="./local/specs/core/querypage.spec.js"/>
+    </properties>
+    <testcase classname=".error_messaging_for_invalid_study_id_s" name="show_error_alert_and_query_form_for_single_invalid_study_id" time="1.696">
+      <system-out>
+        <![CDATA[
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/url - {"url":"http://localhost:8081/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_ids=&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&localdev=true"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1030,"width":945}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":900,"screenWidth":937}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"body"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23590676264019828-1"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/moveto - {"element":"0.23590676264019828-1","xoffset":0,"yoffset":0}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"StudySelect\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23590676264019828-2"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/elements - {"using":"css selector","value":"[data-test=\"StudySelect\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":[{"ELEMENT":"0.23590676264019828-2"}]}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"unkown-study-warning\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23590676264019828-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element/0.23590676264019828-3/element - {"using":"xpath","value":".//li[normalize-space() = \"coadread_tcga_pubb\"]"}
+RESULT: {"message":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"coadread_tcga_pubb\"]\"}","type":"RuntimeError","seleniumStack":{"status":7,"type":"NoSuchElement","message":"An element could not be located on the page using the given search parameters.","orgStatusMessage":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"coadread_tcga_pubb\"]\"}\n  (Session info: chrome=76.0.3809.100)\n  (Driver info: chromedriver=2.42.591071 (0b695ff80972cc1a65a5cd643186d2ae582cd4ac),platform=Linux 5.0.0-25-generic x86_64)"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function () {\n\n            Object.keys(window.ajaxRequests).forEach((key)=>{\n                window.ajaxRequests[key].end = Date.now();\n                window.ajaxRequests[key].duration = window.ajaxRequests[key].end - window.ajaxRequests[key].started;\n            });\n\n            return JSON.stringify(window.ajaxRequests);\n\n        }).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":"{\"918295496\":{\"url\":\"https://3dmol.csb.pitt.edu/track/report.cgi\",\"started\":1566656657299,\"end\":1566656658312,\"duration\":1013}}"}
+]]>
+      </system-out>
+    </testcase>
+    <testcase classname=".error_messaging_for_invalid_study_id_s" name="show_error_alert_and_query_form_for_two_studies_one_invalid" time="134.781">
+      <error message="false == true"/>
+      <system-out>
+        <![CDATA[
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/url - {"url":"http://localhost:8081/results/cancerTypesSummary?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=acc_tcgaa%2Cstudy_es_0&case_set_id=all&data_priority=0&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&localdev=true"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: GET http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"height":1050,"width":1008}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/window/current/size - {"width":1008,"height":1730}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function getViewportSize() {\n    return {\n        screenWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),\n        screenHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)\n    };\n}).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"screenHeight":920,"screenWidth":1000}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"body"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-1"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/moveto - {"element":"0.23229740966831214-1","xoffset":0,"yoffset":0}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"StudySelect\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-2"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/elements - {"using":"css selector","value":"[data-test=\"StudySelect\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":[{"ELEMENT":"0.23229740966831214-2"}]}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"unkown-study-warning\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element/0.23229740966831214-3/element - {"using":"xpath","value":".//li[normalize-space() = \"acc_tcgaa\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-4"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"unkown-study-warning\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element/0.23229740966831214-3/element - {"using":"xpath","value":".//li[normalize-space() = \"study_es_0\"]"}
+RESULT: {"message":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}","type":"RuntimeError","seleniumStack":{"status":7,"type":"NoSuchElement","message":"An element could not be located on the page using the given search parameters.","orgStatusMessage":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}\n  (Session info: chrome=76.0.3809.100)\n  (Driver info: chromedriver=2.42.591071 (0b695ff80972cc1a65a5cd643186d2ae582cd4ac),platform=Linux 5.0.0-25-generic x86_64)"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"unkown-study-warning\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element/0.23229740966831214-3/element - {"using":"xpath","value":".//li[normalize-space() = \"study_es_0\"]"}
+RESULT: {"message":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}","type":"RuntimeError","seleniumStack":{"status":7,"type":"NoSuchElement","message":"An element could not be located on the page using the given search parameters.","orgStatusMessage":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}\n  (Session info: chrome=76.0.3809.100)\n  (Driver info: chromedriver=2.42.591071 (0b695ff80972cc1a65a5cd643186d2ae582cd4ac),platform=Linux 5.0.0-25-generic x86_64)"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"unkown-study-warning\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element/0.23229740966831214-3/element - {"using":"xpath","value":".//li[normalize-space() = \"study_es_0\"]"}
+RESULT: {"message":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}","type":"RuntimeError","seleniumStack":{"status":7,"type":"NoSuchElement","message":"An element could not be located on the page using the given search parameters.","orgStatusMessage":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}\n  (Session info: chrome=76.0.3809.100)\n  (Driver info: chromedriver=2.42.591071 (0b695ff80972cc1a65a5cd643186d2ae582cd4ac),platform=Linux 5.0.0-25-generic x86_64)"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"unkown-study-warning\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element/0.23229740966831214-3/element - {"using":"xpath","value":".//li[normalize-space() = \"study_es_0\"]"}
+RESULT: {"message":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}","type":"RuntimeError","seleniumStack":{"status":7,"type":"NoSuchElement","message":"An element could not be located on the page using the given search parameters.","orgStatusMessage":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}\n  (Session info: chrome=76.0.3809.100)\n  (Driver info: chromedriver=2.42.591071 (0b695ff80972cc1a65a5cd643186d2ae582cd4ac),platform=Linux 5.0.0-25-generic x86_64)"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/elements - {"using":"xpath","value":"//li[normalize-space() = \"study_es_0\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":[]}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"unkown-study-warning\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element/0.23229740966831214-3/element - {"using":"xpath","value":".//li[normalize-space() = \"study_es_0\"]"}
+RESULT: {"message":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}","type":"RuntimeError","seleniumStack":{"status":7,"type":"NoSuchElement","message":"An element could not be located on the page using the given search parameters.","orgStatusMessage":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}\n  (Session info: chrome=76.0.3809.100)\n  (Driver info: chromedriver=2.42.591071 (0b695ff80972cc1a65a5cd643186d2ae582cd4ac),platform=Linux 5.0.0-25-generic x86_64)"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/elements - {"using":"xpath","value":"//li[normalize-space() = \"study_es_0\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":[]}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"unkown-study-warning\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element/0.23229740966831214-3/element - {"using":"xpath","value":".//li[normalize-space() = \"acc_tcgaa\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-4"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"unkown-study-warning\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element/0.23229740966831214-3/element - {"using":"xpath","value":".//li[normalize-space() = \"acc_tcgaa\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-4"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element - {"using":"css selector","value":"[data-test=\"unkown-study-warning\"]"}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":{"ELEMENT":"0.23229740966831214-3"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/element/0.23229740966831214-3/element - {"using":"xpath","value":".//li[normalize-space() = \"study_es_0\"]"}
+RESULT: {"message":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}","type":"RuntimeError","seleniumStack":{"status":7,"type":"NoSuchElement","message":"An element could not be located on the page using the given search parameters.","orgStatusMessage":"no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\".//li[normalize-space() = \"study_es_0\"]\"}\n  (Session info: chrome=76.0.3809.100)\n  (Driver info: chromedriver=2.42.591071 (0b695ff80972cc1a65a5cd643186d2ae582cd4ac),platform=Linux 5.0.0-25-generic x86_64)"}}
+COMMAND: POST http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa/execute - {"script":"return (function () {\n\n            Object.keys(window.ajaxRequests).forEach((key)=>{\n                window.ajaxRequests[key].end = Date.now();\n                window.ajaxRequests[key].duration = window.ajaxRequests[key].end - window.ajaxRequests[key].started;\n            });\n\n            return JSON.stringify(window.ajaxRequests);\n\n        }).apply(null, arguments)","args":[]}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":"{}"}
+COMMAND: DELETE http://127.0.0.1:4444/wd/hub/session/6d1dd05679c310f4dfa771080c0966aa - {}
+RESULT: {"sessionId":"6d1dd05679c310f4dfa771080c0966aa","status":0,"value":null}
+]]>
+      </system-out>
+      <system-err>
+        <![CDATA[
+AssertionError [ERR_ASSERTION]: false == true
+    at Context.<anonymous> (/home/pnp300/git/cbioportal-frontend/end-to-end-test/local/specs/core/querypage.spec.js:26:17)
+    at new Promise (<anonymous>)
+    at new F (/home/pnp300/git/cbioportal-frontend/end-to-end-test/node_modules/core-js/library/modules/_export.js:35:28)
+]]>
+      </system-err>
+    </testcase>
+  </testsuite>
+</testsuites>

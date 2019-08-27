@@ -106,11 +106,13 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
 
 function makeNumericalComparator(value_key:string) {
     return function (d1:any, d2:any) {
-        if (d1.na && d2.na) {
+        // a value migth be absent because sample is absent from data file (d.na === true)
+        // or because data file reports NA for the sample (isNaN(d2[value_key])
+        if ((d1.na || isNaN(d1[value_key])) && (d2.na || isNaN(d2[value_key]))) {
             return 0;
-        } else if (d1.na && !d2.na) {
+        } else if ((d1.na || isNaN(d1[value_key])) && !d2.na) {
             return 2;
-        } else if (!d1.na && d2.na) {
+        } else if (!d1.na && (d2.na || isNaN(d2[value_key]))) {
             return -2;
         } else {
             return (d1[value_key] < d2[value_key] ? -1 : (d1[value_key] === d2[value_key] ? 0 : 1));
