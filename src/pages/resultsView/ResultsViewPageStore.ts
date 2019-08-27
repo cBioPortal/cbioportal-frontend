@@ -2507,12 +2507,14 @@ export class ResultsViewPageStore {
 
     readonly genes = remoteData<Gene[]>({
         invoke: async () => {
-
             const genes = await fetchGenes(this.hugoGeneSymbols);
+            const returnedGeneSymbols = genes.map((gene)=>gene.hugoGeneSymbol);
 
-            // Check that the same genes are in the OQL query as in the API response (order doesnt matter).
-            // This ensures that all the genes in OQL are valid. If not, we throw an error.
-            if (_.isEqual(_.sortBy(this.hugoGeneSymbols), _.sortBy(genes.map((gene)=>gene.hugoGeneSymbol)))) {
+            // check to make sure each submitted gene is present at least once in result set
+            // (it can appear twice because hugo gene symbols are not unique)
+            const allGenesPresentInResult = _.every(this.hugoGeneSymbols,(hugoGeneSymbol)=>returnedGeneSymbols.includes(hugoGeneSymbol));
+
+            if (allGenesPresentInResult) {
                 return genes;
             } else {
                 throw(new Error(ErrorMessages.InvalidGenes));
