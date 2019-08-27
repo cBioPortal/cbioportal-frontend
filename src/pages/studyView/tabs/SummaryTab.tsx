@@ -3,13 +3,8 @@ import styles from "./studySummaryTabStyles.module.scss";
 import chartHeaderStyles from "../chartHeader/styles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
 import {observable} from 'mobx';
-import {
-    CopyNumberAlterationIdentifier,
-    GeneIdentifier,
-    StudyViewPageStore
-} from 'pages/studyView/StudyViewPageStore';
-import {ClinicalAttribute, Gene, SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
-import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
+import {CopyNumberAlterationIdentifier, GeneIdentifier, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
+import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import {
     ClinicalDataIntervalFilterValue,
     CopyNumberGeneFilterElement,
@@ -21,13 +16,12 @@ import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import {observer} from 'mobx-react';
-import classNames from 'classnames';
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
-import {AnalysisGroup, ChartMeta, ChartType} from "../StudyViewUtils";
 import {DataType} from "public-lib/components/downloadControls/DownloadControls";
+import {ChartMeta, ChartType} from "../StudyViewUtils";
 
 
 export interface IStudySummaryTabProps {
@@ -122,7 +116,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
     renderAttributeChart = (chartMeta: ChartMeta) => {
         const props:Partial<IChartContainerProps> = {
             chartMeta: chartMeta,
-            chartType: this.store.chartsType.get(chartMeta.uniqueKey),
+            chartType: this.props.store.chartsType.get(chartMeta.uniqueKey),
+            store: this.props.store,
             dimension: this.store.chartsDimension.get(chartMeta.uniqueKey),
             openComparisonPage: this.store.openComparisonPage,
             title: chartMeta.displayName,
@@ -135,6 +130,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             setComparisonConfirmationModal: this.store.setComparisonConfirmationModal
         };
 
+        const {BAR_CHART, SURVIVAL, CNA_GENES_TABLE, TABLE, SCATTER, PIE_CHART, MUTATED_GENES_TABLE} = ChartTypeEnum;
         switch (this.store.chartsType.get(chartMeta.uniqueKey)) {
             case ChartTypeEnum.PIE_CHART: {
 
@@ -155,7 +151,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.downloadTypes = ["Summary Data", "Full Data", "SVG", "PDF"];
                 break;
             }
-            case ChartTypeEnum.BAR_CHART: {
+            case BAR_CHART: {
                 props.promise = this.store.getClinicalDataBin(chartMeta);
                 props.filters = this.store.getClinicalDataIntervalFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.onDataBinSelection = this.handlers.onDataBinSelection;
@@ -168,7 +164,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.downloadTypes = ["Data", "SVG", "PDF"];
                 break;
             }
-            case ChartTypeEnum.TABLE: {
+            case TABLE: {
                 if (this.store.isCustomChart(chartMeta.uniqueKey)) {
                     props.filters = this.store.getCustomChartFilters(props.chartMeta!.uniqueKey);
                     props.onValueSelection = this.handlers.setCustomChartFilters;
@@ -185,7 +181,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.downloadTypes = ["Data"];
                 break;
             }
-            case ChartTypeEnum.MUTATED_GENES_TABLE: {
+            case MUTATED_GENES_TABLE: {
                 props.filters = this.store.getMutatedGenesTableFilters();
                 props.promise = this.store.mutatedGeneData;
                 props.onValueSelection = this.handlers.addGeneFilters;
@@ -200,7 +196,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.onChangeCancerGeneFilter = this.store.updateMutatedGenesTableByCancerGenesFilter
                 break;
             }
-            case ChartTypeEnum.CNA_GENES_TABLE: {
+            case CNA_GENES_TABLE: {
                 props.filters = this.store.getCNAGenesTableFilters();
                 props.promise = this.store.cnaGeneData;
                 props.onValueSelection = this.handlers.addCNAGeneFilters;
@@ -215,16 +211,14 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.onChangeCancerGeneFilter = this.store.updateCNAGenesTableByCancerGenesFilter
                 break;
             }
-            case ChartTypeEnum.SURVIVAL: {
+            case SURVIVAL: {
                 props.promise = this.store.survivalPlotData;
                 props.getData = () => this.store.getSurvivalDownloadData(chartMeta);
-                // only want to pass these in when necessary, otherwise charts will unnecessarily update when they change
-                props.patientKeysWithNAInSelectedClinicalData = this.store.patientKeysWithNAInSelectedClinicalData;
                 props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;
                 props.downloadTypes = ["Data", "SVG", "PDF"];
                 break;
             }
-            case ChartTypeEnum.SCATTER: {
+            case SCATTER: {
                 if (this.store.getMutationCountVsCNAFilter()) {
                     props.filters = [this.store.getMutationCountVsCNAFilter()];
                 }

@@ -12,8 +12,16 @@ export {default as WindowWrapper} from './components/WindowWrapper';
 
 export {
     default as GenomeNexusAPI,
+    AlleleCount,
+    AlleleFrequency,
+    AlleleNumber,
+    ClinVar,
+    Dbsnp,
     EnsemblFilter,
     GenomicLocation,
+    Gnomad,
+    Homozygotes,
+    MyVariantInfo,
     TranscriptConsequenceSummary,
     VariantAnnotation,
     VariantAnnotationSummary
@@ -36,6 +44,7 @@ export * from './lib/findFirstMostCommonElt';
 export * from './lib/getCanonicalMutationType';
 export * from './lib/OncoKbUtils';
 export * from './lib/ProteinChangeUtils';
+export * from './lib/apiClientCache';
 export {default as SimpleCache, ICache, ICacheData} from "./lib/SimpleCache";
 export * from './lib/SvgComponentUtils';
 export * from './lib/StringUtils';

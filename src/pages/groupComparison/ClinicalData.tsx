@@ -30,7 +30,7 @@ import {scatterPlotSize} from "shared/components/plots/PlotUtils";
 import {CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG, ClinicalDataEnrichmentWithQ, ComparisonGroup} from "./GroupComparisonUtils";
 import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCategoryBarPlot";
 import {STUDY_VIEW_CONFIG} from "pages/studyView/StudyViewConfig";
-import ReactSelect from "react-select";
+import ReactSelect from "react-select1";
 import {MakeMobxView} from "shared/components/MobxView";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import {RESERVED_CLINICAL_VALUE_COLORS} from "../../shared/lib/Colors";

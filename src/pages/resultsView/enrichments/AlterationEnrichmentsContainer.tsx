@@ -23,8 +23,7 @@ import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip"
 import GeneBarPlot from './GeneBarPlot';
 import WindowStore from "shared/components/window/WindowStore";
 import './styles.scss';
-import {OverlapStrategy} from "../../groupComparison/GroupComparisonStore";
-import ReactSelect from "react-select2";
+import ReactSelect from "react-select";
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];

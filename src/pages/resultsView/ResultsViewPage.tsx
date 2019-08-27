@@ -23,7 +23,7 @@ import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import autobind from "autobind-decorator";
 import {ITabConfiguration} from "../../shared/model/ITabConfiguration";
-import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import CoExpressionTab from "./coExpression/CoExpressionTab";
 import Helmet from "react-helmet";
 import {showCustomTab} from "../../shared/lib/customTabs";
