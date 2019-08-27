@@ -1330,7 +1330,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get waterfallPlotWidth():number {
         const noSamples = this.waterfallPlotData.isComplete ? this.waterfallPlotData.result.data.length : 0;
         if (this.isHorizontalWaterfallPlot) {
-            return PLOT_SIDELENGTH;
+            return WATERFALLPLOT_SIDELENGTH;
         }
         return WATERFALLPLOT_BASE_SIDELENGTH + Math.round(noSamples * WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR);
     }
@@ -1340,7 +1340,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         if (this.isHorizontalWaterfallPlot) {
             return WATERFALLPLOT_BASE_SIDELENGTH + Math.round(noSamples * WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR);
         }
-        return PLOT_SIDELENGTH;
+        return WATERFALLPLOT_SIDELENGTH;
     }
 
     @computed get scatterPlotAppearance() {
