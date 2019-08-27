@@ -11,7 +11,7 @@ import {
 } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
-import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
@@ -80,16 +80,22 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.store = new StudyViewPageStore(this.props.appStore, ServerConfigHelpers.sessionServiceIsEnabled());
 
         this.queryReaction = reaction(
-            () => props.routing.location.query,
-            query => {
+            () => [props.routing.location.query, props.routing.location.hash],
+            ([query,hash]) => {
 
                 if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/study")) {
                     return;
                 }
 
                 this.store.updateCurrentTab(getStudyViewTabId(getBrowserWindow().globalStores.routing.location.pathname));
-                const newStudyViewFilter:StudyViewURLQuery = _.pick(props.routing.location.query, ['id', 'studyId', 'cancer_study_id', 'filters', 'filterAttributeId', 'filterValues']);
+                const newStudyViewFilter:StudyViewURLQuery = _.pick(query, ['id', 'studyId', 'cancer_study_id', 'filters', 'filterAttributeId', 'filterValues']);
 
+                if(hash) {
+                    const filters = hash.match(/filterJson=([^&]*)/);
+                    if (filters && filters.length > 1) {
+                        newStudyViewFilter.filters = filters[1];
+                    }
+                }
                 if (!_.isEqual(newStudyViewFilter, this.studyViewQueryFilter)) {
                     this.store.updateStoreFromURL(newStudyViewFilter);
                     this.studyViewQueryFilter = newStudyViewFilter;

@@ -25,7 +25,7 @@ import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
 import { initializeTracking } from "shared/lib/tracking";
 import superagentCache from 'superagent-cache';
-import getBrowserWindow from "shared/lib/getBrowserWindow";
+import getBrowserWindow from "public-lib/lib/getBrowserWindow";
 import {AppStore} from "./AppStore";
 import {handleLongUrls} from "shared/lib/handleLongUrls";
 import "shared/polyfill/canvasToBlob";

@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import AppConfig from "appConfig";
-import getBrowserWindow from "./getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import * as _ from 'lodash';
 import {log} from "./consoleLog";
 import {StudyViewPageStore} from "../../pages/studyView/StudyViewPageStore";

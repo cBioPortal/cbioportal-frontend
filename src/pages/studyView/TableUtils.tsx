@@ -63,7 +63,7 @@ export function getFreqColumnRender(type: 'mutation' | 'cna', numberOfSamplesPro
             overlay={addTotalProfiledOverlay}
             destroyTooltipOnHide={true}
         >
-            <span data-test='freq-cell'>
+            <span data-test='freq-cell' style={style}>
                 {getFrequencyStr(
                     (numberOfAlteredCases / numberOfSamplesProfiled) * 100
                 )}

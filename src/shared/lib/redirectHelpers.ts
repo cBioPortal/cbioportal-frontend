@@ -1,5 +1,5 @@
 import ExtendedRouterStore from "./ExtendedRouterStore";
-import getBrowserWindow from "./getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import {QueryParams} from "url";
 import {PatientViewUrlParams} from "../../pages/patientView/PatientViewPage";
 import {Patient} from "../api/generated/CBioPortalAPI";
