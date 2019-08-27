@@ -37,9 +37,9 @@ export interface IMutatedGenesTablePros {
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
     cancerGeneFilterEnabled?: boolean;
+    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
     onChangeCancerGeneFilter: (filtered: boolean) => void;
-    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
 }
 
 type MutatedGenesTableUserSelectionWithIndex = {

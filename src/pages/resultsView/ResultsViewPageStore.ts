@@ -17,7 +17,8 @@ import {
     MutationCountByPosition,
     MutationFilter,
     MutationMultipleStudyFilter,
-    NumericGeneMolecularData, Patient,
+    NumericGeneMolecularData,
+    Patient,
     PatientFilter,
     PatientIdentifier,
     Sample,
@@ -89,7 +90,7 @@ import {generateQueryVariantId} from "../../public-lib/lib/OncoKbUtils";
 import {
     AlterationEnrichment,
     CosmicMutation,
-    Geneset, 
+    Geneset,
     GenesetDataFilterCriteria,
     GenesetMolecularData,
     Treatment,
@@ -165,8 +166,10 @@ import {AppStore} from "../../AppStore";
 import {CLINICAL_TRACKS_URL_PARAM} from "../../shared/components/oncoprint/ResultsViewOncoprint";
 import {getNumSamples} from "../groupComparison/GroupComparisonUtils";
 import autobind from "autobind-decorator";
-import {GroupComparisonURLQuery} from "../groupComparison/GroupComparisonPage";
 import {DEFAULT_GENOME} from "pages/resultsView/ResultsViewPageStoreUtils";
+import { StudyWithSamples, getFilteredStudiesWithSamples, ChartMeta, getClinicalAttributeUniqueKey, getChartMetaDataType, getPriorityByClinicalAttribute, UniqueKey, getDefaultPriorityByUniqueKey } from "pages/studyView/StudyViewUtils";
+import { MUTATION_COUNT, FRACTION_GENOME_ALTERED } from "pages/studyView/StudyViewPageStore";
+import { IVirtualStudyProps } from "pages/studyView/virtualStudy/VirtualStudy";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -373,6 +376,12 @@ export type DriverAnnotationSettings = {
     driversAnnotated:boolean;
 };
 
+export type ModifyQueryParams = {
+    selectedSampleListId: string;
+    selectedSampleIds: string[];
+    caseIdsMode: "sample" | "patient";
+};
+
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
@@ -464,6 +473,10 @@ export class ResultsViewPageStore {
     @observable public sessionIdURL = '';
 
     @observable expressionTabSeqVersion: number = 2;
+
+    @observable queryFormVisible: boolean = false;
+
+    @observable public modifyQueryParams: ModifyQueryParams | undefined = undefined;
 
     public driverAnnotationSettings:DriverAnnotationSettings;
     @observable public excludeGermlineMutations = false;
@@ -1553,6 +1566,124 @@ export class ResultsViewPageStore {
         return _.keyBy(this.studies.result, (study:CancerStudy)=>study.studyId);
     }
 
+    // used in building virtual study
+    readonly studyWithSamples = remoteData<StudyWithSamples[]>({
+        await: () => [this.samples, this.queriedStudies, this.queriedVirtualStudies],
+        invoke: () => {
+            return Promise.resolve(getFilteredStudiesWithSamples(
+                this.samples.result,
+                this.queriedStudies.result,
+                this.queriedVirtualStudies.result));
+        },
+        onError: (error => {}),
+        default: []
+    });
+
+    readonly mutationProfiles = remoteData({
+        await: ()=>[this.selectedMolecularProfiles],
+        invoke: async ()=>{
+            return this.selectedMolecularProfiles.result!.filter(profile => profile.molecularAlterationType === "MUTATION_EXTENDED")
+        },
+        onError: (error => {}),
+        default: []
+    });
+
+
+    readonly cnaProfiles = remoteData({
+        await: ()=>[this.selectedMolecularProfiles],
+        invoke: async ()=>{
+            return  this.selectedMolecularProfiles
+            .result!
+            .filter(profile => profile.molecularAlterationType === "COPY_NUMBER_ALTERATION" && profile.datatype === "DISCRETE")
+
+        },
+        onError: (error => {}),
+        default: []
+    });
+
+    @computed
+    get chartMetaSet(): { [id: string]: ChartMeta } {
+        let _chartMetaSet: { [id: string]: ChartMeta } = {} as { [id: string]: ChartMeta };
+
+        // Add meta information for each of the clinical attribute
+        // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
+        _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
+            const uniqueKey = getClinicalAttributeUniqueKey(attribute);
+            acc[uniqueKey] = {
+                displayName: attribute.displayName,
+                uniqueKey: uniqueKey,
+                dataType: getChartMetaDataType(uniqueKey),
+                patientAttribute:attribute.patientAttribute,
+                description: attribute.description,
+                priority: getPriorityByClinicalAttribute(attribute),
+                renderWhenDataChange: false,
+                clinicalAttribute: attribute
+            };
+            return acc
+        }, _chartMetaSet);
+
+        if (!_.isEmpty(this.mutationProfiles.result!)) {
+            _chartMetaSet[UniqueKey.MUTATED_GENES_TABLE] = {
+                uniqueKey: UniqueKey.MUTATED_GENES_TABLE,
+                dataType: getChartMetaDataType(UniqueKey.MUTATED_GENES_TABLE),
+                patientAttribute:false,
+                displayName: 'Mutated Genes',
+                priority: getDefaultPriorityByUniqueKey(UniqueKey.MUTATED_GENES_TABLE),
+                renderWhenDataChange: false,
+                description: ''
+            };
+        }
+
+        if (!_.isEmpty(this.cnaProfiles.result)) {
+            _chartMetaSet[UniqueKey.CNA_GENES_TABLE] = {
+                uniqueKey: UniqueKey.CNA_GENES_TABLE,
+                dataType: getChartMetaDataType(UniqueKey.CNA_GENES_TABLE),
+                patientAttribute:false,
+                displayName: 'CNA Genes',
+                renderWhenDataChange: false,
+                priority: getDefaultPriorityByUniqueKey(UniqueKey.CNA_GENES_TABLE),
+                description: ''
+            };
+        }
+
+        const scatterRequiredParams = _.reduce(this.clinicalAttributes.result, (acc, next) => {
+            if (MUTATION_COUNT === next.clinicalAttributeId) {
+                acc[MUTATION_COUNT] = true
+            }
+            if (FRACTION_GENOME_ALTERED === next.clinicalAttributeId) {
+                acc[FRACTION_GENOME_ALTERED] = true
+            }
+            return acc;
+        }, {[MUTATION_COUNT]: false, [FRACTION_GENOME_ALTERED]: false});
+
+        if (scatterRequiredParams[MUTATION_COUNT] && scatterRequiredParams[FRACTION_GENOME_ALTERED]) {
+            _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
+                dataType: getChartMetaDataType(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
+                patientAttribute:false,
+                uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
+                displayName: 'Mutation Count vs Fraction of Genome Altered',
+                priority: getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
+                renderWhenDataChange: false,
+                description: ''
+            };
+        }
+        return _chartMetaSet;
+    }
+
+    readonly virtualStudyParams = remoteData<IVirtualStudyProps>({
+        await:()=>[this.samples, this.studyIds, this.studyWithSamples, this.queriedVirtualStudies],
+        invoke:()=>Promise.resolve(
+            {
+                "user": this.appStore.userName,
+                "name": this.queriedVirtualStudies.result.length === 1 ? this.queriedVirtualStudies.result[0].data.name : undefined,
+                "description": this.queriedVirtualStudies.result.length === 1 ? this.queriedVirtualStudies.result[0].data.description : undefined,
+                "studyWithSamples": this.studyWithSamples.result,
+                "selectedSamples": this.samples.result,
+                "filter": {"studyIds": this.studyIds.result},
+                "attributesMetaSet": this.chartMetaSet
+            } as IVirtualStudyProps
+        )
+    });
 
     readonly oqlFilteredAlterationsByGeneAsSampleKeyArrays = remoteData({
         await: () => [
