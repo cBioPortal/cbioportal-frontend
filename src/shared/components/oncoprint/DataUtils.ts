@@ -283,6 +283,9 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
 ) {
     trackDatum[featureKey] = featureId;
     trackDatum.study_id = case_.studyId;
+    if (data) {
+        _.remove(data, (d) => isNaN(d.value)); // remove data with non-available values
+    }
     if (!data || !data.length) {
         trackDatum.profile_data = null;
         trackDatum.na = true;
