@@ -9,7 +9,7 @@ var {
     clickQueryByGeneButton,
     waitForNumberOfStudyCheckboxes,
     clickModifyStudySelectionButton
-} = require('../../../shared/specUtils);
+} = require('../../../shared/specUtils');
 
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
