@@ -155,7 +155,7 @@ describe('Mutation Table', function() {
             browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",30000);
         });
 
-        it.only('should show the rs ids in dbsnp after adding the dbSNP column', ()=>{
+        it('should show the rs ids in dbsnp after adding the dbSNP column', ()=>{
             // click on column button
             browser.click("button*=Columns");
             // scroll down to activated "dbSNP" selection
