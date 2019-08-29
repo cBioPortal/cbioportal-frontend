@@ -142,6 +142,14 @@ jobs:
       - store_artifacts:
           path: /tmp/repo/junit
 
+  check_forgotten_spec_only_statements:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/
+      # check that no `.only` statements are still in the tests
+      - run: "! git grep '\\.only' end-to-end-tests**/*spec* src**/*spec*"
+
   public_lib:
     <<: *defaults
     steps:
@@ -180,6 +188,9 @@ workflows:
                 requires:
                     - install
             - api_sync:
+                  requires:
+                    - install
+            - check_forgotten_spec_only_statements:
                   requires:
                     - install
     nightly:
