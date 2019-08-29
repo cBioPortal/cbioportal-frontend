@@ -1,6 +1,5 @@
 var assert = require('assert');
 var expect = require('chai').expect;
-var waitForOncoprint = require('./../specUtils').waitForOncoprint;
 
 var {
     goToUrlAndSetLocalStorage,
@@ -8,18 +7,12 @@ var {
     useExternalFrontend,
     setInputText,
     clickQueryByGeneButton,
-    setOncoprintMutationsMenuOpen,
-    getTextInOncoprintLegend,
     waitForNumberOfStudyCheckboxes,
     clickModifyStudySelectionButton
 } = require('../../../shared/specUtils);
 
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
-
-
-
-
 
 var searchInputSelector = ".autosuggest input[type=text]";
 
