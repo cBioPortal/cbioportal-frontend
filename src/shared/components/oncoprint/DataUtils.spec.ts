@@ -1194,6 +1194,22 @@ describe("DataUtils", ()=>{
                {hugo_gene_symbol:"gene", study_id:"study", profile_data:3}
            );
        });
+       it("removes data points with NaN value", ()=>{
+            const data:any[] = [
+                {value:3},
+                {value:NaN},
+            ];
+            assert.deepEqual(
+                fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, "hugo_gene_symbol">(
+                    {},
+                    "hugo_gene_symbol",
+                    "gene",
+                    {sampleId:"sample", studyId:"study"} as Sample,
+                    data
+                ),
+                {hugo_gene_symbol:"gene", study_id:"study", profile_data:3}
+            );
+      });
        it("throws exception if more than one data given for sample",()=>{
            const data:any[] = [
                {value:3},
@@ -1382,10 +1398,7 @@ describe("DataUtils", ()=>{
             data,
             "DESC"
            )
-           assert.deepEqual(
-            partialTrackDatum,
-            {treatment_id: "TREATMENT_ID_1", study_id:"study", profile_data:NaN}
-           );
+           assert.isTrue(partialTrackDatum.na)
        });
 
        it('Prefers largest non-threshold absolute value when no sort order provided', () => {
