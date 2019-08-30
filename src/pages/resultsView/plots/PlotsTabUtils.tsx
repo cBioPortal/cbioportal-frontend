@@ -46,7 +46,7 @@ export const dataTypeToDisplayType:{[s:string]:string} = {
     [AlterationTypeConstants.METHYLATION]: "DNA Methylation",
     [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute",
     [GENESET_DATA_TYPE]:"Gene Sets",
-    [AlterationTypeConstants.GENERIC_ASSAY]: "Treatment"
+    [AlterationTypeConstants.GENERIC_ASSAY]: "Treatment Response"
 };
 
 export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} = {
