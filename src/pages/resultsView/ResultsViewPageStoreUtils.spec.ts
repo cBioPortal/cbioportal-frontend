@@ -1216,14 +1216,11 @@ describe("ResultsViewPageStoreUtils", ()=>{
     describe('getRNASeqProfiles',()=>{
 
         it('properly recognizes expression profile based on patterns in id',()=>{
-            assert.isFalse(isRNASeqProfile("",1), "blank is false");
-            assert.isTrue(isRNASeqProfile("acc_tcga_rna_seq_v2_mrna",2),"matches seq v2 id");
-            assert.isFalse(isRNASeqProfile("acc_tcga_rna_seq_v2_mrna",1),"fails if versions is wrong");
-            assert.isTrue(isRNASeqProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median",2),'matches pan can v2');
-            assert.isFalse(isRNASeqProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median",1),'matches pan can v2');
-            assert.isFalse(isRNASeqProfile("laml_tcga_rna_seq_mrna",2));
-            assert.isTrue(isRNASeqProfile("laml_tcga_rna_seq_mrna",1));
-            assert.isFalse(isRNASeqProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores",2), 'doesn\'t match zscores profils');
+            assert.isFalse(isRNASeqProfile(""), "blank is false");
+            assert.isTrue(isRNASeqProfile("acc_tcga_rna_seq_v2_mrna"),"matches seq v2 id");
+            assert.isTrue(isRNASeqProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median"),'matches pan can v2');
+            assert.isTrue(isRNASeqProfile("laml_tcga_rna_seq_mrna"));
+            assert.isFalse(isRNASeqProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores"), 'doesn\'t match zscores profils');
         });
 
     });
