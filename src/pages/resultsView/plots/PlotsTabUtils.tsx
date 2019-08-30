@@ -83,7 +83,8 @@ export function sortMolecularProfilesForDisplay(profiles:MolecularProfile[]) {
 
 export const CNA_STROKE_WIDTH = 1.8;
 export const PLOT_SIDELENGTH = 650;
-export const WATERFALLPLOT_BASE_SIDELENGTH = 500;
+export const WATERFALLPLOT_SIDELENGTH = 500;
+export const WATERFALLPLOT_BASE_SIDELENGTH = 480;
 export const WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR = 1.6;
 
 export interface IAxisData {

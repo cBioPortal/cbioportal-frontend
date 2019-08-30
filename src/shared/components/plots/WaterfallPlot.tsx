@@ -60,7 +60,7 @@ const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 export const LEGEND_Y = 30
 const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
-const PLOT_DATA_PADDING_PIXELS = 50;
+const PLOT_DATA_PADDING_PIXELS = {y: 3, x: [30, 30]};
 const LEFT_PADDING = 25;
 const LEGEND_ITEMS_PER_ROW = 4;
 const LABEL_OFFSET_FRACTION = .02;
@@ -200,8 +200,8 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                     itemsPerRow={this.legendLocation === "right" ? undefined : LEGEND_ITEMS_PER_ROW}
                     rowGutter={this.legendLocation === "right" ? undefined : -5}
                     data={legendData}
-                    x={this.legendLocation === "right" ? this.legendX : 0}
-                    y={this.legendLocation === "right" ? 100 : this.svgHeight-this.bottomLegendHeight}
+                    x={this.legendLocation === "right" ? this.legendX : 50}
+                    y={this.legendLocation === "right" ? 100 : this.svgHeight-this.bottomLegendHeight+5}
                 />
             );
         } else {
