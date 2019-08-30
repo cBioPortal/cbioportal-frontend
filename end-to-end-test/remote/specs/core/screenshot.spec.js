@@ -1,3 +1,4 @@
+
 var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
@@ -8,6 +9,10 @@ var sessionServiceIsEnabled = require('../../../shared/specUtils').sessionServic
 var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
+
+var {
+    COEXPRESSION_TIMEOUT
+} = require('../../../shared/specUtils');
 
 function waitForAndCheckPlotsTab() {
     browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 10000);
@@ -59,7 +64,7 @@ function runResultsTestSuite(prefix){
 
     it(`${prefix} coexpression tab`, function(){
         browser.click("a.tabAnchor_coexpression");
-        browser.waitForVisible('div[data-test="CoExpressionPlot"]',60000);
+        browser.waitForVisible('div[data-test="CoExpressionPlot"]',COEXPRESSION_TIMEOUT);
         var res = browser.checkElement('[data-test="coExpressionTabDiv"]', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
