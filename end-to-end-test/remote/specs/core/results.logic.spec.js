@@ -5,11 +5,8 @@ var {
     clickQueryByGeneButton,
     waitForNumberOfStudyCheckboxes,
     waitForOncoprint,
-    getTextInOncoprintLegend,
     goToUrlAndSetLocalStorage,
-    useExternalFrontend,
-    setOncoprintMutationsMenuOpen,
-} =
+} = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
