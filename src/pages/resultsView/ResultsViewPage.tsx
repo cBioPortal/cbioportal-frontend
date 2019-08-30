@@ -343,9 +343,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                 expressionProfiles={store.expressionProfiles}
                                 numericGeneMolecularDataCache={store.numericGeneMolecularDataCache}
                                 mutations={store.filteredAndAnnotatedMutations.result!}
-                                RNASeqVersion={store.expressionTabSeqVersion}
                                 coverageInformation={store.coverageInformation.result}
-                                onRNASeqVersionChange={(version:number)=>store.expressionTabSeqVersion=version}
                             />)
                         }
                     </MSKTab>
