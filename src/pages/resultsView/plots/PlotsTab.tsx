@@ -1500,6 +1500,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return showMessage;
     }
 
+    isDisabledAxisLogCheckbox(vertical:boolean):boolean {
+        return vertical ? this.vertAxisDataHasNegativeNumbers : this.horzAxisDataHasNegativeNumbers;
+    }
+
     private getAxisMenu(
         vertical:boolean,
         dataTypeOptions:{value:string, label:string}[],
@@ -1622,8 +1626,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     type="checkbox"
                                     name={vertical ? "vert_logScale" : "vert_logScale"}
                                     value={vertical ? EventKey.vert_logScale : EventKey.horz_logScale}
-                                    checked={axisSelection.logScale}
-                                    disabled={vertical ? this.vertAxisDataHasNegativeNumbers : this.horzAxisDataHasNegativeNumbers }
+                                    checked={axisSelection.logScale && ! this.isDisabledAxisLogCheckbox(vertical)}
+                                    disabled={this.isDisabledAxisLogCheckbox(vertical)}
                                     onClick={this.onInputClick}
                                 />
                                 Log Scale
@@ -2159,7 +2163,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     case PlotType.WaterfallPlot:
                         if (this.waterfallPlotData.isComplete) {
                             const horizontal = this.isHorizontalWaterfallPlot;
-                            const useLogScale = horizontal ? this.horzSelection.logScale : this.vertSelection.logScale;
                             plotElt = (
                                 <PlotsTabWaterfallPlot
                                     svgId={SVG_ID}
