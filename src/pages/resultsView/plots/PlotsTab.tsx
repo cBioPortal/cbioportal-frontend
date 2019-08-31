@@ -47,6 +47,7 @@ import {
     IWaterfallPlotData,
     waterfallPlotTooltip,
     getWaterfallPlotDownloadData,
+    WATERFALLPLOT_SIDELENGTH,
     WATERFALLPLOT_BASE_SIDELENGTH,
     WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR,
     IAxisLogScaleParams,
@@ -173,6 +174,7 @@ export const NONE_SELECTED_OPTION_LABEL = "Ordered samples";
 export const ALL_SELECTED_OPTION_NUMERICAL_VALUE = -3;
 export const SAME_SELECTED_OPTION_STRING_VALUE = "same";
 export const SAME_SELECTED_OPTION_NUMERICAL_VALUE = -2;
+const LEGEND_TO_BOTTOM_WIDTH_THRESHOLD = 550; // when plot is wider than this value, the legend moves from right to bottom of screen
 
 const mutationCountByOptions = [
     { value: MutationCountBy.MutationType, label: "Mutation Type" },
@@ -1325,7 +1327,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get waterfallPlotWidth():number {
         const noSamples = this.waterfallPlotData.isComplete ? this.waterfallPlotData.result.data.length : 0;
         if (this.isHorizontalWaterfallPlot) {
-            return PLOT_SIDELENGTH;
+            return WATERFALLPLOT_SIDELENGTH;
         }
         return WATERFALLPLOT_BASE_SIDELENGTH + Math.round(noSamples * WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR);
     }
@@ -1335,7 +1337,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         if (this.isHorizontalWaterfallPlot) {
             return WATERFALLPLOT_BASE_SIDELENGTH + Math.round(noSamples * WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR);
         }
-        return PLOT_SIDELENGTH;
+        return WATERFALLPLOT_SIDELENGTH;
     }
 
     @computed get scatterPlotAppearance() {
@@ -1500,6 +1502,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return showMessage;
     }
 
+    isDisabledAxisLogCheckbox(vertical:boolean):boolean {
+        return vertical ? this.vertAxisDataHasNegativeNumbers : this.horzAxisDataHasNegativeNumbers;
+    }
+
     private getAxisMenu(
         vertical:boolean,
         dataTypeOptions:{value:string, label:string}[],
@@ -1622,8 +1628,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     type="checkbox"
                                     name={vertical ? "vert_logScale" : "vert_logScale"}
                                     value={vertical ? EventKey.vert_logScale : EventKey.horz_logScale}
-                                    checked={axisSelection.logScale}
-                                    disabled={vertical ? this.vertAxisDataHasNegativeNumbers : this.horzAxisDataHasNegativeNumbers }
+                                    checked={axisSelection.logScale && ! this.isDisabledAxisLogCheckbox(vertical)}
+                                    disabled={this.isDisabledAxisLogCheckbox(vertical)}
                                     onClick={this.onInputClick}
                                 />
                                 Log Scale
@@ -2112,7 +2118,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     chartBase={PLOT_SIDELENGTH}
                                     axisLabelX={this.horzLabel.result!}
                                     axisLabelY={this.vertLabel.result!}
-                                    legendLocationWidthThreshold={550}
+                                    legendLocationWidthThreshold={LEGEND_TO_BOTTOM_WIDTH_THRESHOLD}
                                     horizontalBars={this.horizontalBars}
                                     percentage={isPercentage}
                                     stacked={isStacked}
@@ -2159,7 +2165,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     case PlotType.WaterfallPlot:
                         if (this.waterfallPlotData.isComplete) {
                             const horizontal = this.isHorizontalWaterfallPlot;
-                            const useLogScale = horizontal ? this.horzSelection.logScale : this.vertSelection.logScale;
                             plotElt = (
                                 <PlotsTabWaterfallPlot
                                     svgId={SVG_ID}
@@ -2182,7 +2187,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     labelVisibility={this.waterfallPlotLimitValueSymbolVisibility}
                                     zIndexSortBy={this.zIndexSortBy}
                                     useLogSpaceTicks={true}
-                                    legendLocationWidthThreshold={550}
+                                    legendLocationWidthThreshold={LEGEND_TO_BOTTOM_WIDTH_THRESHOLD}
                                     sortOrder={this.waterfallPlotSortOrder}
                                     pivotThreshold={this.waterfallPlotPivotThreshold}
                                     legendData={scatterPlotLegendData(
@@ -2225,7 +2230,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     legendData={scatterPlotLegendData(
                                         _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, PlotType.BoxPlot, this.mutationDataExists, this.cnaDataExists, this.props.store.driverAnnotationSettings.driversAnnotated, this.limitValueTypes, this.scatterPlotHighlight
                                     )}
-                                     legendLocationWidthThreshold={550}
+                                    legendLocationWidthThreshold={LEGEND_TO_BOTTOM_WIDTH_THRESHOLD}
                                 />
                             );
                             break;
