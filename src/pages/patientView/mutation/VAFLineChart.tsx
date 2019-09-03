@@ -11,7 +11,8 @@ import WindowStore from "../../../shared/components/window/WindowStore";
 import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
 import {Popover} from "react-bootstrap";
 import classnames from "classnames";
-import styles from "../../resultsView/survival/styles.module.scss";
+import survivalStyles from "../../resultsView/survival/styles.module.scss";
+import styles from "./styles.module.scss";
 import autobind from "autobind-decorator";
 import {Portal} from "react-portal";
 import {CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
@@ -465,7 +466,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             return (
                 <Portal isOpened={true} node={document.body}>
                     <Popover
-                        className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)}
+                        className={classnames("cbioportal-frontend", "cbioTooltip", survivalStyles.Tooltip, styles.Tooltip)}
                         positionLeft={this.mouseEvent.pageX}
                         positionTop={this.mouseEvent.pageY+(tooltipPlacement === "top" ? -7 : 7)}
                         style={{
