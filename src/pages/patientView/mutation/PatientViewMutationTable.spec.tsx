@@ -1,5 +1,5 @@
 import React from 'react';
-import {ReactWrapper, mount} from "enzyme";
+import {ReactWrapper, mount, shallow} from "enzyme";
 import { assert } from 'chai';
 import {default as PatientViewMutationTable} from "./PatientViewMutationTable"
 import {MutationTableColumnType} from "shared/components/mutationTable/MutationTable";
@@ -36,12 +36,14 @@ describe("PatientViewMutationTable", ()=>{
     });
 
     it("shows mrna expr column if theres an expression profile and exactly one sample", ()=>{
-        assert(hasColumn(getTable(["sampleA"], "mrnaId"), "mRNA Expr."));
+        assert(hasColumn(getTable(["sampleA"], "[\"sampleA\"]"), "mRNA Expr."));
     });
 
-    /*it("shows copy number column if there's only one sample", ()=>{
-        assert(hasColumn(getTable(["sampleA"], undefined, "cnaId"), "Copy #"));
-    });*/
+    it('should have Samples column resizable', () => {
+        const aTable = getTable(["sampleA", "sampleB"]);
+        const res = aTable.find('.columnResizer');
+        assert.equal(res.length, 2)
+    });
 
     it("hides copy number column if there's more than one sample", ()=>{
         assert.isFalse(hasColumn(getTable(["sampleA","sampleB"], undefined, "cnaId"), "Copy #"));
