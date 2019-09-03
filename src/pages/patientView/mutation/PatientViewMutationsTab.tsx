@@ -218,7 +218,9 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                 <div style={{marginBottom:25}}>
                     {this.vafLineChart.component}
                 </div>
+                <hr/>
                 <MutationOncoprint store={this.props.store} sampleManager={this.props.sampleManager}/>
+                <hr/>
                 {this.table.component}
             </div>
         );
