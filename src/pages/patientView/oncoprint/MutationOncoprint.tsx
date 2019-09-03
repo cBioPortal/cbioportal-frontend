@@ -22,6 +22,7 @@ import _ from "lodash";
 import SampleManager from "../sampleManager";
 import WindowStore from "../../../shared/components/window/WindowStore";
 import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../shared/lib/StoreUtils";
+import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 
 export interface IMutationOncoprintProps {
     store:PatientViewPageStore;
@@ -34,6 +35,7 @@ const TRACK_GROUP_INDEX = 2;
 export default class MutationOncoprint extends React.Component<IMutationOncoprintProps, {}> {
 
     private oncoprint:OncoprintJS<any>|null = null;
+    @observable private showColumnLabels = true;
 
     constructor(props:IMutationOncoprintProps) {
         super(props);
@@ -148,12 +150,101 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     private readonly columnLabels = remoteData({
         await:()=>[this.props.store.mutationData],
         invoke:()=>{
-            // TODO: make it toggleable and return empty if so
             const ret:{[uid:string]:string} = {};
-            for (const mutation of this.props.store.mutationData.result!) {
-                ret[generateMutationIdByGeneAndProteinChangeAndEvent(mutation)] = `${mutation.gene.hugoGeneSymbol} ${mutation.proteinChange}`;
+            if (this.showColumnLabels) {
+                for (const mutation of this.props.store.mutationData.result!) {
+                    ret[generateMutationIdByGeneAndProteinChangeAndEvent(mutation)] = `${mutation.gene.hugoGeneSymbol} ${mutation.proteinChange}`;
+                }
             }
             return Promise.resolve(ret);
+        }
+    });
+
+    private readonly header = MakeMobxView({
+        await:()=>[],
+        render:()=>{
+            return (
+                <div style={{display:"inline-flex", alignItems:"center", marginBottom:5}}>
+                    <div style={{display:"flex", alignItems:"center"}}>
+                        <span>Sort configuration:&nbsp;</span>
+                        <div style={{ width: 250, marginRight: 7 }} >
+                            <ReactSelect
+                                name="select sort configuration"
+                                onChange={(option:any|null)=>{
+                                    if (option) {
+                                        this.clustered = option.value;
+                                    }
+                                }}
+                                options={[
+                                    { label: "Cluster", value: true},
+                                    { label: "Sample order", value: false}
+                                ]}
+                                clearable={false}
+                                searchable={false}
+                                value={{ label: this.clustered ? "Cluster" : "Sample order", value:this.clustered}}
+                                styles={{
+                                    control: (provided:any)=>({
+                                        ...provided,
+                                        height:36,
+                                        minHeight:36,
+                                        border: "1px solid rgb(204,204,204)"
+                                    }),
+                                    menu: (provided:any)=>({
+                                        ...provided,
+                                        maxHeight: 400
+                                    }),
+                                    menuList: (provided:any)=>({
+                                        ...provided,
+                                        maxHeight:400
+                                    }),
+                                    placeholder:(provided:any)=>({
+                                        ...provided,
+                                        color: "#000000"
+                                    }),
+                                    dropdownIndicator:(provided:any)=>({
+                                        ...provided,
+                                        color:"#000000"
+                                    }),
+                                    option:(provided:any, state:any)=>{
+                                        return {
+                                            ...provided,
+                                            cursor:"pointer",
+                                        };
+                                    }
+                                }}
+                                theme={(theme:any)=>({
+                                    ...theme,
+                                    colors: {
+                                        ...theme.colors,
+                                        neutral80:"black",
+                                        //primary: theme.colors.primary50
+                                    },
+                                })}
+                            />
+                        </div>
+                    </div>
+                    <LabeledCheckbox
+                        checked={this.showColumnLabels}
+                        onChange={()=>{ this.showColumnLabels = !this.showColumnLabels; }}
+                    >
+                        <span style={{marginTop:-3}}>Show mutation labels</span>
+                    </LabeledCheckbox>
+                    <DownloadControls
+                        filename="vafHeatmap"
+                        getSvg={()=>(this.oncoprint ? this.oncoprint.toSVG(true) : null)}
+                        getData={()=>{
+                            const data = _.flatMap(this.heatmapTracks.result!, track=>track.data);
+                            return getDownloadData(data);
+                        }}
+                        buttons={["SVG", "PNG", "PDF", "Data"]}
+                        type="button"
+                        dontFade
+                        style={{
+                            marginLeft:10
+                        }}
+                    />
+                </div>
+            );
         }
     });
 
@@ -165,80 +256,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             } else {
                 return (
                     <div>
-                        <div style={{display:"inline-flex", alignItems:"center", marginBottom:5}}>
-                            <div style={{display:"flex", alignItems:"center"}}>
-                                <span>Sort configuration:&nbsp;</span>
-                                <div style={{ width: 250, marginRight: 7 }} >
-                                    <ReactSelect
-                                        name="select sort configuration"
-                                        onChange={(option:any|null)=>{
-                                            if (option) {
-                                                this.clustered = option.value;
-                                            }
-                                        }}
-                                        options={[
-                                            { label: "Cluster", value: true},
-                                            { label: "Sample order", value: false}
-                                        ]}
-                                        clearable={false}
-                                        searchable={false}
-                                        value={{ label: this.clustered ? "Cluster" : "Sample order", value:this.clustered}}
-                                        styles={{
-                                            control: (provided:any)=>({
-                                                ...provided,
-                                                height:36,
-                                                minHeight:36,
-                                                border: "1px solid rgb(204,204,204)"
-                                            }),
-                                            menu: (provided:any)=>({
-                                                ...provided,
-                                                maxHeight: 400
-                                            }),
-                                            menuList: (provided:any)=>({
-                                                ...provided,
-                                                maxHeight:400
-                                            }),
-                                            placeholder:(provided:any)=>({
-                                                ...provided,
-                                                color: "#000000"
-                                            }),
-                                            dropdownIndicator:(provided:any)=>({
-                                                ...provided,
-                                                color:"#000000"
-                                            }),
-                                            option:(provided:any, state:any)=>{
-                                                return {
-                                                    ...provided,
-                                                    cursor:"pointer",
-                                                };
-                                            }
-                                        }}
-                                        theme={(theme:any)=>({
-                                            ...theme,
-                                            colors: {
-                                                ...theme.colors,
-                                                neutral80:"black",
-                                                //primary: theme.colors.primary50
-                                            },
-                                        })}
-                                    />
-                                </div>
-                            </div>
-                            <DownloadControls
-                                filename="vafHeatmap"
-                                getSvg={()=>(this.oncoprint ? this.oncoprint.toSVG(true) : null)}
-                                getData={()=>{
-                                    const data = _.flatMap(this.heatmapTracks.result!, track=>track.data);
-                                    return getDownloadData(data);
-                                }}
-                                buttons={["SVG", "PNG", "PDF", "Data"]}
-                                type="button"
-                                dontFade
-                                style={{
-                                    marginLeft:10
-                                }}
-                            />
-                        </div>
+                        {this.header.component}
                         <Oncoprint
                             oncoprintRef={this.oncoprintRef}
                             initCellWidth={20}
@@ -259,7 +277,8 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             }
         },
         renderPending:()=><LoadingIndicator isLoading={true}/>,
-        renderError:()=><ErrorMessage/>
+        renderError:()=><ErrorMessage/>,
+        showLastRenderWhenPending: true
     });
 
     render() {
