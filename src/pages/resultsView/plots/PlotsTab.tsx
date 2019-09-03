@@ -968,8 +968,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get scatterPlotHighlight() {
-        const searchCaseWords = this.searchCase.trim().split(/\s+/g);
-        const searchMutationWords = this.searchMutation.trim().split(/\s+/g);
+        const searchCaseWords = this.searchCase.trim().split(/\s+/g).map((word) => word.toUpperCase());
+        const searchMutationWords = this.searchMutation.trim().split(/\s+/g).map((word) => word.toUpperCase());
 
         // need to regenerate the function whenever these change in order to trigger immediate Victory rerender
         return (d:IScatterPlotSampleData)=>{
