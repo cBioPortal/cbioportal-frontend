@@ -18,6 +18,7 @@ import {remoteData} from "../../../public-lib";
 import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import ReactSelect from "react-select";
+import MutationOncoprint from "../oncoprint/MutationOncoprint";
 
 export interface IPatientViewMutationsTabProps {
     store:PatientViewPageStore;
@@ -217,6 +218,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                 <div style={{marginBottom:25}}>
                     {this.vafLineChart.component}
                 </div>
+                <MutationOncoprint store={this.props.store} sampleManager={this.props.sampleManager}/>
                 {this.table.component}
             </div>
         );
