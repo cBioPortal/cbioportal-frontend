@@ -12,6 +12,8 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
 const ONCOPRINT_TIMEOUT = 15000;
 
+const ALL_CASE_SET_REGEXP = /^All \(\d+\)$/;
+
 function setInputText(selector, text){
     browser.setValue(selector, '\uE003'.repeat(browser.getValue(selector).length) + text);
 }
@@ -219,11 +221,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (368)",
-            "Expect: All (368), but got " + browser.getText(selectedCaseSet_sel),
-        );
+        assert(ALL_CASE_SET_REGEXP.test(browser.getText(selectedCaseSet_sel)), "'All' case set");
 
         // Uncheck study
         browser.click('[data-test="StudySelect"] input');
@@ -259,7 +257,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.waitUntil(()=>{ return browser.getText(selectedCaseSet_sel) === "All (2358)"; }, 5000);
+        browser.waitUntil(()=>{ return ALL_CASE_SET_REGEXP.test(browser.getText(selectedCaseSet_sel)); }, 5000);
 
         // Deselect all filtered studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
