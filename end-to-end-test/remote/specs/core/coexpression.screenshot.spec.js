@@ -9,8 +9,6 @@ var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScree
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
-var {  } = require()
-
 var {
     COEXPRESSION_TIMEOUT
 } = require('../../../shared/specUtils');
