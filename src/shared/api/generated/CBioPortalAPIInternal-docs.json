@@ -1914,10 +1914,10 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "matchingGenePanels": {
+        "matchingGenePanelIds": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/GenePanel"
+            "type": "string"
           }
         },
         "numberOfAlteredCases": {
@@ -2150,44 +2150,6 @@
         }
       },
       "title": "ExpressionEnrichment"
-    },
-    "GenePanel": {
-      "type": "object",
-      "required": [
-        "genePanelId"
-      ],
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "genePanelId": {
-          "type": "string"
-        },
-        "genes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GenePanelToGene"
-          }
-        }
-      },
-      "title": "GenePanel"
-    },
-    "GenePanelToGene": {
-      "type": "object",
-      "required": [
-        "entrezGeneId",
-        "hugoGeneSymbol"
-      ],
-      "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        }
-      },
-      "title": "GenePanelToGene"
     },
     "Geneset": {
       "type": "object",
@@ -2622,10 +2584,10 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "matchingGenePanels": {
+        "matchingGenePanelIds": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/GenePanel"
+            "type": "string"
           }
         },
         "numberOfAlteredCases": {
