@@ -1,0 +1,7 @@
+.Tooltip {
+  border-radius: 3px !important;
+
+  & > :global(.popover-content) {
+    padding: 8px 10px;
+  }
+}
