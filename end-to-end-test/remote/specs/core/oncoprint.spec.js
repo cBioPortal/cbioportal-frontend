@@ -13,7 +13,7 @@ var setInputText = require('../../../shared/specUtils').setInputText;
 var {
     clickQueryByGeneButton,
     clickModifyStudySelectionButton
-} = require('./../specUtils');
+} = require('../../../shared/specUtils.js');
 
 
 
