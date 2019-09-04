@@ -49,9 +49,9 @@ describe('homepage', function() {
 
         input.waitForExist(10000);
 
-        setInputText(searchInputSelector,'tract');
+        setInputText(searchInputSelector,'bladder');
 
-        waitForNumberOfStudyCheckboxes(2);
+        waitForNumberOfStudyCheckboxes(3);
 
     });
 
