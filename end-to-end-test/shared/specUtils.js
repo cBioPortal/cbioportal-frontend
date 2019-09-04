@@ -241,6 +241,5 @@ module.exports = {
     selectReactSelectOption: selectReactSelectOption,
     reactSelectOption: reactSelectOption,
     getReactSelectOptions: getReactSelectOptions,
+    COEXPRESSION_TIMEOUT: 120000
 };
-
-
