@@ -300,8 +300,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             return PotentialViewType.MutationSummary;
         }
         // one axis molecular profile
-        if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE ||
-            this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
+        if ((this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.horzSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY)
+            || (this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE &&  this.vertSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY)) {
             //  establish whether data may contain limit values
             // (for now only supported for treatment data)
             if (this.limitValuesCanBeShown) {
@@ -309,7 +309,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             }
             return PotentialViewType.MutationTypeAndCopyNumber;
         }
-
 
         //  establish whether data may contain limit values
         // (for now only supported for treatment data)
