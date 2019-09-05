@@ -256,10 +256,10 @@ function addToolTip(node: any, tip: any,showDelay: any, position: any) {
         style: { classes: 'qtip-light qtip-rounded' },
         position: {
             my: "bottom right",
-            at: "top left"
+            at: "top left",
+            viewport: $("body")
         }
-        //position: {viewport: $(window)}
-    }; //TODO: viewport causes jquery exception
+    };
     // if (showDelay)
     //     param['show'] = { delay: showDelay };
     // if (position)
