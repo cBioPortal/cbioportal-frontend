@@ -553,7 +553,8 @@ h3.hr {
 }
 
 .inlineBlock {
-  display:inline-block;
+  float: right;
+  overflow: hidden;
 }
 
 .noOqlWarning {
