@@ -333,7 +333,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     });
 
     public render() {
-        const status = getMobxPromiseGroupStatus(this.downloadableFilesTable, this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationMap);
+        const status = getMobxPromiseGroupStatus(this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationMap, this.cnaData, this.mutationData, 
+            this.mrnaData, this.proteinData, this.unalteredCaseAlterationData, this.alteredCaseAlterationData, this.props.store.virtualStudyParams, this.sampleMatrixText);
 
         switch (status) {
             case "pending":
@@ -354,7 +355,17 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                 isLoading={false}
                                 style={{marginBottom:15}}
                             />
-                            {this.downloadableFilesTable.result}
+                            <table className={ classNames("table", "table-striped", styles.downloadCopyTable) }>
+                                <tbody>
+                                    {hasValidData(this.cnaData.result!) && this.cnaDownloadControls()}
+                                    {hasValidMutationData(this.mutationData.result!) && this.mutationDownloadControls()}
+                                    {hasValidData(this.mrnaData.result!) && this.mrnaExprDownloadControls()}
+                                    {hasValidData(this.proteinData.result!) && this.proteinExprDownloadControls()}
+                                    {this.alteredSamplesDownloadControls(this.alteredCaseAlterationData.result!, this.props.store.virtualStudyParams.result!)}
+                                    {this.unalteredSamplesDownloadControls(this.unalteredCaseAlterationData.result!, this.props.store.virtualStudyParams.result!)}
+                                    {this.sampleMatrixDownloadControls(this.sampleMatrixText.result!)}
+                                </tbody>
+                            </table>
                         </div>
                         <hr/>
                         <div className={styles["tables-container"]} data-test="dataDownloadGeneAlterationTable">
@@ -386,25 +397,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                 return <ErrorMessage/>;
         }
     }
-
-    readonly downloadableFilesTable = remoteData({
-        await:()=>[
-            this.cnaData, this.mutationData, this.mrnaData, this.proteinData
-        ],
-        invoke:()=>Promise.resolve(
-            <table className={ classNames("table", "table-striped", styles.downloadCopyTable) }>
-                <tbody>
-                    {hasValidData(this.cnaData.result!) && this.cnaDownloadControls()}
-                    {hasValidMutationData(this.mutationData.result!) && this.mutationDownloadControls()}
-                    {hasValidData(this.mrnaData.result!) && this.mrnaExprDownloadControls()}
-                    {hasValidData(this.proteinData.result!) && this.proteinExprDownloadControls()}
-                    {this.alteredSamplesDownloadControls.component}
-                    {this.unalteredSamplesDownloadControls.component}
-                    {this.sampleMatrixDownloadControls.component}
-                </tbody>
-            </table>
-        )
-    });
 
     private cnaDownloadControls(): JSX.Element
     {
@@ -494,70 +486,58 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         );
     }
 
-    readonly alteredSamplesDownloadControls = MakeMobxView({
-        await: ()=>[this.alteredCaseAlterationData, this.props.store.virtualStudyParams],
-        render: () => {
-            const alteredSampleCaseIds = _.map(this.alteredCaseAlterationData.result!, caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`);
-            const handleDownload = () => alteredSampleCaseIds.join("\n");
-            const handleQuery = () => this.handleQueryButtonClick(alteredSampleCaseIds);
-            const alteredSamplesVirtualStudyParams = {
-                    "user": this.props.store.virtualStudyParams.result!.user,
-                    "name": this.props.store.virtualStudyParams.result!.name,
-                    "description": this.props.store.virtualStudyParams.result!.description,
-                    "studyWithSamples": this.props.store.virtualStudyParams.result!.studyWithSamples,
-                    "selectedSamples": _.filter(this.props.store.virtualStudyParams.result!.selectedSamples, ((sample: Sample) => alteredSampleCaseIds.includes(`${sample.studyId}:${sample.sampleId}`))),
-                    "filter": this.props.store.virtualStudyParams.result!.filter,
-                    "attributesMetaSet": this.props.store.virtualStudyParams.result!.attributesMetaSet
-                } as IVirtualStudyProps
-
-            return (this.copyDownloadQueryControlsRow("Altered samples: List of samples with alterations",
-                                                handleDownload,
-                                                "altered_samples.txt",
-                                                handleQuery,
-                                                alteredSamplesVirtualStudyParams));
-        },
-        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true}/>,
-        renderError: ()=> <ErrorMessage/>
-    });
-
-    readonly unalteredSamplesDownloadControls = MakeMobxView({
-        await:()=>[this.unalteredCaseAlterationData, this.props.store.virtualStudyParams],
-        render: () => {
-            const unalteredSampleCaseIds = _.map(this.unalteredCaseAlterationData.result!, caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`);
-            const handleDownload = () => unalteredSampleCaseIds.join("\n");
-            const handleQuery = () => this.handleQueryButtonClick(unalteredSampleCaseIds);
-            const unalteredSamplesVirtualStudyParams = {
-                "user": this.props.store.virtualStudyParams.result!.user,
-                "name": this.props.store.virtualStudyParams.result!.name,
-                "description": this.props.store.virtualStudyParams.result!.description,
-                "studyWithSamples": this.props.store.virtualStudyParams.result!.studyWithSamples,
-                "selectedSamples": _.filter(this.props.store.virtualStudyParams.result!.selectedSamples, ((sample: Sample) => unalteredSampleCaseIds.includes(`${sample.studyId}:${sample.sampleId}`))),
-                "filter": this.props.store.virtualStudyParams.result!.filter,
-                "attributesMetaSet": this.props.store.virtualStudyParams.result!.attributesMetaSet
+    private alteredSamplesDownloadControls(alteredCaseAlterationData: ICaseAlteration[], virtualStudyParams: IVirtualStudyProps)
+    {
+        const alteredSampleCaseIds = _.map(alteredCaseAlterationData, caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`);
+        const handleDownload = () => alteredSampleCaseIds.join("\n");
+        const handleQuery = () => this.handleQueryButtonClick(alteredSampleCaseIds);
+        const alteredSamplesVirtualStudyParams = {
+                "user": virtualStudyParams.user,
+                "name": virtualStudyParams.name,
+                "description": virtualStudyParams.description,
+                "studyWithSamples": virtualStudyParams.studyWithSamples,
+                "selectedSamples": _.filter(virtualStudyParams.selectedSamples, ((sample: Sample) => alteredSampleCaseIds.includes(`${sample.studyId}:${sample.sampleId}`))),
+                "filter": virtualStudyParams.filter,
+                "attributesMetaSet": virtualStudyParams.attributesMetaSet
             } as IVirtualStudyProps
 
-            return (this.copyDownloadQueryControlsRow("Unaltered samples: List of samples without any alteration",
-                                                handleDownload,
-                                                "unaltered_samples.txt",
-                                                handleQuery,
-                                                unalteredSamplesVirtualStudyParams));
-        },
-        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true}/>,
-        renderError: ()=> <ErrorMessage/>
-    });
+        return (this.copyDownloadQueryControlsRow("Altered samples: List of samples with alterations",
+                                            handleDownload,
+                                            "altered_samples.txt",
+                                            handleQuery,
+                                            alteredSamplesVirtualStudyParams));
+    }
 
-    readonly sampleMatrixDownloadControls = MakeMobxView({
-        await:()=>[this.sampleMatrixText],
-        render: () => {
-            const handleDownload = () => this.sampleMatrixText.result!;
+    private unalteredSamplesDownloadControls(unalteredCaseAlterationData: ICaseAlteration[], virtualStudyParams: IVirtualStudyProps)
+    {
+        const unalteredSampleCaseIds = _.map(unalteredCaseAlterationData, caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`);
+        const handleDownload = () => unalteredSampleCaseIds.join("\n");
+        const handleQuery = () => this.handleQueryButtonClick(unalteredSampleCaseIds);
+        const unalteredSamplesVirtualStudyParams = {
+            "user": virtualStudyParams.user,
+            "name": virtualStudyParams.name,
+            "description": virtualStudyParams.description,
+            "studyWithSamples": virtualStudyParams.studyWithSamples,
+            "selectedSamples": _.filter(virtualStudyParams.selectedSamples, ((sample: Sample) => unalteredSampleCaseIds.includes(`${sample.studyId}:${sample.sampleId}`))),
+            "filter": virtualStudyParams.filter,
+            "attributesMetaSet": virtualStudyParams.attributesMetaSet
+        } as IVirtualStudyProps
 
-            return (this.copyDownloadControlsRow("Sample matrix: List of all samples where 1=altered and 0=unaltered",
-                                                handleDownload,
-                                                "sample_matrix.txt"));
-        },
-        renderPending: () => <LoadingIndicator isLoading={true} centerRelativeToContainer={true}/>,
-        renderError: ()=> <ErrorMessage/>
-    });
+        return (this.copyDownloadQueryControlsRow("Unaltered samples: List of samples without any alteration",
+                                            handleDownload,
+                                            "unaltered_samples.txt",
+                                            handleQuery,
+                                            unalteredSamplesVirtualStudyParams));
+    }
+
+    private sampleMatrixDownloadControls(sampleMatrixText: string)
+    {
+        const handleDownload = () => sampleMatrixText;
+
+        return (this.copyDownloadControlsRow("Sample matrix: List of all samples where 1=altered and 0=unaltered",
+                                            handleDownload,
+                                            "sample_matrix.txt"));
+    };
 
     private handleMutationDownload()
     {
