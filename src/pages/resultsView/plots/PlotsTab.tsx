@@ -2253,7 +2253,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     <div>
                         <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
                             <ScrollBar style={{position:'relative', top:-5}} getScrollEl={this.getScrollPane} />
-                            <div style={{textAlign:"left", position:"relative", zIndex:1, marginTop:"-9px", marginBottom: this.isWaterfallPlot?"9px":"-16px", minWidth: this.mutationDataCanBeShown && this.cnaDataCanBeShown ? 600 : 0}}>
+                            <div style={{textAlign:"left", position:"relative", zIndex:1, marginTop:"-6px", marginBottom: this.isWaterfallPlot?"9px":"-16px", minWidth: this.mutationDataCanBeShown && this.cnaDataCanBeShown ? 600 : 0}}>
                                 <div style={{display:"inline-block", position: "relative"}} className="utilities-menu">
                                     {(this.mutationDataCanBeShown || this.cnaDataCanBeShown)
                                         && <label className="legend-label">Style samples by:</label>
