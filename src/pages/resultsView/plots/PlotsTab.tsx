@@ -564,21 +564,25 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this.vertSelection.logScale = !this.vertSelection.logScale;
                 break;
             case EventKey.utilities_viewCopyNumber:
-                this.viewCopyNumber = !this.viewCopyNumber;
                 // Styling by mutation type and CNA for waterfall plot
                 // is mutually exclusive. When selected the viewMutationType
                 // option is deselected when currently selected.
-                if (plotType === PlotType.WaterfallPlot && this.viewCopyNumber && this.viewMutationType) {
+                if (plotType === PlotType.WaterfallPlot) {
+                    this.viewCopyNumber = true;
                     this.viewMutationType = false;
+                } else {
+                    this.viewCopyNumber = !this.viewCopyNumber;
                 }
                 break;
             case EventKey.utilities_viewMutationType:
-                this.viewMutationType = !this.viewMutationType;
                 // Styling by mutation type and CNA for waterfall plot
                 // is mutually exclusive. When selected the viewCopyNumber
                 // option is deselected when currently selected.
-                if (plotType === PlotType.WaterfallPlot && this.viewMutationType && this.viewCopyNumber) {
+                if (plotType === PlotType.WaterfallPlot) {
                     this.viewCopyNumber = false;
+                    this.viewMutationType = true;
+                } else {
+                    this.viewMutationType = !this.viewMutationType;
                 }
                 break;
             case EventKey.utilities_showRegressionLine:
