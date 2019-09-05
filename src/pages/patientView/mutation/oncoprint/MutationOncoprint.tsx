@@ -14,7 +14,7 @@ import LoadingIndicator from "../../../../shared/components/loadingIndicator/Loa
 import ErrorMessage from "../../../../shared/components/ErrorMessage";
 import {computed, observable} from "mobx";
 import ReactSelect from "react-select";
-import OncoprintJS from "oncoprintjs";
+import OncoprintJS, {InitParams} from "oncoprintjs";
 import autobind from "autobind-decorator";
 import DownloadControls, {DownloadControlsButton} from "../../../../public-lib/components/downloadControls/DownloadControls";
 import _ from "lodash";
@@ -23,6 +23,10 @@ import WindowStore from "../../../../shared/components/window/WindowStore";
 import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../../shared/lib/StoreUtils";
 import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {MutationStatus} from "../PatientViewMutationsTabUtils";
+import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import Slider from "react-rangeslider";
+import "react-rangeslider/lib/index.css";
+import styles from "./styles.module.scss";
 
 export interface IMutationOncoprintProps {
     store:PatientViewPageStore;
@@ -30,12 +34,18 @@ export interface IMutationOncoprintProps {
 }
 
 const TRACK_GROUP_INDEX = 2;
+const INIT_PARAMS:InitParams = {
+    init_cell_width:20,
+    init_cell_padding:1,
+    cell_padding_off_cell_width_threshold:10
+};
 
 @observer
 export default class MutationOncoprint extends React.Component<IMutationOncoprintProps, {}> {
 
     private oncoprint:OncoprintJS<any>|null = null;
     @observable private showColumnLabels = true;
+    @observable private horzZoomSliderState = 100;
 
     constructor(props:IMutationOncoprintProps) {
         super(props);
@@ -44,8 +54,10 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     }
 
     @autobind
-    private oncoprintRef(oncoprint:OncoprintJS<any>|null) {
+    private oncoprintRef(oncoprint:OncoprintJS<any>) {
         this.oncoprint = oncoprint;
+        this.oncoprint.onHorzZoom(z=>(this.horzZoomSliderState = z));
+        this.horzZoomSliderState = this.oncoprint.getHorzZoom();
     }
 
     @observable clustered = true;
@@ -76,6 +88,21 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         } else {
             return this.props.store.samples.result!.map(s=>s.sampleId);
         }
+    }
+
+    @autobind
+    private updateOncoprintHorzZoom() {
+        this.oncoprint && this.oncoprint.setHorzZoom(this.horzZoomSliderState);
+    }
+
+    @autobind
+    private onClickZoomIn() {
+        this.oncoprint && this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom()/0.7);
+    }
+
+    @autobind
+    private onClickZoomOut() {
+        this.oncoprint && this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom()*0.7);
     }
 
     private readonly heatmapTracks = remoteData<IMutationOncoprintTrackSpec[]>({
@@ -160,93 +187,136 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         }
     });
 
-    private readonly header = MakeMobxView({
-        await:()=>[],
-        render:()=>{
-            return (
-                <div style={{display:"inline-flex", alignItems:"center", marginBottom:5}}>
-                    <div style={{display:"flex", alignItems:"center"}}>
-                        <span>Sort configuration:&nbsp;</span>
-                        <div style={{ width: 250, marginRight: 7 }} >
-                            <ReactSelect
-                                name="select sort configuration"
-                                onChange={(option:any|null)=>{
-                                    if (option) {
-                                        this.clustered = option.value;
-                                    }
-                                }}
-                                options={[
-                                    { label: "Cluster", value: true},
-                                    { label: "Sample order", value: false}
-                                ]}
-                                clearable={false}
-                                searchable={false}
-                                value={{ label: this.clustered ? "Cluster" : "Sample order", value:this.clustered}}
-                                styles={{
-                                    control: (provided:any)=>({
-                                        ...provided,
-                                        height:36,
-                                        minHeight:36,
-                                        border: "1px solid rgb(204,204,204)"
-                                    }),
-                                    menu: (provided:any)=>({
-                                        ...provided,
-                                        maxHeight: 400
-                                    }),
-                                    menuList: (provided:any)=>({
-                                        ...provided,
-                                        maxHeight:400
-                                    }),
-                                    placeholder:(provided:any)=>({
-                                        ...provided,
-                                        color: "#000000"
-                                    }),
-                                    dropdownIndicator:(provided:any)=>({
-                                        ...provided,
-                                        color:"#000000"
-                                    }),
-                                    option:(provided:any, state:any)=>{
-                                        return {
-                                            ...provided,
-                                            cursor:"pointer",
-                                        };
-                                    }
-                                }}
-                                theme={(theme:any)=>({
-                                    ...theme,
-                                    colors: {
-                                        ...theme.colors,
-                                        neutral80:"black",
-                                        //primary: theme.colors.primary50
-                                    },
-                                })}
-                            />
-                        </div>
-                    </div>
-                    <LabeledCheckbox
-                        checked={this.showColumnLabels}
-                        onChange={()=>{ this.showColumnLabels = !this.showColumnLabels; }}
+    @computed get zoomControls() {
+        return (
+            <div className={styles.zoomControls}>
+                <DefaultTooltip
+                    overlay={<span>Zoom out of heatmap</span>}
+                    placement="top"
+                >
+                    <div
+                        onClick={this.onClickZoomOut}
+                        className={styles.zoomButton}
                     >
-                        <span style={{marginTop:-3}}>Show mutation labels</span>
-                    </LabeledCheckbox>
-                    <DownloadControls
-                        filename="vafHeatmap"
-                        getSvg={()=>(this.oncoprint ? this.oncoprint.toSVG(true) : null)}
-                        getData={()=>{
-                            const data = _.flatMap(this.heatmapTracks.result!, track=>track.data);
-                            return getDownloadData(data);
-                        }}
-                        buttons={["SVG", "PNG", "PDF", "Data"]}
-                        type="button"
-                        dontFade
-                        style={{
-                            marginLeft:10
-                        }}
-                    />
+                        <i className="fa fa-search-minus"></i>
+                    </div>
+                </DefaultTooltip>
+                <DefaultTooltip
+                    overlay={<span>Zoom in/out of heatmap</span>}
+                    placement="top"
+                >
+                    <div style={{width:"90px"}}>
+                        <Slider
+                            value={this.horzZoomSliderState}
+                            onChange={(z:number)=>(this.horzZoomSliderState = z)}
+                            onChangeComplete={this.updateOncoprintHorzZoom}
+                            step={0.01}
+                            max={1}
+                            min={0}
+                            tooltip={false}
+                        />
+                    </div>
+                </DefaultTooltip>
+                <DefaultTooltip
+                    overlay={<span>Zoom in to heatmap</span>}
+                    placement="top"
+                >
+                    <div
+                        className={styles.zoomButton}
+                        onClick={this.onClickZoomIn}
+                    >
+                        <i className="fa fa-search-plus"></i>
+                    </div>
+                </DefaultTooltip>
+            </div>
+        );
+    }
+
+    @computed get header() {
+        return (
+            <div style={{display:"inline-flex", alignItems:"center", marginBottom:5}}>
+                <div style={{display:"flex", alignItems:"center"}}>
+                    <span>Sort configuration:&nbsp;</span>
+                    <div style={{ width: 250, marginRight: 7 }} >
+                        <ReactSelect
+                            name="select sort configuration"
+                            onChange={(option:any|null)=>{
+                                if (option) {
+                                    this.clustered = option.value;
+                                }
+                            }}
+                            options={[
+                                { label: "Cluster", value: true},
+                                { label: "Sample order", value: false}
+                            ]}
+                            clearable={false}
+                            searchable={false}
+                            value={{ label: this.clustered ? "Cluster" : "Sample order", value:this.clustered}}
+                            styles={{
+                                control: (provided:any)=>({
+                                    ...provided,
+                                    height:36,
+                                    minHeight:36,
+                                    border: "1px solid rgb(204,204,204)"
+                                }),
+                                menu: (provided:any)=>({
+                                    ...provided,
+                                    maxHeight: 400
+                                }),
+                                menuList: (provided:any)=>({
+                                    ...provided,
+                                    maxHeight:400
+                                }),
+                                placeholder:(provided:any)=>({
+                                    ...provided,
+                                    color: "#000000"
+                                }),
+                                dropdownIndicator:(provided:any)=>({
+                                    ...provided,
+                                    color:"#000000"
+                                }),
+                                option:(provided:any, state:any)=>{
+                                    return {
+                                        ...provided,
+                                        cursor:"pointer",
+                                    };
+                                }
+                            }}
+                            theme={(theme:any)=>({
+                                ...theme,
+                                colors: {
+                                    ...theme.colors,
+                                    neutral80:"black",
+                                    //primary: theme.colors.primary50
+                                },
+                            })}
+                        />
+                    </div>
                 </div>
-            );
-        }
-    });
+                <LabeledCheckbox
+                    checked={this.showColumnLabels}
+                    onChange={()=>{ this.showColumnLabels = !this.showColumnLabels; }}
+                >
+                    <span style={{marginTop:-3}}>Show mutation labels</span>
+                </LabeledCheckbox>
+                {this.zoomControls}
+                <DownloadControls
+                    filename="vafHeatmap"
+                    getSvg={()=>(this.oncoprint ? this.oncoprint.toSVG(true) : null)}
+                    getData={()=>{
+                        const data = _.flatMap(this.heatmapTracks.result!, track=>track.data);
+                        return getDownloadData(data);
+                    }}
+                    buttons={["SVG", "PNG", "PDF", "Data"]}
+                    type="button"
+                    dontFade
+                    style={{
+                        marginLeft:10
+                    }}
+                />
+            </div>
+        );
+    }
 
     private readonly oncoprintUI = MakeMobxView({
         await:()=>[this.heatmapTracks, this.columnLabels],
@@ -256,11 +326,10 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             } else {
                 return (
                     <div>
-                        {this.header.component}
+                        {this.header}
                         <Oncoprint
                             oncoprintRef={this.oncoprintRef}
-                            initCellWidth={20}
-                            initCellPadding={1}
+                            initParams={INIT_PARAMS}
                             columnLabels={this.columnLabels.result!}
                             clinicalTracks={[]}
                             geneticTracks={[]}
