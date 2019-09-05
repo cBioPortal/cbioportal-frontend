@@ -18,7 +18,7 @@ import {remoteData} from "../../../public-lib";
 import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import ReactSelect from "react-select";
-import MutationOncoprint from "../oncoprint/MutationOncoprint";
+import MutationOncoprint from "./oncoprint/MutationOncoprint";
 
 export interface IPatientViewMutationsTabProps {
     store:PatientViewPageStore;

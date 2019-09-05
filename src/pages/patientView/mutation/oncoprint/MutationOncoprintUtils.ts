@@ -1,16 +1,10 @@
-import {Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
+import {Mutation, Sample} from "../../../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
-import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../shared/lib/StoreUtils";
-import {IGeneHeatmapTrackDatum, IGeneHeatmapTrackSpec} from "../../../shared/components/oncoprint/Oncoprint";
-import {CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
-import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
-
-export enum MutationStatus {
-    MUTATED,
-    MUTATED_BUT_NO_VAF,
-    PROFILED_BUT_NOT_MUTATED,
-    NOT_PROFILED
-}
+import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../../shared/lib/StoreUtils";
+import {IGeneHeatmapTrackDatum, IGeneHeatmapTrackSpec} from "../../../../shared/components/oncoprint/Oncoprint";
+import {CoverageInformation} from "../../../resultsView/ResultsViewPageStoreUtils";
+import {isSampleProfiled} from "../../../../shared/lib/isSampleProfiled";
+import {MutationStatus} from "../PatientViewMutationsTabUtils";
 
 export interface IMutationOncoprintTrackDatum extends IGeneHeatmapTrackDatum {
     mutation:Mutation;
@@ -45,7 +39,7 @@ export function makeMutationHeatmapData(
                 hugo_gene_symbol:"", // not used by us
                 mutation,
                 uid,
-                mutationStatus: isNaN(profile_data) ? MutationStatus.MUTATED_BUT_NO_VAF : MutationStatus.MUTATED
+                mutationStatus: isNaN(profile_data) ? MutationStatus.MUTATED_BUT_NO_VAF : MutationStatus.MUTATED_WITH_VAF
             });
         }
 
