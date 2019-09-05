@@ -574,7 +574,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 className="btn btn-sm btn-default"
                                 name={EVENT_KEY.addTreatmentsToHeatmap}
                                 onClick={this.onButtonClick}
-                            >Add Treatments to Heatmap</button>
+                            >Add Treatment Response to Heatmap</button>
                             ]
                         }
 
