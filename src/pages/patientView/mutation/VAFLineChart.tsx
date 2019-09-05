@@ -23,6 +23,7 @@ import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
 import $ from "jquery";
 import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import invertIncreasingFunction, {invertDecreasingFunction} from "../../../shared/lib/invertIncreasingFunction";
+import {MutationStatus} from "./PatientViewMutationsTabUtils";
 
 
 export interface IVAFLineChartProps {
@@ -34,12 +35,6 @@ export interface IVAFLineChartProps {
     dataStore:PatientViewMutationsDataStore;
 }
 
-enum NoMutationReason {
-    NO_VAF_DATA="NO_VAF_DATA",
-    NOT_SEQUENCED="NOT_SEQUENCED",
-    NOT_MUTATED="NOT_MUTATED"
-}
-
 interface IPoint {
     x:number,
     y:number,
@@ -48,7 +43,7 @@ interface IPoint {
     hugoGeneSymbol:string,
     lineData:IPoint[],
 
-    noMutationReason?:NoMutationReason
+    mutationStatus?:MutationStatus
 }
 
 const LINE_COLOR = "#000000";
@@ -315,14 +310,15 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         sampleId,
                         proteinChange,
                         hugoGeneSymbol,
-                        lineData:[]
+                        lineData:[],
+                        mutationStatus: MutationStatus.MUTATED_WITH_VAF
                     });
                 } else {
                     // no VAF data - add point which will be extrapolated
                     thisLineData.push({
                         x: this.sampleIdIndex[sampleId],
                         sampleId, proteinChange, hugoGeneSymbol,
-                        noMutationReason: NoMutationReason.NO_VAF_DATA,
+                        mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
                         lineData:[]
                     });
                 }
@@ -340,7 +336,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         thisLineData.push({
                             x: this.sampleIdIndex[sample.sampleId],
                             sampleId: sample.sampleId, proteinChange, hugoGeneSymbol,
-                            noMutationReason: NoMutationReason.NOT_SEQUENCED,
+                            mutationStatus: MutationStatus.NOT_PROFILED,
                             lineData:[]
                         });
                     } else {
@@ -348,7 +344,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             x: this.sampleIdIndex[sample.sampleId],
                             y: 0,
                             sampleId: sample.sampleId, proteinChange, hugoGeneSymbol,
-                            noMutationReason: NoMutationReason.NOT_MUTATED,
+                            mutationStatus: MutationStatus.PROFILED_BUT_NOT_MUTATED,
                             lineData:[]
                         });
                     }
@@ -425,17 +421,17 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         if (this.tooltipOnPoint) {
             // show tooltip when hovering a point
             let vafExplanation:string;
-            if (datum.noMutationReason === undefined) {
+            if (datum.mutationStatus === undefined) {
                 vafExplanation = `VAF: ${datum.y.toFixed(2)}`;
             } else {
-                switch (datum.noMutationReason) {
-                    case NoMutationReason.NO_VAF_DATA:
+                switch (datum.mutationStatus) {
+                    case MutationStatus.MUTATED_BUT_NO_VAF:
                         vafExplanation = `Mutated, but we don't have VAF data.`;
                         break;
-                    case NoMutationReason.NOT_MUTATED:
+                    case MutationStatus.PROFILED_BUT_NOT_MUTATED:
                         vafExplanation = `Not mutated (VAF: 0)`;
                         break;
-                    case NoMutationReason.NOT_SEQUENCED:
+                    case MutationStatus.NOT_PROFILED:
                     default:
                         vafExplanation = `${datum.sampleId} is not sequenced for ${datum.hugoGeneSymbol} mutations.`;
                         break;

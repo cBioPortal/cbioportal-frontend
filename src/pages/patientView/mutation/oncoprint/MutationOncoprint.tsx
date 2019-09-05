@@ -1,28 +1,28 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import Oncoprint, {IGeneHeatmapTrackSpec} from "../../../shared/components/oncoprint/Oncoprint";
-import {remoteData} from "../../../public-lib";
-import {MakeMobxView} from "../../../shared/components/MobxView";
-import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
+import Oncoprint, {IGeneHeatmapTrackSpec} from "../../../../shared/components/oncoprint/Oncoprint";
+import {remoteData} from "../../../../public-lib";
+import {MakeMobxView} from "../../../../shared/components/MobxView";
+import {PatientViewPageStore} from "../../clinicalInformation/PatientViewPageStore";
 import $ from "jquery";
 import {
     getDownloadData,
     IMutationOncoprintTrackDatum, IMutationOncoprintTrackSpec,
-    makeMutationHeatmapData,
-    MutationStatus
+    makeMutationHeatmapData
 } from "./MutationOncoprintUtils";
-import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import ErrorMessage from "../../../shared/components/ErrorMessage";
+import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
+import ErrorMessage from "../../../../shared/components/ErrorMessage";
 import {computed, observable} from "mobx";
 import ReactSelect from "react-select";
 import OncoprintJS from "oncoprintjs";
 import autobind from "autobind-decorator";
-import DownloadControls, {DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
+import DownloadControls, {DownloadControlsButton} from "../../../../public-lib/components/downloadControls/DownloadControls";
 import _ from "lodash";
-import SampleManager from "../sampleManager";
-import WindowStore from "../../../shared/components/window/WindowStore";
-import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../shared/lib/StoreUtils";
-import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
+import SampleManager from "../../sampleManager";
+import WindowStore from "../../../../shared/components/window/WindowStore";
+import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../../shared/lib/StoreUtils";
+import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";
+import {MutationStatus} from "../PatientViewMutationsTabUtils";
 
 export interface IMutationOncoprintProps {
     store:PatientViewPageStore;
@@ -117,7 +117,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                         const d = data[0];
                         let vafSection:string;
                         switch (d.mutationStatus) {
-                            case MutationStatus.MUTATED:
+                            case MutationStatus.MUTATED_WITH_VAF:
                                 vafSection = "<span>VAF:"+d.profile_data!.toFixed(2)+"</span>";
                                 break;
                             case MutationStatus.MUTATED_BUT_NO_VAF:
