@@ -1,12 +1,8 @@
 .oncoprintjs__tooltip {
   padding: 5px;
   margin-top: -10px; // to compensate position for padding, since tooltip is positioned above (if positioned at center, wouldnt be problem)
-  max-width: none;
-}
-
-.oncoprint__tooltip {
-  min-width: 160px;
-  max-width: none;
+  width: 250px;
+  word-break: break-all;
 }
 
 .oncoprint-hidden {
