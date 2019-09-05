@@ -2298,7 +2298,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                                     checked={this.viewCopyNumber}
                                                     onClick={this.onInputClick}
                                                     disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
-                                                />Copy Number Alteration Type
+                                                />Copy Number Alteration
                                             </label></div>
                                         )}
                                     </div>
