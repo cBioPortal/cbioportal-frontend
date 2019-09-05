@@ -155,6 +155,12 @@ declare module "oncoprintjs"
         custom_track_options?:CustomTrackOption[];
     };
 
+    export type InitParams = {
+        init_cell_width?:number;
+        init_cell_padding?:number;
+        cell_padding_off_cell_width_threshold?:number;
+    };
+
     export default class OncoprintJS<D> {
         webgl_unavailable: boolean;
         setMinimapVisible:(visible:boolean)=>void;
@@ -224,7 +230,7 @@ declare module "oncoprintjs"
         setWidth:(width:number)=>void;
         setColumnLabels:(labels:{[uid:string]:string})=>void;
 
-        constructor(ctr_selector:string, width:number, params?:{ init_cell_width?:number, init_cell_padding?:number });
+        constructor(ctr_selector:string, width:number, params?:InitParams);
         destroy:()=>void;
     }
 }

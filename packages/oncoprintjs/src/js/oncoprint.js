@@ -160,10 +160,7 @@ var Oncoprint = (function () {
         this.$cell_canvas = $cell_canvas;
         this.$cell_overlay_canvas = $cell_overlay_canvas;
 
-        this.model = new OncoprintModel({
-            init_cell_width: params.init_cell_width,
-            init_cell_padding: params.init_cell_padding
-        });
+        this.model = new OncoprintModel(params);
 
         this.cell_view = new OncoprintWebGLCellView($cell_div, $cell_canvas, $cell_overlay_canvas, $column_label_canvas, $dummy_scroll_div_contents, this.model, new OncoprintToolTip($tooltip_ctr), function(left, right) {
                 var enclosed_ids = self.model.getIdsInLeftInterval(left, right);
@@ -642,6 +639,7 @@ var Oncoprint = (function () {
         this.minimap_view.setHorzZoom(this.model, this.cell_view);
 
         executeHorzZoomCallbacks(this);
+        resizeAndOrganizeAfterTimeout(this);
         return this.model.getHorzZoom();
     }
 
