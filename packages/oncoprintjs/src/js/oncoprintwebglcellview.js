@@ -359,7 +359,7 @@ var OncoprintWebGLCellView = (function () {
     };
 
     var resizeAndClear = function(view, model) {
-        var height = view.getHeight(model);
+        var height = view.getVisibleAreaHeight(model);
         var total_width = view.getTotalWidth(model);
         var visible_area_width = view.visible_area_width;
         var scrollbar_slack = 20;
@@ -944,7 +944,7 @@ var OncoprintWebGLCellView = (function () {
         return width;
     }
 
-    OncoprintWebGLCellView.prototype.getWidth = function() {
+    OncoprintWebGLCellView.prototype.getVisibleAreaWidth = function() {
         return this.visible_area_width;
     }
 
@@ -956,17 +956,23 @@ var OncoprintWebGLCellView = (function () {
         renderAllTracks(this, model); // in the process it will call resizeAndClear
     }
 
-    OncoprintWebGLCellView.prototype.getHeight = function(model) {
-        // for now just add fixed height for column labels
-        // TODO: dont show if zoom is too small
-        var height = model.getCellViewHeight();
+    var getColumnLabelsHeight = function(view) {
+        var height = 0;
 
-        if (this.maximum_label_width > 0) {
+        if (view.maximum_label_width > 0) {
             height += COLUMN_LABEL_MARGIN;
-            height += this.maximum_label_width*Math.sin(COLUMN_LABEL_ANGLE*Math.PI/180);
+            height += view.maximum_label_width*Math.sin(COLUMN_LABEL_ANGLE*Math.PI/180);
         }
 
         return height;
+    };
+
+    OncoprintWebGLCellView.prototype.getTotalHeight = function(model) {
+        return model.getOncoprintHeight() + getColumnLabelsHeight(this);
+    }
+
+    OncoprintWebGLCellView.prototype.getVisibleAreaHeight = function(model) {
+        return model.getCellViewHeight() + getColumnLabelsHeight(this);
     }
 
     OncoprintWebGLCellView.prototype.setCellPaddingOn = function(model) {

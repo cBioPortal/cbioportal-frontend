@@ -322,7 +322,7 @@ var Oncoprint = (function () {
         if (oncoprint.model.rendering_suppressed_depth > 0) {
             return;
         }
-        oncoprint.$legend_div.css({'top': oncoprint.cell_view.getHeight(oncoprint.model) + 30});
+        oncoprint.$legend_div.css({'top': oncoprint.cell_view.getVisibleAreaHeight(oncoprint.model) + 30});
     };
     var setLegendTopAfterTimeout = function (oncoprint) {
         if (oncoprint.model.rendering_suppressed_depth > 0) {
@@ -335,7 +335,7 @@ var Oncoprint = (function () {
     };
 
     var setHeight = function(oncoprint) {
-        oncoprint.$ctr.css({'min-height': oncoprint.cell_view.getHeight(oncoprint.model) + Math.max(oncoprint.$legend_div.outerHeight(), (oncoprint.$minimap_div.is(":visible") ? oncoprint.$minimap_div.outerHeight() : 0)) + 30});
+        oncoprint.$ctr.css({'min-height': oncoprint.cell_view.getVisibleAreaHeight(oncoprint.model) + Math.max(oncoprint.$legend_div.outerHeight(), (oncoprint.$minimap_div.is(":visible") ? oncoprint.$minimap_div.outerHeight() : 0)) + 30});
     };
 
     var resizeAndOrganize = function (oncoprint, onComplete) {
@@ -378,11 +378,11 @@ var Oncoprint = (function () {
     };
 
     var maxOncoprintScrollLeft = function(oncoprint) {
-        return Math.max(0, oncoprint.cell_view.getTotalWidth(oncoprint.model) - oncoprint.cell_view.getWidth());
+        return Math.max(0, oncoprint.cell_view.getTotalWidth(oncoprint.model) - oncoprint.cell_view.getVisibleAreaWidth());
     };
 
     var maxOncoprintScrollTop = function(oncoprint) {
-        return Math.max(0, oncoprint.cell_view.getHeight(oncoprint.model) - oncoprint.model.getCellViewHeight());
+        return Math.max(0, oncoprint.cell_view.getTotalHeight(oncoprint.model)-oncoprint.cell_view.getVisibleAreaHeight(oncoprint.model));
     };
 
     var maxDummyScrollDivScroll = function(oncoprint) {
@@ -397,7 +397,7 @@ var Oncoprint = (function () {
             return;
         }
         if (visible) {
-            this.$minimap_div.css({'display': 'block', 'top': this.cell_view.getHeight(this.model) + 30, 'left': $(this.ctr_selector).width() - this.$minimap_div.outerWidth() - 10});
+            this.$minimap_div.css({'display': 'block', 'top': this.cell_view.getVisibleAreaHeight(this.model) + 30, 'left': $(this.ctr_selector).width() - this.$minimap_div.outerWidth() - 10});
         } else {
             this.$minimap_div.css('display', 'none');
             executeMinimapCloseCallbacks(this);
@@ -763,7 +763,7 @@ var Oncoprint = (function () {
             return;
         }
         // Zoom
-        var zoom_x = this.model.getHorzZoomToFitNumCols(this.cell_view.getWidth(), num_cols);
+        var zoom_x = this.model.getHorzZoomToFitNumCols(this.cell_view.getVisibleAreaWidth(), num_cols);
         this.setZoom(zoom_x, zoom_y);
         // Scroll
         var scroll_left = Math.min(col * (this.model.getCellWidth() + this.model.getCellPadding()), maxOncoprintScrollLeft(this));

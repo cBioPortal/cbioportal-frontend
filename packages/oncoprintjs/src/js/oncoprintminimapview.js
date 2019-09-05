@@ -469,7 +469,7 @@ var OncoprintMinimapView = (function () {
                     var render_rect;
                     var zoom = getZoom(self, model);
                     var max_num_cols = model.getIdOrder().length;
-                    var min_num_cols = Math.ceil(cell_view.getWidth() / (model.getCellWidth(true) + model.getCellPadding(true, true)));
+                    var min_num_cols = Math.ceil(cell_view.getVisibleAreaWidth() / (model.getCellWidth(true) + model.getCellPadding(true, true)));
                     var max_height = model.getOncoprintHeight(true) * zoom.y;
                     var min_height = model.getCellViewHeight() * zoom.y;
                     var drag_start_right_col = drag_start_rect.col + drag_start_rect.num_cols;

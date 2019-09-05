@@ -1,6 +1,7 @@
 # Created by https://www.gitignore.io
 
-dist
+dist/*
+!dist/.gitkeep
 
 ### Node ###
 # Logs
