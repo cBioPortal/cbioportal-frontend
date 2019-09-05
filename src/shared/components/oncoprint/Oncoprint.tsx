@@ -1,5 +1,5 @@
 import * as React from "react";
-import OncoprintJS, {TrackId, CustomTrackOption, TrackSortDirection} from "oncoprintjs";
+import OncoprintJS, {TrackId, CustomTrackOption, TrackSortDirection, InitParams} from "oncoprintjs";
 import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
@@ -145,8 +145,7 @@ export interface IOncoprintProps {
     heatmapTracksOrder?:{[trackGroupIndex:number]:string[]}; // track keys
     divId:string;
     width:number;
-    initCellWidth?:number;
-    initCellPadding?:number;
+    initParams?:InitParams;
     caseLinkOutInTooltips:boolean;
 
     molecularProfileIdToMolecularProfile?:{[molecularProfileId:string]:MolecularProfile};
@@ -219,10 +218,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private refreshOncoprint(props:IOncoprintProps) {
         if (!this.oncoprint) {
             // instantiate new one
-            this.oncoprint = new OncoprintJS<any>(`#${props.divId}`, props.width, {
-                init_cell_width: props.initCellWidth,
-                init_cell_padding: props.initCellPadding
-            });
+            this.oncoprint = new OncoprintJS<any>(`#${props.divId}`, props.width, props.initParams)
             this.oncoprint.setTrackGroupLegendOrder([GENETIC_TRACK_GROUP_INDEX, CLINICAL_TRACK_GROUP_INDEX]);
             (window as any).frontendOnc = this.oncoprint;
             if (props.oncoprintRef) {

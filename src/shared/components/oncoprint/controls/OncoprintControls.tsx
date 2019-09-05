@@ -903,6 +903,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
             <div className="btn btn-default oncoprint__zoom-controls">
                 <DefaultTooltip
                     overlay={<span>Zoom out of oncoprint.</span>}
+                    placement="top"
                 >
                     <div
                         onClick={this.onZoomOutClick}
@@ -912,6 +913,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 </DefaultTooltip>
                 <DefaultTooltip
                     overlay={<span>Zoom in/out of oncoprint.</span>}
+                    placement="top"
                 >
                     <div style={{width:"90px"}}>
                         <Slider
@@ -948,6 +950,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
                 <DefaultTooltip
                     overlay={<span>Zoom in to oncoprint.</span>}
+                    placement="top"
                 >
                     <div
                         onClick={this.onZoomInClick}
