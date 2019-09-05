@@ -354,10 +354,10 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             thisLineData = _.sortBy(thisLineData, d=>d.x);
             // interpolate missing y values
             // take out anything from the left and right that dont have data - we'll only interpolate points with data to their left and right
-            while (thisLineData.length > 0 && thisLineData[0].y === undefined) {
+            while (thisLineData.length > 0 && thisLineData[0].mutationStatus !== MutationStatus.MUTATED_WITH_VAF) {
                 thisLineData.shift();
             }
-            while (thisLineData.length > 0 && thisLineData[thisLineData.length-1].y === undefined) {
+            while (thisLineData.length > 0 && thisLineData[thisLineData.length-1].mutationStatus !== MutationStatus.MUTATED_WITH_VAF) {
                 thisLineData.pop();
             }
             if (thisLineData.length === 0) {
@@ -421,21 +421,20 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         if (this.tooltipOnPoint) {
             // show tooltip when hovering a point
             let vafExplanation:string;
-            if (datum.mutationStatus === undefined) {
-                vafExplanation = `VAF: ${datum.y.toFixed(2)}`;
-            } else {
-                switch (datum.mutationStatus) {
-                    case MutationStatus.MUTATED_BUT_NO_VAF:
-                        vafExplanation = `Mutated, but we don't have VAF data.`;
-                        break;
-                    case MutationStatus.PROFILED_BUT_NOT_MUTATED:
-                        vafExplanation = `Not mutated (VAF: 0)`;
-                        break;
-                    case MutationStatus.NOT_PROFILED:
-                    default:
-                        vafExplanation = `${datum.sampleId} is not sequenced for ${datum.hugoGeneSymbol} mutations.`;
-                        break;
-                }
+            switch (datum.mutationStatus) {
+                case MutationStatus.MUTATED_WITH_VAF:
+                    vafExplanation = `VAF: ${datum.y.toFixed(2)}`;
+                    break;
+                case MutationStatus.MUTATED_BUT_NO_VAF:
+                    vafExplanation = `Mutated, but we don't have VAF data.`;
+                    break;
+                case MutationStatus.PROFILED_BUT_NOT_MUTATED:
+                    vafExplanation = `Not mutated (VAF: 0)`;
+                    break;
+                case MutationStatus.NOT_PROFILED:
+                default:
+                    vafExplanation = `${datum.sampleId} is not sequenced for ${datum.hugoGeneSymbol} mutations.`;
+                    break;
             }
             sampleSpecificSection = (
                 <>
@@ -659,7 +658,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     height:this.svgHeight,
                     width:"100%"
                 }}>
-                    No mutations selected.
+                    No VAF data to show.
                 </div>
             );
         }
