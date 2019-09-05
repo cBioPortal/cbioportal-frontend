@@ -941,6 +941,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 profiles.map(profile=>profile.molecularAlterationType)
             ).filter(type=>!!dataTypeToDisplayType[type]); // only show profiles of the type we want to show
 
+            // if no gene sets are queried, remove gene set profile from dataTypeIds
+            if (this.props.store.genesets.result!.length === 0 && dataTypeIds.includes("GENESET_SCORE")) {
+                    _.remove(dataTypeIds, function(n) {
+                        return n === "GENESET_SCORE";
+                      });
+            }
+
             if (this.clinicalAttributeOptions.result!.length) {
                 // add "clinical attribute" to list if we have any clinical attribute options
                 dataTypeIds.push(CLIN_ATTR_DATA_TYPE);
