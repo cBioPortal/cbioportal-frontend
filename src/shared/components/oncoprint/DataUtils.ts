@@ -285,7 +285,7 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
     trackDatum.study_id = case_.studyId;
 
     // remove data points of which `value` is NaN
-    const dataWithValue =  _.filter(data, (d) => isNaN(d.value));
+    const dataWithValue =  _.filter(data, (d) => !isNaN(d.value));
 
     if (!dataWithValue || !dataWithValue.length) {
         trackDatum.profile_data = null;
