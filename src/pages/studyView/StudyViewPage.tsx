@@ -42,8 +42,6 @@ import AppConfig from "appConfig";
 import SocialAuthButton from "../../shared/components/SocialAuthButton";
 import {ServerConfigHelpers} from "../../config/config";
 import { getStudyViewTabId } from './StudyViewUtils';
-import InfoBeacon from "shared/components/infoBeacon/InfoBeacon";
-import {WrappedTour} from "shared/components/wrappedTour/WrappedTour";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -163,17 +161,18 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     get groupsButton() {
         return (
             <>
-                <If condition={!isWebdriver()}>
-                    <InfoBeacon
-                        top={-15}
-                        right={45}
-                        interaction={'mouseover'}
-                        color={'green'}
-                        id={'groupComparison1'}
-                    >
-                        <WrappedTour/>
-                    </InfoBeacon>
-                </If>
+                {/* MODEL FOF USER OF INFO BEACON.  YOU NEED TO CUSTOMIZE <WrappedTour> COMPONENT FOR USE CASE */}
+                {/*<If condition={!isWebdriver()}>*/}
+                {/*    <InfoBeacon*/}
+                {/*        top={-15}*/}
+                {/*        right={45}*/}
+                {/*        interaction={'mouseover'}*/}
+                {/*        color={'green'}*/}
+                {/*        id={'groupComparison1'}*/}
+                {/*    >*/}
+                {/*        <WrappedTour/>*/}
+                {/*    </InfoBeacon>*/}
+                {/*</If>*/}
                 <DefaultTooltip
                     visible={this.showGroupsTooltip}
                     trigger={["click"]}
