@@ -23,7 +23,7 @@ import MutationStatusColumnFormatter from "./column/MutationStatusColumnFormatte
 import ValidationStatusColumnFormatter from "./column/ValidationStatusColumnFormatter";
 import StudyColumnFormatter from "./column/StudyColumnFormatter";
 import {ICosmicData} from "shared/model/Cosmic";
-import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
+import AnnotationColumnFormatter, {IAnnotation} from "./column/AnnotationColumnFormatter";
 import ExonColumnFormatter from "./column/ExonColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {IHotspotDataWrapper} from "shared/model/CancerHotspots";
@@ -47,11 +47,12 @@ import {IColumnVisibilityControlsProps} from "../columnVisibilityControls/Column
 import MobxPromise from "mobxpromise";
 import { VariantAnnotation } from "public-lib/api/generated/GenomeNexusAPI";
 import HgvscColumnFormatter from "./column/HgvscColumnFormatter";
-import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
+import {CancerGene, Query} from "public-lib/api/generated/OncoKbAPI";
 import GnomadColumnFormatter from "./column/GnomadColumnFormatter";
 import ClinVarColumnFormatter from "./column/ClinVarColumnFormatter";
 import autobind from "autobind-decorator";
 import DbsnpColumnFormatter from "./column/DbsnpColumnFormatter";
+import {getEvidenceQuery} from "../../lib/OncoKbUtils";
 
 
 export interface IMutationTableProps {
@@ -491,6 +492,41 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 userEmailAddress: this.props.userEmailAddress,
                 studyIdToStudy: this.props.studyIdToStudy
             })),
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string)=>{
+                (window as any).data = this.props.oncoKbData;
+                let ret = false;
+                switch (filterStringUpper) {
+                    case "HOTSPOT":
+                        const annotation:IAnnotation = AnnotationColumnFormatter.getData(
+                            d,
+                            this.props.oncoKbCancerGenes,
+                            this.props.hotspotData,
+                            this.props.myCancerGenomeData,
+                            this.props.oncoKbData,
+                            this.props.civicGenes,
+                            this.props.civicVariants,
+                            this.props.studyIdToStudy);
+
+                        ret = annotation.isHotspot;
+                        break;
+                    case "ONCOGENIC":
+                        if (this.props.oncoKbData &&
+                            this.props.oncoKbData.result &&
+                            !(this.props.oncoKbData.result instanceof Error) &&
+                            this.props.oncoKbData.result.indicatorMap) {
+
+                            const evidenceQuery = getEvidenceQuery(d[0], this.props.oncoKbData.result);
+                            if (evidenceQuery) {
+                                const indicator = this.props.oncoKbData.result.indicatorMap[evidenceQuery.id];
+                                if (indicator) {
+                                    ret = indicator.oncogenic.toLowerCase().trim().includes("oncogenic");
+                                }
+                            }
+                        }
+                        break;
+                }
+                return ret;
+            },
             download:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.download(d,
                     this.props.oncoKbCancerGenes,
