@@ -1172,7 +1172,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     @computed get mutationDataCanBeShown() {
-        return !!(this.mutationDataExists.result && this.potentialViewType !== PotentialViewType.None);
+        return !!(this.mutationDataExists.result && this.potentialViewType !== PotentialViewType.None && this.potentialViewType !== PotentialViewType.LimitVal);
     }
 
     @computed get mutationDataShown() {
