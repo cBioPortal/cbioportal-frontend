@@ -484,14 +484,22 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                             {this.legend}
                             {this.props.horizontal && <VictoryAxis
                                 domain={this.plotDomainX}
-                                orientation="bottom"
-                                offsetY={50}
+                                orientation="top"
+                                offsetY={80}
                                 crossAxis={false}
                                 tickCount={NUM_AXIS_TICKS}
                                 tickFormat={this.tickFormatX}
-                                axisLabelComponent={<VictoryLabel dy={25}/>}
+                                axisLabelComponent={<VictoryLabel dy={-20}/>}
                                 label={this.props.axisLabel}
                             />}
+                            {/* invert the y-axis in horizontal view */}
+                           {this.props.horizontal && <VictoryAxis
+                                orientation="left"
+                                invertAxis={true}
+                                dependentAxis={true}
+                                tickFormat={() => ''}
+                                style={{ axis: {stroke: "none"}, ticks: {stroke: "none"}, tickLabels: {stroke: "none"} }}
+                           />}
                            {!this.props.horizontal && <VictoryAxis
                                 domain={this.plotDomainY}
                                 offsetX={50}
