@@ -1389,7 +1389,7 @@ describe("DataUtils", ()=>{
             {value:NaN},
             {value:NaN}
            ];
-           const partialTrackDatum = {};
+           const partialTrackDatum = {} as ITreatmentHeatmapTrackDatum;
            fillHeatmapTrackDatum<ITreatmentHeatmapTrackDatum, "treatment_id">(
             partialTrackDatum,
             "treatment_id",
@@ -1397,8 +1397,8 @@ describe("DataUtils", ()=>{
             {patientId:"patient", studyId:"study"} as Sample,
             data,
             "DESC"
-           )
-           assert.isTrue(partialTrackDatum.na)
+           );
+           assert.isTrue(partialTrackDatum.na);
        });
 
        it('Prefers largest non-threshold absolute value when no sort order provided', () => {
