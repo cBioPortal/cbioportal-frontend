@@ -359,7 +359,6 @@ th.reactable-header-sort-asc:after {
 
 #mainColumn {
   padding-top: $gutterWidth;
-  width: 100%;
 }
 
 .fixedWidth {
@@ -491,6 +490,7 @@ h3 {
     flex:1;
     padding-left:0;
     min-height:80vh;
+    max-width: 100%;
   }
 
   &.noMargin {
@@ -553,8 +553,7 @@ h3.hr {
 }
 
 .inlineBlock {
-  float: right;
-  overflow: hidden;
+  display:inline-block;
 }
 
 .noOqlWarning {
