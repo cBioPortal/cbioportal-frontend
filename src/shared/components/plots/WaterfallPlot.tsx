@@ -101,7 +101,7 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                             mutation: (props: any) => {
 
                                 // swap x and y label pos when in horizontal mode
-                                if (this.props.horizontal && !props.datum.search_label) {
+                                if (this.props.horizontal && !props.datum.searchLabel) {
                                     const x = props.x;
                                     props.x = props.y;
                                     props.y = x;
@@ -421,7 +421,7 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
 
         const searchLabels = _.cloneDeep(dataPoints);
         // add marker field to search label
-        _.each(searchLabels, (o) => o.search_label = true);
+        _.each(searchLabels, (o) => o.searchLabel = true);
 
         const range = this.props.horizontal ? this.plotDomainX : this.plotDomainY;
         const min_value = range[0];
