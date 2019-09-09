@@ -231,6 +231,25 @@ export function generateCnaData(unfilteredCaseAggregatedData?: CaseAggregatedDat
         generateSampleAlterationDataByGene(unfilteredCaseAggregatedData, sampleFilter) : {};
 }
 
+export function generateOtherMolecularProfileData(molecularProfileId:string[], unfilteredCaseAggregatedData?: CaseAggregatedData<ExtendedAlteration>):
+    {[key: string]: ExtendedAlteration[]}
+{
+    const sampleFilter = (alteration: ExtendedAlteration) => {
+        return molecularProfileId.includes(alteration.molecularProfileId);
+    };
+
+    return unfilteredCaseAggregatedData ?
+        generateSampleAlterationDataByGene(unfilteredCaseAggregatedData, sampleFilter) : {};
+}
+
+export function generateOtherMolecularProfileDownloadData(sampleAlterationDataByGene: {[key: string]: ExtendedAlteration[]},
+                                             samples: Sample[] = [],
+                                             genes: Gene[] = []): string[][]
+{
+    return sampleAlterationDataByGene ?
+        generateDownloadData(sampleAlterationDataByGene, samples, genes) : [];
+}
+
 export function generateSampleAlterationDataByGene(unfilteredCaseAggregatedData: CaseAggregatedData<ExtendedAlteration>,
                                                    sampleFilter?: (alteration: ExtendedAlteration) => boolean): {[key: string]: ExtendedAlteration[]}
 {
@@ -249,7 +268,6 @@ export function generateSampleAlterationDataByGene(unfilteredCaseAggregatedData:
             }
         });
     });
-
     return sampleDataByGene;
 }
 
@@ -458,4 +476,25 @@ export function hasValidMutationData(sampleAlterationDataByGene: {[key: string]:
 function extractMutationValue(alteration: ExtendedAlteration)
 {
     return alteration.proteinChange;
+}
+
+export function decideMolecularProfileSortingOrder(profileType: MolecularProfile['molecularAlterationType']) {
+    switch (profileType) {
+        case "MUTATION_EXTENDED":
+            return 1;
+        case "COPY_NUMBER_ALTERATION":
+            return 2;
+        case "GENESET_SCORE":
+            return 3;
+        case "MRNA_EXPRESSION":
+            return 4;
+        case "METHYLATION":
+            return 5;
+        case "METHYLATION_BINARY":
+            return 6;
+        case "PROTEIN_LEVEL":
+            return 7;
+        default:
+            return Number.MAX_VALUE;
+    }
 }
