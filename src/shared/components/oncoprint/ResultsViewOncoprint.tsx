@@ -37,6 +37,7 @@ import autobind from "autobind-decorator";
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
+import { selectDisplayValue } from "./DataUtils";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -101,6 +102,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable showClinicalTrackLegends:boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
     @observable showOqlInLabels = false;
+
+    @observable selectedTreatmentsFromUrl:string[] = [];
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
@@ -378,6 +381,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     return self.horzZoom;
                 }
             },
+            get selectedTreatmentsInit() {
+                return self.selectedTreatmentsFromUrl;
+            }
         });
     }
 
@@ -623,6 +629,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @action private initFromUrlParams(paramsMap:any) {
         if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
             this.columnMode = (paramsMap[SAMPLE_MODE_URL_PARAM] && paramsMap[SAMPLE_MODE_URL_PARAM]==="true") ? "sample" : "patient";
+        }
+        if (paramsMap[TREATMENT_LIST_URL_PARAM]) {
+            this.selectedTreatmentsFromUrl = paramsMap[TREATMENT_LIST_URL_PARAM].split(";");
         }
         if (paramsMap[HEATMAP_TRACKS_URL_PARAM]) {
             const groups = paramsMap[HEATMAP_TRACKS_URL_PARAM].split(";").map((x:string)=>x.split(","));
