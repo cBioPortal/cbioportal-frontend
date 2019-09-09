@@ -4,7 +4,7 @@ import {Button, ButtonGroup} from "react-bootstrap";
 import CustomDropdown from "./CustomDropdown";
 import ReactSelect from "react-select1";
 import {MobxPromise} from "mobxpromise";
-import {action, computed, IObservableObject, observable, ObservableMap, reaction, toJS} from "mobx";
+import {action, computed, IObservableObject, observable, ObservableMap, reaction, toJS, autorun} from "mobx";
 import _ from "lodash";
 import {SortMode} from "../ResultsViewOncoprint";
 import {Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
@@ -29,6 +29,7 @@ import {Treatment} from "shared/api/generated/CBioPortalAPIInternal";
 import TextIconArea, { ITextIconAreaItemProps } from "shared/components/textIconArea/TextIconArea";
 import { extractTreatmentSelections } from "../OncoprintUtils";
 import CheckedSelect from "shared/components/react-select-checked-temp/lib/elements/CheckedSelect";
+import { isUndefined } from "util";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -114,6 +115,7 @@ export interface IOncoprintControlsState {
     clusterHeatmapButtonActive?:boolean;
     hideClusterHeatmapButton?:boolean;
     hideHeatmapMenu?:boolean;
+    selectedTreatmentsInit?:string[];
 
     customDriverAnnotationBinaryMenuLabel?:string;
     customDriverAnnotationTiersMenuLabel?:string;
@@ -184,6 +186,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     @observable heatmapGenesReady = false;
     @observable private _selectedTreatmentOptionsObsArray:ISelectOption[] = [];
     private textareaTreatmentText = "";
+    private initSelectedTreatments:any;
 
     constructor(props:IOncoprintControlsProps) {
         super(props);
@@ -207,6 +210,18 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         this.onHorzZoomSliderChange = this.onHorzZoomSliderChange.bind(this);
         this.onHorzZoomSliderSet = this.onHorzZoomSliderSet.bind(this);
         this.onSetHorzZoomTextInput = this.onSetHorzZoomTextInput.bind(this);
+
+        // add pre-selected treatments (passed in via URL in ResultsViewOncoprint) to selected treatments
+        this.initSelectedTreatments = autorun(() => {
+            const selectionMap = this.treatmentOptionsByValueMap;
+            if (_.keys(selectionMap).length > 0) {
+                const initTreatmentOpts = this.props.state.selectedTreatmentsInit ?
+                    this.props.state.selectedTreatmentsInit.map((treatmentId) => selectionMap[treatmentId])
+                    : [];
+                const allTreatments = this._selectedTreatmentOptionsObsArray.concat(initTreatmentOpts);
+                this._selectedTreatmentOptionsObsArray = _.unionBy(allTreatments, d => d.id);
+            }
+        });
 
         this.horzZoomSliderState = props.state.horzZoom;
         reaction(()=>this.props.state.horzZoom,
@@ -482,11 +497,16 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     }
 
     @autobind
+    @action
     private onSelectTreatments(selectedElements:any[]) {
         this._selectedTreatmentOptionsObsArray = selectedElements;
     }
 
-    @computed get selectedTreatments() {
+    @computed get selectedTreatments():ISelectOption[] {
+        return this._selectedTreatmentOptionsObsArray;
+    }
+
+    @computed get selectedTreatmentsJS() {
         return toJS(this._selectedTreatmentOptionsObsArray);
     }
 
@@ -564,7 +584,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     name="treatment-select"
                                     placeholder="Search for Treatments..."
                                     options={this.treatmentSelectOptions}
-                                    value={this.selectedTreatments}
+                                    value={this.selectedTreatmentsJS}
                                     onChange={this.onSelectTreatments}
                                     addAllTitle={"Select all"}
                                     />
