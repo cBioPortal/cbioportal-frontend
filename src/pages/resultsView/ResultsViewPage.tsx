@@ -476,7 +476,7 @@ export default class ResultsViewPage extends React.Component<
                         store.selectedMolecularProfiles.isComplete &&
                         store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.isComplete );
                         
-                    return <MSKTab key={13} id={ResultsViewTab.PATHWAY_MAPPER} linkText={'PathwayMapper'}>
+                    return <MSKTab key={13} id={ResultsViewTab.PATHWAY_MAPPER} linkText={'Pathways'}>
                         {
                                 showPM ?
                                 (<ResultsViewPathwayMapper store={store} appStore={this.props.appStore} initStore={initStore}/>):

@@ -23,7 +23,7 @@ export enum ResultsViewTab {
     SURVIVAL="survival",
     CN_SEGMENTS="cnSegments",
     NETWORK="network",
-    PATHWAY_MAPPER="pathwayMapper",
+    PATHWAY_MAPPER="pathways",
     EXPRESSION="expression",
     DOWNLOAD="download"
 }
@@ -49,7 +49,7 @@ export function parseConfigDisabledTabs(configDisabledTabsParam:string){
         "survival":ResultsViewTab.SURVIVAL,
         "IGV":ResultsViewTab.CN_SEGMENTS,
         "network":ResultsViewTab.NETWORK,
-        "pathwayMapper":ResultsViewTab.PATHWAY_MAPPER,
+        "pathways":ResultsViewTab.PATHWAY_MAPPER,
         "expression":ResultsViewTab.EXPRESSION,
         "download":ResultsViewTab.DOWNLOAD
     };
