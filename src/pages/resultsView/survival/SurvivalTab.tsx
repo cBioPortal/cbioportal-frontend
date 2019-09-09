@@ -22,11 +22,11 @@ export interface ISurvivalTabProps {
 const analysisGroups = [{
     value:ALTERED_GROUP_VALUE,
     color: "red",
-    legendText: "Cases with Alteration(s) in Query Gene(s)"
+    name: "Cases with Alteration(s) in Query Gene(s)"
 },{
     value: UNALTERED_GROUP_VALUE,
     color: "blue",
-    legendText: "Cases without Alteration(s) in Query Gene(s)"
+    name: "Cases without Alteration(s) in Query Gene(s)"
 }];
 
 @observer
