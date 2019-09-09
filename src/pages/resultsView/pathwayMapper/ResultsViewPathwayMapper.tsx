@@ -50,6 +50,7 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     @observable
     activeToasts: React.ReactText[];
 
+
     // This accumulates valid genes
     validGenesAccumulator: {[gene: string]: boolean};
 
@@ -155,13 +156,18 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
     }
 
     @computed get storeForAllData(){
+        // Currently Pathways (PathwayMapper) tab must be active, otherwise; all toasts must be closed.
+        if(this.props.store.tabId !== ResultsViewTab.PATHWAY_MAPPER){
+            this.activeToasts.length = 0;
+            toast.dismiss();
+            return null;
+        }
         if(this.validNonQueryGenes.isComplete && this.validNonQueryGenes.result.length > 0){
             const tId = toast("Alteration data of genes not listed in gene list might take a while to load!",
                               {autoClose: false, position: "bottom-left"});
             this.activeToasts.push(tId);
             return this.props.initStore(this.props.appStore, this.validNonQueryGenes.result.join(" "));
         }
-
     }
 
     @computed get validGenes(){
