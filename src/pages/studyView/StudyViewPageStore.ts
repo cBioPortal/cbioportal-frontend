@@ -974,7 +974,7 @@ export class StudyViewPageStore {
                 value: SELECTED_ANALYSIS_GROUP_VALUE,
                 // In the initial load when no case selected(the same affect of all cases selected), the curve should be shown as blue instead of red
                 color: STUDY_VIEW_CONFIG.colors.theme.unselectedGroup,
-                legendText: this.chartsAreFiltered ? "Selected patients" : "All patients"
+                name: this.chartsAreFiltered ? "Selected patients" : "All patients"
             }] as AnalysisGroup[]
         }
     }
