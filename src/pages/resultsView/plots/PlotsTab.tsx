@@ -2075,7 +2075,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             return (
                 <div>
                     <i className="fa fa-exclamation-triangle text-danger" />&nbsp;
-                    <span>You attempt to visualize treatment profile data, but did not select any treatments for visualization. Please add treatment profile heatmap tracks in OncoPrint tab to analyze treatments in the Plots tab.</span>
+                    <span>To visualize treatment response data, you must first visit the OncoPrint tab and use the "Heatmap" menu to add treatment response tracks to the OncoPrint. Any treatments added to the OncoPrint will then be available on this tab for visualization.</span>
                 </div>
             )
         }
