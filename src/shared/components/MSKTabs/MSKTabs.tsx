@@ -53,10 +53,6 @@ export class DeferredRender extends React.Component<{ className:string, loadingS
 
 export class MSKTab extends React.Component<IMSKTabProps,{}> {
 
-    constructor(props: IMSKTabProps){
-        super(props);
-    }
-
     public div:HTMLDivElement;
 
     componentDidMount(){
@@ -79,7 +75,7 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
     render(){
         return (
             <div
-                ref={(div:HTMLDivElement)=>this.div=div}
+                ref={this.assignRef}
                 className={classnames({ 'msk-tab':true, 'hiddenByPosition':!!this.props.inactive  }, this.props.className )}
             >
                 {this.props.children}
