@@ -1981,7 +1981,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get sortOrderImageClassName():string {
         const baseClass = "fa fa-signal";
         const axisClass =  this.isHorizontalWaterfallPlot ? "horz" : "vert";
-        const sortClass =  this.waterfallPlotSortOrder === "ASC" ? "ascending" : "descending";
+        const sortClass =  (!this.isHorizontalWaterfallPlot && this.waterfallPlotSortOrder === "ASC") || (this.isHorizontalWaterfallPlot && this.waterfallPlotSortOrder === "DESC")? "ascending" : "descending";
         return `${baseClass} ${axisClass}-${sortClass}`;
     }
 
