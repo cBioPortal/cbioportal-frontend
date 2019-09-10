@@ -101,7 +101,7 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                             mutation: (props: any) => {
 
                                 // swap x and y label pos when in horizontal mode
-                                if (this.props.horizontal) {
+                                if (this.props.horizontal && !props.datum.searchLabel) {
                                     const x = props.x;
                                     props.x = props.y;
                                     props.y = x;
@@ -420,6 +420,8 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
         const dataPoints = _.filter(this.waterfallPlotData, (d:any) => this.props.highlight!(d) );
 
         const searchLabels = _.cloneDeep(dataPoints);
+        // add marker field to search label
+        _.each(searchLabels, (o) => o.searchLabel = true);
 
         const range = this.props.horizontal ? this.plotDomainX : this.plotDomainY;
         const min_value = range[0];
@@ -484,14 +486,22 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                             {this.legend}
                             {this.props.horizontal && <VictoryAxis
                                 domain={this.plotDomainX}
-                                orientation="bottom"
-                                offsetY={50}
+                                orientation="top"
+                                offsetY={80}
                                 crossAxis={false}
                                 tickCount={NUM_AXIS_TICKS}
                                 tickFormat={this.tickFormatX}
-                                axisLabelComponent={<VictoryLabel dy={25}/>}
+                                axisLabelComponent={<VictoryLabel dy={-20}/>}
                                 label={this.props.axisLabel}
                             />}
+                            {/* invert the y-axis in horizontal view */}
+                           {this.props.horizontal && <VictoryAxis
+                                orientation="left"
+                                invertAxis={true}
+                                dependentAxis={true}
+                                tickFormat={() => ''}
+                                style={{ axis: {stroke: "none"}, ticks: {stroke: "none"}, tickLabels: {stroke: "none"} }}
+                           />}
                            {!this.props.horizontal && <VictoryAxis
                                 domain={this.plotDomainY}
                                 offsetX={50}
