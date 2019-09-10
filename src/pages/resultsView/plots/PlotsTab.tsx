@@ -2213,7 +2213,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             plotElt = (
                                 <PlotsTabBoxPlot
                                     svgId={SVG_ID}
-                                    domainPadding={75}
+                                    domainPadding={60}
                                     boxWidth={this.boxPlotBoxWidth}
                                     axisLabelX={this.horzLabel.result!}
                                     axisLabelY={this.vertLabel.result!}
