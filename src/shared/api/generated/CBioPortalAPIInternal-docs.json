@@ -1808,8 +1808,7 @@
       "required": [
         "counts",
         "entrezGeneId",
-        "hugoGeneSymbol",
-        "pValue"
+        "hugoGeneSymbol"
       ],
       "properties": {
         "counts": {
