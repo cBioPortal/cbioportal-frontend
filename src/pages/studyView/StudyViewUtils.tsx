@@ -61,7 +61,7 @@ export enum UniqueKey {
     WITH_CNA_DATA = "WITH_CNA_DATA"
 }
 
-export type AnalysisGroup = { value: string, color: string, legendText?: string };
+export type AnalysisGroup = { name?:string, value: string, color: string, legendText?: string };
 
 export enum ChartMetaDataTypeEnum {
     CLINICAL = 'CLINICAL',
