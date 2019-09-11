@@ -138,12 +138,10 @@ describe('StudyViewUtils', () => {
             let filter = {
                 clinicalDataEqualityFilters: [{
                     'attributeId': 'attribute1',
-                    'clinicalDataType': "SAMPLE",
                     'values': ['value1']
                 }],
                 clinicalDataIntervalFilters: [{
                     'attributeId': 'attribute2',
-                    'clinicalDataType': "PATIENT",
                     'values': [{
                         'end': 0,
                         'start': 10,
@@ -155,7 +153,7 @@ describe('StudyViewUtils', () => {
                 studyIds: ['study1', 'study2'],
                 sampleIdentifiers: [],
                 sampleIdentifiersSet: {
-                    'SAMPLE_attribute3': [{
+                    'attribute3': [{
                         'sampleId': 'sample 1',
                         'studyId': 'study1'
                     }, {
@@ -177,9 +175,9 @@ describe('StudyViewUtils', () => {
                     studies as any,
                     filter,
                     {
-                        'SAMPLE_attribute1': 'attribute1 name',
-                        'PATIENT_attribute2': 'attribute2 name',
-                        'SAMPLE_attribute3': 'attribute3 name'
+                        'attribute1': 'attribute1 name',
+                        'attribute2': 'attribute2 name',
+                        'attribute3': 'attribute3 name'
                     }
                 ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n' +
                 '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n' +
@@ -207,7 +205,6 @@ describe('StudyViewUtils', () => {
             let filter = {
                 clinicalDataEqualityFilters: [{
                     'attributeId': 'attribute1',
-                    'clinicalDataType': "SAMPLE",
                     'values': ['value1']
                 }]
             } as StudyViewFilterWithSampleIdentifierFilters;
@@ -218,9 +215,9 @@ describe('StudyViewUtils', () => {
                     studies as any,
                     filter,
                     {
-                        'SAMPLE_attribute1': 'attribute1 name',
-                        'PATIENT_attribute2': 'attribute2 name',
-                        'SAMPLE_attribute3': 'attribute3 name'
+                        'attribute1': 'attribute1 name',
+                        'attribute2': 'attribute2 name',
+                        'attribute3': 'attribute3 name'
                     },
                 ).startsWith('test\n\nCreated on'));
         });
@@ -230,7 +227,6 @@ describe('StudyViewUtils', () => {
         const hasInfoFilter = {
             clinicalDataEqualityFilters: [{
                 'attributeId': 'attribute1',
-                'clinicalDataType': "SAMPLE" as 'SAMPLE',
                 'values': ['value1']
             }],
             clinicalDataIntervalFilters: [],

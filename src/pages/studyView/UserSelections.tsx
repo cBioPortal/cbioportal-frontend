@@ -94,7 +94,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
 
         // Pie chart filters
         _.reduce((this.props.filter.clinicalDataEqualityFilters || []), (acc, clinicalDataEqualityFilter) => {
-            const chartMeta = this.props.attributesMetaSet[clinicalDataEqualityFilter.clinicalDataType + '_' + clinicalDataEqualityFilter.attributeId];
+            const chartMeta = this.props.attributesMetaSet[clinicalDataEqualityFilter.attributeId];
             if (chartMeta) {
                 acc.push(
                     <div className={styles.parentGroupLogic}>
@@ -118,7 +118,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
 
         // Bar chart filters
         _.reduce((this.props.filter.clinicalDataIntervalFilters || []), (acc, clinicalDataIntervalFilter) => {
-            const chartMeta = this.props.attributesMetaSet[clinicalDataIntervalFilter.clinicalDataType + '_' + clinicalDataIntervalFilter.attributeId];
+            const chartMeta = this.props.attributesMetaSet[clinicalDataIntervalFilter.attributeId];
             if (chartMeta) {
                 acc.push(
                     <div className={styles.parentGroupLogic}><GroupLogic
