@@ -6,7 +6,7 @@ import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
 import {
     chartMetaComparator,
     getClinicalAttributeOverlay,
-    getClinicalAttributeUniqueKey,
+    getUniqueKey,
     ChartMeta,
     UniqueKey
 } from "../StudyViewUtils";
@@ -79,7 +79,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                 (acc: Column<{ [id: string]: string }>[], chartMeta: ChartMeta, index: number) => {
                     if (chartMeta.clinicalAttribute !== undefined) {
                         acc.push({
-                            ...this.getDefaultColumnConfig(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute), chartMeta.clinicalAttribute.displayName, chartMeta.clinicalAttribute.datatype === "NUMBER"),
+                            ...this.getDefaultColumnConfig(getUniqueKey(chartMeta.clinicalAttribute), chartMeta.clinicalAttribute.displayName, chartMeta.clinicalAttribute.datatype === "NUMBER"),
                             tooltip: getClinicalAttributeOverlay(chartMeta.clinicalAttribute.displayName, chartMeta.description ? chartMeta.description : '', chartMeta.clinicalAttribute ? chartMeta.clinicalAttribute.clinicalAttributeId : undefined)
                         });
                     }

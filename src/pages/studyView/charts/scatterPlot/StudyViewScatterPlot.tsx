@@ -7,9 +7,9 @@ import autobind from "autobind-decorator";
 import {tickFormatNumeral} from "../../../../shared/components/plots/TickUtils";
 import {makeMouseEvents} from "../../../../shared/components/plots/PlotUtils";
 import _ from "lodash";
-import {downsampleByGrouping, DSData} from "../../../../shared/components/plots/downsampleByGrouping";
+import {DSData} from "../../../../shared/components/plots/downsampleByGrouping";
 import ScatterPlotTooltip from "../../../../shared/components/plots/ScatterPlotTooltip";
-import {DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD, getDownsampledData, MAX_DOT_SIZE} from "./StudyViewScatterPlotUtils";
+import {getDownsampledData, MAX_DOT_SIZE} from "./StudyViewScatterPlotUtils";
 import {ClinicalAttribute, SampleIdentifier} from "../../../../shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator"
 import $ from "jquery";

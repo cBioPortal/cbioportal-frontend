@@ -262,17 +262,6 @@
             "type": "number"
           },
           {
-            "name": "clinicalDataType",
-            "in": "query",
-            "description": "Clinical data type of both attributes",
-            "required": true,
-            "type": "string",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
             "in": "body",
             "name": "studyViewFilter",
             "description": "Study view filter",
@@ -1851,13 +1840,6 @@
         "attributeId": {
           "type": "string"
         },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
-        },
         "customBins": {
           "type": "array",
           "items": {
@@ -1910,13 +1892,6 @@
         "attributeId": {
           "type": "string"
         },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
-        },
         "counts": {
           "type": "array",
           "items": {
@@ -1956,13 +1931,6 @@
         "attributeId": {
           "type": "string"
         },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
-        },
         "values": {
           "type": "array",
           "items": {
@@ -1977,13 +1945,6 @@
       "properties": {
         "attributeId": {
           "type": "string"
-        },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
         }
       },
       "title": "ClinicalDataFilter"
@@ -1993,13 +1954,6 @@
       "properties": {
         "attributeId": {
           "type": "string"
-        },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
         },
         "values": {
           "type": "array",
@@ -2220,13 +2174,6 @@
       "properties": {
         "attributeId": {
           "type": "string"
-        },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
         },
         "count": {
           "type": "integer",
