@@ -23,7 +23,7 @@ import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
 import $ from "jquery";
 import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import invertIncreasingFunction, {invertDecreasingFunction} from "../../../shared/lib/invertIncreasingFunction";
-import {MutationStatus} from "./PatientViewMutationsTabUtils";
+import {MutationStatus, mutationTooltip} from "./PatientViewMutationsTabUtils";
 
 
 export interface IVAFLineChartProps {
@@ -405,38 +405,13 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     private tooltipFunction(datum: any) {
-        let sampleSpecificSection:any = null;
-        if (this.tooltipOnPoint) {
-            // show tooltip when hovering a point
-            let vafExplanation:string;
-            switch (datum.mutationStatus) {
-                case MutationStatus.MUTATED_WITH_VAF:
-                    vafExplanation = `VAF: ${datum.y.toFixed(2)}`;
-                    break;
-                case MutationStatus.MUTATED_BUT_NO_VAF:
-                    vafExplanation = `Mutated, but we don't have VAF data.`;
-                    break;
-                case MutationStatus.PROFILED_BUT_NOT_MUTATED:
-                    vafExplanation = `Not mutated (VAF: 0)`;
-                    break;
-                case MutationStatus.NOT_PROFILED:
-                default:
-                    vafExplanation = `${datum.sampleId} is not sequenced for ${datum.hugoGeneSymbol} mutations.`;
-                    break;
-            }
-            sampleSpecificSection = (
-                <>
-                    <span>Sample ID: {datum.sampleId}</span><br/>
-                    <span>{vafExplanation}</span>
-                </>
-            );
-        }
-        return (
-            <div>
-                <span>Gene: {datum.mutation.gene.hugoGeneSymbol}</span><br/>
-                <span>Protein Change: {datum.mutation.proteinChange}</span><br/>
-                {sampleSpecificSection}
-            </div>
+        return mutationTooltip(
+            datum.mutation,
+            this.tooltipOnPoint ? {
+                mutationStatus: datum.mutationStatus,
+                sampleId: datum.sampleId,
+                vaf: datum.y
+            } : undefined
         );
     }
 
