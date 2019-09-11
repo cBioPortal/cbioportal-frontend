@@ -24,6 +24,7 @@ import $ from "jquery";
 import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import invertIncreasingFunction, {invertDecreasingFunction} from "../../../shared/lib/invertIncreasingFunction";
 import {MutationStatus, mutationTooltip} from "./PatientViewMutationsTabUtils";
+import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../shared/lib/StoreUtils";
 
 
 export interface IVAFLineChartProps {
@@ -41,8 +42,7 @@ interface IPoint {
     sampleId:string,
     mutation:Mutation;
     lineData:IPoint[],
-
-    mutationStatus?:MutationStatus
+    mutationStatus:MutationStatus
 }
 
 const LINE_COLOR = "#000000";
@@ -55,6 +55,11 @@ class ScaleCapturer extends React.Component<any, any>{
 
         return <g/>;
     }
+}
+
+function isPointFoundedOnRealVAF(d:{ mutationStatus: MutationStatus }) {
+    return d.mutationStatus === MutationStatus.MUTATED_WITH_VAF ||
+        d.mutationStatus === MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED;
 }
 
 class Tick extends React.Component<any, any>{
@@ -280,27 +285,42 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         for (const mergedMutation of this.props.mutations) {
             // determine data points in line for this mutation
 
-            const mutation = mergedMutation[0];
-
             // first add data points for each mutation
             let thisLineData:Partial<IPoint>[] = [];
             // keep track of which samples have mutations
             const samplesWithData:{[uniqueSampleKey:string]:boolean} = {};
             for (const mutation of mergedMutation) {
                 const sampleKey = mutation.uniqueSampleKey;
-                samplesWithData[sampleKey] = true;
                 const sampleId = mutation.sampleId;
                 const vaf = getVariantAlleleFrequency(mutation);
                 if (vaf !== null) {
-                    // has VAF data - add real point
-                    thisLineData.push({
-                        x: this.sampleIdIndex[sampleId],
-                        y: vaf,
-                        sampleId,
-                        mutation,
-                        lineData:[],
-                        mutationStatus: MutationStatus.MUTATED_WITH_VAF
-                    });
+                    // has VAF data
+
+                    if (mutation.mutationStatus.toLowerCase() === "uncalled") {
+                        if (mutation.tumorAltCount > 0) {
+                            // add point for uncalled mutation with supporting reads
+                            thisLineData.push({
+                                x: this.sampleIdIndex[sampleId],
+                                y: vaf,
+                                sampleId,
+                                mutation,
+                                lineData:[],
+                                mutationStatus: MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED
+                            });
+                            samplesWithData[sampleKey] = true;
+                        }
+                    } else {
+                        // add point for called mutation with VAF data
+                        thisLineData.push({
+                            x: this.sampleIdIndex[sampleId],
+                            y: vaf,
+                            sampleId,
+                            mutation,
+                            lineData:[],
+                            mutationStatus: MutationStatus.MUTATED_WITH_VAF
+                        });
+                        samplesWithData[sampleKey] = true;
+                    }
                 } else {
                     // no VAF data - add point which will be extrapolated
                     thisLineData.push({
@@ -309,8 +329,11 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
                         lineData:[]
                     });
+                    samplesWithData[sampleKey] = true;
                 }
             }
+
+            const mutation = mergedMutation[0];
             // add data points for samples without mutations
             for (const sample of this.props.samples) {
                 if (!(sample.uniqueSampleKey in samplesWithData)) {
@@ -342,10 +365,10 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             thisLineData = _.sortBy(thisLineData, d=>d.x);
             // interpolate missing y values
             // take out anything from the left and right that dont have data - we'll only interpolate points with data to their left and right
-            while (thisLineData.length > 0 && thisLineData[0].mutationStatus !== MutationStatus.MUTATED_WITH_VAF) {
+            while (thisLineData.length > 0 && !isPointFoundedOnRealVAF(thisLineData[0] as IPoint)) {
                 thisLineData.shift();
             }
-            while (thisLineData.length > 0 && thisLineData[thisLineData.length-1].mutationStatus !== MutationStatus.MUTATED_WITH_VAF) {
+            while (thisLineData.length > 0 && !isPointFoundedOnRealVAF(thisLineData[thisLineData.length-1] as IPoint)) {
                 thisLineData.pop();
             }
             if (thisLineData.length === 0) {
