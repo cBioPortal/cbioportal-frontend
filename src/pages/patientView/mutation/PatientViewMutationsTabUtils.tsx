@@ -13,7 +13,7 @@ export function mutationTooltip(
     sampleSpecificInfo?:{
         sampleId:string,
         mutationStatus:MutationStatus,
-        vaf?:number
+        vaf?:number|null|undefined
     }
 ) {
     let sampleSpecificSection:any = null;
@@ -36,10 +36,11 @@ export function mutationTooltip(
                 break;
         }
         sampleSpecificSection = (
-            <>
-                <span>Sample ID: {sampleSpecificInfo.sampleId}</span><br/>
+            [
+                <span>Sample ID: {sampleSpecificInfo.sampleId}</span>,
+                <br/>,
                 <span>{vafExplanation}</span>
-            </>
+            ]
         );
     }
     return (
@@ -47,6 +48,6 @@ export function mutationTooltip(
             <span>Gene: {mutation.gene.hugoGeneSymbol}</span><br/>
             <span>Protein Change: {mutation.proteinChange}</span><br/>
             {sampleSpecificSection}
-    </div>
-);
+        </div>
+    );
 }

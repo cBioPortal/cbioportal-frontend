@@ -22,13 +22,14 @@ import SampleManager from "../../sampleManager";
 import WindowStore from "../../../../shared/components/window/WindowStore";
 import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../../shared/lib/StoreUtils";
 import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";
-import {MutationStatus} from "../PatientViewMutationsTabUtils";
+import {MutationStatus, mutationTooltip} from "../PatientViewMutationsTabUtils";
 import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import Slider from "react-rangeslider";
 import "react-rangeslider/lib/index.css";
 import styles from "./styles.module.scss";
 import PatientViewMutationsDataStore from "../PatientViewMutationsDataStore";
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
+import ReactDOM from "react-dom";
 
 export interface IMutationOncoprintProps {
     store:PatientViewPageStore;
@@ -169,28 +170,18 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     hasColumnSpacing:true,
                     tooltip:(data:IMutationOncoprintTrackDatum[])=>{
                         const d = data[0];
-                        let vafSection:string;
-                        switch (d.mutationStatus) {
-                            case MutationStatus.MUTATED_WITH_VAF:
-                                vafSection = "<span>VAF:"+d.profile_data!.toFixed(2)+"</span>";
-                                break;
-                            case MutationStatus.MUTATED_BUT_NO_VAF:
-                                vafSection = "<span>Mutated, but no VAF data.</span>";
-                                break;
-                            case MutationStatus.PROFILED_BUT_NOT_MUTATED:
-                                vafSection = "<span>Wild type</span>";
-                                break;
-                            case MutationStatus.NOT_PROFILED:
-                            default:
-                                vafSection = "<span>Not sequenced</span>";
-                                break;
-                        }
-                        const html = "<div>"+
-                                        "<span>"+d.mutation.gene.hugoGeneSymbol!+"</span><br/>"+
-                                        "<span>"+d.mutation.proteinChange+"</span><br/>"+
-                                        vafSection +
-                                    "</div>"
-                        ;
+                        const tooltipJSX = mutationTooltip(
+                            d.mutation,
+                            {
+                                sampleId:d.sample!,
+                                mutationStatus:d.mutationStatus,
+                                vaf:d.profile_data
+                            }
+                        );
+                        // convert JSX into HTML string by rendering to dummy element then using innerHTML
+                        const dummyElt = document.createElement("div");
+                        ReactDOM.render(tooltipJSX, dummyElt);
+                        const html = dummyElt.innerHTML;
                         return $(html);
                     },
                     sortDirectionChangeable: false,
