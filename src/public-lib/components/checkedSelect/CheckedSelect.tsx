@@ -1,23 +1,18 @@
 import * as React from "react";
-import * as _ from "lodash";
 import ReactSelect from "react-select";
 import autobind from "autobind-decorator";
 import {computed} from "mobx";
 import {observer} from "mobx-react";
 
+import {CheckBoxType, getOptionLabel, getSelectedValuesMap, Option} from "./CheckedSelectUtils";
 import './checkedSelect.scss';
-
-export type Option = {
-    value: string;
-    label: string | JSX.Element;
-    disabled?: boolean;
-};
 
 type CheckedSelectProps = {
     name?: string;
     onChange: (values: {value: string}[]) => void;
     value: {value: string}[];
     options: Option[];
+    checkBoxType?: CheckBoxType;
     placeholder?: string | JSX.Element;
     reactSelectComponents?: {[componentType: string]: (props: any) => JSX.Element};
     isClearable?: boolean;
@@ -37,12 +32,13 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
         isClearable: false,
         isDisabled: false,
         isAddAllDisabled: false,
-        showControls: true
+        showControls: true,
+        checkBoxType: CheckBoxType.STRING
     };
 
     @computed
-    get valueMap() {
-        return _.keyBy(this.props.value, v => v.value);
+    get selectedValues() {
+        return getSelectedValuesMap(this.props.value);
     }
 
     @computed
@@ -88,15 +84,7 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
     @autobind
     private getOptionLabel(option: Option): JSX.Element
     {
-        let box = "";
-
-        if (option.value in this.valueMap) {
-            box = String.fromCodePoint(9745); // checked box
-        } else {
-            box = String.fromCodePoint(9744); // empty box
-        }
-
-        return <span>{box} {option.label}</span>;
+        return getOptionLabel(option, this.selectedValues, this.props.checkBoxType);
     }
 
     @autobind
