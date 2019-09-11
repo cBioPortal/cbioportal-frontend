@@ -341,20 +341,20 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                                         this.store.hideRestoreSettingsMsg = true;
                                     }
                                    }>&times;</button>
-                            You previously saved layout preferences have been applied. Undo?
+                            Your previously saved layout preferences have been applied.
                             <button className='btn btn-primary btn-sm'
                                     onClick={() => {
                                         this.store.hideRestoreSettingsMsg = true;
                                         this.store.undoUserSettings();
                                     }}
-                                    style={{marginLeft: '10px'}}>Yes
+                                    style={{marginLeft: '10px'}}>Keep Saved Layout
                             </button>
 
                             <button className='btn btn-primary btn-sm'
                                     onClick={() => {
                                         this.store.hideRestoreSettingsMsg = true;
                                     }}
-                                    style={{marginLeft: '10px'}}>No
+                                    style={{marginLeft: '10px'}}>Revert to Previous Layout
                             </button>
                         </div>
                     </div>
