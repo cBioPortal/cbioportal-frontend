@@ -10,7 +10,7 @@ module.exports = {
         libraryTarget: 'commonjs-module'
     },
     plugins: [
-        new WebpackShellPlugin({onBuildStart:['mkdir -p '+path.resolve(__dirname, 'dist'), 'rm -rf '+path.resolve(__dirname, 'dist'), 'mkdir '+path.resolve(__dirname, 'dist')]})
+        new WebpackShellPlugin({onBuildStart:['mkdir -p '+path.resolve(__dirname, 'dist')]})
     ],
     module: {
         rules:[

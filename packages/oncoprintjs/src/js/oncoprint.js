@@ -137,8 +137,8 @@ var Oncoprint = (function () {
         $minimap_div.appendTo($ctr);
 
         $cell_canvas.appendTo($cell_div);
-        $column_label_canvas.appendTo($cell_div);
         $cell_overlay_canvas.appendTo($cell_div);
+        $column_label_canvas.appendTo($cell_div);
         $dummy_scroll_div.appendTo($cell_div);
         $dummy_scroll_div.on("mousemove mousedown mouseup", function(evt) {
             $cell_overlay_canvas.trigger(evt);
@@ -168,26 +168,13 @@ var Oncoprint = (function () {
                 self.$dummy_scroll_div.scrollLeft(self.model.getZoomedColumnLeft(enclosed_ids[0]));
                 self.id_clipboard = enclosed_ids;
             },
-            (function () {
-                var highlight_timeout = null;
-                var highlight_track = null;
-                return function (track_id) {
-                    if (track_id === null) {
-                        highlight_track = null;
-                        self.highlightTrack(null);
-                        clearTimeout(highlight_timeout);
-                    } else {
-                        if (highlight_track !== track_id) {
-                            self.highlightTrack(null);
-                            clearTimeout(highlight_timeout);
-                            highlight_track = track_id;
-                            highlight_timeout = setTimeout(function() {
-                                self.highlightTrack(highlight_track);
-                            }, 250);
-                        }
-                    }
-                };
-            })());
+            function(uid, track_id) {
+                doCellMouseOver(self, uid, track_id);
+            },
+            function(uid, track_id) {
+                doCellClick(self, uid, track_id);
+            }
+        );
 
         this.minimap_view = new OncoprintMinimapView($minimap_div, $minimap_canvas, $minimap_overlay_canvas, this.model, this.cell_view, 150, 150, function(x,y) {
                 self.setScroll(x,y);
@@ -309,6 +296,8 @@ var Oncoprint = (function () {
 
         this.horz_zoom_callbacks = [];
         this.minimap_close_callbacks = [];
+        this.cell_mouse_over_callbacks = [];
+        this.cell_click_callbacks = [];
 
         this.id_clipboard = [];
         this.clipboard_change_callbacks = [];
@@ -616,6 +605,23 @@ var Oncoprint = (function () {
     var executeMinimapCloseCallbacks = function(oncoprint) {
         for (var i=0; i<oncoprint.minimap_close_callbacks.length; i++) {
             oncoprint.minimap_close_callbacks[i]();
+        }
+    };
+
+    var doCellMouseOver = function(oncoprint, uid, track_id) {
+        if (uid !== null) {
+            oncoprint.highlightTrack(track_id);
+        } else {
+            oncoprint.highlightTrack(null);
+        }
+        for (var i=0; i<oncoprint.cell_mouse_over_callbacks.length; i++) {
+            oncoprint.cell_mouse_over_callbacks[i](uid, track_id);
+        }
+    };
+
+    var doCellClick = function(oncoprint, uid, track_id) {
+        for (var i=0; i<oncoprint.cell_click_callbacks.length; i++) {
+            oncoprint.cell_click_callbacks[i](uid, track_id);
         }
     };
 
@@ -1078,6 +1084,14 @@ var Oncoprint = (function () {
         resizeAndOrganizeAfterTimeout(this);
     }
 
+    Oncoprint.prototype.onCellMouseOver = function(callback) {
+        this.cell_mouse_over_callbacks.push(callback);
+    }
+
+    Oncoprint.prototype.onCellClick = function(callback) {
+        this.cell_click_callbacks.push(callback);
+    }
+
     Oncoprint.prototype.toSVG = function(with_background) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
@@ -1172,6 +1186,14 @@ var Oncoprint = (function () {
             return;
         }
         this.label_view.highlightTrack(track_id, this.model);
+    }
+
+    Oncoprint.prototype.setHighlightedIds = function(ids) {
+        if(this.webgl_unavailable || this.destroyed) {
+            return;
+        }
+        this.model.setHighlightedIds(ids);
+        this.cell_view.setHighlightedIds(this.model);
     }
 
     Oncoprint.prototype.getIdOrder = function(all) {
