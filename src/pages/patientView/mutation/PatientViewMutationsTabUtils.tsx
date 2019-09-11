@@ -4,6 +4,7 @@ import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 export enum MutationStatus {
     MUTATED_WITH_VAF,
     MUTATED_BUT_NO_VAF,
+    PROFILED_WITH_READS_BUT_UNCALLED,
     PROFILED_BUT_NOT_MUTATED,
     NOT_PROFILED
 }
@@ -27,8 +28,11 @@ export function mutationTooltip(
             case MutationStatus.MUTATED_BUT_NO_VAF:
                 vafExplanation = `Mutated, but we don't have VAF data.`;
                 break;
+            case MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED:
+                vafExplanation = `Mutation not detected (VAF: ${sampleSpecificInfo.vaf!.toFixed(2)})`;
+                break;
             case MutationStatus.PROFILED_BUT_NOT_MUTATED:
-                vafExplanation = `Not mutated (VAF: 0)`;
+                vafExplanation = `Wild type (VAF: 0)`;
                 break;
             case MutationStatus.NOT_PROFILED:
             default:
