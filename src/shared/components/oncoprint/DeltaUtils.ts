@@ -47,11 +47,22 @@ export function transition(
     transitionHorzZoomToFit(nextProps, prevProps, oncoprint);
     transitionShowClinicalTrackLegends(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
     tryReleaseRendering(nextProps, prevProps, oncoprint);
+    transitionHighlightedIds(nextProps, prevProps, oncoprint);
     if (notKeepingSorted) {
         oncoprint.keepSorted(true);
     }
     if (suppressingRendering) {
         doReleaseRendering(nextProps, oncoprint);
+    }
+}
+
+export function transitionHighlightedIds(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS<any>
+) {
+    if (nextProps.highlightedIds !== prevProps.highlightedIds) {
+        oncoprint.setHighlightedIds(nextProps.highlightedIds || []);
     }
 }
 

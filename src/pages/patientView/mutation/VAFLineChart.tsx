@@ -39,8 +39,7 @@ interface IPoint {
     x:number,
     y:number,
     sampleId:string,
-    proteinChange:string,
-    hugoGeneSymbol:string,
+    mutation:Mutation;
     lineData:IPoint[],
 
     mutationStatus?:MutationStatus
@@ -134,10 +133,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                     this.tooltipOnPoint = false;
                                 }
                                 this.tooltipDatum = datum;
-                                this.props.dataStore.setMouseOverMutation({
-                                    proteinChange: this.tooltipDatum.proteinChange,
-                                    hugoGeneSymbol: this.tooltipDatum.hugoGeneSymbol
-                                });
+                                this.props.dataStore.setMouseOverMutation(this.tooltipDatum.mutation);
                                 return null;
                             })
                         }
@@ -169,10 +165,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                     // click on line
                                     datum = props.data[0];
                                 }
-                                this.props.dataStore.toggleHighlightedMutation({
-                                    proteinChange:datum.proteinChange,
-                                    hugoGeneSymbol:datum.hugoGeneSymbol
-                                });
+                                this.props.dataStore.toggleHighlightedMutation(datum.mutation);
                             })
                         }
                     ];
@@ -202,10 +195,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     p.y >= rectBoundsDataSpace.y[0] && p.y <= rectBoundsDataSpace.y[1];
             });
 
-            this.props.dataStore.setHighlightedMutations(selectedPoints.map(p=>({
-                proteinChange: p.proteinChange,
-                hugoGeneSymbol: p.hugoGeneSymbol
-            })));
+            this.props.dataStore.setHighlightedMutations(selectedPoints.map(p=>p.mutation));
         }
     }
 
@@ -290,8 +280,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         for (const mergedMutation of this.props.mutations) {
             // determine data points in line for this mutation
 
-            const proteinChange = mergedMutation[0].proteinChange;
-            const hugoGeneSymbol = mergedMutation[0].gene.hugoGeneSymbol;
+            const mutation = mergedMutation[0];
 
             // first add data points for each mutation
             let thisLineData:Partial<IPoint>[] = [];
@@ -308,8 +297,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         x: this.sampleIdIndex[sampleId],
                         y: vaf,
                         sampleId,
-                        proteinChange,
-                        hugoGeneSymbol,
+                        mutation,
                         lineData:[],
                         mutationStatus: MutationStatus.MUTATED_WITH_VAF
                     });
@@ -317,7 +305,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     // no VAF data - add point which will be extrapolated
                     thisLineData.push({
                         x: this.sampleIdIndex[sampleId],
-                        sampleId, proteinChange, hugoGeneSymbol,
+                        sampleId, mutation,
                         mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
                         lineData:[]
                     });
@@ -329,13 +317,13 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     if (!isSampleProfiled(
                         sample.uniqueSampleKey,
                         this.props.mutationProfileId,
-                        hugoGeneSymbol,
+                        mutation.gene.hugoGeneSymbol,
                         this.props.coverageInformation
                     )) {
                         // not profiled
                         thisLineData.push({
                             x: this.sampleIdIndex[sample.sampleId],
-                            sampleId: sample.sampleId, proteinChange, hugoGeneSymbol,
+                            sampleId: sample.sampleId, mutation,
                             mutationStatus: MutationStatus.NOT_PROFILED,
                             lineData:[]
                         });
@@ -343,7 +331,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         thisLineData.push({
                             x: this.sampleIdIndex[sample.sampleId],
                             y: 0,
-                            sampleId: sample.sampleId, proteinChange, hugoGeneSymbol,
+                            sampleId: sample.sampleId, mutation,
                             mutationStatus: MutationStatus.PROFILED_BUT_NOT_MUTATED,
                             lineData:[]
                         });
@@ -409,8 +397,8 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         const map = new ComplexKeyMap<IPoint[]>();
         for (const lineData of this.data.lineData) {
             map.set({
-                hugoGeneSymbol: lineData[0].hugoGeneSymbol,
-                proteinChange: lineData[0].proteinChange
+                hugoGeneSymbol: lineData[0].mutation.gene.hugoGeneSymbol,
+                proteinChange: lineData[0].mutation.proteinChange
             }, lineData);
         }
         return map;
@@ -445,8 +433,8 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         }
         return (
             <div>
-                <span>Gene: {datum.hugoGeneSymbol}</span><br/>
-                <span>Protein Change: {datum.proteinChange}</span><br/>
+                <span>Gene: {datum.mutation.gene.hugoGeneSymbol}</span><br/>
+                <span>Protein Change: {datum.mutation.proteinChange}</span><br/>
                 {sampleSpecificSection}
             </div>
         );
@@ -480,14 +468,16 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     @autobind
     private getThickLines() {
         const highlightedMutations = this.props.dataStore.highlightedMutations.slice();
-        if (this.props.dataStore.getMouseOverMutation()) {
-            highlightedMutations.push(this.props.dataStore.getMouseOverMutation()!);
+        const mouseOverMutation = this.props.dataStore.getMouseOverMutation();
+        if (mouseOverMutation) {
+            highlightedMutations.push(mouseOverMutation);
         }
         if (highlightedMutations.length > 0 && this.scale !== null && this.thickLineContainer !== null) {
             return highlightedMutations.map(highlightedMutation=>{
-                const points = this.mutationToLineData.get(
-                    highlightedMutation, ["proteinChange","hugoGeneSymbol"]
-                );
+                const points = this.mutationToLineData.get({
+                    proteinChange: highlightedMutation.proteinChange,
+                    hugoGeneSymbol: highlightedMutation.gene.hugoGeneSymbol
+                });
                 if (!points) {
                     return <g/>
                 }

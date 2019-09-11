@@ -4,23 +4,18 @@ import {action, computed, observable} from "mobx";
 import _ from "lodash";
 import ComplexKeySet from "../../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 
-type MutationId = {
-    proteinChange:string;
-    hugoGeneSymbol:string;
-};
-
-function mutationMatch(d:Mutation[], id:MutationId) {
+function mutationMatch(d:Mutation[], id:Mutation) {
     return d[0].proteinChange === id.proteinChange &&
-        d[0].gene.hugoGeneSymbol === id.hugoGeneSymbol;
+        d[0].gene.hugoGeneSymbol === id.gene.hugoGeneSymbol;
 }
 
-function mutationIdKey(m:MutationId) {
-    return `{ "proteinChange": "${m.proteinChange}", "hugoGeneSymbol": "${m.hugoGeneSymbol}" }`;
+function mutationIdKey(m:Mutation) {
+    return `{ "proteinChange": "${m.proteinChange}", "hugoGeneSymbol": "${m.gene.hugoGeneSymbol}" }`;
 }
 
 export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<Mutation[]> {
-    @observable.ref private mouseOverMutation:Readonly<MutationId>|null = null;
-    private highlightedMutationsMap = observable.map<MutationId>();
+    @observable.ref private mouseOverMutation:Readonly<Mutation>|null = null;
+    private highlightedMutationsMap = observable.map<Mutation>();
     @observable private _onlyShowHighlightedInTable = false;
 
     public getMouseOverMutation() {
@@ -31,7 +26,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         return this._onlyShowHighlightedInTable;
     }
 
-    public setMouseOverMutation(m:Readonly<MutationId>|null) {
+    public setMouseOverMutation(m:Readonly<Mutation>|null) {
         this.mouseOverMutation = m;
     }
 
@@ -40,7 +35,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
     }
 
     @action
-    public toggleHighlightedMutation(m:Readonly<MutationId>) {
+    public toggleHighlightedMutation(m:Readonly<Mutation>) {
         const key = mutationIdKey(m);
         if (this.highlightedMutationsMap.has(key)) {
             this.highlightedMutationsMap.delete(key);
@@ -50,7 +45,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
     }
 
     @action
-    public setHighlightedMutations(muts:Readonly<MutationId[]>) {
+    public setHighlightedMutations(muts:Readonly<Mutation[]>) {
         this.highlightedMutationsMap.clear();
         let count = 0;
         for (const m of muts) {
@@ -59,7 +54,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         }
     }
 
-    @computed public get highlightedMutations():Readonly<MutationId[]> {
+    @computed public get highlightedMutations():Readonly<Mutation[]> {
         return this.highlightedMutationsMap.entries().map(x=>x[1]);
     }
 
