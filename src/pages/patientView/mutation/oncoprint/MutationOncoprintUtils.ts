@@ -18,10 +18,12 @@ export interface IMutationOncoprintTrackSpec extends IGeneHeatmapTrackSpec {
 export function makeMutationHeatmapData(
     samples:Sample[],
     mutations:Mutation[],
+    uncalledMutations:Mutation[],
     coverageInformation:CoverageInformation
 ) {
     const mutationsByKey = _.keyBy(mutations, generateMutationIdByGeneAndProteinChangeAndEvent);
     const mutationsBySample = _.groupBy(mutations, m=>m.uniqueSampleKey);
+    const uncalledMutationsBySample = _.groupBy(uncalledMutations, m=>m.uniqueSampleKey);
 
     return samples.reduce((map, sample)=>{
         const sampleMutations = mutationsBySample[sample.uniqueSampleKey] || [];
@@ -41,6 +43,25 @@ export function makeMutationHeatmapData(
                 uid,
                 mutationStatus: isNaN(profile_data) ? MutationStatus.MUTATED_BUT_NO_VAF : MutationStatus.MUTATED_WITH_VAF
             });
+        }
+
+        const uncalledSampleMutations = uncalledMutationsBySample[sample.uniqueSampleKey] || [];
+        for (const mutation of uncalledSampleMutations) {
+            const uid = generateMutationIdByGeneAndProteinChangeAndEvent(mutation);
+            if ((uid in mutationsByKey) && (mutation.tumorAltCount > 0)) {
+                // only add uncalled data if the mutation is called for some sample, and if theres supporting reads
+                mutationKeys[uid] = true;
+                data.push({
+                    profile_data:mutation.tumorAltCount / (mutation.tumorAltCount + mutation.tumorRefCount),
+                    sample: sample.sampleId,
+                    patient: sample.patientId,
+                    study_id: sample.studyId,
+                    hugo_gene_symbol:"", // not used by us
+                    mutation,
+                    uid,
+                    mutationStatus: MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED
+                });
+            }
         }
 
         const noData = Object.keys(mutationsByKey).filter(key=>!(key in mutationKeys))

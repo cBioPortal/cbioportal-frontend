@@ -137,6 +137,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         await:()=>[
             this.props.store.samples,
             this.props.store.mutationData,
+            this.props.store.uncalledMutationData,
             this.props.store.mutationMolecularProfile,
             this.props.store.coverageInformation,
         ],
@@ -148,6 +149,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             const data = makeMutationHeatmapData(
                 this.props.store.samples.result!,
                 this.props.store.mutationData.result!,
+                this.props.store.uncalledMutationData.result!,
                 this.props.store.coverageInformation.result!
             );
             return Promise.resolve(this.sampleIdOrder.map((sampleId, index)=>{
@@ -156,8 +158,8 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                 return {
                     key: sampleId,
                     label: `${labelNumber}`,
-                    description: `${sampleId} data from ${this.props.store.mutationMolecularProfileId.result!}`,
-                    molecularProfileId: this.props.store.mutationMolecularProfileId.result!,
+                    description: `${sampleId} data from ${profile.molecularProfileId}`,
+                    molecularProfileId: profile.molecularProfileId,
                     molecularAlterationType: profile.molecularAlterationType,
                     datatype: profile.datatype,
                     data: data[sampleId],
