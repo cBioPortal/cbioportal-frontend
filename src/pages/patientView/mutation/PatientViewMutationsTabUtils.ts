@@ -1,6 +1,0 @@
-export enum MutationStatus {
-    MUTATED_WITH_VAF,
-    MUTATED_BUT_NO_VAF,
-    PROFILED_BUT_NOT_MUTATED,
-    NOT_PROFILED
-}
