@@ -74,19 +74,13 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
     @autobind
     private onTableRowClick(d:Mutation[]) {
         if (d.length) {
-            this.dataStore.toggleHighlightedMutation({
-                proteinChange:d[0].proteinChange,
-                hugoGeneSymbol:d[0].gene.hugoGeneSymbol
-            });
+            this.dataStore.toggleHighlightedMutation(d[0]);
         }
     }
     @autobind
     private onTableRowMouseEnter(d:Mutation[]) {
         if (d.length) {
-            this.dataStore.setMouseOverMutation({
-                proteinChange:d[0].proteinChange,
-                hugoGeneSymbol:d[0].gene.hugoGeneSymbol
-            });
+            this.dataStore.setMouseOverMutation(d[0]);
         }
     }
     @autobind
@@ -219,7 +213,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     {this.vafLineChart.component}
                 </div>
                 <hr/>
-                <MutationOncoprint store={this.props.store} sampleManager={this.props.sampleManager}/>
+                <MutationOncoprint store={this.props.store} dataStore={this.dataStore} sampleManager={this.props.sampleManager}/>
                 <hr/>
                 {this.table.component}
             </div>

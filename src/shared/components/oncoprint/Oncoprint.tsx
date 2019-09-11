@@ -154,6 +154,7 @@ export interface IOncoprintProps {
 
     hiddenIds?:string[];
     columnLabels?:{[uid:string]:string};
+    highlightedIds?:string[];
 
     alterationTypesInQuery?:string[];
 
