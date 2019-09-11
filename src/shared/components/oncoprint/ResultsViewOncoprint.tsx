@@ -5,7 +5,8 @@ import {remoteData} from "public-lib/api/remoteData";
 import Oncoprint, {GENETIC_TRACK_GROUP_INDEX, IHeatmapTrackSpec} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
-    IOncoprintControlsState
+    IOncoprintControlsState,
+    ISelectOption
 } from "shared/components/oncoprint/controls/OncoprintControls";
 import {Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {ResultsViewPageStore, AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
@@ -31,13 +32,14 @@ import classNames from 'classnames';
 import FadeInteraction from "public-lib/components/fadeInteraction/FadeInteraction";
 import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import OqlStatusBanner from "../banners/OqlStatusBanner";
-import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
+import {getAnnotatingProgressMessage, treatmentsToSelectOptions} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
 import { selectDisplayValue } from "./DataUtils";
+import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -103,7 +105,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable _onlyShowClinicalLegendForAlteredCases = false;
     @observable showOqlInLabels = false;
 
-    @observable selectedTreatmentsFromUrl:string[] = [];
+    private selectedTreatmentsFromUrl:string[] = [];
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
@@ -690,6 +692,16 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         .join(";");
     }
 
+    private readonly unalteredKeys = remoteData({
+        await:()=>[this.geneticTracks],
+        invoke:async()=>getUnalteredUids(this.geneticTracks.result!)
+    });
+
+    readonly treatmentSelectOptions = remoteData<ISelectOption[]>({
+        await:() => [this.props.store.treatmentsInStudies],
+        invoke:async() => treatmentsToSelectOptions(this.props.store.treatmentsInStudies.result || [])
+    });
+
     @computed get selectedHeatmapProfileAlterationType():string {
         let molecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[this.selectedHeatmapProfile];
         return molecularProfile.molecularAlterationType;
@@ -755,12 +767,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         invoke:async()=>getAlteredUids(this.geneticTracks.result!),
         default: []
     });
-
-    private readonly unalteredKeys = remoteData({
-        await:()=>[this.geneticTracks],
-        invoke:async()=>getUnalteredUids(this.geneticTracks.result!)
-    });
-
 
     @action private onMinimapClose() {
         this.showMinimap = false;
@@ -979,12 +985,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @autobind
     private getControls() {
-        if (this.oncoprint && !this.oncoprint.webgl_unavailable)  {
+        if (this.oncoprint && !this.oncoprint.webgl_unavailable && this.treatmentSelectOptions.isComplete)  {
             return (<FadeInteraction showByDefault={true} show={true}>
                 <OncoprintControls
                     handlers={this.controlsHandlers}
                     state={this.controlsState}
                     store={this.props.store}
+                    treatmentSelectOptions={this.treatmentSelectOptions.result}
+                    selectedTreatmentIds={this.selectedTreatmentsFromUrl}
                 />
             </FadeInteraction>);
         } else {
