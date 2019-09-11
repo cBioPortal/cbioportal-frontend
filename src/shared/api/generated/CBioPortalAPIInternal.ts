@@ -38,8 +38,6 @@ export type ClinicalDataBinCountFilter = {
 export type ClinicalDataBinFilter = {
     'attributeId': string
 
-        'clinicalDataType': "SAMPLE" | "PATIENT"
-
         'customBins': Array < number >
 
         'disableLogScale': boolean
@@ -64,8 +62,6 @@ export type ClinicalDataCountFilter = {
 export type ClinicalDataCountItem = {
     'attributeId': string
 
-        'clinicalDataType': "SAMPLE" | "PATIENT"
-
         'counts': Array < ClinicalDataCount >
 
 };
@@ -82,21 +78,15 @@ export type ClinicalDataEnrichment = {
 export type ClinicalDataEqualityFilter = {
     'attributeId': string
 
-        'clinicalDataType': "SAMPLE" | "PATIENT"
-
         'values': Array < string >
 
 };
 export type ClinicalDataFilter = {
     'attributeId': string
 
-        'clinicalDataType': "SAMPLE" | "PATIENT"
-
 };
 export type ClinicalDataIntervalFilter = {
     'attributeId': string
-
-        'clinicalDataType': "SAMPLE" | "PATIENT"
 
         'values': Array < ClinicalDataIntervalFilterValue >
 
@@ -193,8 +183,6 @@ export type DataAccessToken = {
 };
 export type DataBin = {
     'attributeId': string
-
-        'clinicalDataType': "SAMPLE" | "PATIENT"
 
         'count': number
 
@@ -833,7 +821,6 @@ export default class CBioPortalAPIInternal {
         'yAxisBinCount' ? : number,
         'yAxisStart' ? : number,
         'yAxisEnd' ? : number,
-        'clinicalDataType': "SAMPLE" | "PATIENT",
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
@@ -871,10 +858,6 @@ export default class CBioPortalAPIInternal {
             queryParameters['yAxisEnd'] = parameters['yAxisEnd'];
         }
 
-        if (parameters['clinicalDataType'] !== undefined) {
-            queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-        }
-
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -897,7 +880,6 @@ export default class CBioPortalAPIInternal {
      * @param {integer} yAxisBinCount - Number of the bins in Y axis
      * @param {number} yAxisStart - Starting point of the Y axis, if different than smallest value
      * @param {number} yAxisEnd - Starting point of the Y axis, if different than largest value
-     * @param {string} clinicalDataType - Clinical data type of both attributes
      * @param {} studyViewFilter - Study view filter
      */
     fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters: {
@@ -909,7 +891,6 @@ export default class CBioPortalAPIInternal {
         'yAxisBinCount' ? : number,
         'yAxisStart' ? : number,
         'yAxisEnd' ? : number,
-        'clinicalDataType': "SAMPLE" | "PATIENT",
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
         $domain ? : string
@@ -968,15 +949,6 @@ export default class CBioPortalAPIInternal {
                 queryParameters['yAxisEnd'] = parameters['yAxisEnd'];
             }
 
-            if (parameters['clinicalDataType'] !== undefined) {
-                queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-            }
-
-            if (parameters['clinicalDataType'] === undefined) {
-                reject(new Error('Missing required  parameter: clinicalDataType'));
-                return;
-            }
-
             if (parameters['studyViewFilter'] !== undefined) {
                 body = parameters['studyViewFilter'];
             }
@@ -1010,7 +982,6 @@ export default class CBioPortalAPIInternal {
      * @param {integer} yAxisBinCount - Number of the bins in Y axis
      * @param {number} yAxisStart - Starting point of the Y axis, if different than smallest value
      * @param {number} yAxisEnd - Starting point of the Y axis, if different than largest value
-     * @param {string} clinicalDataType - Clinical data type of both attributes
      * @param {} studyViewFilter - Study view filter
      */
     fetchClinicalDataDensityPlotUsingPOST(parameters: {
@@ -1022,7 +993,6 @@ export default class CBioPortalAPIInternal {
             'yAxisBinCount' ? : number,
             'yAxisStart' ? : number,
             'yAxisEnd' ? : number,
-            'clinicalDataType': "SAMPLE" | "PATIENT",
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
             $domain ? : string
