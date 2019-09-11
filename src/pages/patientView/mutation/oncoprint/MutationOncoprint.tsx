@@ -27,9 +27,12 @@ import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/Def
 import Slider from "react-rangeslider";
 import "react-rangeslider/lib/index.css";
 import styles from "./styles.module.scss";
+import PatientViewMutationsDataStore from "../PatientViewMutationsDataStore";
+import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 
 export interface IMutationOncoprintProps {
     store:PatientViewPageStore;
+    dataStore:PatientViewMutationsDataStore;
     sampleManager:SampleManager|null;
 }
 
@@ -58,6 +61,22 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         this.oncoprint = oncoprint;
         this.oncoprint.onHorzZoom(z=>(this.horzZoomSliderState = z));
         this.horzZoomSliderState = this.oncoprint.getHorzZoom();
+        this.oncoprint.onCellMouseOver((uid:string|null)=>{
+            if (uid === null) {
+                this.props.dataStore.setMouseOverMutation(null);
+            } else {
+                const mutation = this.mutationKeyToMutation[uid];
+                this.props.dataStore.setMouseOverMutation(mutation || null);
+            }
+        });
+        this.oncoprint.onCellClick((uid:string|null)=>{
+            if (uid) {
+                const mutation = this.mutationKeyToMutation[uid];
+                if (mutation) {
+                    this.props.dataStore.toggleHighlightedMutation(mutation);
+                }
+            }
+        });
     }
 
     @observable clustered = true;
@@ -103,6 +122,14 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     @autobind
     private onClickZoomOut() {
         this.oncoprint && this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom()*0.7);
+    }
+
+    @computed get mutationKeyToMutation() {
+        if (this.props.store.mutationData.isComplete) {
+            return _.keyBy(this.props.store.mutationData.result!, generateMutationIdByGeneAndProteinChangeAndEvent);
+        } else {
+            return {};
+        }
     }
 
     private readonly heatmapTracks = remoteData<IMutationOncoprintTrackSpec[]>({
@@ -318,17 +345,28 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         );
     }
 
+    @computed get highlightedIds() {
+        const mutation = this.props.dataStore.getMouseOverMutation();
+        const highlighted = this.props.dataStore.highlightedMutations.slice();
+        if (mutation) {
+            highlighted.push(mutation);
+        }
+        return highlighted.map(generateMutationIdByGeneAndProteinChangeAndEvent);
+    }
+
     private readonly oncoprintUI = MakeMobxView({
         await:()=>[this.heatmapTracks, this.columnLabels],
         render:()=>{
             if (this.heatmapTracks.result!.length === 0) {
                 return null;
             } else {
+
                 return (
                     <div>
                         {this.header}
                         <Oncoprint
                             oncoprintRef={this.oncoprintRef}
+                            highlightedIds={this.highlightedIds}
                             initParams={INIT_PARAMS}
                             columnLabels={this.columnLabels.result!}
                             clinicalTracks={[]}
