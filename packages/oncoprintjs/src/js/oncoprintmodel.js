@@ -130,6 +130,7 @@ var OncoprintModel = (function () {
         this.cell_padding_off_because_of_zoom = (this.getCellWidth() < this.cell_padding_off_cell_width_threshold);
         this.id_order = [];
         this.hidden_ids = {};
+        this.highlighted_ids = [];
         this.track_group_legend_order = [];
         this.show_track_sublabels = false;
         this.column_labels = {};
@@ -716,6 +717,14 @@ var OncoprintModel = (function () {
         }
         this.visible_id_order.update();
         this.column_left.update();
+    }
+
+    OncoprintModel.prototype.setHighlightedIds = function(ids) {
+        this.highlighted_ids = ids;
+    }
+
+    OncoprintModel.prototype.getHighlightedIds = function() {
+        return this.highlighted_ids;
     }
 
     OncoprintModel.prototype.setTrackGroupOrder = function(index, track_order) {

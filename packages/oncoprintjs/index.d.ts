@@ -229,6 +229,9 @@ declare module "oncoprintjs"
         setTrackMovable:(track_id:TrackId, movable:boolean)=>void;
         setWidth:(width:number)=>void;
         setColumnLabels:(labels:{[uid:string]:string})=>void;
+        setHighlightedIds:(uids:string[])=>void;
+        onCellMouseOver:(callback:(uid:string|null, track_id:TrackId)=>void)=>void; // null indicates no mouseover
+        onCellClick:(callback:(uid:string|null, track_id:TrackId)=>void)=>void; // null indicates click in empty area
 
         constructor(ctr_selector:string, width:number, params?:InitParams);
         destroy:()=>void;
