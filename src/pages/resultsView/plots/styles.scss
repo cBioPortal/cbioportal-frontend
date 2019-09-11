@@ -4,6 +4,11 @@
 
 .plotsTab {
 
+  .chartWrapper {
+    float: left;
+    overflow: hidden;
+  }
+
   .leftColumn {
     width:304px;
 
