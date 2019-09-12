@@ -19,6 +19,9 @@ import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import ReactSelect from "react-select";
 import MutationOncoprint from "./oncoprint/MutationOncoprint";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
+import _ from "lodash";
+import {getDownloadData} from "./oncoprint/MutationOncoprintUtils";
 
 export interface IPatientViewMutationsTabProps {
     store:PatientViewPageStore;
@@ -31,6 +34,12 @@ export interface IPatientViewMutationsTabProps {
 export default class PatientViewMutationsTab extends React.Component<IPatientViewMutationsTabProps, {}> {
     private dataStore = new PatientViewMutationsDataStore(()=>this.props.store.mergedMutationDataIncludingUncalled);
     @observable.ref mutationsTable:PatientViewSelectableMutationTable|null = null;
+    private vafLineChartSvg:SVGElement|null = null;
+
+    @autobind
+    private vafLineChartSvgRef(elt:SVGElement|null) {
+        this.vafLineChartSvg = elt;
+    }
 
     @autobind
     private tableRef(t:PatientViewSelectableMutationTable|null) {
@@ -57,16 +66,24 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         ],
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
         render:()=>(
-            this.props.store.samples.result!.length > 1 ?
-                (<VAFLineChart
+            <div style={{display:"flex"}}>
+                <VAFLineChart
                     mutations={this.selectedMutations.result!}
                     dataStore={this.dataStore}
                     samples={this.props.store.samples.result!}
                     coverageInformation={this.props.store.coverageInformation.result!}
                     mutationProfileId={this.props.store.mutationMolecularProfileId.result!}
                     sampleManager={this.props.sampleManager}
-                />) :
-                null
+                    svgRef={this.vafLineChartSvgRef}
+                />
+                <DownloadControls
+                    filename="vafHeatmap"
+                    getSvg={()=>this.vafLineChartSvg}
+                    buttons={["SVG", "PNG", "PDF"]}
+                    type="button"
+                    dontFade
+                />
+            </div>
         ),
         showLastRenderWhenPending:true
     });
