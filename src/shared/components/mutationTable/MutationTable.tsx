@@ -100,7 +100,7 @@ export interface IMutationTableProps {
 export enum MutationTableColumnType {
     STUDY,
     SAMPLE_ID,
-    TUMORS,
+    SAMPLES,
     GENE,
     PROTEIN_CHANGE,
     CHROMOSOME,
