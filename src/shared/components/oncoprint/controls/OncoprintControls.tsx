@@ -4,7 +4,7 @@ import {Button, ButtonGroup} from "react-bootstrap";
 import CustomDropdown from "./CustomDropdown";
 import ReactSelect from "react-select1";
 import {MobxPromise} from "mobxpromise";
-import {action, computed, IObservableObject, observable, ObservableMap, reaction, toJS} from "mobx";
+import {action, computed, IObservableObject, observable, ObservableMap, reaction, toJS, autorun} from "mobx";
 import _ from "lodash";
 import {SortMode} from "../ResultsViewOncoprint";
 import {Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
@@ -29,6 +29,7 @@ import {Treatment} from "shared/api/generated/CBioPortalAPIInternal";
 import TextIconArea, { ITextIconAreaItemProps } from "shared/components/textIconArea/TextIconArea";
 import { extractTreatmentSelections } from "../OncoprintUtils";
 import CheckedSelect from "shared/components/react-select-checked-temp/lib/elements/CheckedSelect";
+import { isUndefined } from "util";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -131,6 +132,8 @@ export interface IOncoprintControlsProps {
     handlers: IOncoprintControlsHandlers;
     state: IOncoprintControlsState & IObservableObject
     oncoprinterMode?:boolean;
+    treatmentSelectOptions?:ISelectOption[];
+    selectedTreatmentIds?:string[];
 }
 
 export interface ISelectOption {
@@ -182,7 +185,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     @observable horzZoomSliderState:number;
     @observable heatmapGenesReady = false;
-    @observable private _selectedTreatmentOptionsObsArray:ISelectOption[] = [];
+    @observable private _selectedTreatmentIds:string[] = [];
     private textareaTreatmentText = "";
 
     constructor(props:IOncoprintControlsProps) {
@@ -207,6 +210,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         this.onHorzZoomSliderChange = this.onHorzZoomSliderChange.bind(this);
         this.onHorzZoomSliderSet = this.onHorzZoomSliderSet.bind(this);
         this.onSetHorzZoomTextInput = this.onSetHorzZoomTextInput.bind(this);
+
+        if (props.selectedTreatmentIds) {
+            this._selectedTreatmentIds = props.selectedTreatmentIds;
+        }
 
         this.horzZoomSliderState = props.state.horzZoom;
         reaction(()=>this.props.state.horzZoom,
@@ -358,12 +365,12 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 break;
             case EVENT_KEY.addTreatmentsToHeatmap:
                 this.props.handlers.onClickAddTreatmentsToHeatmap &&
-                this.props.handlers.onClickAddTreatmentsToHeatmap(_.map(this._selectedTreatmentOptionsObsArray,'id'));
+                this.props.handlers.onClickAddTreatmentsToHeatmap(this._selectedTreatmentIds);
                 break;
             case EVENT_KEY.removeHeatmap:
                 this.props.handlers.onClickRemoveHeatmap &&
                 this.props.handlers.onClickRemoveHeatmap();
-                this._selectedTreatmentOptionsObsArray = [];
+                this._selectedTreatmentIds = [];
                 break;
             case EVENT_KEY.downloadSVG:
                 this.props.handlers.onClickDownload &&
@@ -420,13 +427,12 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     @autobind
     private onChangeTreatmentTextArea(text:string):string {
-        return extractTreatmentSelections(text, this._selectedTreatmentOptionsObsArray, this.treatmentOptionsByValueMap);
+        return extractTreatmentSelections(text, this._selectedTreatmentIds, this.treatmentOptionsByValueMap);
     }
 
     @autobind
     private onTreatmentRemoved(treatmentId:string) {
-        const removeTreatmentByIdFilter = (d:ISelectOption) => d.id !== treatmentId;
-        this._selectedTreatmentOptionsObsArray = _.filter(this._selectedTreatmentOptionsObsArray, removeTreatmentByIdFilter);
+        _.remove(this._selectedTreatmentIds, (v) => v === treatmentId);
     }
 
     @computed get heatmapProfileOptions() {
@@ -441,57 +447,26 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         }
     }
 
-    @computed get treatmentSelectOptions():ISelectOption[] {
-        // Note: name and desc are optional fields for treatment entities
-        // When not provided in the data file, these fields are assigned the
-        // value of the entity_stable_id. The code below hides fields when
-        // indentical to the entity_stable_id.
-        if (this.props.state.treatmentsPromise && this.props.state.treatmentsPromise.result) {
-            return _.map(this.props.state.treatmentsPromise.result, (d:Treatment) => {
-                const uniqueName = d.name !== d.treatmentId;
-                const uniqueDesc = d.description !== d.treatmentId && d.description !== d.name;
-                let label = "";
-                if (!uniqueName && !uniqueDesc) {
-                    label = d.treatmentId;
-                } else if (!uniqueName) {
-                    label = `${d.treatmentId}: ${d.description}`;
-                } else if (!uniqueDesc) {
-                    label = `${d.name} (${d.treatmentId})`;
-                } else {
-                    label = `${d.name} (${d.treatmentId}): ${d.description}`;
-                }
-
-                // For searching, react-select-checked performs a search in the value
-                // field and displays the label field. To allow searching in all words
-                // that appear in the label field, the value field is made identical to
-                // the label field. The id field is added to track the unique identifier
-                // of the treatment.
-                return {
-                    id: d.treatmentId,
-                    value: label,
-                    label: label
-                };
-            });
-        } else {
-            return [];
-        }
-    }
-
     @computed get treatmentOptionsByValueMap():{[value:string]: ISelectOption}{
-        return _.keyBy(this.treatmentSelectOptions, 'id');
+        return _.keyBy(this.props.treatmentSelectOptions, 'id');
     }
 
     @autobind
-    private onSelectTreatments(selectedElements:any[]) {
-        this._selectedTreatmentOptionsObsArray = selectedElements;
+    @action
+    private onSelectTreatments(selectedElements:ISelectOption[]) {
+        this._selectedTreatmentIds = selectedElements.map((o) => o.id);
     }
 
-    @computed get selectedTreatments() {
-        return toJS(this._selectedTreatmentOptionsObsArray);
+    @computed get selectedTreatments():ISelectOption[] {
+        return this._selectedTreatmentIds.map((o) => this.treatmentOptionsByValueMap[o]);
+    }
+
+    @computed get selectedTreatmentsJS() {
+        return toJS(this.selectedTreatments);
     }
 
     @computed get textareaTreatmentEntries():ITextIconAreaItemProps[] {
-        return _.map(this._selectedTreatmentOptionsObsArray, (d:ISelectOption) => ({value: d.id, label: d.id}));
+        return _.map(this.selectedTreatments, (d:ISelectOption) => ({value: d.id, label: d.id}));
     }
 
     private getClinicalTracksMenu() {
@@ -563,8 +538,8 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 <CheckedSelect
                                     name="treatment-select"
                                     placeholder="Search for Treatments..."
-                                    options={this.treatmentSelectOptions}
-                                    value={this.selectedTreatments}
+                                    options={this.props.treatmentSelectOptions}
+                                    value={this.selectedTreatmentsJS}
                                     onChange={this.onSelectTreatments}
                                     addAllTitle={"Select all"}
                                     />

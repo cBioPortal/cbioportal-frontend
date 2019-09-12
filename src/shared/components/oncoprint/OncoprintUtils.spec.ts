@@ -577,14 +577,14 @@ describe('getTreatmentTrackRuleSetParams', () => {
 
 describe('extractTreatmentSelections', () => {
 
-    const selectedTreatments:ISelectOption[] = [];
+    const selectedTreatments:string[] = [];
     const treatmentMap = {
         'treatmentA': {id: 'treatmentA', value: 'valueA', label: 'labelA'}
     };
 
     it('Adds recognized treatments to selection', () => {
         extractTreatmentSelections("treatmentA treatmentB", selectedTreatments, treatmentMap);
-        assert.deepEqual(selectedTreatments, [{id: 'treatmentA', value: 'valueA', label: 'labelA'}]);
+        assert.deepEqual(selectedTreatments, ['treatmentA']);
     });
 
     it('Removed recognized treatments from text field', () => {
