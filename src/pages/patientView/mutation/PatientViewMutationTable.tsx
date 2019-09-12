@@ -53,7 +53,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
-            MutationTableColumnType.TUMORS,
+            MutationTableColumnType.SAMPLES,
             MutationTableColumnType.EXON,
             MutationTableColumnType.HGVSC,
             MutationTableColumnType.GNOMAD,
@@ -84,8 +84,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
                 this.props.dataStore ? this.props.dataStore.allData : this.props.data)
         };
 
-        this._columns[MutationTableColumnType.TUMORS] = {
-            name: "Tumors",
+        this._columns[MutationTableColumnType.SAMPLES] = {
+            name: "Samples",
             render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
             sortBy:(d:Mutation[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
             download: (d:Mutation[])=>TumorColumnFormatter.getSample(d),
@@ -119,7 +119,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, true));
         
         // order columns
-        this._columns[MutationTableColumnType.TUMORS].order = 5;
+        this._columns[MutationTableColumnType.SAMPLES].order = 5;
         this._columns[MutationTableColumnType.GENE].order = 20;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 30;
         this._columns[MutationTableColumnType.ANNOTATION].order = 35;
@@ -155,7 +155,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         // only hide tumor column if there is one sample and no uncalled
         // mutations (there is no information added in that case by the sample
         // label)
-        this._columns[MutationTableColumnType.TUMORS].shouldExclude = ()=>{
+        this._columns[MutationTableColumnType.SAMPLES].shouldExclude = ()=>{
             return this.getSamples().length < 2 && !this.hasUncalledMutations;
         };
         this._columns[MutationTableColumnType.COPY_NUM].shouldExclude = ()=>{
