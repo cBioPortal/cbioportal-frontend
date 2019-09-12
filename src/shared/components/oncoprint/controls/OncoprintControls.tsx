@@ -41,7 +41,7 @@ import TextIconArea, {
     ITextIconAreaItemProps,
 } from 'shared/components/textIconArea/TextIconArea';
 import { extractTreatmentSelections } from '../OncoprintUtils';
-import CheckedSelect from 'shared/components/react-select-checked-temp/lib/elements/CheckedSelect';
+import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;
@@ -567,6 +567,13 @@ export default class OncoprintControls extends React.Component<
             label: d.id,
         }));
     }
+    
+    @computed get addAllLabel() {
+        if (this.props.treatmentSelectOptions) {
+            return `Select all (${this.props.treatmentSelectOptions.length})`;
+        }
+        return 'Select all';
+    }
 
     private getClinicalTracksMenu() {
         // TODO: put onFocus handler on CheckedSelect when possible
@@ -665,12 +672,10 @@ export default class OncoprintControls extends React.Component<
                                     <CheckedSelect
                                         name="treatment-select"
                                         placeholder="Search for Treatments..."
-                                        options={
-                                            this.props.treatmentSelectOptions
-                                        }
-                                        value={this.selectedTreatmentsJS}
+                                        options={this.props.treatmentSelectOptions}
                                         onChange={this.onSelectTreatments}
-                                        addAllTitle={'Select all'}
+                                        value={this.selectedTreatments}
+                                        addAllLabel={this.addAllLabel}
                                     />
                                 </div>,
                                 <button
