@@ -194,11 +194,11 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     });
 
     private readonly columnLabels = remoteData({
-        await:()=>[this.props.store.mutationData],
+        await:()=>[this.props.store.mutationData, this.props.store.uncalledMutationData],
         invoke:()=>{
             const ret:{[uid:string]:string} = {};
             if (this.showColumnLabels) {
-                for (const mutation of this.props.store.mutationData.result!) {
+                for (const mutation of this.props.store.mutationData.result!.concat(this.props.store.uncalledMutationData.result!)) {
                     ret[generateMutationIdByGeneAndProteinChangeAndEvent(mutation)] = `${mutation.gene.hugoGeneSymbol} ${mutation.proteinChange}`;
                 }
             }
