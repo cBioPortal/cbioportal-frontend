@@ -263,6 +263,20 @@ export class PatientViewPageStore {
         []
     );
 
+    // use this when pageMode === 'sample' to get total nr of samples for the
+    // patient
+    readonly allSamplesForPatient = remoteData({
+            await: () => [this.derivedPatientId],
+            invoke: async() => {
+                return await client.getAllSamplesOfPatientInStudyUsingGET({
+                    studyId: this.studyId,
+                    patientId: this.derivedPatientId.result,
+                    projection: 'DETAILED'
+                });
+            },
+            default: []
+    });
+
     readonly samplesWithoutCancerTypeClinicalData = remoteData({
         await: () => [
             this.samples,
