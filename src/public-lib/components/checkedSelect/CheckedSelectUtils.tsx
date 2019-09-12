@@ -44,5 +44,5 @@ export function getOptionLabel(option: Option,
     const checkBox = checkBoxType === CheckBoxType.STRING ?
         getStringCheckBox(option, selectedValues): getHtmlCheckBox(option, selectedValues);
 
-    return <span>{checkBox} {option.label || option.value}</span>;
+    return <span className="checked-select-option">{checkBox} {option.label || option.value}</span>;
 }
