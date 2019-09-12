@@ -76,6 +76,8 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                 if (mutation) {
                     this.props.dataStore.toggleHighlightedMutation(mutation);
                 }
+            } else {
+                this.props.dataStore.setHighlightedMutations([]);
             }
         });
     }
@@ -126,8 +128,11 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     }
 
     @computed get mutationKeyToMutation() {
-        if (this.props.store.mutationData.isComplete) {
-            return _.keyBy(this.props.store.mutationData.result!, generateMutationIdByGeneAndProteinChangeAndEvent);
+        if (this.props.store.mutationData.isComplete && this.props.store.uncalledMutationData.isComplete) {
+            return _.keyBy(
+                this.props.store.mutationData.result!.concat(this.props.store.uncalledMutationData.result!),
+                generateMutationIdByGeneAndProteinChangeAndEvent
+            );
         } else {
             return {};
         }
