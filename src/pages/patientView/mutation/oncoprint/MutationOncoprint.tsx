@@ -148,8 +148,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             const profile = this.props.store.mutationMolecularProfile.result!;
             const data = makeMutationHeatmapData(
                 this.props.store.samples.result!,
-                this.props.store.mutationData.result!,
-                this.props.store.uncalledMutationData.result!,
+                this.props.store.mutationData.result!.concat(this.props.store.uncalledMutationData.result!),
                 this.props.store.coverageInformation.result!
             );
             return Promise.resolve(this.sampleIdOrder.map((sampleId, index)=>{
