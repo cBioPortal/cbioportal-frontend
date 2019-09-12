@@ -11091,10 +11091,10 @@ oncokb-styles@~0.1.0:
   resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-0.1.0.tgz#3a67a03dbdf6ebdde497c77451fef167afe00c4f"
   integrity sha512-4vhF2Q5hAbOyKWlstA/AItd33cnXbp/Z1Zluxnlc7u0Dz6GnqnrZFK/upUleT4CTES6k5+QWT4Zv95+l5FL0hg==
 
-oncoprintjs@2.0.18:
-  version "2.0.18"
-  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-2.0.18.tgz#af3f3f7d8e7ad4ede5dcd7e6f36f48f640b897b6"
-  integrity sha512-0HbL3Z/zLUaOR2JGpzbpAEG6uFJNnPotj9b9pt8OnCeBK8jepkmXsCU+uA0yNQlg2EajBiq9n8SjJY0L97yfIg==
+oncoprintjs@2.0.19:
+  version "2.0.19"
+  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-2.0.19.tgz#56b6c58fe39ac5f99fe41aa8a41be4192a88fc0c"
+  integrity sha512-bh0QRE6AReRXYxBI6kHD5wkFdNfq6qiOQElNn3ZKOjQ2NOBf4cL7rD+rMLqLejZAZIvFoqOXcNwBCwsPw2UpFQ==
   dependencies:
     express "^4.15.3"
     gl-matrix "2.3.2"
