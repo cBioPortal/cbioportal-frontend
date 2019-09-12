@@ -427,7 +427,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     @autobind
     private onChangeTreatmentTextArea(text:string):string {
-        return extractTreatmentSelections(text, this.selectedTreatments, this.treatmentOptionsByValueMap);
+        return extractTreatmentSelections(text, this._selectedTreatmentIds, this.treatmentOptionsByValueMap);
     }
 
     @autobind
