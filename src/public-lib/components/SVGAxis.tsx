@@ -17,9 +17,19 @@ type SVGAxisProps = {
     reverse?:boolean;
     invertTicks?:boolean;
     label?:string;
+    verticalLabelPadding?:number;
+    horizontalLabelPadding?:number;
+    tickLabelPadding?:number;
 };
 
-export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
+export default class SVGAxis extends React.Component<SVGAxisProps, {}>
+{
+    public static defaultProps: Partial<SVGAxisProps> = {
+        verticalLabelPadding: 30,
+        horizontalLabelPadding: 5,
+        tickLabelPadding: 3
+    };
+
     private positionToAxisPosition(position: number) {
         const pos = this.props.reverse ? this.props.rangeUpper - position : position;
         return (pos / (this.props.rangeUpper - this.props.rangeLower)) * this.props.length;
@@ -33,7 +43,7 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
             const y1 = this.props.vertical ? (this.props.y + this.props.length - axisPosition) : this.props.y;
             const x2 = this.props.vertical ? (this.props.x - tickLength) : (this.props.x + axisPosition);
             const y2 = this.props.vertical ? (this.props.y + this.props.length - axisPosition) : (this.props.y + tickLength);
-            const labelPadding = 3;
+            const labelPadding = this.props.tickLabelPadding!;
 
             let label = null;
             if (tick.label) {
@@ -89,16 +99,18 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
     private get label() {
         if (this.props.label) {
             const tickLength = this.props.invertTicks ? -this.props.tickLength : this.props.tickLength;
+            const verticalPadding = this.props.verticalLabelPadding!;
+            const horizontalPadding = this.props.horizontalLabelPadding!;
             let x:number;
             let y:number;
             let transform:string;
             if (this.props.vertical) {
-                x = this.props.x - tickLength + (this.props.invertTicks ? 30 : -30);
+                x = this.props.x - tickLength + (this.props.invertTicks ? verticalPadding : -verticalPadding);
                 y = this.props.y + (this.props.length / 2);
                 transform = `rotate(270,${x},${y})`;
             } else {
                 x = this.props.x + (this.props.length / 2);
-                y = this.props.y + tickLength + (this.props.invertTicks ? -5 : 5) ;
+                y = this.props.y + tickLength + (this.props.invertTicks ? -horizontalPadding : horizontalPadding) ;
                 transform = "";
             }
             return (
