@@ -198,13 +198,12 @@ var OncoprintWebGLCellView = (function () {
                     return;
                 }
                 clearOverlay(self);
-                self.highlightHighlightedIds(model);
 
                 var offset = self.$overlay_canvas.offset();
                 var mouseX = evt.pageX - offset.left;
                 var mouseY = evt.pageY - offset.top;
+                var overlapping_cells = model.getOverlappingCells(mouseX + self.scroll_x, mouseY + self.scroll_y);
                 if (!dragging) {
-                    var overlapping_cells = model.getOverlappingCells(mouseX + self.scroll_x, mouseY + self.scroll_y);
                     var overlapping_data = (overlapping_cells === null ? null : overlapping_cells.ids.map(function(id) {
                         return model.getTrackDatum(overlapping_cells.track, id);
                     }));
@@ -232,6 +231,8 @@ var OncoprintWebGLCellView = (function () {
                     last_cell_over = null;
                     cell_over_callback(null);
                 }
+
+                self.highlightHighlightedIds(model, overlapping_cells ? overlapping_cells.ids : []);
             });
 
             self.$overlay_canvas.on("mousedown", function(evt) {
@@ -760,7 +761,6 @@ var OncoprintWebGLCellView = (function () {
 
     OncoprintWebGLCellView.prototype.highlightColumn = function(model, uid, opt_track_id) {
         if (uid === null) {
-            clearOverlay(this);
             return;
         }
         var left = model.getZoomedColumnLeft(uid) - this.scroll_x;
@@ -1072,11 +1072,13 @@ var OncoprintWebGLCellView = (function () {
         this.highlightHighlightedIds(model);
     }
 
-    OncoprintWebGLCellView.prototype.highlightHighlightedIds = function(model) {
+    OncoprintWebGLCellView.prototype.highlightHighlightedIds = function(model, opt_exclude_ids) {
         // Highlight highlighted ids
         var highlightedIds = model.getHighlightedIds();
         for (var i=0; i<highlightedIds.length; i++) {
-            this.highlightColumn(model, highlightedIds[i]);
+            if (!opt_exclude_ids || opt_exclude_ids.indexOf(highlightedIds[i]) === -1) {
+                this.highlightColumn(model, highlightedIds[i]);
+            }
         }
     }
 

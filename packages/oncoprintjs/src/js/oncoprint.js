@@ -638,14 +638,17 @@ var Oncoprint = (function () {
             return;
         }
         this.keep_horz_zoomed_to_fit = this.keep_horz_zoomed_to_fit && still_keep_horz_zoomed_to_fit
-        // Update model
-        this.model.setHorzZoom(z);
-        // Update views
-        this.cell_view.setHorzZoom(this.model);
-        this.minimap_view.setHorzZoom(this.model, this.cell_view);
 
-        executeHorzZoomCallbacks(this);
-        resizeAndOrganizeAfterTimeout(this);
+        if (this.model.getHorzZoom() !== z) {
+            // Update model if new zoom is different
+            this.model.setHorzZoom(z);
+            // Update views
+            this.cell_view.setHorzZoom(this.model);
+            this.minimap_view.setHorzZoom(this.model, this.cell_view);
+
+            executeHorzZoomCallbacks(this);
+            resizeAndOrganizeAfterTimeout(this);
+        }
         return this.model.getHorzZoom();
     }
 
