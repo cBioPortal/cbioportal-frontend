@@ -1,6 +1,7 @@
 import * as React from "react";
 import {observer} from "mobx-react";
 import ErrorIcon from "./ErrorIcon";
+import AppConfig from "appConfig";
 
 export interface IErrorMessageProps {
     message?:string;
@@ -22,7 +23,7 @@ export default class ErrorMessage extends React.Component<IErrorMessageProps, {}
                     marginRight:7
                 }}
             />
-            {this.props.message!} Please let us know about this error and how you got here at <b style={{whiteSpace:"nowrap"}}>cbioportal at googlegroups dot com.</b>
+            {this.props.message!} Please let us know about this error and how you got here at <b style={{ whiteSpace: "nowrap" }}><a href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>{AppConfig.serverConfig.skin_email_contact}</a></b>
         </span>
     }
 }
