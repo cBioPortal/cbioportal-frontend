@@ -34,6 +34,7 @@ export interface IVAFLineChartProps {
     mutationProfileId:string;
     sampleManager:SampleManager|null;
     dataStore:PatientViewMutationsDataStore;
+    svgRef:(elt:SVGElement|null)=>void;
 }
 
 interface IPoint {
@@ -536,6 +537,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             return (
                 <>
                     <svg
+                        ref={this.props.svgRef}
                         style={{
                             width: this.svgWidth,
                             height: this.svgHeight,
