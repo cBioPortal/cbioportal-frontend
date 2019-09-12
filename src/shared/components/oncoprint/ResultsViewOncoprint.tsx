@@ -5,7 +5,8 @@ import {remoteData} from "public-lib/api/remoteData";
 import Oncoprint, {GENETIC_TRACK_GROUP_INDEX, IHeatmapTrackSpec} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
-    IOncoprintControlsState
+    IOncoprintControlsState,
+    ISelectOption
 } from "shared/components/oncoprint/controls/OncoprintControls";
 import {Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {ResultsViewPageStore, AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
@@ -31,12 +32,14 @@ import classNames from 'classnames';
 import FadeInteraction from "public-lib/components/fadeInteraction/FadeInteraction";
 import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import OqlStatusBanner from "../banners/OqlStatusBanner";
-import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
+import {getAnnotatingProgressMessage, treatmentsToSelectOptions} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
+import { selectDisplayValue } from "./DataUtils";
+import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -101,6 +104,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable showClinicalTrackLegends:boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
     @observable showOqlInLabels = false;
+
+    private selectedTreatmentsFromUrl:string[] = [];
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
@@ -378,6 +383,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     return self.horzZoom;
                 }
             },
+            get selectedTreatmentsInit() {
+                return self.selectedTreatmentsFromUrl;
+            }
         });
     }
 
@@ -624,6 +632,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
             this.columnMode = (paramsMap[SAMPLE_MODE_URL_PARAM] && paramsMap[SAMPLE_MODE_URL_PARAM]==="true") ? "sample" : "patient";
         }
+        if (paramsMap[TREATMENT_LIST_URL_PARAM]) {
+            this.selectedTreatmentsFromUrl = paramsMap[TREATMENT_LIST_URL_PARAM].split(";");
+        }
         if (paramsMap[HEATMAP_TRACKS_URL_PARAM]) {
             const groups = paramsMap[HEATMAP_TRACKS_URL_PARAM].split(";").map((x:string)=>x.split(","));
             for (const group of groups) {
@@ -680,6 +691,16 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         .map((x:HeatmapTrackGroupRecord)=>`${x.entities.keys().join(";")}`)
         .join(";");
     }
+
+    private readonly unalteredKeys = remoteData({
+        await:()=>[this.geneticTracks],
+        invoke:async()=>getUnalteredUids(this.geneticTracks.result!)
+    });
+
+    readonly treatmentSelectOptions = remoteData<ISelectOption[]>({
+        await:() => [this.props.store.treatmentsInStudies],
+        invoke:async() => treatmentsToSelectOptions(this.props.store.treatmentsInStudies.result || [])
+    });
 
     @computed get selectedHeatmapProfileAlterationType():string {
         let molecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[this.selectedHeatmapProfile];
@@ -746,12 +767,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         invoke:async()=>getAlteredUids(this.geneticTracks.result!),
         default: []
     });
-
-    private readonly unalteredKeys = remoteData({
-        await:()=>[this.geneticTracks],
-        invoke:async()=>getUnalteredUids(this.geneticTracks.result!)
-    });
-
 
     @action private onMinimapClose() {
         this.showMinimap = false;
@@ -970,12 +985,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @autobind
     private getControls() {
-        if (this.oncoprint && !this.oncoprint.webgl_unavailable)  {
+        if (this.oncoprint && !this.oncoprint.webgl_unavailable && this.treatmentSelectOptions.isComplete)  {
             return (<FadeInteraction showByDefault={true} show={true}>
                 <OncoprintControls
                     handlers={this.controlsHandlers}
                     state={this.controlsState}
                     store={this.props.store}
+                    treatmentSelectOptions={this.treatmentSelectOptions.result}
+                    selectedTreatmentIds={this.selectedTreatmentsFromUrl}
                 />
             </FadeInteraction>);
         } else {
