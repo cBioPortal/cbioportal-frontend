@@ -132,7 +132,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
-        this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
+        this.initFromUrlParams(getBrowserWindow().globalStores.routing.query);
 
         onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
             if (studyIds.length > 1) {
@@ -184,7 +184,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.clinicalTracksUrlParam
             ],
             ()=>{
-                const newParams = Object.assign({}, getBrowserWindow().globalStores.routing.location.query);
+                const newParams = Object.assign({}, getBrowserWindow().globalStores.routing.query);
                 newParams[SAMPLE_MODE_URL_PARAM] = (this.columnMode === "sample") + "";
                 if (!this.clinicalTracksUrlParam) {
                     delete newParams[CLINICAL_TRACKS_URL_PARAM];

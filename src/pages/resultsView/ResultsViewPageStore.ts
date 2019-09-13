@@ -634,7 +634,7 @@ export class ResultsViewPageStore {
                 }
             }
             // add any groups that are referenced in URL
-            const clinicalTracksParam = this.routing.location.query[CLINICAL_TRACKS_URL_PARAM];
+            const clinicalTracksParam = this.routing.query[CLINICAL_TRACKS_URL_PARAM];
             if (clinicalTracksParam) {
                 const groupIds = clinicalTracksParam.split(",") // split by comma
                     .filter((clinicalAttributeId:string)=>clinicalAttributeIsINCOMPARISONGROUP({clinicalAttributeId})) // filter for comparison group tracks
