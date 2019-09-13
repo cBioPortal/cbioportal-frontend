@@ -51,7 +51,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
     public render() {
         // use routing if available, if not fall back to the observable variable
         const activeTabId = this.props.routing ?
-            this.props.routing.location.query.mutationsGeneTab : this.mutationsGeneTab;
+            this.props.routing.query.mutationsGeneTab : this.mutationsGeneTab;
 
         return (
             <div data-test="mutationsTabDiv">

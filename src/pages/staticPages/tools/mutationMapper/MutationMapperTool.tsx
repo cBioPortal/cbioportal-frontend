@@ -78,7 +78,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
     {
         // use routing if available, if not fall back to the observable variable
         return this.props.routing ?
-            this.props.routing.location.query.standaloneMutationMapperGeneTab : this.standaloneMutationMapperGeneTab;
+            this.props.routing.query.standaloneMutationMapperGeneTab : this.standaloneMutationMapperGeneTab;
     }
 
     @computed get inputContent(): string

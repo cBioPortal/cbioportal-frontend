@@ -93,7 +93,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
-            () => [props.routing.location.query, props.routing.location.hash, props.routing.location.pathname],
+            () => [props.routing.query, props.routing.location.hash, props.routing.location.pathname],
             ([query,hash,pathname]) => {
 
                 // we don't want to update patient if we aren't on a patient page route

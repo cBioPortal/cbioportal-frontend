@@ -414,7 +414,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     private getTabHref(tabId:string) {
         return URL.format({
             pathname:tabId,
-            query:this.props.routing.location.query,
+            query:this.props.routing.query,
             hash:this.props.routing.location.hash
         });
     }

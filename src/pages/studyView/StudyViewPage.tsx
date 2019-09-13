@@ -81,7 +81,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.store = new StudyViewPageStore();
 
         this.queryReaction = reaction(
-            () => [props.routing.location.query, props.routing.location.hash],
+            () => [props.routing.query, props.routing.location.hash],
             ([query,hash]) => {
 
                 if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/study")) {
