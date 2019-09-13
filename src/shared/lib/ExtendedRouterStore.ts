@@ -7,6 +7,7 @@ import sessionClient from "../api/sessionServiceInstance";
 import AppConfig from "appConfig";
 import {ServerConfigHelpers} from "../../config/config";
 import hashString from "./hashString";
+import MobxObjectToMap from "./MobxObjectToMap";
 
 export function getSessionKey(hash:string){
     return `session_${hash}`
@@ -66,7 +67,6 @@ export enum QueryParameter {
 }
 
 export default class ExtendedRouterStore extends RouterStore {
-
 
     _urlLengthThresholdForSession:number;
 
@@ -202,14 +202,16 @@ export default class ExtendedRouterStore extends RouterStore {
     @observable public _session:PortalSession | undefined;
 
     @computed
-    public get query(){
+    private get _query(){
         // this allows url based query to override a session (if sessionId has been cleared in url)
         if (this._session && this.location.query.session_id) {
             return this._session.query;
         } else {
-            return this.location.query;
+            return this.location ? this.location.query : {};
         }
     }
+
+    public query = MobxObjectToMap(()=>this._query);
 
     @computed
     public get queryHash():string {
