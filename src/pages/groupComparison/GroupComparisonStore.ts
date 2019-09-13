@@ -107,12 +107,12 @@ export default class GroupComparisonStore {
     }
 
     @computed get overlapStrategy() {
-        const param = (this.routing.location.query as GroupComparisonURLQuery).overlapStrategy;
+        const param = (this.routing.query as GroupComparisonURLQuery).overlapStrategy;
         return param || OverlapStrategy.EXCLUDE;
     }
 
     @computed get groupOrder() {
-        const param = (this.routing.location.query as GroupComparisonURLQuery).groupOrder;
+        const param = (this.routing.query as GroupComparisonURLQuery).groupOrder;
         if (param) {
             return JSON.parse(param);
         } else {
@@ -137,7 +137,7 @@ export default class GroupComparisonStore {
     }
 
     @computed get unselectedGroups() {
-        const param = (this.routing.location.query as GroupComparisonURLQuery).unselectedGroups;
+        const param = (this.routing.query as GroupComparisonURLQuery).unselectedGroups;
         if (param) {
             return JSON.parse(param);
         } else {

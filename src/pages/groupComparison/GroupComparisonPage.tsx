@@ -48,7 +48,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     constructor(props:IGroupComparisonPageProps) {
         super(props);
         this.queryReaction = reaction(
-            () => props.routing.location.query,
+            () => props.routing.query,
             query => {
 
                 if (!props.routing.location.pathname.includes("/comparison") ||
@@ -90,7 +90,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     private getTabHref(tabId:string) {
         return URL.format({
             pathname:tabId,
-            query:this.props.routing.location.query,
+            query:this.props.routing.query,
             hash:this.props.routing.location.hash
         });
     }
