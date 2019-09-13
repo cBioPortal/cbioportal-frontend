@@ -79,6 +79,10 @@ import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
 import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
+import { fetchTrialsById, fetchTrialMatchesUsingPOST } from "../../../shared/api/MatchMinerAPI";
+import { IDetailedTrialMatch, ITrial, ITrialMatch, ITrialQuery } from "../../../shared/model/MatchMiner";
+import { groupTrialMatchesById } from "../trialMatch/TrialMatchTableUtils";
+
 
 type PageMode = 'patient' | 'sample';
 
@@ -836,5 +840,60 @@ export class PatientViewPageStore {
     @action clearErrors() {
         this.ajaxErrors = [];
     }
+
+    readonly trialMatches = remoteData<ITrialMatch[]>({
+        invoke: () => {
+            return fetchTrialMatchesUsingPOST({mrn: this.patientId});
+        }
+    }, []);
+
+    readonly trialIds = remoteData<ITrialQuery>({
+        await: () => [
+            this.trialMatches
+        ],
+        invoke: async() => {
+            let nctIds = new Set<string>(); // Trial unique id from clinicaltrials.gov
+            let protocolNos = new Set<string>(); // Trials's MSK ID same as protocol_number or protocol_id
+            _.forEach(this.trialMatches.result, (trialMatch: ITrialMatch) => {
+                if (_.isEmpty(trialMatch.protocolNo)) {
+                    nctIds.add(trialMatch.nctId);
+                } else {
+                    protocolNos.add(trialMatch.protocolNo);
+                }
+            });
+            return {
+                nct_id: [...nctIds],
+                protocol_no: [...protocolNos]
+            };
+        }
+    }, {
+        nct_id: [],
+        protocol_no: []
+    });
+
+    readonly trials = remoteData<ITrial[]>({
+        await: () => [
+            this.trialIds
+        ],
+        invoke: async () => {
+            if (this.trialIds.result.protocol_no.length > 0 || this.trialIds.result.nct_id.length > 0) {
+                return fetchTrialsById(this.trialIds.result);
+            }
+            return [];
+        }
+    }, []);
+
+    readonly detailedTrialMatches = remoteData<IDetailedTrialMatch[]>({
+        await: () => [
+            this.trials,
+            this.trialMatches
+        ],
+        invoke: async () => {
+            if (this.trials.result && this.trialMatches.result ) {
+                return groupTrialMatchesById(this.trials.result, this.trialMatches.result);
+            }
+            return [];
+        }
+    }, []);
 
 }
