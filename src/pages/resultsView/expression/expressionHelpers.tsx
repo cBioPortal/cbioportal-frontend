@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import {
     CancerStudy, GenePanelData, Mutation,
-    NumericGeneMolecularData
+    NumericGeneMolecularData,
+    MolecularProfile
 } from "../../../shared/api/generated/CBioPortalAPI";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
@@ -119,6 +120,14 @@ export const ExpressionStyleSheet: { [mutationType:string]:ExpressionStyle } = {
 
 };
 
+export const RNASeqOptions = [{
+    label: 'RNA Seq V2',
+    value: 'rna_seq_v2_mrna'
+}, {
+    label: 'RNA Seq',
+    value: 'rna_seq_mrna'
+}];
+
 export function getExpressionStyle(mutationType: string){
     return ExpressionStyleSheet[mutationType];
 }
@@ -204,4 +213,18 @@ export function expressionTooltip(d:IBoxScatterPlotPoint, studyIdToStudy:{[study
             )}
         </div>
     );
+}
+
+export function getPossibleRNASeqVersions(expressionProfiles: Pick<MolecularProfile, "molecularProfileId">[]) {
+    const possibleRNASeqVersions: { [id: string]: boolean } = {
+        'rna_seq_mrna': false,
+        'rna_seq_v2_mrna': false
+    };
+
+    possibleRNASeqVersions.rna_seq_mrna = _.some(expressionProfiles, expressionProfile =>
+        RegExp(`rna_seq_mrna$|pan_can_atlas_2018_rna_seq_mrna_median$`).test(expressionProfile.molecularProfileId));
+    possibleRNASeqVersions.rna_seq_v2_mrna = _.some(expressionProfiles, expressionProfile =>
+        RegExp(`rna_seq_v2_mrna$|pan_can_atlas_2018_rna_seq_v2_mrna_median$`).test(expressionProfile.molecularProfileId));
+
+    return RNASeqOptions.filter(option => possibleRNASeqVersions[option.value]);
 }
