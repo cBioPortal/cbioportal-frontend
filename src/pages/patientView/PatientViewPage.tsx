@@ -47,10 +47,12 @@ import {QueryParams} from "url";
 import {AppStore} from "../../AppStore";
 import request from 'superagent';
 import {remoteData} from "../../public-lib/api/remoteData";
+import TrialMatchTable from "./trialMatch/TrialMatchTable";
 
 import 'cbioportal-frontend-commons/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -192,6 +194,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     hideTissueImageTab(){
         return patientViewPageStore.hasTissueImageIFrameUrl.isPending || patientViewPageStore.hasTissueImageIFrameUrl.isError
             || (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result);
+    }
+
+    private shouldShowTrialMatch(patientViewPageStore: PatientViewPageStore): boolean {
+        return getBrowserWindow().localStorage.trialmatch === 'true' &&
+            patientViewPageStore.detailedTrialMatches.isComplete && patientViewPageStore.detailedTrialMatches.result.length > 0;
     }
 
 
@@ -540,6 +547,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </div>
                     </MSKTab>
                     )}
+
+                    <MSKTab key={7} id="trialMatchTab" linkText="Matched Trials"
+                            hide={!this.shouldShowTrialMatch(patientViewPageStore)}>
+                        <TrialMatchTable sampleManager={sampleManager}
+                                         detailedTrialMatches={patientViewPageStore.detailedTrialMatches.result}
+                                         containerWidth={WindowStore.size.width-20}/>
+                    </MSKTab>
 
                     {/*<MSKTab key={5} id="mutationalSignatures" linkText="Mutational Signature Data" hide={true}>*/}
                         {/*<div className="clearfix">*/}
