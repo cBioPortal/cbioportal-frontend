@@ -198,7 +198,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         // map through groups and generate plot data for each
         return _.mapValues(this.sortedGroupedSurvivals, (survivals, group)=>{
             const estimates = this.estimates[group];
-            const groupName = this.analysisGroupsMap[group].legendText;
+            const groupName = this.analysisGroupsMap[group].name;
             return {
                 numOfCases: survivals.length,
                 line: getLineData(survivals, estimates),
@@ -256,7 +256,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         if (this.props.legendLocation === LegendLocation.CHART) {
             for (const grp of this.analysisGroupsWithData) {
                 data.push({
-                    name: !!grp.legendText ? grp.legendText : grp.value,
+                    name: grp.legendText || grp.name || grp.value,
                     symbol: { fill: grp.color, strokeOpacity:0, type:"square", size: 6 },
                 });
             }
@@ -282,7 +282,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @computed get legendDataForDownload() {
         const data: any = this.analysisGroupsWithData.map(grp => ({
-            name: !!grp.legendText ? grp.legendText : grp.value,
+            name: !!grp.name ? grp.name : grp.value,
             symbol: { fill: grp.color, strokeOpacity:0, type:"square", size: 6 }
         }));
 
@@ -317,7 +317,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         for (const group of this.analysisGroupsWithData) {
             data.push({
                 scatterData:getScatterData(this.sortedGroupedSurvivals[group.value], this.estimates[group.value], group.value),
-                title: group.legendText !== undefined ? group.legendText : group.value
+                title: group.name !== undefined ? group.name : group.value
             });
         }
         return getDownloadContent(data, this.props.title);
@@ -467,7 +467,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         onClick={()=>{ this.highlightedCurve = (this.highlightedCurve === group.value ? "" : group.value)}}
                     >
                         <div style={{width:10, height:10, display:"inline-block", backgroundColor:group.color, marginRight:5}}/>
-                        {!!group.legendText ? group.legendText : group.value}
+                        {!!group.name ? group.name : group.value}
                     </span>
                 ))}
                 { this.props.showNaPatientsHiddenToggle && (
@@ -486,7 +486,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     @computed get tableRows() {
         return this.props.analysisGroups.map(grp=>(
             <tr>
-                <td>{!!grp.legendText ? grp.legendText : grp.value}</td>
+                <td>{!!grp.name ? grp.name : grp.value}</td>
                 {
                     getStats(this.sortedGroupedSurvivals[grp.value], this.estimates[grp.value]).map(stat =>
                         <td><b>{stat}</b></td>)
