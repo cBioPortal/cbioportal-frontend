@@ -545,12 +545,17 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
                     )}
 
-                    <MSKTab key={7} id="trialMatchTab" linkText="Matched Trials"
-                            hide={!this.shouldShowTrialMatch(patientViewPageStore)}>
-                        <TrialMatchTable sampleManager={sampleManager}
-                                         detailedTrialMatches={patientViewPageStore.detailedTrialMatches.result}
-                                         containerWidth={WindowStore.size.width-20}/>
-                    </MSKTab>
+                    {
+                        this.shouldShowTrialMatch(patientViewPageStore) && (
+                            <MSKTab key={7} id="trialMatchTab" linkText="Matched Trials">
+                                <TrialMatchTable
+                                    sampleManager={sampleManager}
+                                    detailedTrialMatches={patientViewPageStore.detailedTrialMatches.result}
+                                    containerWidth={WindowStore.size.width-20}
+                                />
+                            </MSKTab>
+                        )
+                    }
 
                     {/*<MSKTab key={5} id="mutationalSignatures" linkText="Mutational Signature Data" hide={true}>*/}
                         {/*<div className="clearfix">*/}
