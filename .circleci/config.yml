@@ -80,7 +80,7 @@ jobs:
       # key. If there are no changes to src/ and yarn.lock, no need to rebuild
       - run:
           name: "Concatenate all source files to use as hash key for caching dist folder"
-          command: "cat yarn.lock $(find src/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js common-dist/common.bundle.js > has_source_changed"
+          command: "cat yarn.lock $(find src/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
       - restore_cache:
           keys:
           - v2-dependencies-plus-dist-{{ checksum "has_source_changed" }}
