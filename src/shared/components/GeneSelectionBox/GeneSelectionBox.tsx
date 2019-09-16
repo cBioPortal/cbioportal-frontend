@@ -6,17 +6,15 @@ import styles from "./styles.module.scss";
 import { observable, computed, action, reaction, IReactionDisposer } from 'mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery, SyntaxError } from 'shared/lib/oql/oql-parser';
-import { parseOQLQuery } from 'shared/lib/oql/oqlfilter';
-import { remoteData } from 'public-lib/api/remoteData';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
-import client from "shared/api/cbioportalClientInstance";
 import {getEmptyGeneValidationResult, getFocusOutText, getOQL} from './GeneSelectionBoxUtils';
 import GeneSymbolValidator, {GeneValidationResult} from './GeneSymbolValidator';
 import autobind from 'autobind-decorator';
 
 export interface IGeneSelectionBoxProps {
     inputGeneQuery?: string;
-    validateInputGeneQuery?:boolean;
+    validateInputGeneQuery?: boolean;
+    onEnter?: () => void;
     location?: GeneBoxType;
     callback?: (
         oql: {
@@ -32,7 +30,7 @@ export interface IGeneSelectionBoxProps {
 export enum GeneBoxType {
     DEFAULT,
     STUDY_VIEW_PAGE,
-    ONCOPRINT_HEATMAP
+    ONCOPRINT_HEATMAP,
 }
 
 export type OQL = {
@@ -140,6 +138,13 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
         return getFocusOutText(getOQL(this.geneQuery).query.map(query => query.gene));
     }
 
+    @autobind
+    private onEnter(event: React.KeyboardEvent): void {
+        if (event.key === `Enter` && this.props.onEnter) {
+            this.props.onEnter()
+        }
+    }
+
     @computed private get textAreaClasses() {
         let classNames: string[] = [];
 
@@ -182,30 +187,36 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
     render() {
         return (
             <div className={styles.genesSelection}>
-                <textarea
-                    ref={this.textAreaRef}
-                    onFocus={() => this.isFocused = true}
-                    onBlur={() => this.isFocused = false}
-                    className={classnames(...this.textAreaClasses)}
-                    rows={5}
-                    cols={80}
-                    placeholder={'Click gene symbols below or enter here'}
-                    title="Click gene symbols below or enter here"
-                    defaultValue={this.getTextAreaValue()}
-                    onChange={event => {
-                        this.currentTextAreaValue = event.currentTarget.value;
-                        this.updateQueryToBeValidateDebounce();
-                    }}
-                    data-test='geneSet'
-                />
+                <div style={{display: "flex"}}>
+                    <textarea
+                        ref={this.textAreaRef}
+                        onFocus={() => this.isFocused = true}
+                        onBlur={() => this.isFocused = false}
+                        className={classnames(...this.textAreaClasses)}
+                        rows={5}
+                        cols={80}
+                        placeholder={'Click gene symbols below or enter here'}
+                        title="Click gene symbols below or enter here"
+                        defaultValue={this.getTextAreaValue()}
+                        onKeyUp={this.onEnter}
+                        onChange={event => {
+                            this.updateQueryToBeValidateDebounce()
+                            this.currentTextAreaValue = event.currentTarget.value;
+                        }}
+                        data-test='geneSet'
+                    />
+                    {this.props.children}
+                </div>
+                <div>
+                    <GeneSymbolValidator
+                        geneQuery={this.queryToBeValidated}
+                        skipGeneValidation={this.skipGenesValidation}
+                        updateGeneQuery={this.updateGeneQuery}
+                        afterValidation={this.afterGeneSymbolValidation}
+                        errorMessageOnly={this.props.location === GeneBoxType.STUDY_VIEW_PAGE}
+                    />
+                </div>
 
-                <GeneSymbolValidator
-                    geneQuery={this.queryToBeValidated}
-                    skipGeneValidation={this.skipGenesValidation}
-                    updateGeneQuery={this.updateGeneQuery}
-                    afterValidation={this.afterGeneSymbolValidation}
-                    errorMessageOnly={this.props.location === GeneBoxType.STUDY_VIEW_PAGE}
-                />
 
             </div>
         )

@@ -35,8 +35,12 @@ import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 import QueryAndDownloadTabs from "shared/components/query/QueryAndDownloadTabs";
 import {createQueryStore} from "pages/home/HomePage";
-import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
+import ExtendedRouterStore, { QueryParameter } from "shared/lib/ExtendedRouterStore";
 import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
+import GeneSelectionBox, { GeneBoxType } from "shared/components/GeneSelectionBox/GeneSelectionBox";
+import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
+import { Gene } from "shared/api/generated/CBioPortalAPI";
+import { GeneReplacement } from "pages/studyView/studyPageHeader/rightPanel/RightPanel";
 
 function initStore(appStore:AppStore) {
 
@@ -133,6 +137,11 @@ export interface IResultsViewPageProps {
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
     private resultsViewPageStore: ResultsViewPageStore;
+    
+    @observable
+    private geneQuery = "";
+    @observable
+    private geneQueryError = false;
 
     @observable showTabs = true;
 
@@ -409,6 +418,28 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     }
 
     @autobind
+    private onGeneSelectionBoxChange(
+        oql: {query: SingleGeneQuery[], error?: {start: number, end: number, message: string}},
+        genes: {found: Gene[], suggestions: GeneReplacement[]},
+        queryStr: string
+    ): void {
+        this.geneQuery = queryStr;
+        this.geneQueryError = !!oql.error;
+    }
+
+    @computed
+    get isQueryButtonDisabled() {
+        return this.geneQuery === "" || this.geneQueryError;
+    }
+
+    @autobind
+    private onGeneSubmitClick() {
+        if (!this.geneQueryError) {
+            (window as any).routingStore.updateRoute({ [QueryParameter.GENE_LIST]: this.geneQuery});
+        }
+    }
+
+    @autobind
     private getTabHref(tabId:string) {
         return URL.format({
             pathname:tabId,
@@ -460,7 +491,23 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                 onToggleQueryFormVisiblity={(visible) => {
                                     this.showTabs = visible;
                                 }}
-                            />
+                            >
+                                <GeneSelectionBox
+                                    inputGeneQuery={this.resultsViewPageStore.rvQuery.oqlQuery}
+                                    validateInputGeneQuery={true}
+                                    location={GeneBoxType.STUDY_VIEW_PAGE}
+                                    callback={this.onGeneSelectionBoxChange}
+                                    onEnter={this.onGeneSubmitClick}
+                                >
+                                    <button
+                                        disabled={this.isQueryButtonDisabled}
+                                        className="btn btn-primary btn-sm"
+                                        onClick={this.onGeneSubmitClick}
+                                    >
+                                        Query
+                                    </button>
+                                </GeneSelectionBox>
+                            </QuerySummary>
                         </div>
 
                         {

@@ -193,19 +193,24 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                                 (loadingComplete) && this.cohortAndGeneSummary.component!
                             }
                         </div>
+                        <div>
+                            <div className="query-summary__rightItems">
+                                <div className="query-summary__alterationData">
+                                {
+                                    (loadingComplete) && <strong>{this.alterationSummary.component!}</strong>
+                                }
+                                </div>
 
-                        <div className="query-summary__rightItems">
-                            <div className="query-summary__alterationData">
-                            {
-                                (loadingComplete) && <strong>{this.alterationSummary.component!}</strong>
-                            }
+                                <ShareUI
+                                    sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
+                                    bitlyAccessToken={AppConfig.serverConfig.bitly_access_token}
+                                    routingStore={this.props.routingStore}
+                                />
                             </div>
-
-                            <ShareUI sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
-                                     bitlyAccessToken={AppConfig.serverConfig.bitly_access_token}
-                                     routingStore={this.props.routingStore}/>
+                            <div className="query-summary__rightItems" style={{float: "right"}}>
+                                {this.props.children}
+                            </div>
                         </div>
-
                     </div>
 
                     {

@@ -21,6 +21,14 @@
     align-items:center;
   }
 
+  .query-summary__alterationData {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.gene-select-box {
+  padding-top: 10px;
 }
 
 .query-summary {
