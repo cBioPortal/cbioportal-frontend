@@ -134,27 +134,18 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
     }
 
     @computed
-    get tilted() {
-        return this.tickValues.length > STUDY_VIEW_CONFIG.thresholds.escapeTick;
-    }
-
-    @computed
     get bottomPadding(): number {
-        const MAX_PADDING = 30;
-        const padding = _.max(this.tickFormat.map((tick: string | string[]) => { 
-            let content;
-            if (_.isArray(tick)) {
-                content = tick.join();
-            } else {
-                content = tick;
-            }
+        const MAX_PADDING = 40;
+        const MIN_PADDING = 10; // used when tickFormat is empty
+        const padding = _.max(this.tickFormat.map((tick: string | string[]) => {
+            const content = _.isArray(tick) ? tick.join() : tick;
             const fontFamily = VICTORY_THEME.axis.style.tickLabels.fontFamily;
             const fontSize = `${VICTORY_THEME.axis.style.tickLabels.fontSize}px`;
             const textHeight = getTextHeight(content, fontFamily, fontSize);
             const textWidth = getTextWidth(content, fontFamily, fontSize);
             const textDiagonal = getTextDiagonal(textHeight, textWidth);
-            return 10 + (this.tilted ? textDiagonal * Math.sin(Math.PI * TILT_ANGLE / 180)  : textHeight);  
-        }));
+            return 10 + (textDiagonal * Math.sin(Math.PI * TILT_ANGLE / 180));
+        })) || MIN_PADDING;
         return padding > MAX_PADDING ? MAX_PADDING : padding;
     }
 
@@ -192,15 +183,13 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         tickFormat={(t: number) => this.tickFormat[t - 1]}
                         domain={[0, this.tickValues[this.tickValues.length - 1] + 1]}
                         tickLabelComponent={<BarChartAxisLabel />}
-                        style={
-                            this.tilted ? {
-                                tickLabels: {
-                                    angle: TILT_ANGLE,
-                                    verticalAnchor: "start",
-                                    textAnchor: "start"
-                                }
-                            } : undefined
-                        }
+                        style={{
+                            tickLabels: {
+                                angle: TILT_ANGLE,
+                                verticalAnchor: "start",
+                                textAnchor: "start"
+                            }
+                        }}
                     />
                     <VictoryAxis
                         dependentAxis={true}
