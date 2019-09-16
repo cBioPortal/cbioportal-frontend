@@ -7,7 +7,7 @@ import {
     getOrdinals,
     getOverlapComputations,
     getSampleIdentifiers,
-    getStudyIds,
+    getStudyIds, getTabId,
     GroupComparisonTab,
     IOverlapComputations,
     isGroupEmpty,
@@ -57,6 +57,7 @@ import {stringListToIndexSet} from "../../public-lib/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
+import trackPropertiesIndividually, {ValueGetter} from "../../shared/lib/trackPropertiesIndividually";
 
 export enum OverlapStrategy {
     INCLUDE = "Include",
@@ -70,9 +71,12 @@ export default class GroupComparisonStore {
     @observable public newSessionPending = false;
     private tabHasBeenShown = observable.map<boolean>();
     private tabHasBeenShownReactionDisposer:IReactionDisposer;
+    public getQueryValue:ValueGetter<GroupComparisonURLQuery>;
 
     constructor(sessionId:string, private appStore:AppStore, private routing:any) {
         this.sessionId = sessionId;
+
+        this.getQueryValue = trackPropertiesIndividually(()=>this.routing.query);
 
         this.tabHasBeenShownReactionDisposer = autorun(()=>{
             this.tabHasBeenShown.set(
@@ -107,12 +111,12 @@ export default class GroupComparisonStore {
     }
 
     @computed get overlapStrategy() {
-        const param = (this.routing.location.query as GroupComparisonURLQuery).overlapStrategy;
+        const param = this.getQueryValue("overlapStrategy");
         return param || OverlapStrategy.EXCLUDE;
     }
 
     @computed get groupOrder() {
-        const param = (this.routing.location.query as GroupComparisonURLQuery).groupOrder;
+        const param = this.getQueryValue("groupOrder");
         if (param) {
             return JSON.parse(param);
         } else {
@@ -137,7 +141,7 @@ export default class GroupComparisonStore {
     }
 
     @computed get unselectedGroups() {
-        const param = (this.routing.location.query as GroupComparisonURLQuery).unselectedGroups;
+        const param = this.getQueryValue("unselectedGroups");
         if (param) {
             return JSON.parse(param);
         } else {
@@ -201,13 +205,9 @@ export default class GroupComparisonStore {
         this.routing.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
     }
 
-    get currentTabId() {
-        return this._currentTabId;
-    }
-
-    @autobind
-    public setTabId(id:GroupComparisonTab) {
-        this._currentTabId = id;
+    @computed
+    public get currentTabId() {
+        return getTabId(this.routing.location.pathname) || GroupComparisonTab.OVERLAP;
     }
 
     readonly _session = remoteData<Session>({

@@ -42,43 +42,19 @@ export type GroupComparisonURLQuery = {
 export default class GroupComparisonPage extends React.Component<IGroupComparisonPageProps, {}> {
     @observable.ref private store:GroupComparisonStore;
     private queryReaction:IReactionDisposer;
-    private pathnameReaction:IReactionDisposer;
-    private lastQuery:Partial<GroupComparisonURLQuery>;
 
     constructor(props:IGroupComparisonPageProps) {
         super(props);
         this.queryReaction = reaction(
-            () => props.routing.location.query,
-            query => {
-
-                if (!props.routing.location.pathname.includes("/comparison") ||
-                    _.isEqual(query, this.lastQuery) ||
-                    (this.lastQuery && (query.sessionId === this.lastQuery.sessionId))) {
-                    return;
-                }
+            () => props.routing.location.query.sessionId,
+            sessionId => {
 
                 if (this.store) {
                     this.store.destroy();
                 }
 
-                this.store = new GroupComparisonStore((query as GroupComparisonURLQuery).sessionId, this.props.appStore, this.props.routing);
-                this.setTabIdInStore(props.routing.location.pathname);
+                this.store = new GroupComparisonStore(sessionId, this.props.appStore, this.props.routing);
                 (window as any).groupComparisonStore = this.store;
-
-                this.lastQuery = query;
-            },
-            {fireImmediately: true}
-        );
-
-        this.pathnameReaction = reaction(
-            () => props.routing.location.pathname,
-            pathname => {
-
-                if (!pathname.includes("/comparison")) {
-                    return;
-                }
-
-                this.setTabIdInStore(pathname);
             },
             {fireImmediately: true}
         );
@@ -95,21 +71,13 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         });
     }
 
-    private setTabIdInStore(pathname:string) {
-        const tabId = getTabId(pathname);
-        if (tabId) {
-            this.store.setTabId(tabId);
-        }
-    }
-
     @autobind
-    private setTabIdInUrl(id:string, replace?:boolean) {
+    private setTabId(id:string, replace?:boolean) {
         this.props.routing.updateRoute({},`comparison/${id}`, false, replace);
     }
 
     componentWillUnmount() {
         this.queryReaction && this.queryReaction();
-        this.pathnameReaction && this.pathnameReaction();
         this.store && this.store.destroy();
     }
 
@@ -127,7 +95,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             return (
                 <MSKTabs unmountOnHide={false}
                          activeTabId={this.store.currentTabId}
-                         onTabClick={this.setTabIdInUrl}
+                         onTabClick={this.setTabId}
                          className="primaryTabs mainTabs"
                          getTabHref={this.getTabHref}
                 >
