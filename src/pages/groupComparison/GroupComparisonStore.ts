@@ -51,12 +51,12 @@ import {Session, SessionGroupData} from "../../shared/api/ComparisonGroupClient"
 import {calculateQValues} from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
-import {GroupComparisonURLQuery} from "./GroupComparisonPage";
 import {AppStore} from "../../AppStore";
 import {stringListToIndexSet} from "../../public-lib/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
+import GroupComparisonURLWrapper from "./GroupComparisonURLWrapper";
 import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
 import {fetchAllReferenceGenomeGenes} from "shared/lib/StoreUtils";
 
@@ -73,9 +73,7 @@ export default class GroupComparisonStore {
     private tabHasBeenShown = observable.map<boolean>();
     private tabHasBeenShownReactionDisposer:IReactionDisposer;
 
-    @observable private _usePatientLevelEnrichments = false;
-
-    constructor(sessionId:string, private appStore:AppStore, private routing:any) {
+    constructor(sessionId:string, private appStore:AppStore, private urlWrapper:GroupComparisonURLWrapper) {
         this.sessionId = sessionId;
 
         this.tabHasBeenShownReactionDisposer = autorun(()=>{
@@ -107,25 +105,25 @@ export default class GroupComparisonStore {
     }
 
     @action public updateOverlapStrategy(strategy:OverlapStrategy) {
-        this.routing.updateRoute({ overlapStrategy: strategy } as Partial<GroupComparisonURLQuery>);
+        this.urlWrapper.updateQuery({ overlapStrategy: strategy });
     }
 
     @computed get overlapStrategy() {
-        const param = (this.routing.location.query as GroupComparisonURLQuery).overlapStrategy;
-        return param || OverlapStrategy.EXCLUDE;
+        return this.urlWrapper.query.overlapStrategy || OverlapStrategy.EXCLUDE;
     }
 
+    @computed
     public get usePatientLevelEnrichments() {
-        return (this.routing.location.query as GroupComparisonURLQuery).patientEnrichments === "true";
+        return this.urlWrapper.query.patientEnrichments === "true";
     }
 
     @autobind
     @action public setUsePatientLevelEnrichments(e:boolean) {
-        this.routing.updateRoute({ patientEnrichments: e.toString()} as Partial<GroupComparisonURLQuery>)
+        this.urlWrapper.updateQuery({ patientEnrichments: e.toString()});
     }
 
     @computed get groupOrder() {
-        const param = (this.routing.location.query as GroupComparisonURLQuery).groupOrder;
+        const param = this.urlWrapper.query.groupOrder;
         if (param) {
             return JSON.parse(param);
         } else {
@@ -142,15 +140,15 @@ export default class GroupComparisonStore {
         const poppedUid = groupOrder.splice(oldIndex, 1)[0];
         groupOrder.splice(newIndex, 0, poppedUid);
 
-        this.routing.updateRoute({ groupOrder: JSON.stringify(groupOrder) } as Partial<GroupComparisonURLQuery>);
+        this.urlWrapper.updateQuery({ groupOrder: JSON.stringify(groupOrder) });
     }
 
     @action private updateUnselectedGroups(names:string[]) {
-        this.routing.updateRoute({ unselectedGroups: JSON.stringify(names) } as Partial<GroupComparisonURLQuery>)
+        this.urlWrapper.updateQuery({ unselectedGroups: JSON.stringify(names) });
     }
 
     @computed get unselectedGroups() {
-        const param = (this.routing.location.query as GroupComparisonURLQuery).unselectedGroups;
+        const param = this.urlWrapper.query.unselectedGroups;
         if (param) {
             return JSON.parse(param);
         } else {
@@ -211,16 +209,7 @@ export default class GroupComparisonStore {
     @action
     private async saveAndGoToSession(newSession:Session) {
         const {id} = await comparisonClient.addComparisonSession(newSession);
-        this.routing.updateRoute({ sessionId: id} as GroupComparisonURLQuery);
-    }
-
-    get currentTabId() {
-        return this._currentTabId;
-    }
-
-    @autobind
-    public setTabId(id:GroupComparisonTab) {
-        this._currentTabId = id;
+        this.urlWrapper.updateQuery({ sessionId: id});
     }
 
     readonly _session = remoteData<Session>({
