@@ -160,7 +160,7 @@ export type CopyNumberGeneFilter = {
 export type CopyNumberGeneFilterElement = {
     'alteration': number
 
-        'entrezGeneId': number
+        'hugoGeneSymbol': string
 
 };
 export type CosmicMutation = {
@@ -446,7 +446,7 @@ export type MutationCountByGene = {
 
 };
 export type MutationGeneFilter = {
-    'entrezGeneIds': Array < number >
+    'hugoGeneSymbols': Array < string >
 
 };
 export type MutationSpectrum = {
