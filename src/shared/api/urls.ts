@@ -2,9 +2,9 @@ import {default as URL, QueryParams} from "url";
 import AppConfig from "appConfig";
 import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import * as _ from 'lodash';
-import {GroupComparisonURLQuery} from "../../pages/groupComparison/GroupComparisonPage";
 import {GroupComparisonLoadingParams} from "../../pages/groupComparison/GroupComparisonLoading";
 import {BuildUrlParams} from "../../public-lib/lib/urls";
+import {GroupComparisonURLQuery} from "../../pages/groupComparison/GroupComparisonURLWrapper";
 
 export function trimTrailingSlash(str:string){
    return str.replace(/\/$/g,"");
