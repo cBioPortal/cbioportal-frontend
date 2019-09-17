@@ -49,7 +49,12 @@ export default class Network extends React.Component<INetworkTabParams, {}> {
 
     render(){
 
-        return <IFrameLoader iframeId={"networkFrame"} url={this.url} height={800} />;
+        return <>
+                <div className={"alert alert-info"}>
+                    The Network tab will be retired on 11/1/2019. For similar functionality, please visit <a href={"http://www.pathwaycommons.org/pcviz/"} target="_blank">http://www.pathwaycommons.org/pcviz/</a>
+                </div>
+                <IFrameLoader iframeId={"networkFrame"} url={this.url} height={800} />
+            </>;
 
     }
 
