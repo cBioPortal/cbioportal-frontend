@@ -536,9 +536,12 @@ export class LazyMobXTableStore<T> {
         } else {
             this.dataStore = new SimpleLazyMobXTableApplicationDataStore<T>(props.data || []);
         }
-
-        this.dataStore.page = 0;
-        this.itemsPerPage = props.initialItemsPerPage || 50;
+        if(this.dataStore.page === undefined) {
+            this.dataStore.page = 0;
+        }
+        if(this.itemsPerPage === undefined) {
+            this.itemsPerPage = props.initialItemsPerPage || 50;
+        }
         // even if dataStore passed in, we need to initialize sort props if undefined
         // otherwise we lose the functionality of 'initialSortColumn' and 'initialSortDirection' props
         if (this.dataStore.sortAscending === undefined) {
