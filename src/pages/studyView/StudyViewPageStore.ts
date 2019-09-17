@@ -222,11 +222,6 @@ export type CustomChartIdentifierWithValue = CustomChartIdentifier & {
     value: string
 }
 
-export type GeneIdentifier = {
-    entrezGeneId: number,
-    hugoGeneSymbol: string
-}
-
 export type CopyNumberAlterationIdentifier = CopyNumberGeneFilterElement & {
     hugoGeneSymbol: string
 }
@@ -700,8 +695,6 @@ export class StudyViewPageStore {
 
     @observable private geneQueries: SingleGeneQuery[] = [];
 
-    private geneMapCache:{[entrezGeneId:number]:string} = {};
-
     @observable public chartsDimension = observable.map<ChartDimension>();
 
     @observable public chartsType = observable.map<ChartType>();
@@ -759,10 +752,10 @@ export class StudyViewPageStore {
         if (_.isArray(filters.mutatedGenes) && filters.mutatedGenes.length > 0) {
             this._mutatedGeneFilter = _.reduce(filters.mutatedGenes, (acc, next) => {
                 acc.push({
-                    entrezGeneIds: _.reduce(next.entrezGeneIds, (geneAcc, entrezGeneId) => {
-                        geneAcc.push(entrezGeneId);
+                    hugoGeneSymbols: _.reduce(next.hugoGeneSymbols, (geneAcc, hugoGeneSymbol) => {
+                        geneAcc.push(hugoGeneSymbol);
                         return geneAcc;
-                    }, [] as number[])
+                    }, [] as string[])
                 });
                 return acc;
             }, [] as MutationGeneFilter[]);
@@ -774,7 +767,7 @@ export class StudyViewPageStore {
                     alterations: _.reduce(next.alterations, (altAcc, alt) => {
                         altAcc.push({
                             alteration: alt.alteration,
-                            entrezGeneId: alt.entrezGeneId
+                            hugoGeneSymbol: alt.hugoGeneSymbol
                         });
                         return altAcc;
                     }, [] as CopyNumberGeneFilterElement[])
@@ -1008,11 +1001,6 @@ export class StudyViewPageStore {
     }
 
     @autobind
-    getKnownHugoGeneSymbolByEntrezGeneId(entrezGeneId: number): string | undefined {
-        return this.geneMapCache[entrezGeneId];
-    }
-
-    @autobind
     @action
     clearGeneFilter() {
         this._mutatedGeneFilter = [];
@@ -1188,27 +1176,26 @@ export class StudyViewPageStore {
 
     @autobind
     @action
-    addGeneFilters(genes: GeneIdentifier[]) {
+    addGeneFilters(hugoGeneSymbols: string[]) {
 
         trackStudyViewFilterEvent("geneFilter", this);
 
-        genes.forEach(gene => this.geneMapCache[gene.entrezGeneId] = gene.hugoGeneSymbol);
-        this._mutatedGeneFilter = [...this._mutatedGeneFilter, {entrezGeneIds: genes.map(gene => gene.entrezGeneId)}];
+        this._mutatedGeneFilter = [...this._mutatedGeneFilter, {hugoGeneSymbols: hugoGeneSymbols}];
     }
 
     @autobind
     @action
-    removeGeneFilter(toBeRemoved: number) {
+    removeGeneFilter(toBeRemoved: string) {
         this._mutatedGeneFilter = _.reduce(this._mutatedGeneFilter, (acc, next) => {
-            const newGroup = _.reduce(next.entrezGeneIds, (list, entrezGeneId) => {
-                if (entrezGeneId !== toBeRemoved) {
-                    list.push(entrezGeneId);
+            const newGroup = _.reduce(next.hugoGeneSymbols, (list, hugoGeneSymbol) => {
+                if (hugoGeneSymbol !== toBeRemoved) {
+                    list.push(hugoGeneSymbol);
                 }
                 return list;
-            }, [] as number[]);
+            }, [] as string[]);
             if (newGroup.length > 0) {
                 acc.push({
-                    entrezGeneIds: newGroup
+                    hugoGeneSymbols: newGroup
                 });
             }
             return acc;
@@ -1268,13 +1255,12 @@ export class StudyViewPageStore {
 
         trackStudyViewFilterEvent("cnaGene", this);
 
-        filters.forEach(filter => this.geneMapCache[filter.entrezGeneId]  = filter.hugoGeneSymbol);
         this._cnaGeneFilter = [...this._cnaGeneFilter, {
             alterations: filters.map(filter => {
                 return {
                     alteration: filter.alteration,
-                    entrezGeneId: filter.entrezGeneId
-                } as CopyNumberGeneFilterElement
+                    hugoGeneSymbol: filter.hugoGeneSymbol
+                }
             })
         }];
     }
@@ -1284,7 +1270,7 @@ export class StudyViewPageStore {
     removeCNAGeneFilters(toBeRemoved: CopyNumberGeneFilterElement) {
         this._cnaGeneFilter = _.reduce(this._cnaGeneFilter, (acc, next) => {
             const newGroup = _.reduce(next.alterations, (list, filter) => {
-                if (filter.entrezGeneId !== toBeRemoved.entrezGeneId && filter.alteration !== toBeRemoved.alteration) {
+                if (filter.hugoGeneSymbol !== toBeRemoved.hugoGeneSymbol && filter.alteration !== toBeRemoved.alteration) {
                     list.push(filter);
                 }
                 return list;
@@ -1547,8 +1533,8 @@ export class StudyViewPageStore {
 
     }
 
-    public getMutatedGenesTableFilters(): number[] {
-        return _.flatMap(this._mutatedGeneFilter, filter => filter.entrezGeneIds);
+    public getMutatedGenesTableFilters(): string[] {
+        return _.flatMap(this._mutatedGeneFilter, filter => filter.hugoGeneSymbols);
     }
 
     public getCNAGenesTableFilters(): CopyNumberGeneFilterElement[] {
@@ -3048,20 +3034,6 @@ export class StudyViewPageStore {
         },
         onError: (error => {}),
         default: []
-    });
-
-    readonly entrezGeneIdToGene = remoteData({
-        await:()=>[this.mutatedGeneData, this.cnaGeneData],
-        invoke:()=>{
-            const ret:{[entrez:number]:GeneIdentifier} = {};
-            for (const d of this.mutatedGeneData.result!) {
-                ret[d.entrezGeneId] = d;
-            }
-            for (const d of this.cnaGeneData.result!) {
-                ret[d.entrezGeneId] = d;
-            }
-            return Promise.resolve(ret);
-        }
     });
 
     readonly cnSegments = remoteData<CopyNumberSeg[]>({

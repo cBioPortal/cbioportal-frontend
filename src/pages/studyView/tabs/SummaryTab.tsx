@@ -3,7 +3,7 @@ import styles from "./studySummaryTabStyles.module.scss";
 import chartHeaderStyles from "../chartHeader/styles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
 import {observable} from 'mobx';
-import {CopyNumberAlterationIdentifier, GeneIdentifier, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
+import {CopyNumberAlterationIdentifier, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import {
     ClinicalDataIntervalFilterValue,
@@ -55,15 +55,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             },
             onToggleLogScale: (chartMeta: ChartMeta) => {
                 this.store.toggleLogScale(chartMeta);
-            },
-            addGeneFilters: (genes: GeneIdentifier[]) => {
-                this.store.addGeneFilters(genes);
-            },
-            removeGeneFilter: (entrezGeneId:number) => {
-                this.store.removeGeneFilter(entrezGeneId);
-            },
-            resetGeneFilter: (chartMeta: ChartMeta) => {
-                this.store.resetGeneFilter();
             },
             resetCNAGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetCNAGeneFilter();
@@ -184,8 +175,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             case MUTATED_GENES_TABLE: {
                 props.filters = this.store.getMutatedGenesTableFilters();
                 props.promise = this.store.mutatedGeneData;
-                props.onValueSelection = this.handlers.addGeneFilters;
-                props.onResetSelection = this.handlers.resetGeneFilter;
+                props.onValueSelection = this.store.addGeneFilters;
+                props.onResetSelection = this.store.resetGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
                 props.title = props.title + ( !this.store.molecularProfileSampleCounts.isComplete || this.store.molecularProfileSampleCounts.result === undefined ? '' : ` (${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} profiled samples)`),
