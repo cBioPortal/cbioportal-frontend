@@ -1781,9 +1781,21 @@ export class ResultsViewPageStore {
             } else {
                 // would be nice to have an endpoint that would return multiple sample lists
                 // but this will only ever happen one for each study selected (and in queries where a sample list is specified)
-                const allSampleLists = await Promise.all(this.rvQuery.samplesSpecification.map((spec) => {
+                let samplesSpecifications = [];
+                // get sample specifications from physical studies if we are querying virtual study
+                if (this.queriedVirtualStudies.result!.length > 0){
+                    samplesSpecifications = populateSampleSpecificationsFromVirtualStudies(this.rvQuery.samplesSpecification, this.queriedVirtualStudies.result!);
+                } else {
+                    samplesSpecifications = this.rvQuery.samplesSpecification;
+                }
+                // get unique study ids to reduce the API requests
+                const uniqueStudyIds = _.chain(samplesSpecifications)
+                                      .map((specification) => specification.studyId)
+                                      .uniq()
+                                      .value();
+                const allSampleLists = await Promise.all(uniqueStudyIds.map((studyId) => {
                     return client.getAllSampleListsInStudyUsingGET({
-                        studyId: spec.studyId,
+                        studyId: studyId,
                         projection: 'SUMMARY'
                     })
                 }));
