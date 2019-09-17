@@ -16,8 +16,8 @@ StringExceptQuotes = stringExceptQuotes:[^"]+ { return stringExceptQuotes.join("
 sp = space:[ \t\r]+
 msp = space:[ \t\r]*
 
-zmbs = zero_or_more_breaks_and_spaces:[; \t\r\n]*
-ombs = one_or_more_breaks_and_spaces:[; \t\r\n]+
+zmbs = zero_or_more_breaks_and_spaces:[,; \t\r\n]*
+ombs = one_or_more_breaks_and_spaces:[,; \t\r\n]+
 
 StartMergedGenes
 	= "[" zmbs "\"" label:StringExceptQuotes "\"" {return {"label": label, "list":[]};}
