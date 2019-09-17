@@ -10,7 +10,10 @@ import {
     MutationMapper as DefaultMutationMapper,
     TrackDataStatus,
     TrackName,
-    TrackVisibility
+    TrackVisibility,
+    ProteinImpactTypeBadgeSelector,
+    onFilterOptionSelect,
+    DataFilterType
 } from "react-mutation-mapper";
 
 import 'react-mutation-mapper/dist/styles.css';
@@ -22,14 +25,15 @@ import StructureViewerPanel from "shared/components/structureViewer/StructureVie
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
-import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS, getColorForProteinImpactType} from "shared/lib/MutationUtils";
-import ProteinImpactTypePanel from "shared/components/mutationTypePanel/ProteinImpactTypePanel";
 import ProteinChainPanel from "shared/components/proteinChainPanel/ProteinChainPanel";
 import MutationMapperStore from "./MutationMapperStore";
+import {findProteinImpactTypeFilter, PROTEIN_IMPACT_TYPE_FILTER_ID} from "./MutationMapperDataStore";
 import WindowStore from "../window/WindowStore";
+
+import styles from "./mutationMapper.module.scss";
 
 export interface IMutationMapperConfig {
     show_oncokb?: boolean;
@@ -70,18 +74,6 @@ export interface IMutationMapperProps {
 @observer
 export default class MutationMapper<P extends IMutationMapperProps> extends DefaultMutationMapper<P>
 {
-    protected handlers:any;
-
-    constructor(props: P) {
-        super(props);
-
-        this.handlers = {
-            resetDataStore:()=>{
-                this.props.store.dataStore.resetFilterAndSelection();
-            }
-        };
-    }
-
     @computed get trackDataStatus(): TrackDataStatus
     {
         let oncoKbDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.oncoKbData.status;
@@ -143,6 +135,29 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
         return `Mutations${this.multipleMutationInfo}`;
     }
 
+    @computed
+    public get proteinImpactTypeFilter() {
+        return findProteinImpactTypeFilter(this.store.dataStore.dataFilters);
+    }
+
+    /**
+     * Overriding the parent method to have a customized filter panel.
+     */
+    protected get mutationFilterPanel(): JSX.Element | null
+    {
+        return (
+            <div>
+                <div style={{paddingBottom: 15, paddingTop: 15}}>
+                    <ProteinImpactTypeBadgeSelector
+                        filter={this.proteinImpactTypeFilter}
+                        counts={this.store.mutationCountsByProteinImpactType}
+                        onSelect={this.onProteinImpactTypeSelect}
+                    />
+                </div>
+            </div>
+        );
+    }
+
     protected get structureViewerPanel(): JSX.Element | null
     {
         return this.is3dPanelOpen ? (
@@ -171,6 +186,10 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
                 trackDataStatus={this.trackDataStatus}
                 onTrackVisibilityChange={this.onTrackVisibilityChange}
                 getLollipopColor={getColorForProteinImpactType}
+                filterResetPanel={
+                    !this.props.store.dataStore.showingAllData && this.filterResetPanel !== null ?
+                        this.filterResetPanel: undefined
+                }
             />
         );
     }
@@ -186,18 +205,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
                 maxChainsHeight={200}
             />
         ): null;
-    }
-
-    protected get proteinImpactTypePanel(): JSX.Element | null
-    {
-        return (
-            <div>
-                <ProteinImpactTypePanel
-                    dataStore={this.props.store.dataStore}
-                    {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
-                />
-            </div>
-        );
     }
 
     protected get view3dButton(): JSX.Element | null
@@ -220,9 +227,9 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
 
         return (
             <FilterResetPanel
-                resetFilters={() => dataStore.resetFilterAndSelection()}
-                mutationsShown={`${dataStore.tableData.length}/${dataStore.allData.length}`}
-                className={classnames("alert" , "alert-success")}
+                resetFilters={() => dataStore.resetFilters()}
+                filterInfo={`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`}
+                className={classnames("alert" , "alert-success", styles.filterResetPanel)}
                 buttonClass="btn btn-default btn-xs"
             />
         );
@@ -249,7 +256,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
                 {
                     (!this.isLoading) && (
                     <div>
-                        {!this.props.store.dataStore.showingAllData && this.filterResetPanel}
                         <div style={{ display:'flex' }}>
                             <div className="borderedChart" style={{ marginRight:10 }}>
                                 {this.mutationPlot}
@@ -259,7 +265,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
                             <div className="mutationMapperMetaColumn">
                                 {this.geneSummary}
                                 {this.mutationRateSummary}
-                                {this.proteinImpactTypePanel}
+                                {this.mutationFilterPanel}
                                 {this.view3dButton}
                             </div>
                         </div>
@@ -311,5 +317,16 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
 
         // reset visibility values for the visible ones
         selectedTrackNames.forEach(trackName => this.trackVisibility[trackName] = 'visible');
+    }
+
+    @autobind
+    @action
+    protected onProteinImpactTypeSelect(selectedMutationTypeIds: string[], allValuesSelected: boolean)
+    {
+        onFilterOptionSelect(selectedMutationTypeIds.map(v => v.toLowerCase()),
+            allValuesSelected,
+            this.store.dataStore,
+            DataFilterType.PROTEIN_IMPACT_TYPE,
+            PROTEIN_IMPACT_TYPE_FILTER_ID);
     }
 }
