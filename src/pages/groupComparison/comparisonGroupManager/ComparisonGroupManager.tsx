@@ -68,8 +68,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         this.addGroupPanelOpen = true;
         this._inputGroupName = getDefaultGroupName(
             this.props.store.filters,
-            this.props.store.customChartFilterSet.toJS(),
-            this.props.store.entrezGeneIdToGene.result!
+            this.props.store.customChartFilterSet.toJS()
         );
     }
 
@@ -390,7 +389,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                     className="btn btn-sm btn-primary"
                     data-event={serializeEvent({action:'createCustomGroup',label:'', category:'groupComparison' })}
                     onClick={this.showAddGroupPanel}
-                    disabled={!selectedSamples || !this.props.store.entrezGeneIdToGene.isComplete}
+                    disabled={!selectedSamples}
                     style={{width:"100%"}}
                 >Create new group from selected samples {selectedSamples ? ` (${selectedSamples.length})` : ""}
                 </button>

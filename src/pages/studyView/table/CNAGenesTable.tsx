@@ -229,10 +229,10 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 },
                 render: (data: CopyNumberCountByGeneWithCancerGene) => (
                     <LabeledCheckbox
-                        checked={this.isChecked(data.entrezGeneId, data.alteration)}
-                        disabled={this.isDisabled(data.entrezGeneId, data.alteration)}
+                        checked={this.isChecked(data.hugoGeneSymbol, data.alteration)}
+                        disabled={this.isDisabled(data.hugoGeneSymbol, data.alteration)}
                         onChange={event =>
-                            this.togglePreSelectRow(data.entrezGeneId, data.alteration)
+                            this.togglePreSelectRow(data.hugoGeneSymbol, data.alteration)
                         }
                         labelProps={{
                             style: {
@@ -281,11 +281,11 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     }
 
     @autobind
-    isChecked(entrezGeneId: number, alteration: number) {
+    isChecked(hugoGeneSymbol: string, alteration: number) {
         const record = _.find(
             this.preSelectedRows,
             (row: CNAGenesTableUserSelectionWithIndex) =>
-                row.entrezGeneId === entrezGeneId && row.alteration === alteration
+                row.hugoGeneSymbol === hugoGeneSymbol && row.alteration === alteration
         );
         if (_.isUndefined(record)) {
             return (
@@ -294,7 +294,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     _.find(
                         this.selectedRows,
                         (row: CNAGenesTableUserSelectionWithIndex) =>
-                            row.entrezGeneId === entrezGeneId && row.alteration === alteration
+                            row.hugoGeneSymbol === hugoGeneSymbol && row.alteration === alteration
                     )
                 )
             );
@@ -304,23 +304,23 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     }
 
     @autobind
-    isDisabled(entrezGeneId: number, alteration: number) {
+    isDisabled(hugoGeneSymbol: string, alteration: number) {
         return !_.isUndefined(
             _.find(
                 this.selectedRows,
                 (row: CNAGenesTableUserSelectionWithIndex) =>
-                    row.entrezGeneId === entrezGeneId && row.alteration === alteration
+                    row.hugoGeneSymbol === hugoGeneSymbol && row.alteration === alteration
             )
         );
     }
 
     @autobind
     @action
-    togglePreSelectRow(entrezGeneId: number, alteration: number) {
+    togglePreSelectRow(hugoGeneSymbol: string, alteration: number) {
         const record: CNAGenesTableUserSelectionWithIndex | undefined = _.find(
             this.preSelectedRows,
             (row: CNAGenesTableUserSelectionWithIndex) =>
-                row.entrezGeneId === entrezGeneId && row.alteration === alteration
+                row.hugoGeneSymbol === hugoGeneSymbol && row.alteration === alteration
         );
         if (_.isUndefined(record)) {
             let dataIndex = -1;
@@ -329,7 +329,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 this.tableData,
                 (row: CopyNumberCountByGeneWithCancerGene, index: number) => {
                     const exist =
-                        row.entrezGeneId === entrezGeneId && row.alteration === alteration;
+                        row.hugoGeneSymbol === hugoGeneSymbol && row.alteration === alteration;
                     if (exist) {
                         dataIndex = index;
                     }
@@ -340,7 +340,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             if (!_.isUndefined(datum)) {
                 this.preSelectedRows.push({
                     rowIndex: dataIndex,
-                    entrezGeneId: datum.entrezGeneId,
                     alteration: datum.alteration,
                     hugoGeneSymbol: datum.hugoGeneSymbol
                 });
@@ -356,7 +355,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         this.props.onUserSelection(
             this.preSelectedRows.map(row => {
                 return {
-                    entrezGeneId: row.entrezGeneId,
                     alteration: row.alteration,
                     hugoGeneSymbol: row.hugoGeneSymbol
                 };
@@ -377,15 +375,9 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     row: CopyNumberCountByGeneWithCancerGene,
                     index: number
                 ) => {
-                    if (
-                        _.some(this.props.filters, {
-                            entrezGeneId: row.entrezGeneId,
-                            alteration: row.alteration
-                        })
-                    ) {
+                    if (_.some(this.props.filters, filter => filter.hugoGeneSymbol === row.hugoGeneSymbol && filter.alteration === row.alteration)) {
                         acc.push({
                             rowIndex: index,
-                            entrezGeneId: row.entrezGeneId,
                             alteration: row.alteration,
                             hugoGeneSymbol: row.hugoGeneSymbol
                         });
@@ -400,8 +392,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @autobind
     isSelectedRow(data: CopyNumberCountByGeneWithCancerGene) {
         return !_.isUndefined(
-            _.find(_.union(this.selectedRows, this.preSelectedRows), function(row) {
-                return row.entrezGeneId === data.entrezGeneId && row.alteration === data.alteration;
+            _.find(_.union(this.selectedRows, this.preSelectedRows), function (row) {
+                return row.hugoGeneSymbol === data.hugoGeneSymbol && row.alteration === data.alteration;
             })
         );
     }

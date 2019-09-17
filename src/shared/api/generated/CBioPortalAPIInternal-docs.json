@@ -2143,9 +2143,8 @@
           "type": "integer",
           "format": "int32"
         },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
+        "hugoGeneSymbol": {
+          "type": "string"
         }
       },
       "title": "CopyNumberGeneFilterElement"
@@ -2784,11 +2783,10 @@
     "MutationGeneFilter": {
       "type": "object",
       "properties": {
-        "entrezGeneIds": {
+        "hugoGeneSymbols": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int32"
+            "type": "string"
           }
         }
       },

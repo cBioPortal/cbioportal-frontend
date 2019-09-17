@@ -366,7 +366,6 @@ export function getVirtualStudyDescription(
                                             studyWithSamples: StudyWithSamples[],
                                             filter: StudyViewFilterWithSampleIdentifierFilters,
                                             attributeNamesSet: { [id: string]: string },
-                                            genes: Gene[],
                                             user?: string) {
     let descriptionLines: string[] = [];
     const createdOnStr = 'Created on';
@@ -376,12 +375,7 @@ export function getVirtualStudyDescription(
         descriptionLines.push(previousDescription.replace(regex, ''));
     } else {
 
-        let entrezIdSet: { [id: string]: string } = _.reduce(genes, (acc: { [id: string]: string }, next) => {
-            acc[next.entrezGeneId] = next.hugoGeneSymbol
-            return acc
-        }, {})
         //add to samples and studies count
-
         let uniqueSampleKeys = _.uniq(_.flatMap(studyWithSamples, study => study.uniqueSampleKeys))
         descriptionLines.push(`${uniqueSampleKeys.length} sample${uniqueSampleKeys.length > 1 ? 's' : ''} from ${studyWithSamples.length} ${studyWithSamples.length > 1 ? 'studies:' : 'study:'}`);
         //add individual studies sample count
@@ -395,7 +389,7 @@ export function getVirtualStudyDescription(
                 filterLines.push('- CNA Genes:')
                 filterLines = filterLines.concat(filter.cnaGenes.map(cnaGene => {
                     return cnaGene.alterations.map(alteration => {
-                        let geneSymbol = entrezIdSet[alteration.entrezGeneId] || alteration.entrezGeneId
+                        let geneSymbol = alteration.hugoGeneSymbol
                         return geneSymbol + "-" + getCNAByAlteration(alteration.alteration)
                     }).join(', ').trim();
                 }).map(line => '  - ' + line));
@@ -403,9 +397,7 @@ export function getVirtualStudyDescription(
             if (filter.mutatedGenes && filter.mutatedGenes.length > 0) {
                 filterLines.push('- Mutated Genes:')
                 filterLines = filterLines.concat(filter.mutatedGenes.map(mutatedGene => {
-                    return mutatedGene.entrezGeneIds.map(entrezGeneId => {
-                        return entrezIdSet[entrezGeneId] || entrezGeneId;
-                    }).join(', ').trim();
+                    return mutatedGene.hugoGeneSymbols.join(', ').trim();
                 }).map(line => '  - ' + line));
             }
 
