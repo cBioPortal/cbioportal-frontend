@@ -17,7 +17,8 @@ import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
-import CheckedSelect, {Option} from 'public-lib/components/checkedSelect/CheckedSelect';
+import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
+import {Option} from 'public-lib/components/checkedSelect/CheckedSelectUtils'
 import {MiniOncoprint} from "shared/components/miniOncoprint/MiniOncoprint";
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import GeneBarPlot from './GeneBarPlot';
