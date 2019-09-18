@@ -22,6 +22,7 @@ import MutationOncoprint from "./oncoprint/MutationOncoprint";
 import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import _ from "lodash";
 import {getDownloadData} from "./oncoprint/MutationOncoprintUtils";
+import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 
 export interface IPatientViewMutationsTabProps {
     store:PatientViewPageStore;
@@ -35,6 +36,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
     private dataStore = new PatientViewMutationsDataStore(()=>this.props.store.mergedMutationDataIncludingUncalled);
     @observable.ref mutationsTable:PatientViewSelectableMutationTable|null = null;
     private vafLineChartSvg:SVGElement|null = null;
+    @observable vafLineChartLogScale = false;
 
     @autobind
     private vafLineChartSvgRef(elt:SVGElement|null) {
@@ -75,7 +77,16 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     mutationProfileId={this.props.store.mutationMolecularProfileId.result!}
                     sampleManager={this.props.sampleManager}
                     svgRef={this.vafLineChartSvgRef}
+                    logScale={this.vafLineChartLogScale}
                 />
+                <div style={{marginTop:3, marginRight:7}}>
+                    <LabeledCheckbox
+                        checked={this.vafLineChartLogScale}
+                        onChange={()=>{ this.vafLineChartLogScale = !this.vafLineChartLogScale; }}
+                    >
+                        <span style={{marginTop:-3}}>Log scale</span>
+                    </LabeledCheckbox>
+                </div>
                 <DownloadControls
                     filename="vafHeatmap"
                     getSvg={()=>this.vafLineChartSvg}

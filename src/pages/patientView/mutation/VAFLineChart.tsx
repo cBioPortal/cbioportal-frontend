@@ -24,7 +24,6 @@ import $ from "jquery";
 import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import invertIncreasingFunction, {invertDecreasingFunction} from "../../../shared/lib/invertIncreasingFunction";
 import {MutationStatus, mutationTooltip} from "./PatientViewMutationsTabUtils";
-import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../shared/lib/StoreUtils";
 
 
 export interface IVAFLineChartProps {
@@ -35,6 +34,7 @@ export interface IVAFLineChartProps {
     sampleManager:SampleManager|null;
     dataStore:PatientViewMutationsDataStore;
     svgRef:(elt:SVGElement|null)=>void;
+    logScale:boolean;
 }
 
 interface IPoint {
@@ -49,6 +49,7 @@ interface IPoint {
 const LINE_COLOR = "#000000";
 const THICK_LINE_STROKE_WIDTH = 6;
 const DRAG_COVER_CLASSNAME = "draggingCover";
+const MIN_LOG_ARG = 0.001;
 
 class ScaleCapturer extends React.Component<any, any>{
     render() {
@@ -481,9 +482,9 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     return <g/>
                 }
 
-                let d = `M ${this.scale!.x(points[0].x)} ${this.scale!.y(points[0].y)}`;
+                let d = `M ${this.scale!.x(points[0].x)} ${this.scale!.y(this.y(points[0]))}`;
                 for (let i=1; i<points.length; i++) {
-                    d = `${d} L ${this.scale!.x(points[i].x)} ${this.scale!.y(points[i].y)}`;
+                    d = `${d} L ${this.scale!.x(points[i].x)} ${this.scale!.y(this.y(points[i]))}`;
                 }
                 return (
                     <Portal isOpened={true} node={this.thickLineContainer}>
@@ -532,6 +533,38 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         }
     }
 
+    @autobind
+    private y(d:IPoint) {
+        if (this.props.logScale) {
+            return Math.log10(Math.max(MIN_LOG_ARG, d.y));
+        } else {
+            return d.y;
+        }
+    }
+
+    @computed get yDomain() {
+        if (this.props.logScale) {
+            return [Math.log10(MIN_LOG_ARG), Math.log10(1)];
+        } else {
+            return [0, 1];
+        }
+    }
+
+    @autobind
+    private tickFormatY(t:number, tickIndex:number) {
+        if (this.props.logScale) {
+            const realValue = Math.pow(10, t);
+            if (tickIndex === 0) {
+                // bottom tick - show less-than-or-equal sign
+                return `≤ ${realValue}`;
+            } else {
+                return realValue;
+            }
+        } else {
+            return t;
+        }
+    }
+
     render() {
         if (this.data.lineData.length > 0) {
             return (
@@ -554,7 +587,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         <VictoryChart
                             theme={CBIOPORTAL_VICTORY_THEME}
                             standalone={false}
-                            domain={{ y: [0, 1] }}
+                            domain={{ y: this.yDomain }}
                             width={this.chartWidth}
                             height={this.chartHeight}
                             domainPadding={20}
@@ -566,6 +599,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 axisLabelComponent={<VictoryLabel dy={-28}/>}
                                 crossAxis={false}
                                 offsetX={50}
+                                tickFormat={this.tickFormatY}
                             />
                             <VictoryAxis
                                 style={{
@@ -590,6 +624,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                             data: { stroke: LINE_COLOR, strokeOpacity:0.5, pointerEvents:"none" }
                                         }}
                                         data={dataForSingleLine}
+                                        y={this.y}
                                     />,
                                     <VictoryLine
                                         style={{
@@ -597,6 +632,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                         }}
                                         data={dataForSingleLine}
                                         events={this.mouseEvents}
+                                        y={this.y}
                                     />
                                 ]
                             )}
@@ -613,6 +649,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 size={2.5}
                                 data={this.data.grayPoints}
                                 events={this.mouseEvents}
+                                y={this.y}
                             />
                             <VictoryScatter
                                 style={{
@@ -625,6 +662,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 size={3}
                                 data={_.flatten(this.data.lineData)}
                                 events={this.mouseEvents}
+                                y={this.y}
                             />
                         </VictoryChart>
                         <Observer>
