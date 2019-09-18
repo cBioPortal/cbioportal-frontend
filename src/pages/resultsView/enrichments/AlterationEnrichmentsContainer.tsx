@@ -9,7 +9,7 @@ import styles from "./styles.module.scss";
 import {
     getAlterationScatterData,
     getAlterationRowData,
-    getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getFilteredDataByGroups, getGroupColumns, AlterationContainerType
+    getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getAlterationEnrichmentColumns, AlterationContainerType, getFilteredData
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
@@ -24,6 +24,7 @@ import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip"
 import GeneBarPlot from './GeneBarPlot';
 import WindowStore from "shared/components/window/WindowStore";
 import './styles.scss';
+import ReactSelect from "react-select";
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -39,6 +40,8 @@ export interface IAlterationEnrichmentContainerProps {
     store?: ResultsViewPageStore;
     showCNAInTable?:boolean;
     containerType:AlterationContainerType;
+    patientLevelEnrichments:boolean;
+    onSetPatientLevelEnrichments:(patientLevel:boolean)=>void;
 }
 
 @observer
@@ -54,7 +57,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     @observable.shallow selectedGenes: string[]|null;
     @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
 
-    @observable _enrichedGroups: string[] = this.props.groups.map(group=>group.name);
+    @observable.ref _enrichedGroups: string[] = this.props.groups.map(group=>group.name);
 
     @computed get isTwoGroupAnalysis(): boolean {
         return this.props.groups.length == 2;
@@ -75,7 +78,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {
-        return getFilteredDataByGroups(this.data, this._enrichedGroups, this.significanceFilter, this.selectedGenes);
+        return getFilteredData(this.data, this._enrichedGroups, this.significanceFilter, this.selectedGenes);
     }
 
     @autobind
@@ -122,7 +125,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     );
 
     @computed get customColumns() {
-        const cols =  getGroupColumns(this.props.groups, this.props.alteredVsUnalteredMode);
+        const cols =  getAlterationEnrichmentColumns(this.props.groups, this.props.alteredVsUnalteredMode);
         if (this.isTwoGroupAnalysis) {
             cols.push({
             name: 'Alteration Overlap',
@@ -139,13 +142,13 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                       throw("No matching groups in Alteration Overlap Cell");
                   }
 
-                const totalUniqueSamples = group1.profiledCount + group2.profiledCount;
+                const totalUniqueCases = group1.profiledCount + group2.profiledCount;
 
-                const group1Width = (group1.profiledCount/totalUniqueSamples)*100;
+                const group1Width = (group1.profiledCount/totalUniqueCases)*100;
                 const group2Width = 100 - group1Width;
-                const group1Unaltered = ((group1.profiledCount - group1.alteredCount)/ totalUniqueSamples) * 100;
-                const group1Altered = (group1.alteredCount / totalUniqueSamples) * 100;
-                const group2Altered = (group2.alteredCount / totalUniqueSamples) * 100;
+                const group1Unaltered = ((group1.profiledCount - group1.alteredCount)/ totalUniqueCases) * 100;
+                const group1Altered = (group1.alteredCount / totalUniqueCases) * 100;
+                const group2Altered = (group2.alteredCount / totalUniqueCases) * 100;
 
                 const alterationLanguage = this.props.showCNAInTable ? 'copy number alterations' : 'mutations'
 
@@ -156,11 +159,11 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             <tbody>
                             <tr>
                                 <td><strong>{group1.name}: </strong></td>
-                                <td>{group1.alteredCount} of {group1.profiledCount} of samples ({numeral(group1.alteredPercentage).format('0.0')}%)</td>
+                                <td>{group1.alteredCount} of {group1.profiledCount} of {this.props.patientLevelEnrichments ? "patients" : "samples"} ({numeral(group1.alteredPercentage).format('0.0')}%)</td>
                             </tr>
                             <tr>
                                 <td><strong>{group2.name}: </strong></td>
-                                <td>{group2.alteredCount} of {group2.profiledCount} of samples ({numeral(group2.alteredPercentage).format('0.0')}%)
+                                <td>{group2.alteredCount} of {group2.profiledCount} of {this.props.patientLevelEnrichments ? "patients" : "samples"} ({numeral(group2.alteredPercentage).format('0.0')}%)
                                 </td>
                             </tr>
                             </tbody>
@@ -189,11 +192,11 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                 <table>
                     <tr>
                         <td>Upper row</td>
-                        <td>: Samples colored according to group.</td>
+                        <td>: {this.props.patientLevelEnrichments ? "Patients" : "Samples"} colored according to group.</td>
                     </tr>
                     <tr>
                         <td>Lower row</td>
-                        <td>: Samples with {this.props.showCNAInTable ? 'the listed alteration' : 'a mutation'} in the listed gene are highlighted.</td>
+                        <td>: {this.props.patientLevelEnrichments ? "Patients" : "Samples"} with {this.props.showCNAInTable ? 'the listed alteration' : 'a mutation'} in the listed gene are highlighted.</td>
                     </tr>
                 </table>,
           });
@@ -269,7 +272,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     public render() {
-
         if (this.props.data.length === 0) {
             return <div className={'alert alert-info'}>No data/result available</div>;
         }
@@ -311,6 +313,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             showCNAInTable={this.props.showCNAInTable}
                             containerType={this.props.containerType}
                             categoryToColor={this.categoryToColor}
+                            dataStore={this.dataStore}
                         />
                     </div>
                 </div>
@@ -321,7 +324,61 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
                     </div>
                     <div className={styles.Checkboxes}>
-
+                        <div style={{ width: 250, marginRight: 7 }} >
+                            <ReactSelect
+                                name="select enrichments level: sample or patient"
+                                onChange={(option:any|null)=>{
+                                    if (option) {
+                                        this.props.onSetPatientLevelEnrichments(option.value);
+                                    }
+                                }}
+                                options={[
+                                    { label: "Patient-level enrichments", value: true},
+                                    { label: "Sample-level enrichments", value: false}
+                                ]}
+                                clearable={false}
+                                searchable={false}
+                                value={{ label: this.props.patientLevelEnrichments ? "Patient-level enrichments" : "Sample-level enrichments", value: this.props.patientLevelEnrichments}}
+                                styles={{
+                                    control: (provided:any)=>({
+                                        ...provided,
+                                        height:36,
+                                        minHeight:36,
+                                        border: "1px solid rgb(204,204,204)"
+                                    }),
+                                    menu: (provided:any)=>({
+                                        ...provided,
+                                        maxHeight: 400
+                                    }),
+                                    menuList: (provided:any)=>({
+                                        ...provided,
+                                        maxHeight:400
+                                    }),
+                                    placeholder:(provided:any)=>({
+                                        ...provided,
+                                        color: "#000000"
+                                    }),
+                                    dropdownIndicator:(provided:any)=>({
+                                        ...provided,
+                                        color:"#000000"
+                                    }),
+                                    option:(provided:any, state:any)=>{
+                                        return {
+                                            ...provided,
+                                            cursor:"pointer",
+                                        };
+                                    }
+                                }}
+                                theme={(theme:any)=>({
+                                    ...theme,
+                                    colors: {
+                                        ...theme.colors,
+                                        neutral80:"black",
+                                        //primary: theme.colors.primary50
+                                    },
+                                })}
+                            />
+                        </div>
                         <div style={{ width: 250, marginRight: 7 }} >
                             <CheckedSelect
                                 name={"enrichedGroupsSelector"}
@@ -329,6 +386,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                                 onChange={this.onChange}
                                 options={this.options}
                                 value={this.selectedValues}
+                                height={36}
                             />
                         </div>
                         <label className="checkbox-inline">
@@ -339,8 +397,10 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                                 data-test="SwapAxes"
                             />Significant only
                         </label>
+
                     </div>
-                    <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
+                    <AlterationEnrichmentTable key={this.props.patientLevelEnrichments.toString()}
+                                                data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
                                                checkedGenes={this.props.store ? this.checkedGenes : undefined}
                                                dataStore={this.dataStore}
                                                visibleOrderedColumnNames={this.visibleOrderedColumnNames}

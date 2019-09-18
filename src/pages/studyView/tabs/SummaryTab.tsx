@@ -23,6 +23,7 @@ import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledC
 import {DataType} from "public-lib/components/downloadControls/DownloadControls";
 import {ChartMeta, ChartType} from "../StudyViewUtils";
 
+
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
 }
@@ -191,6 +192,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.getData = () => this.store.getMutatedGenesDownloadData();
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ["Data"];
+                props.filterByCancerGenes= this.store.filterMutatedGenesTableByCancerGenes;
+                props.onChangeCancerGeneFilter = this.store.updateMutatedGenesTableByCancerGenesFilter
                 break;
             }
             case CNA_GENES_TABLE: {
@@ -204,6 +207,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.getData = () => this.store.getGenesCNADownloadData();
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ["Data"];
+                props.filterByCancerGenes= this.store.filterCNAGenesTableByCancerGenes;
+                props.onChangeCancerGeneFilter = this.store.updateCNAGenesTableByCancerGenesFilter
                 break;
             }
             case SURVIVAL: {
@@ -326,6 +331,34 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                             </ul>
                         </div>
                     </div>
+                }
+                {
+                    this.store.showSettingRestoreMsg &&
+                    <div>
+                        <div className="alert alert-info">
+                            <button type="button" className="close"
+                                    onClick={() => {
+                                        this.store.hideRestoreSettingsMsg = true;
+                                    }
+                                   }>&times;</button>
+                            Your previously saved layout preferences have been applied.
+                            <button className='btn btn-primary btn-sm'
+                                    onClick={() => {
+                                        this.store.hideRestoreSettingsMsg = true;
+                                        this.store.undoUserSettings();
+                                    }}
+                                    style={{marginLeft: '10px'}}>Keep Saved Layout
+                            </button>
+
+                            <button className='btn btn-primary btn-sm'
+                                    onClick={() => {
+                                        this.store.hideRestoreSettingsMsg = true;
+                                    }}
+                                    style={{marginLeft: '10px'}}>Revert to Previous Layout
+                            </button>
+                        </div>
+                    </div>
+
                 }
 
                 {!this.store.loadingInitialDataForSummaryTab &&

@@ -1,8 +1,9 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
+import {computed} from "mobx";
 import * as _ from 'lodash';
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
-import {CancerStudy, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, DiscreteCopyNumberData, Gene, ReferenceGenomeGene} from "shared/api/generated/CBioPortalAPI";
 import {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
 import MrnaExprColumnFormatter from "shared/components/mutationTable/column/MrnaExprColumnFormatter";
 import {IColumnVisibilityControlsProps} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
@@ -37,6 +38,7 @@ type ICopyNumberTableWrapperProps = {
     enableOncoKb?:boolean;
     enableCivic?:boolean;
     pubMedCache?:PubMedCache;
+    referenceGenes:ReferenceGenomeGene[];
     data:DiscreteCopyNumberData[][];
     copyNumberCountCache?:CopyNumberCountCache;
     mrnaExprRankCache?:MrnaExprRankCache;
@@ -48,14 +50,26 @@ type ICopyNumberTableWrapperProps = {
     status:"loading"|"available"|"unavailable";
 };
 
-
 @observer
 export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
-
     public static defaultProps = {
         enableOncoKb: true,
         enableCivic: false
     };
+
+    @computed get hugoGeneSymbolToCytoband() {
+        // build reference gene map
+        const result:{[hugosymbol:string]:string} =
+            this.props.referenceGenes!.reduce(
+                (map:{[hugosymbol:string]:string}, next:ReferenceGenomeGene)=>
+                { map[next.hugoGeneSymbol] = next.cytoband || '';return map;},
+                {});
+        return result;
+    }
+
+    getCytobandForGene(hugoGeneSymbol:string) {
+        return this.hugoGeneSymbolToCytoband[hugoGeneSymbol];
+    }
 
     render() {
         const columns: CNATableColumn[] = [];
@@ -120,9 +134,8 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
 
         columns.push({
             name: "Cytoband",
-            render: (d:DiscreteCopyNumberData[])=><span>{d[0].gene.cytoband}</span>,
-            download: (d:DiscreteCopyNumberData[])=>d[0].gene.cytoband,
-            sortBy: (d:DiscreteCopyNumberData[])=>d[0].gene.cytoband,
+            render: (d:DiscreteCopyNumberData[])=><span>{this.getCytobandForGene(d[0].gene.hugoGeneSymbol)}</span>,
+            sortBy: (d:DiscreteCopyNumberData[])=>this.getCytobandForGene(d[0].gene.hugoGeneSymbol),
             visible: true,
             order: 60
         });

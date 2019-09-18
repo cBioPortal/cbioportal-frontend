@@ -4,7 +4,7 @@ import {Button, ButtonGroup} from "react-bootstrap";
 import CustomDropdown from "./CustomDropdown";
 import ReactSelect from "react-select1";
 import {MobxPromise} from "mobxpromise";
-import {action, computed, IObservableObject, observable, ObservableMap, reaction} from "mobx";
+import {action, computed, IObservableObject, observable, ObservableMap, reaction, toJS, autorun} from "mobx";
 import _ from "lodash";
 import {SortMode} from "../ResultsViewOncoprint";
 import {Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
@@ -17,7 +17,7 @@ import "./styles.scss";
 import ErrorIcon from "../../ErrorIcon";
 import classNames from "classnames";
 import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
-import {ResultsViewPageStore} from "../../../../pages/resultsView/ResultsViewPageStore";
+import {ResultsViewPageStore, AlterationTypeConstants} from "../../../../pages/resultsView/ResultsViewPageStore";
 import {ExtendedClinicalAttribute} from "../../../../pages/resultsView/ResultsViewPageStoreUtils";
 import {getNCBIlink} from "public-lib/lib/urls";
 import {GeneBoxType} from "../../GeneSelectionBox/GeneSelectionBox";
@@ -25,6 +25,11 @@ import GeneSelectionBox from "../../GeneSelectionBox/GeneSelectionBox";
 import autobind from "autobind-decorator";
 import {SingleGeneQuery} from "../../../lib/oql/oql-parser";
 import AddClinicalTracks from "../../../../pages/resultsView/oncoprint/AddClinicalTracks";
+import {Treatment} from "shared/api/generated/CBioPortalAPIInternal";
+import TextIconArea, { ITextIconAreaItemProps } from "shared/components/textIconArea/TextIconArea";
+import { extractTreatmentSelections } from "../OncoprintUtils";
+import CheckedSelect from "shared/components/react-select-checked-temp/lib/elements/CheckedSelect";
+import { isUndefined } from "util";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -58,10 +63,12 @@ export interface IOncoprintControlsHandlers {
     onChangeSelectedClinicalTracks?:(attributeIds:(string|SpecialAttribute)[])=>void;
 
     onClickAddGenesToHeatmap?:()=>void;
+    onClickAddTreatmentsToHeatmap?:(treatments:string[])=>void;
     onClickRemoveHeatmap?:()=>void;
     onClickClusterHeatmap?:()=>void;
     onSelectHeatmapProfile?:(molecularProfileId:string)=>void;
     onChangeHeatmapGeneInputValue?:(value:string)=>void;
+    onChangeHeatmapTreatmentInputValue?:(value:string)=>void;
 
     onSetHorzZoom:(z:number)=>void;
     onClickZoomIn:()=>void;
@@ -99,9 +106,12 @@ export interface IOncoprintControlsState {
     clinicalAttributeSampleCountPromise?:MobxPromise<{[clinicalAttributeId:string]:number}>,
     selectedClinicalAttributeIds?:string[],
     heatmapProfilesPromise?:MobxPromise<MolecularProfile[]>,
+    treatmentsPromise?:MobxPromise<Treatment[]>
     selectedHeatmapProfile?:string;
+    selectedHeatmapProfileAlterationType?:string;
     heatmapIsDynamicallyQueried?:boolean;
     heatmapGeneInputValue?: string;
+    heatmapTreatmentInputValue?:string;
     clusterHeatmapButtonActive?:boolean;
     hideClusterHeatmapButton?:boolean;
     hideHeatmapMenu?:boolean;
@@ -122,6 +132,14 @@ export interface IOncoprintControlsProps {
     handlers: IOncoprintControlsHandlers;
     state: IOncoprintControlsState & IObservableObject
     oncoprinterMode?:boolean;
+    treatmentSelectOptions?:ISelectOption[];
+    selectedTreatmentIds?:string[];
+}
+
+export interface ISelectOption {
+    id:string,
+    value:string,
+    label:string
 }
 
 const EVENT_KEY = {
@@ -159,12 +177,16 @@ const EVENT_KEY = {
     downloadOrder:"28",
     downloadTabular:"29",
     horzZoomSlider:"30",
+    addTreatmentsToHeatmap: "32"
 };
 
 @observer
 export default class OncoprintControls extends React.Component<IOncoprintControlsProps, {}> {
+
     @observable horzZoomSliderState:number;
-    @observable heatmapGenesReady:boolean = false;
+    @observable heatmapGenesReady = false;
+    @observable private _selectedTreatmentIds:string[] = [];
+    private textareaTreatmentText = "";
 
     constructor(props:IOncoprintControlsProps) {
         super(props);
@@ -188,6 +210,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         this.onHorzZoomSliderChange = this.onHorzZoomSliderChange.bind(this);
         this.onHorzZoomSliderSet = this.onHorzZoomSliderSet.bind(this);
         this.onSetHorzZoomTextInput = this.onSetHorzZoomTextInput.bind(this);
+
+        if (props.selectedTreatmentIds) {
+            this._selectedTreatmentIds = props.selectedTreatmentIds;
+        }
 
         this.horzZoomSliderState = props.state.horzZoom;
         reaction(()=>this.props.state.horzZoom,
@@ -337,9 +363,14 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 this.props.handlers.onClickAddGenesToHeatmap &&
                 this.props.handlers.onClickAddGenesToHeatmap();
                 break;
+            case EVENT_KEY.addTreatmentsToHeatmap:
+                this.props.handlers.onClickAddTreatmentsToHeatmap &&
+                this.props.handlers.onClickAddTreatmentsToHeatmap(this._selectedTreatmentIds);
+                break;
             case EVENT_KEY.removeHeatmap:
                 this.props.handlers.onClickRemoveHeatmap &&
                 this.props.handlers.onClickRemoveHeatmap();
+                this._selectedTreatmentIds = [];
                 break;
             case EVENT_KEY.downloadSVG:
                 this.props.handlers.onClickDownload &&
@@ -394,15 +425,48 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         }
     }
 
+    @autobind
+    private onChangeTreatmentTextArea(text:string):string {
+        return extractTreatmentSelections(text, this._selectedTreatmentIds, this.treatmentOptionsByValueMap);
+    }
+
+    @autobind
+    private onTreatmentRemoved(treatmentId:string) {
+        _.remove(this._selectedTreatmentIds, (v) => v === treatmentId);
+    }
+
     @computed get heatmapProfileOptions() {
         if (this.props.state.heatmapProfilesPromise && this.props.state.heatmapProfilesPromise.result) {
             return _.map(this.props.state.heatmapProfilesPromise.result, profile=>({
                 label: profile.name,
-                value: profile.molecularProfileId
+                value: profile.molecularProfileId,
+                type: profile.molecularAlterationType
             }));
         } else {
             return [];
         }
+    }
+
+    @computed get treatmentOptionsByValueMap():{[value:string]: ISelectOption}{
+        return _.keyBy(this.props.treatmentSelectOptions, 'id');
+    }
+
+    @autobind
+    @action
+    private onSelectTreatments(selectedElements:ISelectOption[]) {
+        this._selectedTreatmentIds = selectedElements.map((o) => o.id);
+    }
+
+    @computed get selectedTreatments():ISelectOption[] {
+        return this._selectedTreatmentIds.map((o) => this.treatmentOptionsByValueMap[o]);
+    }
+
+    @computed get selectedTreatmentsJS() {
+        return toJS(this.selectedTreatments);
+    }
+
+    @computed get textareaTreatmentEntries():ITextIconAreaItemProps[] {
+        return _.map(this.selectedTreatments, (d:ISelectOption) => ({value: d.id, label: d.id}));
     }
 
     private getClinicalTracksMenu() {
@@ -424,6 +488,11 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     }
 
     private getHeatmapMenu() {
+
+        const showItemSelectionElements = this.props.state.heatmapIsDynamicallyQueried;
+        const showGenesTextArea = showItemSelectionElements && this.props.state.selectedHeatmapProfileAlterationType !== AlterationTypeConstants.GENERIC_ASSAY;
+        const showTreatmentsTextArea = showItemSelectionElements && this.props.state.selectedHeatmapProfileAlterationType === AlterationTypeConstants.GENERIC_ASSAY;
+
         if (this.props.oncoprinterMode || this.props.state.hideHeatmapMenu || !this.props.state.heatmapProfilesPromise) {
             return <span/>;
         }
@@ -442,8 +511,8 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                             value={this.props.state.selectedHeatmapProfile}
                             options={this.heatmapProfileOptions}
                         />
-                        {this.props.state.heatmapIsDynamicallyQueried && [
-                            <GeneSelectionBox
+                        {showGenesTextArea &&
+                            [<GeneSelectionBox
                                 inputGeneQuery={this.props.state.heatmapGeneInputValue || ""}
                                 callback={this.onChangeHeatmapGeneInput}
                                 location={GeneBoxType.ONCOPRINT_HEATMAP}
@@ -454,23 +523,50 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 name={EVENT_KEY.addGenesToHeatmap}
                                 onClick={this.onButtonClick}
                                 disabled={!this.heatmapGenesReady}
-                             >Add Genes to Heatmap</button>,
-
+                                >Add Genes to Heatmap</button>
+                            ]
+                        }
+                        {showTreatmentsTextArea && this.props.state.treatmentsPromise!.isComplete &&
+                            [<TextIconArea
+                                elements={this.textareaTreatmentEntries}
+                                text={this.textareaTreatmentText}
+                                placeholder="Type space- or comma-separated treatments here, then click 'Add Treatments to Heatmap'"
+                                onChangeTextArea={this.onChangeTreatmentTextArea}
+                                onIconClicked={this.onTreatmentRemoved}
+                                />,
+                                <div className={classNames("treatment-selector")}>
+                                <CheckedSelect
+                                    name="treatment-select"
+                                    placeholder="Search for Treatments..."
+                                    options={this.props.treatmentSelectOptions}
+                                    value={this.selectedTreatmentsJS}
+                                    onChange={this.onSelectTreatments}
+                                    addAllTitle={"Select all"}
+                                    />
+                            </div>,
                             <button
-                                key="removeHeatmapButton"
+                                key="addTreatmentsToHeatmapButton"
                                 className="btn btn-sm btn-default"
-                                name={EVENT_KEY.removeHeatmap}
+                                name={EVENT_KEY.addTreatmentsToHeatmap}
                                 onClick={this.onButtonClick}
-                            >Remove Heatmap</button>
-                        ]}
+                            >Add Treatment Response to Heatmap</button>
+                            ]
+                        }
+
+                        <button
+                            key="removeHeatmapButton"
+                            className="btn btn-sm btn-default"
+                            name={EVENT_KEY.removeHeatmap}
+                            onClick={this.onButtonClick}
+                        >Remove Heatmap</button>
 
                         {!this.props.state.hideClusterHeatmapButton &&
                             (<button
                                 data-test="clusterHeatmapBtn"
-                                 className={classNames("btn", "btn-sm", "btn-default", {active:this.props.state.clusterHeatmapButtonActive})}
-                                 name={EVENT_KEY.sortByHeatmapClustering}
-                                 onClick={this.onButtonClick}
-                             >Cluster Heatmap</button>)
+                                className={classNames("btn", "btn-sm", "btn-default", { active: this.props.state.clusterHeatmapButtonActive })}
+                                name={EVENT_KEY.sortByHeatmapClustering}
+                                onClick={this.onButtonClick}
+                            >Cluster Heatmap</button>)
                         }
                     </div>
                 );

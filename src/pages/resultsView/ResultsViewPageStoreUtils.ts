@@ -1,7 +1,7 @@
 import {
     Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation, Patient, Sample, CancerStudy, ClinicalAttribute, PatientIdentifier,
-    PatientFilter
+    PatientFilter, ReferenceGenomeGene
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action, computed} from "mobx";
 import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
@@ -81,6 +81,8 @@ export function computeCustomDriverAnnotationReport(mutations:Mutation[]):Custom
         tiers: Object.keys(tiersMap)
     };
 }
+
+export const DEFAULT_GENOME = "hg19";
 
 export const initializeCustomDriverAnnotationSettings = action((
     report:CustomDriverAnnotationReport,
@@ -309,7 +311,7 @@ export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:C
                 queriedStudies.push(study);
                 delete unknownIds[study.studyId];
             })
-    
+
         }).catch(() => {}); //this is for private instances. it throws error when the study is not found
 
         queriedVirtualStudies.filter((vs:VirtualStudy) => unknownIds[vs.id]).forEach(virtualStudy=>{
@@ -380,10 +382,8 @@ export function filterSubQueryData(
 }
 
 
-export function isRNASeqProfile(profileId:string, version:number): boolean {
-    const ver = (version === 2) ? 'v2_' : '';
-    // note that pan can only has v2 expression data, so don't worry about v1
-    return RegExp(`rna_seq_${ver}mrna$|pan_can_atlas_2018_rna_seq_${ver}mrna_median$`).test(profileId);
+export function isRNASeqProfile(profileId:string): boolean {
+    return RegExp(`rna_seq_mrna$|rna_seq_v2_mrna$|pan_can_atlas_2018_rna_seq_mrna_median$|pan_can_atlas_2018_rna_seq_v2_mrna_median$`).test(profileId);
 }
 
 export function isTCGAPubStudy(studyId:string){
@@ -435,7 +435,8 @@ export function getMolecularProfiles(query:any){
         query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
         query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
         query.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
-        query.genetic_profile_ids_PROFILE_GENESET_SCORE
+        query.genetic_profile_ids_PROFILE_GENESET_SCORE,
+        query.genetic_profile_ids_GENERIC_ASSAY
     ].filter((profile:string|undefined)=>!!profile);
 
     // append 'genetic_profile_ids' which is sometimes in use
@@ -464,7 +465,7 @@ export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackC
     filteredAlterationData.forEach((element, key) => {
         //1: is not group
         if (element.mergedTrackOqlList === undefined) {
-            const notGroupedOql = element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;                    
+            const notGroupedOql = element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
             const sampleKeysMap = _.keyBy(_.map(notGroupedOql.data, (data) => data.uniqueSampleKey));
             const unProfiledSampleKeysMap = _.keyBy(samples.filter((sample) => {
                 const molecularProfileIds = studyToMolecularProfiles[sample.studyId] ? _.intersection(studyToMolecularProfiles[sample.studyId].map((profile) => profile.molecularProfileId), selectedMolecularProfileIds) : selectedMolecularProfileIds;
@@ -512,9 +513,9 @@ export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackC
     return result;
 }
 
-export function getSingleGeneResultKey(key: number, oqlQuery: string, notGroupedOql: OQLLineFilterOutput<AnnotatedExtendedAlteration>){  
+export function getSingleGeneResultKey(key: number, oqlQuery: string, notGroupedOql: OQLLineFilterOutput<AnnotatedExtendedAlteration>){
     //only gene
-    if ((oql_parser.parse(oqlQuery)![key] as oql_parser.SingleGeneQuery).alterations === false) { 
+    if ((oql_parser.parse(oqlQuery)![key] as oql_parser.SingleGeneQuery).alterations === false) {
         return notGroupedOql.gene;
     }
     //gene with alteration type
@@ -527,10 +528,11 @@ export function getMultipleGeneResultKey(groupedOql: MergedTrackLineFilterOutput
     return groupedOql.label ? groupedOql.label : _.map(groupedOql.list, (data) => data.gene).join(' / ');
 }
 
-export function makeEnrichmentDataPromise<T extends {hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
+export function makeEnrichmentDataPromise<T extends {cytoband?:string, hugoGeneSymbol:string, pValue:number, qValue?:number}>(params:{
     store?:ResultsViewPageStore,
     await: MobxPromise_await,
-    getSelectedProfile:()=>MolecularProfile|undefined,
+    referenceGenesPromise:MobxPromise<{[hugoGeneSymbol:string]:ReferenceGenomeGene}>,
+    getSelectedProfileMap:()=>{[studyId:string]:MolecularProfile},
     fetchData:()=>Promise<T[]>
 }):MobxPromise<(T & {qValue:number})[]> {
     return remoteData({
@@ -539,19 +541,27 @@ export function makeEnrichmentDataPromise<T extends {hugoGeneSymbol:string, pVal
             if (params.store) {
                 ret.push(params.store.selectedMolecularProfiles);
             }
+            ret.push(params.referenceGenesPromise);
             return ret;
         },
         invoke:async()=>{
-            const profile = params.getSelectedProfile();
-            if (profile) {
+            const profileMap = params.getSelectedProfileMap();
+            if (profileMap) {
                 let data = await params.fetchData();
-
                 // filter out query genes, if looking at a queried profile
                 // its important that we filter out *before* calculating Q values
                 if (params.store && params.store.selectedMolecularProfiles.result!
-                        .findIndex(x=>x.molecularProfileId === profile.molecularProfileId) > -1) {
+                    .findIndex(molecularProfile => profileMap[molecularProfile.studyId] !== undefined) > -1) {
                     const queryGenes = _.keyBy(params.store.hugoGeneSymbols, x=>x.toUpperCase());
                     data = data.filter(d=>!(d.hugoGeneSymbol.toUpperCase() in queryGenes));
+                }
+
+                // add cytoband from reference gene
+                for (const d of data) {
+                    const refGene = params.referenceGenesPromise.result![d.hugoGeneSymbol];
+
+                    if (refGene)
+                        d.cytoband = refGene.cytoband;
                 }
 
                 const sortedByPvalue = _.sortBy(data, c=>c.pValue);

@@ -3,7 +3,7 @@ import {remoteData} from "../../public-lib/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import oncoKBClient from "shared/api/oncokbClientInstance";
-import {action, computed, IReactionDisposer, observable, ObservableMap, reaction, toJS} from "mobx";
+import {action, computed, IReactionDisposer, observable, reaction, toJS} from "mobx";
 import {
     ClinicalDataBinCountFilter,
     ClinicalDataBinFilter,
@@ -35,7 +35,7 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     CopyNumberSeg,
-    Gene, GenePanel, GenePanelData,
+    Gene, GenePanel,
     MolecularProfile,
     MolecularProfileFilter,
     Patient
@@ -74,7 +74,6 @@ import {
     isFiltered,
     isLogScaleByDataBins,
     isSpecialChart,
-    makePatientToClinicalAnalysisGroup,
     MutationCountVsCnaYBinsMin,
     NA_DATA,
     shouldShowChart,
@@ -82,7 +81,7 @@ import {
     SPECIAL_CHARTS,
     StudyWithSamples,
     submitToPage, ChartMetaWithDimensionAndChartType,
-    UniqueKey, ClinicalDataType
+    UniqueKey,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -119,11 +118,32 @@ import client from "../../shared/api/cbioportalClientInstance";
 import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
-import jStat from 'jStat'
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";
 import {CancerGene, Gene as OncokbGene} from "../../public-lib/api/generated/OncoKbAPI";
 import {DataType} from "public-lib/components/downloadControls/DownloadControls";
 
+import Timer = NodeJS.Timer;
+import { AppStore } from 'AppStore';
+
+export type ChartUserSetting = {
+    id: string,
+    name?: string,
+    chartType?: ChartType,
+    groups?: CustomGroup[], //used when it is custom chart
+    layout?: {
+        x: number,
+        y: number,
+        w: number;
+        h: number;
+    },
+    patientAttribute: boolean,
+    filterByCancerGenes?:boolean
+}
+
+export type StudyPageSettings = {
+    chartSettings:ChartUserSetting[],
+    origin:string[]
+}
 
 export enum StudyViewPageTabKeyEnum {
     SUMMARY = 'summary',
@@ -177,11 +197,12 @@ export type StudyViewURLQuery = {
 
 export type CustomGroup = {
     name: string,
-    cases: CustomChartIdentifier[]
+    sampleIdentifiers: CustomChartIdentifier[]
 }
 
-export type NewChart = {
-    name: string,
+export type CustomChart = {
+    name?: string,
+    patientAttribute: boolean,
     groups: CustomGroup[]
 }
 
@@ -192,7 +213,6 @@ export const DataBinMethodConstants: {[key: string]: 'DYNAMIC' | 'STATIC'}= {
 
 export type CustomChartIdentifier = {
     studyId: string,
-    patientAttribute: boolean,
     sampleId: string,
     patientId: string
 }
@@ -229,17 +249,44 @@ export type CopyNumberCountByGeneWithCancerGene = CopyNumberCountByGene & Oncokb
 export class StudyViewPageStore {
     private reactionDisposers:IReactionDisposer[] = [];
 
-    constructor() {
+    constructor(private appStore: AppStore, private sessionServiceIsEnabled: boolean) {
         this.reactionDisposers.push(reaction(() => this.loadingInitialDataForSummaryTab, () => {
             if (!this.loadingInitialDataForSummaryTab) {
                 this.updateChartStats();
+                this.loadUserSettings();
+            }
+        }));
+
+        this.reactionDisposers.push(reaction(() => [this.visibleAttributes, this.columns, this.chartsDimension.toJS(), this.chartsType.toJS()], () => {
+            this.updateLayout();
+        }));
+
+        this.reactionDisposers.push(reaction(() => toJS(this.currentChartSettingsMap), () => {
+            if(this.isSavingUserSettingsPossible){
+                if (!this.hideRestoreSettingsMsg) {
+                    // hide restore message if its already shown
+                    // this is because the user setting session is going to be updated for every operation once the user is logged in
+                    this.hideRestoreSettingsMsg = true;
+                }
+                this.updateUserSettingsDebounce();
+            }
+        }));
+
+        this.reactionDisposers.push(reaction(() => this.fetchUserSettings.isComplete, (isComplete) => {
+            //execute if user log in from study page
+            if (isComplete && this.isSavingUserPreferencePossible && !this._loadUserSettingsInitially) {
+                this.previousSettings = this.currentChartSettingsMap;
+                this.loadUserSettings();
             }
         }));
 
         // Include special charts into custom charts list
        SPECIAL_CHARTS.forEach((chartMeta:ChartMetaWithDimensionAndChartType) => {
            const uniqueKey = chartMeta.uniqueKey;
-           const chartType = chartMeta.chartType;
+           if (!this.chartsType.has(uniqueKey)) {
+               this.chartsType.set(uniqueKey, chartMeta.chartType);
+           }
+           const chartType = this.chartsType.get(uniqueKey);
            if (chartType !== undefined) {
                this._customCharts.set(uniqueKey, {
                    displayName: chartMeta.displayName,
@@ -259,6 +306,19 @@ export class StudyViewPageStore {
            }
        });
     }
+
+    @computed get isLoggedIn() {
+        return this.appStore.isLoggedIn;
+    }
+
+    @computed get isSavingUserPreferencePossible() {
+        return this.isLoggedIn && this.sessionServiceIsEnabled;
+    }
+
+    @observable hideRestoreSettingsMsg = this.isLoggedIn;
+
+    //this is set on initial load
+    private _loadUserSettingsInitially = this.isLoggedIn;
 
     // make sure the reactions are disposed when the component which initialized store will unmount
     destroy() {
@@ -812,28 +872,46 @@ export class StudyViewPageStore {
 
     @computed
     get containerWidth(): number {
-        return this.studyViewPageLayoutProps.cols * STUDY_VIEW_CONFIG.layout.grid.w + (this.studyViewPageLayoutProps.cols + 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x;
+        return this.columns * STUDY_VIEW_CONFIG.layout.grid.w + (this.columns + 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x;
+    }
+
+    @computed
+    private get columns(): number {
+        return Math.floor((windowStore.size.width - 40) / (STUDY_VIEW_CONFIG.layout.grid.w + STUDY_VIEW_CONFIG.layout.gridMargin.x));
+    }
+
+    @autobind @action
+    private updateLayout() {
+        this.currentGridLayout = calculateLayout(this.visibleAttributes, this.columns, this.chartsDimension.toJS(), this.useCurrentGridLayout ? this.currentGridLayout : [], this.currentFocusedChartByUser, this.currentFocusedChartByUserDimension);
+        if (this.useCurrentGridLayout) {
+            this.useCurrentGridLayout = false;
+        }
     }
 
     // Minus the margin width
     @computed
     get studyViewPageLayoutProps(): StudyViewLayout {
-        let cols: number = Math.floor((windowStore.size.width - 40) / (STUDY_VIEW_CONFIG.layout.grid.w + STUDY_VIEW_CONFIG.layout.gridMargin.x));
         return {
-            cols: cols,
+            cols: this.columns,
             grid: STUDY_VIEW_CONFIG.layout.grid,
             gridMargin: STUDY_VIEW_CONFIG.layout.gridMargin,
-            layout: calculateLayout(this.visibleAttributes, cols, this.chartsDimension.toJS(), this.currentGridLayout, this.currentFocusedChartByUser, this.currentFocusedChartByUserDimension),
+            layout: this.currentGridLayout,
             dimensions: STUDY_VIEW_CONFIG.layout.dimensions
         };
     }
 
-    @autobind
+    @autobind @action
     updateCurrentGridLayout(newGridLayout: ReactGridLayout.Layout[]) {
         this.currentGridLayout = newGridLayout;
     }
 
-    private currentGridLayout: ReactGridLayout.Layout[] | undefined = undefined;
+    //this variable is acts as flag whether to use it as a currentGridLayout in updating layout
+    private useCurrentGridLayout = false;
+
+    @observable.ref private currentGridLayout: ReactGridLayout.Layout[] = [];
+    //@observable private currentGridLayoutUpdated = false;
+    @observable private previousSettings: { [id: string]: ChartUserSetting } = {};
+
     private currentFocusedChartByUser: ChartMeta | undefined = undefined;
     private currentFocusedChartByUserDimension: ChartDimension | undefined = undefined;
 
@@ -847,6 +925,27 @@ export class StudyViewPageStore {
 
     @observable numberOfSelectedSamplesInCustomSelection: number = 0;
     @observable _filterComparisonGroups:StudyViewComparisonGroup[] = [];
+
+    @observable private _filterMutatedGenesTableByCancerGenes: boolean = true;
+    @observable private _filterCNAGenesTableByCancerGenes: boolean = true;
+
+    @autobind
+    @action updateMutatedGenesTableByCancerGenesFilter(filtered: boolean) {
+        this._filterMutatedGenesTableByCancerGenes = filtered;
+    }
+
+    @autobind
+    @action updateCNAGenesTableByCancerGenesFilter(filtered: boolean) {
+        this._filterCNAGenesTableByCancerGenes = filtered;
+    }
+
+    @computed get filterMutatedGenesTableByCancerGenes() {
+        return this.oncokbCancerGeneFilterEnabled && this._filterMutatedGenesTableByCancerGenes;
+    }
+
+    @computed get filterCNAGenesTableByCancerGenes() {
+        return this.oncokbCancerGeneFilterEnabled && this._filterCNAGenesTableByCancerGenes;
+    }
 
     public get filterComparisonGroups() {
         return this._filterComparisonGroups;
@@ -867,6 +966,8 @@ export class StudyViewPageStore {
         )
     }
 
+    //used in saving custom added charts
+    @observable private _customChartMap = observable.shallowMap<CustomChart>();
     @observable private _customCharts = observable.shallowMap<ChartMeta>();
     @observable private _customChartsSelectedCases = observable.shallowMap<CustomChartIdentifierWithValue[]>();
 
@@ -1611,7 +1712,7 @@ export class StudyViewPageStore {
                         this.initialVisibleAttributesClinicalDataCountData);
                 },
                 invoke: async () => {
-                    let dataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
+                    let dataType: "SAMPLE" | "PATIENT" = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     let result: ClinicalDataCountItem[] = [];
                     if (this.isInitialFilterState && isDefaultAttr && !this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
                         result = this.initialVisibleAttributesClinicalDataCountData.result;
@@ -2171,8 +2272,7 @@ export class StudyViewPageStore {
     }
 
     @autobind
-    @action addCustomChart(newChart:NewChart) {
-        const uniqueKey = this.newCustomChartUniqueKey();
+    @action addCustomChart(newChart:CustomChart, uniqueKey:string = this.newCustomChartUniqueKey(), loadedfromUserSettings:boolean=false) {
         const newChartName = newChart.name ? newChart.name : this.getDefaultCustomChartName();
         let chartMeta:ChartMeta = {
             uniqueKey: uniqueKey,
@@ -2184,38 +2284,40 @@ export class StudyViewPageStore {
             priority: 1
         };
         let allCases: CustomChartIdentifierWithValue[] = [];
+        if(newChart.patientAttribute) {
+            chartMeta.patientAttribute = true;
+        }
         _.each(newChart.groups, (group:CustomGroup) => {
-            _.reduce(group.cases, (acc, next) => {
-                if(next.patientAttribute) {
-                    chartMeta.patientAttribute = true;
-                }
+            _.reduce(group.sampleIdentifiers, (acc, next) => {
                 acc.push({
                     studyId: next.studyId,
                     sampleId: next.sampleId,
                     patientId: next.patientId,
-                    patientAttribute: next.patientAttribute,
                     value: group.name
                 });
                 return acc;
             }, allCases)
         });
         this._customCharts.set(uniqueKey, chartMeta);
+        this._customChartMap.set(uniqueKey, newChart)
         this._chartVisibility.set(uniqueKey, true);
         this._customChartsSelectedCases.set(uniqueKey, allCases);
         this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
         this.chartsDimension.set(uniqueKey, {w: 1, h: 1});
 
         // Autoselect the groups
-        this.setCustomChartFilters(chartMeta, newChart.groups.map(group=>group.name));
-        this.newlyAddedCharts.clear();
-        this.newlyAddedCharts.push(uniqueKey);
+        if(!loadedfromUserSettings) {
+            this.setCustomChartFilters(chartMeta, newChart.groups.map(group=>group.name));
+            this.newlyAddedCharts.clear();
+            this.newlyAddedCharts.push(uniqueKey);
+        }
     }
 
     @autobind
     @action
-    updateCustomSelect(newChart: NewChart) {
+    updateCustomSelect(newChart: CustomChart) {
         const sampleIdentifiers = _.reduce(newChart.groups, (acc, next) => {
-            acc.push(...next.cases.map((customCase: CustomChartIdentifier) => {
+            acc.push(...next.sampleIdentifiers.map((customCase: CustomChartIdentifier) => {
                 return {
                     sampleId: customCase.sampleId,
                     studyId: customCase.studyId
@@ -2324,17 +2426,166 @@ export class StudyViewPageStore {
     }
 
     @computed
+    get showSettingRestoreMsg() {
+        return this.isSavingUserPreferencePossible &&
+            !this.hideRestoreSettingsMsg &&
+            this.fetchUserSettings.isComplete &&
+            !_.isEqual(this.previousSettings, _.keyBy(this.fetchUserSettings.result, chartUserSetting => chartUserSetting.id));
+    }
+
+    @computed
+    get isSavingUserSettingsPossible() {
+        return this.isSavingUserPreferencePossible && this.fetchUserSettings.isComplete &&
+            (!this.showSettingRestoreMsg || !_.isEqual(this.currentChartSettingsMap, _.keyBy(this.fetchUserSettings.result, chartSetting => chartSetting.id)))
+    }
+
+    @computed
     get loadingInitialDataForSummaryTab() {
-        if (this.defaultVisibleAttributes.isPending ||
+        let pending = this.defaultVisibleAttributes.isPending ||
             this.initialVisibleAttributesClinicalDataBinCountData.isPending ||
             this.initialVisibleAttributesClinicalDataCountData.isPending ||
             this.mutationProfiles.isPending ||
-            this.cnaProfiles.isPending
-        ) {
-            return true;
-        } else {
-            return false;
+            this.cnaProfiles.isPending;
+
+        if (this._loadUserSettingsInitially) {
+            pending = pending || this.fetchUserSettings.isPending
         }
+        return pending;
+    }
+
+    public updateUserSettingsDebounce = _.debounce(() => {
+        if (!_.isEqual(this.previousSettings, this.currentChartSettingsMap)) {
+            this.previousSettings = this.currentChartSettingsMap;
+            if (!_.isEmpty(this.currentChartSettingsMap)) {
+                sessionServiceClient.updateUserSettings({
+                    origin: toJS(this.studyIds),
+                    chartSettings: _.values(this.currentChartSettingsMap)
+                });
+            }
+        }
+    }, 3000);
+
+    // return contains settings for all visible charts each chart setting
+    @computed private get currentChartSettingsMap() {
+        let chartSettingsMap: { [chartId: string]: ChartUserSetting } = {};
+        if(this.isSavingUserPreferencePossible) {
+            this.visibleAttributes.forEach(attribute => {
+                const id = attribute.uniqueKey
+                const chartType = this.chartsType.get(id);
+                chartSettingsMap[attribute.uniqueKey] = {
+                    id,
+                    chartType,
+                    patientAttribute: this.chartMetaSet[id].patientAttribute // add chart attribute type
+                }
+                if(chartType === UniqueKey.MUTATED_GENES_TABLE) {
+                    chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = this._filterMutatedGenesTableByCancerGenes;
+                } else if(chartType === UniqueKey.CNA_GENES_TABLE) {
+                    chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = this._filterCNAGenesTableByCancerGenes;
+                }
+                const customChart = this._customChartMap.get(id);
+                if (customChart) { // if its custom chart add groups and name
+                    chartSettingsMap[id].groups = customChart.groups;
+                    chartSettingsMap[id].name = this.chartMetaSet[id].displayName;
+                }
+            });
+
+            // add layout for each chart
+            this.currentGridLayout.forEach(layout => {
+                if (layout.i && chartSettingsMap[layout.i]) {
+                    chartSettingsMap[layout.i].layout = {
+                        x: layout.x,
+                        y: layout.y,
+                        w: layout.w,
+                        h: layout.h
+                    };
+                }
+            });
+        }
+
+        return chartSettingsMap;
+    }
+
+    readonly fetchUserSettings = remoteData<ChartUserSetting[]>({
+        invoke: async () => {
+            if (this.isSavingUserPreferencePossible && this.studyIds.length > 0) {
+                let userSettings = await sessionServiceClient.fetchUserSettings(toJS(this.studyIds));
+                if(userSettings) {
+                    return userSettings.chartSettings || [];
+                }
+            }
+            return [];
+        },
+        default: [],
+        onError: () => {
+            // fail silently when an error occurs
+        }
+    });
+
+    @autobind
+    @action private clearPageSettings() {
+        this._chartVisibility.clear();
+        this.currentGridLayout = [];
+        this.currentFocusedChartByUser = undefined;
+        this.currentFocusedChartByUserDimension = undefined;
+        this._filterMutatedGenesTableByCancerGenes = true;
+        this._filterCNAGenesTableByCancerGenes = true;
+    }
+
+    @autobind
+    @action
+    loadUserSettings() {
+        if (this.isSavingUserPreferencePossible && !_.isEmpty(this.fetchUserSettings.result)) {
+            this.loadSettings(this.fetchUserSettings.result);
+            // set previousSettings only if user is already logged in
+            if(this._loadUserSettingsInitially){
+                this.previousSettings = _.keyBy(this.fetchUserSettings.result, chartSetting => chartSetting.id);
+            }
+        }
+    }
+
+    @autobind
+    @action
+    public undoUserSettings() {
+        this.loadSettings(_.values(this.previousSettings));
+        this.previousSettings = {};
+    }
+
+    @autobind
+    @action
+    private loadSettings(chartSettngs: ChartUserSetting[]){
+        this.clearPageSettings();
+        _.map(chartSettngs, chartUserSettings => {
+            if (chartUserSettings.name && chartUserSettings.groups && chartUserSettings.groups.length > 0) {
+                this.addCustomChart({
+                    name: chartUserSettings.name,
+                    groups: chartUserSettings.groups || [],
+                    patientAttribute: chartUserSettings.patientAttribute,
+                }, chartUserSettings.id, true);
+            }
+
+            if (chartUserSettings.layout) {
+                this.currentGridLayout.push({
+                    i: chartUserSettings.id,
+                    isResizable: false,
+                    moved: false,
+                    static: false,
+                    ...chartUserSettings.layout
+                });
+                this.chartsDimension.set(chartUserSettings.id, {
+                    w: chartUserSettings.layout.w,
+                    h: chartUserSettings.layout.h
+                });
+            }
+
+            if (chartUserSettings.chartType === UniqueKey.MUTATED_GENES_TABLE) {
+                this._filterMutatedGenesTableByCancerGenes = chartUserSettings.filterByCancerGenes === undefined ? true : chartUserSettings.filterByCancerGenes;
+            } else if (chartUserSettings.chartType === UniqueKey.CNA_GENES_TABLE) {
+                this._filterCNAGenesTableByCancerGenes = chartUserSettings.filterByCancerGenes === undefined ? true : chartUserSettings.filterByCancerGenes;
+            }
+            this.changeChartVisibility(chartUserSettings.id, true);
+            chartUserSettings.chartType && this.chartsType.set(chartUserSettings.id, chartUserSettings.chartType);
+        });
+        this.useCurrentGridLayout = true;
     }
 
     @autobind
@@ -2445,7 +2696,7 @@ export class StudyViewPageStore {
         }
     }
 
-    @action
+    @autobind @action
     changeChartType(attr: ChartMeta, newChartType: ChartType) {
         let data: MobxPromise<ClinicalDataCountSummary[]> | undefined
         if (newChartType === ChartTypeEnum.TABLE) {
@@ -2468,6 +2719,7 @@ export class StudyViewPageStore {
         }
         this.currentFocusedChartByUser = _.clone(attr);
         this.currentFocusedChartByUserDimension = this.chartsDimension.get(attr.uniqueKey);
+        this.useCurrentGridLayout=true
     }
 
     readonly defaultVisibleAttributes = remoteData({

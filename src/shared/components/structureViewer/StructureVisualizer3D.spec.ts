@@ -125,7 +125,7 @@ describe('StructureVisualizer3D', () => {
             "Background color should be set to 0xFFFFFF");
 
         assert.isTrue($3Dmol.download.calledWith("pdb:3PXE", viewer, sinon.match({pdbUri: props.pdbUri})),
-            "Structure download should be requested for pdb:3PXE from http://www.rcsb.org/pdb/files/");
+            "Structure download should be requested for pdb:3PXE from https://files.rcsb.org/view/");
 
         assert.isTrue(viewer.clear.calledOnce,
             "Clear should only be called once per init");

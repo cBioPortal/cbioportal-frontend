@@ -5,6 +5,7 @@ import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import styles from './style/patientTable.module.scss';
 import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
 import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
+import { isUrl } from "public-lib";
 
 export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
@@ -56,7 +57,12 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                       },
                       {
                           name:'Value',
-                          render: (data)=><span>{this.getDisplayValue(data)}</span>,
+                          render: (data)=>{
+                              if(isUrl(data.value)){
+                                return <a href={data.value} target="_blank">{data.value}</a>
+                              }
+                              return <span>{this.getDisplayValue(data)}</span>
+                          },
                           download: (data) => this.getDisplayValue(data),
                           filter: (data:IPatientRow, filterString:string, filterStringUpper:string) =>
                             data.value.toString().toUpperCase().indexOf(filterStringUpper) > -1

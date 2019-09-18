@@ -14,25 +14,25 @@ import _ from "lodash";
 import { AlterationContainerType } from "pages/resultsView/enrichments/EnrichmentsUtil";
 
 export interface ICopyNumberEnrichmentsProps {
-    store: GroupComparisonStore
+    store: GroupComparisonStore;
 }
 
 @observer
 export default class CopyNumberEnrichments extends React.Component<ICopyNumberEnrichmentsProps, {}> {
     @autobind
-    private onChangeProfile(m:MolecularProfile) {
-        this.props.store.setCopyNumberEnrichmentProfile(m);
+    private onChangeProfile(profileMap:{[studyId:string]:MolecularProfile}) {
+        this.props.store.setCopyNumberEnrichmentProfileMap(profileMap);
     }
 
-    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "copy-number", true);
+    readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "copy-number", true, true, true);
 
     private readonly enrichmentAnalysisGroups = remoteData({
-        await:()=>[this.props.store._activeGroupsOverlapRemoved],
+        await:()=>[this.props.store.activeGroups],
         invoke:()=>{
-            const groups = _.map(this.props.store._activeGroupsOverlapRemoved.result, group => {
+            const groups = _.map(this.props.store.activeGroups.result, group => {
                 return {
                     name:group.nameWithOrdinal,
-                    description:`Number (percentage) of samples in ${group.nameWithOrdinal} that have the listed alteration in the listed gene.`,
+                    description:`Number (percentage) of ${this.props.store.usePatientLevelEnrichments ? "patients" : "samples"} in ${group.nameWithOrdinal} that have the listed alteration in the listed gene.`,
                     count: getNumSamples(group),
                     color: group.color
                 }
@@ -43,21 +43,35 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
 
     readonly enrichmentsUI = MakeMobxView({
         await:()=>[
-            this.props.store.copyNumberData,
-            this.props.store.copyNumberEnrichmentProfile,
-            this.enrichmentAnalysisGroups
+            this.props.store.copyNumberEnrichmentData,
+            this.enrichmentAnalysisGroups,
+            this.props.store.selectedStudyCopyNumberEnrichmentProfileMap,
+            this.enrichmentAnalysisGroups,
+            this.props.store.studies
         ],
         render:()=>{
+            let headerName = "Copy number";
+            let studyIds = Object.keys(this.props.store.selectedStudyCopyNumberEnrichmentProfileMap.result!);
+            if (studyIds.length === 1) {
+                headerName = this.props.store.selectedStudyCopyNumberEnrichmentProfileMap.result![studyIds[0]].name
+            }
             return (
                 <div data-test="GroupComparisonCopyNumberEnrichments">
-                    <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles} onChange={this.onChangeProfile}
-                                                selectedValue={this.props.store.copyNumberEnrichmentProfile.result!.molecularProfileId}/>
-                    <AlterationEnrichmentContainer data={this.props.store.copyNumberData.result!}
+                    <EnrichmentsDataSetDropdown
+                        dataSets={this.props.store.copyNumberEnrichmentProfiles}
+                        onChange={this.onChangeProfile}
+                        selectedProfileByStudyId={this.props.store.selectedStudyCopyNumberEnrichmentProfileMap.result!}
+                        studies={this.props.store.studies.result!}
+                    />
+
+                    <AlterationEnrichmentContainer data={this.props.store.copyNumberEnrichmentData.result!}
                         groups={this.enrichmentAnalysisGroups.result}
                         alteredVsUnalteredMode={false}
-                        headerName={this.props.store.copyNumberEnrichmentProfile.result!.name}
+                        headerName={headerName}
                         showCNAInTable={true}
                         containerType={AlterationContainerType.COPY_NUMBER}
+                        patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
+                        onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
                     />
                 </div>
             );

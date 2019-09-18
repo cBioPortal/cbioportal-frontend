@@ -16,7 +16,7 @@ import GroupSelector from "./groupSelector/GroupSelector";
 import {getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
 import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
-import {action, IReactionDisposer, observable, reaction} from "mobx";
+import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
 import _ from "lodash";
@@ -35,6 +35,7 @@ export type GroupComparisonURLQuery = {
     groupOrder?:string; // json stringified array of names
     unselectedGroups?:string; // json stringified array of names
     overlapStrategy?:OverlapStrategy;
+    patientEnrichments?:string;
 };
 
 @inject('routing', 'appStore')
@@ -102,6 +103,12 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         }
     }
 
+    @computed get selectedGroupsKey() {
+        // for components which should remount whenever selected studies change
+        const selectedGroups = this.store._selectedGroups.result || [];
+        return JSON.stringify(selectedGroups.map(g=>g.uid));
+    }
+
     @autobind
     private setTabIdInUrl(id:string, replace?:boolean) {
         this.props.routing.updateRoute({},`comparison/${id}`, false, replace);
@@ -132,44 +139,47 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                          getTabHref={this.getTabHref}
                 >
                     <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
-                        <Overlap store={this.store}/>
+                        <Overlap
+                            key={this.selectedGroupsKey}
+                            store={this.store}
+                        />
                     </MSKTab>
                     {
                         this.store.showSurvivalTab &&
                         <MSKTab id={GroupComparisonTab.SURVIVAL} linkText="Survival"
-                                anchorClassName={this.store.survivalTabGrey ? "greyedOut" : ""}
+                                anchorClassName={this.store.survivalTabUnavailable ? "greyedOut" : ""}
                         >
                             <Survival store={this.store}/>
                         </MSKTab>
                     }
                     <MSKTab id={GroupComparisonTab.CLINICAL} linkText="Clinical"
-                        anchorClassName={this.store.clinicalTabGrey ? "greyedOut" : ""}>
+                        anchorClassName={this.store.clinicalTabUnavailable ? "greyedOut" : ""}>
                         <ClinicalData store={this.store}/>
                     </MSKTab>
                     {this.store.showMutationsTab && (
                         <MSKTab id={GroupComparisonTab.MUTATIONS} linkText="Mutations"
-                            anchorClassName={this.store.mutationsTabGrey ? "greyedOut" : ""}
+                            anchorClassName={this.store.mutationsTabUnavailable ? "greyedOut" : ""}
                         >
                             <MutationEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.showCopyNumberTab && (
                         <MSKTab id={GroupComparisonTab.CNA} linkText="Copy-number"
-                            anchorClassName={this.store.copyNumberTabGrey ? "greyedOut" : ""}
+                            anchorClassName={this.store.copyNumberUnavailable ? "greyedOut" : ""}
                         >
                             <CopyNumberEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (
                         <MSKTab id={GroupComparisonTab.MRNA} linkText="mRNA"
-                            anchorClassName={this.store.mRNATabGrey ? "greyedOut" : ""}
+                            anchorClassName={this.store.mRNATabUnavailable ? "greyedOut" : ""}
                         >
                             <MRNAEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.showProteinTab && (
                         <MSKTab id={GroupComparisonTab.PROTEIN} linkText="Protein"
-                            anchorClassName={this.store.proteinTabGrey ? "greyedOut" : ""}
+                            anchorClassName={this.store.proteinTabUnavailable ? "greyedOut" : ""}
                         >
                             <ProteinEnrichments store={this.store}/>
                         </MSKTab>

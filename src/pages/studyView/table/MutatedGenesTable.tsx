@@ -38,6 +38,8 @@ export interface IMutatedGenesTablePros {
     selectedGenes: string[];
     cancerGeneFilterEnabled?: boolean;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
+    filterByCancerGenes: boolean;
+    onChangeCancerGeneFilter: (filtered: boolean) => void;
 }
 
 type MutatedGenesTableUserSelectionWithIndex = {
@@ -60,7 +62,6 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     @observable private preSelectedRows: MutatedGenesTableUserSelectionWithIndex[] = [];
     @observable private sortBy: string = ColumnKey.FREQ;
     @observable private sortDirection: SortDirection;
-    @observable private cancerGeneFilterIconEnabled = true;
     @observable private modalSettings: {
         modalOpen: boolean;
         modalPanelName: string;
@@ -129,11 +130,11 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     @autobind
     toggleCancerGeneFilter(event: any) {
         event.stopPropagation();
-        this.cancerGeneFilterIconEnabled = !this.cancerGeneFilterIconEnabled;
+        this.props.onChangeCancerGeneFilter(!this.props.filterByCancerGenes)
     }
 
     @computed get isFilteredByCancerGeneList() {
-        return this.props.cancerGeneFilterEnabled! && this.cancerGeneFilterIconEnabled;
+        return !!this.props.cancerGeneFilterEnabled && this.props.filterByCancerGenes;
     }
 
     @computed get tableData() {

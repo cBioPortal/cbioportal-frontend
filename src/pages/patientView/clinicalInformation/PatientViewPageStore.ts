@@ -2,7 +2,8 @@ import * as _ from 'lodash';
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
     ClinicalData, MolecularProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
-    CopyNumberCount, ClinicalDataMultiStudyFilter, SampleMolecularIdentifier, GenePanelData, GenePanel
+    CopyNumberCount, ClinicalDataMultiStudyFilter, SampleMolecularIdentifier, GenePanelData, GenePanel,
+    ReferenceGenomeGene
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
@@ -68,7 +69,8 @@ import {
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     concatMutationData,
     fetchOncoKbCancerGenes,
-    fetchVariantAnnotationsIndexedByGenomicLocation
+    fetchVariantAnnotationsIndexedByGenomicLocation,
+    fetchReferenceGenomeGenes
 } from "shared/lib/StoreUtils";
 import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../public-lib/lib/StringUtils";
@@ -78,6 +80,9 @@ import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
 import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
+import { fetchTrialsById, fetchTrialMatchesUsingPOST } from "../../../shared/api/MatchMinerAPI";
+import { IDetailedTrialMatch, ITrial, ITrialMatch, ITrialQuery } from "../../../shared/model/MatchMiner";
+import { groupTrialMatchesById } from "../trialMatch/TrialMatchTableUtils";
 import {computeGenePanelInformation, CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
 
 type PageMode = 'patient' | 'sample';
@@ -277,6 +282,20 @@ export class PatientViewPageStore {
         []
     );
 
+    // use this when pageMode === 'sample' to get total nr of samples for the
+    // patient
+    readonly allSamplesForPatient = remoteData({
+            await: () => [this.derivedPatientId],
+            invoke: async() => {
+                return await client.getAllSamplesOfPatientInStudyUsingGET({
+                    studyId: this.studyId,
+                    patientId: this.derivedPatientId.result,
+                    projection: 'DETAILED'
+                });
+            },
+            default: []
+    });
+
     readonly samplesWithoutCancerTypeClinicalData = remoteData({
         await: () => [
             this.samples,
@@ -466,6 +485,21 @@ export class PatientViewPageStore {
         }
     }, {});
 
+    readonly referenceGenes = remoteData<ReferenceGenomeGene[]>({
+        await: ()=>[
+            this.studies,
+            this.discreteCNAData
+        ],
+        invoke: async () => {
+            return fetchReferenceGenomeGenes(this.studies.result[0].referenceGenome,
+                this.discreteCNAData.result.map(
+                    (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol.toUpperCase()));
+        },
+        onError:(err)=>{
+            // throwing this allows sentry to report it
+            throw(err);
+        }
+    });
 
     public readonly mrnaRankMolecularProfileId = remoteData({
         await: () => [
@@ -876,5 +910,60 @@ export class PatientViewPageStore {
     @action clearErrors() {
         this.ajaxErrors = [];
     }
+
+    readonly trialMatches = remoteData<ITrialMatch[]>({
+        invoke: () => {
+            return fetchTrialMatchesUsingPOST({mrn: this.patientId});
+        }
+    }, []);
+
+    readonly trialIds = remoteData<ITrialQuery>({
+        await: () => [
+            this.trialMatches
+        ],
+        invoke: async() => {
+            let nctIds = new Set<string>(); // Trial unique id from clinicaltrials.gov
+            let protocolNos = new Set<string>(); // Trials's MSK ID same as protocol_number or protocol_id
+            _.forEach(this.trialMatches.result, (trialMatch: ITrialMatch) => {
+                if (_.isEmpty(trialMatch.protocolNo)) {
+                    nctIds.add(trialMatch.nctId);
+                } else {
+                    protocolNos.add(trialMatch.protocolNo);
+                }
+            });
+            return {
+                nct_id: [...nctIds],
+                protocol_no: [...protocolNos]
+            };
+        }
+    }, {
+        nct_id: [],
+        protocol_no: []
+    });
+
+    readonly trials = remoteData<ITrial[]>({
+        await: () => [
+            this.trialIds
+        ],
+        invoke: async () => {
+            if (this.trialIds.result.protocol_no.length > 0 || this.trialIds.result.nct_id.length > 0) {
+                return fetchTrialsById(this.trialIds.result);
+            }
+            return [];
+        }
+    }, []);
+
+    readonly detailedTrialMatches = remoteData<IDetailedTrialMatch[]>({
+        await: () => [
+            this.trials,
+            this.trialMatches
+        ],
+        invoke: async () => {
+            if (this.trials.result && this.trialMatches.result ) {
+                return groupTrialMatchesById(this.trials.result, this.trialMatches.result);
+            }
+            return [];
+        }
+    }, []);
 
 }

@@ -52,6 +52,7 @@ describe("OQL parser", ()=>{
     doTest("TP53;", [{gene:"TP53", alterations:false}]);
     doTest("TP53\n", [{gene:"TP53", alterations:false}]);
     doTest("TP53 BRCA1 KRAS NRAS", [{gene:"TP53", alterations:false}, {gene:"BRCA1", alterations:false}, {gene:"KRAS", alterations:false}, {gene:"NRAS", alterations:false}]);
+    doTest("TP53,BRCA1,KRAS, NRAS", [{gene:"TP53", alterations:false}, {gene:"BRCA1", alterations:false}, {gene:"KRAS", alterations:false}, {gene:"NRAS", alterations:false}]);
     doTest("TP53: MUT BRCA1", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:[]}, {alteration_type:"mut", constr_rel:"=", constr_type:"name", constr_val:"BRCA1", info:{unrecognized:true}, modifiers:[]}]}]);
     doTest("TP53:MUT", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}, modifiers:[]}]}])
     doTest("TP53: GERMLINE", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:["GERMLINE"]}]}]);
@@ -134,6 +135,11 @@ describe("OQL parser", ()=>{
             {alteration_type: "cna", constr_rel: "=", constr_val: "HOMDEL", modifiers:[]},
             {alteration_type: "exp", constr_rel: ">=", constr_val: 3},
             {alteration_type: "prot", constr_rel: "<", constr_val: 1}] as Alteration[]}])
+    doTest("TP53:MUT, BRCA1: AMP HOMDEL EXP>=3 PROT<1;", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}, modifiers:[]}]},
+        {gene:"BRCA1", alterations:[{alteration_type: "cna", constr_rel: "=", constr_val: "AMP", modifiers:[]},
+                {alteration_type: "cna", constr_rel: "=", constr_val: "HOMDEL", modifiers:[]},
+                {alteration_type: "exp", constr_rel: ">=", constr_val: 3},
+                {alteration_type: "prot", constr_rel: "<", constr_val: 1}] as Alteration[]}])
 
     doTest("TP53:PROT<=-2\n", [{gene:"TP53", alterations:[{alteration_type: "prot", constr_rel: "<=", constr_val:-2}]}])
 

@@ -60,6 +60,7 @@ export type CancerStudyQueryUrlParams = {
     genetic_profile_ids_PROFILE_METHYLATION: string,
     genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: string,
     genetic_profile_ids_PROFILE_GENESET_SCORE: string,
+    genetic_profile_ids_PROFILE_GENERIC_ASSAY: string,
     Z_SCORE_THRESHOLD: string,
     RPPA_SCORE_THRESHOLD: string,
     data_priority: '0' | '1' | '2',
@@ -67,9 +68,11 @@ export type CancerStudyQueryUrlParams = {
     case_ids: string,
     gene_list: string,
     geneset_list?: string,
+    treatment_list?: string,
     tab_index: 'tab_download' | 'tab_visualize',
     transpose_matrix?: 'on',
     Action: 'Submit',
+    patient_enrichments?:string
 };
 
 export type GeneReplacement = { alias: string, genes: Gene[] };
@@ -108,7 +111,7 @@ export const QueryParamsKeys: (keyof CancerStudyQueryParams)[] = [
     'caseIds',
     'caseIdsMode',
     'geneQuery',
-    'genesetQuery',
+    'genesetQuery'
 ];
 
 type GenesetId = string;
@@ -228,6 +231,12 @@ export class QueryStore {
 
     @computed get stateToSerialize() {
         return _.pick(this, QueryParamsKeys);
+    }
+
+    @computed
+    get onlyOneReferenceGenome() {
+        const referenceGenomes = _.uniq(this.selectableSelectedStudies.map(s => s.referenceGenome));
+        return (referenceGenomes.length === 1);
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -380,7 +389,7 @@ export class QueryStore {
         // clear error when gene query is modified
         this.genesetQueryErrorDisplayStatus = 'unfocused';
         this._genesetQuery = value;
-    }
+	}
 
     ////////////////////////////////////////////////////////////////////////////////
     // VISUAL OPTIONS
@@ -1538,6 +1547,7 @@ export class QueryStore {
             params.genetic_profile_ids_PROFILE_METHYLATION,
             params.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
             params.genetic_profile_ids_PROFILE_GENESET_SCORE,
+            params.genetic_profile_ids_PROFILE_GENERIC_ASSAY
         ];
 
         let queriedStudies = params.cancer_study_list ? params.cancer_study_list.split(",") : (params.cancer_study_id ? [params.cancer_study_id] : []);

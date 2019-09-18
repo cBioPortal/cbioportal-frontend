@@ -12,6 +12,7 @@ import {
     MUT_COLOR_INFRAME, MUT_COLOR_MISSENSE, MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC
 } from "shared/lib/Colors";
+import {normalizeMutations} from "../components/mutationMapper/MutationMapperUtils";
 
 
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
@@ -29,7 +30,7 @@ export function isUncalled(molecularProfileId:string) {
 export function getColorForProteinImpactType(mutations: Mutation[],
     colors: IProteinImpactTypeColors = DEFAULT_PROTEIN_IMPACT_TYPE_COLORS): string
 {
-    return getDefaultColorForProteinImpactType(mutations, colors);
+    return getDefaultColorForProteinImpactType(normalizeMutations(mutations), colors);
 }
 
 // TODO remove when done refactoring mutation mapper
@@ -210,14 +211,14 @@ export function updateMissingGeneInfo(mutations: Partial<Mutation>[],
 // TODO remove when done refactoring mutation mapper
 export function extractGenomicLocation(mutation: Mutation)
 {
-    if (mutation.gene && mutation.gene.chromosome &&
+    if (mutation.gene && mutation.chr &&
         mutation.startPosition &&
         mutation.endPosition &&
         mutation.referenceAllele &&
         mutation.variantAllele)
     {
         return {
-            chromosome: mutation.gene.chromosome.replace("chr", ""),
+            chromosome: mutation.chr.replace("chr", ""),
             start: mutation.startPosition,
             end: mutation.endPosition,
             referenceAllele: mutation.referenceAllele,

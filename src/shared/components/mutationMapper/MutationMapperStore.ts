@@ -3,11 +3,12 @@ import {computed} from "mobx";
 import MobxPromise, {cached, labelMobxPromises} from "mobxpromise";
 
 import {
+    DataFilter, defaultHotspotFilter,
     DefaultMutationMapperDataFetcher,
-    DefaultMutationMapperStore,
+    DefaultMutationMapperStore, defaultOncoKbFilter,
     getMutationsToTranscriptId,
     groupOncoKbIndicatorDataByMutations,
-    IHotspotIndex
+    IHotspotIndex, isHotspot
 } from "react-mutation-mapper";
 
 import genomeNexusClient from "shared/api/genomeNexusClientInstance";
@@ -40,6 +41,7 @@ import {defaultOncoKbIndicatorFilter} from "shared/lib/OncoKbUtils";
 
 import {IMutationMapperConfig} from "./MutationMapper";
 import autobind from "autobind-decorator";
+import {normalizeMutation, normalizeMutations} from "./MutationMapperUtils";
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?:boolean
@@ -67,6 +69,9 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
                 filterMutationsBySelectedTranscript: mutationMapperStoreConfig.filterMutationsBySelectedTranscript
             },
             getMutations);
+
+        const unnormalizedGetMutations = this.getMutations;
+        this.getMutations = ()=>normalizeMutations(unnormalizedGetMutations());
         labelMobxPromises(this);
     }
 
@@ -123,6 +128,43 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
     @autobind
     protected getDefaultEntrezGeneId(mutation: Mutation): number {
         return mutation.gene.entrezGeneId;
+    }
+
+    @autobind
+    protected customFilterApplier(filter: DataFilter,
+                                  mutation: Mutation,
+                                  positions: {[position: string]: {position: number}})
+    {
+
+        mutation = normalizeMutation(mutation);
+
+        let pick = false;
+
+        if (filter.position) {
+            pick = !!positions[mutation.proteinPosStart+""];
+        }
+
+        if (pick &&
+            filter.hotspot &&
+            this.indexedHotspotData.result)
+        {
+            // TODO for now ignoring the actual filter value and treating as a boolean
+            pick = isHotspot(mutation, this.indexedHotspotData.result, defaultHotspotFilter);
+        }
+
+        if (pick &&
+            filter.oncokb &&
+            this.oncoKbData.result &&
+            !(this.oncoKbData.result instanceof Error))
+        {
+            // TODO for now ignoring the actual filter value and treating as a boolean
+            pick = defaultOncoKbFilter(mutation,
+                this.oncoKbData.result,
+                this.getDefaultTumorType,
+                this.getDefaultEntrezGeneId);
+        }
+
+        return pick;
     }
 
     // TODO remove when done refactoring react-mutation-mapper

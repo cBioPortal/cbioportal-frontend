@@ -1,0 +1,10 @@
+FROM circleci/node:8.12.0-browsers
+MAINTAINER Pim van Nierop <pim@thehyve.nl>
+
+LABEL Description="End-2-end test image for cBioPortal frontend"
+
+USER root
+
+RUN npm install --global yarn@1.13.0
+
+CMD /cbioportal-frontend/end-to-end-test/local/docker/screenshottest.sh
