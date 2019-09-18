@@ -866,7 +866,7 @@ export class StudyViewPageStore {
                 studyIds: studyIds
             }), clinicalAttribute => `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`);
 
-            const matchedAttr = _.find(clinicalAttributes, (attr: ClinicalAttribute) => attr.clinicalAttributeId === query.filterAttributeId);
+            const matchedAttr = _.find(clinicalAttributes, (attr: ClinicalAttribute) => attr.clinicalAttributeId.toUpperCase() === query.filterAttributeId!.toUpperCase());
             if (matchedAttr !== undefined) {
                 if (matchedAttr.datatype == "NUMBER") {
                     filters.clinicalDataIntervalFilters = [{
