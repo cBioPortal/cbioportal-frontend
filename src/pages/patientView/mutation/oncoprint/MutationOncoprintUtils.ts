@@ -1,7 +1,7 @@
 import {Mutation, Sample} from "../../../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../../shared/lib/StoreUtils";
-import {IGeneHeatmapTrackDatum, IGeneHeatmapTrackSpec} from "../../../../shared/components/oncoprint/Oncoprint";
+import {IGeneHeatmapTrackDatum, IHeatmapTrackSpec} from "../../../../shared/components/oncoprint/Oncoprint";
 import {CoverageInformation} from "../../../resultsView/ResultsViewPageStoreUtils";
 import {isSampleProfiled} from "../../../../shared/lib/isSampleProfiled";
 import {MutationStatus} from "../PatientViewMutationsTabUtils";
@@ -12,7 +12,7 @@ export interface IMutationOncoprintTrackDatum extends IGeneHeatmapTrackDatum {
     mutationStatus:MutationStatus;
 }
 
-export interface IMutationOncoprintTrackSpec extends IGeneHeatmapTrackSpec {
+export interface IMutationOncoprintTrackSpec extends IHeatmapTrackSpec {
     data:IMutationOncoprintTrackDatum[];
 }
 

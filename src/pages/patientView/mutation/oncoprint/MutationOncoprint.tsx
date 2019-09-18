@@ -1,6 +1,6 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import Oncoprint, {IGeneHeatmapTrackSpec} from "../../../../shared/components/oncoprint/Oncoprint";
+import Oncoprint from "../../../../shared/components/oncoprint/Oncoprint";
 import {remoteData} from "../../../../public-lib";
 import {MakeMobxView} from "../../../../shared/components/MobxView";
 import {PatientViewPageStore} from "../../clinicalInformation/PatientViewPageStore";
