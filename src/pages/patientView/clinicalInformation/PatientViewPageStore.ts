@@ -639,9 +639,7 @@ export class PatientViewPageStore {
             let genePanelData:GenePanelData[];
             if (sampleMolecularIdentifiers.length && this.mutatedGenes.result!.length) {
                 genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
-                    genePanelMultipleStudyFilter:{
-                        sampleMolecularIdentifiers
-                    }
+                    sampleMolecularIdentifiers
                 });
             } else {
                 genePanelData = [];
