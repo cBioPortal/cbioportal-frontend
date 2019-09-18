@@ -203,8 +203,6 @@ function getDownloadObject<T>(columns: Column<T>[], rowData: T) {
 
 export class LazyMobXTableStore<T> {
     public filterString:string|undefined;
-    @observable private _page:number;
-    @observable private _itemsPerPage:number;
     @observable private _itemsLabel:string|undefined;
     @observable private _itemsLabelPlural:string|undefined;
     @observable public sortColumn:string;
@@ -222,11 +220,11 @@ export class LazyMobXTableStore<T> {
     @observable private _columnVisibilityOverride:{[columnId: string]: boolean}|undefined;
 
     @computed public get itemsPerPage() {
-        return this._itemsPerPage;
+        return this.dataStore.itemsPerPage;
     }
 
     public set itemsPerPage(i:number) {
-        this._itemsPerPage = i;
+        this.dataStore.itemsPerPage = i;
         this.page = this.page; // trigger clamping in page setter
     }
 
@@ -250,10 +248,10 @@ export class LazyMobXTableStore<T> {
     }
 
     @computed public get page() {
-        return this._page;
+        return this.dataStore.page;
     }
     public set page(p:number) {
-        this._page = this.clampPage(p);
+        this.dataStore.page = this.clampPage(p);
     }
 
     private clampPage(p:number) {
@@ -317,11 +315,7 @@ export class LazyMobXTableStore<T> {
     }
 
     @computed get visibleData():T[] {
-        if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
-            return this.displayData;
-        } else {
-            return this.displayData.slice(this.page*this.itemsPerPage, (this.page+1)*this.itemsPerPage);
-        }
+        return this.dataStore.visibleData;
     }
 
     private getNextSortAscending(clickedColumn:Column<T>) {
@@ -558,7 +552,12 @@ export class LazyMobXTableStore<T> {
         } else {
             this.dataStore = new SimpleLazyMobXTableApplicationDataStore<T>(props.data || []);
         }
-
+        if(this.dataStore.page === undefined) {
+            this.dataStore.page = 0;
+        }
+        if(this.itemsPerPage === undefined) {
+            this.itemsPerPage = props.initialItemsPerPage || 50;
+        }
         // even if dataStore passed in, we need to initialize sort props if undefined
         // otherwise we lose the functionality of 'initialSortColumn' and 'initialSortDirection' props
         if (this.dataStore.sortAscending === undefined) {
@@ -606,10 +605,6 @@ export class LazyMobXTableStore<T> {
         this.sortColumn = lazyMobXTableProps.initialSortColumn || "";
         this.sortAscending = (lazyMobXTableProps.initialSortDirection !== "desc"); // default ascending
         this.setProps(lazyMobXTableProps);
-
-        this._page = 0;
-        this.itemsPerPage = lazyMobXTableProps.initialItemsPerPage || 50;
-
         reaction(()=>this.displayData.length, ()=>{ this.page = this.clampPage(this.page); /* update for possibly reduced maxPage */});
     }
 }

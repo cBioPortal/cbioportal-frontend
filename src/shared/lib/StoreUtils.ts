@@ -4,9 +4,23 @@ import {
     fetchVariantAnnotationsIndexedByGenomicLocation as fetchDefaultVariantAnnotationsIndexedByGenomicLocation,
 } from "react-mutation-mapper"
 import {
-    default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
-    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier, CopyNumberSeg,
-    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, NumericGeneMolecularData, SampleFilter, Gene
+    default as CBioPortalAPI,
+    MolecularProfile,
+    Mutation,
+    MutationFilter,
+    DiscreteCopyNumberData,
+    DiscreteCopyNumberFilter,
+    ClinicalData,
+    Sample,
+    CancerStudy,
+    CopyNumberCountIdentifier,
+    CopyNumberSeg,
+    ClinicalDataSingleStudyFilter,
+    ClinicalDataMultiStudyFilter,
+    NumericGeneMolecularData,
+    SampleFilter,
+    Gene,
+    ReferenceGenomeGene
 } from "shared/api/generated/CBioPortalAPI";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -40,6 +54,7 @@ import GenomeNexusAPI from "public-lib/api/generated/GenomeNexusAPI";
 import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
 import {stringListToIndexSet} from "public-lib/lib/StringUtils";
 import {GeneticTrackDatum_Data} from "../components/oncoprint/Oncoprint";
+import {normalizeMutations} from "../components/mutationMapper/MutationMapperUtils";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     uniqueSampleKeyToTumorType : {},
@@ -73,7 +88,7 @@ export async function fetchVariantAnnotationsByMutation(mutations: Mutation[],
                                                         isoformOverrideSource: string = "uniprot",
                                                         client: GenomeNexusAPI = genomeNexusClient)
 {
-    return fetchDefaultVariantAnnotationsByMutation(mutations, fields, isoformOverrideSource, client);
+    return fetchDefaultVariantAnnotationsByMutation(normalizeMutations(mutations), fields, isoformOverrideSource, client);
 }
 
 export async function fetchVariantAnnotationsIndexedByGenomicLocation(mutations: Mutation[],
@@ -81,7 +96,7 @@ export async function fetchVariantAnnotationsIndexedByGenomicLocation(mutations:
                                                                       isoformOverrideSource: string = "uniprot",
                                                                       client: GenomeNexusAPI = genomeNexusClient)
 {
-    return fetchDefaultVariantAnnotationsIndexedByGenomicLocation(mutations, fields, isoformOverrideSource, client);
+    return fetchDefaultVariantAnnotationsIndexedByGenomicLocation(normalizeMutations(mutations), fields, isoformOverrideSource, client);
 }
 
 export async function fetchGenes(hugoGeneSymbols?: string[],
@@ -94,6 +109,31 @@ export async function fetchGenes(hugoGeneSymbols?: string[],
             geneIds: hugoGeneSymbols.slice(),
             projection: "SUMMARY"
         }), (gene: Gene) => order[gene.hugoGeneSymbol]);
+    } else {
+        return [];
+    }
+}
+
+export async function fetchReferenceGenomeGenes(genomeName:string, hugoGeneSymbols?: string[],
+                                 client: CBioPortalAPI = defaultClient)
+{
+    if (hugoGeneSymbols && hugoGeneSymbols.length) {
+        const order = stringListToIndexSet(hugoGeneSymbols);
+        return _.sortBy(await client.fetchReferenceGenomeGenesUsingPOST({
+            genomeName: genomeName,
+            geneIds: hugoGeneSymbols.slice()
+        }), (gene:ReferenceGenomeGene) => order[gene.hugoGeneSymbol]);
+    } else {
+        return [];
+    }
+}
+
+export async function fetchAllReferenceGenomeGenes(genomeName:string,
+                                                   client: CBioPortalAPI = defaultClient)
+{
+    if (genomeName) {
+        return await client.getAllReferenceGenomeGenesUsingGET(
+            {genomeName:genomeName});
     } else {
         return [];
     }
@@ -629,15 +669,15 @@ export async function fetchCnaCivicGenes(discreteCNAData:MobxPromise<DiscreteCop
 {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
         let entrezGeneSymbols: Set<number> = new Set([]);
-        
+
         discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
             entrezGeneSymbols.add(cna.gene.entrezGeneId);
         });
-        
+
         let querySymbols: Array<number> = Array.from(entrezGeneSymbols);
-    
+
         let civicGenes: ICivicGene = (await getCivicGenes(querySymbols));
-    
+
         return civicGenes;
     } else {
         return {};
@@ -854,7 +894,7 @@ export function concatMutationData(mutationData?:MobxPromise<Mutation[]>,
 }
 
 function mutationEventFields(m: Mutation) {
-    return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele];
+    return [m.chr, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele];
 }
 
 export function generateMutationIdByEvent(m: Mutation): string {

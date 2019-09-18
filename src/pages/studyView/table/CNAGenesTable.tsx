@@ -48,6 +48,8 @@ export interface ICNAGenesTablePros {
     selectedGenes: string[];
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     cancerGeneFilterEnabled?: boolean;
+    filterByCancerGenes: boolean;
+    onChangeCancerGeneFilter: (filtered: boolean) => void;
 }
 
 class CNAGenesTableComponent extends FixedHeaderTable<CopyNumberCountByGeneWithCancerGene> {}
@@ -65,7 +67,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @observable private preSelectedRows: CNAGenesTableUserSelectionWithIndex[] = [];
     @observable private sortBy: string = ColumnKey.FREQ;
     @observable private sortDirection: SortDirection;
-    @observable private cancerGeneFilterIconEnabled = true;
 
     @observable private modalSettings: {
         modalOpen: boolean;
@@ -109,11 +110,11 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @autobind
     toggleCancerGeneFilter(event:any) {
         event.stopPropagation();
-        this.cancerGeneFilterIconEnabled=!this.cancerGeneFilterIconEnabled;
+        this.props.onChangeCancerGeneFilter(!this.props.filterByCancerGenes)
     }
 
     @computed get isFilteredByCancerGeneList() {
-        return this.props.cancerGeneFilterEnabled! && this.cancerGeneFilterIconEnabled;
+        return !!this.props.cancerGeneFilterEnabled && this.props.filterByCancerGenes;
     }
 
     @computed get tableData() {
@@ -262,7 +263,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
                 },
                 render: (data: CopyNumberCountByGeneWithCancerGene) => {
-                    return getFreqColumnRender('cna', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanelIds, this.toggleModal, {marginLeft: this.cellMargin[ColumnKey.FREQ]})
+                    return getFreqColumnRender('cna', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanelIds, this.toggleModal, {marginLeft: this.cellMargin[ColumnKey.FREQ]});
                 },
                 sortBy: (data: CopyNumberCountByGeneWithCancerGene) =>
                     (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100,

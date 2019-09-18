@@ -81,8 +81,9 @@ export interface IChartContainerProps {
     cancerGenes:number[];
     onGeneSelect?:any;
     isNewlyAdded: (uniqueKey: string) => boolean;
-    cancerGeneFilterEnabled: boolean,
-
+    cancerGeneFilterEnabled: boolean;
+    filterByCancerGenes?: boolean;
+    onChangeCancerGeneFilter?: (filtered: boolean) => void;
     openComparisonPage:(params:{
         chartMeta: ChartMeta,
         clinicalAttributeValues?:{ value:string, color:string }[]
@@ -347,6 +348,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
                         cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
+                        filterByCancerGenes={this.props.filterByCancerGenes!}
+                        onChangeCancerGeneFilter={this.props.onChangeCancerGeneFilter!}
                     />
                 );
             }
@@ -363,6 +366,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
                         cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
+                        filterByCancerGenes={this.props.filterByCancerGenes!}
+                        onChangeCancerGeneFilter={this.props.onChangeCancerGeneFilter!}
                     />
                 );
             }

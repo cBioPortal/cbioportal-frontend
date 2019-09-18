@@ -7,7 +7,7 @@ import * as styles_any from './styles/styles.module.scss';
 import classNames from 'classnames';
 import StudyList from "./studyList/StudyList";
 import {observer, Observer} from "mobx-react";
-import {action, expr, IReactionDisposer, reaction, computed} from 'mobx';
+import {action, computed, expr, IReactionDisposer, reaction} from 'mobx';
 import memoize from "memoize-weak-decorator";
 import {If, Then, Else} from 'react-if';
 import {QueryStore} from "./QueryStore";

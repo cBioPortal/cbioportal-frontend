@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+set -e 
+set -u
+set -o pipefail
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # serve frontend as https if CBIOPORTAL_URL contains https, use http otherwise

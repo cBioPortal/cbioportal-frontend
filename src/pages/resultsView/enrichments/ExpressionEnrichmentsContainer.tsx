@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
-import { observable, computed } from 'mobx';
-import ExpressionEnrichmentTable from 'pages/resultsView/enrichments/ExpressionEnrichmentsTable';
-import { ExpressionEnrichment } from 'shared/api/generated/CBioPortalAPIInternal';
+import { observable, computed, action } from 'mobx';
+import ExpressionEnrichmentTable, { ExpressionEnrichmentTableColumnType } from 'pages/resultsView/enrichments/ExpressionEnrichmentsTable';
 import styles from "./styles.module.scss";
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import {
     ExpressionEnrichmentWithQ,
     getExpressionRowData,
     getExpressionScatterData,
+    getExpressionEnrichmentColumns,
     getFilteredData
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
@@ -19,32 +19,29 @@ import MiniBoxPlot from 'pages/resultsView/enrichments/MiniBoxPlot';
 import * as _ from "lodash";
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
-import EllipsisTextTooltip from "../../../public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
-import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
-import classNames from 'classnames';
+import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
+import { Option } from 'public-lib/components/checkedSelect/CheckedSelectUtils';
+import EllipsisTextTooltip from "public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];
     selectedProfile: MolecularProfile;
-    group1Name?:string;
-    group2Name?:string;
-    group1Description?:string;
-    group2Description?:string;
-    group1Color?:string;
-    group2Color?:string;
-    alteredVsUnalteredMode?:boolean;
+    groups: {
+        name: string,
+        description: string,
+        nameOfEnrichmentDirection?: string,
+        count: number,
+        color?: string
+    }[]
+    alteredVsUnalteredMode?: boolean;
     store?: ResultsViewPageStore;
 }
 
 @observer
 export default class ExpressionEnrichmentContainer extends React.Component<IExpressionEnrichmentContainerProps, {}> {
 
-    static defaultProps:Partial<IExpressionEnrichmentContainerProps> = {
-        group1Name: "Altered group",
-        group2Name: "Unaltered group",
-        group1Description: "samples that have alterations in the query gene(s).",
-        group2Description: "samples that do not have alterations in the query gene(s).",
-        alteredVsUnalteredMode:true
+    static defaultProps: Partial<IExpressionEnrichmentContainerProps> = {
+        alteredVsUnalteredMode: true
     };
 
     @observable overExpressedFilter: boolean = true;
@@ -53,26 +50,17 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     @observable.shallow checkedGenes: string[] = [];
     @observable clickedGeneHugo: string;
     @observable clickedGeneEntrez: number;
-    @observable.ref selectedGenes: string[]|null;
-    @observable.ref highlightedRow:ExpressionEnrichmentRow|undefined;
+    @observable.ref selectedGenes: string[] | null;
+    @observable.ref highlightedRow: ExpressionEnrichmentRow | undefined;
+    @observable.ref _expressedGroups: string[] = this.props.groups.map(group => group.name);
 
     @computed get data(): ExpressionEnrichmentRow[] {
-        return getExpressionRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
+        return getExpressionRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.props.groups);
     }
 
     @computed get filteredData(): ExpressionEnrichmentRow[] {
-        return getFilteredData(this.data, this.underExpressedFilter, this.overExpressedFilter, this.significanceFilter, 
+        return getFilteredData(this.data, this._expressedGroups, this.significanceFilter,
             this.selectedGenes);
-    }
-
-    @autobind
-    private toggleOverExpressedFilter() {
-        this.overExpressedFilter = !this.overExpressedFilter;
-    }
-
-    @autobind
-    private toggleUnderExpressedFilter() {
-        this.underExpressedFilter = !this.underExpressedFilter;
     }
 
     @autobind
@@ -108,30 +96,32 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     }
 
     private dataStore = new EnrichmentsTableDataStore(
-        ()=>{
+        () => {
             return this.filteredData;
         },
-        ()=>{
+        () => {
             return this.highlightedRow;
         },
-        (c:ExpressionEnrichmentRow)=>{
+        (c: ExpressionEnrichmentRow) => {
             this.highlightedRow = c;
         }
     );
 
-    @computed get volcanoPlotLabels() {
-        if (this.props.alteredVsUnalteredMode) {
-            return ["Under-expressed", "Over-expressed"];
-        } else {
-            return [this.props.group2Name!, this.props.group1Name!];
-        }
+    //used in 2 groups analysis
+    @computed get group1() {
+        return this.props.groups[0];
+    }
+
+    //used in 2 groups analysis
+    @computed get group2() {
+        return this.props.groups[1];
     }
 
     @computed get group1CheckboxLabel() {
         if (this.props.alteredVsUnalteredMode) {
             return "Over-expressed";
         } else {
-            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group1Name!}/></span>;
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.group1.name!}/></span>;
         }
     }
 
@@ -139,12 +129,68 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         if (this.props.alteredVsUnalteredMode) {
             return "Under-expressed";
         } else {
-            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.props.group2Name!}/></span>;
+            return <span style={{display:"flex", alignItems:"center"}}>Enriched in&nbsp;<EllipsisTextTooltip text={this.group2.name!}/></span>;
         }
     }
 
     @computed get selectedGenesSet() {
         return _.keyBy(this.selectedGenes || []);
+    }
+
+    @computed get isTwoGroupAnalysis(): boolean {
+        return this.props.groups.length == 2;
+    }
+
+    @computed get customColumns() {
+        return getExpressionEnrichmentColumns(this.props.groups, this.props.alteredVsUnalteredMode);
+    }
+
+    @computed get visibleOrderedColumnNames() {
+        const columns = [];
+        columns.push(ExpressionEnrichmentTableColumnType.GENE,
+            ExpressionEnrichmentTableColumnType.CYTOBAND);
+
+        this.props.groups.forEach(group => {
+            columns.push(group.name + " mean");
+        });
+
+        this.props.groups.forEach(group => {
+            columns.push(group.name + " standard deviation");
+        });
+
+        if (this.isTwoGroupAnalysis) {
+            columns.push(ExpressionEnrichmentTableColumnType.LOG_RATIO);
+        }
+
+        columns.push(
+            ExpressionEnrichmentTableColumnType.P_VALUE,
+            ExpressionEnrichmentTableColumnType.Q_VALUE);
+
+        if (this.isTwoGroupAnalysis && this.props.alteredVsUnalteredMode) {
+            columns.push(ExpressionEnrichmentTableColumnType.TENDENCY);
+        } else {
+            columns.push(ExpressionEnrichmentTableColumnType.EXPRESSED)
+        }
+
+        return columns;
+    }
+
+    @autobind
+    @action onChange(values: { value: string }[]) {
+        this._expressedGroups = _.map(values, datum => datum.value);
+    }
+
+    @computed get selectedValues() {
+        return this._expressedGroups.map(id => ({ value: id }));
+    }
+
+    @computed get options(): Option[] {
+        return _.map(this.props.groups, group => {
+            return {
+                label: group.nameOfEnrichmentDirection ? group.nameOfEnrichmentDirection : group.name,
+                value: group.name
+            }
+        });
     }
 
     public render() {
@@ -154,7 +200,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         }
 
         const data: any[] = getExpressionScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
-        const maxData:any = _.maxBy(data, (d) => {
+        const maxData: any = _.maxBy(data, (d) => {
             return Math.ceil(Math.abs(d.x));
         });
 
@@ -166,43 +212,45 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         return (
             <div className={styles.Container}>
 
-                <div className={styles.ChartsPanel}>
-                    <MiniScatterChart data={data}
-                                      selectedGenesSet={this.selectedGenesSet}
-                                      xAxisLeftLabel={this.volcanoPlotLabels[0]} xAxisRightLabel={this.volcanoPlotLabels[1]} xAxisDomain={Math.ceil(Math.abs(maxData.x))}
-                                      xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
-                                      onSelectionCleared={this.onSelectionCleared}/>
-                    { this.props.store && <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez}
-                                                       selectedProfile={this.props.selectedProfile} queryGenes={this.props.store.hugoGeneSymbols}
-                                                       selectedGeneQValue={selectedGeneQValue} store={this.props.store}/>}
-                </div>
+                {this.isTwoGroupAnalysis &&
+                    <div className={styles.ChartsPanel}>
+                        <MiniScatterChart
+                            data={data}
+                            selectedGenesSet={this.selectedGenesSet}
+                            xAxisLeftLabel={this.group2.nameOfEnrichmentDirection || this.group2.name}
+                            xAxisRightLabel={this.group1.nameOfEnrichmentDirection || this.group1.name}
+                            xAxisDomain={Math.ceil(Math.abs(maxData.x))}
+                            xAxisTickValues={null}
+                            onGeneNameClick={this.onGeneNameClick}
+                            onSelection={this.onSelection}
+                            onSelectionCleared={this.onSelectionCleared} />
+                        {this.props.store &&
+                            <MiniBoxPlot
+                                selectedGeneHugo={this.clickedGeneHugo}
+                                selectedGeneEntrez={this.clickedGeneEntrez}
+                                selectedProfile={this.props.selectedProfile}
+                                queryGenes={this.props.store.hugoGeneSymbols}
+                                selectedGeneQValue={selectedGeneQValue}
+                                store={this.props.store} />
+                        }
+                    </div>
+                }
 
                 <div className={styles.TableContainer}>
                     <div>
                         <h3>{this.props.selectedProfile.name}</h3>
-                        { this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
+                        {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
-                        <div className={styles.FlexCheckbox}>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={this.overExpressedFilter}
-                                    onClick={this.toggleOverExpressedFilter}
-                                />
-                                {this.group1CheckboxLabel}
-                            </label>
-                        </div>
-                        <div className={styles.FlexCheckbox}>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={this.underExpressedFilter}
-                                    onClick={this.toggleUnderExpressedFilter}
-                                />
-                                {this.group2CheckboxLabel}
-                            </label>
+                        <div style={{ width: 250, marginRight: 7 }} >
+                            <CheckedSelect
+                                name={"enrichedGroupsSelector"}
+                                placeholder={"Select enriched groups"}
+                                onChange={this.onChange}
+                                options={this.options}
+                                value={this.selectedValues}
+                            />
                         </div>
                         <div className={styles.FlexCheckbox}>
                             <label>
@@ -215,19 +263,17 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                             </label>
                         </div>
                     </div>
-                    <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
-                                               onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} group1Name={this.props.group1Name!} group2Name={this.props.group2Name!}
-                                               mutexTendency={this.props.alteredVsUnalteredMode}
-                                               group1Description={this.props.group1Description!}
-                                               group2Description={this.props.group2Description!}
-                                               group1Color={this.props.group1Color}
-                                               group2Color={this.props.group2Color}
-                                               checkedGenes={this.props.store ? this.checkedGenes : undefined}
+                    <ExpressionEnrichmentTable
+                        data={this.filteredData}
+                        onCheckGene={this.props.store ? this.onCheckGene : undefined}
+                        onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined}
+                        dataStore={this.dataStore}
+                        mutexTendency={this.props.alteredVsUnalteredMode}
+                        checkedGenes={this.props.store ? this.checkedGenes : undefined}
+                        visibleOrderedColumnNames={this.visibleOrderedColumnNames}
+                        customColumns={_.keyBy(this.customColumns, column => column.uniqueName || column.name)}
                     />
                 </div>
-
-
-
             </div>
         );
     }

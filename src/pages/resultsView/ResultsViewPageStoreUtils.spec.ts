@@ -128,7 +128,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             studyId: 'brca_tcga',
             gene: {
                 entrezGeneId, hugoGeneSymbol: `GENE${entrezGeneId}`,
-                "type": "protein-coding", "cytoband": "1p20.1", "length": 4000
+                "type": "protein-coding"
             }
         })) as NumericGeneMolecularData[];
 
@@ -1216,14 +1216,11 @@ describe("ResultsViewPageStoreUtils", ()=>{
     describe('getRNASeqProfiles',()=>{
 
         it('properly recognizes expression profile based on patterns in id',()=>{
-            assert.isFalse(isRNASeqProfile("",1), "blank is false");
-            assert.isTrue(isRNASeqProfile("acc_tcga_rna_seq_v2_mrna",2),"matches seq v2 id");
-            assert.isFalse(isRNASeqProfile("acc_tcga_rna_seq_v2_mrna",1),"fails if versions is wrong");
-            assert.isTrue(isRNASeqProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median",2),'matches pan can v2');
-            assert.isFalse(isRNASeqProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median",1),'matches pan can v2');
-            assert.isFalse(isRNASeqProfile("laml_tcga_rna_seq_mrna",2));
-            assert.isTrue(isRNASeqProfile("laml_tcga_rna_seq_mrna",1));
-            assert.isFalse(isRNASeqProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores",2), 'doesn\'t match zscores profils');
+            assert.isFalse(isRNASeqProfile(""), "blank is false");
+            assert.isTrue(isRNASeqProfile("acc_tcga_rna_seq_v2_mrna"),"matches seq v2 id");
+            assert.isTrue(isRNASeqProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median"),'matches pan can v2');
+            assert.isTrue(isRNASeqProfile("laml_tcga_rna_seq_mrna"));
+            assert.isFalse(isRNASeqProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores"), 'doesn\'t match zscores profils');
         });
 
     });
@@ -1294,7 +1291,6 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(test,[]);
         });
 
-        
         it("when only physical studies are present", async ()=>{
             let test = await fetchQueriedStudies(physicalStudies,['physical_study_1', 'physical_study_2'], virtualStudies);
             assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'physical_study_2']);
@@ -2386,7 +2382,6 @@ describe('getSampleAlteredMap', () => {
     const studyToMolecularProfiles = {"chol_nus_2012": [{"molecularProfileId": "chol_nus_2012_mutations"} as MolecularProfile, {"molecularProfileId": "chol_nus_2012_cna"} as MolecularProfile]};
 
     it('should handle all profiled samples correctly', () => {
-        
         const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformation, molecularProfileIds, studyToMolecularProfiles);
         const expectedResult = {
             "RAS": [
@@ -2438,7 +2433,6 @@ describe('getSampleAlteredMap', () => {
     });
 
     it('should set undefined for the not profiled samples', () => {
-        
         const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, molecularProfileIds, studyToMolecularProfiles);
         const expectedResult = {
             "RAS": [
@@ -2488,7 +2482,6 @@ describe('getSampleAlteredMap', () => {
     });
 
     it('should search in all molecularProfile ids', () => {
-        
         const ret = getSampleAlteredMap(filteredAlterationData, samples, oqlQuery, coverageInformationWithUnprofiledSamples, unprofiledMolecularProfileIds, studyToMolecularProfiles);
         const expectedResult = {
             "RAS": [
@@ -2542,7 +2535,7 @@ describe('getSingleGeneResultKey', () => {
         } as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
         const ret = getSingleGeneResultKey(arg0, arg1, arg2);
         const expectedResult = "KRAS"
-        
+
         assert.equal(ret, expectedResult, "get single gene result key(without alteration)");
 
     });
@@ -2576,7 +2569,7 @@ describe('getMultipleGeneResultKey', () => {
         } as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
         const ret = getMultipleGeneResultKey(arg0);
         const expectedResult = "RAS"
-        
+
         assert.equal(ret, expectedResult, "get gene group result key(with name)");
 
     });
@@ -2607,7 +2600,7 @@ describe('getMultipleGeneResultKey', () => {
         } as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
         const ret = getMultipleGeneResultKey(arg0);
         const expectedResult = "SMAD4 / RAN"
-        
+
         assert.equal(ret, expectedResult, "get gene group result key(without name)");
 
     });

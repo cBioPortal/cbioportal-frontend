@@ -74,6 +74,14 @@
     {
       "name": "O. Gene Panels",
       "description": " "
+    },
+    {
+      "name": "Q. Structural Variants",
+      "description": " "
+    },
+    {
+      "name": "Reference Genome Genes",
+      "description": " "
     }
   ],
   "schemes": [
@@ -522,11 +530,14 @@
         "parameters": [
           {
             "in": "body",
-            "name": "genePanelMultipleStudyFilter",
+            "name": "sampleMolecularIdentifiers",
             "description": "List of Molecular Profile ID and Sample ID pairs",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/GenePanelMultipleStudyFilter"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SampleMolecularIdentifier"
+              }
             }
           }
         ],
@@ -2069,6 +2080,122 @@
         }
       }
     },
+    "/reference-genome-genes/{genomeName}": {
+      "get": {
+        "tags": [
+          "Reference Genome Genes"
+        ],
+        "summary": "Get all reference genes",
+        "operationId": "getAllReferenceGenomeGenesUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "genomeName",
+            "in": "path",
+            "description": "Name of Reference Genome hg19",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ReferenceGenomeGene"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reference-genome-genes/{genomeName}/fetch": {
+      "post": {
+        "tags": [
+          "Reference Genome Genes"
+        ],
+        "summary": "Fetch genes of reference genome of interest",
+        "operationId": "fetchReferenceGenomeGenesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "genomeName",
+            "in": "path",
+            "description": "Name of Reference Genome hg19",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "geneIds",
+            "description": "List of Entrez Gene IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ReferenceGenomeGene"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reference-genome-genes/{genomeName}/{geneId}": {
+      "get": {
+        "tags": [
+          "Reference Genome Genes"
+        ],
+        "summary": "Get a gene of a reference genome of interest",
+        "operationId": "getReferenceGenomeGeneUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "genomeName",
+            "in": "path",
+            "description": "Name of Reference Genome hg19",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "geneId",
+            "in": "path",
+            "description": "Entrez Gene ID 207",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ReferenceGenomeGene"
+            }
+          }
+        }
+      }
+    },
     "/sample-lists": {
       "get": {
         "tags": [
@@ -2318,6 +2445,43 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/Sample"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/structuralvariant/fetch": {
+      "post": {
+        "tags": [
+          "Q. Structural Variants"
+        ],
+        "summary": "Fetch structural variants for entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers",
+        "operationId": "fetchStructuralVariantsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "structuralVariantFilter",
+            "description": "List of entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StructuralVariantFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StructuralVariant"
               }
             }
           }
@@ -4031,6 +4195,9 @@
         "publicStudy": {
           "type": "boolean"
         },
+        "referenceGenome": {
+          "type": "string"
+        },
         "rppaSampleCount": {
           "type": "integer",
           "format": "int32"
@@ -4431,25 +4598,20 @@
       "type": "object",
       "required": [
         "entrezGeneId",
+        "geneticEntityId",
         "hugoGeneSymbol"
       ],
       "properties": {
-        "chromosome": {
-          "type": "string"
-        },
-        "cytoband": {
-          "type": "string"
-        },
         "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "geneticEntityId": {
           "type": "integer",
           "format": "int32"
         },
         "hugoGeneSymbol": {
           "type": "string"
-        },
-        "length": {
-          "type": "integer",
-          "format": "int32"
         },
         "type": {
           "type": "string"
@@ -4529,21 +4691,6 @@
         }
       },
       "title": "GenePanelDataFilter"
-    },
-    "GenePanelMultipleStudyFilter": {
-      "type": "object",
-      "required": [
-        "sampleMolecularIdentifiers"
-      ],
-      "properties": {
-        "sampleMolecularIdentifiers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/SampleMolecularIdentifier"
-          }
-        }
-      },
-      "title": "GenePanelMultipleStudyFilter"
     },
     "GenePanelToGene": {
       "type": "object",
@@ -4644,7 +4791,8 @@
             "PROTEIN_LEVEL",
             "PROTEIN_ARRAY_PROTEIN_LEVEL",
             "PROTEIN_ARRAY_PHOSPHORYLATION",
-            "GENESET_SCORE"
+            "GENESET_SCORE",
+            "GENERIC_ASSAY"
           ]
         },
         "molecularProfileId": {
@@ -4653,8 +4801,15 @@
         "name": {
           "type": "string"
         },
+        "pivotThreshold": {
+          "type": "number",
+          "format": "float"
+        },
         "showProfileInAnalysisTab": {
           "type": "boolean"
+        },
+        "sortOrder": {
+          "type": "string"
         },
         "study": {
           "$ref": "#/definitions/CancerStudy"
@@ -4697,6 +4852,9 @@
           "type": "string"
         },
         "center": {
+          "type": "string"
+        },
+        "chr": {
           "type": "string"
         },
         "driverFilter": {
@@ -5010,6 +5168,45 @@
       },
       "title": "PatientIdentifier"
     },
+    "ReferenceGenomeGene": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "referenceGenomeId"
+      ],
+      "properties": {
+        "chromosome": {
+          "type": "string"
+        },
+        "cytoband": {
+          "type": "string"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "length": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "referenceGenomeId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "ReferenceGenomeGene"
+    },
     "Sample": {
       "type": "object",
       "required": [
@@ -5135,6 +5332,195 @@
         }
       },
       "title": "SampleMolecularIdentifier"
+    },
+    "StructuralVariant": {
+      "type": "object",
+      "properties": {
+        "annotation": {
+          "type": "string"
+        },
+        "breakpointType": {
+          "type": "string"
+        },
+        "center": {
+          "type": "string"
+        },
+        "comments": {
+          "type": "string"
+        },
+        "connectionType": {
+          "type": "string"
+        },
+        "dnaSupport": {
+          "type": "string"
+        },
+        "driverFilter": {
+          "type": "string"
+        },
+        "driverFilterAnn": {
+          "type": "string"
+        },
+        "driverTiersFilter": {
+          "type": "string"
+        },
+        "driverTiersFilterAnn": {
+          "type": "string"
+        },
+        "eventInfo": {
+          "type": "string"
+        },
+        "externalAnnotation": {
+          "type": "string"
+        },
+        "length": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "ncbiBuild": {
+          "type": "string"
+        },
+        "normalPairedEndReadCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "normalReadCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "normalSplitReadCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "normalVariantCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "rnaSupport": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "sampleIdInternal": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "site1Chromosome": {
+          "type": "string"
+        },
+        "site1Description": {
+          "type": "string"
+        },
+        "site1EnsemblTranscriptId": {
+          "type": "string"
+        },
+        "site1EntrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "site1Exon": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "site1HugoSymbol": {
+          "type": "string"
+        },
+        "site1Position": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "site2Chromosome": {
+          "type": "string"
+        },
+        "site2Description": {
+          "type": "string"
+        },
+        "site2EffectOnFrame": {
+          "type": "string"
+        },
+        "site2EnsemblTranscriptId": {
+          "type": "string"
+        },
+        "site2EntrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "site2Exon": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "site2HugoSymbol": {
+          "type": "string"
+        },
+        "site2Position": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "structuralVariantId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "tumorPairedEndReadCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "tumorReadCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "tumorSplitReadCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "tumorVariantCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "variantClass": {
+          "type": "string"
+        }
+      },
+      "title": "StructuralVariant"
+    },
+    "StructuralVariantFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleMolecularIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleMolecularIdentifier"
+          }
+        }
+      },
+      "title": "StructuralVariantFilter"
     },
     "TypeOfCancer": {
       "type": "object",
