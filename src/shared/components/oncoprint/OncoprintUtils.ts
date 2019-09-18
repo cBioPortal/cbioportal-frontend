@@ -158,7 +158,7 @@ export function getHeatmapTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):RuleS
     let value_stop_points:number[];
     let null_legend_label = "";
     let na_legend_label = "";
-    switch (molecularAlterationType) {
+    switch (trackSpec.molecularAlterationType) {
         case AlterationTypeConstants.GENERIC_ASSAY:
             return getTreatmentTrackRuleSetParams(trackSpec);
             break;
