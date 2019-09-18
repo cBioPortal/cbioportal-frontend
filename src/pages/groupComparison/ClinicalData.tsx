@@ -19,7 +19,8 @@ import {
     IStringAxisData,
     makeBoxScatterPlotData,
     MutationSummary,
-    mutationSummaryToAppearance
+    mutationSummaryToAppearance,
+    IAxisLogScaleParams
 } from "pages/resultsView/plots/PlotsTabUtils";
 import DownloadControls from "public-lib/components/downloadControls/DownloadControls";
 import ScrollBar from "shared/components/Scrollbar/ScrollBar";
@@ -160,13 +161,24 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         return this.highlightedRow!.clinicalAttribute.datatype.toLowerCase() === 'number';
     }
 
-    @observable logScale = false;
+    @observable private logScale = false;
+    @observable logScaleFunction:IAxisLogScaleParams|undefined;
     @observable swapAxes = false;
     @observable horizontalBars = false;
 
     @autobind
     @action private onClickLogScale() {
         this.logScale = !this.logScale;
+        if (this.logScale) {
+            const MIN_LOG_ARGUMENT = 0.01;
+            this.logScaleFunction = {
+                label: "log2",
+                fLogScale: (x:number, offset:number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
+                fInvLogScale: (x:number) => Math.pow(2, x)
+            };
+        } else {
+            this.logScaleFunction = undefined;
+        }
     }
 
     @autobind
@@ -445,7 +457,7 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
                                 chartBase={500}
                                 tooltip={this.boxPlotTooltip}
                                 horizontal={this.boxPlotData.result.horizontal}
-                                logScale={this.logScale}
+                                logScale={this.logScaleFunction}
                                 size={scatterPlotSize}
                                 fill={mutationSummaryToAppearance[MutationSummary.Neither].fill}
                                 stroke={mutationSummaryToAppearance[MutationSummary.Neither].stroke}

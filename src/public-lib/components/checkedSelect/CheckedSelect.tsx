@@ -23,6 +23,7 @@ type CheckedSelectProps = {
     addAllLabel?: string | JSX.Element;
     clearAllLabel?: string | JSX.Element;
     showControls?: boolean;
+    height?:number;
 };
 
 @observer
@@ -124,8 +125,8 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                     styles={{
                         control: (provided:any)=>({
                             ...provided,
-                            height:33.5,
-                            minHeight:33.5,
+                            height:this.props.height || 33.5,
+                            minHeight:this.props.height || 33.5,
                             border: "1px solid rgb(204,204,204)"
                         }),
                         menu: (provided:any)=>({
@@ -145,22 +146,17 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                             color:"#000000"
                         }),
                         option:(provided:any, state:any)=>{
-                            const ret:any = {
+                            return {
                                 ...provided,
-                                cursor:"pointer",
-                                color:"black"
+                                cursor:"pointer"
                             };
-                            if (state.isSelected && !state.isFocused) {
-                                ret.backgroundColor = state.theme.colors.primary25;
-                            }
-                            return ret;
                         }
                     }}
                     theme={(theme:any)=>({
                         ...theme,
                         colors: {
                             ...theme.colors,
-                            primary: theme.colors.primary50
+                            //primary: theme.colors.primary50
                         },
                     })}
                     components={this.components}

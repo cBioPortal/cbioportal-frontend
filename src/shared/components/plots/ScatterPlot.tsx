@@ -1,3 +1,4 @@
+import _ from "lodash";
 import * as React from "react";
 import {observer, Observer} from "mobx-react";
 import bind from "bind-decorator";
@@ -9,10 +10,10 @@ import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import ifndef from "shared/lib/ifndef";
 import {tickFormatNumeral} from "./TickUtils";
-import {computeCorrelationPValue, makeScatterPlotSizeFunction, separateScatterDataByAppearance} from "./PlotUtils";
+import {computeCorrelationPValue, makeScatterPlotSizeFunction, separateScatterDataByAppearance, dataPointIsLimited as dataPointIsLimited} from "./PlotUtils";
 import {toConditionalPrecision} from "../../lib/NumberUtils";
-import regression from "regression";
 import {getRegressionComputations} from "./ScatterPlotUtils";
+import { IAxisLogScaleParams, IPlotSampleData } from 'pages/resultsView/plots/PlotsTabUtils';
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -41,21 +42,26 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
         spearman: number;
     };
     showRegressionLine?:boolean;
-    logX?:boolean;
-    logY?:boolean;
+    logX?:IAxisLogScaleParams|undefined;
+    logY?:IAxisLogScaleParams|undefined;
+    excludeLimitValuesFromCorrelation?:boolean; // if true, data points that are beyond threshold (e.g., '>8', have a `xThresholdType` or `yThresholdType` attribute) are not included in caluculation of the corr. efficient
     useLogSpaceTicks?:boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
     axisLabelX?:string;
     axisLabelY?:string;
     fontFamily?:string;
 }
+// constants related to the gutter
+const GUTTER_TEXT_STYLE = {fontFamily: baseLabelStyles.fontFamily, fontSize: baseLabelStyles.fontSize};
+const CORRELATION_INFO_Y = 100; // experimentally determined
+const REGRESSION_STROKE = "#c43a31";
+const REGRESSION_STROKE_WIDTH = 2;
+const REGRESSION_EQUATION_Y = CORRELATION_INFO_Y + 95; // 95 ~= correlation height
+const LEGEND_TEXT_WIDTH = 107; // experimentally determined
 
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
-const CORRELATION_INFO_Y = 100; // experimentally determined
-export const LEGEND_Y = CORRELATION_INFO_Y + 90; /* 90 ≈ approximate correlation info height + top padding */
 const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
-const MIN_LOG_ARGUMENT = 0.01;
 const LEFT_PADDING = 25;
 
 @observer
@@ -145,6 +151,17 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         return this.props.chartWidth - 20;
     }
 
+    @computed get legendY() {
+        const correlationInfo = 90;
+        const regressionEqation = 45;
+
+        if (this.props.showRegressionLine) {
+            return CORRELATION_INFO_Y + correlationInfo + regressionEqation;
+        } else {
+            return CORRELATION_INFO_Y + correlationInfo;
+        }
+    }
+
     private get legend() {
         const x = this.legendX;
         if (this.props.legendData && this.props.legendData.length) {
@@ -153,7 +170,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                     orientation="vertical"
                     data={this.props.legendData}
                     x={x}
-                    y={LEGEND_Y}
+                    y={this.legendY}
                     width={RIGHT_PADDING}
                 />
             );
@@ -163,46 +180,93 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     private get correlationInfo() {
-        const approxTextWidth = 107; // experimentally determined
         const x = this.legendX;
-        const style = {fontFamily: baseLabelStyles.fontFamily, fontSize: baseLabelStyles.fontSize};
         return (
             <g>
-                <VictoryLabel  x={x + approxTextWidth}
+                <VictoryLabel  x={x + LEGEND_TEXT_WIDTH}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
                                text={`Spearman: ${this.spearmanCorr.toFixed(2)}`}
-                               style={style}
+                               style={GUTTER_TEXT_STYLE}
                 />
-                { (this.spearmanPval !== null) && <VictoryLabel  x={x + approxTextWidth}
+                { (this.spearmanPval !== null) && <VictoryLabel  x={x + LEGEND_TEXT_WIDTH}
                                                                  y={CORRELATION_INFO_Y}
                                                                  textAnchor="end"
                                                                  dy="2"
                                                                  text={`(p = ${toConditionalPrecision(this.spearmanPval, 3, 0.01)})`}
-                                                                 style={style}
+                                                                 style={GUTTER_TEXT_STYLE}
                 />}
-                <VictoryLabel  x={x + approxTextWidth}
+                <VictoryLabel  x={x + LEGEND_TEXT_WIDTH}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
                                dy="5"
                                text={`Pearson: ${this.pearsonCorr.toFixed(2)}`}
-                               style={style}
+                               style={GUTTER_TEXT_STYLE}
                 />
-                { (this.pearsonPval !== null) && <VictoryLabel  x={x + approxTextWidth}
+                { (this.pearsonPval !== null) && <VictoryLabel  x={x + LEGEND_TEXT_WIDTH}
                                                                  y={CORRELATION_INFO_Y}
                                                                  textAnchor="end"
                                                                  dy="7"
                                                                  text={`(p = ${toConditionalPrecision(this.pearsonPval, 3, 0.01)})`}
-                                                                 style={style}
+                                                                 style={GUTTER_TEXT_STYLE}
                 />}
             </g>
         );
     }
 
+    private get regressionLineEquation(): JSX.Element | null {
+        if (!this.props.showRegressionLine) {
+            return null;
+        }        
+
+        const equation = this.regressionLineComputations.string;
+        const r2 = `R² = ${this.regressionLineComputations.r2}`;
+        const legendPadding = 10;
+        const lineLength = 10;
+        const linePadding = 7;
+
+        return (
+            <g>
+                <line
+                    stroke={REGRESSION_STROKE}
+                    strokeWidth={REGRESSION_STROKE_WIDTH}
+                    x1={this.legendX + legendPadding}
+                    y1={REGRESSION_EQUATION_Y}
+                    x2={this.legendX + legendPadding + lineLength}
+                    y2={REGRESSION_EQUATION_Y}
+                    dy="0"
+                />
+                <VictoryLabel
+                    x={this.legendX + legendPadding + lineLength + linePadding}
+                    y={REGRESSION_EQUATION_Y}
+                    dy="0"
+                    textAnchor="start"
+                    text={equation}
+                    style={GUTTER_TEXT_STYLE}
+                />
+                <VictoryLabel
+                    x={this.legendX + legendPadding + lineLength + linePadding}
+                    y={REGRESSION_EQUATION_Y}
+                    dy="2"
+                    textAnchor="start"
+                    text={r2}
+                    style={GUTTER_TEXT_STYLE}
+                />
+            </g>
+        );
+    } 
+
     @computed get splitData() {
+
+        // when limit values are shown in the legend, exclude
+        // these points from calculations of correlation coefficients
+        const data = this.props.excludeLimitValuesFromCorrelation?
+            _.filter(this.props.data, (d:IPlotSampleData)=>!dataPointIsLimited(d)):
+            this.props.data;
+
         const x = [];
         const y = [];
-        for (const d of this.props.data) {
+        for (const d of data) {
             x.push(d.x);
             y.push(d.y);
         }
@@ -220,12 +284,12 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
             min.y = Math.min(d.y, min.y);
         }
         if (this.props.logX) {
-            min.x = this.logScale(min.x);
-            max.x = this.logScale(max.x);
+            min.x = this.props.logX.fLogScale(min.x, 0);
+            max.x = this.props.logX.fLogScale(max.x, 0);
         }
         if (this.props.logY) {
-            min.y = this.logScale(min.y);
-            max.y = this.logScale(max.y);
+            min.y = this.props.logY.fLogScale(min.y, 0);
+            max.y = this.props.logY.fLogScale(max.y, 0);
         }
         return {
             x: [min.x, max.x],
@@ -240,10 +304,10 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
             let x = this.splitData.x;
             let y = this.splitData.y;
             if (this.props.logX) {
-                x = x.map(d=>this.logScale(d));
+                x = x.map(d=>this.props.logX!.fLogScale(d, 0));
             }
             if (this.props.logY) {
-                y = y.map(d=>this.logScale(d));
+                y = y.map(d=>this.props.logY!.fLogScale(d, 0));
             }
             return jStat.corrcoeff(x, y);
         }
@@ -278,18 +342,10 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         return this.props.chartHeight;
     }
 
-    private logScale(x:number) {
-        return Math.log2(Math.max(x, MIN_LOG_ARGUMENT));
-    }
-
-    private invLogScale(x:number) {
-        return Math.pow(2, x);
-    }
-
     @bind
     private x(d:D) {
         if (this.props.logX) {
-            return this.logScale(d.x);
+            return this.props.logX!.fLogScale(d.x, 0);
         } else {
             return d.x;
         }
@@ -298,7 +354,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     @bind
     private y(d:D) {
         if (this.props.logY) {
-            return this.logScale(d.y);
+            return this.props.logY!.fLogScale(d.y, 0);
         } else {
             return d.y;
         }
@@ -311,22 +367,22 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         return makeScatterPlotSizeFunction(highlight, size);
     }
 
-    private tickFormat(t:number, ticks:number[], logScale:boolean) {
-        if (logScale && !this.props.useLogSpaceTicks) {
-            t = this.invLogScale(t);
-            ticks = ticks.map(x=>this.invLogScale(x));
+    private tickFormat(t:number, ticks:number[], logScaleFunc:IAxisLogScaleParams|undefined) {
+        if (logScaleFunc && !this.props.useLogSpaceTicks) {
+            t = logScaleFunc.fInvLogScale(t);
+            ticks = ticks.map(x=>logScaleFunc.fInvLogScale(x));
         }
         return tickFormatNumeral(t, ticks);
     }
 
     @bind
     private tickFormatX(t:number, i:number, ticks:number[]) {
-        return this.tickFormat(t, ticks, !!this.props.logX);
+        return this.tickFormat(t, ticks, this.props.logX);
     }
 
     @bind
     private tickFormatY(t:number, i:number, ticks:number[]) {
-        return this.tickFormat(t, ticks, !!this.props.logY);
+        return this.tickFormat(t, ticks, this.props.logY);
     }
 
     @computed get data() {
@@ -337,26 +393,34 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
             ifndef(this.props.strokeWidth, 0),
             ifndef(this.props.strokeOpacity, 1),
             ifndef(this.props.fillOpacity, 1),
+            ifndef(this.props.symbol, "circle"),
             this.props.zIndexSortBy
         );
     }
 
+    @computed private get regressionLineComputations() {
+        const data = this.props.data.map(d=>([this.x(d), this.y(d)] as [number, number]));
+        return getRegressionComputations(data);
+    }
+
     private get regressionLine() {
-        if (this.props.showRegressionLine && this.props.data.length >= 2) {
-            const regressionLineComputations = getRegressionComputations(this.props.data.map(
-                // perform same transformations on data for this calculation as we do for plot (i.e. log if necessary)
-                d=>([this.x(d), this.y(d)] as [number, number])
-            ));
+        // when limit values are shown in the legend, exclude
+        // these points from calculation of regression line
+        const regressionData:D[] = this.props.excludeLimitValuesFromCorrelation?
+        _.filter(this.props.data, (d:IPlotSampleData)=>!dataPointIsLimited(d)):
+        this.props.data;
+
+        if (this.props.showRegressionLine && regressionData.length >= 2) {
+            const regressionLineComputations = this.regressionLineComputations;
             const y = (x:number)=>regressionLineComputations.predict(x)[1];
             const labelX = 0.7;
             const xPoints = [this.plotDomain.x[0], this.plotDomain.x[0]*(1-labelX) + this.plotDomain.x[1]*labelX, this.plotDomain.x[1]];
             const data:any[] = xPoints.map(x=>({ x, y:y(x), label:""}));
-            data[1].label = [regressionLineComputations.string, `R² = ${regressionLineComputations.r2}`];
             return [
                 <VictoryLine
                     style={{
                         data: {
-                            stroke: "#c43a31", strokeWidth: 2
+                            stroke: REGRESSION_STROKE, strokeWidth: REGRESSION_STROKE_WIDTH
                         },
                         labels: {
                             fontSize: 15,
@@ -431,7 +495,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                             />
                             { this.data.map(dataWithAppearance=>(
                                 <VictoryScatter
-                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity}`}
+                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
                                     style={{
                                         data: {
                                             fill: dataWithAppearance.fill,
@@ -442,7 +506,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                         }
                                     }}
                                     size={this.size}
-                                    symbol={this.props.symbol || "circle"}
+                                    symbol={dataWithAppearance.symbol}
                                     data={dataWithAppearance.data}
                                     events={this.mouseEvents}
                                     x={this.x}
@@ -452,6 +516,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                             {this.regressionLine}
                         </VictoryChart>
                         {this.correlationInfo}
+                        {this.regressionLineEquation}
                     </g>
                 </svg>
             </div>

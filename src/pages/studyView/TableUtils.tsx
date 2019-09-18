@@ -7,7 +7,6 @@ import {ICON_FILTER_OFF, ICON_FILTER_ON} from "shared/lib/Colors";
 import {GenePanelList} from "pages/studyView/table/GenePanelModal";
 import {getFrequencyStr} from "pages/studyView/StudyViewUtils";
 import {GenePanel, GenePanelToGene} from "shared/api/generated/CBioPortalAPI";
-import MobxPromiseCache from "shared/lib/MobxPromiseCache";
 import {CSSProperties} from "react";
 
 export function getGeneColumnHeaderRender(cellMargin: number, headerName: string, cancerGeneListFilterEnabled: boolean, isFilteredByCancerGeneList: boolean, cancerGeneIconToggle: (event: any) => void) {

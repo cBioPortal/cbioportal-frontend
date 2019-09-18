@@ -30,12 +30,10 @@ describe('GeneSymbolValidatorMessage', () => {
         };
         props.genes = {
             found: [{
+                geneticEntityId:5808,
                 entrezGeneId: 7157,
                 hugoGeneSymbol: "TP53",
                 type: "protein-coding",
-                cytoband: "17p13.1",
-                length: 19149,
-                chromosome: "17"
             }], suggestions: []
         };
         const wrapper = mount(<GeneSymbolValidatorMessage {...props} />);
@@ -102,12 +100,10 @@ describe('GeneSymbolValidatorMessage', () => {
                 alias: 'AAA',
                 genes: [
                     {
+                        "geneticEntityId":296,
                         "entrezGeneId": 351,
                         "hugoGeneSymbol": "APP",
-                        "type": "protein-coding",
-                        "cytoband": "21q21.3",
-                        "length": 6349,
-                        "chromosome": "21"
+                        "type": "protein-coding"
                     }
                 ]
             }]

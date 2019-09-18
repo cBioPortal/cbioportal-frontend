@@ -3,39 +3,26 @@ import * as _ from 'lodash';
 import {observer, Observer} from "mobx-react";
 import './styles.scss';
 import {
-    CancerStudy, Gene, NumericGeneMolecularData, Mutation, MolecularProfile
+    CancerStudy, Gene, NumericGeneMolecularData, MolecularProfile
 } from "../../../shared/api/generated/CBioPortalAPI";
-import {action, computed, observable} from "mobx";
-import {
-    calculateJitter, ExpressionStyle, ExpressionStyleSheet, expressionTooltip, getExpressionStyle,
-    getMolecularDataBuckets, prioritizeMutations
-} from "./expressionHelpers";
+import {computed, observable} from "mobx";
+import {ExpressionStyle, expressionTooltip, getPossibleRNASeqVersions} from "./expressionHelpers";
 import {Modal} from "react-bootstrap";
 import autobind from "autobind-decorator";
-import {
-    VictoryBoxPlot, VictoryChart, VictoryAxis, Point,
-    VictoryLabel, VictoryContainer, VictoryTooltip, VictoryScatter, VictoryLegend
-} from 'victory';
-import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
-import {BOX_STYLES, BoxPlotModel, calculateBoxPlotModel, VictoryBoxPlotModel} from "../../../shared/lib/boxPlotUtils";
 import {ITooltipModel} from "../../../shared/model/ITooltipModel";
 import ChartContainer from "../../../shared/components/ChartContainer/ChartContainer";
 import {If, Then, Else} from 'react-if';
 import jStat from 'jStat';
-import numeral from 'numeral';
 import classNames from 'classnames';
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import {CoverageInformation, isPanCanStudy, isTCGAProvStudy} from "../ResultsViewPageStoreUtils";
-import {sleep} from "../../../shared/lib/TimeUtils";
 import {
     CNA_STROKE_WIDTH,
-    getCnaQueries, IBoxScatterPlotPoint, INumberAxisData, IScatterPlotData, IScatterPlotSampleData, IStringAxisData,
+    getCnaQueries, IBoxScatterPlotPoint, INumberAxisData, IScatterPlotData, IPlotSampleData, IStringAxisData,
     makeBoxScatterPlotData, makeScatterPlotPointAppearance,
     mutationRenderPriority, MutationSummary, mutationSummaryToAppearance, scatterPlotLegendData,
-    scatterPlotTooltip, boxPlotTooltip, scatterPlotZIndexSortBy
+    scatterPlotTooltip, boxPlotTooltip, scatterPlotZIndexSortBy, IAxisLogScaleParams
 } from "../plots/PlotsTabUtils";
-import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
-import {getSampleViewUrl} from "../../../shared/api/urls";
 import {AnnotatedMutation, ResultsViewPageStore} from "../ResultsViewPageStore";
 import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import {remoteData} from "../../../public-lib/api/remoteData";
@@ -44,8 +31,7 @@ import {MobxPromise} from "mobxpromise";
 import {stringListToSet} from "../../../public-lib/lib/StringUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
-import {ViewType} from "../plots/PlotsTab";
-import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
+import {ViewType, PlotType} from "../plots/PlotsTab";
 import {maxPage} from "../../../shared/components/lazyMobXTable/utils";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
@@ -57,18 +43,10 @@ export interface ExpressionWrapperProps {
     studyMap: { [studyId: string]: CancerStudy };
     genes: Gene[];
     mutations: AnnotatedMutation[];
-    onRNASeqVersionChange: (version: number) => void;
-    RNASeqVersion: number;
     coverageInformation: CoverageInformation
 }
 
 class ExpressionTabBoxPlot extends BoxScatterPlot<IBoxScatterPlotPoint> {}
-
-const SYMBOL_SIZE = 3;
-
-const EXPRESSION_CAP = .01;
-
-const LOGGING_FUNCTION = Math.log2;
 
 const SVG_ID = "expression-tab-plot-svg";
 
@@ -101,6 +79,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     svgContainer: SVGElement;
+
+    @observable private _rnaSeqVersion: 'rna_seq_mrna'|'rna_seq_v2_mrna';
 
     @observable.ref tooltipModel: ITooltipModel<ExpressionTooltipModel> | null = null;
 
@@ -168,14 +148,36 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         }
     });
 
+    @computed get selectedRNASeqVersion() {
+        return this._rnaSeqVersion ? this._rnaSeqVersion : this.possibleRNASeqVersions[0].value;
+    }
+
+    @computed get possibleRNASeqVersions() {
+        if(this.props.expressionProfiles.isComplete) {
+            return getPossibleRNASeqVersions(this.props.expressionProfiles.result!);
+        }
+        return [];
+    }
+
+    readonly selectedExpressionProfiles = remoteData<MolecularProfile[]>({
+        await: () => [this.props.expressionProfiles],
+        invoke: () => {
+            return Promise.resolve(
+                _.filter(this.props.expressionProfiles.result, expressionProfile => {
+                    return RegExp(`${this.selectedRNASeqVersion}$|pan_can_atlas_2018_${this.selectedRNASeqVersion}_median$`)
+                        .test(expressionProfile.molecularProfileId);
+                }));
+        }
+    });
+
     readonly expressionData = remoteData<NumericGeneMolecularData[]>({
-        await:()=>this.props.numericGeneMolecularDataCache.await([this.props.expressionProfiles],
+        await:()=>this.props.numericGeneMolecularDataCache.await([this.selectedExpressionProfiles],
             profiles=>profiles.map((p:MolecularProfile)=>({ entrezGeneId: this.selectedGene.entrezGeneId, molecularProfileId: p.molecularProfileId }))
         ),
         invoke:()=>{
             // TODO: this cache is leading to some ugly code
             return Promise.resolve(_.flatten(this.props.numericGeneMolecularDataCache.getAll(
-                this.props.expressionProfiles.result!.map(p=>({ entrezGeneId: this.selectedGene.entrezGeneId, molecularProfileId: p.molecularProfileId }))
+                this.selectedExpressionProfiles.result!.map(p=>({ entrezGeneId: this.selectedGene.entrezGeneId, molecularProfileId: p.molecularProfileId }))
             ).map(promise=>promise.result!)) as NumericGeneMolecularData[]);
         }
     });
@@ -299,7 +301,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @autobind
     handleRNASeqVersionChange(event: React.SyntheticEvent<HTMLSelectElement>) {
-        this.props.onRNASeqVersionChange(parseInt(event.currentTarget.value));
+        this._rnaSeqVersion = event.currentTarget.value as any;
     }
 
     @autobind
@@ -397,12 +399,16 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     @computed
     get yAxisLabel() {
         const log = this.logScale ? ' (log2)' : '';
-        return `${this.selectedGene.hugoGeneSymbol} Expression --- RNA Seq V${this.props.RNASeqVersion}${log}`;
+        let rnaSeqVersion = '1';
+        if (this.selectedRNASeqVersion === 'rna_seq_v2_mrna') {
+            rnaSeqVersion = '2';
+        }
+        return `${this.selectedGene.hugoGeneSymbol} Expression --- RNA Seq V${rnaSeqVersion}${log}`;
     }
 
     @computed get fill() {
         if (this.showCna || this.showMutations) {
-            return (d:IScatterPlotSampleData)=>this.scatterPlotAppearance(d).fill!;
+            return (d:IPlotSampleData)=>this.scatterPlotAppearance(d).fill!;
         } else {
             return mutationSummaryToAppearance[MutationSummary.Neither].fill;
         }
@@ -426,12 +432,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @autobind
-    private strokeOpacity(d:IScatterPlotSampleData) {
+    private strokeOpacity(d:IPlotSampleData) {
         return this.scatterPlotAppearance(d).strokeOpacity;
     }
 
     @autobind
-    private stroke(d:IScatterPlotSampleData) {
+    private stroke(d:IPlotSampleData) {
         return this.scatterPlotAppearance(d).stroke;
     }
 
@@ -468,9 +474,23 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get zIndexSortBy() {
-        return scatterPlotZIndexSortBy<IScatterPlotSampleData>(
+        return scatterPlotZIndexSortBy<IPlotSampleData>(
             this.viewType
         );
+    }
+
+    @computed get axisLogScaleFunction():IAxisLogScaleParams|undefined {
+
+        const MIN_LOG_ARGUMENT = 0.01;
+
+        if (!this.logScale) {
+            return undefined;
+        }
+        return {
+            label: "log2",
+            fLogScale: (x:number, offset:number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
+            fInvLogScale: (x:number) => Math.pow(2, x)
+        };
     }
 
     @autobind
@@ -491,7 +511,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         chartBase={550}
                         tooltip={this.tooltip}
                         horizontal={false}
-                        logScale={this.logScale}
+                        logScale={this.axisLogScaleFunction}
                         size={4}
                         fill={this.fill}
                         stroke={this.stroke}
@@ -502,7 +522,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         strokeWidth={this.strokeWidth}
                         useLogSpaceTicks={true}
                         legendData={scatterPlotLegendData(
-                            _.flatten(this.boxPlotData.result.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.driverAnnotationSettings.driversAnnotated
+                            _.flatten(this.boxPlotData.result.map(d=>d.data)), this.viewType, PlotType.BoxPlot, this.mutationDataExists, this.cnaDataExists, this.props.store.driverAnnotationSettings.driversAnnotated, []
                         )}
                         legendLocationWidthThreshold={900}
                         boxCalculationFilter={this.boxCalculationFilter}
@@ -553,10 +573,14 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
                         <div className="form-group">
                             <h5>Profile:</h5>
-                            <select className="form-control input-sm" value={this.props.RNASeqVersion}
+                            
+                            <select className="form-control input-sm" value={this.selectedRNASeqVersion}
                                     onChange={this.handleRNASeqVersionChange} title="Select profile">
-                                <option value={2}>RNA Seq V2</option>
-                                <option value={1}>RNA Seq</option>
+                                        {
+                                            this.possibleRNASeqVersions.map(option=>{
+                                                return  <option value={option.value}>{option.label}</option>
+                                            })
+                                        }
                             </select>
                         </div>
 

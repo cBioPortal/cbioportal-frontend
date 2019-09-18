@@ -31,7 +31,8 @@ describe('Oncoprint sortBy URL parameter', () => {
     const storeMock = {
         samples: {isComplete: true, result: samples},
         patients: {isComplete: true, result: patients},
-        givenSampleOrder: {isComplete: true, result: caseList}
+        givenSampleOrder: {isComplete: true, result: caseList},
+        molecularProfileIdToMolecularProfile: {isComplete: true}
     } as any as ResultsViewPageStore;
 
     it('`case_id` provides sorted sample config to oncoprint', () => {

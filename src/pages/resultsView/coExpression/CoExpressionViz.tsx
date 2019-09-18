@@ -183,7 +183,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         };
 
         if (yAxisCoExpression) {
-            ret.molecularY = this.props.profileY.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE ? 
+            ret.molecularY = this.props.profileY.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE ?
             this.props.numericGenesetMolecularDataCache.get({
                 genesetId: yAxisCoExpression.geneticEntityId,
                 molecularProfileId: this.props.profileY.molecularProfileId
@@ -202,7 +202,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
 
         return ret;
     }
-    
+
     readonly plotData = remoteData({
         await:()=>{
             if (this.props.hidden)
@@ -253,7 +253,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
                 numericGeneMolecularData,
                 mutations,
                 this.props.geneticEntity.geneticEntityId,
-                isNaN(Number(this.highlightedCoExpression.geneticEntityId))? 
+                isNaN(Number(this.highlightedCoExpression.geneticEntityId))?
                     this.highlightedCoExpression.geneticEntityId :
                     Number(this.highlightedCoExpression.geneticEntityId),
                 this.props.geneticEntity.geneticEntityName,
@@ -337,7 +337,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
             //Create a GeneticEntity object based on this.highlightedCoExpression
             let yGeneticEntity: GeneticEntity;
             if (this.highlightedCoExpression) {
-                const emptyGeneEntityData: Gene = {chromosome:'', cytoband: '', entrezGeneId: 0, hugoGeneSymbol: '', length: 0, type: ''};
+                const emptyGeneEntityData: Gene = {geneticEntityId:0,entrezGeneId: 0, hugoGeneSymbol: '', type: ''};
                 yGeneticEntity = {geneticEntityName: this.highlightedCoExpression.geneticEntityName,
                     geneticEntityType: this.highlightedCoExpression.geneticEntityType,
                     geneticEntityId: this.highlightedCoExpression.geneticEntityId,

@@ -36,6 +36,7 @@ import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 import QueryAndDownloadTabs from "shared/components/query/QueryAndDownloadTabs";
 import {createQueryStore} from "pages/home/HomePage";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
+import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
 
 function initStore(appStore:AppStore) {
 
@@ -52,7 +53,7 @@ function initStore(appStore:AppStore) {
         },
         (x:any) => {
 
-            const query = x[0];
+            const query = x[0] as CancerStudyQueryUrlParams;
             const pathname = x[1];
 
             // escape from this if queryies are deeply equal
@@ -251,11 +252,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:ResultsViewTab.ENRICHMENTS,
                 hide:()=>{
-                    if (!this.resultsViewPageStore.studies.isComplete) {
-                        return true;
-                    } else {
-                        return this.resultsViewPageStore.studies.result!.length > 1;
-                    }
+                    return !this.resultsViewPageStore.studies.isComplete;
                 },
                 getTab: () => {
                     return <MSKTab key={10} id={ResultsViewTab.ENRICHMENTS} linkText={'Enrichments'}>
@@ -283,6 +280,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return (
                         !this.resultsViewPageStore.studies.isComplete ||
                         !this.resultsViewPageStore.genes.isComplete ||
+                        !this.resultsViewPageStore.referenceGenes.isComplete ||
                         !doesQueryHaveCNSegmentData(this.resultsViewPageStore.samples.result)
                     );
                 },
@@ -290,7 +288,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return <MSKTab key={6} id={ResultsViewTab.CN_SEGMENTS}
                                    linkText="CN Segments">
                         <CNSegments store={store}/>
-                    </MSKTab>
+                    </MSKTab>;
                 }
             },
 
@@ -309,7 +307,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             (store.studies.isComplete && store.sampleLists.isComplete && store.samples.isComplete) &&
                             (<Network genes={store.genes.result!}
                                       profileIds={store.rvQuery.selectedMolecularProfileIds}
-                                      cancerStudyId={store.studies.result[0].studyId}
+                                      cancerStudyId={(store.studies.result.length > 0) ? store.studies.result![0].studyId : ""}
                                       zScoreThreshold={store.rvQuery.zScoreThreshold}
                                       caseSetId={(store.sampleLists.result!.length > 0) ? store.sampleLists.result![0].sampleListId : "-1"}
                                       sampleIds={store.samples.result.map((sample)=>sample.sampleId)}
@@ -343,9 +341,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                 expressionProfiles={store.expressionProfiles}
                                 numericGeneMolecularDataCache={store.numericGeneMolecularDataCache}
                                 mutations={store.filteredAndAnnotatedMutations.result!}
-                                RNASeqVersion={store.expressionTabSeqVersion}
                                 coverageInformation={store.coverageInformation.result}
-                                onRNASeqVersionChange={(version:number)=>store.expressionTabSeqVersion=version}
                             />)
                         }
                     </MSKTab>
