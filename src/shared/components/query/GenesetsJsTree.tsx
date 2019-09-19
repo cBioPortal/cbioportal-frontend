@@ -196,7 +196,7 @@ export default class GenesetsJsTree extends React.Component<GenesetsJsTreeProps,
         return (
                 <div>
                 <LoadingIndicator isLoading={this.isLoading} />
-                <div ref={tree => this.tree = tree} style={{maxHeight: "380px", overflowY: "scroll"}}></div>
+                <div ref={tree => this.tree = tree} style={{maxHeight: "380px", overflowY: "scroll"}} data-test="gsva-tree-container" ></div>
                 <div style={{padding: "30px 0px"}}>
                 <button className="btn btn-primary btn-sm pull-right"
                     style={{margin: "2px"}}
