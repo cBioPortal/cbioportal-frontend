@@ -19,17 +19,17 @@ export interface PortalSession {
     version:number;
 }
 
-function saveRemoteSession(data:any){
+export function saveRemoteSession(data:any){
     const dataCopy = Object.assign({}, data);
     delete dataCopy[""]; // artifact of mobx RouterStore URL serialization, when theres & at end of URL, which breaks session service
     return sessionClient.saveSession(dataCopy);
 }
 
-function getRemoteSession(sessionId:string){
+export function getRemoteSession(sessionId:string){
     return sessionClient.getSession(sessionId)
 }
 
-function normalizeLegacySession(sessionData:any){
+export function normalizeLegacySession(sessionData:any){
     // legacy sessions were stored with values as first item in arrays, so undo this
     sessionData.data = _.mapValues(sessionData.data, (value: any) => {
         if (_.isArray(value)) {
@@ -93,51 +93,54 @@ export default class ExtendedRouterStore extends RouterStore {
     }
 
     @computed get needsRemoteSessionLookup(){
-        if (!ServerConfigHelpers.sessionServiceIsEnabled()) {
-            return false;
-        }
-        const needsRemoteSessionLookup = this.session_id !== undefined && this.session_id !== "pending"
-            && (this._session === undefined || (this._session.id !== this.session_id));
-        return needsRemoteSessionLookup;
+        return false;
+        // if (!ServerConfigHelpers.sessionServiceIsEnabled()) {
+        //     return false;
+        // }
+        // const needsRemoteSessionLookup = this.session_id !== undefined && this.session_id !== "pending"
+        //     && (this._session === undefined || (this._session.id !== this.session_id));
+        // return needsRemoteSessionLookup;
     }
 
-    remoteSessionData = remoteData({
-        invoke: async () => {
-            if (this.session_id && this.session_id !== "pending") {
-                let sessionData = await this.getRemoteSession(this.session_id);
-
-                // if it has no version, it's a legacy session and needs to be normalized
-                if (sessionData.version === undefined) {
-                    sessionData = normalizeLegacySession(sessionData);
-                }
-
-                return sessionData;
-            } else {
-                return undefined;
-            }
-
-        },
-        onResult:()=> {
-            if (this.remoteSessionData.result) {
-                // we have to do this because session service attaches
-                // other data to response
-                this._session = {
-                    id: this.remoteSessionData.result!.id,
-                    query: this.remoteSessionData.result!.data,
-                    path: this.location.pathname,
-                    version:this.remoteSessionData.result!.version
-                };
-            } else {
-                if (this._session && this._session.id !== "pending") delete this._session;
-            }
-        }
-    });
+    // remoteSessionData = remoteData({
+    //     invoke: async () => {
+    //         if (this.session_id && this.session_id !== "pending") {
+    //             let sessionData = await this.getRemoteSession(this.session_id);
+    //
+    //             // if it has no version, it's a legacy session and needs to be normalized
+    //             if (sessionData.version === undefined) {
+    //                 sessionData = normalizeLegacySession(sessionData);
+    //             }
+    //
+    //             return sessionData;
+    //         } else {
+    //             return undefined;
+    //         }
+    //
+    //     },
+    //     onResult:()=> {
+    //         if (this.remoteSessionData.result) {
+    //             // we have to do this because session service attaches
+    //             // other data to response
+    //             this._session = {
+    //                 id: this.remoteSessionData.result!.id,
+    //                 query: this.remoteSessionData.result!.data,
+    //                 path: this.location.pathname,
+    //                 version:this.remoteSessionData.result!.version
+    //             };
+    //         } else {
+    //             if (this._session && this._session.id !== "pending") delete this._session;
+    //         }
+    //     }
+    // });
 
     sessionEnabledForPath(path:string){
-        const tests = [
-          /^\/results/,
-        ];
-        return _.some(tests,(test)=>test.test(path));
+        return false;
+        // const tests = [
+        //   /^\/results/,
+        // // ];
+        // const tests = [];
+        // return _.some(tests,(test)=>test.test(path));
     }
 
     @action updateRoute(newParams: QueryParams, path:string | undefined = undefined, clear = false, replace = false) {
@@ -164,38 +167,42 @@ export default class ExtendedRouterStore extends RouterStore {
         path = URL.resolve('/', path);
 
         // we don't use session
-        if (!ServerConfigHelpers.sessionServiceIsEnabled() || !this.sessionEnabledForPath(path) || JSON.stringify(newQuery).length < this.urlLengthThresholdForSession){
+        // SESSION IS NOW BEING HANDLED BY URLWRAPPER
+        if (true){
             // if there happens to be session, kill it because we're going URL, baby
             delete this._session;
             this[replace ? "replace" : "push"]( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
         } else {
             // we are using session: do we need to make a new session?
 
-            if (!this._session || !_.isEqual(this._session.query,newQuery) || _.size(newParams) > 0) {
-                const pendingSession = {
-                    id:'pending',
-                    query:newQuery,
-                    path:path,
-                    version:this.sessionVersion
-                };
-                // add session version
-                this._session = pendingSession;
+            // we need to filter out sessionprops of new query
 
-                this[replace ? "replace" : "push"]( URL.format({pathname: path, query: { session_id:'pending'}, hash:this.location.hash}) );
-                this.saveRemoteSession(pendingSession.query).then((sessionResponse)=>{
-                    this._session!.id = sessionResponse.id;
-                    // we use replace because we don't want the pending state ("?session_id=pending") in the history
-                    // we need to use `this.location.pathname` instead of `path` as the "pathname" parameter because
-                    //  in the meantime the user (more likely, the E2E test runner) could have navigated to a different
-                    //  tab and thus changed the path. If we used `path`, we'd be bringing them back to the
-                    //  tab they were at when the session saving was initiated. We don't care about the
-                    //  fact that this overwrites their history of that original tab, because this would likely go
-                    //  so quickly that they wouldn't miss that in their history anyway.
-                    this.replace( URL.format({pathname: this.location.pathname, query: {session_id:sessionResponse.id}, hash:this.location.hash}) );
-                });
-            } else { // we already have a session but we only need to update path or hash
-                this[replace ? "replace" : "push"]( URL.format({pathname: path, query: {session_id:this._session.id}, hash:this.location.hash}) );
-            }
+            // if (!this._session || !_.isEqual(this._session.query,newQuery) || _.size(newParams) > 0) {
+            //     const pendingSession = {
+            //         id:'pending',
+            //         query:newQuery,
+            //         path:path,
+            //         version:this.sessionVersion
+            //     };
+            //     // add session version
+            //     this._session = pendingSession;
+            //
+            //     this[replace ? "replace" : "push"]( URL.format({pathname: path, query: { session_id:'pending'}, hash:this.location.hash}) );
+            //     this.saveRemoteSession(pendingSession.query).then((sessionResponse)=>{
+            //         this._session!.id = sessionResponse.id;
+            //         // we use replace because we don't want the pending state ("?session_id=pending") in the history
+            //         // we need to use `this.location.pathname` instead of `path` as the "pathname" parameter because
+            //         //  in the meantime the user (more likely, the E2E test runner) could have navigated to a different
+            //         //  tab and thus changed the path. If we used `path`, we'd be bringing them back to the
+            //         //  tab they were at when the session saving was initiated. We don't care about the
+            //         //  fact that this overwrites their history of that original tab, because this would likely go
+            //         //  so quickly that they wouldn't miss that in their history anyway.
+            //         this.replace( URL.format({pathname: this.location.pathname, query: {session_id:sessionResponse.id}, hash:this.location.hash}) );
+            //     });
+            // } else { // we already have a session but we only need to update path or hash
+            //
+            //     this[replace ? "replace" : "push"]( URL.format({pathname: path, query: this.location.query, hash:this.location.hash}) );
+            // }
         }
 
     }
@@ -204,12 +211,13 @@ export default class ExtendedRouterStore extends RouterStore {
 
     @computed
     public get query(){
+        return this.location.query;
         // this allows url based query to override a session (if sessionId has been cleared in url)
-        if (this._session && this.location.query.session_id) {
-            return this._session.query;
-        } else {
-            return this.location.query;
-        }
+        // if (this._session && this.location.query.session_id) {
+        //     return this._session.query;
+        // } else {
+        //     return this.location.query;
+        // }
     }
 
     @computed

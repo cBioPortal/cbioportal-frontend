@@ -228,7 +228,10 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
         }
         if (!this.oncoprint.webgl_unavailable) {
             transition(props, this.lastTransitionProps || {}, this.oncoprint, ()=>this.trackSpecKeyToTrackId,
-                ()=>this.props.molecularProfileIdToMolecularProfile);
+                ()=> {
+                    return this.props.molecularProfileIdToMolecularProfile
+                }
+            );
             this.lastTransitionProps = _.clone(props);
         }
     }
