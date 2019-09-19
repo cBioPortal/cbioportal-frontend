@@ -985,7 +985,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @autobind
     private getControls() {
-        if (this.oncoprint && !this.oncoprint.webgl_unavailable && this.treatmentSelectOptions.isComplete)  {
+        if (this.oncoprint && !this.oncoprint.webgl_unavailable)  {
             return (<FadeInteraction showByDefault={true} show={true}>
                 <OncoprintControls
                     handlers={this.controlsHandlers}
