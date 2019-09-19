@@ -14,6 +14,7 @@ import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 // tslint:disable-next-line:no-import-side-effect
 import "./homePage.scss";
 import autobind from "autobind-decorator";
+import {ResultsViewTab} from "pages/resultsView/ResultsViewPageHelpers";
 
 (Chart as any).plugins.register({
     beforeDraw: function (chartInstance: any) {
@@ -41,7 +42,10 @@ export function createQueryStore(currentQuery?:any) {
         query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
         delete query.cancer_study_id;
 
-        win.routingStore.updateRoute(query, "results", true);
+        const tab = (queryStore.physicalStudyIdsInSelection.length > 1 && queryStore.geneIds.length === 1) ?
+             ResultsViewTab.CANCER_TYPES_SUMMARY : ResultsViewTab.ONCOPRINT;
+
+        win.routingStore.updateRoute(query, `results/${tab}`, true);
 
     };
 

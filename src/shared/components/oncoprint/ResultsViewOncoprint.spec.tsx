@@ -75,10 +75,10 @@ describe('Oncoprint sortBy URL parameter', () => {
             storeMock.givenSampleOrder.isComplete = params.caselistEnabled;
         }
         const oncoprintView = new ResultsViewOncoprint(
-            {divId: "", store: storeMock, routing: ""}
+            {divId: "", store: storeMock}
         );
         if (params.columnMode !== undefined) {
-            oncoprintView.columnMode = params.columnMode;
+            routingStub.location.query.show_samples = params.columnMode === "sample";
         }
         return oncoprintView;
     };

@@ -11,11 +11,12 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 const ONCOPRINT_TIMEOUT = 60000;
 
 describe("oncoprint screenshot tests", function() {
-    it("coadread_tcga_pub with clinical and heatmap tracks", function(){
+    it.only("coadread_tcga_pub with clinical and heatmap tracks", function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=1&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=coadread_tcga_pub_rna_seq_mrna_median_Zscores&show_samples=false&clinicallist=0%2C2%2CMETHYLATION_SUBTYPE&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF&`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(ONCOPRINT_TIMEOUT);
         var res = checkElementWithMouseDisabled('.oncoprintContainer');
+        browser.debug();
         assertScreenShotMatch(res);
     });
     it("acc_tcga with clinical and heatmap tracks", function(){
