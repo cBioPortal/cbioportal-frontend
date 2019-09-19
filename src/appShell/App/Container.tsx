@@ -42,9 +42,8 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     @computed get isSessionLoaded(){
-
-        return !this.routingStore.needsRemoteSessionLookup || this.routingStore.remoteSessionData.isComplete;
-
+        console.log("should we move this into page level?");
+        return true;
     }
 
     render() {
