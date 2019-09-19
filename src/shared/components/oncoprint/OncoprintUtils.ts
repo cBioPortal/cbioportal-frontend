@@ -202,33 +202,33 @@ export function getTreatmentTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):Rul
     // - The most extreme value in the legend is should be the largest value in the current track group. It is passed in
     //  along side other track specs (if possible)
     // - When the most extreme value does not reach the pivotThreshold the pivotThreshold is used a most extreme value
-    
+
     legend_label = `${trackSpec.molecularProfileName}`;
     const dataPoints = trackSpec.data;
     const pivotThreshold = trackSpec.pivotThreshold;
     const sortOrder = trackSpec.sortOrder;
-    
+
     const colorBetterDark = [0,114,178,1] as [number, number, number, number];
     const colorBetterLight = [204,236,255,1] as [number, number, number, number];
     const colorWorseDark  = [213,94,0,1] as [number, number, number, number];
     const colorWorseLight  = [255,226,204,1] as [number, number, number, number];
     const categoryColorOptions = [ 'rgba(240,228,66,1)', 'rgba(0,158,115,1)', 'rgba(204,121,167,1)', 'rgba(0,0,0,1)' ];
-    
+
     let maxValue = trackSpec.maxProfileValue!;
     let minValue = trackSpec.minProfileValue!;
     if (pivotThreshold !== undefined) {
         maxValue = Math.max(maxValue, pivotThreshold);
         minValue = Math.min(minValue, pivotThreshold);
     }
-    
+
     const pivotOutsideValueRange = pivotThreshold && (maxValue === pivotThreshold || minValue === pivotThreshold);
-    
+
     // when all observed values are negative or positive
     // assume that 0 should be used in the legend
     const rightBoundaryValue = Math.max(0, maxValue);
     const leftBoundaryValue = Math.min(0, minValue);
     value_range = [leftBoundaryValue, rightBoundaryValue];                  // larger concentrations are `better` (ASC)
-    
+
     // only include the pivotValue in the legend when covered by the current value_range
     if (pivotThreshold === undefined || pivotOutsideValueRange) {
         colors = [colorBetterDark, colorBetterLight];
@@ -236,21 +236,21 @@ export function getTreatmentTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):Rul
     } else {
         colors = [colorBetterDark, colorBetterLight, colorWorseLight, colorWorseDark];
         if (pivotThreshold <= leftBoundaryValue) {
-            // when data points do not bracket the pivotThreshold, make an artificial left boundary                                      
+            // when data points do not bracket the pivotThreshold, make an artificial left boundary
             value_stop_points = [pivotThreshold-(rightBoundaryValue-pivotThreshold), pivotThreshold, pivotThreshold, rightBoundaryValue];
         } else if (pivotThreshold >= rightBoundaryValue) {
-            // when data points do not bracket the pivotThreshold, make an artificial right boundary                                      
+            // when data points do not bracket the pivotThreshold, make an artificial right boundary
             value_stop_points = [leftBoundaryValue, pivotThreshold, pivotThreshold, pivotThreshold+(pivotThreshold-leftBoundaryValue)];
         } else {
             value_stop_points = [leftBoundaryValue, pivotThreshold, pivotThreshold, rightBoundaryValue];
         }
     }
-    
+
     if (sortOrder === "DESC") {                                             // smaller concentrations are `better` (DESC)
         value_range = _.reverse(value_range);
         value_stop_points = _.reverse(value_stop_points);
     }
-    
+
     let counter = 0;
     const categories = _(dataPoints as ITreatmentHeatmapTrackDatum[]).filter((d:ITreatmentHeatmapTrackDatum) => !!d.category).map((d)=>d.category).uniq().value();
     categories.forEach( (d:string) => {
@@ -745,7 +745,7 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(oncoprint:ResultsVi
             const treatmentProfiles = _.filter(molecularProfileIdToHeatmapTracks.values(), d => d.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY);
             const neededTreatments = _.flatten(treatmentProfiles.map(v=>v.entities.keys()));
             await oncoprint.props.store.treatmentCache.getPromise(neededTreatments.map(g=>({treatmentId:g})), true);
-            
+
             const cacheQueries = _.flatten(treatmentProfiles.map(entry=>(
                 entry.entities.keys().map(g=>({
                     molecularProfileId: entry.molecularProfileId,
@@ -906,7 +906,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
                 return [];
             }
             const molecularProfileId = molecularProfile.value.molecularProfileId;
-            const genesetIds = oncoprint.props.store.rvQuery.genesetIds;
+            const genesetIds = oncoprint.props.store.genesetIds;
 
             const cacheQueries = genesetIds.map((genesetId) => ({molecularProfileId, genesetId}));
             await dataCache.getPromise(cacheQueries, true);
