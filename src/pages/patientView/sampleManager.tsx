@@ -1,12 +1,16 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import SampleInline from './patientHeader/SampleInline';
+import SampleInline, {SortableSampleInline} from './patientHeader/SampleInline';
 import {ClinicalDataBySampleId} from "../../shared/api/api-types-extended";
 import { ClinicalData } from "shared/api/generated/CBioPortalAPI";
 import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
 import naturalSort from 'javascript-natural-sort';
 import {ClinicalEvent, ClinicalEventData} from "../../shared/api/generated/CBioPortalAPI";
+import {action, computed} from "mobx";
+import {stringListToIndexSet} from "../../public-lib";
+import PatientViewURLWrapper from "./PatientViewURLWrapper";
+import {url} from "inspector";
 
 
 // sort samples based on event, clinical data and id
@@ -77,25 +81,22 @@ export function sortSamples(samples: Array<ClinicalDataBySampleId>,
 
 
 class SampleManager {
-
-    sampleIndex: { [s:string]:number };
-    sampleLabels: { [s:string]:string };
-    sampleOrder: string[];
     clinicalDataLegacyCleanAndDerived: { [s:string]:any };
     sampleColors: { [s:string]:string };
     commonClinicalDataLegacyCleanAndDerived: { [s:string]:string };
 
-    constructor(public samples: Array<ClinicalDataBySampleId>, events?: any) {
-
-        this.sampleIndex = {};
-        this.sampleLabels = {};
+    constructor(
+        private _samples: Array<ClinicalDataBySampleId>,
+        private urlWrapper:PatientViewURLWrapper,
+        events?: any
+    ) {
         this.clinicalDataLegacyCleanAndDerived = {};
         this.sampleColors = {};
         // clinical attributes that should be displayed at patient level, since
         // they are the same in all samples
         this.commonClinicalDataLegacyCleanAndDerived = {};
 
-        samples.forEach((sample, i) => {
+        _samples.forEach((sample, i) => {
            // add legacy clinical data
            this.clinicalDataLegacyCleanAndDerived[sample.id] = cleanAndDerive(
                _.fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]))
@@ -122,21 +123,33 @@ class SampleManager {
         // remove common CANCER_TYPE/CANCER_TYPE_DETAILED in top bar (display on
         // patient)
         ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'].forEach((attr) => {
-            if (SampleManager.isSameClinicalAttributeInAllSamples(samples, attr)) {
-                this.commonClinicalDataLegacyCleanAndDerived[attr] = this.clinicalDataLegacyCleanAndDerived[samples[0].id][attr];
-                samples.forEach((sample) => {
+            if (SampleManager.isSameClinicalAttributeInAllSamples(_samples, attr)) {
+                this.commonClinicalDataLegacyCleanAndDerived[attr] = this.clinicalDataLegacyCleanAndDerived[_samples[0].id][attr];
+                _samples.forEach((sample) => {
                     delete this.clinicalDataLegacyCleanAndDerived[sample.id][attr];
                 });
             }
         })
 
-        this.samples = sortSamples(samples, this.clinicalDataLegacyCleanAndDerived, events);
-        this.samples.forEach((sample, i) => {
-            this.sampleIndex[sample.id] = i;
-            this.sampleLabels[sample.id] = String(i+1);
-        });
-        // order as array of sample ids (used further downstream)
-        this.sampleOrder = _.sortBy(Object.keys(this.sampleIndex), (k) => this.sampleIndex[k]);
+        this._samples = sortSamples(_samples, this.clinicalDataLegacyCleanAndDerived, events);
+    }
+
+    @computed public get samples() {
+        const urlSampleOrder = JSON.parse(this.urlWrapper.query.sampleIdOrder || "[]");
+        if (urlSampleOrder.length > 0) {
+            const sampleOrder = stringListToIndexSet(urlSampleOrder);
+            return _.sortBy<ClinicalDataBySampleId>(this._samples, s=>sampleOrder[s.id]);
+        } else {
+            return this._samples;
+        }
+    }
+
+    @computed public get sampleIndex() {
+        return stringListToIndexSet(this.samples.map(s=>s.id));
+    }
+
+    @computed public get sampleLabels() {
+        return _.mapValues(this.sampleIndex, i=>String(i+1));
     }
 
     static isSameClinicalAttributeInAllSamples(samples:Array<ClinicalDataBySampleId>, attribute:string) {
@@ -180,12 +193,8 @@ class SampleManager {
         return this.sampleColors[sampleId];
     }
 
-    getSampleIdsInOrder():string[] {
+    @computed get sampleIdsInOrder():string[] {
         return this.samples.map((sample:ClinicalDataBySampleId) => sample.id);
-    }
-
-    getComponentsForSamples() {
-        this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
 }
 

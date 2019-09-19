@@ -1,10 +1,8 @@
 import ExtendedRouterStore from "./ExtendedRouterStore";
 import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import {QueryParams} from "url";
-import {PatientViewUrlParams} from "../../pages/patientView/PatientViewPage";
-import {Patient} from "../api/generated/CBioPortalAPI";
-import {StudyViewURLQuery} from "../../pages/studyView/StudyViewPageStore";
 import AppConfig from "appConfig";
+import {PatientViewUrlParams} from "../../pages/patientView/PatientViewURLWrapper";
 
 export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStore }){
 

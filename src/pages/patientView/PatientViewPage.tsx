@@ -53,6 +53,8 @@ import 'cbioportal-frontend-commons/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
 import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
+import SampleInlineList from "./patientHeader/SampleInlineList";
+import PatientViewURLWrapper from "./PatientViewURLWrapper";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -73,24 +75,19 @@ export interface IPatientViewPageProps {
     clinicalDataStatus?: RequestStatus;
 }
 
-export interface PatientViewUrlParams extends QueryParams{
-    studyId:string;
-    caseId?:string;
-    sampleId?:string;
-}
-
 @inject('routing', 'appStore')
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
 
     @observable private mutationTableColumnVisibility: {[columnId: string]: boolean}|undefined;
     @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
+    private urlWrapper:PatientViewURLWrapper;
 
     constructor(props: IPatientViewPageProps) {
 
         super(props);
 
-
+        this.urlWrapper = new PatientViewURLWrapper(props.routing);
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
             () => [props.routing.location.query, props.routing.location.hash, props.routing.location.pathname],
@@ -135,6 +132,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(this);
     }
 
+    @autobind
     public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
         if (!e.shiftKey && !e.altKey && !e.metaKey) {
             e.preventDefault();
@@ -145,9 +143,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     private handleTabChange(id: string) {
-
-        this.props.routing.updateRoute({}, `patient/${id}`);
-
+        this.urlWrapper.setTabId(id);
     }
 
     private handlePatientClick(id: string) {
@@ -226,9 +222,33 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
     });
 
-    public render() {
+    @autobind
+    private onSampleSortEnd(params:any) {
+        const sampleManager = this.sampleManager!;
+        if (params.oldIndex !== params.newIndex) {
+            const sampleOrder = sampleManager.sampleIdsInOrder.slice();
+            const poppedId = sampleOrder.splice(params.oldIndex, 1)[0];
+            sampleOrder.splice(params.newIndex, 0, poppedId);
 
-        let sampleManager: SampleManager | null = null;
+            this.urlWrapper.updateQuery({ sampleIdOrder: JSON.stringify(sampleOrder) });
+        }
+    }
+
+    @computed get sampleManager() {
+        if (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.studyMetaData.isComplete) {
+            let patientData = patientViewPageStore.patientViewData.result;
+            if (patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) {
+                return new SampleManager(patientData.samples!, this.urlWrapper, patientViewPageStore.clinicalEvents.result);
+            } else {
+                return new SampleManager(patientData.samples!, this.urlWrapper);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    public render() {
+        let sampleManager: SampleManager | null = this.sampleManager;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
         let cohortNav: JSX.Element | null = null;
         let studyName: JSX.Element | null = null;
@@ -243,55 +263,17 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
 
         if (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.studyMetaData.isComplete) {
-            let patientData = patientViewPageStore.patientViewData.result;
-            if (patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) {
-                sampleManager = new SampleManager(patientData.samples!, patientViewPageStore.clinicalEvents.result);
-            } else {
-                sampleManager = new SampleManager(patientData.samples!);
-            }
-
-            sampleHeader = _.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
-                const isPDX:boolean = (sampleManager &&
-                    sampleManager.clinicalDataLegacyCleanAndDerived &&
-                    sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
-                    sampleManager.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft'
-                );
-
-                return (
-                    <div className="patientSample">
-                        <span className='clinical-spans'>
-                            {
-                                sampleManager!.getComponentForSample(sample.id, 1, '',
-                                    <span style={{display:'inline-flex'}}>
-                                        {'\u00A0'}
-                                        {isPDX && getMouseIcon()}
-                                        {isPDX && '\u00A0'}
-                                        <a
-                                            href={getSampleViewUrl(patientViewPageStore.studyMetaData.result!.studyId, sample.id)}
-                                            target="_blank"
-                                            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => this.handleSampleClick(sample.id, e)}
-                                        >
-                                            {SampleManager.getClinicalAttributeInSample(sample, "DISPLAY_SAMPLE_NAME") ? `${SampleManager.getClinicalAttributeInSample(sample, "DISPLAY_SAMPLE_NAME")!.value} (${sample.id})` : sample.id}
-                                        </a>
-                                        {sampleManager &&
-                                        sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
-                                        getSpanElementsFromCleanData(sampleManager.clinicalDataLegacyCleanAndDerived[sample.id], patientViewPageStore.studyId)}
-                                    </span>
-                                )
-                            }
-                        </span>
-                        {patientViewPageStore.hasMutationalSignatureData.result === true &&
-                        <LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending && patientViewPageStore.mutationalSignatureMetaData.isPending}/>}
-
-                        {patientViewPageStore.hasMutationalSignatureData.result === true &&
-                        patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete &&
-                        patientViewPageStore.mutationalSignatureMetaData.isComplete &&
-                        (<SignificantMutationalSignatures data={patientViewPageStore.mutationalSignatureData.result}
-                                                          metadata={patientViewPageStore.mutationalSignatureMetaData.result} uniqueSampleKey={sample.id}/>)}
-
-                    </div>
-                );
-            });
+            sampleHeader = [
+                <SampleInlineList
+                    axis="xy"
+                    distance={6}
+                    samples={sampleManager!.samples}
+                    sampleManager={sampleManager!}
+                    store={patientViewPageStore}
+                    handleSampleClick={this.handleSampleClick}
+                    onSortEnd={this.onSampleSortEnd}
+                />
+            ];
 
             if (sampleHeader && sampleHeader.length > 0 && patientViewPageStore.pageMode === 'sample' &&
                 patientViewPageStore.patientId && patientViewPageStore.allSamplesForPatient && patientViewPageStore.allSamplesForPatient.result.length > 1) {
@@ -373,7 +355,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </div>
                     <If condition={patientViewPageStore.patientViewData.isComplete}>
                         <Then>
-                            <MSKTabs id="patientViewPageTabs" activeTabId={this.props.params.tab || "summaryTab"}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
+                            <MSKTabs id="patientViewPageTabs" activeTabId={this.urlWrapper.tabId}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
 
                         <MSKTab key={0} id="summary" linkText="Summary">
 
@@ -383,7 +365,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) && (
 
                                             <div>
-                                                <Timeline store={patientViewPageStore} width={WindowStore.size.width-60} sampleManager={ sampleManager } />
+                                                <Timeline
+                                                    store={patientViewPageStore}
+                                                    width={WindowStore.size.width-60}
+                                                    sampleManager={ sampleManager }
+                                                />
                                                 <hr />
                                             </div>
                                         )
@@ -422,7 +408,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             <PatientViewMutationTable
                                                 studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
                                                 sampleManager={sampleManager}
-                                                sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                                sampleIds={sampleManager ? sampleManager.sampleIdsInOrder : []}
                                                 uniqueSampleKeyToTumorType={patientViewPageStore.uniqueSampleKeyToTumorType}
                                                 molecularProfileIdToMolecularProfile={patientViewPageStore.molecularProfileIdToMolecularProfile.result}
                                                 variantCountCache={patientViewPageStore.variantCountCache}
@@ -468,7 +454,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             patientViewPageStore.referenceGenes.isComplete) && (
                                             <CopyNumberTableWrapper
                                             studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
-                                            sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                            sampleIds={sampleManager ? sampleManager.sampleIdsInOrder : []}
                                             sampleManager={sampleManager}
                                             cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
                                             cnaCivicGenes={patientViewPageStore.cnaCivicGenes}

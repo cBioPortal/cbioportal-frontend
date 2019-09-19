@@ -14,6 +14,7 @@ import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore"
 import {ClinicalEvent, ClinicalEventData} from "../../../shared/api/generated/CBioPortalAPI";
 import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
+import {observer} from "mobx-react";
 
 interface ITimelineProps {
     sampleManager:SampleManager;
@@ -21,15 +22,13 @@ interface ITimelineProps {
     width:number;
 }
 
+@observer
 export default class Timeline extends React.Component<ITimelineProps, {}> {
 
     private currentWidth:number;
 
     shouldComponentUpdate(nextProps:ITimelineProps){
-        if (nextProps.width !== this.currentWidth) {
-            // only rerender to resize
-            this.drawTimeline(nextProps.width);
-        }
+        this.drawTimeline(nextProps.width);
         return false;
     }
 
@@ -53,7 +52,7 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
             return memo;
         },{});
 
-        let caseIds = this.props.sampleManager.getSampleIdsInOrder();
+        let caseIds = this.props.sampleManager.sampleIdsInOrder;
 
         let params = {
             cancer_study_id: this.props.store.studyId,

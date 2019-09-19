@@ -5,6 +5,7 @@ import {ClinicalDataBySampleId} from "shared/api/api-types-extended";
 import ClinicalInformationPatientTable from "../clinicalInformation/ClinicalInformationPatientTable";
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {placeArrowBottomLeft} from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {SortableElement} from "react-sortable-hoc";
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
@@ -109,3 +110,5 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
         );
     }
 }
+
+export const SortableSampleInline = SortableElement(SampleInline);

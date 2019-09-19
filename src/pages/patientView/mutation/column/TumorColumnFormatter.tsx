@@ -44,7 +44,7 @@ export default class TumorColumnFormatter {
             // First, we sort by the number of present and called samples
             ret.push(Object.keys(presentSamples).filter((s) => presentSamples[s]).length);
             // Then, we sort by the particular ones present
-            for (const sampleId of sampleManager.getSampleIdsInOrder()) {
+            for (const sampleId of sampleManager.sampleIdsInOrder) {
                 ret.push(+(!!presentSamples[sampleId]));
             }
             return ret;

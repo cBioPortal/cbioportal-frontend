@@ -7,6 +7,7 @@ import SampleManager from "../sampleManager";
 import {ThumbnailExpandVAFPlot} from "../vafPlot/ThumbnailExpandVAFPlot";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import {MutationFrequenciesBySample} from "../vafPlot/VAFPlot";
+import PatientViewURLWrapper from "../PatientViewURLWrapper";
 
 describe('GenomicOverview', () => {
     let genomicOverview:ShallowWrapper<any,any>;
@@ -29,6 +30,8 @@ describe('GenomicOverview', () => {
         }
     }
 
+    let fakeUrlWrapper:PatientViewURLWrapper = { query: {} } as PatientViewURLWrapper;
+
 
     describe("computing VAF plot frequencies", ()=>{
         it('computes the correct frequencies for a single sample', ()=>{
@@ -40,7 +43,7 @@ describe('GenomicOverview', () => {
                 sampleOrder={{}}
                 sampleLabels={{}}
                 sampleColors={{}}
-                sampleManager={new SampleManager([])}
+                sampleManager={new SampleManager([], fakeUrlWrapper)}
                 containerWidth={20}
             />);
             assert.deepEqual(getVAFFrequencies(genomicOverview), {}, "no frequencies with no mutations");
@@ -55,7 +58,7 @@ describe('GenomicOverview', () => {
                 sampleOrder={{}}
                 sampleLabels={{}}
                 sampleColors={{}}
-                sampleManager={new SampleManager([])}
+                sampleManager={new SampleManager([], fakeUrlWrapper)}
                 containerWidth={20}
             />);
             let frequencies = getVAFFrequencies(genomicOverview);
@@ -74,7 +77,7 @@ describe('GenomicOverview', () => {
                 sampleOrder={{}}
                 sampleLabels={{}}
                 sampleColors={{}}
-                sampleManager={new SampleManager([])}
+                sampleManager={new SampleManager([], fakeUrlWrapper)}
                 containerWidth={20}
             />);
             frequencies = getVAFFrequencies(genomicOverview);
@@ -98,7 +101,7 @@ describe('GenomicOverview', () => {
                 sampleOrder={{sample1:1, sample2:2}}
                 sampleLabels={{}}
                 sampleColors={{}}
-                sampleManager={new SampleManager([])}
+                sampleManager={new SampleManager([], fakeUrlWrapper)}
                 containerWidth={20}
             />);
             frequencies = getVAFFrequencies(genomicOverview);
@@ -115,7 +118,7 @@ describe('GenomicOverview', () => {
                 sampleOrder={{sample1:1, sample2:2}}
                 sampleLabels={{}}
                 sampleColors={{}}
-                sampleManager={new SampleManager([])}
+                sampleManager={new SampleManager([], fakeUrlWrapper)}
                 containerWidth={20}
             />);
             frequencies = getVAFFrequencies(genomicOverview);
@@ -145,7 +148,7 @@ describe('GenomicOverview', () => {
                 sampleOrder={{sample1:1, sample2:2}}
                 sampleLabels={{}}
                 sampleColors={{}}
-                sampleManager={new SampleManager([])}
+                sampleManager={new SampleManager([], fakeUrlWrapper)}
                 containerWidth={20}
             />);
             frequencies = getVAFFrequencies(genomicOverview);
@@ -178,7 +181,7 @@ describe('GenomicOverview', () => {
                 sampleOrder={{sample1:1, sample2:2}}
                 sampleLabels={{}}
                 sampleColors={{}}
-                sampleManager={new SampleManager([])}
+                sampleManager={new SampleManager([], fakeUrlWrapper)}
                 containerWidth={20}
             />);
             frequencies = getVAFFrequencies(genomicOverview);

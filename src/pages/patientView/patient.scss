@@ -38,29 +38,27 @@
     left:0;
     font-size:40px;
   }
+}
 
-  .patientSamples {
+.patientSample {
+  width:fit-content !important;
+  vertical-align:top;
+  cursor:move;
+  display:inline-block;
+  background-color:#ddd;
+  padding:1px 2px;
+  margin-right:3px;
+  border-radius:3px;
+  margin-bottom:3px;
+  font-size:11px;
+  height: 20px;
+  line-height: 20px;
+  vertical-align: middle;
 
-    .patientSample {
-      display:inline-block;
-      background-color:#ddd;
-      padding:1px 2px;
-      margin-right:3px;
-      border-radius:3px;
-      margin-bottom:3px;
-      font-size:11px;
-      height: 20px;
-      line-height: 20px;
-      vertical-align: middle;
-
-      svg {
-        position:relative;
-        top:1px;
-      }
-    }
-
+  svg {
+    position:relative;
+    top:1px;
   }
-
 }
 
 .vafPlot {

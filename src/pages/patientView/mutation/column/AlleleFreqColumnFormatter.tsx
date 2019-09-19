@@ -61,7 +61,7 @@ export default class AlleleFreqColumnFormatter {
             return (<span></span>);
         }
 
-        const sampleOrder = sampleManager.getSampleIdsInOrder();
+        const sampleOrder = sampleManager.sampleIdsInOrder;
         const barX = sampleOrder.reduce((map, sampleId:string, i:number) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {} as {[s:string]:number});
         const sampleElements = mutations.map((m:Mutation) => {
             const args = AlleleFreqColumnFormatter.getComponentForSampleArgs(m);
@@ -130,7 +130,7 @@ export default class AlleleFreqColumnFormatter {
             map[next.sampleId] = next;
             return map;
         }, {} as {[s:string]:Mutation});
-        return sampleManager.getSampleIdsInOrder().map(sampleId=>sampleToMutation[sampleId]).map(mutation=>
+        return sampleManager.sampleIdsInOrder.map(sampleId=>sampleToMutation[sampleId]).map(mutation=>
             AlleleFreqColumnFormatter.calcFrequency(mutation) || null
         );
     }

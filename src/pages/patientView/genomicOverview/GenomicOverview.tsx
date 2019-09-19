@@ -9,6 +9,7 @@ import {Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {MutationFrequenciesBySample} from "../vafPlot/VAFPlot";
+import {observer} from "mobx-react";
 
 interface IGenomicOverviewProps {
     mergedMutations: Mutation[][];
@@ -21,6 +22,7 @@ interface IGenomicOverviewProps {
     containerWidth: number;
 }
 
+@observer
 export default class GenomicOverview extends React.Component<IGenomicOverviewProps, { frequencies:MutationFrequenciesBySample }> {
 
     shouldComponentUpdate(nextProps:IGenomicOverviewProps){
