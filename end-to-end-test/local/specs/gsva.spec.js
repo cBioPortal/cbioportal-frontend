@@ -77,7 +77,7 @@ describe('gsva feature', function() {
                 checkTestStudy();
                 checkGSVAprofile();
                 browser.$('button[data-test=GENESET_HIERARCHY_BUTTON]').click();
-                $('div.modal-dialog').waitForExist();
+                waitForGsvaHierarchyDialog();
             });
 
             it('adds gene set name to entry component from hierachy selector', () => {
@@ -434,6 +434,11 @@ const checkGSVAprofile = () => {
     var gsvaProfileCheckbox = browser.$("[data-test=GENESET_SCORE]");
     gsvaProfileCheckbox.click();
     $('[data-test=GENESETS_TEXT_AREA]').waitForExist();
+}
+
+const waitForGsvaHierarchyDialog = () => {
+    $('div.modal-dialog').waitForExist();
+    $('div[data-test=gsva-tree-container] ul').waitForExist();
 }
 
 module.exports = {
