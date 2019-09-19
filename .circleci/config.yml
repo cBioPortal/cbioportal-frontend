@@ -35,6 +35,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
           sleep 1s && \
           cd end-to-end-test && \
+          echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
           yarn run e2e
         when: always
         environment:
@@ -199,14 +200,14 @@ jobs:
               ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
       - run:
           name: Generate checksum of data that populates the test database
-          command: |         
+          command: |
               $TEST_HOME/local/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
       - restore_cache:
           keys:
           - v4-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - run:
           name: Create MySQL data directory when no cache found
-          command: |         
+          command: |
               mkdir -p $DB_DATA_DIR
       - run:
           name: Setup docker images and containers
@@ -220,7 +221,7 @@ jobs:
               fi
       - run:
           name: Change owner of MySQL database files (needed by cache)
-          command: |         
+          command: |
               sudo chmod -R 777 $DB_DATA_DIR && \
               sudo chown -R circleci:circleci $DB_DATA_DIR
       - save_cache:
@@ -229,7 +230,7 @@ jobs:
           key: v4-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - run:
           name: Run end-2-end tests with studies in local database
-          command: | 
+          command: |
               cd $PORTAL_SOURCE_DIR && $TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
       - run:
           name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
