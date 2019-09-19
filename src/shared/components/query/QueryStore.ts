@@ -1082,6 +1082,11 @@ export class QueryStore {
     }
 
     @computed
+    public get isMultipleNonVirtualStudiesSelected() {
+        return this.selectableSelectedStudyIds.filter((id) => !this.isVirtualStudy(id)).length > 1;
+    }
+
+    @computed
     public get getOverlappingStudiesMap() {
         const overlappingStudyGroups = getOverlappingStudies(this.selectableSelectedStudies);
         return _.chain(overlappingStudyGroups)
