@@ -68,7 +68,24 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         ],
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
         render:()=>(
-            <div style={{display:"flex"}}>
+            <div>
+                <div style={{display:"flex"}}>
+                    <div style={{marginTop:3, marginRight:7}}>
+                        <LabeledCheckbox
+                            checked={this.vafLineChartLogScale}
+                            onChange={()=>{ this.vafLineChartLogScale = !this.vafLineChartLogScale; }}
+                        >
+                            <span style={{marginTop:-3}}>Log scale</span>
+                        </LabeledCheckbox>
+                    </div>
+                    <DownloadControls
+                        filename="vafHeatmap"
+                        getSvg={()=>this.vafLineChartSvg}
+                        buttons={["SVG", "PNG", "PDF"]}
+                        type="button"
+                        dontFade
+                    />
+                </div>
                 <VAFLineChart
                     mutations={this.selectedMutations.result!}
                     dataStore={this.dataStore}
@@ -78,21 +95,6 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     sampleManager={this.props.sampleManager}
                     svgRef={this.vafLineChartSvgRef}
                     logScale={this.vafLineChartLogScale}
-                />
-                <div style={{marginTop:3, marginRight:7}}>
-                    <LabeledCheckbox
-                        checked={this.vafLineChartLogScale}
-                        onChange={()=>{ this.vafLineChartLogScale = !this.vafLineChartLogScale; }}
-                    >
-                        <span style={{marginTop:-3}}>Log scale</span>
-                    </LabeledCheckbox>
-                </div>
-                <DownloadControls
-                    filename="vafHeatmap"
-                    getSvg={()=>this.vafLineChartSvg}
-                    buttons={["SVG", "PNG", "PDF"]}
-                    type="button"
-                    dontFade
                 />
             </div>
         ),
