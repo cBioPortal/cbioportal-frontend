@@ -112,21 +112,26 @@ export function populateSampleSpecificationsFromVirtualStudies(samplesSpecificat
 }
 
 //testIt
-export function parseSamplesSpecifications(query:any, cancerStudyIds:string[]): SamplesSpecificationElement[]{
+export function parseSamplesSpecifications(
+    case_ids:string,
+    sample_list_ids:string | undefined,
+    case_set_id:string,
+    cancerStudyIds:string[]
+): SamplesSpecificationElement[]{
 
     let samplesSpecifications: SamplesSpecificationElement[];
 
-    if (query.case_ids && query.case_ids.length > 0) {
-        const case_ids = query.case_ids.split(/\+|\s+/);
-        samplesSpecifications = case_ids.map((item:string)=>{
+    if (case_ids && case_ids.length > 0) {
+        const case_ids_parsed = case_ids.split(/\+|\s+/);
+        samplesSpecifications = case_ids_parsed.map((item:string)=>{
             const split = item.split(":");
             return {
                 studyId:split[0],
                 sampleId:split[1]
-            }
+            } as SamplesSpecificationElement;
         });
-    } else if (query.sample_list_ids) {
-        samplesSpecifications = query.sample_list_ids.split(",").map((studyListPair:string)=>{
+    } else if (sample_list_ids) {
+        samplesSpecifications = sample_list_ids.split(",").map((studyListPair:string)=>{
             const pair = studyListPair.split(":");
             return {
                 studyId:pair[0],
@@ -134,16 +139,16 @@ export function parseSamplesSpecifications(query:any, cancerStudyIds:string[]): 
                 sampleId: undefined
             }
         });
-    } else if (query.case_set_id !== "all") {
+    } else if (case_set_id !== "all") {
         // by definition if there is a case_set_id, there is only one study
         samplesSpecifications = cancerStudyIds.map((studyId:string)=>{
             return {
                 studyId: studyId,
-                sampleListId: query.case_set_id,
+                sampleListId: case_set_id,
                 sampleId: undefined
             };
         });
-    } else if (query.case_set_id === "all") { // case_set_id IS equal to all
+    } else if (case_set_id === "all") { // case_set_id IS equal to all
         samplesSpecifications = cancerStudyIds.map((studyId:string)=>{
             return {
                 studyId,
