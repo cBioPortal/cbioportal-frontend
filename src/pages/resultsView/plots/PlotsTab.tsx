@@ -1204,8 +1204,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     @computed get plotDataExists() {
-        return this.horzAxisDataPromise.isComplete && this.horzAxisDataPromise.result!.data.length > 0 
-            && this.vertAxisDataPromise.isComplete && this.vertAxisDataPromise.result!.data.length > 0;
+        return (this.horzAxisDataPromise.isComplete && this.horzAxisDataPromise.result!.data.length > 0)
+            || (this.vertAxisDataPromise.isComplete && this.vertAxisDataPromise.result!.data.length > 0);
     }
 
     @computed get horzAxisDataPromise() {
