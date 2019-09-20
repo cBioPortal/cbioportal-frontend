@@ -13,6 +13,12 @@ export default class News extends React.Component<{}, {}> {
                 <title>{'cBioPortal for Cancer Genomics::News'}</title>
             </Helmet>
             <StaticContent sourceUrl={AppConfig.serverConfig.skin_documentation_news!} title={"News"}/>
+            <a
+                id="releasesLink"
+                href="https://github.com/cBioPortal/cbioportal/releases"
+            >
+                Release notes
+            </a>
         </PageLayout>
     }
 
