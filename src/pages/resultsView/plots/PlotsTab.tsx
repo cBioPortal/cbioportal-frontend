@@ -1203,6 +1203,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
+    @computed get plotDataExists() {
+        return this.horzAxisDataPromise.isComplete && this.horzAxisDataPromise.result!.data.length > 0 
+            && this.vertAxisDataPromise.isComplete && this.vertAxisDataPromise.result!.data.length > 0;
+    }
+
     @computed get horzAxisDataPromise() {
         return makeAxisDataPromise(
             this.horzSelection,
@@ -2260,57 +2265,57 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     <div>
                         <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
                             <ScrollBar style={{position:'relative', top:-5}} getScrollEl={this.getScrollPane} />
-                            <div style={{textAlign:"left", position:"relative", zIndex:1, marginTop:"-6px", marginBottom: this.isWaterfallPlot?"9px":"-16px", minWidth: this.mutationDataCanBeShown && this.cnaDataCanBeShown ? 600 : 0}}>
-                                <div style={{display:"inline-block", position: "relative"}} className="utilities-menu">
-                                    {(this.mutationDataCanBeShown || this.cnaDataCanBeShown)
-                                        && <label className="legend-label">Style samples by:</label>
-                                    }
-                                    &nbsp;
-                                    <div style={{display:"inline-block"}} className={`gene-select-background ${geneSelectShownClassName}`}>
-                                        {this.isWaterfallPlot && (
-                                            <div className="checkbox gene-select-container">
-                                                <label>Gene:</label>
-                                                &nbsp;
-                                                <ReactSelect
-                                                    className={'color-samples-toolbar-elt gene-select'}
-                                                    name={`utilities_geneSelectionBox`}
-                                                    value={this.utilitiesMenuSelection.selectedGeneOption ? this.utilitiesMenuSelection.selectedGeneOption.value : undefined}
-                                                    onChange={this.onUtilitiesGeneSelect}
-                                                    isLoading={this.horzGeneOptions.isPending}
-                                                    options={this.utilityMenuGeneOptions}
-                                                    clearable={false}
-                                                    searchable={false}
-                                                    disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
-                                                    />
+                                {(this.plotDataExists) && (
+                                    <div style={{textAlign:"left", position:"relative", zIndex:1, marginTop:"-6px", marginBottom: this.isWaterfallPlot?"9px":"-16px", minWidth: this.mutationDataCanBeShown && this.cnaDataCanBeShown ? 600 : 0}}>
+                                        <div style={{display:"inline-block", position: "relative"}} className="utilities-menu">
+                                            <label className="legend-label">Style samples by:</label>
+                                            &nbsp;
+                                            <div style={{display:"inline-block"}} className={`gene-select-background ${geneSelectShownClassName}`}>
+                                                {this.isWaterfallPlot && (
+                                                    <div className="checkbox gene-select-container">
+                                                        <label>Gene:</label>
+                                                        &nbsp;
+                                                        <ReactSelect
+                                                            className={'color-samples-toolbar-elt gene-select'}
+                                                            name={`utilities_geneSelectionBox`}
+                                                            value={this.utilitiesMenuSelection.selectedGeneOption ? this.utilitiesMenuSelection.selectedGeneOption.value : undefined}
+                                                            onChange={this.onUtilitiesGeneSelect}
+                                                            isLoading={this.horzGeneOptions.isPending}
+                                                            options={this.utilityMenuGeneOptions}
+                                                            clearable={false}
+                                                            searchable={false}
+                                                            disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
+                                                            />
+                                                    </div>
+                                                )}
+                                                {this.mutationDataCanBeShown && (
+                                                    <div className={`checkbox color-samples-toolbar-elt`}><label>
+                                                        <input
+                                                            data-test="ViewMutationType"
+                                                            type={this.plotType.result === PlotType.WaterfallPlot? "radio": "checkbox"}                                                name="utilities_viewMutationType"
+                                                            value={EventKey.utilities_viewMutationType}
+                                                            checked={this.viewMutationType}
+                                                            onClick={this.onInputClick}
+                                                            disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
+                                                        />Mutation Type *
+                                                    </label></div>
+                                                )}
+                                                {this.cnaDataCanBeShown && (
+                                                    <div className="checkbox color-samples-toolbar-elt"><label>
+                                                        <input
+                                                            data-test="ViewCopyNumber"
+                                                            type={this.plotType.result === PlotType.WaterfallPlot? "radio": "checkbox"}                                                name="utilities_viewCopyNumber"
+                                                            value={EventKey.utilities_viewCopyNumber}
+                                                            checked={this.viewCopyNumber}
+                                                            onClick={this.onInputClick}
+                                                            disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
+                                                        />Copy Number Alteration
+                                                    </label></div>
+                                                )}
                                             </div>
-                                        )}
-                                        {this.mutationDataCanBeShown && (
-                                            <div className={`checkbox color-samples-toolbar-elt`}><label>
-                                                <input
-                                                    data-test="ViewMutationType"
-                                                    type={this.plotType.result === PlotType.WaterfallPlot? "radio": "checkbox"}                                                name="utilities_viewMutationType"
-                                                    value={EventKey.utilities_viewMutationType}
-                                                    checked={this.viewMutationType}
-                                                    onClick={this.onInputClick}
-                                                    disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
-                                                />Mutation Type *
-                                            </label></div>
-                                        )}
-                                        {this.cnaDataCanBeShown && (
-                                            <div className="checkbox color-samples-toolbar-elt"><label>
-                                                <input
-                                                    data-test="ViewCopyNumber"
-                                                    type={this.plotType.result === PlotType.WaterfallPlot? "radio": "checkbox"}                                                name="utilities_viewCopyNumber"
-                                                    value={EventKey.utilities_viewCopyNumber}
-                                                    checked={this.viewCopyNumber}
-                                                    onClick={this.onInputClick}
-                                                    disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
-                                                />Copy Number Alteration
-                                            </label></div>
-                                        )}
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
+                                )}
                             {this.plotExists && (
                                 <DownloadControls
                                     getSvg={this.getSvg}
