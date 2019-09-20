@@ -782,8 +782,26 @@ export class StudyViewPageStore {
             }, [] as CopyNumberGeneFilter[]);
         }
         if (_.isArray(filters.sampleIdentifiers) && filters.sampleIdentifiers.length > 0) {
-            this.sampleIdentifiers = filters.sampleIdentifiers;
+            this.numberOfSelectedSamplesInCustomSelection = filters.sampleIdentifiers.length;
+            this.updateChartSampleIdentifierFilter(UniqueKey.CUSTOM_SELECT, filters.sampleIdentifiers, false);
         }
+
+        if (filters.mutationCountVsCNASelection) {
+            this._mutationCountVsCNAFilter = filters.mutationCountVsCNASelection;
+        }
+
+        if (filters.withCNAData !== undefined) {
+            this._withCNADataFilter = filters.withCNAData;
+            const value = filters.withCNAData ? Datalabel.YES : Datalabel.NO;
+            this.customChartFilterSet.set(UniqueKey.WITH_CNA_DATA, [value]);
+        }
+
+        if (filters.withMutationData !== undefined) {
+            this._withMutationDataFilter = filters.withMutationData;
+            const value = filters.withMutationData ? Datalabel.YES : Datalabel.NO;
+            this.customChartFilterSet.set(UniqueKey.WITH_MUTATION_DATA, [value]);
+        }
+
         if(!_.isEqual(toJS(this.initialFiltersQuery), filters)) {
             this.initialFiltersQuery = filters;
         }
