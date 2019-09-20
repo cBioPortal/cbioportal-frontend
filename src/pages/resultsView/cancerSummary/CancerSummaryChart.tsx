@@ -14,6 +14,7 @@ import * as ReactDOM from "react-dom";
 import WindowStore from "shared/components/window/WindowStore";
 import { Popover } from "react-bootstrap";
 import {pluralize} from "../../../public-lib/lib/StringUtils";
+import { HORIZONTAL_OFFSET, VERTICAL_OFFSET } from "pages/studyView/charts/barChart/BarChartToolTip";
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -99,10 +100,10 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
             let tooltipPlacement = (this.mousePosition.x > WindowStore.size.width-maxWidth ? "left" : "right");
             return (ReactDOM as any).createPortal(
                 <Popover
-                    arrowOffsetTop={17}
+                    arrowOffsetTop={VERTICAL_OFFSET}
                     className={classnames("cbioportal-frontend", "cbioTooltip")}
-                    positionLeft={this.mousePosition.x+(tooltipPlacement === "left" ? -8 : 8)}
-                    positionTop={this.mousePosition.y-17}
+                    positionLeft={this.mousePosition.x+(tooltipPlacement === "left" ? - HORIZONTAL_OFFSET : HORIZONTAL_OFFSET)}
+                    positionTop={this.mousePosition.y-VERTICAL_OFFSET}
                     style={{
                         transform: (tooltipPlacement === "left" ? "translate(-100%,0%)" : undefined),
                         maxWidth
@@ -128,10 +129,10 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
 
             return (ReactDOM as any).createPortal(
                 <Popover
-                    arrowOffsetTop={17}
+                    arrowOffsetTop={VERTICAL_OFFSET}
                     className={classnames("cbioportal-frontend", "cbioTooltip")}
-                    positionLeft={this.mousePosition.x + (tooltipPlacement === "left" ? -8 : 8)}
-                    positionTop={this.mousePosition.y - 17}
+                    positionLeft={this.mousePosition.x + (tooltipPlacement === "left" ? -HORIZONTAL_OFFSET : HORIZONTAL_OFFSET)}
+                    positionTop={this.mousePosition.y - VERTICAL_OFFSET}
                     style={{
                         transform: (tooltipPlacement === "left" ? "translate(-100%,0%)" : undefined),
                         maxWidth
