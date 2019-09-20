@@ -1362,7 +1362,13 @@ function generalWaterfallPlotTooltip<D extends IWaterfallPlotData>(
 
     return (
         <div>
-            <a href={getSampleViewUrl(d.studyId, d.sampleId)} target="_blank">{d.sampleId}</a>
+            <a
+                href={getSampleViewUrl(d.studyId, d.sampleId)}
+                target="_blank"
+                style={{whiteSpace: 'pre-line', wordBreak: 'break-word'}}
+            >
+                {d.sampleId}
+            </a>
             <div>Value: <span style={{fontWeight:"bold"}}> {thresholdType}{value} </span></div>
             {mutationsSection}
             {!!mutationsSection && <br/>}
