@@ -1203,9 +1203,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    @computed get plotDataExists() {
+    @computed get plotDataExistsForTwoAxes() {
         return (this.horzAxisDataPromise.isComplete && this.horzAxisDataPromise.result!.data.length > 0)
-            || (this.vertAxisDataPromise.isComplete && this.vertAxisDataPromise.result!.data.length > 0);
+            && (this.vertAxisDataPromise.isComplete && this.vertAxisDataPromise.result!.data.length > 0);
     }
 
     @computed get horzAxisDataPromise() {
@@ -2265,7 +2265,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     <div>
                         <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
                             <ScrollBar style={{position:'relative', top:-5}} getScrollEl={this.getScrollPane} />
-                                {(this.plotDataExists && (this.mutationDataCanBeShown || this.cnaDataCanBeShown)) && (
+                                {((this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown) && (this.mutationDataCanBeShown || this.cnaDataCanBeShown)) && (
                                     <div style={{textAlign:"left", position:"relative", zIndex:1, marginTop:"-6px", marginBottom: this.isWaterfallPlot?"9px":"-16px", minWidth: this.mutationDataCanBeShown && this.cnaDataCanBeShown ? 600 : 0}}>
                                         <div style={{display:"inline-block", position: "relative"}} className="utilities-menu">
                                             <label className="legend-label">Style samples by:</label>
