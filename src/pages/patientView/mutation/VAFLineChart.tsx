@@ -181,6 +181,14 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         }];
     }
 
+    @computed get mutations() {
+        if (this.props.dataStore.getOnlyShowHighlightedInVAFChart()) {
+            return this.props.mutations.filter(m=>this.props.dataStore.isMutationHighlighted(m[0]));
+        } else {
+            return this.props.mutations;
+        }
+    }
+
     @action
     private selectPointsInDragRect() {
         if (this.scale) {
@@ -284,7 +292,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         const grayPoints:IPoint[] = [];
         const lineData:IPoint[][] = [];
 
-        for (const mergedMutation of this.props.mutations) {
+        for (const mergedMutation of this.mutations) {
             // determine data points in line for this mutation
 
             // first add data points for each mutation
