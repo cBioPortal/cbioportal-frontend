@@ -9,8 +9,6 @@ import naturalSort from 'javascript-natural-sort';
 import {ClinicalEvent, ClinicalEventData} from "../../shared/api/generated/CBioPortalAPI";
 import {action, computed} from "mobx";
 import {stringListToIndexSet} from "../../public-lib";
-import PatientViewURLWrapper from "./PatientViewURLWrapper";
-import {url} from "inspector";
 
 
 // sort samples based on event, clinical data and id
@@ -87,7 +85,7 @@ class SampleManager {
 
     constructor(
         private _samples: Array<ClinicalDataBySampleId>,
-        private urlWrapper:PatientViewURLWrapper,
+        private getSampleIdOrder: ()=>string[]|null,
         events?: any
     ) {
         this.clinicalDataLegacyCleanAndDerived = {};
@@ -135,9 +133,9 @@ class SampleManager {
     }
 
     @computed public get samples() {
-        const urlSampleOrder = JSON.parse(this.urlWrapper.query.sampleIdOrder || "[]");
-        if (urlSampleOrder.length > 0) {
-            const sampleOrder = stringListToIndexSet(urlSampleOrder);
+        const sampleIdOrder = this.getSampleIdOrder();
+        if (sampleIdOrder && sampleIdOrder.length === this._samples.length) {
+            const sampleOrder = stringListToIndexSet(sampleIdOrder);
             return _.sortBy<ClinicalDataBySampleId>(this._samples, s=>sampleOrder[s.id]);
         } else {
             return this._samples;

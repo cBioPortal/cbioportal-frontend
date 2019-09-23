@@ -54,9 +54,8 @@ import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
 import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import SampleInlineList from "./patientHeader/SampleInlineList";
-import PatientViewURLWrapper from "./PatientViewURLWrapper";
 
-const patientViewPageStore = new PatientViewPageStore();
+const patientViewPageStore = new PatientViewPageStore(getBrowserWindow().globalStores.routing);
 
 const win:any = (window as any);
 
@@ -81,13 +80,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     @observable private mutationTableColumnVisibility: {[columnId: string]: boolean}|undefined;
     @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
-    private urlWrapper:PatientViewURLWrapper;
 
     constructor(props: IPatientViewPageProps) {
 
         super(props);
 
-        this.urlWrapper = new PatientViewURLWrapper(props.routing);
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
             () => [props.routing.location.query, props.routing.location.hash, props.routing.location.pathname],
@@ -143,7 +140,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     private handleTabChange(id: string) {
-        this.urlWrapper.setTabId(id);
+        patientViewPageStore.urlWrapper.setTabId(id);
     }
 
     private handlePatientClick(id: string) {
@@ -224,31 +221,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     @autobind
     private onSampleSortEnd(params:any) {
-        const sampleManager = this.sampleManager!;
+        const sampleManager = patientViewPageStore.sampleManager!;
         if (params.oldIndex !== params.newIndex) {
             const sampleOrder = sampleManager.sampleIdsInOrder.slice();
             const poppedId = sampleOrder.splice(params.oldIndex, 1)[0];
             sampleOrder.splice(params.newIndex, 0, poppedId);
 
-            this.urlWrapper.updateQuery({ sampleIdOrder: JSON.stringify(sampleOrder) });
-        }
-    }
-
-    @computed get sampleManager() {
-        if (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.studyMetaData.isComplete) {
-            let patientData = patientViewPageStore.patientViewData.result;
-            if (patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) {
-                return new SampleManager(patientData.samples!, this.urlWrapper, patientViewPageStore.clinicalEvents.result);
-            } else {
-                return new SampleManager(patientData.samples!, this.urlWrapper);
-            }
-        } else {
-            return null;
+            patientViewPageStore.urlWrapper.updateQuery({ sampleIdOrder: JSON.stringify(sampleOrder) });
         }
     }
 
     public render() {
-        let sampleManager: SampleManager | null = this.sampleManager;
+        let sampleManager: SampleManager | null = patientViewPageStore.sampleManager;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
         let cohortNav: JSX.Element | null = null;
         let studyName: JSX.Element | null = null;
@@ -355,7 +339,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </div>
                     <If condition={patientViewPageStore.patientViewData.isComplete}>
                         <Then>
-                            <MSKTabs id="patientViewPageTabs" activeTabId={this.urlWrapper.tabId}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
+                            <MSKTabs id="patientViewPageTabs" activeTabId={patientViewPageStore.urlWrapper.tabId}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
 
                         <MSKTab key={0} id="summary" linkText="Summary">
 

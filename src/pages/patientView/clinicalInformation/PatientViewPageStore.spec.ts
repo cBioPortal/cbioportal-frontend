@@ -15,7 +15,7 @@ describe('PatientViewPageStore', () => {
     let store: PatientViewPageStore;
 
     before(()=>{
-        store = new PatientViewPageStore();
+        store = new PatientViewPageStore({ query: {} } as any);
     });
 
     after(()=>{

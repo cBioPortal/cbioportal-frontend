@@ -82,6 +82,9 @@ import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import { fetchTrialsById, fetchTrialMatchesUsingPOST } from "../../../shared/api/MatchMinerAPI";
 import { IDetailedTrialMatch, ITrial, ITrialMatch, ITrialQuery } from "../../../shared/model/MatchMiner";
 import { groupTrialMatchesById } from "../trialMatch/TrialMatchTableUtils";
+import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
+import PatientViewURLWrapper from "../PatientViewURLWrapper";
+import SampleManager from "../sampleManager";
 
 
 type PageMode = 'patient' | 'sample';
@@ -145,9 +148,14 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
 }
 
 export class PatientViewPageStore {
-    constructor() {
+
+    public urlWrapper:PatientViewURLWrapper;
+
+    constructor(private routing:ExtendedRouterStore) {
         labelMobxPromises(this);
         this.internalClient = internalClient;
+
+        this.urlWrapper = new PatientViewURLWrapper(this.routing);
     }
 
     public internalClient: CBioPortalAPIInternal;
@@ -194,6 +202,27 @@ export class PatientViewPageStore {
 
     @computed get caseId():string {
         return this.pageMode === 'sample' ? this.sampleId : this.patientId;
+    }
+
+    @computed get urlSampleIdOrder() {
+        if (this.urlWrapper.query.sampleIdOrder) {
+            return JSON.parse(this.urlWrapper.query.sampleIdOrder);
+        } else {
+            return null;
+        }
+    }
+
+    @computed get sampleManager() {
+        if (this.patientViewData.isComplete && this.studyMetaData.isComplete) {
+            const patientData = this.patientViewData.result;
+            if (this.clinicalEvents.isComplete && this.clinicalEvents.result.length > 0) {
+                return new SampleManager(patientData.samples!, ()=>this.urlSampleIdOrder, this.clinicalEvents.result);
+            } else {
+                return new SampleManager(patientData.samples!, ()=>this.urlSampleIdOrder);
+            }
+        } else {
+            return null;
+        }
     }
 
     readonly mutationMolecularProfileId = remoteData({
