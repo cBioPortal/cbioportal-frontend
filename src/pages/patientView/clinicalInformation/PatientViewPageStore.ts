@@ -85,6 +85,7 @@ import { groupTrialMatchesById } from "../trialMatch/TrialMatchTableUtils";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
 import PatientViewURLWrapper from "../PatientViewURLWrapper";
 import SampleManager from "../sampleManager";
+import {validateParametersPatientView} from "../../../shared/lib/validateParameters";
 
 
 type PageMode = 'patient' | 'sample';
@@ -158,28 +159,47 @@ export class PatientViewPageStore {
         this.urlWrapper = new PatientViewURLWrapper(this.routing);
     }
 
+    public destroy() {
+        this.urlWrapper.destroy();
+    }
+
     public internalClient: CBioPortalAPIInternal;
 
     @observable public activeTabId = '';
 
-    @observable private _patientId = '';
-    @computed get patientId(): string {
-        if (this._patientId)
-            return this._patientId;
-
-        return this.derivedPatientId.result;
+    @computed public get urlValidationResult() {
+        const query = this.urlWrapper.query;
+        return validateParametersPatientView(query);
     }
-
-    @observable public urlValidationError: string | null = null;
 
     @observable ajaxErrors: Error[] = [];
 
-    @observable studyId = '';
+    @computed get studyId() {
+        if (this.urlValidationResult.isValid) {
+            return this.urlWrapper.query.studyId!;
+        } else {
+            return "";
+        }
+    }
 
-    @observable _sampleId = '';
+    @computed get _patientId() {
+        let patientId = undefined;
+        if (this.urlValidationResult.isValid) {
+            patientId = this.urlWrapper.query.caseId;
+        }
+        return patientId;
+    }
+
+    @computed get patientId() {
+        return this._patientId || this.derivedPatientId.result;
+    }
 
     @computed get sampleId() {
-        return this._sampleId;
+        if (this.urlValidationResult.isValid) {
+            return this.urlWrapper.query.sampleId || "";
+        } else {
+            return "";
+        }
     }
 
     @computed get pageTitle(): string {
@@ -197,7 +217,7 @@ export class PatientViewPageStore {
     }
 
     @computed get pageMode(): PageMode {
-        return this._sampleId ? 'sample' : 'patient';
+        return this.sampleId ? 'sample' : 'patient';
     }
 
     @computed get caseId():string {
@@ -239,13 +259,19 @@ export class PatientViewPageStore {
         invoke: async() => findUncalledMutationMolecularProfileId(this.molecularProfilesInStudy, this.studyId)
     });
 
-    // this is a string of concatenated ids
-    @observable
-    private _patientIdsInCohort:string[] = [];
+    @computed
+    private get patientIdsInCohortFromUrl() {
+        let cohortIds:string[] = [];
 
-    public set patientIdsInCohort(cohortIds:string[]){
-        // cannot put action on setter
-        runInAction(()=>this._patientIdsInCohort = cohortIds);
+        if (this.urlValidationResult.isValid) {
+            // if there is a navCaseId list in url
+            const navCaseIdMatch = this.urlWrapper.hash.match(/navCaseIds=([^&]*)/);
+            if (navCaseIdMatch && navCaseIdMatch.length > 1) {
+                cohortIds = parseCohortIds(navCaseIdMatch[1]);
+            }
+        }
+
+        return cohortIds;
     }
 
     @computed
@@ -253,7 +279,7 @@ export class PatientViewPageStore {
         let concatenatedIds: string;
         // check to see if we copied from url hash on app load
         const memoryCachedIds = getNavCaseIdsCache();
-        return (memoryCachedIds) ? memoryCachedIds : this._patientIdsInCohort;
+        return (memoryCachedIds) ? memoryCachedIds : this.patientIdsInCohortFromUrl;
     }
 
     @computed get myCancerGenomeData() {
@@ -804,18 +830,6 @@ export class PatientViewPageStore {
         return generateUniqueSampleKeyToTumorTypeMap(this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData,
             this.samplesWithoutCancerTypeClinicalData);
-    }
-
-    @action("SetSampleId") setSampleId(newId: string) {
-        if (newId)
-            this._patientId = '';
-        this._sampleId = newId;
-    }
-
-    @action("SetPatientId") setPatientId(newId: string) {
-        if (newId)
-            this._sampleId = '';
-        this._patientId = newId;
     }
 
     @cached get mrnaExprRankCache() {

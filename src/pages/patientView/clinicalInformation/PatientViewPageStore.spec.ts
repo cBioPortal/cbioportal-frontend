@@ -7,6 +7,7 @@ import { handlePathologyReportCheckResponse, PatientViewPageStore } from './Pati
 import { assert } from 'chai';
 // import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
+import {observable} from "mobx";
 // //import AppConfig from 'appConfig';
 // import request from 'superagent';
 
@@ -15,7 +16,7 @@ describe('PatientViewPageStore', () => {
     let store: PatientViewPageStore;
 
     before(()=>{
-        store = new PatientViewPageStore({ query: {} } as any);
+        store = new PatientViewPageStore({ query: {}, location: { pathname: "/patient"} } as any);
     });
 
     after(()=>{
@@ -45,16 +46,25 @@ describe('PatientViewPageStore', () => {
 
 
     it('sets page title to patient if theres a patient id and sample if sample id, patient id winning out', ()=>{
+        const query = observable({
+            caseId: "",
+            studyId: "study",
+            sampleId: ""
+        });
+
+        store = new PatientViewPageStore({ query, location: { pathname: "/patient"} } as any);
 
         assert.equal(store.pageTitle, 'Patient: ');
 
-        store.setPatientId('1234');
+        query.caseId = "1234";
         assert.equal(store.pageTitle, 'Patient: 1234');
 
-        store.setSampleId('1234');
+        query.caseId = "";
+        query.sampleId = "1234";
         assert.equal(store.pageTitle, 'Sample: 1234');
 
-        store.setPatientId('1234');
+        query.caseId = "1234";
+        query.sampleId = "";
         assert.equal(store.pageTitle, 'Patient: 1234');
 
     });

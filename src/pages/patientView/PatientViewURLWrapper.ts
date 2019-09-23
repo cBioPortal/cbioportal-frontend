@@ -5,7 +5,7 @@ import {GroupComparisonTab} from "../groupComparison/GroupComparisonUtils";
 import {computed} from "mobx";
 import autobind from "autobind-decorator";
 
-export interface PatientViewUrlParams extends QueryParams{
+export interface PatientViewUrlParams {
     studyId:string;
     caseId?:string;
     sampleId?:string;
@@ -30,6 +30,8 @@ export default class PatientViewURLWrapper extends URLWrapper<PatientViewUrlPara
             { name:"sampleIdOrder", isSessionProp:false }
         ]);
     }
+
+    pathContext = "/patient";
 
     @computed public get tabId() {
         return getTabId(this.pathName) || "summary";
