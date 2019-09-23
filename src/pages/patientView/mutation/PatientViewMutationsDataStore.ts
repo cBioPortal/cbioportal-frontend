@@ -17,6 +17,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
     @observable.ref private mouseOverMutation:Readonly<Mutation>|null = null;
     private highlightedMutationsMap = observable.map<Mutation>();
     @observable private _onlyShowHighlightedInTable = false;
+    @observable private _onlyShowHighlightedInVAFChart = false;
 
     public getMouseOverMutation() {
         return this.mouseOverMutation;
@@ -26,12 +27,20 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         return this._onlyShowHighlightedInTable;
     }
 
+    public getOnlyShowHighlightedInVAFChart() {
+        return this._onlyShowHighlightedInVAFChart;
+    }
+
     public setMouseOverMutation(m:Readonly<Mutation>|null) {
         this.mouseOverMutation = m;
     }
 
     public setOnlyShowHighlightedInTable(o:boolean) {
         this._onlyShowHighlightedInTable = o;
+    }
+
+    public setOnlyShowHighlightedInVAFChart(o:boolean) {
+        this._onlyShowHighlightedInVAFChart = o;
     }
 
     @action
@@ -56,6 +65,10 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
 
     @computed public get highlightedMutations():Readonly<Mutation[]> {
         return this.highlightedMutationsMap.entries().map(x=>x[1]);
+    }
+
+    public isMutationHighlighted(m:Mutation) {
+        return this.highlightedMutationsMap.has(mutationIdKey(m));
     }
 
     @computed get sortedFilteredData() {
