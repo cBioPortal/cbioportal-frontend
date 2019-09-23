@@ -47,7 +47,8 @@ export interface IStudyViewPageProps {
     appStore: AppStore;
 }
 
-export class StudyResultsSummary extends React.Component<{ store:StudyViewPageStore, appStore:AppStore },{}> {
+@observer
+export class StudyResultsSummary extends React.Component<{ store:StudyViewPageStore, appStore:AppStore, loadingComplete: boolean },{}> {
 
     render(){
         return (
@@ -57,7 +58,7 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
                      <strong data-test="selected-patients">{this.props.store.selectedPatients.length.toLocaleString()}</strong>&nbsp;<strong>patients</strong>&nbsp;|&nbsp;
                      <strong data-test="selected-samples">{this.props.store.selectedSamples.result.length.toLocaleString()}</strong>&nbsp;<strong>samples</strong>
                 </div>
-                <ActionButtons store={this.props.store} appStore={this.props.appStore}/>
+                <ActionButtons store={this.props.store} appStore={this.props.appStore} loadingComplete={this.props.loadingComplete}/>
             </div>
         )
     }
@@ -270,19 +271,20 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     <Observer>
                                         {
                                             () => {
+                                                // create element here to get correct mobx subscriber list
+                                                const summary  = <StudyResultsSummary
+                                                    store={this.store}
+                                                    appStore={this.props.appStore}
+                                                    loadingComplete={this.chartDataPromises.isComplete}
+                                                />;
                                                 return (
-                                                        <If condition={this.chartDataPromises.isComplete}>
-                                                            <Then>
-                                                                <CSSTransition classNames="studyFilterResult" in={true}
-                                                                               appear timeout={{enter: 200}}>
-                                                                    {() => <StudyResultsSummary store={this.store} appStore={this.props.appStore}/>
-                                                                    }
-                                                                </CSSTransition>
-                                                            </Then>
-                                                            <Else>
-                                                                <LoadingIndicator isLoading={true} size={"small"} className={styles.selectedInfoLoadingIndicator}/>
-                                                            </Else>
-                                                        </If>
+                                                    <CSSTransition
+                                                        classNames="studyFilterResult"
+                                                        in={true}
+                                                        appear timeout={{enter: 200}}
+                                                    >
+                                                        {() =>  { return summary; }}
+                                                    </CSSTransition>
                                                 )
                                             }
                                         }
