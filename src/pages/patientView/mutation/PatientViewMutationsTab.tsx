@@ -2,7 +2,6 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import PatientViewSelectableMutationTable from "./PatientViewSelectableMutationTable";
 import {ServerConfigHelpers} from "../../../config/config";
 import AppConfig from "appConfig";
 import {MSKTab} from "../../../shared/components/MSKTabs/MSKTabs";
@@ -23,6 +22,7 @@ import DownloadControls from "../../../public-lib/components/downloadControls/Do
 import _ from "lodash";
 import {getDownloadData} from "./oncoprint/MutationOncoprintUtils";
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
+import PatientViewMutationTable from "./PatientViewMutationTable";
 
 export interface IPatientViewMutationsTabProps {
     store:PatientViewPageStore;
@@ -31,10 +31,49 @@ export interface IPatientViewMutationsTabProps {
     sampleManager:SampleManager|null;
 }
 
+const DROPDOWN_STYLES = {
+    control: (provided:any)=>({
+        ...provided,
+        height:36,
+        minHeight:36,
+        border: "1px solid rgb(204,204,204)"
+    }),
+    menu: (provided:any)=>({
+        ...provided,
+        maxHeight: 400
+    }),
+    menuList: (provided:any)=>({
+        ...provided,
+        maxHeight:400
+    }),
+    placeholder:(provided:any)=>({
+        ...provided,
+        color: "#000000"
+    }),
+    dropdownIndicator:(provided:any)=>({
+        ...provided,
+        color:"#000000"
+    }),
+    option:(provided:any, state:any)=>{
+        return {
+            ...provided,
+            cursor:"pointer",
+        };
+    }
+};
+
+const DROPDOWN_THEME = (theme:any)=>({
+    ...theme,
+    colors: {
+        ...theme.colors,
+        neutral80:"black",
+        //primary: theme.colors.primary50
+    },
+});
+
 @observer
 export default class PatientViewMutationsTab extends React.Component<IPatientViewMutationsTabProps, {}> {
     private dataStore = new PatientViewMutationsDataStore(()=>this.props.store.mergedMutationDataIncludingUncalled);
-    @observable.ref mutationsTable:PatientViewSelectableMutationTable|null = null;
     private vafLineChartSvg:SVGElement|null = null;
     @observable vafLineChartLogScale = false;
 
@@ -43,26 +82,20 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         this.vafLineChartSvg = elt;
     }
 
-    @autobind
-    private tableRef(t:PatientViewSelectableMutationTable|null) {
-        this.mutationsTable = t;
-    }
-
-    readonly selectedMutations = remoteData({
-        await:()=>[this.props.store.mutationData, this.props.store.uncalledMutationData],
-        invoke:()=>{
-            if (!this.mutationsTable || this.mutationsTable.selectedMutations.length === 0) {
-                return Promise.resolve(this.props.store.mergedMutationDataIncludingUncalled);
-            } else {
-                return Promise.resolve(this.mutationsTable.selectedMutations);
-            }
+    private highlightedInVAFChartOptions:{[value:string]:{label:string, value:boolean}} = {
+        "true": {
+            label: "Only show highlighted mutations in chart",
+            value: true
+        },
+        "false": {
+            label: "Show all mutations in chart",
+            value: false
         }
-    });
+    };
 
     readonly vafLineChart = MakeMobxView({
         await:()=>[
             this.props.store.coverageInformation,
-            this.selectedMutations,
             this.props.store.samples,
             this.props.store.mutationMolecularProfileId
         ],
@@ -70,6 +103,22 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         render:()=>(
             <div>
                 <div style={{display:"flex"}}>
+                    <div style={{ width: 314, marginRight: 15, marginTop: -6 }} >
+                        <ReactSelect
+                            name="select whether chart filters out non-highlighted mutations"
+                            onChange={(option:any|null)=>{
+                                if (option) {
+                                    this.dataStore.setOnlyShowHighlightedInVAFChart(option.value);
+                                }
+                            }}
+                            options={[this.highlightedInVAFChartOptions.true, this.highlightedInVAFChartOptions.false]}
+                            clearable={false}
+                            searchable={false}
+                            value={this.highlightedInVAFChartOptions[this.dataStore.getOnlyShowHighlightedInVAFChart().toString()]}
+                            styles={DROPDOWN_STYLES}
+                            theme={DROPDOWN_THEME}
+                        />
+                    </div>
                     <div style={{marginTop:3, marginRight:7}}>
                         <LabeledCheckbox
                             checked={this.vafLineChartLogScale}
@@ -87,7 +136,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     />
                 </div>
                 <VAFLineChart
-                    mutations={this.selectedMutations.result!}
+                    mutations={this.props.store.mergedMutationDataIncludingUncalled}
                     dataStore={this.dataStore}
                     samples={this.props.store.samples.result!}
                     coverageInformation={this.props.store.coverageInformation.result!}
@@ -151,48 +200,11 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                         clearable={false}
                         searchable={false}
                         value={this.highlightedInTableOptions[this.dataStore.getOnlyShowHighlightedInTable().toString()]}
-                        styles={{
-                            control: (provided:any)=>({
-                                ...provided,
-                                height:36,
-                                minHeight:36,
-                                border: "1px solid rgb(204,204,204)"
-                            }),
-                            menu: (provided:any)=>({
-                                ...provided,
-                                maxHeight: 400
-                            }),
-                            menuList: (provided:any)=>({
-                                ...provided,
-                                maxHeight:400
-                            }),
-                            placeholder:(provided:any)=>({
-                                ...provided,
-                                color: "#000000"
-                            }),
-                            dropdownIndicator:(provided:any)=>({
-                                ...provided,
-                                color:"#000000"
-                            }),
-                            option:(provided:any, state:any)=>{
-                                return {
-                                    ...provided,
-                                    cursor:"pointer",
-                                };
-                            }
-                        }}
-                        theme={(theme:any)=>({
-                            ...theme,
-                            colors: {
-                                ...theme.colors,
-                                neutral80:"black",
-                                //primary: theme.colors.primary50
-                            },
-                        })}
+                        styles={DROPDOWN_STYLES}
+                        theme={DROPDOWN_THEME}
                     />
                 </div>
-                <PatientViewSelectableMutationTable
-                    ref={this.tableRef}
+                <PatientViewMutationTable
                     dataStore={this.dataStore}
                     onRowClick={this.onTableRowClick}
                     onRowMouseEnter={this.onTableRowMouseEnter}
