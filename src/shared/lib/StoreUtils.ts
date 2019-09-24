@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import $ from 'jquery';
 import {
     fetchVariantAnnotationsByMutation as fetchDefaultVariantAnnotationsByMutation,
     fetchVariantAnnotationsIndexedByGenomicLocation as fetchDefaultVariantAnnotationsIndexedByGenomicLocation,
@@ -55,6 +56,8 @@ import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageSt
 import {stringListToIndexSet} from "public-lib/lib/StringUtils";
 import {GeneticTrackDatum_Data} from "../components/oncoprint/Oncoprint";
 import {normalizeMutations} from "../components/mutationMapper/MutationMapperUtils";
+import AppConfig from "appConfig";
+import {buildCBioPortalPageUrl, getFrontendAssetUrl} from "shared/api/urls";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     uniqueSampleKeyToTumorType : {},
@@ -131,6 +134,10 @@ export async function fetchReferenceGenomeGenes(genomeName:string, hugoGeneSymbo
 export async function fetchAllReferenceGenomeGenes(genomeName:string,
                                                    client: CBioPortalAPI = defaultClient)
 {
+    if (AppConfig.serverConfig.app_name === "public-portal") {
+        // this is temporary
+        return $.get(getFrontendAssetUrl("reactapp/reference_genome_hg19.json"));
+    }
     if (genomeName) {
         return await client.getAllReferenceGenomeGenesUsingGET(
             {genomeName:genomeName});
