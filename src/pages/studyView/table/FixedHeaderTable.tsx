@@ -42,6 +42,7 @@ export type IFixedHeaderTableProps<T> = {
     toggleSelectionOperator?: () => void;
     // used only when showControlsAtTop === true (show controls at bottom otherwise)
     showControlsAtTop?: boolean;
+    hideControls?: boolean;
     showAddRemoveAllButtons?: boolean;
     addAll?: (data: T[]) => void;
     removeAll?: (data: T[]) => void;
@@ -103,6 +104,7 @@ export default class FixedHeaderTable<T> extends React.Component<
         showSelectableNumber: false,
         sortBy: '',
         numberOfSelectedRows: 0,
+        hideControls: false,
     };
 
     constructor(props: IFixedHeaderTableProps<T>) {
@@ -305,7 +307,10 @@ export default class FixedHeaderTable<T> extends React.Component<
     }
 
     componentDidMount(): void {
-        if (this.props.autoFocusSearchAfterRendering) {
+        if (
+            !this.props.hideControls &&
+            this.props.autoFocusSearchAfterRendering
+        ) {
             this.inputElement.focus();
         }
     }
@@ -434,7 +439,9 @@ export default class FixedHeaderTable<T> extends React.Component<
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
-                {this.props.showControlsAtTop && this.getControls()}
+                {!this.props.hideControls &&
+                    this.props.showControlsAtTop &&
+                    this.getControls()}
                 <RVTable
                     width={this.props.width!}
                     height={this.props.height!}
@@ -465,7 +472,9 @@ export default class FixedHeaderTable<T> extends React.Component<
                         );
                     })}
                 </RVTable>
-                {!this.props.showControlsAtTop && this.getControls()}
+                {!this.props.hideControls &&
+                    !this.props.showControlsAtTop &&
+                    this.getControls()}
             </div>
         );
     }

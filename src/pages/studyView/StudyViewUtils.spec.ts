@@ -17,7 +17,7 @@ import {
     generateNumericalData,
     getClinicalDataCountWithColorByCategoryCounts,
     getClinicalDataCountWithColorByClinicalDataCount,
-    getClinicalDataIntervalFilterValues,
+    getDataIntervalFilterValues,
     getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
@@ -39,7 +39,6 @@ import {
     isLogScaleByValues,
     isOccupied,
     makePatientToClinicalAnalysisGroup,
-    mutationCountVsCnaTooltip,
     needAdditionShiftForLogScaleBarChart,
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
@@ -53,16 +52,16 @@ import {
     formatRange,
     getBinName,
     getGroupedClinicalDataByBins,
-    getFilteredAndCompressedDataIntervalFilters,
     updateSavedUserPreferenceChartIds,
 } from 'pages/studyView/StudyViewUtils';
 import {
-    DataBin,
+    ClinicalDataBin,
     Sample,
     StudyViewFilter,
-    ClinicalDataFilterValue,
+    DataFilterValue,
+    CancerStudy,
+    ClinicalAttribute,
 } from 'cbioportal-ts-api-client';
-import { CancerStudy, ClinicalAttribute, Gene } from 'cbioportal-ts-api-client';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { SpecialChartsUniqueKeyEnum } from './StudyViewUtils';
 import { Layout } from 'react-grid-layout';
@@ -77,8 +76,6 @@ import {
     DEFAULT_NA_COLOR,
     RESERVED_CLINICAL_VALUE_COLORS,
 } from 'shared/lib/Colors';
-import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyViewDensityScatterPlot';
-import { shallow } from 'enzyme';
 import { ChartUserSetting } from './StudyViewPageStore';
 
 describe('StudyViewUtils', () => {
@@ -210,6 +207,7 @@ describe('StudyViewUtils', () => {
                         ],
                     },
                 ],
+                genomicDataFilters: [],
                 geneFilters: [
                     {
                         geneQueries: [['GENE1']],
@@ -759,13 +757,11 @@ describe('StudyViewUtils', () => {
         ] as any;
 
         it('generates clinical data interval filter values from data bins', () => {
-            const values: ClinicalDataFilterValue[] = getClinicalDataIntervalFilterValues(
-                [
-                    linearScaleDataBinsWithNa[0],
-                    linearScaleDataBinsWithNa[2],
-                    linearScaleDataBinsWithNa[5],
-                ] as any
-            );
+            const values: DataFilterValue[] = getDataIntervalFilterValues([
+                linearScaleDataBinsWithNa[0],
+                linearScaleDataBinsWithNa[2],
+                linearScaleDataBinsWithNa[5],
+            ] as any);
 
             assert.deepEqual(values, [
                 { end: 20, start: undefined, value: undefined },
@@ -1281,13 +1277,13 @@ describe('StudyViewUtils', () => {
             { start: 20, end: 30 },
             { start: 30, end: 40 },
             { start: 40, end: 50 },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithBothEndsClosedAndSpecialValues = [
             ...filterValuesWithBothEndsClosed,
             { value: 'NA' },
             { value: 'REDACTED' },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithBothEndsOpen = [
             { end: 10 },
@@ -1296,13 +1292,13 @@ describe('StudyViewUtils', () => {
             { start: 30, end: 40 },
             { start: 40, end: 50 },
             { start: 50 },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithBothEndsOpenAndSpecialValues = [
             ...filterValuesWithBothEndsOpen,
             { value: 'NA' },
             { value: 'REDACTED' },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithStartOpen = [
             { end: 10 },
@@ -1310,13 +1306,13 @@ describe('StudyViewUtils', () => {
             { start: 20, end: 30 },
             { start: 30, end: 40 },
             { start: 40, end: 50 },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithStartOpenAndSpecialValues = [
             ...filterValuesWithStartOpen,
             { value: 'NA' },
             { value: 'REDACTED' },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithEndOpen = [
             { start: 10, end: 20 },
@@ -1324,40 +1320,40 @@ describe('StudyViewUtils', () => {
             { start: 30, end: 40 },
             { start: 40, end: 50 },
             { start: 50 },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithEndOpenAndSpecialValues = [
             ...filterValuesWithEndOpen,
             { value: 'NA' },
             { value: 'REDACTED' },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithSpecialValuesOnly = [
             { value: 'NA' },
             { value: 'REDACTED' },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithDistinctNumerals = [
             { start: 20, end: 20 },
             { start: 30, end: 30 },
             { start: 40, end: 40 },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithDistinctNumeralsAndSpecialValues = [
             ...filterValuesWithDistinctNumerals,
             { value: 'NA' },
             { value: 'REDACTED' },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithSingleDistinctValue = [
             { start: 666, end: 666 },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         const filterValuesWithSingleDistinctValueAndSpecialValues = [
             ...filterValuesWithSingleDistinctValue,
             { value: 'NA' },
             { value: 'REDACTED' },
-        ] as ClinicalDataFilterValue[];
+        ] as DataFilterValue[];
 
         it('generates display value for filter values with both ends closed', () => {
             const value = intervalFiltersDisplayValue(
@@ -1455,21 +1451,21 @@ describe('StudyViewUtils', () => {
             { start: 20, end: 30 },
             { start: 30, end: 40 },
             { start: 40, end: 50 },
-        ] as DataBin[];
+        ] as ClinicalDataBin[];
 
         const everyBinDistinct = [
             { start: 0, end: 0 },
             { start: 10, end: 10 },
             { start: 20, end: 20 },
             { start: 30, end: 30 },
-        ] as DataBin[];
+        ] as ClinicalDataBin[];
 
         const someBinsDistinct = [
             { start: 0, end: 0 },
             { start: 10, end: 10 },
             { start: 20, end: 30 },
             { start: 30, end: 40 },
-        ] as DataBin[];
+        ] as ClinicalDataBin[];
 
         it('accepts a list of bins with all distinct values', () => {
             assert.isTrue(

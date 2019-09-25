@@ -46,6 +46,7 @@ export interface IGeneSelectionBoxProps {
         },
         queryStr: string
     ) => void;
+    textAreaHeight?: string;
 }
 
 export enum GeneBoxType {
@@ -278,6 +279,7 @@ export default class OQLTextArea extends React.Component<
                         defaultValue={this.getTextAreaValue()}
                         onChange={this.onChange}
                         data-test="geneSet"
+                        style={{ height: this.props.textAreaHeight }}
                     />
 
                     {this.props.submitButton && this.props.submitButton}
