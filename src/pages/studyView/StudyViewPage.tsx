@@ -616,6 +616,10 @@ export default class StudyViewPage extends React.Component<
                                                     this.store.currentTab ===
                                                     StudyViewPageTabKeyEnum.CLINICAL_DATA
                                                 }
+                                                disableGeneSpecificTab={
+                                                    this.store.currentTab ===
+                                                    StudyViewPageTabKeyEnum.CLINICAL_DATA
+                                                }
                                                 showResetPopup={() => {
                                                     this.showReturnToDefaultChartListModal = true;
                                                 }}
