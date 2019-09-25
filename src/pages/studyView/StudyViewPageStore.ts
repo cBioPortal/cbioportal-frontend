@@ -213,6 +213,13 @@ export type CustomChart = {
     groups: CustomGroup[]
 }
 
+export type GenomicChart = {
+    name?: string,
+    patientAttribute: boolean,
+    molecularProfileId: string,
+    entrezGeneId: number
+}
+
 export const DataBinMethodConstants: {[key: string]: 'DYNAMIC' | 'STATIC'}= {
     STATIC: 'STATIC',
     DYNAMIC: 'DYNAMIC'
@@ -2419,6 +2426,12 @@ export class StudyViewPageStore {
             this.newlyAddedCharts.clear();
             this.newlyAddedCharts.push(uniqueKey);
         }
+    }
+
+    @autobind
+    @action
+    addGenomicChart(newChart:GenomicChart) {
+
     }
 
     @autobind

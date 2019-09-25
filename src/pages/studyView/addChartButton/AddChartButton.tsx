@@ -6,7 +6,8 @@ import 'react-mfb/mfb.css';
 import {
     CustomChart,
     StudyViewPageStore, StudyViewPageTabKey,
-    StudyViewPageTabKeyEnum
+    StudyViewPageTabKeyEnum,
+    GenomicChart
 } from "../StudyViewPageStore";
 import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
@@ -24,6 +25,7 @@ import {ChartTypeEnum, ChartTypeNameEnum} from "../StudyViewConfig";
 import InfoBanner from "../infoBanner/InfoBanner";
 import {GAEvent, serializeEvent, trackEvent} from "../../../shared/lib/tracking";
 import classNames from "classnames";
+import GeneLevelSelection from './geneLevelSelection/GeneLevelSelection';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore,
@@ -32,6 +34,7 @@ export interface IAddChartTabsProps {
     disableGenomicTab?: boolean,
     disableClinicalTab?: boolean,
     disableCustomTab?: boolean,
+    disableGeneLevelTab?: boolean
     onInfoMessageChange?: (newMessage: string) => void,
     showResetPopup:()=>void
 }
@@ -45,13 +48,15 @@ export interface IAddChartButtonProps extends IAddChartTabsProps {
 export enum TabKeysEnum {
     CUSTOM_DATA = 'Custom_Data',
     CLINICAL = 'Clinical',
-    GENOMIC = 'Genomic'
+    GENOMIC = 'Genomic',
+    GENE_LEVEL = 'Gene Level'
 }
 
 export enum TabNamesEnum {
     CUSTOM_DATA = 'Custom Data',
     CLINICAL = 'Clinical',
-    GENOMIC = 'Genomic'
+    GENOMIC = 'Genomic',
+    GENE_LEVEL = 'Gene Level'
 }
 
 export type TabKeys =
@@ -78,7 +83,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     public static defaultProps = {
         disableGenomicTab: false,
         disableClinicalTab: false,
-        disableCustomTab: false
+        disableCustomTab: false,
+        disableGeneLevelTab: false
     };
 
     constructor(props: IAddChartTabsProps, context: any) {
@@ -264,7 +270,17 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         onSubmit={(chart: CustomChart) => {
                             this.infoMessage = `${chart.name} has been added.`;
                             this.props.store.addCustomChart(chart);
-
+                        }}
+                    />
+                </MSKTab>
+                <MSKTab key={3} id={TabKeysEnum.GENE_LEVEL} linkText={TabNamesEnum.GENE_LEVEL}
+                        hide={this.props.disableGeneLevelTab || this.props.store.molecularProfiles.result.length === 0}>
+                    <GeneLevelSelection
+                        molecularProfiles={this.props.store.molecularProfiles.result}
+                        submitButtonText={"Add Chart"}
+                        onSubmit={(chart: GenomicChart) => {
+                            this.infoMessage = `${chart.name} has been added.`;
+                            this.props.store.addGenomicChart(chart);
                         }}
                     />
                 </MSKTab>
