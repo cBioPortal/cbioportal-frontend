@@ -82,6 +82,7 @@ import {
     StudyWithSamples,
     submitToPage, ChartMetaWithDimensionAndChartType,
     UniqueKey,
+    getChartSettingsMap,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -1647,7 +1648,7 @@ export class StudyViewPageStore {
             data.forEach(item => {
                 const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
                 if (this.isNewlyAdded(uniqueKey)) {
-                    this.showAsPieChart(uniqueKey, item.counts.length);
+                    this.showAsPieChart(uniqueKey, item.counts.length, item.clinicalDataType === "PATIENT" ? true : false);
                     this.newlyAddedCharts.remove(uniqueKey);
                 }
             });
@@ -1670,7 +1671,7 @@ export class StudyViewPageStore {
             data.forEach(item => {
                 const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
                 this.unfilteredClinicalDataCountCache[uniqueKey] = item;
-                this.showAsPieChart(uniqueKey, item.counts.length);
+                this.showAsPieChart(uniqueKey, item.counts.length, item.clinicalDataType === "PATIENT" ? true : false);
                 this.newlyAddedCharts.remove(uniqueKey);
             });
         }
@@ -2484,42 +2485,20 @@ export class StudyViewPageStore {
     }, 3000);
 
     // return contains settings for all visible charts each chart setting
-    @computed private get currentChartSettingsMap() {
+    @computed private get currentChartSettingsMap(): { [chartId: string]: ChartUserSetting } {
         let chartSettingsMap: { [chartId: string]: ChartUserSetting } = {};
-        if(this.isSavingUserPreferencePossible) {
-            this.visibleAttributes.forEach(attribute => {
-                const id = attribute.uniqueKey
-                const chartType = this.chartsType.get(id);
-                chartSettingsMap[attribute.uniqueKey] = {
-                    id,
-                    chartType,
-                    patientAttribute: this.chartMetaSet[id].patientAttribute // add chart attribute type
-                }
-                if(chartType === UniqueKey.MUTATED_GENES_TABLE) {
-                    chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = this._filterMutatedGenesTableByCancerGenes;
-                } else if(chartType === UniqueKey.CNA_GENES_TABLE) {
-                    chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = this._filterCNAGenesTableByCancerGenes;
-                }
-                const customChart = this._customChartMap.get(id);
-                if (customChart) { // if its custom chart add groups and name
-                    chartSettingsMap[id].groups = customChart.groups;
-                    chartSettingsMap[id].name = this.chartMetaSet[id].displayName;
-                }
-            });
-
-            // add layout for each chart
-            this.currentGridLayout.forEach(layout => {
-                if (layout.i && chartSettingsMap[layout.i]) {
-                    chartSettingsMap[layout.i].layout = {
-                        x: layout.x,
-                        y: layout.y,
-                        w: layout.w,
-                        h: layout.h
-                    };
-                }
-            });
+        if (this.isSavingUserPreferencePossible) {
+            chartSettingsMap = getChartSettingsMap(
+                this.visibleAttributes,
+                this.columns,
+                this.chartsDimension.toJS(),
+                this.chartsType.toJS(),
+                this._customChartMap.toJS(),
+                this._filterMutatedGenesTableByCancerGenes,
+                this._filterCNAGenesTableByCancerGenes,
+                this.currentGridLayout
+            );
         }
-
         return chartSettingsMap;
     }
 
@@ -2568,6 +2547,32 @@ export class StudyViewPageStore {
         this.previousSettings = {};
     }
 
+    // had to create default variables for eachsince the default chart settings
+    // depends on the number of columns (browser width)
+    @observable private _defualtChartsDimension = observable.map<ChartDimension>();
+    @observable private _defaultChartsType = observable.map<ChartType>();
+    @observable private _defaultVisibleChartIds: string[] = [];
+
+    @autobind
+    @action
+    public resetToDefaultSettings() {
+        this.clearPageSettings();
+        this.loadSettings(_.values(this.defaultChartSettingsMap));
+    }
+
+    @computed get showResetToDefaultButton() {
+        return !_.isEqual(this.currentChartSettingsMap, this.defaultChartSettingsMap);
+    }
+
+    @computed private get defaultChartSettingsMap(): { [chartId: string]: ChartUserSetting } {
+        return getChartSettingsMap(
+            this._defaultVisibleChartIds.map(chartUniqueKey => this.chartMetaSet[chartUniqueKey]),
+            this.columns,
+            this._defualtChartsDimension.toJS(),
+            this._defaultChartsType.toJS(),
+            {});
+    }
+
     @autobind
     @action
     private loadSettings(chartSettngs: ChartUserSetting[]){
@@ -2613,23 +2618,27 @@ export class StudyViewPageStore {
 
         if (!_.isEmpty(this.mutationProfiles.result)) {
             const mutatedGeneMeta = _.find(this.chartMetaSet, chartMeta => chartMeta.uniqueKey === UniqueKey.MUTATED_GENES_TABLE);
+            this.chartsType.set(UniqueKey.MUTATED_GENES_TABLE, ChartTypeEnum.MUTATED_GENES_TABLE);
+            this.chartsDimension.set(UniqueKey.MUTATED_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE]);
             if (mutatedGeneMeta && mutatedGeneMeta.priority !== 0) {
                 this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
             }
-            this.chartsType.set(UniqueKey.MUTATED_GENES_TABLE, ChartTypeEnum.MUTATED_GENES_TABLE);
-            this.chartsDimension.set(UniqueKey.MUTATED_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE]);
         }
         if (!_.isEmpty(this.cnaProfiles.result)) {
             const cnaGeneMeta = _.find(this.chartMetaSet, chartMeta => chartMeta.uniqueKey === UniqueKey.CNA_GENES_TABLE);
+            this.chartsType.set(UniqueKey.CNA_GENES_TABLE, ChartTypeEnum.CNA_GENES_TABLE);
+            this.chartsDimension.set(UniqueKey.CNA_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.CNA_GENES_TABLE]);
             if (cnaGeneMeta && cnaGeneMeta.priority !== 0) {
                 this.changeChartVisibility(UniqueKey.CNA_GENES_TABLE, true);
             }
-            this.chartsType.set(UniqueKey.CNA_GENES_TABLE, ChartTypeEnum.CNA_GENES_TABLE);
-            this.chartsDimension.set(UniqueKey.CNA_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.CNA_GENES_TABLE]);
         }
 
         this.initializeClinicalDataCountCharts();
         this.initializeClinicalDataBinCountCharts();
+
+        this._defualtChartsDimension = observable.map(this.chartsDimension.toJS());
+        this._defaultChartsType = observable.map(this.chartsType.toJS());
+        this._defaultVisibleChartIds = this.visibleAttributes.map(attribute => attribute.uniqueKey);
     }
 
     @action
@@ -2695,7 +2704,7 @@ export class StudyViewPageStore {
 
         // This is also the proper place to initialize the special charts visibility
         _.each(this.specialChartKeysInCustomCharts, key => {
-            this.showAsPieChart(key, key === UniqueKey.CANCER_STUDIES ? this.cancerStudiesData.result.length : 2);
+            this.showAsPieChart(key, key === UniqueKey.CANCER_STUDIES ? this.cancerStudiesData.result.length : 2, false);
         });
     }
     private getTableDimensionByNumberOfRecords(records: number) {
@@ -2830,7 +2839,7 @@ export class StudyViewPageStore {
     initializeClinicalDataCountCharts() {
         _.each(this.initialVisibleAttributesClinicalDataCountData.result, item => {
             const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
-            this.showAsPieChart(uniqueKey, item.counts.length);
+            this.showAsPieChart(uniqueKey, item.counts.length, item.clinicalDataType === "PATIENT" ? true : false);
         });
     }
 
@@ -2838,11 +2847,12 @@ export class StudyViewPageStore {
     initializeClinicalDataBinCountCharts() {
         _.each(_.groupBy(this.initialVisibleAttributesClinicalDataBinCountData.result, 'attributeId'), (item:DataBin[], attributeId:string) => {
             const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item[0].clinicalDataType, attributeId);
+            this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
+            this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
+
             if (shouldShowChart(this.initialFilters, item.length, this.samples.result.length)) {
                 this._chartVisibility.set(uniqueKey, true);
             }
-            this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
-            this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
         });
     }
 
@@ -3829,7 +3839,7 @@ export class StudyViewPageStore {
     });
 
     @action
-    showAsPieChart(uniqueKey: string, dataSize: number) {
+    showAsPieChart(uniqueKey: string, dataSize: number, patientAttribute:boolean) {
         if (shouldShowChart(this.initialFilters, dataSize, this.samples.result.length)) {
             this.changeChartVisibility(uniqueKey, true);
 
