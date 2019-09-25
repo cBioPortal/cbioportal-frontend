@@ -345,7 +345,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                             <button className='btn btn-primary btn-sm'
                                     onClick={() => {
                                         this.store.hideRestoreSettingsMsg = true;
-                                        this.store.undoUserSettings();
                                     }}
                                     style={{marginLeft: '10px'}}>Keep Saved Layout
                             </button>
@@ -353,6 +352,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                             <button className='btn btn-primary btn-sm'
                                     onClick={() => {
                                         this.store.hideRestoreSettingsMsg = true;
+                                        this.store.undoUserSettings();
                                     }}
                                     style={{marginLeft: '10px'}}>Revert to Previous Layout
                             </button>
