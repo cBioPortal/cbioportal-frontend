@@ -14,7 +14,7 @@ import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import {BarDatum} from "./charts/barChart/BarChart";
 import {
-    StudyViewPageTabKeyEnum
+    StudyViewPageTabKeyEnum, ChartUserSetting, CustomChart
 } from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -1579,4 +1579,52 @@ export function isSpecialChart(chartMeta: ChartMeta) {
     return SPECIAL_CHARTS.findIndex(
         cm => cm.uniqueKey === chartMeta.uniqueKey
     ) > -1;
+}
+
+
+export function getChartSettingsMap(visibleAttributes: ChartMeta[],
+    columns: number,
+    chartDimensionSet: { [uniqueId: string]: ChartDimension },
+    chartTypeSet: { [uniqueId: string]: ChartType },
+    customChartSet: { [uniqueId: string]: CustomChart },
+    filterMutatedGenesTableByCancerGenes: boolean = true,
+    filterCNAGenesTableByCancerGenes: boolean = true,
+    gridLayout?: ReactGridLayout.Layout[]) {
+
+    if (!gridLayout) {
+        gridLayout = calculateLayout(visibleAttributes, columns, chartDimensionSet, []);
+    }
+
+    let chartSettingsMap: { [chartId: string]: ChartUserSetting } = {};
+    visibleAttributes.forEach(attribute => {
+        const id = attribute.uniqueKey
+        const chartType = chartTypeSet[id] || 'NONE';
+        chartSettingsMap[attribute.uniqueKey] = {
+            id: attribute.uniqueKey,
+            chartType,
+            patientAttribute: attribute.patientAttribute // add chart attribute type
+        }
+        if (chartType === UniqueKey.MUTATED_GENES_TABLE) {
+            chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
+        } else if (chartType === UniqueKey.CNA_GENES_TABLE) {
+            chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterCNAGenesTableByCancerGenes;
+        }
+        const customChart = customChartSet[id];
+        if (customChart) { // if its custom chart add groups and name
+            chartSettingsMap[id].groups = customChart.groups;
+            chartSettingsMap[id].name = attribute.displayName;
+        }
+    });
+    // add layout for each chart
+    gridLayout.forEach(layout => {
+        if (layout.i && chartSettingsMap[layout.i]) {
+            chartSettingsMap[layout.i].layout = {
+                x: layout.x,
+                y: layout.y,
+                w: layout.w,
+                h: layout.h
+            };
+        }
+    });
+    return chartSettingsMap;
 }
