@@ -3400,9 +3400,9 @@ export class ResultsViewPageStore {
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         getSelectedProfileMap: () => this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any protein profiles
         fetchData: () => {
-            let studyIds = Object.keys(this.selectedmRNAEnrichmentProfileMap.result!);
+            let studyIds = Object.keys(this.selectedProteinEnrichmentProfileMap.result!);
             if (studyIds.length === 1) {
-                const molecularProfileId = this.selectedmRNAEnrichmentProfileMap.result![studyIds[0]].molecularProfileId;
+                const molecularProfileId = this.selectedProteinEnrichmentProfileMap.result![studyIds[0]].molecularProfileId;
                 const groups: MolecularProfileCasesGroupFilter[] = [{
                     molecularProfileCaseIdentifiers: this.alteredSamples.result
                         .filter(s => (s.studyId === studyIds[0]))
