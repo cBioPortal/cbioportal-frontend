@@ -3,7 +3,7 @@ import {SingleGeneQuery} from "shared/lib/oql/oql-parser";
 import {unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
 import {
     ClinicalDataCount,
-    ClinicalDataIntervalFilterValue,
+    DataIntervalFilterValue,
     DataBin,
     SampleIdentifier,
     StudyViewFilter
@@ -456,6 +456,11 @@ export function getVirtualStudyDescription(
                 filterLines.push(`- ${name}: ${intervalFiltersDisplayValue(clinicalDataIntervalFilter.values)}`);
             });
 
+            _.each(filter.genomicDataIntervalFilters || [], (genomicDataIntervalFilter) => {
+                let name = attributeNamesSet[genomicDataIntervalFilter.hugoGeneSymbol + '_' + genomicDataIntervalFilter.molecularProfileId];
+                filterLines.push(`- ${name}: ${intervalFiltersDisplayValue(genomicDataIntervalFilter.values)}`);
+            });
+
             _.each(filter.sampleIdentifiersSet || {}, (sampleIdentifiers, id) => {
                 let name = attributeNamesSet[id] || id;
                 filterLines.push(`- ${name}: ${sampleIdentifiers.length} samples`);
@@ -477,6 +482,7 @@ export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFi
     const flag = !(_.isEmpty(filter) || (
             _.isEmpty(filter.clinicalDataEqualityFilters) &&
             _.isEmpty(filter.clinicalDataIntervalFilters) &&
+            _.isEmpty(filter.genomicDataIntervalFilters) &&
             _.isEmpty(filter.cnaGenes) &&
             _.isEmpty(filter.mutatedGenes) &&
             _.isEmpty(filter.fusionGenes) &&
@@ -564,15 +570,15 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
     return svg;
 }
 
-export function getClinicalDataIntervalFilterValues(data: DataBin[]): ClinicalDataIntervalFilterValue[]
+export function getDataIntervalFilterValues(data: DataBin[]): DataIntervalFilterValue[]
 {
-    const values: Partial<ClinicalDataIntervalFilterValue>[] = data.map(dataBin => ({
+    const values: Partial<DataIntervalFilterValue>[] = data.map(dataBin => ({
         start: dataBin.start,
         end: dataBin.end,
         value: dataBin.start === undefined && dataBin.end === undefined ? dataBin.specialValue : undefined
     }));
 
-    return values as ClinicalDataIntervalFilterValue[];
+    return values as DataIntervalFilterValue[];
 }
 
 export function filterNumericalBins(data: DataBin[]) {
@@ -834,7 +840,7 @@ export function closestIntegerPowerOfTen(value: number, dataBinPosition: DataBin
     }
 }
 
-export function intervalFiltersDisplayValue(values: ClinicalDataIntervalFilterValue[]) {
+export function intervalFiltersDisplayValue(values: DataIntervalFilterValue[]) {
     const categories = values
         .filter(value => value.start === undefined && value.end === undefined)
         .map(value => value.value);

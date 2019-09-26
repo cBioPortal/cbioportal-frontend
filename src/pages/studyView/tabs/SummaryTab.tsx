@@ -6,7 +6,7 @@ import {observable} from 'mobx';
 import {CopyNumberAlterationIdentifier, GeneIdentifier, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import {
-    ClinicalDataIntervalFilterValue,
+    DataIntervalFilterValue,
     CopyNumberGeneFilterElement,
     DataBin,
     RectangleBounds
@@ -115,10 +115,10 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             case BAR_CHART: {
                 //if the chart is one of the custom charts then get the appropriate promise
                 if(this.store.isCustomChart(chartMeta.uniqueKey)) {
-                    props.filters = this.store.getCustomChartFilters(props.chartMeta!.uniqueKey);
-                    props.onValueSelection = this.handlers.setCustomChartFilters;
-                    props.onResetSelection = this.handlers.setCustomChartFilters;
-                    props.promise = this.store.getCustomChartDataBin(chartMeta);
+                    props.promise = this.store.getGenomicChartDataBin(chartMeta);
+                    props.filters = this.store.getGenomicDataIntervalFiltersByUniqueKey(props.chartMeta!.uniqueKey);
+                    props.onDataBinSelection = this.store.updateGenomicDataIntervalFilters;
+                    props.onResetSelection = this.store.updateGenomicDataIntervalFilters;
                 } else {
                     props.promise = this.store.getClinicalDataBin(chartMeta);
                     props.filters = this.store.getClinicalDataIntervalFiltersByUniqueKey(chartMeta.uniqueKey);

@@ -43,6 +43,7 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
                     attributesMetaSet={this.props.store.chartMetaSet}
                     updateClinicalDataEqualityFilter={this.props.store.updateClinicalDataEqualityFilters}
                     updateClinicalDataIntervalFilter={this.props.store.updateClinicalDataIntervalFiltersByValues}
+                    updateGenomicDataIntervalFilter={this.props.store.updateGenomicDataIntervalFiltersByValues}
                     updateCustomChartFilter={this.props.store.setCustomChartFilters}
                     removeMutatedGeneFilter={this.props.store.removeMutatedGeneFilter}
                     removeFusionGeneFilter={this.props.store.removeFusionGeneFilter}

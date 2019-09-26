@@ -17,7 +17,7 @@ import {
     generateNumericalData,
     getClinicalDataCountWithColorByCategoryCounts,
     getClinicalDataCountWithColorByClinicalDataCount,
-    getClinicalDataIntervalFilterValues,
+    getDataIntervalFilterValues,
     getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
@@ -53,7 +53,7 @@ import {
     formatRange,
 } from 'pages/studyView/StudyViewUtils';
 import {
-    ClinicalDataIntervalFilterValue,
+    DataIntervalFilterValue,
     DataBin,
     Sample,
     StudyViewFilter
@@ -151,6 +151,7 @@ describe('StudyViewUtils', () => {
                         'value': `10`
                     }]
                 }],
+                genomicDataIntervalFilters: [],
                 mutatedGenes: [{ "entrezGeneIds": [1] }],
                 fusionGenes: [{ "entrezGeneIds": [1] }],
                 cnaGenes: [{ "alterations": [{ "entrezGeneId": 2, "alteration": -2 }] }],
@@ -627,7 +628,7 @@ describe('StudyViewUtils', () => {
         ] as any;
 
         it('generates clinical data interval filter values from data bins', () => {
-            const values: ClinicalDataIntervalFilterValue[] = getClinicalDataIntervalFilterValues(
+            const values: DataIntervalFilterValue[] = getDataIntervalFilterValues(
                 [linearScaleDataBinsWithNa[0], linearScaleDataBinsWithNa[2], linearScaleDataBinsWithNa[5]] as any);
 
             assert.deepEqual(values, [
@@ -862,13 +863,13 @@ describe('StudyViewUtils', () => {
             {start: 20, end: 30},
             {start: 30, end: 40},
             {start: 40, end: 50}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithBothEndsClosedAndSpecialValues = [
             ...filterValuesWithBothEndsClosed,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithBothEndsOpen = [
             {end: 10},
@@ -877,13 +878,13 @@ describe('StudyViewUtils', () => {
             {start: 30, end: 40},
             {start: 40, end: 50},
             {start: 50}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithBothEndsOpenAndSpecialValues = [
             ...filterValuesWithBothEndsOpen,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithStartOpen = [
             {end: 10},
@@ -891,13 +892,13 @@ describe('StudyViewUtils', () => {
             {start: 20, end: 30},
             {start: 30, end: 40},
             {start: 40, end: 50},
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithStartOpenAndSpecialValues = [
             ...filterValuesWithStartOpen,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithEndOpen = [
             {start: 10, end: 20},
@@ -905,40 +906,40 @@ describe('StudyViewUtils', () => {
             {start: 30, end: 40},
             {start: 40, end: 50},
             {start: 50}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithEndOpenAndSpecialValues = [
             ...filterValuesWithEndOpen,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithSpecialValuesOnly = [
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithDistinctNumerals = [
             {start: 20, end: 20},
             {start: 30, end: 30},
             {start: 40, end: 40}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithDistinctNumeralsAndSpecialValues = [
             ...filterValuesWithDistinctNumerals,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithSingleDistinctValue = [
             {start: 666, end: 666}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         const filterValuesWithSingleDistinctValueAndSpecialValues = [
             ...filterValuesWithSingleDistinctValue,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as DataIntervalFilterValue[];
 
         it ('generates display value for filter values with both ends closed', () => {
             const value = intervalFiltersDisplayValue(filterValuesWithBothEndsClosed);

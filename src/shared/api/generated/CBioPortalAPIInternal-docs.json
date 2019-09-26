@@ -1115,6 +1115,55 @@
         }
       }
     },
+    "/genomic-data-bin-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch genomic data bin counts by study view filter",
+        "operationId": "fetchGenomicDataBinCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataBinMethod",
+            "in": "query",
+            "description": "Method for data binning",
+            "required": false,
+            "type": "string",
+            "default": "DYNAMIC",
+            "enum": [
+              "STATIC",
+              "DYNAMIC"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "genomicDataBinCountFilter",
+            "description": "Genomic data bin count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenomicDataBinCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DataBin"
+              }
+            }
+          }
+        }
+      }
+    },
     "/info": {
       "get": {
         "tags": [
@@ -2041,26 +2090,11 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ClinicalDataIntervalFilterValue"
+            "$ref": "#/definitions/DataIntervalFilterValue"
           }
         }
       },
       "title": "ClinicalDataIntervalFilter"
-    },
-    "ClinicalDataIntervalFilterValue": {
-      "type": "object",
-      "properties": {
-        "end": {
-          "type": "number"
-        },
-        "start": {
-          "type": "number"
-        },
-        "value": {
-          "type": "string"
-        }
-      },
-      "title": "ClinicalDataIntervalFilterValue"
     },
     "CoExpression": {
       "type": "object",
@@ -2282,6 +2316,21 @@
       },
       "title": "DataBin"
     },
+    "DataIntervalFilterValue": {
+      "type": "object",
+      "properties": {
+        "end": {
+          "type": "number"
+        },
+        "start": {
+          "type": "number"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "DataIntervalFilterValue"
+    },
     "DensityPlotBin": {
       "type": "object",
       "properties": {
@@ -2492,6 +2541,66 @@
         }
       },
       "title": "GenesetMolecularData"
+    },
+    "GenomicDataBinCountFilter": {
+      "type": "object",
+      "properties": {
+        "genomicDataBinFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenomicDataBinFilter"
+          }
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "title": "GenomicDataBinCountFilter"
+    },
+    "GenomicDataBinFilter": {
+      "type": "object",
+      "properties": {
+        "customBins": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "disableLogScale": {
+          "type": "boolean"
+        },
+        "end": {
+          "type": "number"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "title": "GenomicDataBinFilter"
+    },
+    "GenomicDataIntervalFilter": {
+      "type": "object",
+      "properties": {
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataIntervalFilterValue"
+          }
+        }
+      },
+      "title": "GenomicDataIntervalFilter"
     },
     "Gistic": {
       "type": "object",
@@ -3018,6 +3127,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/FusionGeneFilter"
+          }
+        },
+        "genomicDataIntervalFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenomicDataIntervalFilter"
           }
         },
         "mutatedGenes": {

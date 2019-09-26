@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import styles from "./styles.module.scss";
-import {ClinicalDataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
+import {DataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
 import {UniqueKey} from 'pages/studyView/StudyViewUtils';
 import {
     ChartMeta,
@@ -31,7 +31,8 @@ export interface IUserSelectionsProps {
     comparisonGroupSelection:StudyViewComparisonGroup[];
     attributesMetaSet: { [id: string]: ChartMeta };
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
-    updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
+    updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: DataIntervalFilterValue[]) => void;
+    updateGenomicDataIntervalFilter: (chartMeta: ChartMeta, values: DataIntervalFilterValue[]) => void;
     updateCustomChartFilter: (chartMeta: ChartMeta, values: string[]) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
@@ -135,6 +136,27 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                         ]}
                         operation={':'}
                         group={false}/></div>
+                );
+            }
+            return acc;
+        }, components);
+
+        // Genomic Bar chart filters
+        _.reduce((this.props.filter.genomicDataIntervalFilters || []), (acc, genomicDataIntervalFilter) => {
+            const chartMeta = this.props.attributesMetaSet[genomicDataIntervalFilter.hugoGeneSymbol + '_' + genomicDataIntervalFilter.molecularProfileId];
+            if (chartMeta) {
+                acc.push(
+                    <div className={styles.parentGroupLogic}><GroupLogic
+                        components={[
+                            <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
+                            <PillTag
+                                content={intervalFiltersDisplayValue(genomicDataIntervalFilter.values)}
+                                backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                                onDelete={() => this.props.updateGenomicDataIntervalFilter(chartMeta, [])}
+                            />
+                        ]}
+                        operation={':'}
+                        group={false} /></div>
                 );
             }
             return acc;

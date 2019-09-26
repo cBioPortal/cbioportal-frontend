@@ -36,10 +36,10 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
     @computed
     get newChartInfo(): GenomicChart {
         return {
-            name: this.validGene!.hugoGeneSymbol,
+            name: this.validGene!.hugoGeneSymbol+': '+this.selectedProfileOption!.label,
             patientAttribute: false,
             molecularProfileId: this.selectedProfileOption!.value,
-            entrezGeneId: this.validGene!.entrezGeneId
+            hugoGeneSymbol: this.validGene!.hugoGeneSymbol
         }
     }
 
