@@ -9,7 +9,7 @@ import { action, computed, observable } from 'mobx';
 import styles from "./styles.module.scss";
 import { serializeEvent } from 'shared/lib/tracking';
 import { ClinicalDataTypeEnum } from 'pages/studyView/StudyViewUtils';
-import ReactSelect from "react-select1";
+import ReactSelect from "react-select";
 import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
@@ -27,7 +27,7 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
     @observable validGene: Gene | undefined = undefined;
     @observable isQueryInvalid: boolean = true;
     @observable isMultipleValidGene: boolean = false;
-    @observable selectedProfileId = this.props.molecularProfiles.length > 0 ? this.props.molecularProfiles[0].molecularProfileId : undefined;
+    @observable selectedProfileOption = this.props.molecularProfiles.length > 0 ? {value: this.props.molecularProfiles[0].molecularProfileId, label: this.props.molecularProfiles[0].name} : undefined;
 
     public static defaultProps = {
         disableGrouping: false
@@ -38,7 +38,7 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
         return {
             name: this.validGene!.hugoGeneSymbol,
             patientAttribute: false,
-            molecularProfileId: this.selectedProfileId!,
+            molecularProfileId: this.selectedProfileOption!.value,
             entrezGeneId: this.validGene!.entrezGeneId
         }
     }
@@ -61,14 +61,14 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
 
     @computed
     get addChartButtonDisabled() {
-        return !this.validGene || !this.selectedProfileId;
+        return !this.validGene || !this.selectedProfileOption;
     }
 
     @autobind
     @action
     handleSelect(option: any) {
         if (option && option.value) {
-            this.selectedProfileId = option.value;
+            this.selectedProfileOption = option;
         }
     }
 
@@ -113,11 +113,11 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
                 Molecular Profile:
                 <div>
                     <ReactSelect
-                            value={this.selectedProfileId}
+                            value={this.selectedProfileOption}
                             onChange={this.handleSelect}
                             options={this.molecularProfileOptions}
-                            clearable={false}
-                            autosize={false}
+                            isClearable={false}
+                            isSearchable={false}
                     />
                 </div>
 
