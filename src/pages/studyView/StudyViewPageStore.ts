@@ -85,6 +85,7 @@ import {
     submitToPage, ChartMetaWithDimensionAndChartType,
     UniqueKey,
     getChartSettingsMap,
+    ChartMetaDataTypeEnum,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -970,6 +971,7 @@ export class StudyViewPageStore {
     public clinicalDataBinPromises: { [id: string]: MobxPromise<DataBin[]> } = {};
     public clinicalDataCountPromises: { [id: string]: MobxPromise<ClinicalDataCountSummary[]> } = {};
     public customChartsPromises: { [id: string]: MobxPromise<ClinicalDataCountSummary[]> } = {};
+    public customGenomicChartPromises: { [id: string]: MobxPromise<DataBin[]> } = {};
 
     private _chartSampleIdentifiersFilterSet =  observable.map<SampleIdentifier[]>();
 
@@ -1029,6 +1031,7 @@ export class StudyViewPageStore {
 
     //used in saving custom added charts
     @observable private _customChartMap = observable.shallowMap<CustomChart>();
+    @observable private _customGenomicChartMap = observable.shallowMap<GenomicChart>();
     @observable private _customCharts = observable.shallowMap<ChartMeta>();
     @observable private _customChartsSelectedCases = observable.shallowMap<CustomChartIdentifierWithValue[]>();
 
@@ -2431,6 +2434,25 @@ export class StudyViewPageStore {
     @autobind
     @action
     addGenomicChart(newChart:GenomicChart) {
+        const uniqueKey = newChart.entrezGeneId + '_' + newChart.molecularProfileId;
+        const newChartName = newChart.name ? newChart.name : this.getDefaultCustomChartName();
+        let chartMeta:ChartMeta = {
+            uniqueKey: uniqueKey,
+            displayName: newChartName,
+            description: newChartName,
+            dataType: ChartMetaDataTypeEnum.GENOMIC,
+            patientAttribute: false,
+            renderWhenDataChange: false,
+            priority: 1
+        };
+
+        this._customCharts.set(uniqueKey, chartMeta);
+        this._customGenomicChartMap.set(uniqueKey, newChart);
+        // // this._customChartMap.set(uniqueKey, newChart)
+        this._chartVisibility.set(uniqueKey, true);
+        // this._customChartsSelectedCases.set(uniqueKey, allCases);
+        this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
+        this.chartsDimension.set(uniqueKey, {w: 2, h: 1});
 
     }
 
@@ -4040,6 +4062,19 @@ export class StudyViewPageStore {
                 this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART]);
             }
         }
+    }
+
+
+    public getCustomChartDataBin(chartMeta: ChartMeta) {
+        this.customGenomicChartPromises[chartMeta.uniqueKey] = remoteData<DataBin[]>({
+            await: () => {
+                
+            },
+            invoke: () => {
+
+             }
+        })
+        return this.customGenomicChartPromises[chartMeta.uniqueKey];
     }
 
     public getCustomChartDataCount(chartMeta: ChartMeta) {

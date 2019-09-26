@@ -113,10 +113,18 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case BAR_CHART: {
-                props.promise = this.store.getClinicalDataBin(chartMeta);
-                props.filters = this.store.getClinicalDataIntervalFiltersByUniqueKey(chartMeta.uniqueKey);
-                props.onDataBinSelection = this.handlers.onDataBinSelection;
-                props.onResetSelection = this.handlers.onDataBinSelection;
+                //if the chart is one of the custom charts then get the appropriate promise
+                if(this.store.isCustomChart(chartMeta.uniqueKey)) {
+                    props.filters = this.store.getCustomChartFilters(props.chartMeta!.uniqueKey);
+                    props.onValueSelection = this.handlers.setCustomChartFilters;
+                    props.onResetSelection = this.handlers.setCustomChartFilters;
+                    props.promise = this.store.getCustomChartDataBin(chartMeta);
+                } else {
+                    props.promise = this.store.getClinicalDataBin(chartMeta);
+                    props.filters = this.store.getClinicalDataIntervalFiltersByUniqueKey(chartMeta.uniqueKey);
+                    props.onDataBinSelection = this.handlers.onDataBinSelection;
+                    props.onResetSelection = this.handlers.onDataBinSelection;
+                }
                 props.onToggleLogScale = this.handlers.onToggleLogScale;
                 props.showLogScaleToggle = this.store.isLogScaleToggleVisible(
                     chartMeta.uniqueKey, props.promise!.result);
