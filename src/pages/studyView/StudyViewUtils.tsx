@@ -367,6 +367,9 @@ export function getClinicalDataType(patientAttribute: boolean): ClinicalDataType
 }
 
 export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): string {
+    if(attribute.patientAttribute === undefined) {
+        console.log(attribute)
+    }
     const clinicalDataType = getClinicalDataType(attribute.patientAttribute);
     return getClinicalAttributeUniqueKeyByDataTypeAttrId(clinicalDataType, attribute.clinicalAttributeId);
 }

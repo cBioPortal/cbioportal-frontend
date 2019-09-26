@@ -1518,6 +1518,10 @@ export class StudyViewPageStore {
     }
 
     public geCurrentBins(chartMeta: ChartMeta): number[] {
+        if (this.isCustomChart(chartMeta.uniqueKey)) {
+            return [] as number[];
+        }
+        
         return _.uniq(_.reduce(this.getClinicalDataBin(chartMeta).result, (acc, next) => {
             if (next.start) {
                 acc.push(next.start);
@@ -4066,14 +4070,31 @@ export class StudyViewPageStore {
 
 
     public getCustomChartDataBin(chartMeta: ChartMeta) {
-        this.customGenomicChartPromises[chartMeta.uniqueKey] = remoteData<DataBin[]>({
-            await: () => {
-                
-            },
-            invoke: () => {
-
-             }
-        })
+        console.log("getbins");
+        if(!this.customGenomicChartPromises.hasOwnProperty(chartMeta.uniqueKey)) {
+            this.customGenomicChartPromises[chartMeta.uniqueKey] = remoteData<DataBin[]>({
+                await: () => [],
+                invoke: async () => {
+                    return [
+                        {
+                            attributeId: "12",
+                            clinicalDataType: "SAMPLE",
+                            count: 1,
+                            start: 10,
+                            end: 20
+                        },
+                        {
+                            attributeId: "123",
+                            clinicalDataType: "SAMPLE",
+                            count: 5,
+                            start: 20,
+                            end: 30
+                        }
+                    ] as DataBin[]
+                 },
+                 default: []
+            });
+        }
         return this.customGenomicChartPromises[chartMeta.uniqueKey];
     }
 
