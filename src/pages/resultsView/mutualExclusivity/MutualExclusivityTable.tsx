@@ -128,7 +128,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.P_VALUE] = {
             name: "p-Value",
             render: (d: MutualExclusivity) => <span>{formatPValue(d.pValue)}</span>,
-            tooltip: <span>Derived from Fisher Exact Test</span>,
+            tooltip: <span>Derived from one-sided Fisher Exact Test</span>,
             sortBy: (d: MutualExclusivity) => d.pValue,
             download: (d: MutualExclusivity) => formatPValue(d.pValue)
         };
