@@ -23,7 +23,8 @@ function waitForOncoprint(timeout) {
     browser.waitUntil(()=>{
         return !browser.isExisting(".oncoprintLoadingIndicator") // wait for loading indicator to hide, and
             && browser.isExisting('#oncoprintDiv svg rect')// as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
-            && (browser.getCssProperty(".oncoprintContainer", "opacity").value === 1); // oncoprint has faded in
+            && (browser.getCssProperty(".oncoprintContainer", "opacity").value === 1) // oncoprint has faded in
+            && $('.oncoprint__controls').isExisting(); // oncoprint controls are showing
     }, timeout);
 }
 
@@ -161,8 +162,11 @@ function selectReactSelectOption(parent, optionText) {
     reactSelectOption(parent, optionText).click();
 }
 
-function reactSelectOption(parent, optionText) {
+function reactSelectOption(parent, optionText, loose = false) {
     parent.$('.Select-control').click();
+    if (loose) {
+        return  parent.$('.Select-option*='+optionText);
+    }
     return parent.$('.Select-option='+optionText);
 }
 
