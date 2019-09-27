@@ -11,6 +11,7 @@ stats.json
 .DS_Store
 tsDist/
 dist/
+common-dist/
 commons-dist/
 .sass-cache
 .rpt2_cache
