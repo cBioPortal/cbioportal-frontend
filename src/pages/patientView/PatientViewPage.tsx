@@ -499,7 +499,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         )
                                     }
                                 </MSKTab>
-                    {patientViewPageStore.samples.isComplete && patientViewPageStore.samples.result.length > 1 && (
+                    {patientViewPageStore.sampleIds.length > 1 && patientViewPageStore.existsSomeMutationWithVAFData && (
                         <MSKTab key={1} id="genomicEvolution" linkText="Genomic Evolution">
                             <PatientViewMutationsTab
                                 store={patientViewPageStore}
