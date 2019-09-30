@@ -49,11 +49,13 @@ export class CopyDownloadButtons extends React.Component<ICopyDownloadButtonsPro
                 overlay={<span className="alert-success">Copied!</span>}
                 visible={this.props.showCopyMessage}
                 {...this.baseTooltipProps}
+                overlayClassName={this.props.className}
             >
                 <DefaultTooltip
                     overlay={<span>Copy</span>}
                     visible={this.props.showCopyMessage ? false : undefined}
                     {...this.baseTooltipProps}
+                    overlayClassName={this.props.className}
                 >
                     {button}
                 </DefaultTooltip>
@@ -67,6 +69,7 @@ export class CopyDownloadButtons extends React.Component<ICopyDownloadButtonsPro
             <DefaultTooltip
                 overlay={<span>Download TSV</span>}
                 {...this.baseTooltipProps}
+                overlayClassName={this.props.className}
             >
                 <Button className="btn-sm" onClick={this.props.handleDownload}>
                     {this.props.downloadLabel} <i className='fa fa-cloud-download'/>

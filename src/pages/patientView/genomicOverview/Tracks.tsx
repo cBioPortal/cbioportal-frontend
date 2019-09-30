@@ -6,6 +6,9 @@ import {CopyNumberSeg, Mutation, Sample} from 'shared/api/generated/CBioPortalAP
 import SampleManager from "../SampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import { IKeyedIconData, IIconData } from './GenomicOverviewUtils';
+import { observable, action } from 'mobx';
+import autobind from 'autobind-decorator';
+import { observer } from 'mobx-react';
 
 interface TracksPropTypes {
     mutations:Array<Mutation>;
@@ -15,21 +18,25 @@ interface TracksPropTypes {
     width:number;
     mutationGenePanelIconData?:IKeyedIconData;
     copyNumberGenePanelIconData?:IKeyedIconData;
+    onSelectGenePanel?:(name:string)=>void;
 }
 
 export const DEFAULT_GENOME_BUILD="GRCh37";
+const noGenePanelMessage = 'Gene panel information not found. Sample is presumed to be whole exome/genome sequenced.';
 
-
+@observer
 export default class Tracks extends React.Component<TracksPropTypes, {}> {
-
+    @observable genePanelInTooltip:string = '';
+    
     componentDidMount() {
         this.drawTracks();
     }
-
-    componentDidUpdate() {
-        this.drawTracks();
+    
+    @autobind
+    @action setGenePanelInTooltip(genePanelId:string) {
+        this.genePanelInTooltip = genePanelId;
     }
-
+    
     drawTracks() {
 
         // --- construct params ---
@@ -77,7 +84,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
                     _tmp.push(_dataObj.segmentMean);
                     raphaelData.push(_tmp);
                 });
-                tracksHelper.plotCnSegs(paper, config, chmInfo, rowIndex, raphaelData, 1, 3, 2, 5, sample.id, genePanelIconData);
+                tracksHelper.plotCnSegs(paper, config, chmInfo, rowIndex, raphaelData, 1, 3, 2, 5, sample.id, genePanelIconData, this.setGenePanelInTooltip);
                 rowIndex = rowIndex + 1;
 
                 if (this.props.sampleManager.samples.length > 1) {
@@ -86,8 +93,9 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
                     const $newContainer = $('<svg height="12" width="12" />').attr(pos);
                     $container.replaceWith($newContainer);
 
-                    let comp: any = this.props.sampleManager.getComponentForSample(sample.id);
-
+                    let comp: any = this.props.sampleManager.getComponentForSample(
+                        sample.id, 1, '', null,
+                        this.props.onSelectGenePanel);
                     ReactDOM.render(
                         comp,
                         $newContainer[0]
@@ -109,7 +117,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
                 var _trackData = _.filter(this.props.mutations, function (_mutObj: any) {
                     return _mutObj.sampleId === sample.id;
                 });
-                tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, sample.id, genePanelIconData);
+                tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, sample.id, genePanelIconData, this.setGenePanelInTooltip);
                 rowIndex = rowIndex + 1;
 
                 if (this.props.sampleManager.samples.length > 1) {
@@ -120,7 +128,9 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
                     $newContainer.attr(pos);
                     $container.replaceWith($newContainer);
 
-                    let comp: any = this.props.sampleManager.getComponentForSample(sample.id);
+                    let comp: any = this.props.sampleManager.getComponentForSample(
+                        sample.id, 1, '', null,
+                        this.props.onSelectGenePanel);
 
                     ReactDOM.render(
                         comp,
@@ -130,11 +140,26 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
             };
         });
         // --- end of mutation events bar chart ---
-    }
+    };
 
     public render() {
         return (
-            <div className="genomicOverviewTracksContainer" />
+            <React.Fragment>
+                <div className="genomicOverviewTracksContainer" />
+                <div className="tooltip-content" style={{display: 'none'}}>
+                    <span>
+                        { this.genePanelInTooltip ? 
+                            <React.Fragment>
+                                Gene panel:{' '}
+                                <a onClick={() => this.props.onSelectGenePanel!(this.genePanelInTooltip)}>        
+                                    {this.genePanelInTooltip}
+                                </a>
+                            </React.Fragment>
+                            : noGenePanelMessage
+                        }
+                    </span>
+                </div>
+            </React.Fragment>
         );
     }
 }
