@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
     ClinicalData, MolecularProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
     CopyNumberCount, ClinicalDataMultiStudyFilter, ReferenceGenomeGene, GenePanelData, GenePanel
@@ -7,7 +6,7 @@ import {
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 import {
-    Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
+    default as CBioPortalAPIInternal
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action, runInAction} from "mobx";
 import {remoteData} from "../../../public-lib/api/remoteData";
@@ -26,7 +25,6 @@ import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotIndex, indexHotspotsData} from "react-mutation-mapper";
-import {IMutSigData} from "shared/model/MutSig";
 import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
@@ -86,7 +84,8 @@ import { groupTrialMatchesById } from "../trialMatch/TrialMatchTableUtils";
 import { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import { AppStore, SiteError } from 'AppStore';
-
+import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
+import getBrowserWindow from 'public-lib/lib/getBrowserWindow';
 
 type PageMode = 'patient' | 'sample';
 
@@ -183,8 +182,8 @@ export class PatientViewPageStore {
 
     @observable _sampleId = '';
 
-    @observable public mutationTableGeneFilterOption = GeneFilterOption.ANY_SAMPLE;
-    @observable public copyNumberTableGeneFilterOption = GeneFilterOption.ANY_SAMPLE;
+    @observable public mutationTableGeneFilterOption:GeneFilterOption = getGeneFilterDefault(getBrowserWindow().frontendConfig);
+    @observable public copyNumberTableGeneFilterOption:GeneFilterOption = getGeneFilterDefault(getBrowserWindow().frontendConfig);
 
     @computed get sampleId() {
         return this._sampleId;
