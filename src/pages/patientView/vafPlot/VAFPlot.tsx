@@ -1,6 +1,8 @@
 import * as React from 'react';
 import $ from 'jquery';
 import {AlleleFreqPlotMulti} from './legacyVAFCode.js';
+import { IKeyedIconData } from '../genomicOverview/GenomicOverviewUtils.js';
+import _ from 'lodash';
 
 export type MutationFrequencies = number[];
 
@@ -24,6 +26,7 @@ export type IVAFPlotProps = {
     init_show_histogram?: boolean;
     init_show_curve?: boolean;
     show_controls?: boolean;
+    genepanel_icon_data?:IKeyedIconData;
 };
 
 export type IVAFPlotState = {
@@ -99,8 +102,12 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
     }
 
     componentDidMount() {
-
-        AlleleFreqPlotMulti(this, this.props.data, this.state.options, this.props.order, this.props.colors, this.props.labels);
+        AlleleFreqPlotMulti(this, this.props.data, this.state.options, this.props.order, this.props.colors, this.props.labels, this.props.genepanel_icon_data);
+    }
+    
+    componentDidUpdate() {
+        $(this.div).find('svg').remove(); // remove svg element prior to rerendering
+        AlleleFreqPlotMulti(this, this.props.data, this.state.options, this.props.order, this.props.colors, this.props.labels, this.props.genepanel_icon_data);
     }
 
     shouldComponentUpdate(nextProps:IVAFPlotProps, nextState:IVAFPlotState) {
@@ -120,7 +127,9 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
             }
         }
 
-        return (nextState.show_histogram !== this.state.show_histogram) || (nextState.show_curve !== this.state.show_curve);
+        return (nextState.show_histogram !== this.state.show_histogram)
+            || (nextState.show_curve !== this.state.show_curve)
+            || (!_.isEqual(this.props.data, nextProps.data));
     }
 
     toggleShowHistogram() {
@@ -133,6 +142,7 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
     }
 
     render() {
+        
         const histogramCheckbox = (
             <label
                 key="histogram-toggle"
@@ -146,6 +156,7 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
                     style={{ marginRight:3 }}
                 />histogram
             </label>);
+
         const curveCheckbox = (
             <label
                 key="curve-toggle"
@@ -158,7 +169,9 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
                     style={{ marginRight:3 }}
                 />density estimation
             </label>);
+
         const controls = [histogramCheckbox, curveCheckbox];
+
         return (
             <div
                 style={{display: "inline"}}
