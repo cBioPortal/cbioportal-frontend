@@ -4,7 +4,7 @@ import styles from "./table/tables.module.scss";
 import classnames from 'classnames';
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {ICON_FILTER_OFF, ICON_FILTER_ON} from "shared/lib/Colors";
-import {GenePanelList} from "pages/studyView/table/GenePanelModal";
+import {GenePanelList} from "pages/studyView/table/StudyViewGenePanelModal";
 import {getFrequencyStr} from "pages/studyView/StudyViewUtils";
 import {CSSProperties} from "react";
 import {
