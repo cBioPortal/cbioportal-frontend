@@ -215,6 +215,22 @@ describe('patient view page', function() {
 
         });
 
+        describe('VAF plot', () => {
+
+            before(()=>{
+                goToUrlAndSetLocalStorage(patienViewUrl);
+                waitForPatientView();
+            });
+
+            it('shows gene panel icons when gene panels are used', () => {
+                browser.moveToObject('svg[data-test=vaf-plot]'); // moves pointer to plot thumbnail
+                $('div[role=tooltip] svg[data-test=vaf-plot]').waitForVisible();
+                var genePanelIcon = $('svg[data-test=vaf-plot] rect.genepanel-icon');
+                assert(genePanelIcon.isExisting());
+            });
+
+        });
+
     }
 });
 
