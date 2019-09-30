@@ -131,11 +131,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(this);
     }
 
-    @computed get mutationsTabEnabled() {
-        // TODO: DELETE THIS WHEN RELEASING IN GENERAL
-        return this.props.routing.location.query.enableMutations === "true";
-    }
-
     public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
         if (!e.shiftKey && !e.altKey && !e.metaKey) {
             e.preventDefault();
@@ -504,7 +499,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         )
                                     }
                                 </MSKTab>
-                    {this.mutationsTabEnabled && patientViewPageStore.samples.isComplete && patientViewPageStore.samples.result.length > 1 && (
+                    {patientViewPageStore.samples.isComplete && patientViewPageStore.samples.result.length > 1 && (
                         <MSKTab key={1} id="genomicEvolution" linkText="Genomic Evolution">
                             <PatientViewMutationsTab
                                 store={patientViewPageStore}
