@@ -23,8 +23,9 @@ export function makeMutationHeatmapData(
 ) {
     const mutationsByKey = _.keyBy(mutations, generateMutationIdByGeneAndProteinChangeAndEvent);
     const mutationsBySample = _.groupBy(mutations, m=>m.uniqueSampleKey);
+    const mutationHasAtLeastOneVAF = _.mapValues(mutationsByKey, ()=>false);
 
-    return samples.reduce((map, sample)=>{
+    const everyMutationDataBySample = samples.reduce((map, sample)=>{
         const sampleMutations = mutationsBySample[sample.uniqueSampleKey] || [];
         const mutationKeys:{[uid:string]:boolean} = {};
         const data:IMutationOncoprintTrackDatum[] = [];
@@ -42,6 +43,7 @@ export function makeMutationHeatmapData(
                     mutationStatus = MutationStatus.MUTATED_BUT_NO_VAF;
                 } else {
                     mutationStatus = MutationStatus.MUTATED_WITH_VAF;
+                    mutationHasAtLeastOneVAF[uid] = true;
                 }
 
                 data.push({
@@ -83,6 +85,11 @@ export function makeMutationHeatmapData(
         map[sample.sampleId] = data;
         return map;
     }, {} as {[sampleId:string]:IMutationOncoprintTrackDatum[]});
+
+    // filter out data for mutations where none of them have data
+    return _.mapValues(everyMutationDataBySample, mutationData=>{
+        return mutationData.filter(d=>mutationHasAtLeastOneVAF[d.uid]);
+    });
 }
 
 export function getDownloadData(
