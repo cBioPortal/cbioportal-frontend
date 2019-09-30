@@ -101,6 +101,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
             error, please contact us at <a style="color:#FF0000" href="mailto:cbioportal-access@cbio.mskcc.org">
             cbioportal-access@cbio.mskcc.org</a>`,
 
+    skin_patientview_filter_genes_profiled_all_samples: false,
+
     enable_darwin: false,
 
     session_url_length_threshold: '1990',
