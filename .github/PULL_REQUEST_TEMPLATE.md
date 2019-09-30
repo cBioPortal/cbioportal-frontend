@@ -1,4 +1,4 @@
-Fix # (Point to an issue in backend repo issue tracker cBioPortal/cbioportal#, see https://help.github.com/en/articles/closing-issues-using-keywords)
+Fix cBioPortal/cbioportal# (see https://help.github.com/en/articles/closing-issues-using-keywords)
 
 Describe changes proposed in this pull request:
 - a
