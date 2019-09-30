@@ -29,10 +29,8 @@ export function mutationTooltip(
                 vafExplanation = `Mutated, but we don't have VAF data.`;
                 break;
             case MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED:
-                vafExplanation = `Mutation not detected (VAF: ${sampleSpecificInfo.vaf!.toFixed(2)})`;
-                break;
             case MutationStatus.PROFILED_BUT_NOT_MUTATED:
-                vafExplanation = `Wild type (VAF: 0)`;
+                vafExplanation = `Mutation not detected (VAF: ${(sampleSpecificInfo.vaf || 0).toFixed(2)})`;
                 break;
             case MutationStatus.NOT_PROFILED:
             default:
