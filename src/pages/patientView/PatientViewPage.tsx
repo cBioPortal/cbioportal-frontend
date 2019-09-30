@@ -505,7 +505,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     }
                                 </MSKTab>
                     {this.mutationsTabEnabled && patientViewPageStore.samples.isComplete && patientViewPageStore.samples.result.length > 1 && (
-                        <MSKTab key={1} id="mutations" linkText="Mutations">
+                        <MSKTab key={1} id="genomicEvolution" linkText="Genomic Evolution">
                             <PatientViewMutationsTab
                                 store={patientViewPageStore}
                                 mutationTableColumnVisibility={this.mutationTableColumnVisibility}
