@@ -84,6 +84,7 @@ import { fetchTrialsById, fetchTrialMatchesUsingPOST } from "../../../shared/api
 import { IDetailedTrialMatch, ITrial, ITrialMatch, ITrialQuery } from "../../../shared/model/MatchMiner";
 import { groupTrialMatchesById } from "../trialMatch/TrialMatchTableUtils";
 import {computeGenePanelInformation, CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
+import {getVariantAlleleFrequency} from "../../../shared/lib/MutationUtils";
 
 type PageMode = 'patient' | 'sample';
 
@@ -837,6 +838,15 @@ export class PatientViewPageStore {
 
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
         return mergeMutationsIncludingUncalled(this.mutationData, this.uncalledMutationData);
+    }
+
+    @computed get existsSomeMutationWithVAFData() {
+        return _.some(this.mergedMutationDataIncludingUncalled, mutationList=>{
+            return _.some(mutationList, m=>{
+                const vaf = getVariantAlleleFrequency(m);
+                return vaf != null && vaf > 0;
+            });
+        });
     }
 
     @computed get uniqueSampleKeyToTumorType(): {[sampleId: string]: string} {
