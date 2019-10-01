@@ -221,6 +221,7 @@ E2e-tests on _CircleCI_ and _CircleCI+PR_ context are triggered via _hooks_ conf
 E2e-testing against a local database removes dependence on data provided by public cbioportal instances for testing. This makes it possible to test features for data types that are not provided by public cbioportal instances or test features that depend on a backend feature not yet integrated in  public cbioportal instances. E2e-localdb tests make use of the `BACKEND` environmental variable to test against a specific backend version. Depending on the running context (see section above) setting the `BACKEND` environmental variable is required or optional (see table below).
 
 Requirement for setting the BACKEND variable depends on the context of the job:
+
 | **context**             | **BACKEND var** | **comments** |
 |------------------------ | ----------------- | ------------ |
 | _Local_                   | mandatory        | |
