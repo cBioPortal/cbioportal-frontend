@@ -15,7 +15,6 @@ interface TracksPropTypes {
 }
 
 export const DEFAULT_GENOME_BUILD="GRCh37";
-// export const DEFAULT_GENOME_BUILD="mm10";
 
 export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
