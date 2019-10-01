@@ -52,13 +52,10 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
 
     render(){
         return (
-            <div className={styles.studyFilterResult}>
-                 <div className={styles.selectedInfo} data-test="selected-info">
-                     <strong>Selected:&nbsp;</strong>
-                     <strong data-test="selected-patients">{this.props.store.selectedPatients.length.toLocaleString()}</strong>&nbsp;<strong>patients</strong>&nbsp;|&nbsp;
-                     <strong data-test="selected-samples">{this.props.store.selectedSamples.result.length.toLocaleString()}</strong>&nbsp;<strong>samples</strong>
-                </div>
-                <ActionButtons store={this.props.store} appStore={this.props.appStore} loadingComplete={this.props.loadingComplete}/>
+            <div className={styles.selectedInfo} data-test="selected-info">
+                <strong>Selected:&nbsp;</strong>
+                <strong data-test="selected-patients">{this.props.store.selectedPatients.length.toLocaleString()}</strong>&nbsp;<strong>patients</strong>&nbsp;|&nbsp;
+                <strong data-test="selected-samples">{this.props.store.selectedSamples.result.length.toLocaleString()}</strong>&nbsp;<strong>samples</strong>
             </div>
         )
     }
@@ -278,13 +275,33 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     appStore={this.props.appStore}
                                                     loadingComplete={this.chartDataPromises.isComplete}
                                                 />;
+                                                const buttons = <ActionButtons store={this.store} appStore={this.props.appStore} loadingComplete={this.chartDataPromises.isComplete}/>
+
+
                                                 return (
                                                     <CSSTransition
                                                         classNames="studyFilterResult"
                                                         in={true}
                                                         appear timeout={{enter: 200}}
                                                     >
-                                                        {() =>  { return summary; }}
+                                                        {() =>  { return <div className={styles.studyFilterResult}>
+                                                            <If condition={this.store.selectedSamples.isComplete} >
+                                                                <Then>
+                                                                    {summary}
+                                                                    {buttons}
+                                                                </Then>
+                                                                <Else>
+                                                                    <LoadingIndicator
+                                                                        isLoading={true}
+                                                                        size={"small"}
+                                                                        className={styles.selectedInfoLoadingIndicator}
+                                                                    />
+                                                                    {buttons}
+                                                                </Else>
+                                                            </If>
+                                                        </div>
+                                                        
+                                                        }}
                                                     </CSSTransition>
                                                 )
                                             }
