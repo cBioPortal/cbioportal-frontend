@@ -121,6 +121,14 @@ export type Cosmic = {
         'tumorSite': string
 
 };
+export type CountByTumorType = {
+    'tumorType': string
+
+        'tumorTypeCount': number
+
+        'variantCount': number
+
+};
 export type Dbsnp = {
     '_class': string
 
@@ -257,6 +265,36 @@ export type Hotspot = {
         'tumorCount': number
 
         'type': string
+
+};
+export type InsightMutation = {
+    'biallelicCountsByTumorType': Array < CountByTumorType >
+
+        'chromosome': string
+
+        'countsByTumorType': Array < CountByTumorType >
+
+        'endPosition': number
+
+        'hugoGeneSymbol': string
+
+        'mutationStatus': string
+
+        'pathogenic': string
+
+        'penetrance': string
+
+        'qcPassCountsByTumorType': Array < CountByTumorType >
+
+        'referenceAllele': string
+
+        'startPosition': number
+
+        'variantAllele': string
+
+};
+export type InsightMutationFilter = {
+    'hugoSymbols': Array < string >
 
 };
 export type IntegerRange = {
@@ -1238,6 +1276,158 @@ export default class GenomeNexusAPIInternal {
         }): Promise < Array < Hotspot >
         > {
             return this.fetchHotspotAnnotationByTranscriptIdGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchInsightMutationsByHugoSymbolGETURL(parameters: {
+        'hugoGeneSymbol' ? : string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/insight/mutation';
+        if (parameters['hugoGeneSymbol'] !== undefined) {
+            queryParameters['hugoGeneSymbol'] = parameters['hugoGeneSymbol'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves MSK Insight mutations by Hugo Gene Symbol
+     * @method
+     * @name GenomeNexusAPIInternal#fetchInsightMutationsByHugoSymbolGET
+     * @param {string} hugoGeneSymbol - Hugo Symbol. For example BRCA1
+     */
+    fetchInsightMutationsByHugoSymbolGETWithHttpInfo(parameters: {
+        'hugoGeneSymbol' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/insight/mutation';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['hugoGeneSymbol'] !== undefined) {
+                queryParameters['hugoGeneSymbol'] = parameters['hugoGeneSymbol'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves MSK Insight mutations by Hugo Gene Symbol
+     * @method
+     * @name GenomeNexusAPIInternal#fetchInsightMutationsByHugoSymbolGET
+     * @param {string} hugoGeneSymbol - Hugo Symbol. For example BRCA1
+     */
+    fetchInsightMutationsByHugoSymbolGET(parameters: {
+            'hugoGeneSymbol' ? : string,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < InsightMutation >
+        > {
+            return this.fetchInsightMutationsByHugoSymbolGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchInsightMutationsByMutationFilterPOSTURL(parameters: {
+        'mutationFilter': InsightMutationFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/insight/mutation';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves MSK Insight mutations by Mutation Filter
+     * @method
+     * @name GenomeNexusAPIInternal#fetchInsightMutationsByMutationFilterPOST
+     * @param {} mutationFilter - List of Hugo Gene Symbols. For example ["TP53", "PIK3CA", "BRCA1"]
+     */
+    fetchInsightMutationsByMutationFilterPOSTWithHttpInfo(parameters: {
+        'mutationFilter': InsightMutationFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/insight/mutation';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['mutationFilter'] !== undefined) {
+                body = parameters['mutationFilter'];
+            }
+
+            if (parameters['mutationFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: mutationFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves MSK Insight mutations by Mutation Filter
+     * @method
+     * @name GenomeNexusAPIInternal#fetchInsightMutationsByMutationFilterPOST
+     * @param {} mutationFilter - List of Hugo Gene Symbols. For example ["TP53", "PIK3CA", "BRCA1"]
+     */
+    fetchInsightMutationsByMutationFilterPOST(parameters: {
+            'mutationFilter': InsightMutationFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < InsightMutation >
+        > {
+            return this.fetchInsightMutationsByMutationFilterPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
