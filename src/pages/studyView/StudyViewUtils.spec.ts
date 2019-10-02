@@ -5,6 +5,7 @@ import {
     calculateNewLayoutForFocusedChart,
     chartMetaComparator,
     clinicalDataCountComparator,
+    customBinsAreValid,
     filterCategoryBins,
     filterIntervalBins,
     filterNumericalBins,
@@ -38,6 +39,7 @@ import {
     isLogScaleByValues,
     isOccupied,
     makePatientToClinicalAnalysisGroup,
+    mutationCountVsCnaTooltip,
     needAdditionShiftForLogScaleBarChart,
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
@@ -47,8 +49,8 @@ import {
     StudyViewFilterWithSampleIdentifierFilters,
     ChartMeta,
     ChartMetaDataTypeEnum,
-    getStudyViewTabId, ChartType,
-    customBinsAreValid
+    getStudyViewTabId,
+    formatRange,
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -70,6 +72,8 @@ import {VirtualStudy} from 'shared/model/VirtualStudy';
 import {ChartDimension, ChartTypeEnum} from "./StudyViewConfig";
 import {MobxPromise} from "mobxpromise";
 import {CLI_NO_COLOR, CLI_YES_COLOR, DEFAULT_NA_COLOR, RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
+import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyViewDensityScatterPlot';
+import { shallow } from 'enzyme';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
@@ -2199,4 +2203,41 @@ describe('StudyViewUtils', () => {
             assert.isTrue(customBinsAreValid(['1', '2']));
         });
     })
+
+    describe("formatRange", () => {
+        it("should format min max range with no special value", () => {
+            const actual = formatRange(1.5, 2.5, undefined)
+            const expected = "1.5-2.5";
+            
+            assert.equal(actual, expected);
+        });
+
+        it("should format min max range with special value", () => {
+            const actual = formatRange(1, 2, "Foo ");
+            const expected = "Foo 1-2";
+
+            assert.equal(actual, expected);
+        });
+
+        it("should format min range with special value", () => {
+            const acutal = formatRange(1, undefined, "<=");
+            const expected = "≤1";
+
+            assert.equal(acutal, expected);
+        });
+
+        it("should format max range with special value", () => {
+            const actual = formatRange(undefined, 2, ">=");
+            const expected = "≥2";
+
+            assert.equal(actual, expected);
+        });
+
+        it("should format min max range where min = max", () => {
+            const actual = formatRange(10, 10, undefined);
+            const expected = "10";
+
+            assert.equal(actual, expected);
+        });
+    });
 });
