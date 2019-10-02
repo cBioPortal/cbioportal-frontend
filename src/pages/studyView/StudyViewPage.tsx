@@ -40,14 +40,15 @@ import {ServerConfigHelpers} from "../../config/config";
 import { getStudyViewTabId } from './StudyViewUtils';
 import InfoBeacon from "shared/components/infoBeacon/InfoBeacon";
 import {WrappedTour} from "shared/components/wrappedTour/WrappedTour";
-import { Alert } from 'react-bootstrap';
+import { Alert, Modal } from 'react-bootstrap';
 
 export interface IStudyViewPageProps {
     routing: any;
     appStore: AppStore;
 }
 
-export class StudyResultsSummary extends React.Component<{ store:StudyViewPageStore, appStore:AppStore },{}> {
+@observer
+export class StudyResultsSummary extends React.Component<{ store:StudyViewPageStore, appStore:AppStore, loadingComplete: boolean },{}> {
 
     render(){
         return (
@@ -57,7 +58,7 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
                      <strong data-test="selected-patients">{this.props.store.selectedPatients.length.toLocaleString()}</strong>&nbsp;<strong>patients</strong>&nbsp;|&nbsp;
                      <strong data-test="selected-samples">{this.props.store.selectedSamples.result.length.toLocaleString()}</strong>&nbsp;<strong>samples</strong>
                 </div>
-                <ActionButtons store={this.props.store} appStore={this.props.appStore}/>
+                <ActionButtons store={this.props.store} appStore={this.props.appStore} loadingComplete={this.props.loadingComplete}/>
             </div>
         )
     }
@@ -73,6 +74,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private queryReaction:IReactionDisposer;
     @observable showCustomSelectTooltip = false;
     @observable showGroupsTooltip = false;
+    @observable private showReturnToDefaultChartListModal:boolean = false;
     private studyViewQueryFilter:StudyViewURLQuery;
 
     constructor(props: IStudyViewPageProps) {
@@ -148,9 +150,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     @computed
     get addChartButtonText() {
         if (this.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
-            return '+ Add Chart';
+            return 'Charts';
         } else if (this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
-            return '+ Add Column'
+            return 'Columns'
         } else {
             return '';
         }
@@ -160,17 +162,18 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     get groupsButton() {
         return (
             <>
-                <If condition={!isWebdriver()}>
-                    <InfoBeacon
-                        top={-15}
-                        right={45}
-                        interaction={'mouseover'}
-                        color={'green'}
-                        id={'groupComparison1'}
-                    >
-                        <WrappedTour/>
-                    </InfoBeacon>
-                </If>
+                {/* MODEL FOF USER OF INFO BEACON.  YOU NEED TO CUSTOMIZE <WrappedTour> COMPONENT FOR USE CASE */}
+                {/*<If condition={!isWebdriver()}>*/}
+                {/*    <InfoBeacon*/}
+                {/*        top={-15}*/}
+                {/*        right={45}*/}
+                {/*        interaction={'mouseover'}*/}
+                {/*        color={'green'}*/}
+                {/*        id={'groupComparison1'}*/}
+                {/*    >*/}
+                {/*        <WrappedTour/>*/}
+                {/*    </InfoBeacon>*/}
+                {/*</If>*/}
                 <DefaultTooltip
                     visible={this.showGroupsTooltip}
                     trigger={["click"]}
@@ -269,19 +272,20 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     <Observer>
                                         {
                                             () => {
+                                                // create element here to get correct mobx subscriber list
+                                                const summary  = <StudyResultsSummary
+                                                    store={this.store}
+                                                    appStore={this.props.appStore}
+                                                    loadingComplete={this.chartDataPromises.isComplete}
+                                                />;
                                                 return (
-                                                        <If condition={this.chartDataPromises.isComplete}>
-                                                            <Then>
-                                                                <CSSTransition classNames="studyFilterResult" in={true}
-                                                                               appear timeout={{enter: 200}}>
-                                                                    {() => <StudyResultsSummary store={this.store} appStore={this.props.appStore}/>
-                                                                    }
-                                                                </CSSTransition>
-                                                            </Then>
-                                                            <Else>
-                                                                <LoadingIndicator isLoading={true} size={"small"} className={styles.selectedInfoLoadingIndicator}/>
-                                                            </Else>
-                                                        </If>
+                                                    <CSSTransition
+                                                        classNames="studyFilterResult"
+                                                        in={true}
+                                                        appear timeout={{enter: 200}}
+                                                    >
+                                                        {() =>  { return summary; }}
+                                                    </CSSTransition>
                                                 )
                                             }
                                         }
@@ -328,8 +332,38 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     currentTab={this.store.currentTab}
                                                     addChartOverlayClassName='studyViewAddChartOverlay'
                                                     disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
+                                                    showResetPopup={() => { this.showReturnToDefaultChartListModal = true; }}
                                                 />
                                         )}
+
+                                        <Modal bsSize={'small'} show={this.showReturnToDefaultChartListModal} onHide={() => { this.showReturnToDefaultChartListModal = false; }} keyboard>
+                                            <Modal.Header closeButton>
+                                                <Modal.Title>Reset charts</Modal.Title>
+                                            </Modal.Header>
+                                            <Modal.Body>
+                                                <div>Please confirm that you would like to replace the current charts with the default list.</div>
+                                            </Modal.Body>
+                                            <Modal.Footer>
+                                                <button className='btn btn-primary btn-sm'
+                                                    style={{ marginTop: '10px', marginBottom: '0' }}
+                                                    onClick={() => {
+                                                        this.store.resetToDefaultSettings();
+                                                        this.showReturnToDefaultChartListModal = false;
+                                                    }}
+                                                >
+                                                    Confirm
+                                                </button>
+                                                <button className='btn btn-primary btn-sm'
+                                                    style={{ marginTop: '10px', marginBottom: '0' }}
+                                                    onClick={() => {
+                                                        this.showReturnToDefaultChartListModal = false;
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </Modal.Footer>
+                                        </Modal>
+
                                         {ServerConfigHelpers.sessionServiceIsEnabled() && this.groupsButton}
                                     </div>
                                 </div>

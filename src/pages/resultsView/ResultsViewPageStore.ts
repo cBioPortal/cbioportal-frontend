@@ -472,8 +472,6 @@ export class ResultsViewPageStore {
 
     @observable public sessionIdURL = '';
 
-    @observable expressionTabSeqVersion: number = 2;
-
     @observable queryFormVisible: boolean = false;
 
     @observable public modifyQueryParams: ModifyQueryParams | undefined = undefined;
@@ -3402,9 +3400,9 @@ export class ResultsViewPageStore {
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         getSelectedProfileMap: () => this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any protein profiles
         fetchData: () => {
-            let studyIds = Object.keys(this.selectedmRNAEnrichmentProfileMap.result!);
+            let studyIds = Object.keys(this.selectedProteinEnrichmentProfileMap.result!);
             if (studyIds.length === 1) {
-                const molecularProfileId = this.selectedmRNAEnrichmentProfileMap.result![studyIds[0]].molecularProfileId;
+                const molecularProfileId = this.selectedProteinEnrichmentProfileMap.result![studyIds[0]].molecularProfileId;
                 const groups: MolecularProfileCasesGroupFilter[] = [{
                     molecularProfileCaseIdentifiers: this.alteredSamples.result
                         .filter(s => (s.studyId === studyIds[0]))
@@ -3516,55 +3514,10 @@ export class ResultsViewPageStore {
         ],
         invoke:()=>{
             return Promise.resolve(this.molecularProfilesInStudies.result.filter(
-                (profile:MolecularProfile)=>isRNASeqProfile(profile.molecularProfileId, this.expressionTabSeqVersion)
+                (profile:MolecularProfile)=>isRNASeqProfile(profile.molecularProfileId)
             ));
         }
     },[]);
-
-    readonly rnaSeqMolecularData = remoteData<{[hugoGeneSymbol:string]:NumericGeneMolecularData[][]}>({
-       await:()=>[
-           this.expressionProfiles,
-           this.genes,
-           this.geneMolecularDataCache
-       ],
-       invoke: async ()=>{
-
-           const rnaSeqProfiles = this.expressionProfiles.result!;
-
-           const queries = _.flatMap(this.genes.result,(gene:Gene)=>{
-               return rnaSeqProfiles.map((profile:MolecularProfile)=> {
-                   return ({
-                       entrezGeneId: gene.entrezGeneId,
-                       molecularProfileId: profile.molecularProfileId,
-                       hugoGeneSymbol:gene.hugoGeneSymbol
-                   })
-               });
-           });
-
-           const data = await this.geneMolecularDataCache.result!.getPromise(queries,true);
-
-           // group cache objects by entrez geneId
-           const groupedByGene = _.groupBy(data,
-               (cacheItem:CacheData<NumericGeneMolecularData[], { entrezGeneId:number, molecularProfileId:string; }>)=>
-                   (cacheItem.meta) ? cacheItem.meta!.entrezGeneId : undefined
-           );
-
-           // now convert key from entrez to hugeGeneSymbol
-           const keyedByHugoSymbol = _.mapKeys(groupedByGene,(val, entrezGeneId:string)=>{
-               // look up huge gene symbol on gene with matching entrez
-               return _.find(this.genes.result,(gene:Gene)=>gene.entrezGeneId.toString()===entrezGeneId)!.hugoGeneSymbol;
-           });
-
-           const unwrapCacheObjects:{[hugeGeneSymbol:string]:NumericGeneMolecularData[][]} =
-               _.mapValues(keyedByHugoSymbol,(val:AugmentedData<NumericGeneMolecularData[], GeneMolecularDataCache>)=>{
-                    return _.map(val,(item:AugmentedData<NumericGeneMolecularData[], GeneMolecularDataCache>)=>item.data);
-                }) as any; // there's an error with typing for _.mapValues
-
-           return Promise.resolve(unwrapCacheObjects);
-
-       }
-
-    });
 
     @memoize sortRnaSeqMolecularDataByStudy(seqData:{[profileId:string]:NumericGeneMolecularData[]}){
         return _.keyBy(seqData,(data:NumericGeneMolecularData[])=>{

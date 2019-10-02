@@ -76,14 +76,19 @@ export default class CancerStudyTreeData
 
 		//map virtual study to cancer study
 		const _virtualStudies = virtualStudies.map(virtualstudy => {
-			return {
-				allSampleCount: _.sumBy(virtualstudy.data.studies, study=>study.samples.length),
-				studyId       : virtualstudy.id,
-				name          : virtualstudy.data.name,
-				description   : virtualstudy.data.description,
-				cancerTypeId  : VIRTUAL_STUDY_NAME
-			} as CancerStudy;
-		});
+			// TODO: temp fix for when virtual study data is not of expeceted format
+			// (e.g. old format) Might need some better sanity checking of
+			// virtual/session data
+			if (virtualstudy.data) {
+				return {
+					allSampleCount: _.sumBy(virtualstudy.data.studies, study=>study.samples.length),
+					studyId       : virtualstudy.id,
+					name          : virtualstudy.data.name,
+					description   : virtualstudy.data.description,
+					cancerTypeId  : VIRTUAL_STUDY_NAME
+				} as CancerStudy;
+			}
+		}).filter(virtualstudy => virtualstudy) as CancerStudy[];
 
 		// add priority categories
 		for (let name in priorityStudies)

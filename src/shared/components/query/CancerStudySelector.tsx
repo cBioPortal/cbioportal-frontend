@@ -22,6 +22,7 @@ import QuickSelectButtons from "./QuickSelectButtons";
 import {StudySelectorStats} from "shared/components/query/StudySelectorStats";
 import WindowStore from "shared/components/window/WindowStore";
 import Timeout = NodeJS.Timeout;
+import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 
 const MIN_LIST_HEIGHT = 200;
 
@@ -68,6 +69,12 @@ export interface ICancerStudySelectorProps {
 
 @observer
 export default class CancerStudySelector extends React.Component<ICancerStudySelectorProps, {}> {
+    @computed get studiesDataComplete(): boolean {
+        return this.store.cancerTypes.isComplete &&
+            this.store.cancerStudies.isComplete &&
+            this.store.userVirtualStudies.isComplete;
+    }
+
     private handlers = {
         onSummaryClick: () => {
             this.store.openSummary();
@@ -273,50 +280,52 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
                 </FlexRow>
 
-                <FlexRow className={styles.cancerStudySelectorBody}>
-                    <If condition={this.store.maxTreeDepth > 0}>
-                        <Then>
-                            <div className={styles.cancerTypeListContainer}>
-                                <this.CancerTypeList/>
-                            </div>
-                        </Then>
-                    </If>
-                    <div className={styles.cancerStudyListContainer} data-test='cancerTypeListContainer'>
+                <If condition={this.studiesDataComplete}>
+                    <FlexRow className={styles.cancerStudySelectorBody}>
+                        <If condition={this.store.maxTreeDepth > 0}>
+                            <Then>
+                                <div className={styles.cancerTypeListContainer}>
+                                    <this.CancerTypeList/>
+                                </div>
+                            </Then>
+                        </If>
+                        <div className={styles.cancerStudyListContainer} data-test='cancerTypeListContainer'>
 
-                        <div className="checkbox" style={{marginLeft: 19}}>
-                            <If condition={shownStudies.length > 0}>
-                                <If condition={!this.logic.mainView.isFiltered && !_.isEmpty(quickSetButtons)}>
-                                    <Then>
-                                        <div className={styles.quickSelect}>
-                                            <QuickSelectButtons onSelect={this.selectMatchingStudies}
-                                                                buttonsConfig={quickSetButtons}/>
-                                        </div>
-                                    </Then>
-                                    <Else>
-                                        <label>
-                                            <input type="checkbox"
-                                                   data-test="selectAllStudies"
-                                                   style={{top: -2}}
-                                                   onClick={this.handlers.onCheckAllFiltered}
-                                                   checked={shownAndSelectedStudies.length === shownStudies.length}
-                                            />
-                                            <strong>{(shownAndSelectedStudies.length === shownStudies.length) ?
-                                                `Deselect all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""} (${shownStudies.length})` :
-                                                `Select all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""}  (${shownStudies.length})`}
-                                            </strong>
-                                        </label>
+                            <div className="checkbox" style={{marginLeft: 19}}>
+                                <If condition={shownStudies.length > 0}>
+                                    <If condition={!this.logic.mainView.isFiltered && !_.isEmpty(quickSetButtons)}>
+                                        <Then>
+                                            <div className={styles.quickSelect}>
+                                                <QuickSelectButtons onSelect={this.selectMatchingStudies}
+                                                                    buttonsConfig={quickSetButtons}/>
+                                            </div>
+                                        </Then>
+                                        <Else>
+                                            <label>
+                                                <input type="checkbox"
+                                                    data-test="selectAllStudies"
+                                                    style={{top: -2}}
+                                                    onClick={this.handlers.onCheckAllFiltered}
+                                                    checked={shownAndSelectedStudies.length === shownStudies.length}
+                                                />
+                                                <strong>{(shownAndSelectedStudies.length === shownStudies.length) ?
+                                                    `Deselect all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""} (${shownStudies.length})` :
+                                                    `Select all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""}  (${shownStudies.length})`}
+                                                </strong>
+                                            </label>
 
-                                    </Else>
+                                        </Else>
+                                    </If>
                                 </If>
-                            </If>
-                            <If condition={this.store.cancerStudies.isComplete && this.store.cancerTypes.isComplete && shownStudies.length === 0}>
-                                <p>There are no studies matching your filter.</p>
-                            </If>
-                        </div>
+                                <If condition={this.store.cancerStudies.isComplete && this.store.cancerTypes.isComplete && shownStudies.length === 0}>
+                                    <p>There are no studies matching your filter.</p>
+                                </If>
+                            </div>
 
-                        <StudyList/>
-                    </div>
-                </FlexRow>
+                            <StudyList/>
+                        </div>
+                    </FlexRow>
+                </If>
 
                 <Modal
                     className={classNames(styles.SelectedStudiesWindow, 'cbioportal-frontend')}
