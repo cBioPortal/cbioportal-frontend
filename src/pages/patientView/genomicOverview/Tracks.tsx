@@ -33,7 +33,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
         // --- chromosome chart ---
         let genomeBuild = DEFAULT_GENOME_BUILD;
-        if (this.props.mutations) {
+        if (this.props.mutations && this.props.mutations.length > 0) {
             genomeBuild = this.props.mutations[0].ncbiBuild;
         }
         const chmInfo = tracksHelper.getChmInfo( genomeBuild);

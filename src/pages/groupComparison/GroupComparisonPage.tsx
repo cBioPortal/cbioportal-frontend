@@ -24,37 +24,28 @@ import ClinicalData from "./ClinicalData";
 import ReactSelect from "react-select";
 import {trackEvent} from "shared/lib/tracking";
 import URL from "url";
+import GroupComparisonURLWrapper, {GroupComparisonURLQuery} from "./GroupComparisonURLWrapper";
 
 export interface IGroupComparisonPageProps {
     routing:any;
     appStore:AppStore;
 }
 
-export type GroupComparisonURLQuery = {
-    sessionId: string;
-    groupOrder?:string; // json stringified array of names
-    unselectedGroups?:string; // json stringified array of names
-    overlapStrategy?:OverlapStrategy;
-    patientEnrichments?:string;
-};
-
 @inject('routing', 'appStore')
 @observer
 export default class GroupComparisonPage extends React.Component<IGroupComparisonPageProps, {}> {
     @observable.ref private store:GroupComparisonStore;
     private queryReaction:IReactionDisposer;
-    private pathnameReaction:IReactionDisposer;
-    private lastQuery:Partial<GroupComparisonURLQuery>;
+    private urlWrapper:GroupComparisonURLWrapper;
 
     constructor(props:IGroupComparisonPageProps) {
         super(props);
+        this.urlWrapper = new GroupComparisonURLWrapper(props.routing);
         this.queryReaction = reaction(
-            () => props.routing.location.query,
-            query => {
+            () => this.urlWrapper.query.sessionId,
+            sessionId => {
 
-                if (!props.routing.location.pathname.includes("/comparison") ||
-                    _.isEqual(query, this.lastQuery) ||
-                    (this.lastQuery && (query.sessionId === this.lastQuery.sessionId))) {
+                if (!props.routing.location.pathname.includes("/comparison") || !sessionId) {
                     return;
                 }
 
@@ -62,24 +53,8 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                     this.store.destroy();
                 }
 
-                this.store = new GroupComparisonStore((query as GroupComparisonURLQuery).sessionId, this.props.appStore, this.props.routing);
-                this.setTabIdInStore(props.routing.location.pathname);
+                this.store = new GroupComparisonStore(sessionId, this.props.appStore, this.urlWrapper);
                 (window as any).groupComparisonStore = this.store;
-
-                this.lastQuery = query;
-            },
-            {fireImmediately: true}
-        );
-
-        this.pathnameReaction = reaction(
-            () => props.routing.location.pathname,
-            pathname => {
-
-                if (!pathname.includes("/comparison")) {
-                    return;
-                }
-
-                this.setTabIdInStore(pathname);
             },
             {fireImmediately: true}
         );
@@ -96,27 +71,14 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         });
     }
 
-    private setTabIdInStore(pathname:string) {
-        const tabId = getTabId(pathname);
-        if (tabId) {
-            this.store.setTabId(tabId);
-        }
-    }
-
     @computed get selectedGroupsKey() {
-        // for components which should remount whenever selected studies change
+        // for components which should remount whenever selected groups change
         const selectedGroups = this.store._selectedGroups.result || [];
         return JSON.stringify(selectedGroups.map(g=>g.uid));
     }
 
-    @autobind
-    private setTabIdInUrl(id:string, replace?:boolean) {
-        this.props.routing.updateRoute({},`comparison/${id}`, false, replace);
-    }
-
     componentWillUnmount() {
         this.queryReaction && this.queryReaction();
-        this.pathnameReaction && this.pathnameReaction();
         this.store && this.store.destroy();
     }
 
@@ -133,8 +95,8 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         render:()=>{
             return (
                 <MSKTabs unmountOnHide={false}
-                         activeTabId={this.store.currentTabId}
-                         onTabClick={this.setTabIdInUrl}
+                         activeTabId={this.urlWrapper.tabId}
+                         onTabClick={this.urlWrapper.setTabId}
                          className="primaryTabs mainTabs"
                          getTabHref={this.getTabHref}
                 >

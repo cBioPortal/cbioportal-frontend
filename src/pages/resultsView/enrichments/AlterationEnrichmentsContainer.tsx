@@ -17,7 +17,8 @@ import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
-import CheckedSelect, {Option} from 'public-lib/components/checkedSelect/CheckedSelect';
+import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
+import {Option} from 'public-lib/components/checkedSelect/CheckedSelectUtils'
 import {MiniOncoprint} from "shared/components/miniOncoprint/MiniOncoprint";
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import GeneBarPlot from './GeneBarPlot';
@@ -271,7 +272,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     public render() {
-
         if (this.props.data.length === 0) {
             return <div className={'alert alert-info'}>No data/result available</div>;
         }
@@ -313,6 +313,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             showCNAInTable={this.props.showCNAInTable}
                             containerType={this.props.containerType}
                             categoryToColor={this.categoryToColor}
+                            dataStore={this.dataStore}
                         />
                     </div>
                 </div>

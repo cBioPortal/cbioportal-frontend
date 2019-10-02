@@ -131,10 +131,10 @@ describe('study laml_tcga tests', () => {
     describe('add chart', () => {
         it('the button text should be updated in different tab', () => {
             toStudyViewSummaryTab();
-            assert(getTextFromElement(ADD_CHART_BUTTON) === '+ Add Chart');
+            assert(getTextFromElement(ADD_CHART_BUTTON) === 'Charts');
 
             toStudyViewClinicalDataTab();
-            assert(getTextFromElement(ADD_CHART_BUTTON) === '+ Add Column');
+            assert(getTextFromElement(ADD_CHART_BUTTON) === 'Columns');
         });
         it('chart in genomic tab can be updated', () => {
             toStudyViewSummaryTab();

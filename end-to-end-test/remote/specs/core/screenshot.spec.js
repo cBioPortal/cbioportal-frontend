@@ -195,12 +195,10 @@ describe("download tab screenshot tests", function() {
 });
 
 describe('patient view page screenshot test', function(){
-    before(function(){
+    it('patient view lgg_ucsf_2014 P04', function() {
         var url = `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&caseId=P04`;
         goToUrlAndSetLocalStorage(url);
-    });
 
-    it('patient view lgg_ucsf_2014 P04', function() {
         // find oncokb image
         var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
         oncokbIndicator.waitForExist(30000);
@@ -208,6 +206,21 @@ describe('patient view page screenshot test', function(){
         var vafPlot = $('.vafPlot');
         vafPlot.waitForExist(30000);
 
+        var res = browser.checkElement('#mainColumn', {hide:['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+
+    it('patient view with 0 mutations msk_impact_2017 P-0000053-T01-IM3', function() {
+        var url = `${CBIOPORTAL_URL}/patient?sampleId=P-0000053-T01-IM3&studyId=msk_impact_2017`;
+        goToUrlAndSetLocalStorage(url);
+
+        // should show 0 mutations
+        browser.waitForText('.//*[text()[contains(.,"0 Mutations")]]');
+
+        // should show 21.6% copy number altered in genomic overview
+        browser.waitForText('.//*[text()[contains(.,"21.6%")]]');
+
+        // take screenshot
         var res = browser.checkElement('#mainColumn', {hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
