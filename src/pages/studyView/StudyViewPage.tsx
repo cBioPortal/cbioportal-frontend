@@ -40,7 +40,7 @@ import {ServerConfigHelpers} from "../../config/config";
 import { getStudyViewTabId } from './StudyViewUtils';
 import InfoBeacon from "shared/components/infoBeacon/InfoBeacon";
 import {WrappedTour} from "shared/components/wrappedTour/WrappedTour";
-import { Alert } from 'react-bootstrap';
+import { Alert, Modal } from 'react-bootstrap';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -74,6 +74,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private queryReaction:IReactionDisposer;
     @observable showCustomSelectTooltip = false;
     @observable showGroupsTooltip = false;
+    @observable private showReturnToDefaultChartListModal:boolean = false;
     private studyViewQueryFilter:StudyViewURLQuery;
 
     constructor(props: IStudyViewPageProps) {
@@ -149,9 +150,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     @computed
     get addChartButtonText() {
         if (this.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
-            return '+ Add Chart';
+            return 'Charts';
         } else if (this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
-            return '+ Add Column'
+            return 'Columns'
         } else {
             return '';
         }
@@ -331,8 +332,38 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     currentTab={this.store.currentTab}
                                                     addChartOverlayClassName='studyViewAddChartOverlay'
                                                     disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
+                                                    showResetPopup={() => { this.showReturnToDefaultChartListModal = true; }}
                                                 />
                                         )}
+
+                                        <Modal bsSize={'small'} show={this.showReturnToDefaultChartListModal} onHide={() => { this.showReturnToDefaultChartListModal = false; }} keyboard>
+                                            <Modal.Header closeButton>
+                                                <Modal.Title>Reset charts</Modal.Title>
+                                            </Modal.Header>
+                                            <Modal.Body>
+                                                <div>Please confirm that you would like to replace the current charts with the default list.</div>
+                                            </Modal.Body>
+                                            <Modal.Footer>
+                                                <button className='btn btn-primary btn-sm'
+                                                    style={{ marginTop: '10px', marginBottom: '0' }}
+                                                    onClick={() => {
+                                                        this.store.resetToDefaultSettings();
+                                                        this.showReturnToDefaultChartListModal = false;
+                                                    }}
+                                                >
+                                                    Confirm
+                                                </button>
+                                                <button className='btn btn-primary btn-sm'
+                                                    style={{ marginTop: '10px', marginBottom: '0' }}
+                                                    onClick={() => {
+                                                        this.showReturnToDefaultChartListModal = false;
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </Modal.Footer>
+                                        </Modal>
+
                                         {ServerConfigHelpers.sessionServiceIsEnabled() && this.groupsButton}
                                     </div>
                                 </div>
