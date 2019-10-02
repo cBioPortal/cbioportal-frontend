@@ -530,6 +530,8 @@ export type TranscriptConsequence = {
 
         'hgvsc': string
 
+        'hgvsg': string
+
         'hgvsp': string
 
         'polyphen_prediction': string
@@ -601,6 +603,8 @@ export type VariantAnnotation = {
         'colocatedVariants': Array < ColocatedVariant >
 
         'end': number
+
+        'hgvsg': string
 
         'hotspots': HotspotAnnotation
 
