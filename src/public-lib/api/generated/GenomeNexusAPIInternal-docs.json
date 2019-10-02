@@ -22,6 +22,10 @@
       "description": "Cancer Hotspots Controller"
     },
     {
+      "name": "insight-mutation-controller",
+      "description": "Insight Mutation Controller"
+    },
+    {
       "name": "mutation-assessor-controller",
       "description": "Mutation Assessor Controller"
     },
@@ -412,6 +416,76 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/Hotspot"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/insight/mutation": {
+      "get": {
+        "tags": [
+          "insight-mutation-controller"
+        ],
+        "summary": "Retrieves MSK Insight mutations by Hugo Gene Symbol",
+        "operationId": "fetchInsightMutationsByHugoSymbolGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoGeneSymbol",
+            "in": "query",
+            "description": "Hugo Symbol. For example BRCA1",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/InsightMutation"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "insight-mutation-controller"
+        ],
+        "summary": "Retrieves MSK Insight mutations by Mutation Filter",
+        "operationId": "fetchInsightMutationsByMutationFilterPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "mutationFilter",
+            "description": "List of Hugo Gene Symbols. For example [\"TP53\", \"PIK3CA\", \"BRCA1\"]",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InsightMutationFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/InsightMutation"
               }
             }
           }
@@ -1036,6 +1110,22 @@
         }
       }
     },
+    "CountByTumorType": {
+      "type": "object",
+      "properties": {
+        "tumorType": {
+          "type": "string"
+        },
+        "tumorTypeCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "variantCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
     "Dbsnp": {
       "type": "object",
       "properties": {
@@ -1368,6 +1458,82 @@
         "type": {
           "type": "string",
           "description": "Hotspot type"
+        }
+      }
+    },
+    "InsightMutation": {
+      "type": "object",
+      "properties": {
+        "biallelicCountsByTumorType": {
+          "type": "array",
+          "description": "Biallelic Counts by Tumor Type",
+          "items": {
+            "$ref": "#/definitions/CountByTumorType"
+          }
+        },
+        "chromosome": {
+          "type": "string",
+          "description": "Chromosome"
+        },
+        "countsByTumorType": {
+          "type": "array",
+          "description": "Counts by Tumor Type",
+          "items": {
+            "$ref": "#/definitions/CountByTumorType"
+          }
+        },
+        "endPosition": {
+          "type": "integer",
+          "format": "int64",
+          "description": "End Position"
+        },
+        "hugoGeneSymbol": {
+          "type": "string",
+          "description": "Hugo Gene Symbol"
+        },
+        "mutationStatus": {
+          "type": "string",
+          "description": "Mutation Status"
+        },
+        "pathogenic": {
+          "type": "string",
+          "description": "Pathogenic"
+        },
+        "penetrance": {
+          "type": "string",
+          "description": "Penetrance"
+        },
+        "qcPassCountsByTumorType": {
+          "type": "array",
+          "description": "QC Pass Counts by Tumor Type",
+          "items": {
+            "$ref": "#/definitions/CountByTumorType"
+          }
+        },
+        "referenceAllele": {
+          "type": "string",
+          "description": "Reference Allele"
+        },
+        "startPosition": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Start Position"
+        },
+        "variantAllele": {
+          "type": "string",
+          "description": "Variant Allele"
+        }
+      }
+    },
+    "InsightMutationFilter": {
+      "type": "object",
+      "properties": {
+        "hugoSymbols": {
+          "type": "array",
+          "description": "List of Hugo Symbols. For example [\"TP53\", \"PIK3CA\", \"BRCA1\"]",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
