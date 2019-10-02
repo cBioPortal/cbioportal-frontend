@@ -2882,6 +2882,14 @@ buffer@^4.3.0:
     ieee754 "^1.1.4"
     isarray "^1.0.0"
 
+buffer@^5.4.0:
+  version "5.4.3"
+  resolved "https://registry.yarnpkg.com/buffer/-/buffer-5.4.3.tgz#3fbc9c69eb713d323e3fc1a895eee0710c072115"
+  integrity sha512-zvj65TkFeIt3i6aj5bIvJDzjjQQGs4o/sNoezg1F1kYap9Nu2jcUdpwzRSJTHMMzG0H7bZkn4rNQpImhuxWX2A==
+  dependencies:
+    base64-js "^1.0.2"
+    ieee754 "^1.1.4"
+
 builtin-modules@^1.0.0, builtin-modules@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-1.1.1.tgz#270f076c5a72c02f5b65a47df94c5fe3a278892f"
@@ -3068,10 +3076,10 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-cbioportal-frontend-commons@^0.0.18:
-  version "0.0.18"
-  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.18.tgz#9163f0ac3f670f396dd4edf8498a42b6eb54f93a"
-  integrity sha512-8zalWWA/3wJWFOuJV19xhejLXOyBhi570UOYGmRQm4JnZQlpBAviOmYLWuLK6TQsubx9HPB0EuQWiIef5IP+/A==
+cbioportal-frontend-commons@^0.0.22:
+  version "0.0.22"
+  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.22.tgz#6a547913adadf2ae2de08c2ca31f4d5103a409ed"
+  integrity sha512-ECWVbXvkqF0msXcrcDXN1MmQ1f1cfi6/++IkE4ThpSuxNmK08/BsXbYZCqDof42v70yN1auXEbhs3jWNDjHk1g==
   dependencies:
     autobind-decorator "^2.1.0"
     babel-polyfill "^6.22.0"
@@ -3082,6 +3090,7 @@ cbioportal-frontend-commons@^0.0.18:
     mobx "^3.1.7"
     mobx-react "^4.1.3"
     mobxpromise "github:cbioportal/mobxpromise#v1.0.2"
+    object-sizeof "^1.2.0"
     rc-tooltip "3.7.3"
     react "^16.8.4"
     react-file-download "^0.3.2"
@@ -8452,6 +8461,13 @@ object-keys@^1.0.12:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/object-keys/-/object-keys-1.1.0.tgz#11bd22348dd2e096a045ab06f6c85bcc340fa032"
   integrity sha512-6OO5X1+2tYkNyNEx6TsCxEqFfRWaqx6EtMiSbGrw8Ob8v9Ne+Hl8rBAgLBZn5wjEz3s/s6U1WXFUFOcxxAwUpg==
+
+object-sizeof@^1.2.0:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/object-sizeof/-/object-sizeof-1.5.1.tgz#da2ed6ce9c7c0b0f7cf42e8b370f493ec41e0936"
+  integrity sha512-htKkjOdWqxZQg5V6/M0tA/yLiYaRize4MzAyzibuR9Q0Jy/WYFRmTH4FYiGTdTXi2hbzxzdnaLv4K8N4VX7YTQ==
+  dependencies:
+    buffer "^5.4.0"
 
 object-visit@^1.0.0:
   version "1.0.1"
