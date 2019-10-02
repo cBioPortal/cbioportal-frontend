@@ -19,7 +19,6 @@ import {
 import styles from "./styles.module.scss";
 import classNames from 'classnames';
 import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
-import WindowStore from "../../../shared/components/window/WindowStore";
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
 import {remoteData} from "../../../public-lib/api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
@@ -30,15 +29,10 @@ import ErrorMessage from "../../../shared/components/ErrorMessage";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import { MakeMobxView } from 'shared/components/MobxView';
 import { CUSTOM_CASE_LIST_ID } from 'shared/components/query/QueryStore';
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { Alteration } from 'shared/lib/oql/oql-parser';
 import ReactSelect from "react-select";
-import Select from "react-select1";
-import { Dropdown, Checkbox } from 'react-bootstrap';
-import { DropdownToggleProps } from 'react-bootstrap/lib/DropdownToggle';
-import { DropdownMenuProps } from 'react-bootstrap/lib/DropdownMenu';
 import autobind from 'autobind-decorator';
 import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import FontAwesome from 'react-fontawesome';
@@ -739,27 +733,5 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         }
         this.props.store.modifyQueryParams = modifyQueryParams;
         this.props.store.queryFormVisible = true;
-    }
-
-    @action
-    private async handleVirtualStudyButtonClick(alterations: ICaseAlteration[]) {
-        let studies = _.reduce(_.groupBy(alterations, "studyId"), (acc: { id: string; samples: string[] }[], alteration, studyId) => {
-            acc.push({
-                id: studyId,
-                samples: alterations.map(alteration => alteration.sampleId)
-            })
-            return acc;
-        }, []);
-
-        let parameters = {
-            name: "virtual study",
-            description: "virtual study",
-            origin: studies.map(study => study.id),
-            studies: studies
-        }
-        const saveStudyResult = await sessionServiceClient.saveVirtualStudy(parameters, false);
-        if (saveStudyResult && saveStudyResult.id) {
-            window.open(buildCBioPortalPageUrl({pathname:'study', query: {id: saveStudyResult.id}}), "_blank");
-        }
     }
 }
