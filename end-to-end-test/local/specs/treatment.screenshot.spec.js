@@ -24,7 +24,7 @@ describe('treatment feature', () => {
             selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
             $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
             $('div.icon-area div.icon').waitForExist();
-            $('button=Add Treatments to Heatmap').click();
+            $('button=Add Treatment Response to Heatmap').click();
             openHeatmapMenu();
             waitForOncoprint();
             var res = browser.checkElement('[id=oncoprintDiv]');

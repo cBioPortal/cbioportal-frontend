@@ -107,12 +107,22 @@ describe('treatment feature', function() {
                 assert(treatments.length, 1);
             });
 
+            it('initializes from `treatment_list` URL parameter', () => {
+                goToUrlAndSetLocalStorage(oncoprintTabUrl.concat('&treatment_list=17-AAG'));
+                waitForOncoprint();
+                openHeatmapMenu();
+                selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
+                assert($('div.icon*=17-AAG').isExisting());
+                var selectMenuEntry = reactSelectOption($('.oncoprint__controls__heatmap_menu .treatment-selector'), 'Name of 17-AAG', true);
+                assert(selectMenuEntry.getAttribute('class').includes('is-selected'));
+            });
+
             it('sets `treatment_list` URL parameter', () => {
                 openHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
                 $('div.icon-area div.icon').waitForExist();
-                $('button=Add Treatments to Heatmap').click();
+                $('button=Add Treatment Response to Heatmap').click();
                 waitForOncoprint();
                 var url = browser.url().value;
                 var regex = /treatment_list=17-AAG/;

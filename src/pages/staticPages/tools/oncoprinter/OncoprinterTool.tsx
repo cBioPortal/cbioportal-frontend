@@ -231,6 +231,8 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
     }
 
     render() {
+
+        const numCells = this.store.hugoGeneSymbols.length * this.store.sampleIds.length;
         return (
             <PageLayout className={'whiteBackground staticPage'}>
                 <Helmet>
@@ -259,6 +261,16 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                                      className="mainTabs"
                             >
                                 <MSKTab key={0} id={OncoprinterTab.ONCOPRINT} linkText="Oncoprint">
+                                    {(numCells > 100000) && (
+                                        <div
+                                            className="alert alert-warning"
+                                        >
+                                            Warning: Because your inputted data is very large,
+                                            the Oncoprinter may be slow, and downloaded PDF, SVG, and PNG 
+                                            may be huge and unresponsive. We recommend plotting
+                                            data for fewer genes at a time.
+                                        </div>
+                                    )}
                                     <div style={{marginTop:10}}>
                                         <Oncoprinter
                                             ref={this.oncoprinterRef}

@@ -19,7 +19,8 @@ import MiniBoxPlot from 'pages/resultsView/enrichments/MiniBoxPlot';
 import * as _ from "lodash";
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
-import CheckedSelect, { Option } from 'public-lib/components/checkedSelect/CheckedSelect';
+import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
+import { Option } from 'public-lib/components/checkedSelect/CheckedSelectUtils';
 import EllipsisTextTooltip from "public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 export interface IExpressionEnrichmentContainerProps {

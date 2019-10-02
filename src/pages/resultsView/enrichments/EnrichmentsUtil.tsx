@@ -27,16 +27,12 @@ export const CNA_TO_ALTERATION:{[cna:number]:string} = {
     "-2": "HOMDEL"
 };
 
-export enum GeneOptions {
+export enum GeneOptionLabel {
     USER_DEFINED_OPTION='User-defined genes',
     HIGHEST_FREQUENCY='Genes with highest frequency in any group',
     AVERAGE_FREQUENCY='Genes with highest average frequency',
-    SIGNIFICANT_P_VALUE='Genes with most significant p-value'
-}
-
-export const USER_DEFINED_OPTION:{label:string, genes:string[]} = {
-    label: GeneOptions.USER_DEFINED_OPTION,
-    genes: []
+    SIGNIFICANT_P_VALUE='Genes with most significant p-value',
+    SYNC_WITH_TABLE="Sync with table (up to 100 genes)"
 }
 
 export enum AlterationContainerType {
@@ -586,9 +582,12 @@ export function getEnrichmentBarPlotData(data: { [gene: string]: AlterationEnric
     });
 }
 
-export function getGeneListOptions(data: AlterationEnrichmentRow[], includeAlteration?:boolean): { label: string, genes: string[] }[] {
+export function getGeneListOptions(data: AlterationEnrichmentRow[], includeAlteration?:boolean): { label: GeneOptionLabel, genes: string[] }[] {
     if (_.isEmpty(data)) {
-        return [USER_DEFINED_OPTION];
+        return [{
+            label: GeneOptionLabel.USER_DEFINED_OPTION,
+            genes: []
+        }];
     }
 
     let dataWithOptionName: (AlterationEnrichmentRow & {optionName?:string})[] = data;
@@ -625,18 +624,25 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[], includeAlter
     });
 
     return [
-        USER_DEFINED_OPTION,
         {
-            label: GeneOptions.HIGHEST_FREQUENCY,
+            label: GeneOptionLabel.USER_DEFINED_OPTION,
+            genes: []
+        },
+        {
+            label: GeneOptionLabel.HIGHEST_FREQUENCY,
             genes: _.map(dataSortedByAlteredPercentage, datum => datum.optionName || datum.hugoGeneSymbol)
         },
         {
-            label: GeneOptions.AVERAGE_FREQUENCY,
+            label: GeneOptionLabel.AVERAGE_FREQUENCY,
             genes: _.map(dataSortedByAvgFrequency, datum => datum.optionName || datum.hugoGeneSymbol)
         },
         {
-            label: GeneOptions.SIGNIFICANT_P_VALUE,
+            label: GeneOptionLabel.SIGNIFICANT_P_VALUE,
             genes: _.map(dataSortedBypValue, datum => datum.optionName || datum.hugoGeneSymbol)
+        },
+        {
+            label: GeneOptionLabel.SYNC_WITH_TABLE,
+            genes: []
         }
     ];
 }

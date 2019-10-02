@@ -283,13 +283,17 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
 ) {
     trackDatum[featureKey] = featureId;
     trackDatum.study_id = case_.studyId;
-    if (!data || !data.length) {
+
+    // remove data points of which `value` is NaN
+    const dataWithValue =  _.filter(data, (d) => !isNaN(d.value));
+
+    if (!dataWithValue || !dataWithValue.length) {
         trackDatum.profile_data = null;
         trackDatum.na = true;
-    } else if (data.length === 1) {
-        trackDatum.profile_data = data[0].value;
-        if (data[0].thresholdType) {
-            trackDatum.thresholdType = data[0].thresholdType;
+    } else if (dataWithValue.length === 1) {
+        trackDatum.profile_data = dataWithValue[0].value;
+        if (dataWithValue[0].thresholdType) {
+            trackDatum.thresholdType = dataWithValue[0].thresholdType;
             trackDatum.category = trackDatum.profile_data && trackDatum.thresholdType? `${trackDatum.thresholdType}${trackDatum.profile_data.toFixed(2)}` : undefined;
         }
     } else {
@@ -304,16 +308,16 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
             let representingDatum;
             switch (sortOrder) {
                 case "ASC":
-                    let bestValue = _(data).map((d:HeatmapCaseDatum)=>d.value).min();
-                    representingDatum = selectRepresentingDataPoint(bestValue!, data, false);
+                    let bestValue = _(dataWithValue).map((d:HeatmapCaseDatum)=>d.value).min();
+                    representingDatum = selectRepresentingDataPoint(bestValue!, dataWithValue, false);
                     break;
                 case "DESC":
-                    bestValue = _(data).map((d:HeatmapCaseDatum)=>d.value).max();
-                    representingDatum = selectRepresentingDataPoint(bestValue!, data, false);
+                    bestValue = _(dataWithValue).map((d:HeatmapCaseDatum)=>d.value).max();
+                    representingDatum = selectRepresentingDataPoint(bestValue!, dataWithValue, false);
                     break;
                 default:
-                    bestValue = _.maxBy(data,(d:HeatmapCaseDatum) => Math.abs(d.value))!.value;
-                    representingDatum = selectRepresentingDataPoint(bestValue, data, true);
+                    bestValue = _.maxBy(dataWithValue,(d:HeatmapCaseDatum) => Math.abs(d.value))!.value;
+                    representingDatum = selectRepresentingDataPoint(bestValue, dataWithValue, true);
                     break;
             }
             
@@ -321,7 +325,7 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
             // this is detected by `representingDatum` to be undefined
             // in that case select the first element as representing datum
             if (representingDatum === undefined) {
-                representingDatum = data[0];
+                representingDatum = dataWithValue[0];
             }
 
             trackDatum.profile_data = representingDatum!.value;

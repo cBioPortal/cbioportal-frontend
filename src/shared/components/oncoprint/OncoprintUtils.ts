@@ -943,19 +943,18 @@ export function makeGenesetHeatmapTracksMobxPromise(
     });
 }
 
-export function extractTreatmentSelections(text:string, selectedTreatments:ISelectOption[], treatmentsMap:{[treatmentId:string]:ISelectOption}):string {
+export function extractTreatmentSelections(text:string, selectedTreatments:string[], treatmentsMap:{[treatmentId:string]:ISelectOption}):string {
 
     // get values from input string
     const elements = splitHeatmapTextField(text);
 
     // check values for valid treatment ids
-    const selectedKeys:string[] = _.map(selectedTreatments,'id');
     const detectedTreatments:string[] = [];
     _.each(elements, (d:string)=> {
         if (d in treatmentsMap) {
             detectedTreatments.push(d);
-            if (! selectedKeys.includes(d)) {
-                selectedTreatments.push( treatmentsMap[d] );
+            if (! selectedTreatments.includes(d)) {
+                selectedTreatments.push(d);
             }
         }
     });

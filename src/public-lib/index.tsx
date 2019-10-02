@@ -1,6 +1,8 @@
 // components exported here will be exposed in the commons library
 
-export {default as CheckedSelect, Option} from './components/checkedSelect/CheckedSelect';
+export {default as CheckedSelect} from './components/checkedSelect/CheckedSelect';
+export {Option} from './components/checkedSelect/CheckedSelectUtils';
+export {default as Checklist} from './components/checkedSelect/Checklist';
 export {default as DefaultTooltip} from './components/defaultTooltip/DefaultTooltip';
 export {default as DownloadControls} from './components/downloadControls/DownloadControls';
 export {default as EditableSpan} from './components/editableSpan/EditableSpan';
