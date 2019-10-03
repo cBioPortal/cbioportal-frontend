@@ -24,10 +24,14 @@
     font-weight: bold;
 }
 
-.other-profiles-select {
-  flex: 1;
-  margin-left: 10px;
-  margin-right: 10px;
+.showMoreButtonContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.showMoreButton {
+  // margin-left: 10px !important;
+  width: 200px;
 }
 
 .tooltip {
@@ -36,6 +40,5 @@
 
 .infoIcon {
   margin-left: 4px;
-  margin-top: 4px;
   color: #555;
 }
