@@ -2,7 +2,7 @@ import * as React from 'react';
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import styles from "./mutationType.module.scss";
-import getCanonicalMutationType from "shared/lib/getCanonicalMutationType";
+import getCanonicalMutationType from "public-lib/lib/getCanonicalMutationType";
 import {floatValueIsNA} from "shared/lib/NumberUtils";
 
 interface IMutationTypeFormat {
@@ -31,7 +31,7 @@ export default class ClonalColumnFormatter {
             sampleToValue[mutation.sampleId] = ClonalColumnFormatter.getClonalValue([mutation]);
         }
         for (const mutation of data) {
-            sampleToCCF[mutation.sampleId] = mutation.ccfMCopies;
+            sampleToCCF[mutation.sampleId] = mutation.alleleSpecificCopyNumber.ccfMCopies;
         }
         // exclude samples with invalid count value (undefined || emtpy || lte 0)
         const samplesWithValue = sampleIds.filter(sampleId =>
@@ -95,21 +95,21 @@ export default class ClonalColumnFormatter {
     }
 
     public static getCcfMCopiesUpperValue(data:Mutation[]):number {
-        const ccfMCopiesUpperValue = data[0].ccfMCopiesUpper;
+        const ccfMCopiesUpperValue = data[0].alleleSpecificCopyNumber.ccfMCopiesUpper;
         return ccfMCopiesUpperValue;
     }
 
     public static getCcfMCopiesValue(data:Mutation[]):number {
-        const ccfMCopiesValue = data[0].ccfMCopies;
+        const ccfMCopiesValue = data[0].alleleSpecificCopyNumber.ccfMCopies;
         return ccfMCopiesValue;
     }
 
     public static getClonalValue(data:Mutation[]):string {
         let textValue:string = "";
-        const ccfMCopiesUpperValue = ClonalColumnFormatter.getCcfMCopiesUpperValue(data);
-        if (floatValueIsNA(ccfMCopiesUpperValue)) {
+        const clonalValue = data[0].alleleSpecificCopyNumber.clonal;
+        if (clonalValue == null) {
             textValue = "";
-        } else if (ccfMCopiesUpperValue === 1) {
+        } else if (clonalValue) {
             textValue = "yes";
         } else {
             textValue = "no";

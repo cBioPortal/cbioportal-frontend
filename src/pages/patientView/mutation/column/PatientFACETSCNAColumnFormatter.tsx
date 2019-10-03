@@ -2,7 +2,7 @@ import * as React from 'react';
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 import SampleManager from "../../sampleManager";
 
 export default class PatientFACETSCNAColumnFormatter {
@@ -104,8 +104,8 @@ export default class PatientFACETSCNAColumnFormatter {
     // gets value displayed in table cell - "NA" if missing attributes needed for calculation
     private static getFacetsCNAData(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
         const sampleId:string = mutation.sampleId;
-        const tcn = mutation.totalCopyNumber;
-        const lcn = mutation.minorCopyNumber;
+        const tcn = mutation.alleleSpecificCopyNumber.totalCopyNumber;
+        const lcn = mutation.alleleSpecificCopyNumber.minorCopyNumber;
         const mcn:number = tcn - lcn;
         let wgd = null;
         if (sampleIdToClinicalDataMap) {
@@ -122,8 +122,8 @@ export default class PatientFACETSCNAColumnFormatter {
 
     public static getFacetsCNATooltip(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleManager:SampleManager) {
         const sampleId:string = mutation.sampleId;
-        const tcn = mutation.totalCopyNumber;
-        const lcn = mutation.minorCopyNumber;
+        const tcn = mutation.alleleSpecificCopyNumber.totalCopyNumber;
+        const lcn = mutation.alleleSpecificCopyNumber.minorCopyNumber;
         const mcn:number = tcn - lcn;
         const componentBySample = sampleManager.getComponentForSample(sampleId, 1, "");
         let wgd = null;
@@ -216,7 +216,7 @@ export default class PatientFACETSCNAColumnFormatter {
             cnaDataValue = PatientFACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, "NA", wgd);
             return cnaDataValue
         } else {
-            cnaDataValue = PatientFACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, mutation.totalCopyNumber, wgd);
+            cnaDataValue = PatientFACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, mutation.alleleSpecificCopyNumber.totalCopyNumber, wgd);
         }
         const cnaToolTip = PatientFACETSCNAColumnFormatter.getFacetsCNATooltip(mutation, sampleIdToClinicalDataMap, sampleManager);
         return (<DefaultTooltip placement="left"

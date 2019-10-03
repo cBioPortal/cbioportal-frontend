@@ -112,7 +112,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             name: "CCF",
             tooltip:(<span>Cancer Cell Fraction</span>),
             render: (d:Mutation[])=>FACETSColumnFormatter.renderFunction(d, this.props.sampleManager),
-            sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopies),
+            sortBy:(d:Mutation[])=>d.map(m=>m.alleleSpecificCopyNumber.ccfMCopies),
             download:(d:Mutation[])=>CancerCellFractionColumnFormatter.getCancerCellFractionDownload(d)
         };
 
@@ -120,7 +120,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             name: "Clonal",
             tooltip: (<span>FACETS Clonal</span>),
             render:(d:Mutation[])=>FACETSClonalColumnFormatter.renderFunction(d, this.getSamples(), this.props.sampleManager),
-            sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopiesUpper),
+            sortBy:(d:Mutation[])=>d.map(m=>m.alleleSpecificCopyNumber.ccfMCopiesUpper),
             download:(d:Mutation[])=>FACETSClonalColumnFormatter.getClonalDownload(d)
         };
 
@@ -237,7 +237,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         }
         return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return !floatValueIsNA(m.ccfMCopies);
+                return !floatValueIsNA(m.alleleSpecificCopyNumber.ccfMCopies);
             });
         });
     }
@@ -255,7 +255,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         }
         return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return (m.totalCopyNumber !== -1 && clinicalData[m.sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY").length > 0);
+                return (m.alleleSpecificCopyNumber.totalCopyNumber !== -1 && clinicalData[m.sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY").length > 0);
             });
         });
     }

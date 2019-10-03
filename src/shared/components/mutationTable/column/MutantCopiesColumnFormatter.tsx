@@ -2,7 +2,7 @@ import * as React from 'react';
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import styles from "./mutationType.module.scss";
-import getCanonicalMutationType from "shared/lib/getCanonicalMutationType";
+import getCanonicalMutationType from "public-lib/lib/getCanonicalMutationType";
 
 interface IMutationTypeFormat {
     label?: string;
@@ -56,7 +56,7 @@ export default class MutantCopiesColumnFormatter {
     public static getMutantCopies(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):number {
         const sampleId:string = mutation.sampleId;
         const variantAlleleFraction:number = MutantCopiesColumnFormatter.getVariantAlleleFraction(mutation);
-        const totalCopyNumber = mutation.totalCopyNumber;
+        const totalCopyNumber = mutation.alleleSpecificCopyNumber.totalCopyNumber;
         let purity = null;
         if (sampleIdToClinicalDataMap) {
             const purityData = sampleIdToClinicalDataMap[sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY");
@@ -73,7 +73,7 @@ export default class MutantCopiesColumnFormatter {
 
     public static getMutantCopiesOverTotalCopies(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string {
         let textValue:string = "";
-        const totalCopyNumber:number = mutation.totalCopyNumber;
+        const totalCopyNumber:number = mutation.alleleSpecificCopyNumber.totalCopyNumber;
         const mutantCopies:number = MutantCopiesColumnFormatter.getMutantCopies(mutation, sampleIdToClinicalDataMap)
         if (mutantCopies === -1 || MutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
             textValue = "";
@@ -104,7 +104,7 @@ export default class MutantCopiesColumnFormatter {
      */
     public static constructToolTipString(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string {
         let textValue:string = "";
-        const totalCopyNumber:number = mutation.totalCopyNumber;
+        const totalCopyNumber:number = mutation.alleleSpecificCopyNumber.totalCopyNumber;
         const mutantCopies:number = MutantCopiesColumnFormatter.getMutantCopies(mutation, sampleIdToClinicalDataMap);
         if (mutantCopies === -1 || MutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
             textValue = "Missing data values, mutant copies can not be computed";

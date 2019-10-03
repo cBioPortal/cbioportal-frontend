@@ -2,7 +2,7 @@ import * as React from 'react';
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MolecularProfile, Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 
 export default class FACETSCNAColumnFormatter {
 
@@ -102,8 +102,8 @@ export default class FACETSCNAColumnFormatter {
 
     private static getFacetsCNAData(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
         const sampleId:string = mutation.sampleId;
-        const tcn = mutation.totalCopyNumber;
-        const lcn = mutation.minorCopyNumber;
+        const tcn = mutation.alleleSpecificCopyNumber.totalCopyNumber;
+        const lcn = mutation.alleleSpecificCopyNumber.minorCopyNumber;
         const mcn:number = tcn - lcn;
         let wgd = null;
         if (sampleIdToClinicalDataMap) {
@@ -120,8 +120,8 @@ export default class FACETSCNAColumnFormatter {
 
     public static getFacetsCNATooltip(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
         const sampleId:string = mutation.sampleId;
-        const tcn = mutation.totalCopyNumber;
-        const lcn = mutation.minorCopyNumber;
+        const tcn = mutation.alleleSpecificCopyNumber.totalCopyNumber;
+        const lcn = mutation.alleleSpecificCopyNumber.minorCopyNumber;
         const mcn:number = tcn - lcn;
         let wgd = null;
         let facetsTooltip = null;
@@ -199,7 +199,7 @@ export default class FACETSCNAColumnFormatter {
         for (const mutation of data) {
             const facetsCNAData = FACETSCNAColumnFormatter.getFacetsCNAData(mutation, sampleIdToClinicalDataMap);
             if (facetsCNAData !== "NA") {
-                sampleToCNA[mutation.sampleId] = mutation.totalCopyNumber.toString();
+                sampleToCNA[mutation.sampleId] = mutation.alleleSpecificCopyNumber.totalCopyNumber.toString();
             } else {
                 sampleToCNA[mutation.sampleId] = "NA";
             }
@@ -241,7 +241,7 @@ export default class FACETSCNAColumnFormatter {
             cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, "NA", wgd);
             return cnaDataValue
         } else {
-            cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, mutation.totalCopyNumber, wgd);
+            cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, mutation.alleleSpecificCopyNumber.totalCopyNumber, wgd);
         }
         const cnaToolTip = FACETSCNAColumnFormatter.getFacetsCNATooltip(mutation, sampleIdToClinicalDataMap);
         return (<DefaultTooltip placement="left"

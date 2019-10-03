@@ -469,7 +469,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             tooltip: (<span>FACETS Clonal</span>),
             render:(d:Mutation[])=>ClonalColumnFormatter.renderFunction(d, [d[0].sampleId]),
             download:ClonalColumnFormatter.getClonalValue,
-            sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopiesUpper)
+            sortBy:(d:Mutation[])=>d.map(m=>m.alleleSpecificCopyNumber.ccfMCopiesUpper)
         };
 
         this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
@@ -477,7 +477,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             tooltip: (<span>FACETS Cancer Cell Fraction</span>),
             render:CancerCellFractionColumnFormatter.renderFunction,
             download:CancerCellFractionColumnFormatter.getCancerCellFractionValue,
-            sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopies)
+            sortBy:(d:Mutation[])=>d.map(m=>m.alleleSpecificCopyNumber.ccfMCopies)
         };
 
         this._columns[MutationTableColumnType.MUTANT_COPIES] = {

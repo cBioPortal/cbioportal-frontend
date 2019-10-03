@@ -13,8 +13,8 @@ export default class FACETSColumnFormatter {
     static maxBarHeight = 12;
     static indexToBarLeft = (n:number) => n*(FACETSColumnFormatter.barWidth + FACETSColumnFormatter.barSpacing);
 
-    public static getComponentForSampleArgs<T extends {ccfMCopies:number}>(mutation:T) {
-        const ccfMCopiesValue = mutation.ccfMCopies;
+    public static getComponentForSampleArgs<T extends {alleleSpecificCopyNumber:{ccfMCopies:number}}>(mutation:T) {
+        const ccfMCopiesValue = mutation.alleleSpecificCopyNumber.ccfMCopies;
         let opacity: number = 1;
         let extraTooltipText: string = '';
         if (ccfMCopiesValue !== 1) {
@@ -26,8 +26,8 @@ export default class FACETSColumnFormatter {
         };
     }
 
-    public static convertMutationToSampleElement<T extends {sampleId:string, ccfMCopies:number}>(mutation:T, color:string, barX:number, sampleComponent:any) {
-            const ccfMCopies = mutation.ccfMCopies;
+    public static convertMutationToSampleElement<T extends {sampleId:string, alleleSpecificCopyNumber:{ccfMCopies:number}}>(mutation:T, color:string, barX:number, sampleComponent:any) {
+            const ccfMCopies = mutation.alleleSpecificCopyNumber.ccfMCopies;
             const barHeight = (isNaN(ccfMCopies) ? 0 : ccfMCopies)*FACETSColumnFormatter.maxBarHeight;
             const barY = FACETSColumnFormatter.maxBarHeight - barHeight;
 
