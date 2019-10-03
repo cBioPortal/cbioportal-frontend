@@ -30,6 +30,8 @@ webpackConfig.plugins.push(new webpack.DefinePlugin({
 
 webpackConfig.entry = "";
 
+webpackConfig.mode = "development";
+
 if (argv.debug) {
     console.log("argv: ",argv);
     webpackConfig.devtool = "inline-source-map";
