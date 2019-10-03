@@ -13,7 +13,7 @@ import {default as CaseAlterationTable, ICaseAlteration} from "./CaseAlterationT
 import {
     generateCaseAlterationData, generateCnaData, generateDownloadData, generateGeneAlterationData, generateMrnaData,
     generateMutationData, generateMutationDownloadData,
-    generateProteinData, hasValidData, hasValidMutationData, stringify2DArray, generateOtherMolecularProfileData, generateOtherMolecularProfileDownloadData
+    generateProteinData, hasValidData, hasValidMutationData, stringify2DArray, generateOtherMolecularProfileData, generateOtherMolecularProfileDownloadData, DOWNLOAD_TABLE_DEFAULT_ROW_LIMIT
 } from "./DownloadUtils";
 
 import styles from "./styles.module.scss";
@@ -57,6 +57,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         this.handleProteinDownload = this.handleProteinDownload.bind(this);
         this.handleTransposedProteinDownload = this.handleTransposedProteinDownload.bind(this);
     }
+
+    @observable showAllRows: boolean = false;
 
     readonly geneAlterationData = remoteData<IGeneAlteration[]>({
         await: ()=>[
@@ -125,43 +127,33 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         invoke:()=>Promise.resolve(stringify2DArray(this.transposedMutationDownloadData.result!))
     });
 
-    readonly otherMolecularProfileData = remoteData<{[key: string]: ExtendedAlteration[]}>({
+    readonly allOtherMolecularProfileDataGroupByProfileName = remoteData<{[profileName: string]: {[key: string]: ExtendedAlteration[]}}>({
         await:()=>[this.props.store.nonQueriedMolecularData, this.props.store.nonSelectedMolecularProfilesGroupByName],
         invoke:()=>{
             const profileNames = _.keys(this.props.store.nonSelectedMolecularProfilesGroupByName.result);
-            const selectedProfileName = this.props.store.selectedMolecularProfileNameForDownload ? this.props.store.selectedMolecularProfileNameForDownload : profileNames[0];
             if (this.props.store.doNonSelectedMolecularProfilesExist) {
                 const data = {
                     "samples": _.groupBy(this.props.store.nonQueriedMolecularData.result!, (data) => data.uniqueSampleKey)
                 } as CaseAggregatedData<ExtendedAlteration>
-                return Promise.resolve(generateOtherMolecularProfileData(this.props.store.nonSelectedMolecularProfilesGroupByName.result[selectedProfileName].map(profile => profile.molecularProfileId), data))
+                const allOtherMolecularProfileDataGroupByProfileName: {[profileName: string]: {[key: string]: ExtendedAlteration[]}} = _.reduce(profileNames, (allOtherMolecularProfileDataGroupByProfileName, profileName) => {
+                    allOtherMolecularProfileDataGroupByProfileName[profileName] = generateOtherMolecularProfileData(this.props.store.nonSelectedMolecularProfilesGroupByName.result[profileName].map(profile => profile.molecularProfileId), data);
+                    return allOtherMolecularProfileDataGroupByProfileName;
+                },{} as {[profileName: string]: {[key: string]: ExtendedAlteration[]}})
+                return Promise.resolve(allOtherMolecularProfileDataGroupByProfileName)
             }
             return Promise.resolve({});
         }
     });
 
-    readonly otherMolecularProfileDownloadData = remoteData<string[][]>({
-        await:()=>[this.otherMolecularProfileData, this.props.store.samples, this.props.store.genes],
-        invoke:()=>Promise.resolve(generateOtherMolecularProfileDownloadData(
-            this.otherMolecularProfileData.result!, this.props.store.samples.result!, this.props.store.genes.result!
-        ))
-    });
-
-    readonly transposedOtherMolecularProfileDownloadData = remoteData<string[][]>({
-        await:()=>[this.otherMolecularProfileDownloadData],
-        invoke:()=>Promise.resolve(_.unzip(this.otherMolecularProfileDownloadData.result!))
-    });
-
-    readonly otherMolecularProfileDataText = remoteData<string>({
-        await:()=>[this.otherMolecularProfileDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.otherMolecularProfileDownloadData.result!))
-    });
-
-    readonly transposedOtherMolecularProfileDataText = remoteData<string>({
-        await:()=>[this.transposedOtherMolecularProfileDownloadData],
-        invoke:()=>{
-            return Promise.resolve(stringify2DArray(this.transposedOtherMolecularProfileDownloadData.result!))
-        }
+    readonly allOtherMolecularProfileDownloadDataGroupByProfileName = remoteData<{[key: string]: string[][]}>({
+        await:()=>[this.allOtherMolecularProfileDataGroupByProfileName, this.props.store.samples, this.props.store.genes],
+        invoke:()=>Promise.resolve(
+            _.mapValues(this.allOtherMolecularProfileDataGroupByProfileName.result, (otherMolecularProfileData) => {
+                return generateOtherMolecularProfileDownloadData (
+                    otherMolecularProfileData, this.props.store.samples.result!, this.props.store.genes.result!
+                )
+            })
+        )
     });
 
     readonly mrnaData = remoteData<{[key: string]: ExtendedAlteration[]}>({
@@ -411,6 +403,13 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                     {(this.props.store.doNonSelectedMolecularProfilesExist) && this.nonSelectedProfileDownloadRow(this.props.store.nonSelectedMolecularProfilesGroupByName.result!)}
                                 </tbody>
                             </table>
+                            {
+                                this.shouldShowMoreButtonAppear(_.size(this.props.store.nonSelectedMolecularProfilesGroupByName.result!), this.props.store.selectedMolecularProfiles.result!.length) && (
+                                    <div className={classNames(styles.showMoreButtonContainer)}>
+                                        <button className={classNames("btn", "btn-primary", "btn-sm", styles.showMoreButton)} onClick={this.toggleShowAll}>{this.showAllRows ? "Show less" : "Show more"}</button>
+                                    </div>
+                                )
+                            }
                         </div>
                         <hr/>
                         <div className={styles["tables-container"]} data-test="dataDownloadGeneAlterationTable">
@@ -493,90 +492,52 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     private nonSelectedProfileDownloadRow(nonSelectedMolecularProfilesGroupByName:_.Dictionary<MolecularProfile[]>)
     {
-        const profileOptions = _.keys(nonSelectedMolecularProfilesGroupByName).map((name) => {
+        const allProfileOptions = _.map(nonSelectedMolecularProfilesGroupByName, (profiles: MolecularProfile[], profileName: string) => {
             if (this.props.store.studies.result!.length === 1) {
-                const singleStudyProfile = nonSelectedMolecularProfilesGroupByName[name][0];
+                const singleStudyProfile = profiles[0];
                 return {
-                    "value": name,
-                    "label": name,
+                    "name": profileName,
                     "description": singleStudyProfile.description
                 }
             }
-            return {"value": name, "label": name}
+            return {"name": profileName}
         });
 
-        const selectedOption = profileOptions.find((option) => {
-            if (this.props.store.selectedMolecularProfileNameForDownload && _.keys(nonSelectedMolecularProfilesGroupByName).includes(this.props.store.selectedMolecularProfileNameForDownload)) {
-                return option.value === this.props.store.selectedMolecularProfileNameForDownload;
-            }
-            return option.value === _.keys(nonSelectedMolecularProfilesGroupByName)[0];
-        });
-        const selectedProfileName = selectedOption!.value;
+        const filteredProfileOptions = allProfileOptions.slice(0, Math.min(DOWNLOAD_TABLE_DEFAULT_ROW_LIMIT - this.props.store.selectedMolecularProfiles.result!.length, allProfileOptions.length));
         
-        return (
-            <tr>
-                <td style={{width: 500}}>
-                    <div style={{display: "flex", alignItems:"center"}}>
-                        {"Other profiles"}
-                        <div className={styles["other-profiles-select"]}>
-                            <ReactSelect
-                                    value={selectedOption}
-                                    onChange={this.handleSelect}
-                                    options={profileOptions}
-                                    formatOptionLabel={this.formatOptionLabel}
-                                    clearable={false}
-                                    autosize={false}
-                            />
+        return _.map(this.showAllRows ? allProfileOptions : filteredProfileOptions, (option) => 
+            (
+                <tr>
+                    <td style={{width: 500}}>
+                        <div style={{display: "flex", alignItems:"center"}}>
+                            {option.name}
+                            {
+                                (option.description) && (
+                                        <DefaultTooltip
+                                            mouseEnterDelay={0}
+                                            placement="right"
+                                            overlay={<div className={styles.tooltip}>{option.description}</div>}
+                                        >
+                                            <FontAwesome className={styles.infoIcon} name='info-circle'/>
+                                        </DefaultTooltip>
+                                )
+                            }
                         </div>
-                    </div>
-                </td>
-                <td>
-                    {
-                        (this.props.store.doNonSelectedMolecularProfilesExist) && (
-                            <div>
-                                <a onClick={(event) => this.handleOtherMolecularProfileDownload(event, selectedProfileName)}>
-                                <i className='fa fa-cloud-download' style={{marginRight: 5}}/>Tab Delimited Format
-                                </a>
-                                <span style={{margin:'0px 10px'}}>|</span>
-                                <a onClick={(event) => this.handleTransposedOtherMolecularProfileDownload(event, selectedProfileName)}>
-                                    <i className='fa fa-cloud-download' style={{marginRight: 5}}/>Transposed Matrix
-                                </a>
-                            </div>
-                        )
-                    }
-
-
-                </td>
-            </tr>
-        );
-    }
-
-    @autobind
-    @action
-    private formatOptionLabel(props: any) {
-        return (
-            <div style={{ display: "flex" }}>
-                <div>{props.label}</div>
-                {
-                    (props.description) && (
-                        <DefaultTooltip
-                            mouseEnterDelay={0}
-                            placement="right"
-                            overlay={<div className={styles.tooltip}>{props.description}</div>}
-                        >
-                            <FontAwesome className={styles.infoIcon} name='question-circle'/>
-                        </DefaultTooltip>
-                    )
-                }
-            </div>
+                    </td>
+                    <td>
+                        <div>
+                            <a onClick={(event) => this.handleOtherMolecularProfileDownload(event, option.name)}>
+                            <i className='fa fa-cloud-download' style={{marginRight: 5}}/>Tab Delimited Format
+                            </a>
+                            <span style={{margin:'0px 10px'}}>|</span>
+                            <a onClick={(event) => this.handleTransposedOtherMolecularProfileDownload(event, option.name)}>
+                                <i className='fa fa-cloud-download' style={{marginRight: 5}}/>Transposed Matrix
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            )
         )
-    };
-
-    @autobind
-    private handleSelect(option: any) {
-        if (option && option.value) {
-            this.props.store.selectedMolecularProfileNameForDownload = option.value;
-        }
     }
 
     private copyDownloadControlsRow(title:string,
@@ -672,6 +633,16 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                             "sample_matrix.txt"));
     };
 
+    private shouldShowMoreButtonAppear(nonSelectedProfilesCount: number, selectedProfilesCount: number): boolean {
+        return nonSelectedProfilesCount > DOWNLOAD_TABLE_DEFAULT_ROW_LIMIT - selectedProfilesCount;
+    }
+
+    @autobind
+    @action
+    private toggleShowAll() {
+        this.showAllRows = !this.showAllRows;
+    }
+
     private handleMutationDownload()
     {
         onMobxPromise(this.mutationDataText, text=>fileDownload(text, "mutations.txt"));
@@ -685,13 +656,19 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     @autobind
     private handleOtherMolecularProfileDownload(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>, profileName: string)
     {
-        onMobxPromise(this.otherMolecularProfileDataText, text=>fileDownload(text, `${profileName}.txt`));
+        onMobxPromise(this.allOtherMolecularProfileDownloadDataGroupByProfileName, downloadDataGroupByProfileName=>{
+            const textMap = this.downloadDataTextGroupByProfileName(downloadDataGroupByProfileName);
+            fileDownload(textMap[profileName], `${profileName}.txt`)
+        });
     }
 
     @autobind
     private handleTransposedOtherMolecularProfileDownload(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>, profileName: string)
     {
-        onMobxPromise(this.transposedOtherMolecularProfileDataText, text=>fileDownload(text, `${profileName}.txt`));
+        onMobxPromise(this.allOtherMolecularProfileDownloadDataGroupByProfileName, downloadDataGroupByProfileName=>{
+            const transposedTextMap = this.downloadDataTextGroupByProfileName(this.unzipDownloadDataGroupByProfileName(downloadDataGroupByProfileName));
+            fileDownload(transposedTextMap[profileName], `${profileName}.txt`)
+        });
     }
 
     private handleMrnaDownload(profileName: string)
@@ -733,5 +710,17 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         }
         this.props.store.modifyQueryParams = modifyQueryParams;
         this.props.store.queryFormVisible = true;
+    }
+
+    private unzipDownloadDataGroupByProfileName(downloadDataGroupByProfileName: {[key: string]: string[][]}): {[key: string]: string[][]} {
+        return _.mapValues(downloadDataGroupByProfileName, (otherMolecularProfileDownloadData) => {
+            return _.unzip(otherMolecularProfileDownloadData);
+        })
+    }
+
+    private downloadDataTextGroupByProfileName(downloadDataGroupByProfileName: {[key: string]: string[][]}): {[x: string]: string} {
+        return _.mapValues(downloadDataGroupByProfileName, (downloadData) => {
+            return stringify2DArray(downloadData);
+        })
     }
 }
