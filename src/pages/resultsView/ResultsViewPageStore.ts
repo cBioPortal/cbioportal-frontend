@@ -475,8 +475,6 @@ export class ResultsViewPageStore {
 
     @observable queryFormVisible: boolean = false;
 
-    @observable public selectedMolecularProfileNameForDownload: string | undefined = undefined;
-
     @computed get doNonSelectedMolecularProfilesExist() {
         return this.nonSelectedMolecularProfilesGroupByName.result && _.keys(this.nonSelectedMolecularProfilesGroupByName.result).length > 0;
     }
