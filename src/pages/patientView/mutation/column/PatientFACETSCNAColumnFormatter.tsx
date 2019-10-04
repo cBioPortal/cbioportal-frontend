@@ -103,6 +103,9 @@ export default class PatientFACETSCNAColumnFormatter {
 
     // gets value displayed in table cell - "NA" if missing attributes needed for calculation
     private static getFacetsCNAData(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
+        if (mutation.alleleSpecificCopyNumber === undefined) {
+            return "NA";
+        }
         const sampleId:string = mutation.sampleId;
         const tcn = mutation.alleleSpecificCopyNumber.totalCopyNumber;
         const lcn = mutation.alleleSpecificCopyNumber.minorCopyNumber;
