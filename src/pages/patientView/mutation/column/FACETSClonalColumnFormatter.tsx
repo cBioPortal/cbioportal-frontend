@@ -14,7 +14,7 @@ export default class FACETSClonalColumnFormatter {
             sampleToValue[mutation.sampleId] = FACETSClonalColumnFormatter.getClonalValue([mutation]);
         }
         for (const mutation of mutations) {
-            sampleToCCF[mutation.sampleId] = mutation.alleleSpecificCopyNumber.ccfMCopies;
+            sampleToCCF[mutation.sampleId] = mutation.alleleSpecificCopyNumber !== undefined ? mutation.alleleSpecificCopyNumber.ccfMCopies : -1;
         }
         // exclude samples with invalid count value (undefined || emtpy || lte 0)
         const samplesWithValue = sampleIds.filter(sampleId =>
@@ -90,13 +90,15 @@ export default class FACETSClonalColumnFormatter {
 
     public static getClonalValue(mutations:Mutation[]):string {
         let textValue:string = "";
-	const clonalValue = mutations[0].alleleSpecificCopyNumber.clonal;
-        if (clonalValue == null) {
-            textValue = "";
-        } else if (clonalValue) {
-            textValue = "yes";
-        } else {
-            textValue = "no";
+        if (mutations[0].alleleSpecificCopyNumber !== undefined) {
+            const clonalValue = mutations[0].alleleSpecificCopyNumber.clonal;
+            if (clonalValue == null) {
+                textValue = "";
+            } else if (clonalValue) {
+                textValue = "yes";
+            } else {
+                textValue = "no";
+            }
         }
         return textValue;
     }

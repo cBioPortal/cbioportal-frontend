@@ -14,19 +14,22 @@ export default class FACETSColumnFormatter {
     static indexToBarLeft = (n:number) => n*(FACETSColumnFormatter.barWidth + FACETSColumnFormatter.barSpacing);
 
     public static getComponentForSampleArgs<T extends {alleleSpecificCopyNumber:{ccfMCopies:number}}>(mutation:T) {
-        const ccfMCopiesValue = mutation.alleleSpecificCopyNumber.ccfMCopies;
         let opacity: number = 1;
         let extraTooltipText: string = '';
-        if (ccfMCopiesValue !== 1) {
-            opacity = .5;
+        if (mutation.alleleSpecificCopyNumber !== undefined) {
+            const ccfMCopiesValue = mutation.alleleSpecificCopyNumber.ccfMCopies;
+            if (ccfMCopiesValue !== 1) {
+                opacity = .5;
+            }
         }
         return {
-           opacity,
-           extraTooltipText
-        };
+            opacity,
+            extraTooltipText
+         };
     }
 
     public static convertMutationToSampleElement<T extends {sampleId:string, alleleSpecificCopyNumber:{ccfMCopies:number}}>(mutation:T, color:string, barX:number, sampleComponent:any) {
+        if (mutation.alleleSpecificCopyNumber !== undefined) {
             const ccfMCopies = mutation.alleleSpecificCopyNumber.ccfMCopies;
             const barHeight = (isNaN(ccfMCopies) ? 0 : ccfMCopies)*FACETSColumnFormatter.maxBarHeight;
             const barY = FACETSColumnFormatter.maxBarHeight - barHeight;
@@ -38,6 +41,7 @@ export default class FACETSColumnFormatter {
             return {
                 sampleId:mutation.sampleId, bar, component:sampleComponent, text, ccfMCopies
             };
+        }
     }
 
     public static renderFunction(mutations:Mutation[], sampleManager:SampleManager|null) {

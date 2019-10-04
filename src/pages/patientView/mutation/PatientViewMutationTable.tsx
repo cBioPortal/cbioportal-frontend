@@ -237,7 +237,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         }
         return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return !floatValueIsNA(m.alleleSpecificCopyNumber.ccfMCopies);
+                return (m.alleleSpecificCopyNumber !== undefined && !floatValueIsNA(m.alleleSpecificCopyNumber.ccfMCopies));
             });
         });
     }
@@ -255,7 +255,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         }
         return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return (m.alleleSpecificCopyNumber.totalCopyNumber !== -1 && clinicalData[m.sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY").length > 0);
+                return (m.alleleSpecificCopyNumber !== undefined && (m.alleleSpecificCopyNumber.totalCopyNumber !== -1 && clinicalData[m.sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY").length > 0));
             });
         });
     }

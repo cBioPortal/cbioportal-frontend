@@ -74,12 +74,14 @@ export default class FACETSMutantCopiesColumnFormatter {
 
     public static getMutantCopiesOverTotalCopies(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string {
         let textValue:string = "";
-        const totalCopyNumber:number = mutation.alleleSpecificCopyNumber.totalCopyNumber;
-        const mutantCopies:number = FACETSMutantCopiesColumnFormatter.getMutantCopies(mutation, sampleIdToClinicalDataMap)
-        if (mutantCopies === -1 || FACETSMutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
-            textValue = "";
-        } else {
-            textValue = mutantCopies.toString() + "/" + totalCopyNumber.toString();
+        if (mutation.alleleSpecificCopyNumber !== undefined) {
+            const totalCopyNumber:number = mutation.alleleSpecificCopyNumber.totalCopyNumber;
+            const mutantCopies:number = FACETSMutantCopiesColumnFormatter.getMutantCopies(mutation, sampleIdToClinicalDataMap)
+            if (mutantCopies === -1 || FACETSMutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
+                textValue = "";
+            } else {
+                textValue = mutantCopies.toString() + "/" + totalCopyNumber.toString();
+            }
         }
         return textValue;
     }
@@ -105,12 +107,14 @@ export default class FACETSMutantCopiesColumnFormatter {
      */
     public static constructToolTipString(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string {
         let textValue:string = "";
-        const totalCopyNumber:number = mutation.alleleSpecificCopyNumber.totalCopyNumber;
-        const mutantCopies:number = FACETSMutantCopiesColumnFormatter.getMutantCopies(mutation, sampleIdToClinicalDataMap);
-        if (mutantCopies === -1 || FACETSMutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
-            textValue = "Missing data values, mutant copies can not be computed";
-        } else {
-            textValue = mutantCopies.toString(10) + " out of " + totalCopyNumber.toString(10) + " copies of this gene are mutated";
+        if (mutation.alleleSpecificCopyNumber !== undefined) {
+            const totalCopyNumber:number = mutation.alleleSpecificCopyNumber.totalCopyNumber;
+            const mutantCopies:number = FACETSMutantCopiesColumnFormatter.getMutantCopies(mutation, sampleIdToClinicalDataMap);
+            if (mutantCopies === -1 || FACETSMutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
+                textValue = "Missing data values, mutant copies can not be computed";
+            } else {
+                textValue = mutantCopies.toString(10) + " out of " + totalCopyNumber.toString(10) + " copies of this gene are mutated";
+            }
         }
         return textValue;
     }

@@ -12,5 +12,5 @@ export function toConditionalPrecision(number: number, precision: number, thresh
  */
 export function floatValueIsNA(number: number): boolean {
     const minFloatValue: number = 1.0e-44;
-    return (number > 0 && number < minFloatValue);
+    return (number === undefined || (number > 0 && number < minFloatValue));
 }
