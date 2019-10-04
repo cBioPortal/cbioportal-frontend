@@ -112,21 +112,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         ))
     });
 
-    readonly transposedMutationDownloadData = remoteData<string[][]>({
-        await:()=>[this.mutationDownloadData],
-        invoke:()=>Promise.resolve(_.unzip(this.mutationDownloadData.result!))
-    });
-
-    readonly mutationDataText = remoteData<string>({
-        await:()=>[this.mutationDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.mutationDownloadData.result!))
-    });
-
-    readonly transposedMutationDataText = remoteData<string>({
-        await:()=>[this.transposedMutationDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.transposedMutationDownloadData.result!))
-    });
-
     readonly allOtherMolecularProfileDataGroupByProfileName = remoteData<{[profileName: string]: {[key: string]: ExtendedAlteration[]}}>({
         await:()=>[this.props.store.nonQueriedMolecularData, this.props.store.nonSelectedMolecularProfilesGroupByName],
         invoke:()=>{
@@ -168,21 +153,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         ))
     });
 
-    readonly transposedMrnaDownloadData = remoteData<string[][]>({
-        await:()=>[this.mrnaDownloadData],
-        invoke:()=>Promise.resolve(_.unzip(this.mrnaDownloadData.result!))
-    });
-
-    readonly mrnaDataText = remoteData<string>({
-        await:()=>[this.mrnaDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.mrnaDownloadData.result!))
-    });
-
-    readonly transposedMrnaDataText = remoteData<string>({
-        await:()=>[this.transposedMrnaDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.transposedMrnaDownloadData.result!))
-    });
-
     readonly proteinData = remoteData<{[key: string]: ExtendedAlteration[]}>({
         await:()=>[this.props.store.nonOqlFilteredCaseAggregatedData],
         invoke:()=>Promise.resolve(generateProteinData(this.props.store.nonOqlFilteredCaseAggregatedData.result!))
@@ -195,21 +165,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         ))
     });
 
-    readonly transposedProteinDownloadData = remoteData<string[][]>({
-        await:()=>[this.proteinDownloadData],
-        invoke:()=>Promise.resolve(_.unzip(this.proteinDownloadData.result!))
-    });
-
-    readonly proteinDataText = remoteData<string>({
-        await:()=>[this.proteinDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.proteinDownloadData.result!))
-    });
-
-    readonly transposedProteinDataText = remoteData<string>({
-        await:()=>[this.transposedProteinDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.transposedProteinDownloadData.result!))
-    });
-
     readonly cnaData = remoteData<{[key: string]: ExtendedAlteration[]}>({
         await:()=>[this.props.store.nonOqlFilteredCaseAggregatedData],
         invoke:()=>Promise.resolve(generateCnaData(this.props.store.nonOqlFilteredCaseAggregatedData.result!))
@@ -220,21 +175,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         invoke:()=>Promise.resolve(generateDownloadData(
             this.cnaData.result!, this.props.store.samples.result!, this.props.store.genes.result!
         ))
-    });
-
-    readonly transposedCnaDownloadData = remoteData<string[][]>({
-        await:()=>[this.cnaDownloadData],
-        invoke:()=>Promise.resolve(_.unzip(this.cnaDownloadData.result!))
-    });
-
-    readonly cnaDataText = remoteData<string>({
-        await:()=>[this.cnaDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.cnaDownloadData.result!))
-    });
-
-    readonly transposedCnaDataText = remoteData<string>({
-        await:()=>[this.transposedCnaDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.transposedCnaDownloadData.result!))
     });
 
     readonly alteredCaseAlterationData = remoteData<ICaseAlteration[]>({
@@ -645,12 +585,66 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     private handleMutationDownload()
     {
-        onMobxPromise(this.mutationDataText, text=>fileDownload(text, "mutations.txt"));
+        onMobxPromise(this.mutationDownloadData, data=>{
+            const text = this.downloadDataText(data);
+            fileDownload(text, "mutations.txt")
+        });
     }
 
     private handleTransposedMutationDownload()
     {
-        onMobxPromise(this.transposedMutationDataText, text=>fileDownload(text, "mutations_transposed.txt"));
+        onMobxPromise(this.mutationDownloadData, data=>{
+            const text = this.downloadDataText(this.unzipDownloadData(data));
+            fileDownload(text, "mutations_transposed.txt")
+        });
+    }
+
+    private handleMrnaDownload(profileName: string)
+    {
+        onMobxPromise(this.mrnaDownloadData, data=>{
+            const text = this.downloadDataText(data);
+            fileDownload(text, `${profileName}.txt`)
+        });
+    }
+
+    private handleTransposedMrnaDownload(profileName: string)
+    {
+        onMobxPromise(this.mrnaDownloadData, data=>{
+            const text = this.downloadDataText(this.unzipDownloadData(data));
+            fileDownload(text, `${profileName}.txt`)
+        });
+    }
+
+    private handleProteinDownload(profileName: string)
+    {
+        onMobxPromise(this.proteinDownloadData, data=>{
+            const text = this.downloadDataText(data);
+            fileDownload(text, `${profileName}.txt`)
+        });
+    }
+
+    private handleTransposedProteinDownload(profileName: string)
+    {
+        onMobxPromise(this.proteinDownloadData, data=>{
+            const text = this.downloadDataText(this.unzipDownloadData(data));
+            fileDownload(text, `${profileName}.txt`)
+        });
+    }
+
+    private handleCnaDownload()
+    {
+        onMobxPromise(this.cnaDownloadData, data=>{
+            const text = this.downloadDataText(data);
+            fileDownload(text, "cna.txt")
+        });
+    }
+
+    private handleTransposedCnaDownload()
+    {
+        onMobxPromise(this.cnaDownloadData, data=>{
+            const text = this.downloadDataText(this.unzipDownloadData(data));
+            fileDownload(text, "cna_transposed.txt")
+        });
     }
 
     @autobind
@@ -669,36 +663,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             const transposedTextMap = this.downloadDataTextGroupByProfileName(this.unzipDownloadDataGroupByProfileName(downloadDataGroupByProfileName));
             fileDownload(transposedTextMap[profileName], `${profileName}.txt`)
         });
-    }
-
-    private handleMrnaDownload(profileName: string)
-    {
-        onMobxPromise(this.mrnaDataText, text=>fileDownload(text, `${profileName}.txt`));
-    }
-
-    private handleTransposedMrnaDownload(profileName: string)
-    {
-        onMobxPromise(this.transposedMrnaDataText, text=>fileDownload(text, `${profileName}.txt`));
-    }
-
-    private handleProteinDownload(profileName: string)
-    {
-        onMobxPromise(this.proteinDataText, text=>fileDownload(text, `${profileName}.txt`));
-    }
-
-    private handleTransposedProteinDownload(profileName: string)
-    {
-        onMobxPromise(this.transposedProteinDataText, text=>fileDownload(text, `${profileName}.txt`));
-    }
-
-    private handleCnaDownload()
-    {
-        onMobxPromise(this.cnaDataText, text=>fileDownload(text, "cna.txt"));
-    }
-
-    private handleTransposedCnaDownload()
-    {
-        onMobxPromise(this.transposedCnaDataText, text=>fileDownload(text, "cna_transposed.txt"));
     }
 
     @action
@@ -722,5 +686,13 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         return _.mapValues(downloadDataGroupByProfileName, (downloadData) => {
             return stringify2DArray(downloadData);
         })
+    }
+
+    private unzipDownloadData(downloadData: string[][]): string[][] {
+        return _.unzip(downloadData);
+    }
+
+    private downloadDataText(downloadData: string[][]): string {
+        return stringify2DArray(downloadData);
     }
 }
