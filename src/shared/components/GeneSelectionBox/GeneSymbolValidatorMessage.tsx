@@ -2,11 +2,10 @@ import * as React from 'react';
 import styles from "shared/components/GeneSelectionBox/styles.module.scss";
 import FontAwesome from "react-fontawesome";
 import {GeneValidationResult} from "shared/components/GeneSelectionBox/GeneSymbolValidator";
-import {OQL} from "shared/components/GeneSelectionBox/GeneSelectionBox";
-import {GeneReplacement, normalizeQuery} from "shared/components/query/QueryStore";
+import {OQL} from "shared/components/GeneSelectionBox/OQLTextArea";
+import {GeneReplacement} from "shared/components/query/QueryStore";
 import ReactSelect from "react-select1";
 import classNames from 'classnames';
-import {Gene} from "shared/api/generated/CBioPortalAPI";
 
 export type GeneSymbolValidatorMessageProps = {
     errorMessageOnly?: boolean;

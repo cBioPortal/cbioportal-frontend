@@ -5,7 +5,7 @@ import DownloadControls from 'public-lib/components/downloadControls/DownloadCon
 import autobind from 'autobind-decorator';
 import MultipleCategoryBarPlot from 'shared/components/plots/MultipleCategoryBarPlot';
 import ReactSelect from "react-select";
-import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
+import OQLTextArea, { GeneBoxType } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import _ from "lodash";
 import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -16,7 +16,6 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { FormControl } from 'react-bootstrap';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
-import AlterationEnrichmentTable from './AlterationEnrichmentsTable';
 import { EnrichmentsTableDataStore } from './EnrichmentsTableDataStore';
 
 export interface IGeneBarPlotProps {
@@ -470,7 +469,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                     <br />
                     {!this.inSyncMode &&
                         <div>
-                            <GeneSelectionBox
+                            <OQLTextArea
                                 inputGeneQuery={this.geneQuery}
                                 validateInputGeneQuery={false}
                                 callback={this.onChangeGeneInput}

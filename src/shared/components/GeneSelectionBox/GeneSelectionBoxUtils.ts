@@ -1,6 +1,6 @@
 import {parseOQLQuery} from "shared/lib/oql/oqlfilter";
 import {SyntaxError} from "shared/lib/oql/oql-parser";
-import {OQL} from "shared/components/GeneSelectionBox/GeneSelectionBox";
+import {OQL} from "shared/components/GeneSelectionBox/OQLTextArea";
 
 
 export function getFocusOutText(genes: string[]): string {

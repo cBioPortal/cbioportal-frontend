@@ -94,6 +94,7 @@ describe('homepage', function() {
 
         var errorMessageSel = 'span[data-test="oqlErrorMessage"]';
         browser.waitForExist(errorMessageSel);
+        browser.waitForText("span=Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.");
 
         assert.equal(
             browser.getText(errorMessageSel),
@@ -110,6 +111,7 @@ describe('homepage', function() {
 
         setInputText(oqlEntrySel, 'PTEN: PROT>1');
         browser.waitForExist(errorMessageSel);
+        browser.waitForText("span=Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.");
         assert.equal(
             browser.getText(errorMessageSel),
             "Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries."
