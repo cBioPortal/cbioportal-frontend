@@ -4,7 +4,7 @@ import {Button, ButtonGroup} from "react-bootstrap";
 import CustomDropdown from "./CustomDropdown";
 import ReactSelect from "react-select1";
 import {MobxPromise} from "mobxpromise";
-import {action, computed, IObservableObject, observable, ObservableMap, reaction, toJS, autorun} from "mobx";
+import {action, computed, IObservableObject, observable, ObservableMap, reaction, toJS} from "mobx";
 import _ from "lodash";
 import {SortMode} from "../ResultsViewOncoprint";
 import {Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
@@ -20,8 +20,8 @@ import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
 import {ResultsViewPageStore, AlterationTypeConstants} from "../../../../pages/resultsView/ResultsViewPageStore";
 import {ExtendedClinicalAttribute} from "../../../../pages/resultsView/ResultsViewPageStoreUtils";
 import {getNCBIlink} from "public-lib/lib/urls";
-import {GeneBoxType} from "../../GeneSelectionBox/GeneSelectionBox";
-import GeneSelectionBox from "../../GeneSelectionBox/GeneSelectionBox";
+import {GeneBoxType} from "../../GeneSelectionBox/OQLTextArea";
+import OQLTextArea from "../../GeneSelectionBox/OQLTextArea";
 import autobind from "autobind-decorator";
 import {SingleGeneQuery} from "../../../lib/oql/oql-parser";
 import AddClinicalTracks from "../../../../pages/resultsView/oncoprint/AddClinicalTracks";
@@ -29,7 +29,6 @@ import {Treatment} from "shared/api/generated/CBioPortalAPIInternal";
 import TextIconArea, { ITextIconAreaItemProps } from "shared/components/textIconArea/TextIconArea";
 import { extractTreatmentSelections } from "../OncoprintUtils";
 import CheckedSelect from "shared/components/react-select-checked-temp/lib/elements/CheckedSelect";
-import { isUndefined } from "util";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -245,7 +244,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         this.props.handlers.onSelectHeatmapProfile(option.value);
     }
 
-    private toggleShowMinimap(eventKey:any) {
+    private toggleShowMinimap() {
         this.props.handlers.onSelectShowMinimap &&
         this.props.handlers.onSelectShowMinimap(!this.props.state.showMinimap);
     }
@@ -512,7 +511,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                             options={this.heatmapProfileOptions}
                         />
                         {showGenesTextArea &&
-                            [<GeneSelectionBox
+                            [<OQLTextArea
                                 inputGeneQuery={this.props.state.heatmapGeneInputValue || ""}
                                 callback={this.onChangeHeatmapGeneInput}
                                 location={GeneBoxType.ONCOPRINT_HEATMAP}

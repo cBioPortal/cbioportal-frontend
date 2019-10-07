@@ -3,7 +3,7 @@ import * as styles_any from './styles/styles.module.scss';
 import {observer} from "mobx-react";
 import FontAwesome from "react-fontawesome";
 import ReactSelect from 'react-select1';
-import {GeneReplacement, QueryStoreComponent} from "./QueryStore";
+import {GeneReplacement, QueryStoreComponent, Focus} from "./QueryStore";
 import AppConfig from "appConfig";
 
 const styles = styles_any as {
@@ -29,7 +29,7 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 				<div className={styles.GeneSymbolValidator}>
 					<span className={styles.errorMessage}>
 						{`Cannot validate gene symbols because of invalid OQL. ${
-							this.store.geneQueryErrorDisplayStatus === 'unfocused'
+							this.store.geneQueryErrorDisplayStatus === Focus.Unfocused
 							? "Please click 'Submit' to see location of error."
 							: this.store.oql.error.message
 						}`}

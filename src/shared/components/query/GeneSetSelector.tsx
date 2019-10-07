@@ -3,18 +3,22 @@ import * as styles_any from './styles/styles.module.scss';
 import {Modal} from 'react-bootstrap';
 import ReactSelect from 'react-select1';
 import {observer} from "mobx-react";
-import {computed} from 'mobx';
+import {computed, action} from 'mobx';
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import gene_lists from './gene_lists';
-import GeneSymbolValidator from "./GeneSymbolValidator";
 import classNames from 'classnames';
 import {getOncoQueryDocUrl} from "../../api/urls";
-import {QueryStoreComponent} from "./QueryStore";
+import {QueryStoreComponent, Focus, GeneReplacement} from "./QueryStore";
 import MutSigGeneSelector from "./MutSigGeneSelector";
 import GisticGeneSelector from "./GisticGeneSelector";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import AppConfig from "appConfig";
 import {ServerConfigHelpers} from "../../../config/config";
+import OQLTextArea, { GeneBoxType } from '../GeneSelectionBox/OQLTextArea';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { Gene } from 'shared/api/generated/CBioPortalAPI';
+import {bind} from "bind-decorator";
+import GenesetsValidator from './GenesetsValidator';
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -60,18 +64,17 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}>
 	    ];
 	}
 
-	@computed get textAreaRef()
-	{
-		if (this.store.geneQueryErrorDisplayStatus === 'shouldFocus')
-			return (textArea:HTMLTextAreaElement) => {
-				let {error} = this.store.oql;
-				if (textArea && error)
-				{
-					textArea.focus();
-					textArea.setSelectionRange(error.start, error.end);
-					this.store.geneQueryErrorDisplayStatus = 'focused';
-				}
-			};
+	@bind
+	@action
+	handleOQLUpdate(
+		oql: {query: SingleGeneQuery[], error?: {start: number, end: number, message: string}},
+		genes: {found: Gene[], suggestions: GeneReplacement[]},
+		queryStr: string,
+	): void {
+		if (queryStr !== this.store.geneQuery) {
+			this.store.geneQuery = queryStr;
+			this.store.oql.error = oql.error;
+		}
 	}
 
 	render()
@@ -94,35 +97,16 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}>
 					onChange={(option:any) => this.store.geneQuery = option ? option.value : ''}
 				/>
 
-				{/* we are hiding these buttons on 02/27/2019 */}
-				{/* {!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
-					<FlexRow padded className={styles.buttonRow}>
-						{!!(this.store.mutSigForSingleStudy.result.length) && (
-							<button className="btn btn-default btn-sm" onClick={() => this.store.showMutSigPopup = true}>
-								Select from Recurrently Mutated Genes (MutSig)
-							</button>
-						)}
-						{!!(this.store.gisticForSingleStudy.result.length) && (
-							<button className="btn btn-default btn-sm" onClick={() => this.store.showGisticPopup = true}>
-								Select Genes from Recurrent CNAs (Gistic)
-							</button>
-						)}
-					</FlexRow>
-				)} */}
-
-				<textarea
-					ref={this.textAreaRef}
-					className={classNames(styles.geneSet, this.store.geneQuery ? styles.notEmpty : styles.empty)}
-					rows={5}
-					cols={80}
-					placeholder="Enter HUGO Gene Symbols, Gene Aliases, or OQL"
-					title="Enter HUGO Gene Symbols, Gene Aliases, or OQL"
-					value={this.store.geneQuery}
-					onChange={event => this.store.geneQuery = event.currentTarget.value}
-					data-test='geneSet'
+				<OQLTextArea
+					focus={this.store.geneQueryErrorDisplayStatus}
+					inputGeneQuery={this.store.geneQuery}
+					validateInputGeneQuery={true}
+					location={GeneBoxType.DEFAULT}
+					textBoxPrompt={"Enter HUGO Gene Symbols, Gene Aliases, or OQL"}
+					callback={this.handleOQLUpdate}
 				/>
 
-				<GeneSymbolValidator/>
+				<GenesetsValidator/>
 
 				<Modal
 					className={classNames('cbioportal-frontend',styles.MutSigGeneSelectorWindow)}
