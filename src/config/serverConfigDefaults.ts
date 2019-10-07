@@ -44,6 +44,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_documentation_about: 'About-Us.md',
     skin_documentation_baseurl:
         'https://raw.githubusercontent.com/cBioPortal/cbioportal/master/docs/',
+    skin_documentation_dat:"Using-Data-Access-Tokens.md",
     skin_documentation_markdown: true,
     skin_email_contact: 'cbioportal at googlegroups dot com',
     skin_documentation_faq: 'FAQ.md',

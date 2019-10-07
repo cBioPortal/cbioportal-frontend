@@ -57,6 +57,7 @@ export interface IServerConfig {
     show_genomenexus: boolean;
     skin_documentation_about: string | null;
     skin_documentation_baseurl: string | null;
+    "skin_documentation_dat": string | null;
     skin_blurb: string | null;
     skin_custom_header_tabs: string | null;
     skin_data_sets_footer: string | null;

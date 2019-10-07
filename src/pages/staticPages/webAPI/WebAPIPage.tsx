@@ -1,12 +1,89 @@
 import * as React from 'react';
 import {observer} from 'mobx-react';
+import {observable} from "mobx";
 import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
+import StaticContent from "../../../shared/components/staticContent/StaticContent";
+import internalClient from "shared/api/cbioportalInternalClientInstance";
 import './styles.scss';
 import Helmet from "react-helmet";
 import { Link } from 'react-router';
+import AppConfig from "appConfig";
+import {isNullOrUndefined} from "util";
+import fileDownload from 'react-file-download';
+import {AppStore} from "../../../AppStore";
+import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
+
+export class UserDataAccessToken {
+    @observable token : string;
+    @observable creationDate: string;
+    @observable expirationDate: string;
+    @observable username: string;
+    constructor(token: string, creationDate: string, expirationDate: string, username: string) {
+        this.token = token;
+        this.creationDate = creationDate;
+        this.expirationDate = expirationDate;
+        this.username = username;
+    }
+}
+
+function buildDataAccessTokenFileContents(dat:UserDataAccessToken | undefined) {
+    if (!isNullOrUndefined(dat)) {
+        const fileContents = "token: " + dat!.token + "\n" +
+            "creation_date: " + new Date(dat!.creationDate).toISOString()+ "\n" +
+            "expiration_date: " + new Date(dat!.expirationDate).toISOString();
+        return fileContents;
+    } else {
+        alert("Cannot create Data Access Token file for user with non-existent tokens.");
+        return null;
+    }
+}
 
 @observer
 export default class WebAPIPage extends React.Component<{}, {}> {
+    private get appStore(){
+        return getBrowserWindow().globalStores.appStore;
+    }
+
+    async generateNewDataAccessToken() {
+        if (this.appStore.isLoggedIn) {
+            let _token = await Promise.resolve(
+                internalClient.createDataAccessTokenUsingPOST(
+                    {'allowRevocationOfOtherTokens':AppConfig.serverConfig.dat_uuid_revoke_other_tokens}))
+            const dat = new UserDataAccessToken(_token.token, _token.creation, _token.expiration, _token.username);
+            return dat;
+        } else {
+            return undefined;
+        }
+    }
+
+    async downloadDataAccessTokenFile() {
+        const dat = this.generateNewDataAccessToken();
+        if (!isNullOrUndefined(dat)) {
+            const fileContents = buildDataAccessTokenFileContents(await dat);
+            fileDownload(fileContents, "cbioportal_data_access_token.txt");
+        }
+    }
+
+    renderDataAccessTokensDiv() {
+        if ((AppConfig.serverConfig.authenticationMethod === "social_auth" || (AppConfig.serverConfig.dat_method !== "uuid" && AppConfig.serverConfig.dat_method !== "jwt"))) {
+            return <div></div>;
+        }
+        else {
+            return (
+                <div>
+                <a id="using-data-access-tokens" className="anchor_no_style">
+                    <h2>
+                        Using Data Access Tokens
+                    </h2>
+                </a>
+                <StaticContent sourceUrl={AppConfig.serverConfig.skin_documentation_dat!} title={""}/>
+                <br />
+                <button className="btn btn-primary btn-sm" onClick={() => this.downloadDataAccessTokenFile()}>Download token</button>
+                </div>
+            )
+        }
+    }
 
     public render() {
 
@@ -622,7 +699,9 @@ Error:  No case lists available for cancer_study_id:  gbs.
                 </p>
                 <p>And a link to TP53 mutations across all cancer studies:</p>
                 <p><a href="ln?q=TP53:MUT">ln?q=TP53:MUT</a></p>
-        </PageLayout>;
+                {this.renderDataAccessTokensDiv()}
+        </PageLayout>
+                        ;
 
     }
 
