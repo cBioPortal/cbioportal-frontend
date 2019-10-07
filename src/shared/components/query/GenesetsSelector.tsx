@@ -2,13 +2,11 @@ import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
 import {Modal} from 'react-bootstrap';
 import {observer} from "mobx-react";
-import {computed, ObservableMap} from 'mobx';
+import {computed} from 'mobx';
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import gene_lists from './gene_lists';
-import GenesetsValidator from "./GenesetsValidator";
 import classNames from 'classnames';
-import {getOncoQueryDocUrl} from "../../api/urls";
-import {QueryStoreComponent} from "./QueryStore";
+import {QueryStoreComponent, Focus} from "./QueryStore";
 import GenesetsHierarchySelector from "./GenesetsHierarchySelector";
 import GenesetsVolcanoSelector from "./GenesetsVolcanoSelector";
 import SectionHeader from "../sectionHeader/SectionHeader";
@@ -64,14 +62,14 @@ export default class GenesetsSelector extends QueryStoreComponent<GenesetsSelect
 
     @computed get textAreaRef()
     {
-        if (this.store.geneQueryErrorDisplayStatus === 'shouldFocus')
+        if (this.store.geneQueryErrorDisplayStatus === Focus.ShouldFocus)
             return (textArea:HTMLTextAreaElement) => {
                 const {error} = this.store.oql;
                 if (textArea && error)
                 {
                     textArea.focus();
                     textArea.setSelectionRange(error.start, error.end);
-                    this.store.geneQueryErrorDisplayStatus = 'focused';
+                    this.store.geneQueryErrorDisplayStatus = Focus.Focused;
                 }
             };
     }
@@ -106,8 +104,6 @@ export default class GenesetsSelector extends QueryStoreComponent<GenesetsSelect
                         onChange={event => this.store.genesetQuery = event.currentTarget.value}
                         data-test='GENESETS_TEXT_AREA'
                     />
-
-                    <GenesetsValidator/>
 
                     <Modal
                         className={classNames('cbioportal-frontend',styles.GenesetsSelectorWindow)}

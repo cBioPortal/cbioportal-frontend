@@ -1,19 +1,21 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
-import { GeneReplacement, normalizeQuery } from 'shared/components/query/QueryStore';
+import { GeneReplacement, normalizeQuery, Focus } from 'shared/components/query/QueryStore';
 import { action, computed } from '../../../../node_modules/mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import 'react-select1/dist/react-select.css';
 import {remoteData} from "public-lib/api/remoteData";
 import client from "shared/api/cbioportalClientInstance";
 import memoize from 'memoize-weak-decorator';
-import {OQL} from "shared/components/GeneSelectionBox/GeneSelectionBox";
+import {OQL} from "shared/components/GeneSelectionBox/OQLTextArea";
 import {getEmptyGeneValidationResult, getOQL} from "shared/components/GeneSelectionBox/GeneSelectionBoxUtils";
 import autobind from 'autobind-decorator';
 import GeneSymbolValidatorMessage from "shared/components/GeneSelectionBox/GeneSymbolValidatorMessage";
 
 export interface IGeneSymbolValidatorProps {
+    deferOqlError?: boolean;
+    focus?: Focus;
     errorMessageOnly?:boolean;
 	skipGeneValidation: boolean;
 	geneQuery:string;
@@ -94,8 +96,24 @@ export default class GeneSymbolValidator extends React.Component<IGeneSymbolVali
 		return this.oql.error ? [] : this.oql.query.map(line => line.gene);
 	}
 
-	render()
-	{
+	@computed
+    get oqlOrError(): OQL | Error {
+        if (!this.oql.error) {
+            return this.oql;
+        }
+
+        if (this.props.focus !== null && this.props.focus !== undefined) {
+            if (this.props.focus === Focus.Unfocused) {
+                return new Error("Please click 'Submit' to see location of error.");
+            } else {
+                return new Error("OQL syntax error at selected character; please fix and submit again.");
+            }
+        }
+
+        return new Error(this.oql.error.message);
+	}
+	
+	render() {
 		if(this.props.skipGeneValidation) {
 			if (this.props.afterValidation) {
 				this.props.afterValidation(true, getEmptyGeneValidationResult(), this.oql);
@@ -105,14 +123,14 @@ export default class GeneSymbolValidator extends React.Component<IGeneSymbolVali
 		return(
 			<GeneSymbolValidatorMessage
 				genes={this.props.skipGeneValidation ? getEmptyGeneValidationResult() : (this.genes.isError ? new Error("ERROR") : this.genes.result)}
-				oql={this.oql.error ? new Error(this.oql.error.message) : this.oql}
+				oql={this.oqlOrError}
 				validatingGenes={this.props.skipGeneValidation ? false : this.genes.isPending}
 				errorMessageOnly={this.props.errorMessageOnly}
 				wrapTheContent={this.props.wrap}
 				replaceGene={this.replaceGene}
 			/>
 		)
-		
+
 	}
 
 	@autobind

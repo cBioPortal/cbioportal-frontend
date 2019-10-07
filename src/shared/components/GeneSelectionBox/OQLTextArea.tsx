@@ -5,19 +5,18 @@ import classnames from 'classnames';
 import styles from "./styles.module.scss";
 import { observable, computed, action, reaction, IReactionDisposer } from 'mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
-import { SingleGeneQuery, SyntaxError } from 'shared/lib/oql/oql-parser';
-import { parseOQLQuery } from 'shared/lib/oql/oqlfilter';
-import { remoteData } from 'public-lib/api/remoteData';
-import { GeneReplacement } from 'shared/components/query/QueryStore';
-import client from "shared/api/cbioportalClientInstance";
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { GeneReplacement, Focus } from 'shared/components/query/QueryStore';
 import {getEmptyGeneValidationResult, getFocusOutText, getOQL} from './GeneSelectionBoxUtils';
 import GeneSymbolValidator, {GeneValidationResult} from './GeneSymbolValidator';
 import autobind from 'autobind-decorator';
 
 export interface IGeneSelectionBoxProps {
+    focus?: Focus;
     inputGeneQuery?: string;
     validateInputGeneQuery?:boolean;
     location?: GeneBoxType;
+    textBoxPrompt?: string;
     callback?: (
         oql: {
             query: SingleGeneQuery[],
@@ -41,7 +40,7 @@ export type OQL = {
 }
 
 @observer
-export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxProps, {}> {
+export default class OQLTextArea extends React.Component<IGeneSelectionBoxProps, {}> {
     private disposers: IReactionDisposer[];
 
     // Need to record the textarea value due to SyntheticEvent restriction due to debounce
@@ -97,7 +96,7 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
                     this.updateTextAreaRefValue();
                 }
             ),
-            reaction(() => this.showFullText, newVal => {
+            reaction(() => this.showFullText, () => {
                 this.updateTextAreaRefValue();
             })
         ];
@@ -174,9 +173,19 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
         if (this.props.callback) {
             this.props.callback(oql, validationResult, this.geneQuery)
         }
-        if (oql.error !== undefined) {
-            this.textAreaRef.current!.setSelectionRange(oql.error.start, oql.error.end);
+
+        if (oql.error !== undefined &&
+            (this.props.focus === undefined || this.props.focus === Focus.ShouldFocus) &&
+            this.textAreaRef.current
+        ) {
+            this.textAreaRef.current.focus();
+            this.textAreaRef.current.setSelectionRange(oql.error.start, oql.error.end);
         }
+    }
+
+    @computed
+    get promptText() {
+        return this.props.textBoxPrompt ? this.props.textBoxPrompt : "Click gene symbols below or enter here";
     }
 
     render() {
@@ -189,8 +198,8 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
                     className={classnames(...this.textAreaClasses)}
                     rows={5}
                     cols={80}
-                    placeholder={'Click gene symbols below or enter here'}
-                    title="Click gene symbols below or enter here"
+                    placeholder={this.promptText}
+                    title={this.promptText}
                     defaultValue={this.getTextAreaValue()}
                     onChange={event => {
                         this.currentTextAreaValue = event.currentTarget.value;
@@ -200,6 +209,7 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
                 />
 
                 <GeneSymbolValidator
+                    focus={this.props.focus}
                     geneQuery={this.queryToBeValidated}
                     skipGeneValidation={this.skipGenesValidation}
                     updateGeneQuery={this.updateGeneQuery}

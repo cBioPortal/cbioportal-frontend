@@ -4,12 +4,9 @@ import {observer} from "mobx-react";
 import {action, computed, observable} from 'mobx';
 import styles from "../styles.module.scss";
 import autobind from "autobind-decorator";
-import {getPatientViewUrl} from 'shared/api/urls';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
 import {Gene} from 'shared/api/generated/CBioPortalAPI';
-import GeneSelectionBox, {GeneBoxType} from 'shared/components/GeneSelectionBox/GeneSelectionBox';
-import fileDownload from 'react-file-download';
-import {Else, If, Then} from 'react-if';
+import OQLTextArea, {GeneBoxType} from 'shared/components/GeneSelectionBox/OQLTextArea';
 import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import classnames from "classnames";
 import {serializeEvent} from "../../../../shared/lib/tracking";
@@ -23,7 +20,6 @@ export type GeneReplacement = { alias: string, genes: Gene[] };
 @observer
 export default class RightPanel extends React.Component<IRightPanelProps, {}> {
 
-    @observable private _isQueryButtonDisabled = false;
 
     @observable downloadingData = false;
     @observable showDownloadErrorMessage = false;
@@ -55,7 +51,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
         return (
             <div className="studyViewSummaryHeader">
                 <div className={styles.rightPanel}>
-                    <GeneSelectionBox
+                    <OQLTextArea
                         inputGeneQuery={this.props.store.geneQueryStr}
                         validateInputGeneQuery={false}
                         callback={this.updateSelectedGenes}
