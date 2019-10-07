@@ -5,7 +5,6 @@ import {computed} from "mobx";
 import {observer} from "mobx-react";
 
 import {CheckBoxType, getOptionLabel, getSelectedValuesMap, Option} from "./CheckedSelectUtils";
-import './checkedSelect.scss';
 
 type CheckedSelectProps = {
     name?: string;
@@ -143,6 +142,8 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                         }),
                         dropdownIndicator:(provided:any)=>({
                             ...provided,
+                            // make the dropdown y axis padding a bit small for shorter dropdown.
+                            padding: '4px 8px',
                             color:"#000000"
                         }),
                         option:(provided:any, state:any)=>{
