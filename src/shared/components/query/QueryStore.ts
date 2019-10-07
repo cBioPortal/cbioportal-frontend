@@ -128,6 +128,12 @@ export const QueryParamsKeys: (keyof CancerStudyQueryParams)[] = [
 
 type GenesetId = string;
 
+export enum Focus {
+    Unfocused,
+    ShouldFocus,
+    Focused,
+}
+
 // mobx observable
 export class QueryStore {
     public initialQueryParams: {
@@ -384,27 +390,27 @@ export class QueryStore {
 
     set geneQuery(value: string) {
         // clear error when gene query is modified
-        this.geneQueryErrorDisplayStatus = "unfocused";
+        this.geneQueryErrorDisplayStatus = Focus.Unfocused;
         this._geneQuery = value;
     }
 
-    @observable _genesetQuery = "";
+    @observable private rawGenesetQuery = "";
     get genesetQuery() {
-        return this._genesetQuery.toUpperCase();
+        return this.rawGenesetQuery.toUpperCase();
     }
 
     set genesetQuery(value: string) {
         // clear error when gene query is modified
-        this.genesetQueryErrorDisplayStatus = "unfocused";
-        this._genesetQuery = value;
-    }
+        this.genesetQueryErrorDisplayStatus = Focus.Unfocused;
+        this.rawGenesetQuery = value;
+	}
 
     ////////////////////////////////////////////////////////////////////////////////
     // VISUAL OPTIONS
     ////////////////////////////////////////////////////////////////////////////////
 
-    @observable geneQueryErrorDisplayStatus: "unfocused" | "shouldFocus" | "focused" = "unfocused";
-    @observable genesetQueryErrorDisplayStatus: "unfocused" | "shouldFocus" | "focused" = "unfocused";
+    @observable geneQueryErrorDisplayStatus = Focus.Unfocused;
+    @observable genesetQueryErrorDisplayStatus = Focus.Unfocused;
     @observable showMutSigPopup = false;
     @observable showGisticPopup = false;
     @observable showGenesetsHierarchyPopup = false;
@@ -1764,8 +1770,8 @@ export class QueryStore {
 
     @action submit() {
         if (this.oql.error) {
-            this.geneQueryErrorDisplayStatus = "shouldFocus";
-            this.genesetQueryErrorDisplayStatus = "shouldFocus";
+            this.geneQueryErrorDisplayStatus = Focus.ShouldFocus;
+            this.genesetQueryErrorDisplayStatus = Focus.ShouldFocus;
             return false;
         }
 
