@@ -46,42 +46,12 @@ export default class FACETSMutantCopiesColumnFormatter {
         return (value === -1 || value === null); 
     }
 
-    public static getVariantAlleleFraction(mutation:Mutation):number {
-        let variantAlleleFraction = 0;
-        if (mutation.tumorRefCount !== null && mutation.tumorAltCount !== null) {
-            variantAlleleFraction = mutation.tumorAltCount/(mutation.tumorRefCount + mutation.tumorAltCount);
-        }
-        return variantAlleleFraction;
-    }
-
-    public static getMutantCopies(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):number {
-        const sampleId:string = mutation.sampleId;
-        const variantAlleleFraction:number = FACETSMutantCopiesColumnFormatter.getVariantAlleleFraction(mutation);
-        const totalCopyNumber = mutation.alleleSpecificCopyNumber.totalCopyNumber;
-        let purity = null;
-        if (sampleIdToClinicalDataMap) {
-            const purityData = sampleIdToClinicalDataMap[sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY");
-            if (purityData !== undefined && purityData.length > 0) {
-                purity = Number(purityData[0].value);
-            }
-        }
-        if (purity === null) {
-            return -1;
-        }
-        const mutantCopies:number = Math.min(totalCopyNumber, Math.round((variantAlleleFraction/purity)*totalCopyNumber))
-        return mutantCopies;
-    }
-
     public static getMutantCopiesOverTotalCopies(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string {
         let textValue:string = "";
-        if (mutation.alleleSpecificCopyNumber !== undefined) {
+        if (mutation.alleleSpecificCopyNumber !== undefined && mutation.alleleSpecificCopyNumber.mutantCopies !== undefined && mutation.alleleSpecificCopyNumber.totalCopyNumber !== undefined) {
             const totalCopyNumber:number = mutation.alleleSpecificCopyNumber.totalCopyNumber;
-            const mutantCopies:number = FACETSMutantCopiesColumnFormatter.getMutantCopies(mutation, sampleIdToClinicalDataMap)
-            if (mutantCopies === -1 || FACETSMutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
-                textValue = "";
-            } else {
-                textValue = mutantCopies.toString() + "/" + totalCopyNumber.toString();
-            }
+            const mutantCopies = mutation.alleleSpecificCopyNumber.mutantCopies;
+            textValue = mutantCopies.toString() + "/" + totalCopyNumber.toString();
         }
         return textValue;
     }
@@ -107,14 +77,12 @@ export default class FACETSMutantCopiesColumnFormatter {
      */
     public static constructToolTipString(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string {
         let textValue:string = "";
-        if (mutation.alleleSpecificCopyNumber !== undefined) {
+        if (mutation.alleleSpecificCopyNumber !== undefined && mutation.alleleSpecificCopyNumber.mutantCopies !== undefined && mutation.alleleSpecificCopyNumber.totalCopyNumber !== undefined) {
             const totalCopyNumber:number = mutation.alleleSpecificCopyNumber.totalCopyNumber;
-            const mutantCopies:number = FACETSMutantCopiesColumnFormatter.getMutantCopies(mutation, sampleIdToClinicalDataMap);
-            if (mutantCopies === -1 || FACETSMutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
-                textValue = "Missing data values, mutant copies can not be computed";
-            } else {
-                textValue = mutantCopies.toString(10) + " out of " + totalCopyNumber.toString(10) + " copies of this gene are mutated";
-            }
+            const mutantCopies:number = mutation.alleleSpecificCopyNumber.mutantCopies; 
+            textValue = mutantCopies.toString(10) + " out of " + totalCopyNumber.toString(10) + " copies of this gene are mutated";
+        } else {
+            textValue = "Missing data values, mutant copies can not be computed";
         }
         return textValue;
     }

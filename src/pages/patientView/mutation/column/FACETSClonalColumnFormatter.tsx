@@ -9,12 +9,18 @@ export default class FACETSClonalColumnFormatter {
     public static getDisplayValue(mutations:Mutation[], sampleIds:string[], sampleManager:SampleManager) {
         let values:string[] = [];
         const sampleToValue:{[key: string]: any} = {};
-        const sampleToCCF:{[key: string]: number} = {};
+        const sampleToCCF:{[key: string]: any} = {};
         for (const mutation of mutations) {
             sampleToValue[mutation.sampleId] = FACETSClonalColumnFormatter.getClonalValue([mutation]);
         }
+
         for (const mutation of mutations) {
-            sampleToCCF[mutation.sampleId] = mutation.alleleSpecificCopyNumber !== undefined ? mutation.alleleSpecificCopyNumber.ccfMCopies : -1;
+            // check must be done because members without values will not be returned in the backend response
+            if (mutation.alleleSpecificCopyNumber !== undefined && mutation.alleleSpecificCopyNumber.ccfMCopies !== undefined) {
+                sampleToCCF[mutation.sampleId] = mutation.alleleSpecificCopyNumber.ccfMCopies;
+            } else {
+                sampleToCCF[mutation.sampleId] = "NA"
+            }
         }
         // exclude samples with invalid count value (undefined || emtpy || lte 0)
         const samplesWithValue = sampleIds.filter(sampleId =>
@@ -25,14 +31,12 @@ export default class FACETSClonalColumnFormatter {
         if (!samplesWithValue) {
             return (<span></span>);
         } else if (samplesWithValue.length === 1) {
-             tdValue = <li><DefaultTooltip overlay={FACETSClonalColumnFormatter.getTooltip(`${samplesWithValue[0]}`, `${sampleToValue[samplesWithValue[0]]}`, `${sampleToCCF[samplesWithValue[0]]}`, sampleManager)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{FACETSClonalColumnFormatter.getClonalCircle(sampleToValue[samplesWithValue[0]])}</DefaultTooltip></li>;
+            tdValue = FACETSClonalColumnFormatter.getClonalListElement(samplesWithValue[0], sampleToValue[samplesWithValue[0]], sampleToCCF[samplesWithValue[0]], sampleManager);
         }
         // multiple value: add sample id and value pairs
         else {
-             tdValue = samplesWithValue.map((sampleId:string) => {
-                return (
-                    <li><DefaultTooltip overlay={FACETSClonalColumnFormatter.getTooltip(`${sampleId}`, `${sampleToValue[sampleId]}`, `${sampleToCCF[sampleId]}`, sampleManager)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{FACETSClonalColumnFormatter.getClonalCircle(`${sampleToValue[sampleId]}`)}</DefaultTooltip></li>
-                );
+            tdValue = samplesWithValue.map((sampleId:string) => {
+                return FACETSClonalColumnFormatter.getClonalListElement(sampleId, sampleToValue[sampleId], sampleToCCF[sampleId], sampleManager);
             });
         }
         return (
@@ -41,16 +45,43 @@ export default class FACETSClonalColumnFormatter {
                 </span>
                );
     }
+    
+    public static getClonalValue(mutations:Mutation[]):string {
+        let textValue:string = "NA";
+        if (mutations[0].alleleSpecificCopyNumber !== undefined && mutations[0].alleleSpecificCopyNumber.clonal !== undefined) {
+            const clonalValue = mutations[0].alleleSpecificCopyNumber.clonal;
+            if (clonalValue) {
+                textValue = "yes";
+            } else {
+                textValue = "no";
+            }
+        }
+        return textValue;
+    }
 
-    public static getTooltip(sampleId:string, clonalValue:string, ccfMCopies:string, sampleManager:SampleManager) {
-        let clonalColor = "";
+    public static getClonalColor(clonalValue:string):string {
+        let clonalColor:string = "";
         if (clonalValue === "yes") {
             clonalColor = "limegreen";
-        } else if  (clonalValue === "no") {
+        } else if (clonalValue === "no") {
             clonalColor = "dimgrey";
         } else {
             clonalColor = "lightgrey";
         }
+        return clonalColor;
+    }
+
+    public static getClonalCircle(clonalValue:string) {
+        let clonalColor = FACETSClonalColumnFormatter.getClonalColor(clonalValue);
+        return (
+                <svg height="10" width="10">
+                    <circle cx={5} cy={5} r={5} fill={`${clonalColor}`}/>
+                </svg>
+        );
+    }
+
+    public static getTooltip(sampleId:string, clonalValue:string, ccfMCopies:string, sampleManager:SampleManager) {
+        let clonalColor = FACETSClonalColumnFormatter.getClonalColor(clonalValue);
         return (
                 <div>
                     <table>
@@ -59,48 +90,13 @@ export default class FACETSClonalColumnFormatter {
                         <tr><td style={{paddingRight:5}}>CCF</td><td><strong>{ccfMCopies}</strong></td></tr>
                     </table>
                 </div>
-            );
-    }
-
-    public static getClonalCircle(clonalValue:string) {
-        let color:string = "";
-        if (clonalValue === "yes") {
-            color = "limegreen";
-        } else if (clonalValue === "no") {
-            color = "dimgrey";
-        } else {
-            color = "lightgrey";
-        }
-        return (
-                <svg height="10" width="10">
-                    <circle cx={5} cy={5} r={5} fill={`${color}`}/>
-                </svg>
         );
     }
 
-    public static getCcfMCopiesUpperValue(mutations:Mutation[]):number {
-        const ccfMCopiesUpperValue = mutations[0].alleleSpecificCopyNumber.ccfMCopiesUpper;
-        return ccfMCopiesUpperValue;
-    }
-
-    public static getCcfMCopiesValue(mutations:Mutation[]):number {
-        const ccfMCopiesValue = mutations[0].alleleSpecificCopyNumber.ccfMCopies;
-        return ccfMCopiesValue;
-    }
-
-    public static getClonalValue(mutations:Mutation[]):string {
-        let textValue:string = "";
-        if (mutations[0].alleleSpecificCopyNumber !== undefined) {
-            const clonalValue = mutations[0].alleleSpecificCopyNumber.clonal;
-            if (clonalValue == null) {
-                textValue = "";
-            } else if (clonalValue) {
-                textValue = "yes";
-            } else {
-                textValue = "no";
-            }
-        }
-        return textValue;
+    public static getClonalListElement(sampleId:string, clonalValue:string, ccfMCopies:string, sampleManager:SampleManager) {
+       return (
+            <li><DefaultTooltip overlay={FACETSClonalColumnFormatter.getTooltip(`${sampleId}`, `${clonalValue}`, `${ccfMCopies}`, sampleManager)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{FACETSClonalColumnFormatter.getClonalCircle(clonalValue)}</DefaultTooltip></li>
+        );
     }
 
     public static renderFunction(mutations:Mutation[], sampleIds:string[], sampleManager:SampleManager|null) {
