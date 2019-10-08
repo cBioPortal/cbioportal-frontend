@@ -138,7 +138,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     uniprot_id_url:"https://www.uniprot.org/uniprot/?query=accession:<%= swissProtAccession %>&format=tab&columns=entry+name",
 
-    query_gene_limit: 100
+    query_product_limit: 1000000,
 
 
 

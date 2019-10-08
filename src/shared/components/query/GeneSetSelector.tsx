@@ -19,6 +19,8 @@ import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { bind } from 'bind-decorator';
 import GenesetsValidator from './GenesetsValidator';
+import FontAwesome from 'react-fontawesome';
+import GeneSymbolValidationError from './GeneSymbolValidationError';
 
 const styles = styles_any as {
     GeneSetSelector: string;
@@ -30,6 +32,8 @@ const styles = styles_any as {
     notEmpty: string;
     sectionSpinner: string;
     learnOql: string;
+    geneCount: string;
+    icon: string;
 };
 
 @observer
@@ -81,6 +85,29 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
         }
     }
 
+    @computed
+    get customError(): JSX.Element | null {        
+        if (this.store.isQueryLimitReached) {
+            return (
+                <div className={styles.geneCount}>
+                    <div
+                        className={""}
+                        title={`Please limit your queries to ${this.store.geneLimit} genes or fewer.`}
+                    >
+                        <FontAwesome className={styles.icon} name="exclamation-circle" />
+                        <GeneSymbolValidationError
+                            sampleCount={this.store.profiledSamplesCount.result.all}
+                            queryProductLimit={AppConfig.serverConfig.query_product_limit}
+                            email={AppConfig.serverConfig.skin_email_contact}
+                        />
+                    </div>
+                </div>
+            )
+        }
+
+        return null;
+    }
+
     render() {
         return (
             <FlexRow padded overflow className={styles.GeneSetSelector}>
@@ -126,7 +153,9 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                             'Enter HUGO Gene Symbols, Gene Aliases, or OQL'
                         }
                         callback={this.handleOQLUpdate}
-                    />
+                    >
+                        {this.customError}
+                    </OQLTextArea>
 
                     <GenesetsValidator />
 
