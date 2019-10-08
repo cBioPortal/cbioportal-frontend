@@ -71,6 +71,26 @@
   border: 1px solid #ddd;
   border-radius: 2px;
   box-shadow: 0 0 1px #e9e9e9;
+
+  span.icon {
+    text-align: center;
+    margin-right: 4px;
+    width: 16px;
+    height: 16px;
+    line-height: 17px;
+  }
+
+  div.geneCount {
+    color: #fff;
+    margin: 2px 2px 2px 0;
+    padding: 5px 10px;
+    border-radius: 2px;
+    span.icon {
+      color: #fff;
+      line-height: 17px;
+    }
+    background: $redError;
+  }
 }
 
 div.SelectedStudiesWindow {

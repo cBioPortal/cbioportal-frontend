@@ -2707,7 +2707,13 @@ export class ResultsViewPageStore {
     }
 
     @computed get isQueryInvalid() {
-        return this.hugoGeneSymbols.length > AppConfig.serverConfig.query_gene_limit;
+        return (
+            this.hugoGeneSymbols.length * this.samples.result.length > AppConfig.serverConfig.query_product_limit
+        );
+    }
+
+    @computed get geneLimit(): number {
+        return Math.floor(AppConfig.serverConfig.query_product_limit / this.samples.result.length);
     }
 
     readonly genesets = remoteData<Geneset[]>({
