@@ -167,6 +167,11 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
                 }
 
                 {
+                    this.store.forDownloadTab && 
+                    <div className={"alert alert-danger"} role="alert">The Download interface has been removed. Enhanced download functionality is now available through the Query interface. Run a query with your gene(s) of interest and use the Download tab to download all available data types.</div>
+                }
+
+                {   !this.store.forDownloadTab &&
                     <If condition={this.store.defaultSelectedIds.size === 0 || this.studiesDataReady}>
                         <Then>
                             <If condition={this.props.forkedMode && this.showQueryControls}>
