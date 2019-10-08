@@ -2101,7 +2101,7 @@ export class ResultsViewPageStore {
         invoke: () => this.getClinicalData("SAMPLE", this.studies.result!, this.samples.result, ["CANCER_TYPE", "CANCER_TYPE_DETAILED"])
     }, []);
 
-    readonly facetsClinicalDataForSamples = remoteData({
+    readonly facetsClinicalDataForSamples = remoteData<ClinicalData[]>({
         await: () => [
             this.studies,
             this.samples

@@ -18,6 +18,7 @@ export interface IMutationsPageProps {
     routing?: any;
     store: ResultsViewPageStore;
     appStore:AppStore;
+    sampleIdToClinicalDataMap:{};
 }
 
 @observer

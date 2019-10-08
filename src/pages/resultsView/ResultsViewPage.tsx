@@ -227,7 +227,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 id:ResultsViewTab.MUTATIONS,
                 getTab: () => {
                     return <MSKTab key={3} id={ResultsViewTab.MUTATIONS} linkText="Mutations">
-                        <Mutations store={store} appStore={ this.props.appStore }/>
+                        <Mutations store={store} appStore={ this.props.appStore } sampleIdToClinicalDataMap={store.clinicalDataGroupedBySampleMap.result}/>
                     </MSKTab>
                 }
             },

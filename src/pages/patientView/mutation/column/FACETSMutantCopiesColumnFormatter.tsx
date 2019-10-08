@@ -42,10 +42,6 @@ export default class FACETSMutantCopiesColumnFormatter {
         return displayValuesAsString.join("; ");
     }
 
-    public static invalidTotalCopyNumber(value:number):boolean {
-        return (value === -1 || value === null); 
-    }
-
     public static getMutantCopiesOverTotalCopies(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string {
         let textValue:string = "";
         if (mutation.alleleSpecificCopyNumber !== undefined && mutation.alleleSpecificCopyNumber.mutantCopies !== undefined && mutation.alleleSpecificCopyNumber.totalCopyNumber !== undefined) {

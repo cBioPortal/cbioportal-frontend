@@ -53,89 +53,39 @@ export default class FACETSCNAColumnFormatter {
         "WGD,6,3":"Amp"
     };
 
-    private static facetsCNATable:{[key:string]:string} = {
-        "no WGD,0,0":"-2",
-        "no WGD,1,0":"-1",
-        "no WGD,2,0":"-1",
-        "no WGD,3,0":"1",
-        "no WGD,4,0":"1",
-        "no WGD,5,0":"2",
-        "no WGD,6,0":"2",
-        "no WGD,1,1":"0",
-        "no WGD,2,1":"1",
-        "no WGD,3,1":"1",
-        "no WGD,4,1":"2",
-        "no WGD,5,1":"2",
-        "no WGD,6,1":"2",
-        "no WGD,2,2":"1",
-        "no WGD,3,2":"2",
-        "no WGD,4,2":"2",
-        "no WGD,5,2":"2",
-        "no WGD,6,2":"2",
-        "no WGD,3,3":"2",
-        "no WGD,4,3":"2",
-        "no WGD,5,3":"2",
-        "no WGD,6,3":"2",
-        "WGD,0,0":"-2",
-        "WGD,1,0":"-1",
-        "WGD,2,0":"-1",
-        "WGD,3,0":"-1",
-        "WGD,4,0":"-1",
-        "WGD,5,0":"1",
-        "WGD,6,0":"2",
-        "WGD,1,1":"-1",
-        "WGD,2,1":"-1",
-        "WGD,3,1":"-1",
-        "WGD,4,1":"1",
-        "WGD,5,1":"2",
-        "WGD,6,1":"2",
-        "WGD,2,2":"0",
-        "WGD,3,2":"1",
-        "WGD,4,2":"2",
-        "WGD,5,2":"2",
-        "WGD,6,2":"2",
-        "WGD,3,3":"2",
-        "WGD,4,3":"2",
-        "WGD,5,3":"2",
-        "WGD,6,3":"2"
-    };
+    private static hasRequiredAscnData(mutation:Mutation):boolean {
+        if (mutation.alleleSpecificCopyNumber === undefined || 
+            mutation.alleleSpecificCopyNumber.totalCopyNumber === undefined || 
+            mutation.alleleSpecificCopyNumber.minorCopyNumber === undefined ||
+            mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber == undefined) {
+            return false;
+        }
+        return true;
+    }
 
     private static getFacetsCNAData(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
-        const sampleId:string = mutation.sampleId;
-        const tcn = mutation.alleleSpecificCopyNumber.totalCopyNumber;
-        const lcn = mutation.alleleSpecificCopyNumber.minorCopyNumber;
-        const mcn:number = tcn - lcn;
-        let wgd = null;
-        if (sampleIdToClinicalDataMap) {
-            const wgdData = sampleIdToClinicalDataMap[sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_WGD");
-            if (wgdData !== undefined && wgdData.length > 0) {
-                wgd = wgdData[0].value;
-            }
-        }
-        if (tcn === -1 || lcn === -1 || wgd === null) {
+        if (!FACETSCNAColumnFormatter.hasRequiredAscnData(mutation)) {
             return "NA";
         }
-        return FACETSCNAColumnFormatter.getFacetsCNA(mcn, lcn, wgd);
+        return mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber;
     }
 
     public static getFacetsCNATooltip(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
         const sampleId:string = mutation.sampleId;
-        const tcn = mutation.alleleSpecificCopyNumber.totalCopyNumber;
-        const lcn = mutation.alleleSpecificCopyNumber.minorCopyNumber;
-        const mcn:number = tcn - lcn;
         let wgd = null;
-        let facetsTooltip = null;
         if (sampleIdToClinicalDataMap) {
             let wgdData = sampleIdToClinicalDataMap[sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_WGD");
             if (wgdData !== undefined && wgdData.length > 0) {
                 wgd = wgdData[0].value;
             }
         }
-        if (tcn === -1 || lcn === -1 || wgd === null) {
+        if (!FACETSCNAColumnFormatter.hasRequiredAscnData(mutation) || wgd === null) {
             return (<span><b>NA</b></span>);
-        } else {
-            facetsTooltip = FACETSCNAColumnFormatter.getFacetsCall(mcn, lcn, wgd).toLowerCase()
         }
+        const tcn = mutation.alleleSpecificCopyNumber.totalCopyNumber;
+        const lcn = mutation.alleleSpecificCopyNumber.minorCopyNumber;
+        const mcn:number = tcn - lcn;
+        let facetsTooltip = FACETSCNAColumnFormatter.getFacetsCall(mcn, lcn, wgd).toLowerCase()
         return (<span><b>{facetsTooltip}</b> ({wgd} with total copy number of {tcn.toString(10)} and a minor copy number of {lcn.toString(10)})</span>);
     }
 
@@ -149,18 +99,6 @@ export default class FACETSCNAColumnFormatter {
             facetsCall = FACETSCNAColumnFormatter.facetsCallTable[key];
         }
         return facetsCall;
-    }
-
-    // gets the FACETS generated copy number (e.g -1, 0, 1)
-    private static getFacetsCNA(mcn:number, lcn:number, wgd:string) {
-        let facetsCNA = null;
-        const key: string = [wgd, mcn.toString(), lcn.toString()].join(",");
-        if (!(key in FACETSCNAColumnFormatter.facetsCNATable)) {
-            facetsCNA = "NA";
-        } else {
-            facetsCNA = FACETSCNAColumnFormatter.facetsCNATable[key];
-        }
-        return facetsCNA;
     }
 
     public static renderFunction(data: Mutation[], sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined, sampleIds:string[]) {
@@ -230,6 +168,7 @@ export default class FACETSCNAColumnFormatter {
         const sampleId:string = mutation.sampleId;
         let wgd = null;
         if (sampleIdToClinicalDataMap) {
+          console.log("ATTEMPTING TO ACCESS CLINICAL DATA");
           const wgdData = sampleIdToClinicalDataMap[sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_WGD");
           if (wgdData !== undefined && wgdData.length > 0) {
               wgd = wgdData[0].value;
@@ -241,7 +180,7 @@ export default class FACETSCNAColumnFormatter {
             cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, "NA", wgd);
             return cnaDataValue
         } else {
-            cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, mutation.alleleSpecificCopyNumber.totalCopyNumber, wgd);
+            cnaDataValue = FACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData.toString(), mutation.alleleSpecificCopyNumber.totalCopyNumber, wgd);
         }
         const cnaToolTip = FACETSCNAColumnFormatter.getFacetsCNATooltip(mutation, sampleIdToClinicalDataMap);
         return (<DefaultTooltip placement="left"

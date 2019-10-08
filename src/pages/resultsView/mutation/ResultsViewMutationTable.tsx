@@ -149,7 +149,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         }
         return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return !floatValueIsNA(m.alleleSpecificCopyNumber.ccfMCopies);
+                return (m.alleleSpecificCopyNumber !== undefined && m.alleleSpecificCopyNumber.ccfMCopies !== undefined);
             });
         });
     }
@@ -167,7 +167,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         }
         return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return (m.alleleSpecificCopyNumber.totalCopyNumber !== -1 && clinicalData[m.sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY").length > 0);
+                return (m.alleleSpecificCopyNumber !== undefined && m.alleleSpecificCopyNumber.mutantCopies !== undefined);
             });
         });
     }
