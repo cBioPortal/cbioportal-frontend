@@ -39,10 +39,6 @@ import {createQueryStore} from "pages/home/HomePage";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
 
-const patientViewPageStore = new PatientViewPageStore();
-const win:any = (window as any);
-win.patientViewPageStore = patientViewPageStore;
-
 function initStore(appStore:AppStore) {
 
     const resultsViewPageStore = new ResultsViewPageStore(appStore, getBrowserWindow().globalStores.routing);

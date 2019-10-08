@@ -7,18 +7,18 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../sampleManager";
 import {isUncalled} from 'shared/lib/MutationUtils';
 
-export default class FACETSColumnFormatter {
+export default class PatientCancerCellFractionColumnFormatter {
     static barWidth = 6;
     static barSpacing = 3;
     static maxBarHeight = 12;
-    static indexToBarLeft = (n:number) => n*(FACETSColumnFormatter.barWidth + FACETSColumnFormatter.barSpacing);
+    static indexToBarLeft = (n:number) => n*(PatientCancerCellFractionColumnFormatter.barWidth + PatientCancerCellFractionColumnFormatter.barSpacing);
 
-    public static getComponentForSampleArgs<T extends {alleleSpecificCopyNumber:{ccfMCopies:number}}>(mutation:T) {
+    public static getComponentForSampleArgs<T extends {alleleSpecificCopyNumber:{clonal:boolean}}>(mutation:T) {
         let opacity: number = 1;
         let extraTooltipText: string = '';
-        if (mutation.alleleSpecificCopyNumber !== undefined && mutation.alleleSpecificCopyNumber.ccfMCopies !== undefined) {
-            const ccfMCopiesValue = mutation.alleleSpecificCopyNumber.ccfMCopies;
-            if (ccfMCopiesValue !== 1) {
+        if (mutation.alleleSpecificCopyNumber !== undefined && mutation.alleleSpecificCopyNumber.clonal !== undefined) {
+            const clonalValue = mutation.alleleSpecificCopyNumber.clonal;
+            if (!clonalValue) {
                 opacity = .5;
             }
         }
@@ -31,10 +31,10 @@ export default class FACETSColumnFormatter {
     public static convertMutationToSampleElement<T extends {sampleId:string, alleleSpecificCopyNumber:{ccfMCopies:number}}>(mutation:T, color:string, barX:number, sampleComponent:any) {
         if (mutation.alleleSpecificCopyNumber !== undefined && mutation.alleleSpecificCopyNumber.ccfMCopies !== undefined) {
             const ccfMCopies = mutation.alleleSpecificCopyNumber.ccfMCopies;
-            const barHeight = (isNaN(ccfMCopies) ? 0 : ccfMCopies)*FACETSColumnFormatter.maxBarHeight;
-            const barY = FACETSColumnFormatter.maxBarHeight - barHeight;
+            const barHeight = (isNaN(ccfMCopies) ? 0 : ccfMCopies)*PatientCancerCellFractionColumnFormatter.maxBarHeight;
+            const barY = PatientCancerCellFractionColumnFormatter.maxBarHeight - barHeight;
 
-            const bar = (<rect x={barX} y={barY} width={FACETSColumnFormatter.barWidth} height={barHeight} fill={color}/>);
+            const bar = (<rect x={barX} y={barY} width={PatientCancerCellFractionColumnFormatter.barWidth} height={barHeight} fill={color}/>);
             const text = (<span>
                     <strong>{ccfMCopies.toFixed(2)}</strong>
                 </span>);
@@ -49,11 +49,15 @@ export default class FACETSColumnFormatter {
             return (<span></span>);
         }
 
+        // for every sample of the selected patient
+        // 1) create a "bar" for sample
+        // 2) adjust height proportional to CCF value
+        // 3) create tooltip with ordered information
         const sampleOrder = sampleManager.getSampleIdsInOrder();
-        const barX = sampleOrder.reduce((map, sampleId:string, i:number) => {map[sampleId] = FACETSColumnFormatter.indexToBarLeft(i); return map;}, {} as {[s:string]:number});
+        const barX = sampleOrder.reduce((map, sampleId:string, i:number) => {map[sampleId] = PatientCancerCellFractionColumnFormatter.indexToBarLeft(i); return map;}, {} as {[s:string]:number});
         const sampleElements = mutations.map((m:Mutation) => {
-            const args = FACETSColumnFormatter.getComponentForSampleArgs(m);
-            return FACETSColumnFormatter.convertMutationToSampleElement(
+            const args = PatientCancerCellFractionColumnFormatter.getComponentForSampleArgs(m);
+            return PatientCancerCellFractionColumnFormatter.convertMutationToSampleElement(
                 m,
                 sampleManager.getColorForSample(m.sampleId),
                 barX[m.sampleId],
@@ -77,8 +81,8 @@ export default class FACETSColumnFormatter {
         else if (tooltipLines.length > 0) {
             content = (
                 <svg
-                    width={FACETSColumnFormatter.getSVGWidth(sampleOrder.length)}
-                    height={FACETSColumnFormatter.maxBarHeight}
+                    width={PatientCancerCellFractionColumnFormatter.getSVGWidth(sampleOrder.length)}
+                    height={PatientCancerCellFractionColumnFormatter.maxBarHeight}
                 >
                     {bars}
                 </svg>
@@ -105,6 +109,6 @@ export default class FACETSColumnFormatter {
     }
 
     public static getSVGWidth(numSamples:number) {
-        return numSamples*FACETSColumnFormatter.barWidth + (numSamples-1)*FACETSColumnFormatter.barSpacing
+        return numSamples*PatientCancerCellFractionColumnFormatter.barWidth + (numSamples-1)*PatientCancerCellFractionColumnFormatter.barSpacing
     }
 }

@@ -16,27 +16,27 @@ interface IMutationTypeFormat {
 /**
  * @author Avery Wang
  */
-export default class CancerCellFractionColumnFormatter {
+export default class ASCNMethodColumnFormatter {
     /* Determines the display value by using the impact field.
      *
      * @param data  column formatter data
-     * @returns {string}    "CancerCellFraction" text value
+     * @returns {string}    "ASCNMethod" text value
      */
     public static getDisplayValue(data:Mutation[]):string {
-        return CancerCellFractionColumnFormatter.getCancerCellFractionValue(data);
+        return ASCNMethodColumnFormatter.getASCNMethodValue(data);
     }
 
-    public static getCcfMCopiesValue(data:Mutation[]):string {
-        let ccfMCopiesValue = "";
-        if (data[0].alleleSpecificCopyNumber !== undefined && data[0].alleleSpecificCopyNumber.ccfMCopies !== undefined) {
-            ccfMCopiesValue = data[0].alleleSpecificCopyNumber.ccfMCopies.toFixed(2);
+    public static getAscnMethodValue(data:Mutation[]):string {
+        let ascnMethodValue = "";
+        if (data[0].alleleSpecificCopyNumber !== undefined && data[0].alleleSpecificCopyNumber.ascnMethod !== undefined) {
+            ascnMethodValue = data[0].alleleSpecificCopyNumber.ascnMethod;
         }
-        return ccfMCopiesValue;
+        return ascnMethodValue;
     }
 
-    public static getCancerCellFractionValue(data:Mutation[]):string {
-        const ccfMCopiesValue = CancerCellFractionColumnFormatter.getCcfMCopiesValue(data);
-        return ccfMCopiesValue;
+    public static getASCNMethodValue(data:Mutation[]):string {
+        const ascnMethodValue = ASCNMethodColumnFormatter.getAscnMethodValue(data);
+        return ascnMethodValue;
     }
 
     public static getTextValue(data:number):string {
@@ -49,17 +49,17 @@ export default class CancerCellFractionColumnFormatter {
 
     public static renderFunction(data:Mutation[]) {
         // use text for all purposes (display, sort, filter)
-        const text:string = CancerCellFractionColumnFormatter.getDisplayValue(data);
+        const text:string = ASCNMethodColumnFormatter.getDisplayValue(data);
         let content = <span>{text}</span>;
         return content;
     }
     
-    public static getCancerCellFractionDownload(mutations:Mutation[]): string|string[]
+    public static getASCNMethodDownload(mutations:Mutation[]): string|string[]
     {
         let result = [];
         if (mutations) {
             for (let mutation of mutations) {
-                result.push(CancerCellFractionColumnFormatter.getCancerCellFractionValue([mutation]));
+                result.push(ASCNMethodColumnFormatter.getASCNMethodValue([mutation]));
             }
         }
         if (result.length == 1) {

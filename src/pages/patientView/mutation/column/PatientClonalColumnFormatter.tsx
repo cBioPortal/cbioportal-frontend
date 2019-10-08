@@ -4,14 +4,14 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../sampleManager";
 import {floatValueIsNA} from "shared/lib/NumberUtils";
 
-export default class FACETSClonalColumnFormatter {
+export default class PatientClonalColumnFormatter {
 
     public static getDisplayValue(mutations:Mutation[], sampleIds:string[], sampleManager:SampleManager) {
         let values:string[] = [];
         const sampleToValue:{[key: string]: any} = {};
         const sampleToCCF:{[key: string]: any} = {};
         for (const mutation of mutations) {
-            sampleToValue[mutation.sampleId] = FACETSClonalColumnFormatter.getClonalValue([mutation]);
+            sampleToValue[mutation.sampleId] = PatientClonalColumnFormatter.getClonalValue([mutation]);
         }
 
         for (const mutation of mutations) {
@@ -22,7 +22,7 @@ export default class FACETSClonalColumnFormatter {
                 sampleToCCF[mutation.sampleId] = "NA"
             }
         }
-        // exclude samples with invalid count value (undefined || emtpy || lte 0)
+        // exclude samples with invalid count value (undefined || empty || lte 0)
         const samplesWithValue = sampleIds.filter(sampleId =>
             sampleToValue[sampleId] && sampleToValue[sampleId].toString().length > 0);
 
@@ -31,12 +31,12 @@ export default class FACETSClonalColumnFormatter {
         if (!samplesWithValue) {
             return (<span></span>);
         } else if (samplesWithValue.length === 1) {
-            tdValue = FACETSClonalColumnFormatter.getClonalListElement(samplesWithValue[0], sampleToValue[samplesWithValue[0]], sampleToCCF[samplesWithValue[0]], sampleManager);
+            tdValue = PatientClonalColumnFormatter.getClonalListElement(samplesWithValue[0], sampleToValue[samplesWithValue[0]], sampleToCCF[samplesWithValue[0]], sampleManager);
         }
         // multiple value: add sample id and value pairs
         else {
             tdValue = samplesWithValue.map((sampleId:string) => {
-                return FACETSClonalColumnFormatter.getClonalListElement(sampleId, sampleToValue[sampleId], sampleToCCF[sampleId], sampleManager);
+                return PatientClonalColumnFormatter.getClonalListElement(sampleId, sampleToValue[sampleId], sampleToCCF[sampleId], sampleManager);
             });
         }
         return (
@@ -72,7 +72,7 @@ export default class FACETSClonalColumnFormatter {
     }
 
     public static getClonalCircle(clonalValue:string) {
-        let clonalColor = FACETSClonalColumnFormatter.getClonalColor(clonalValue);
+        let clonalColor = PatientClonalColumnFormatter.getClonalColor(clonalValue);
         return (
                 <svg height="10" width="10">
                     <circle cx={5} cy={5} r={5} fill={`${clonalColor}`}/>
@@ -81,7 +81,7 @@ export default class FACETSClonalColumnFormatter {
     }
 
     public static getTooltip(sampleId:string, clonalValue:string, ccfMCopies:string, sampleManager:SampleManager) {
-        let clonalColor = FACETSClonalColumnFormatter.getClonalColor(clonalValue);
+        let clonalColor = PatientClonalColumnFormatter.getClonalColor(clonalValue);
         return (
                 <div>
                     <table>
@@ -95,7 +95,7 @@ export default class FACETSClonalColumnFormatter {
 
     public static getClonalListElement(sampleId:string, clonalValue:string, ccfMCopies:string, sampleManager:SampleManager) {
        return (
-            <li><DefaultTooltip overlay={FACETSClonalColumnFormatter.getTooltip(`${sampleId}`, `${clonalValue}`, `${ccfMCopies}`, sampleManager)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{FACETSClonalColumnFormatter.getClonalCircle(clonalValue)}</DefaultTooltip></li>
+            <li><DefaultTooltip overlay={PatientClonalColumnFormatter.getTooltip(`${sampleId}`, `${clonalValue}`, `${ccfMCopies}`, sampleManager)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{PatientClonalColumnFormatter.getClonalCircle(clonalValue)}</DefaultTooltip></li>
         );
     }
 
@@ -103,14 +103,14 @@ export default class FACETSClonalColumnFormatter {
         if (!sampleManager) {
             return (<span></span>);
         }
-        return FACETSClonalColumnFormatter.getDisplayValue(mutations, sampleIds, sampleManager);
+        return PatientClonalColumnFormatter.getDisplayValue(mutations, sampleIds, sampleManager);
     }
 
     public static getClonalDownload(mutations:Mutation[]): string|string[] {
         let result = [];
         if (mutations) {
             for (let mutation of mutations) {
-                result.push(FACETSClonalColumnFormatter.getClonalValue([mutation]));
+                result.push(PatientClonalColumnFormatter.getClonalValue([mutation]));
             }
         }
         return result;

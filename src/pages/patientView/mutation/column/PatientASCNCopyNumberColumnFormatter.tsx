@@ -5,9 +5,9 @@ import {Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 import SampleManager from "../../sampleManager";
 
-export default class PatientFACETSCNAColumnFormatter {
+export default class PatientASCNCopyNumberColumnFormatter {
 
-    private static facetsCallTable:{[key:string]:string} = {
+    private static ascnCallTable:{[key:string]:string} = {
         "no WGD,0,0":"Homdel",
         "no WGD,1,0":"Hetloss",
         "no WGD,2,0":"CNLOH",
@@ -65,14 +65,14 @@ export default class PatientFACETSCNAColumnFormatter {
     }
 
     // gets value displayed in table cell - "NA" if missing attributes needed for calculation
-    private static getFacetsCNAData(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
-        if (!PatientFACETSCNAColumnFormatter.hasRequiredAscnData(mutation)) {
+    private static getASCNCopyNumberData(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
+        if (!PatientASCNCopyNumberColumnFormatter.hasRequiredAscnData(mutation)) {
             return "NA";
         }
         return mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber;
     }
 
-    public static getFacetsCNATooltip(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleManager:SampleManager) {
+    public static getASCNCopyNumberTooltip(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleManager:SampleManager) {
         const sampleId:string = mutation.sampleId;
         const componentBySample = sampleManager.getComponentForSample(sampleId, 1, "");
         let wgd = null;
@@ -82,47 +82,55 @@ export default class PatientFACETSCNAColumnFormatter {
                 wgd = wgdData[0].value;
             }
         }
-        if (!PatientFACETSCNAColumnFormatter.hasRequiredAscnData(mutation) || wgd === null) {
+        if (!PatientASCNCopyNumberColumnFormatter.hasRequiredAscnData(mutation) || wgd === null) {
             return (<span>{componentBySample} <b>NA</b></span>);
         }
         const tcn = mutation.alleleSpecificCopyNumber.totalCopyNumber;
         const lcn = mutation.alleleSpecificCopyNumber.minorCopyNumber;
         const mcn:number = tcn - lcn;
-        let facetsTooltip = PatientFACETSCNAColumnFormatter.getFacetsCall(mcn, lcn, wgd).toLowerCase()
-        return (<span>{componentBySample} <b>{facetsTooltip}</b> ({wgd} with total copy number of {tcn.toString(10)} and a minor copy number of {lcn.toString(10)})</span>);
+        let ascnTooltip = PatientASCNCopyNumberColumnFormatter.getASCNCall(mcn, lcn, wgd).toLowerCase()
+        return (<span>{componentBySample} <b>{ascnTooltip}</b> ({wgd} with total copy number of {tcn.toString(10)} and a minor copy number of {lcn.toString(10)})</span>);
     }
 
     // gets the FACETES call (e.g tetraploid, amp, cnloh)
-    private static getFacetsCall(mcn:number, lcn:number, wgd:string) {
-        let facetsCall = null;
+    private static getASCNCall(mcn:number, lcn:number, wgd:string) {
+        let ascnCall = null;
         const key: string = [wgd, mcn.toString(), lcn.toString()].join(",");
-        if (!(key in PatientFACETSCNAColumnFormatter.facetsCallTable)) {
-            facetsCall = "NA";
+        if (!(key in PatientASCNCopyNumberColumnFormatter.ascnCallTable)) {
+            ascnCall = "NA";
         } else {
-            facetsCall = PatientFACETSCNAColumnFormatter.facetsCallTable[key];
+            ascnCall = PatientASCNCopyNumberColumnFormatter.ascnCallTable[key];
         }
-        return facetsCall;
+        return ascnCall;
     }
 
     public static renderFunction(data: Mutation[], sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined, sampleIds:string[], sampleManager:SampleManager|null) {
         if (!sampleManager) {
             return (<span></span>);
         }
-        const displayValuesBySample:{[key:string]:JSX.Element} = PatientFACETSCNAColumnFormatter.getElementsForMutations(data, sampleIdToClinicalDataMap, sampleManager);
+        const displayValuesBySample:{[key:string]:JSX.Element} = PatientASCNCopyNumberColumnFormatter.getElementsForMutations(data, sampleIdToClinicalDataMap, sampleManager);
         const sampleIdsWithElements = sampleIds.filter(sampleId => displayValuesBySample[sampleId]);
         if (!sampleIdsWithElements) {
             return (<span></span>);
         } else {
-            let content = sampleIdsWithElements.map((sampleId:string) => {
-                let displayElement = displayValuesBySample[sampleId];
-                // if current item is not last samle in list then append '; ' to end of text value
+            // map to sampleIds instead of sampleIdsWithElements so that each icon will line up
+            // positionally (e.g col 1 will always be sample 1, col 2 will always be sample 2
+            // even if sample 1 doesn't have an icon)
+            let content = sampleIds.map((sampleId:string) => {
+                let displayElement = undefined;
+                if (displayValuesBySample[sampleId] === undefined) {
+                    displayElement = <svg width='18' height='20' className='case-label-header'></svg>
+                } else {
+                    displayElement = displayValuesBySample[sampleId];
+                }
+                // if current item is not last samle in list, seperate withs space
                 if (sampleIdsWithElements.indexOf(sampleId) !== (sampleIdsWithElements.length -1)) {
-                    return <li>{displayElement}<span style={{fontSize:"small"}}>{" "}</span></li>;
+                    return <li>{displayElement}<span style={{fontSize:"small"}}>{""}</span></li>;
                 }
                 return <li>{displayElement}</li>;
             })
             return (
-             <span style={{display:'inline-block', minWidth:100}}>
+             <span style={{display:'inline-block', minWidth:100, position:'relative'}}>
                  <ul style={{marginBottom:0}} className="list-inline list-unstyled">{ content }</ul>
              </span>
             );
@@ -132,7 +140,7 @@ export default class PatientFACETSCNAColumnFormatter {
     public static getElementsForMutations(data:Mutation[], sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined, sampleManager:SampleManager) {
         const sampleToElement:{[key: string]: JSX.Element} = {};
         for (const mutation of data) {
-            const element = PatientFACETSCNAColumnFormatter.getElement(mutation, sampleIdToClinicalDataMap, sampleManager);
+            const element = PatientASCNCopyNumberColumnFormatter.getElement(mutation, sampleIdToClinicalDataMap, sampleManager);
             sampleToElement[mutation.sampleId] = element;
         }
         return sampleToElement;
@@ -147,15 +155,15 @@ export default class PatientFACETSCNAColumnFormatter {
                 wgd = wgdData[0].value;
             }
         }
-        const facetsCNAData = PatientFACETSCNAColumnFormatter.getFacetsCNAData(mutation, sampleIdToClinicalDataMap);
+        const ascnCopyNumberData = PatientASCNCopyNumberColumnFormatter.getASCNCopyNumberData(mutation, sampleIdToClinicalDataMap);
         let cnaDataValue = null;
-        if (facetsCNAData === "NA") {
-            cnaDataValue = PatientFACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData, "NA", wgd);
+        if (ascnCopyNumberData === "NA") {
+            cnaDataValue = PatientASCNCopyNumberColumnFormatter.formatASCNCopyNumberData(ascnCopyNumberData, "NA", wgd);
             return cnaDataValue
         } else {
-            cnaDataValue = PatientFACETSCNAColumnFormatter.formatFacetsCNAData(facetsCNAData.toString(), mutation.alleleSpecificCopyNumber.totalCopyNumber, wgd);
+            cnaDataValue = PatientASCNCopyNumberColumnFormatter.formatASCNCopyNumberData(ascnCopyNumberData.toString(), mutation.alleleSpecificCopyNumber.totalCopyNumber, wgd);
         }
-        const cnaToolTip = PatientFACETSCNAColumnFormatter.getFacetsCNATooltip(mutation, sampleIdToClinicalDataMap, sampleManager);
+        const cnaToolTip = PatientASCNCopyNumberColumnFormatter.getASCNCopyNumberTooltip(mutation, sampleIdToClinicalDataMap, sampleManager);
         return (<DefaultTooltip placement="left"
                     overlay={cnaToolTip}
                     arrowContent={<div className="rc-tooltip-arrow-inner"/>}
@@ -165,29 +173,30 @@ export default class PatientFACETSCNAColumnFormatter {
         );
     }
 
-    // returns an element (rounded rectangle with tcn inside - coloring based on FACETS CNA number equivalent)
-    public static formatFacetsCNAData(facetsCNAData:string, tcn:string|number, wgd:null|string) {
+    // returns an element (rounded rectangle with tcn inside - coloring based on FACETS CopyNumber number equivalent)
+    public static formatASCNCopyNumberData(ascnCopyNumberData:string, tcn:string|number, wgd:null|string) {
         let color = "";
         let textcolor = "white"
         let opacity = 100
-        if (facetsCNAData === "2") {
+        if (ascnCopyNumberData === "2") {
             color = "red";
-        } else if (facetsCNAData === "1") {
+        } else if (ascnCopyNumberData === "1") {
             color = "#e15b5b";
-        } else if (facetsCNAData === "0") {
+        } else if (ascnCopyNumberData === "0") {
             color = "#BCBCBC"
-        } else if (facetsCNAData === "-1") {
+        } else if (ascnCopyNumberData === "-1") {
             color = "#2a5eea";
-        } else if (facetsCNAData === "-2") {
+        } else if (ascnCopyNumberData === "-2") {
             color = "blue";
         } else {
             textcolor = "black"
             opacity = 0
+            tcn = "NA"
         }
-        return PatientFACETSCNAColumnFormatter.getFacetsCNAIcon(tcn.toString(), color, opacity, wgd, textcolor);
+        return PatientASCNCopyNumberColumnFormatter.getASCNCopyNumberIcon(tcn.toString(), color, opacity, wgd, textcolor);
     }
 
-    public static getFacetsCNAIcon(cnaNumber:string, color:string, opacity:number, wgd:null|string, textcolor:string) {
+    public static getASCNCopyNumberIcon(cnaNumber:string, color:string, opacity:number, wgd:null|string, textcolor:string) {
       let size = 9;
       let cnaTextValue = cnaNumber;
       let fillColor = color;
@@ -202,13 +211,13 @@ export default class PatientFACETSCNAColumnFormatter {
                           <text x='9' y='5' dominantBaseline='middle' fontWeight='bold' textAnchor='middle' fontSize='7' fill='black'>WGD</text>
                        </svg>
       }
-      let facetsCNAIconRectangle = <rect width='12' height='12' rx='15%' ry='15%' fill={fillColor} opacity={opacity}/>
+      let ascnCopyNumberIconRectangle = <rect width='12' height='12' rx='15%' ry='15%' fill={fillColor} opacity={opacity}/>
 
       return (
           <svg width='18' height='20' className='case-label-header'>
               {wgdStringSVG}
               <g transform="translate(3,8)">
-                {facetsCNAIconRectangle}
+                {ascnCopyNumberIconRectangle}
                 <svg>
                   <text x='6' y='7' dominantBaseline='middle' textAnchor='middle' fontSize={size} fill={textcolor}>{cnaTextValue}</text>
                 </svg>

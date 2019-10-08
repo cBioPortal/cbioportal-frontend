@@ -16,7 +16,7 @@ interface IMutationTypeFormat {
 /**
  * @author Avery Wang
  */
-export default class FACETSMutantCopiesColumnFormatter {
+export default class PatientMutantCopiesColumnFormatter {
     /* Determines the display value by using the impact field.
      *
      * @param data  column formatter data
@@ -25,7 +25,7 @@ export default class FACETSMutantCopiesColumnFormatter {
     public static getDisplayValue(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleIds:string[]):{[key: string]: string} {
         const sampleToValue:{[key: string]: string} = {};
         for (const mutation of data) {
-            const value:string = FACETSMutantCopiesColumnFormatter.getMutantCopiesOverTotalCopies(mutation, sampleIdToClinicalDataMap);
+            const value:string = PatientMutantCopiesColumnFormatter.getMutantCopiesOverTotalCopies(mutation, sampleIdToClinicalDataMap);
             if (value.toString().length > 0) {
                 sampleToValue[mutation.sampleId] = value;
             }
@@ -34,7 +34,7 @@ export default class FACETSMutantCopiesColumnFormatter {
     }
 
     public static getDisplayValueAsString(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleIds:string[]):string {
-        const displayValuesBySample:{[key: string]: string} = FACETSMutantCopiesColumnFormatter.getDisplayValue(data, sampleIdToClinicalDataMap, sampleIds);
+        const displayValuesBySample:{[key: string]: string} = PatientMutantCopiesColumnFormatter.getDisplayValue(data, sampleIdToClinicalDataMap, sampleIds);
         const sampleIdsWithValues = sampleIds.filter(sampleId => displayValuesBySample[sampleId]);
         const displayValuesAsString = sampleIdsWithValues.map((sampleId:string) => {
             return displayValuesBySample[sampleId];
@@ -61,7 +61,7 @@ export default class FACETSMutantCopiesColumnFormatter {
     public static getMutantCopiesToolTip(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleIdsWithValues:string[]):{[key: string]: string} {
         const sampleToToolTip:{[key: string]: string} = {};
         for (const mutation of data) {
-            sampleToToolTip[mutation.sampleId] = FACETSMutantCopiesColumnFormatter.constructToolTipString(mutation, sampleIdToClinicalDataMap);
+            sampleToToolTip[mutation.sampleId] = PatientMutantCopiesColumnFormatter.constructToolTipString(mutation, sampleIdToClinicalDataMap);
         }
         return sampleToToolTip;
     }
@@ -88,9 +88,9 @@ export default class FACETSMutantCopiesColumnFormatter {
             return (<span></span>);
         }
         // get display text values map (sampleid -> value), list of sample ids with values in 'displayValuesBySample', and calculate tooltip by sample
-        const displayValuesBySample:{[key: string]: string} = FACETSMutantCopiesColumnFormatter.getDisplayValue(data, sampleIdToClinicalDataMap, sampleIds);
+        const displayValuesBySample:{[key: string]: string} = PatientMutantCopiesColumnFormatter.getDisplayValue(data, sampleIdToClinicalDataMap, sampleIds);
         const sampleIdsWithValues = sampleIds.filter(sampleId => displayValuesBySample[sampleId]);
-        const toolTipBySample:{[key: string]: string} = FACETSMutantCopiesColumnFormatter.getMutantCopiesToolTip(data, sampleIdToClinicalDataMap, sampleIdsWithValues);
+        const toolTipBySample:{[key: string]: string} = PatientMutantCopiesColumnFormatter.getMutantCopiesToolTip(data, sampleIdToClinicalDataMap, sampleIdsWithValues);
         if (!sampleIdsWithValues) {
             return (<span></span>);
         } else {

@@ -10,7 +10,7 @@ import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnForm
 import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
 import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import DiscreteCNAColumnFormatter from "./column/DiscreteCNAColumnFormatter";
-import FACETSCNAColumnFormatter from "./column/FACETSCNAColumnFormatter";
+import ASCNCopyNumberColumnFormatter from "./column/ASCNCopyNumberColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
@@ -18,6 +18,7 @@ import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter"
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
 import ClonalColumnFormatter from "./column/ClonalColumnFormatter";
 import CancerCellFractionColumnFormatter from "./column/CancerCellFractionColumnFormatter";
+import ASCNMethodColumnFormatter from "./column/ASCNMethodColumnFormatter";
 import MutantCopiesColumnFormatter from "./column/MutantCopiesColumnFormatter";
 import FunctionalImpactColumnFormatter from "./column/FunctionalImpactColumnFormatter";
 import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
@@ -128,6 +129,7 @@ export enum MutationTableColumnType {
     COSMIC,
     COPY_NUM,
     FACETS_COPY_NUM,
+    ASCN_METHOD,
     MRNA_EXPR,
     COHORT,
     REF_READS_N,
@@ -314,15 +316,23 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.FACETS_COPY_NUM] = {
             name: "Integer Copy #",
             render:(d:Mutation[])=>{
-                return FACETSCNAColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
+                return ASCNCopyNumberColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
             },
             sortBy: (d:Mutation[]):string|null=>{
                 if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
-                    return FACETSCNAColumnFormatter.getSortValue(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
+                    return ASCNCopyNumberColumnFormatter.getSortValue(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
                 } else {
                     return "";
                 }
             }
+        };
+
+        this._columns[MutationTableColumnType.ASCN_METHOD] = {
+            name: "ASCN Method",
+            tooltip: (<span>Allele Specific Copy Number Method</span>),
+            render:ASCNMethodColumnFormatter.renderFunction,
+            download:ASCNMethodColumnFormatter.getASCNMethodValue,
+            sortBy:(d:Mutation[])=>ASCNMethodColumnFormatter.getDisplayValue(d),
         };
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
@@ -469,7 +479,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             tooltip: (<span>FACETS Clonal</span>),
             render:(d:Mutation[])=>ClonalColumnFormatter.renderFunction(d, [d[0].sampleId]),
             download:ClonalColumnFormatter.getClonalValue,
-            sortBy:(d:Mutation[])=>d.map(m=>m.alleleSpecificCopyNumber.ccfMCopiesUpper)
+            sortBy:(d:Mutation[])=>CancerCellFractionColumnFormatter.getDisplayValue(d)
         };
 
         this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
@@ -477,7 +487,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             tooltip: (<span>FACETS Cancer Cell Fraction</span>),
             render:CancerCellFractionColumnFormatter.renderFunction,
             download:CancerCellFractionColumnFormatter.getCancerCellFractionValue,
-            sortBy:(d:Mutation[])=>d.map(m=>m.alleleSpecificCopyNumber.ccfMCopies)
+            sortBy:(d:Mutation[])=>CancerCellFractionColumnFormatter.getDisplayValue(d)
         };
 
         this._columns[MutationTableColumnType.MUTANT_COPIES] = {
