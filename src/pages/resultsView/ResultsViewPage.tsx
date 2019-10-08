@@ -37,6 +37,7 @@ import QueryAndDownloadTabs from "shared/components/query/QueryAndDownloadTabs";
 import {createQueryStore} from "pages/home/HomePage";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
+import GeneSymbolValidationError from "shared/components/query/GeneSymbolValidationError";
 
 function initStore(appStore:AppStore) {
 
@@ -431,16 +432,16 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 />
             </div>);
         } else {
-            return (<>
-                {
-                    // if query invalid(we only check gene length for now), return error page
-                    (this.resultsViewPageStore.isQueryInvalid) && (
-                        <div className="alert alert-danger queryInvalid" style={{marginBottom: "15px"}} role="alert">
-                            <p>
-                                Queries are limited to 100 genes. Please <a
-                                href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>let us know</a> your use
-                                case(s) if you need to query more than 100 genes.
-                            </p>
+            return (
+                <>
+                {// if query invalid(we only check gene count * sample count < 1,000,000 for now), return error page
+                    this.resultsViewPageStore.isQueryInvalid && (
+                        <div className="alert alert-danger queryInvalid" style={{ marginBottom: "40px" }} role="alert">
+                            <GeneSymbolValidationError
+                                sampleCount={this.resultsViewPageStore.samples.result.length}
+                                queryProductLimit={AppConfig.serverConfig.query_product_limit}
+                                email={AppConfig.serverConfig.skin_email_contact}
+                            />
                         </div>
                     )
                 }

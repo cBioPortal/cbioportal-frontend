@@ -66,12 +66,19 @@ $selectHeightInner: $selectHeight - 2px;
     font-size: 18px !important;
 }
 
-#geneBoxValidationStatus > div {
-    max-width: 280px;
+#geneBoxValidationStatus > div,
+#wideGeneBoxValidationStatus > div {
     white-space: normal;
     width: 100%;
 }
 
+#geneBoxValidationStatus > div {
+    max-width: 280px;
+}
+
+#wideGeneBoxValidationStatus > div {
+    max-width: 555px;
+}
 
 
 .studyFilterResult-enter-done {
