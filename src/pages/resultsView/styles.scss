@@ -112,3 +112,9 @@
     margin-bottom:5px;
   }
 }
+
+#wideGeneBoxValidationStatus > div {
+  white-space: normal;
+  width: 100%;
+  max-width: 555px;
+}

@@ -5,6 +5,7 @@ import FontAwesome from 'react-fontawesome';
 import ReactSelect from 'react-select1';
 import { GeneReplacement, QueryStoreComponent, Focus } from './QueryStore';
 import AppConfig from 'appConfig';
+import GeneSymbolValidationError from "./GeneSymbolValidationError";
 
 const styles = styles_any as {
     GeneSymbolValidator: string;
@@ -43,23 +44,14 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}> {
                 <div className={styles.GeneSymbolValidator}>
                     <div
                         className={styles.invalidBubble}
-                        title="Please limit your queries to 100 genes or fewer."
+                        title={`Please limit your queries to ${this.store.geneLimit} genes or fewer.`}
                     >
-                        <FontAwesome
-                            className={styles.icon}
-                            name="exclamation-circle"
+                        <FontAwesome className={styles.icon} name="exclamation-circle" />
+                        <GeneSymbolValidationError
+                            sampleCount={this.store.profiledSamplesCount.result.all}
+                            queryProductLimit={AppConfig.serverConfig.query_product_limit}
+                            email={AppConfig.serverConfig.skin_email_contact}
                         />
-                        <span>
-                            Queries are limited to 100 genes. Please{' '}
-                            <a
-                                style={{ color: '#ccc' }}
-                                href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}
-                            >
-                                let us know
-                            </a>{' '}
-                            your use case(s) if you need to query more than 100
-                            genes.
-                        </span>
                     </div>
                 </div>
             );

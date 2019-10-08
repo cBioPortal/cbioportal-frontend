@@ -20,7 +20,7 @@ const styles = styles_any as {
 @observer
 export default class GenesetsValidator extends QueryStoreComponent<{}, {}> {
     render() {
-        if (this.store.genesetIdsQuery.error)
+        if (this.store.genesetIdsQuery.error) {
             return (
                 <div className={styles.GeneSymbolValidator}>
                     <span className={styles.errorMessage}>
@@ -33,10 +33,13 @@ export default class GenesetsValidator extends QueryStoreComponent<{}, {}> {
                     </span>
                 </div>
             );
+        }
 
-        if (!this.store.genesetIdsQuery.query.length) return null;
+        if (!this.store.genesetIdsQuery.query.length) {
+            return null;
+        }
 
-        if (this.store.genesets.isError)
+        if (this.store.genesets.isError) {
             return (
                 <div className={styles.GeneSymbolValidator}>
                     <span className={styles.pendingMessage}>
@@ -44,11 +47,12 @@ export default class GenesetsValidator extends QueryStoreComponent<{}, {}> {
                     </span>
                 </div>
             );
+        }
 
         if (
             this.store.genesets.isPending &&
             this.store.genesets.result.invalid.length === 0
-        )
+        ) {
             return (
                 <div className={styles.GeneSymbolValidator}>
                     <span className={styles.pendingMessage}>
@@ -56,8 +60,9 @@ export default class GenesetsValidator extends QueryStoreComponent<{}, {}> {
                     </span>
                 </div>
             );
+        }
 
-        if (this.store.genesets.result.invalid.length)
+        if (this.store.genesets.result.invalid.length) {
             return (
                 <div className={styles.GeneSymbolValidator}>
                     <div
@@ -77,6 +82,7 @@ export default class GenesetsValidator extends QueryStoreComponent<{}, {}> {
                     )}
                 </div>
             );
+        }
 
         return (
             <div className={styles.GeneSymbolValidator}>
