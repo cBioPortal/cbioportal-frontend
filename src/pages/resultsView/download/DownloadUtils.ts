@@ -22,8 +22,6 @@ export interface IDownloadFileRow {
     alterationData: {[gene: string]: string[]};
 }
 
-export const DOWNLOAD_TABLE_DEFAULT_ROW_LIMIT = 7;
-
 export function generateOqlData(datum: GeneticTrackDatum,
                                 geneAlterationDataByGene?: {[gene: string]: IGeneAlteration},
                                 molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile}): IOqlData
