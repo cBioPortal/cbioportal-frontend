@@ -75,7 +75,7 @@ $selectHeightInner: $selectHeight - 2px;
 
 
 .studyFilterResult-enter-done {
-    transform: scale(1); /* Standard syntax */
+    transform: scale(1) !important; /* Standard syntax */
 }
 
 .studyViewAddChartOverlay.rc-tooltip-placement-bottomRight .rc-tooltip-arrow {
