@@ -633,12 +633,13 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                                 onClick={() => this.studySelectorModalVisible = !this.studySelectorModalVisible}>Custom list</button>
 
                     </div>}
-                    { this.studiesWithExpressionData.isPending && <LoadingIndicator isLoading={true} />}
 
                     <div className="collapse">
                         <div className="well"></div>
                     </div>
                 </div>
+
+                <LoadingIndicator center={true} size="big" isLoading={this.boxPlotData.isPending || this.studiesWithExpressionData.isPending} />
 
                 { this.boxPlotData.isComplete && <If condition={this.selectedStudies.length > 0}>
                     <Then>
@@ -666,7 +667,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         </div>
                     </Else>
                 </If>}
-                { this.boxPlotData.isPending && <LoadingIndicator isLoading={true} />}
             </div>
         );
     }
