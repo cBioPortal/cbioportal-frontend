@@ -3,7 +3,7 @@ import {assert} from 'chai';
 import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
 import {GenePanelData, MolecularProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import {
-    generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData, updateOqlData
+    generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData, updateOqlData, decideMolecularProfileSortingOrder
 } from "./DownloadUtils";
 import {
     AnnotatedMutation, ExtendedAlteration
@@ -903,6 +903,30 @@ describe('DownloadUtils', () => {
                 "mutation is not profiled for the two not profiled GeneticTrackDatum");
             assert.equal(oqlData2.isProteinLevelNotProfiled, true,
                 "protein level is profiled for the two not profiled GeneticTrackDatum");
+        });
+    });
+
+    describe.only('molecularProfileSortingOrder', () => {
+        it('should return specific number for 7 specific molecular profile types', () => {
+            assert.equal(decideMolecularProfileSortingOrder("MUTATION_EXTENDED"), 1,
+                "MUTATION_EXTENDED should be the 1st type");
+            assert.equal(decideMolecularProfileSortingOrder("COPY_NUMBER_ALTERATION"), 2,
+                "COPY_NUMBER_ALTERATION should be the 2nd type");
+            assert.equal(decideMolecularProfileSortingOrder("GENESET_SCORE"), 3,
+                "GENESET_SCORE should be the 3rd type");
+            assert.equal(decideMolecularProfileSortingOrder("MRNA_EXPRESSION"), 4,
+                "MRNA_EXPRESSION should be the 4th type");
+            assert.equal(decideMolecularProfileSortingOrder("METHYLATION"), 5,
+                "METHYLATION should be the 5th type");
+            assert.equal(decideMolecularProfileSortingOrder("METHYLATION_BINARY"), 6,
+                "METHYLATION_BINARY should be the 6th type");
+            assert.equal(decideMolecularProfileSortingOrder("PROTEIN_LEVEL"), 7,
+                "PROTEIN_LEVEL should be the 7th type");
+        });
+
+        it('should return maximum number for the other types', () => {
+            assert.equal(decideMolecularProfileSortingOrder("FUSION"), Number.MAX_VALUE,
+                "FUSION should be put to the end");
         });
     });
 });
