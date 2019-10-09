@@ -86,23 +86,30 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
     }
 
     @computed
-    get customError(): JSX.Element | null {        
+    get customError(): JSX.Element | null {
         if (this.store.isQueryLimitReached) {
             return (
                 <div className={styles.geneCount}>
                     <div
-                        className={""}
+                        className={''}
                         title={`Please limit your queries to ${this.store.geneLimit} genes or fewer.`}
                     >
-                        <FontAwesome className={styles.icon} name="exclamation-circle" />
+                        <FontAwesome
+                            className={styles.icon}
+                            name="exclamation-circle"
+                        />
                         <GeneSymbolValidationError
-                            sampleCount={this.store.profiledSamplesCount.result.all}
-                            queryProductLimit={AppConfig.serverConfig.query_product_limit}
+                            sampleCount={
+                                this.store.profiledSamplesCount.result.all
+                            }
+                            queryProductLimit={
+                                AppConfig.serverConfig.query_product_limit
+                            }
                             email={AppConfig.serverConfig.skin_email_contact}
                         />
                     </div>
                 </div>
-            )
+            );
         }
 
         return null;

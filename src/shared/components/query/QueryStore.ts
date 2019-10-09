@@ -1791,12 +1791,16 @@ export class QueryStore {
 
     @computed get isQueryLimitReached(): boolean {
         return (
-            this.oql.query.length * this.profiledSamplesCount.result.all > AppConfig.serverConfig.query_product_limit
+            this.oql.query.length * this.profiledSamplesCount.result.all >
+            AppConfig.serverConfig.query_product_limit
         );
     }
 
     @computed get geneLimit(): number {
-        return Math.floor(AppConfig.serverConfig.query_product_limit / this.profiledSamplesCount.result.all)
+        return Math.floor(
+            AppConfig.serverConfig.query_product_limit /
+                this.profiledSamplesCount.result.all
+        );
     }
 
     @computed get submitError() {

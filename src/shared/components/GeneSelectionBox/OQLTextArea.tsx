@@ -235,7 +235,7 @@ export default class OQLTextArea extends React.Component<
             : 'Click gene symbols below or enter here';
     }
 
-    render() {        
+    render() {
         return (
             <div className={styles.genesSelection}>
                 <textarea
