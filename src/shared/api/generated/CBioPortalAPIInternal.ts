@@ -146,7 +146,7 @@ export type CopyNumberCountByGene = {
 
         'numberOfAlteredCases': number
 
-        'numberOfSamplesProfiled': number
+        'numberOfProfiledCases': number
 
         'qValue': number
 
@@ -438,7 +438,7 @@ export type MutationCountByGene = {
 
         'numberOfAlteredCases': number
 
-        'numberOfSamplesProfiled': number
+        'numberOfProfiledCases': number
 
         'qValue': number
 

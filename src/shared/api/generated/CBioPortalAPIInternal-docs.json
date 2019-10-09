@@ -2110,7 +2110,7 @@
           "type": "integer",
           "format": "int32"
         },
-        "numberOfSamplesProfiled": {
+        "numberOfProfiledCases": {
           "type": "integer",
           "format": "int32"
         },
@@ -2767,7 +2767,7 @@
           "type": "integer",
           "format": "int32"
         },
-        "numberOfSamplesProfiled": {
+        "numberOfProfiledCases": {
           "type": "integer",
           "format": "int32"
         },
