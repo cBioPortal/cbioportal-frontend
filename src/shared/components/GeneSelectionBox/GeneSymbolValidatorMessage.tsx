@@ -161,17 +161,25 @@ const GeneSymbolValidatorMessageChild = (
     );
 };
 
-const GeneSymbolValidatorMessage = (props: GeneSymbolValidatorMessageProps) => {
-    return (
-        <div id="geneBoxValidationStatus">
-            <GeneSymbolValidatorMessageChild {...props} />
-        </div>
-    );
-};
+class GeneSymbolValidatorMessage extends React.Component<
+    GeneSymbolValidatorMessageProps,
+    {}
+> {
+    render() {
+        if (this.props.children) {
+            return (
+                <div id="wideGeneBoxValidationStatus">
+                    {this.props.children}
+                </div>
+            );
+        }
 
-GeneSymbolValidatorMessage.defaultProps = {
-    errorMessageOnly: false,
-    wrapTheContent: false,
-};
+        return (
+            <div id="geneBoxValidationStatus">
+                <GeneSymbolValidatorMessageChild {...this.props} />
+            </div>
+        );
+    }
+}
 
 export default React.memo(GeneSymbolValidatorMessage);
