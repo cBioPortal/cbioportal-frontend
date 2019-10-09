@@ -66,16 +66,22 @@ To run unit/integration tests in watch mode (where specName is a fragment of the
 yarn run test:watch -- --grep=#specName#
 ```
 
-To run linting
-```
-yarn run lint
+## Formatting Code with Prettier JS
+We are starting to format commits using Prettier JS. Right now this is optional, but you may run into formatting commits.  
+Things to remember:
+- Keep Prettier JS changes in a separate commit
+- Only run it on files you're changing or creating anyways
+
+To run Prettier JS: 
+```$bash
+yarn run prettier --write <files>
 ```
 
-## precommit hook
-There is a precommit hook installed that lint checks the typescript in this project. The hook can be viewed in [package.json](package.json). You can skip it with 
-```bash
-git commit -n
+To run Prettier JS on your last commit:
+```$bash
+yarn run prettier-last-commit
 ```
+
 
 ## Changing the URL of API
 If the version of the desired API URL is the same as the one used to generate

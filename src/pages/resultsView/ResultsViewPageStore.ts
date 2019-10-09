@@ -170,6 +170,7 @@ import {DEFAULT_GENOME} from "pages/resultsView/ResultsViewPageStoreUtils";
 import { StudyWithSamples, getFilteredStudiesWithSamples, ChartMeta, getClinicalAttributeUniqueKey, getChartMetaDataType, getPriorityByClinicalAttribute, UniqueKey, getDefaultPriorityByUniqueKey } from "pages/studyView/StudyViewUtils";
 import { MUTATION_COUNT, FRACTION_GENOME_ALTERED } from "pages/studyView/StudyViewPageStore";
 import { IVirtualStudyProps } from "pages/studyView/virtualStudy/VirtualStudy";
+import { decideMolecularProfileSortingOrder } from "./download/DownloadUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -473,6 +474,10 @@ export class ResultsViewPageStore {
     @observable public sessionIdURL = '';
 
     @observable queryFormVisible: boolean = false;
+
+    @computed get doNonSelectedMolecularProfilesExist() {
+        return this.nonSelectedMolecularProfilesGroupByName.result && _.keys(this.nonSelectedMolecularProfilesGroupByName.result).length > 0;
+    }
 
     @observable public modifyQueryParams: ModifyQueryParams | undefined = undefined;
 
@@ -922,6 +927,46 @@ export class ResultsViewPageStore {
                         molecularDataMultipleStudyFilter:({
                             entrezGeneIds: _.map(this.genes.result,(gene:Gene)=>gene.entrezGeneId),
                             sampleMolecularIdentifiers:identifiers
+                        } as MolecularDataMultipleStudyFilter)
+                    });
+                }
+            }
+
+            return Promise.resolve([]);
+
+        }
+    });
+
+    // other molecular profiles data download needs the data from non queried molecular profiles
+    readonly nonQueriedMolecularData = remoteData<NumericGeneMolecularData[]>({
+        await: () => [
+            this.studyToDataQueryFilter,
+            this.genes,
+            this.nonSelectedMolecularProfiles,
+            this.samples
+        ],
+        invoke: () => {
+            // we get mutations with mutations endpoint, all other alterations with this one, so filter out mutation genetic profile
+            const profilesWithoutMutationProfile = _.filter(this.nonSelectedMolecularProfiles.result, (profile: MolecularProfile) => profile.molecularAlterationType !== AlterationTypeConstants.MUTATION_EXTENDED);
+            const genes = this.genes.result;
+
+            if (profilesWithoutMutationProfile.length && genes != undefined && genes.length) {
+
+                const profilesWithoutMutationProfileGroupByStudyId = _.groupBy(profilesWithoutMutationProfile, (profile) => profile.studyId);
+                // find samples which share studyId with profile and add identifier
+                const sampleIdentifiers : SampleMolecularIdentifier[] = this.samples.result.filter((sample)=> sample.studyId in profilesWithoutMutationProfileGroupByStudyId).reduce((acc: SampleMolecularIdentifier[], sample) => {
+                    acc = acc.concat(profilesWithoutMutationProfileGroupByStudyId[sample.studyId].map((profile) => {
+                        return { 'molecularProfileId':profile.molecularProfileId, 'sampleId':sample.sampleId } as SampleMolecularIdentifier;
+                    }));
+                    return acc;
+                },[]);
+
+                if (sampleIdentifiers.length) {
+                    return client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST({
+                        projection:'DETAILED',
+                        molecularDataMultipleStudyFilter:({
+                            entrezGeneIds: _.map(this.genes.result,(gene:Gene)=>gene.entrezGeneId),
+                            sampleMolecularIdentifiers:sampleIdentifiers
                         } as MolecularDataMultipleStudyFilter)
                     });
                 }
@@ -1781,9 +1826,21 @@ export class ResultsViewPageStore {
             } else {
                 // would be nice to have an endpoint that would return multiple sample lists
                 // but this will only ever happen one for each study selected (and in queries where a sample list is specified)
-                const allSampleLists = await Promise.all(this.rvQuery.samplesSpecification.map((spec) => {
+                let samplesSpecifications = [];
+                // get sample specifications from physical studies if we are querying virtual study
+                if (this.queriedVirtualStudies.result!.length > 0){
+                    samplesSpecifications = populateSampleSpecificationsFromVirtualStudies(this.rvQuery.samplesSpecification, this.queriedVirtualStudies.result!);
+                } else {
+                    samplesSpecifications = this.rvQuery.samplesSpecification;
+                }
+                // get unique study ids to reduce the API requests
+                const uniqueStudyIds = _.chain(samplesSpecifications)
+                                      .map((specification) => specification.studyId)
+                                      .uniq()
+                                      .value();
+                const allSampleLists = await Promise.all(uniqueStudyIds.map((studyId) => {
                     return client.getAllSampleListsInStudyUsingGET({
-                        studyId: spec.studyId,
+                        studyId: studyId,
                         projection: 'SUMMARY'
                     })
                 }));
@@ -2394,6 +2451,22 @@ export class ResultsViewPageStore {
             })
         }
     }, []);
+
+    readonly nonSelectedMolecularProfiles = remoteData<MolecularProfile[]>({
+        await:()=>[this.molecularProfilesInStudies, this.selectedMolecularProfiles],
+        invoke:() => {   
+            return Promise.resolve(_.difference(this.molecularProfilesInStudies.result!, this.selectedMolecularProfiles.result!));
+        }
+    }, []);
+
+    // If we have same profile accros multiple studies, they should have the same name, so we can group them by name to get all related molecular profiles in multiple studies.
+    readonly nonSelectedMolecularProfilesGroupByName = remoteData<{ [profileName: string]: MolecularProfile[] }>({
+        await:()=>[this.nonSelectedMolecularProfiles],
+        invoke:() => {
+            const sortedProfiles = _.sortBy(this.nonSelectedMolecularProfiles.result, (profile) => decideMolecularProfileSortingOrder(profile.molecularAlterationType));
+            return Promise.resolve(_.groupBy(sortedProfiles, (profile) => profile.name));
+        }
+    }, {});
 
     readonly molecularProfileIdToMolecularProfile = remoteData<{ [molecularProfileId: string]: MolecularProfile }>({
         await: () => [this.molecularProfilesInStudies],
