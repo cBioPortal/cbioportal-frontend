@@ -5,7 +5,7 @@ import FontAwesome from 'react-fontawesome';
 import ReactSelect from 'react-select1';
 import { GeneReplacement, QueryStoreComponent, Focus } from './QueryStore';
 import AppConfig from 'appConfig';
-import GeneSymbolValidationError from "./GeneSymbolValidationError";
+import GeneSymbolValidationError from './GeneSymbolValidationError';
 
 const styles = styles_any as {
     GeneSymbolValidator: string;
@@ -46,10 +46,17 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}> {
                         className={styles.invalidBubble}
                         title={`Please limit your queries to ${this.store.geneLimit} genes or fewer.`}
                     >
-                        <FontAwesome className={styles.icon} name="exclamation-circle" />
+                        <FontAwesome
+                            className={styles.icon}
+                            name="exclamation-circle"
+                        />
                         <GeneSymbolValidationError
-                            sampleCount={this.store.profiledSamplesCount.result.all}
-                            queryProductLimit={AppConfig.serverConfig.query_product_limit}
+                            sampleCount={
+                                this.store.profiledSamplesCount.result.all
+                            }
+                            queryProductLimit={
+                                AppConfig.serverConfig.query_product_limit
+                            }
                             email={AppConfig.serverConfig.skin_email_contact}
                         />
                     </div>
