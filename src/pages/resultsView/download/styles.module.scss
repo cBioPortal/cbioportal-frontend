@@ -23,3 +23,22 @@
     white-space: nowrap;
     font-weight: bold;
 }
+
+.showMoreButtonContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.showMoreButton {
+  // margin-left: 10px !important;
+  width: 200px;
+}
+
+.tooltip {
+  max-width: 300px;
+}
+
+.infoIcon {
+  margin-left: 4px;
+  color: #555;
+}
