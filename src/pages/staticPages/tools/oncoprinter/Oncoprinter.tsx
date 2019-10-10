@@ -17,6 +17,7 @@ import FadeInteraction from "public-lib/components/fadeInteraction/FadeInteracti
 import OncoprinterStore from "./OncoprinterStore";
 import autobind from "autobind-decorator";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
+import WindowStore from "../../../../shared/components/window/WindowStore";
 
 interface IOncoprinterProps {
     divId: string;
@@ -43,7 +44,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     private controlsHandlers:IOncoprintControlsHandlers;
     private controlsState:IOncoprintControlsState & IObservableObject;
 
-    @observable.ref public oncoprint:OncoprintJS<any>;
+    @observable.ref public oncoprint:OncoprintJS;
 
     constructor(props:IOncoprinterProps) {
         super(props);
@@ -224,7 +225,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     }
 
     @autobind
-    private oncoprintRef(oncoprint:OncoprintJS<any>) {
+    private oncoprintRef(oncoprint:OncoprintJS) {
         this.oncoprint = oncoprint;
 
         this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
@@ -316,7 +317,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                                 genesetHeatmapTracks={[]}
                                 heatmapTracks={[]}
                                 divId={this.props.divId}
-                                width={1050}
+                                width={WindowStore.size500Ms.width - 100}
                                 caseLinkOutInTooltips={false}
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}

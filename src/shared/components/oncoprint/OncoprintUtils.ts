@@ -1,59 +1,46 @@
-import OncoprintJS, {IGeneticAlterationRuleSetParams, RuleSetParams, TrackSortComparator} from "oncoprintjs";
+import OncoprintJS, {
+    IGeneticAlterationRuleSetParams,
+    IGradientRuleSetParams,
+    RuleSetParams,
+    RuleSetType
+} from "oncoprintjs";
 import {
-    ClinicalTrackSpec, GeneticTrackDatum,
+    ClinicalTrackSpec,
+    GeneticTrackDatum,
     GeneticTrackSpec,
-    IHeatmapTrackSpec,
     IGeneHeatmapTrackDatum,
-    ITreatmentHeatmapTrackDatum,
     IGenesetHeatmapTrackDatum,
     IGenesetHeatmapTrackSpec,
-    IBaseHeatmapTrackDatum
+    IHeatmapTrackSpec,
+    ITreatmentHeatmapTrackDatum
 } from "./Oncoprint";
 import {
+    genetic_rule_set_different_colors_no_recurrence,
+    genetic_rule_set_different_colors_recurrence,
     genetic_rule_set_same_color_for_all_no_recurrence,
     genetic_rule_set_same_color_for_all_recurrence,
-    genetic_rule_set_different_colors_no_recurrence,
-    genetic_rule_set_different_colors_recurrence, germline_rule_params
+    germline_rule_params
 } from "./geneticrules";
-import {OncoprintPatientGeneticTrackData, OncoprintSampleGeneticTrackData} from "../../lib/QuerySession";
 import {
     AlterationTypeConstants,
     AnnotatedExtendedAlteration,
-    AnnotatedMutation, CaseAggregatedData, ExtendedAlteration, IQueriedCaseData, IQueriedMergedTrackCaseData,
-    ResultsViewPageStore
+    CaseAggregatedData,
+    IQueriedCaseData,
+    IQueriedMergedTrackCaseData
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import {remoteData} from "public-lib/api/remoteData";
-import {
-    makeClinicalTrackData,
-    makeGeneticTrackData,
-    makeHeatmapTrackData
-} from "./DataUtils";
+import {makeClinicalTrackData, makeGeneticTrackData, makeHeatmapTrackData} from "./DataUtils";
 import ResultsViewOncoprint from "./ResultsViewOncoprint";
 import _ from "lodash";
-import {action, runInAction, ObservableMap, IObservableArray} from "mobx";
+import {action, IObservableArray, ObservableMap, runInAction} from "mobx";
 import {MobxPromise} from "mobxpromise";
 import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
-import Spec = Mocha.reporters.Spec;
-import {UnflattenedOQLLineFilterOutput, isMergedTrackFilter} from "../../lib/oql/oqlfilter";
-import {
-    ClinicalAttribute,
-    MolecularProfile,
-    Patient,
-    Sample
-} from "../../api/generated/CBioPortalAPI";
-import {
-    clinicalAttributeIsINCOMPARISONGROUP,
-    clinicalAttributeIsPROFILEDIN,
-    SpecialAttribute
-} from "../../cache/ClinicalDataCache";
-import {STUDY_VIEW_CONFIG} from "../../../pages/studyView/StudyViewConfig";
-import {getClinicalValueColor, RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
-import GeneMolecularDataCache from "shared/cache/GeneMolecularDataCache";
-import { AlterationTypes } from "pages/patientView/copyNumberAlterations/column/CnaColumnFormatter";
-import { isNumber } from "util";
-import { ISelectOption } from "./controls/OncoprintControls";
-import {TreatmentMolecularDataEnhanced} from "shared/cache/TreatmentMolecularDataCache.ts";
+import {isMergedTrackFilter, UnflattenedOQLLineFilterOutput} from "../../lib/oql/oqlfilter";
+import {ClinicalAttribute, MolecularProfile, Patient, Sample} from "../../api/generated/CBioPortalAPI";
+import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/ClinicalDataCache";
+import {RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
+import {ISelectOption} from "./controls/OncoprintControls";
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -143,7 +130,7 @@ function formatGeneticTrackOql(oqlFilter: UnflattenedOQLLineFilterOutput<object>
     );
 }
 
-export function doWithRenderingSuppressedAndSortingOff(oncoprint:OncoprintJS<any>, task:()=>void) {
+export function doWithRenderingSuppressedAndSortingOff(oncoprint:OncoprintJS, task:()=>void) {
     oncoprint.suppressRendering();
     oncoprint.keepSorted(false);
     task();
@@ -176,7 +163,7 @@ export function getHeatmapTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):RuleS
     }
 
     return {
-        type: 'gradient' as 'gradient',
+        type: RuleSetType.GRADIENT,
         legend_label,
         value_key: "profile_data",
         value_range,
@@ -264,7 +251,7 @@ export function getTreatmentTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):Rul
     });
 
     return {
-        type: 'gradient+categorical' as 'gradient+categorical',
+        type: RuleSetType.GRADIENT_AND_CATEGORICAL,
         legend_label,
         value_key: "profile_data",
         value_range,
@@ -278,7 +265,7 @@ export function getTreatmentTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):Rul
 
 export function getGenesetHeatmapTrackRuleSetParams() {
     return {
-        type: 'gradient' as 'gradient',
+        type: RuleSetType.GRADIENT,
         legend_label: 'Gene Set Heatmap',
         value_key: 'profile_data',
         value_range: [-1,1] as [number, number],
@@ -306,7 +293,7 @@ export function getGenesetHeatmapTrackRuleSetParams() {
             0, 0.2, 0.4, 0.6, 0.8, 1
         ],
         null_color: 'rgba(224,224,224,1)'
-    };
+    } as IGradientRuleSetParams;
 }
 
 export function getGeneticTrackRuleSetParams(
@@ -336,7 +323,7 @@ export function getClinicalTrackRuleSetParams(track:ClinicalTrackSpec) {
     switch (track.datatype) {
         case "number":
             params = {
-                type: 'bar',
+                type: RuleSetType.BAR,
                 value_key: "attr_val",
                 value_range: track.numberRange,
                 log_scale: track.numberLogScale
@@ -344,7 +331,7 @@ export function getClinicalTrackRuleSetParams(track:ClinicalTrackSpec) {
             break;
         case "counts":
             params = {
-                type: "stacked_bar",
+                type: RuleSetType.STACKED_BAR,
                 value_key: "attr_val",
                 categories: track.countsCategoryLabels,
                 fills: track.countsCategoryFills
@@ -353,7 +340,7 @@ export function getClinicalTrackRuleSetParams(track:ClinicalTrackSpec) {
         case "string":
         default:
             params = {
-                type: 'categorical',
+                type: RuleSetType.CATEGORICAL,
                 category_key: "attr_val",
                 category_to_color: RESERVED_CLINICAL_VALUE_COLORS
             };

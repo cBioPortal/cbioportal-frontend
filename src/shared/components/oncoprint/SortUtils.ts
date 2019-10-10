@@ -191,24 +191,23 @@ export function alphabeticalDefault(comparator:(d1:any, d2:any)=>number) {
 }
 
 export function getClinicalTrackSortComparator(track:ClinicalTrackSpec) {
-    if (track.datatype === "number") {
-        const comparator = makeNumericalComparator("attr_val");
-        return {
-            preferred: alphabeticalDefault(comparator),
-            mandatory: comparator
-        };
-    } else if (track.datatype === "string") {
-        return {
-            preferred: alphabeticalDefault(stringClinicalComparator),
-            mandatory: stringClinicalComparator
-        };
-    } else if (track.datatype === "counts") {
-        const comparator = makeCountsMapClinicalComparator(track.countsCategoryLabels);
-        return {
-            preferred: alphabeticalDefault(comparator),
-            mandatory: comparator
-        };
+    let comparator;
+    switch (track.datatype) {
+        case "number":
+            comparator = makeNumericalComparator("attr_val");
+            break;
+        case "counts":
+            comparator = makeCountsMapClinicalComparator(track.countsCategoryLabels);
+            break;
+        case "string":
+        default:
+            comparator = stringClinicalComparator;
+            break;
     }
+    return {
+        preferred: alphabeticalDefault(comparator),
+        mandatory: comparator
+    };
 }
 
 export const heatmapTrackSortComparator = (()=>{
