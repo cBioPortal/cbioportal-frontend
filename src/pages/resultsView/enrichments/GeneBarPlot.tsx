@@ -185,10 +185,10 @@ export default class GeneBarPlot extends React.Component<
                     <tbody>{groupRows}</tbody>
                 </table>
                 <strong>p-Value</strong>:{' '}
-                {toConditionalPrecision(geneData.pValue, 3, 0.01)}
+                {geneData.pValue ? toConditionalPrecision(geneData.pValue, 3, 0.01) : '-'}
                 <br />
                 <strong>q-Value</strong>:{' '}
-                {toConditionalPrecision(geneData.qValue, 3, 0.01)}
+                {geneData.qValue ? toConditionalPrecision(geneData.qValue, 3, 0.01) : '-'}
             </div>
         );
     }
