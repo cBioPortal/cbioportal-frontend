@@ -10,15 +10,19 @@ export interface WindowSize {
 export default class WindowWrapper
 {
     @observable public size: WindowSize;
+    @observable public size500Ms: WindowSize;
 
     private handleWindowResize = _.debounce(this.setWindowSize, 200);
+    private handleWindowResize500Ms = _.debounce(this.setWindowSize500Ms, 500);
     private windowObj: any;
 
     constructor() {
         if (typeof window === 'object') {
             this.windowObj = window;
             this.setWindowSize();
-            this.windowObj.addEventListener("resize", this.handleWindowResize)
+            this.setWindowSize500Ms();
+            this.windowObj.addEventListener("resize", this.handleWindowResize);
+            this.windowObj.addEventListener("resize", this.handleWindowResize500Ms);
         }
     }
 
@@ -26,6 +30,15 @@ export default class WindowWrapper
     @action
     private setWindowSize() {
         this.size = {
+            width: this.windowObj.innerWidth,
+            height: this.windowObj.innerHeight
+        };
+    }
+
+    @autobind
+    @action
+    private setWindowSize500Ms() {
+        this.size500Ms = {
             width: this.windowObj.innerWidth,
             height: this.windowObj.innerHeight
         };

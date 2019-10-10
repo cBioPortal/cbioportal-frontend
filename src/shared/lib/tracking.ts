@@ -20,7 +20,7 @@ export function initializeTracking(){
 
     $("body").on("click","[data-event]",(el)=>{
         try {
-            const event:GAEvent = JSON.parse(($(el.currentTarget).attr("data-event"))) as GAEvent;
+            const event:GAEvent = JSON.parse(($(el.currentTarget).attr("data-event")!)) as GAEvent;
             trackEvent(event);
         } catch (ex) {
 
