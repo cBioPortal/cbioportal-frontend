@@ -4,5 +4,7 @@ export enum OptionType {
     GENE = "GENE",
     GENE_COUNT = "genes",
     PATIENT = "PATIENT",
-    PATIENT_COUNT = "patients"
+    PATIENT_COUNT = "patients",
+    SAMPLE = "SAMPLE",
+    SAMPLE_COUNT = "samples",
 }

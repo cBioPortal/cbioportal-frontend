@@ -42,6 +42,7 @@ import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import getBrowserWindow from "public-lib/lib/getBrowserWindow";
 import {seekUrlHash} from "shared/lib/seekUrlHash";
 import queryString from "query-string";
+import { PagePath } from 'shared/enums/PagePaths';
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
@@ -98,7 +99,7 @@ export const makeRoutes = (routing) => {
                 <Route path="/results/legacy_submission" onEnter={handleLegacySubmission} component={getBlankPage()} />
 
                 <Route path="/results(/:tab)" onEnter={()=>{}} getComponent={lazyLoadComponent(ResultsViewPage)} />
-                <Route path="/patient(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
+                <Route path={"/" + PagePath.Patient + "(/:tab)"} onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
                 <Route path="/study(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
                 <Route path="/comparison(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(GroupComparisonPage)}/>
 
