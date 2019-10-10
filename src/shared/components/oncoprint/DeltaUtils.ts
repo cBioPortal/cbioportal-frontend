@@ -1,30 +1,35 @@
 import {
-    IOncoprintProps, default as Oncoprint, GeneticTrackSpec, IGenesetHeatmapTrackSpec,
-    IHeatmapTrackSpec, ClinicalTrackSpec, IBaseHeatmapTrackDatum, ITreatmentHeatmapTrackDatum, 
-    CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX, IGenesetHeatmapTrackDatum, IGeneHeatmapTrackDatum,
+    CLINICAL_TRACK_GROUP_INDEX,
+    ClinicalTrackSpec,
+    GENETIC_TRACK_GROUP_INDEX,
+    GeneticTrackSpec,
+    IBaseHeatmapTrackDatum,
+    IGenesetHeatmapTrackSpec,
+    IHeatmapTrackSpec,
+    IOncoprintProps,
 } from "./Oncoprint";
-import OncoprintJS, {TrackId, SortConfig} from "oncoprintjs";
-import {ObservableMap} from "mobx";
+import OncoprintJS, {SortConfig, TrackId} from "oncoprintjs";
 import _ from "lodash";
 import {
-    getClinicalTrackRuleSetParams, getGeneticTrackRuleSetParams,
-    getGenesetHeatmapTrackRuleSetParams, getHeatmapTrackRuleSetParams
+    getClinicalTrackRuleSetParams,
+    getGenesetHeatmapTrackRuleSetParams,
+    getGeneticTrackRuleSetParams,
+    getHeatmapTrackRuleSetParams
 } from "./OncoprintUtils";
 import {getClinicalTrackSortComparator, getGeneticTrackSortComparator, heatmapTrackSortComparator} from "./SortUtils";
 import {
-    makeClinicalTrackTooltip, makeGeneticTrackTooltip, makeHeatmapTrackTooltip,
-    linebreakGenesetId
+    linebreakGenesetId,
+    makeClinicalTrackTooltip,
+    makeGeneticTrackTooltip,
+    makeHeatmapTrackTooltip
 } from "./TooltipUtils";
 import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
-import { AlterationTypeConstants } from "pages/resultsView/ResultsViewPageStore";
-import { isNumberData } from "pages/resultsView/plots/PlotsTabUtils";
-import { isNull, isNumber } from "util";
-import { AnyModifier } from "shared/lib/oql/oql-parser";
+import {AlterationTypeConstants} from "pages/resultsView/ResultsViewPageStore";
 
 export function transition(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>,
+    oncoprint:OncoprintJS,
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
     getMolecularProfileMap:()=>({[molecularProfileId:string]:MolecularProfile}|undefined)
 ) {
@@ -47,6 +52,7 @@ export function transition(
     transitionHiddenIds(nextProps, prevProps, oncoprint);
     transitionHorzZoomToFit(nextProps, prevProps, oncoprint);
     transitionShowClinicalTrackLegends(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
+    transitionWidth(nextProps, prevProps, oncoprint);
     tryReleaseRendering(nextProps, prevProps, oncoprint);
     if (notKeepingSorted) {
         oncoprint.keepSorted(true);
@@ -56,10 +62,20 @@ export function transition(
     }
 }
 
+function transitionWidth(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint: OncoprintJS
+) {
+    if (nextProps.width !== prevProps.width) {
+        oncoprint.setWidth(nextProps.width);
+    }
+}
+
 export function transitionShowSublabels(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint: OncoprintJS<any>
+    oncoprint: OncoprintJS
 ) {
     if (nextProps.showSublabels !== prevProps.showSublabels) {
         oncoprint.setShowTrackSublabels(!!nextProps.showSublabels);
@@ -76,7 +92,7 @@ type TreatmentProfileToTrackIdMap = {[molecularProfileId:string]: undefined|Trac
 export function transitionTrackGroupSortPriority(
     nextProps: TrackSpecsWithDynamicGroups,
     prevProps: Partial<TrackSpecsWithDynamicGroups>,
-    oncoprint: OncoprintJS<any>
+    oncoprint: OncoprintJS
 ) {
     const prevHeatmapTrackGroups = _.sortBy(_.uniq(
         (prevProps.heatmapTracks || [])
@@ -96,7 +112,7 @@ export function transitionTrackGroupSortPriority(
 
 function doSuppressRendering(
     nextProps:IOncoprintProps,
-    oncoprint:OncoprintJS<any>
+    oncoprint:OncoprintJS
 ) {
     oncoprint.suppressRendering();
     nextProps.onSuppressRendering && nextProps.onSuppressRendering();
@@ -104,7 +120,7 @@ function doSuppressRendering(
 
 function doReleaseRendering(
     nextProps:IOncoprintProps,
-    oncoprint:OncoprintJS<any>
+    oncoprint:OncoprintJS
 ) {
     oncoprint.releaseRendering(nextProps.onReleaseRendering);
 }
@@ -112,7 +128,7 @@ function doReleaseRendering(
 function trySuppressRendering(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>
+    oncoprint:OncoprintJS
 ){
     if (nextProps.suppressRendering && !prevProps.suppressRendering) {
         doSuppressRendering(nextProps, oncoprint);
@@ -122,7 +138,7 @@ function trySuppressRendering(
 function tryReleaseRendering(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>
+    oncoprint:OncoprintJS
 ){
     if (!nextProps.suppressRendering && prevProps.suppressRendering) {
         doReleaseRendering(nextProps, oncoprint);
@@ -132,7 +148,7 @@ function tryReleaseRendering(
 function transitionHorzZoomToFit(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>
+    oncoprint:OncoprintJS
 ) {
     if (!_.isEqual(nextProps.horzZoomToFitIds, prevProps.horzZoomToFitIds)) {
         oncoprint.updateHorzZoomToFitIds(nextProps.horzZoomToFitIds || []);
@@ -274,7 +290,7 @@ function createSortConfig(props:Partial<Pick<IOncoprintProps, "sortConfig">>):So
 export function transitionSortConfig(
     nextProps: Pick<IOncoprintProps, "sortConfig">,
     prevProps: Partial<Pick<IOncoprintProps, "sortConfig">>,
-    oncoprint: OncoprintJS<any>
+    oncoprint: OncoprintJS
 ) {
     const prevSortConfig = createSortConfig(prevProps);
     const nextSortConfig = createSortConfig(nextProps);
@@ -293,7 +309,7 @@ export function transitionSortConfig(
 function transitionHiddenIds(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>
+    oncoprint:OncoprintJS
 ) {
     if (nextProps.hiddenIds !== prevProps.hiddenIds) {
         // do it on shallow inequality
@@ -304,7 +320,7 @@ function transitionHiddenIds(
 function transitionShowClinicalTrackLegends(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>,
+    oncoprint:OncoprintJS,
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId}
 ) {
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
@@ -319,7 +335,7 @@ function transitionShowClinicalTrackLegends(
 function transitionWhitespaceBetweenColumns(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>
+    oncoprint:OncoprintJS
 ) {
     if (nextProps.showWhitespaceBetweenColumns !== prevProps.showWhitespaceBetweenColumns) {
         oncoprint.setCellPaddingOn(!!nextProps.showWhitespaceBetweenColumns);
@@ -329,7 +345,7 @@ function transitionWhitespaceBetweenColumns(
 function transitionShowMinimap(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>
+    oncoprint:OncoprintJS
 ) {
     if (nextProps.showMinimap !== prevProps.showMinimap) {
         oncoprint.setMinimapVisible(!!nextProps.showMinimap);
@@ -339,7 +355,7 @@ function transitionShowMinimap(
 function transitionOnMinimapCloseCallback(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>
+    oncoprint:OncoprintJS
 ) {
     if (nextProps.onMinimapClose && nextProps.onMinimapClose !== prevProps.onMinimapClose) {
         oncoprint.onMinimapClose(nextProps.onMinimapClose);
@@ -366,7 +382,7 @@ function hasGeneticTrackRuleSetChanged(
 function transitionTracks(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>,
+    oncoprint:OncoprintJS,
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
     getMolecularProfileMap:()=>({[molecularProfileId:string]:MolecularProfile}|undefined)
 ) {
@@ -514,7 +530,7 @@ function transitionTracks(
 function transitionGeneticTrackOrder(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
-    oncoprint:OncoprintJS<any>,
+    oncoprint:OncoprintJS,
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId}
 ) {
     const nextTracksMap = _.keyBy(nextProps.geneticTracks, "key");
@@ -534,7 +550,7 @@ function tryRemoveTrack(
     nextSpec: {key:string}|undefined,
     prevSpec: {key:string}|undefined,
     trackSpecKeyToTrackId:{[key:string]:TrackId},
-    oncoprint:OncoprintJS<any>
+    oncoprint:OncoprintJS
 ) {
     if (!nextSpec && prevSpec) {
         // remove track, if OncoprintJS hasn't already removed it and told a
@@ -572,7 +588,7 @@ function updateExpansionTracks<
     getMolecularProfileMap: () => (
         {[molecularProfileId: string]: MolecularProfile} | undefined
     ),
-    oncoprint: OncoprintJS<any>,
+    oncoprint: OncoprintJS,
     nextProps: IOncoprintProps,
     prevProps: Partial<IOncoprintProps>,
     trackIdForRuleSetSharing: RuleSetRepMap,
@@ -583,7 +599,7 @@ function updateExpansionTracks<
         getMolecularProfileMap: () => (
             {[molecularProfileId: string]: MolecularProfile} | undefined
         ),
-        oncoprint: OncoprintJS<any>,
+        oncoprint: OncoprintJS,
         nextProps: IOncoprintProps,
         prevProps: Partial<IOncoprintProps>,
         trackIdForRuleSetSharing: RuleSetRepMap,
@@ -626,7 +642,7 @@ function transitionGeneticTrack(
     prevSpec:GeneticTrackSpec|undefined,
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
     getMolecularProfileMap:()=>({[molecularProfileId:string]:MolecularProfile}|undefined),
-    oncoprint:OncoprintJS<any>,
+    oncoprint:OncoprintJS,
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
     trackIdForRuleSetSharing:{genetic?:TrackId},
@@ -732,7 +748,7 @@ function transitionClinicalTrack(
     nextSpec:ClinicalTrackSpec|undefined,
     prevSpec:ClinicalTrackSpec|undefined,
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
-    oncoprint:OncoprintJS<any>,
+    oncoprint:OncoprintJS,
     nextProps:IOncoprintProps
 ) {
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
@@ -789,7 +805,7 @@ function transitionGenesetHeatmapTrack(
     nextSpec:IGenesetHeatmapTrackSpec|undefined,
     prevSpec:IGenesetHeatmapTrackSpec|undefined,
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
-    oncoprint:OncoprintJS<any>,
+    oncoprint:OncoprintJS,
     nextProps:IOncoprintProps,
     trackIdForRuleSetSharing:{genesetHeatmap?:TrackId, heatmap?:TrackId}
 ) {
@@ -874,7 +890,7 @@ export function transitionHeatmapTrack(
     prevSpec:IHeatmapTrackSpec|undefined,
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
     getMolecularProfileMap: () => (object | undefined),
-    oncoprint:OncoprintJS<any>,
+    oncoprint:OncoprintJS,
     nextProps:IOncoprintProps,
     prevProps:object,
     trackIdForRuleSetSharing:{heatmap?:TrackId, heatmap01?:TrackId, treatment?: TreatmentProfileToTrackIdMap},

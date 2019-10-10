@@ -40,6 +40,7 @@ import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
 import { selectDisplayValue } from "./DataUtils";
 import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
+import WindowStore from "../window/WindowStore";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -134,7 +135,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     public controlsHandlers:IOncoprintControlsHandlers;
     private controlsState:IOncoprintControlsState & IObservableObject;
 
-    @observable.ref private oncoprint:OncoprintJS<any>;
+    @observable.ref private oncoprint:OncoprintJS;
 
     private urlParamsReaction:IReactionDisposer;
 
@@ -739,7 +740,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    private oncoprintRef(oncoprint:OncoprintJS<any>) {
+    private oncoprintRef(oncoprint:OncoprintJS) {
         this.oncoprint = oncoprint;
         if (this.props.addOnBecomeVisibleListener) {
             this.props.addOnBecomeVisibleListener(
@@ -1103,7 +1104,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 genesetHeatmapTracks={this.genesetHeatmapTracks.result}
                                 heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this. heatmapTracks.result)}
                                 divId={this.props.divId}
-                                width={900}
+                                width={WindowStore.size500Ms.width - 100}
                                 caseLinkOutInTooltips={true}
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
