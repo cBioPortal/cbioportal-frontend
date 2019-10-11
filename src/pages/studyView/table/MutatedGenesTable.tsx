@@ -121,7 +121,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             [ColumnKey.FREQ]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     this.columnsWidth[ColumnKey.FREQ],
-                    getFrequencyStr(_.max(this.tableData.map(item => (item.numberOfAlteredCases / item.numberOfSamplesProfiled) * 100))!)
+                    getFrequencyStr(_.max(this.tableData.map(item => (item.numberOfAlteredCases / item.numberOfProfiledCases) * 100))!)
                 )
             )
         }
@@ -241,14 +241,14 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                     return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
                 },
                 render: (data: MutationCountByGeneWithCancerGene) => {
-                    return getFreqColumnRender('mutation', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanelIds, this.toggleModal, {marginLeft: this.cellMargin[ColumnKey.FREQ]});
+                    return getFreqColumnRender('mutation', data.numberOfProfiledCases, data.numberOfAlteredCases, data.matchingGenePanelIds, this.toggleModal, {marginLeft: this.cellMargin[ColumnKey.FREQ]});
                 },
                 sortBy: (data: MutationCountByGeneWithCancerGene) =>
-                    (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100,
+                    (data.numberOfAlteredCases / data.numberOfProfiledCases) * 100,
                 defaultSortDirection: "desc" as "desc",
                 filter: (data: MutationCountByGeneWithCancerGene, filterString: string) => {
                     return _.toString(
-                        getFrequencyStr(data.numberOfAlteredCases / data.numberOfSamplesProfiled)
+                        getFrequencyStr(data.numberOfAlteredCases / data.numberOfProfiledCases)
                     ).includes(filterString);
                 },
                 width: this.columnsWidth[ColumnKey.FREQ]

@@ -137,7 +137,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 getFixedHeaderNumberCellMargin(
                     this.columnsWidth[ColumnKey.FREQ],
                     getFrequencyStr(
-                        _.max(this.tableData!.map(item => (item.numberOfAlteredCases / item.numberOfSamplesProfiled) * 100))!
+                        _.max(this.tableData!.map(item => (item.numberOfAlteredCases / item.numberOfProfiledCases) * 100))!
                     )
                 )
             )
@@ -263,15 +263,15 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
                 },
                 render: (data: CopyNumberCountByGeneWithCancerGene) => {
-                    return getFreqColumnRender('cna', data.numberOfSamplesProfiled, data.numberOfAlteredCases, data.matchingGenePanelIds, this.toggleModal, {marginLeft: this.cellMargin[ColumnKey.FREQ]});
+                    return getFreqColumnRender('cna', data.numberOfProfiledCases, data.numberOfAlteredCases, data.matchingGenePanelIds, this.toggleModal, {marginLeft: this.cellMargin[ColumnKey.FREQ]});
                 },
                 sortBy: (data: CopyNumberCountByGeneWithCancerGene) =>
-                    (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100,
+                    (data.numberOfAlteredCases / data.numberOfProfiledCases) * 100,
                 defaultSortDirection: "desc" as "desc",
                 filter: (data: CopyNumberCountByGeneWithCancerGene, filterString: string) => {
                     return _.toString(
                         getFrequencyStr(
-                            (data.numberOfAlteredCases / data.numberOfSamplesProfiled) * 100
+                            (data.numberOfAlteredCases / data.numberOfProfiledCases) * 100
                         )
                     ).includes(filterString);
                 },

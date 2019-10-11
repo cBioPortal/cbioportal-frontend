@@ -3297,7 +3297,7 @@ export class StudyViewPageStore {
                     record.qValue === undefined ? '' : getQValue(record.qValue),
                     record.totalCount,
                     record.numberOfAlteredCases,
-                    getFrequencyStr(record.numberOfAlteredCases / record.numberOfSamplesProfiled * 100)
+                    getFrequencyStr(record.numberOfAlteredCases / record.numberOfProfiledCases * 100)
                 ];
                 if (this.oncokbCancerGeneFilterEnabled) {
                     rowData.push(this.oncokbCancerGeneFilterEnabled ? (record.isCancerGene ? 'Yes' : 'No') : 'NA');
@@ -3321,7 +3321,7 @@ export class StudyViewPageStore {
                     record.hugoGeneSymbol,
                     record.qValue === undefined ? '' : getQValue(record.qValue),
                     record.cytoband, getCNAByAlteration(record.alteration),
-                    record.numberOfAlteredCases, getFrequencyStr(record.numberOfAlteredCases / record.numberOfSamplesProfiled * 100)
+                    record.numberOfAlteredCases, getFrequencyStr(record.numberOfAlteredCases / record.numberOfProfiledCases * 100)
                 ];
                 if (this.oncokbCancerGeneFilterEnabled) {
                     rowData.push(this.oncokbCancerGeneFilterEnabled ? (record.isCancerGene ? 'Yes' : 'No') : 'NA');
