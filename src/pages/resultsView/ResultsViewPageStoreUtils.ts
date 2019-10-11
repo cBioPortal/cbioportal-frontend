@@ -556,9 +556,10 @@ export function makeEnrichmentDataPromise<T extends {cytoband?:string, hugoGeneS
                     data = data.filter(d=>!(d.hugoGeneSymbol.toUpperCase() in queryGenes));
                 }
 
+                let referenceGenes = params.referenceGenesPromise.result!
                 // add cytoband from reference gene
                 for (const d of data) {
-                    const refGene = params.referenceGenesPromise.result![d.hugoGeneSymbol];
+                    const refGene = referenceGenes[d.hugoGeneSymbol];
 
                     if (refGene)
                         d.cytoband = refGene.cytoband;
