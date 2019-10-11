@@ -906,7 +906,7 @@ describe('DownloadUtils', () => {
         });
     });
 
-    describe.only('molecularProfileSortingOrder', () => {
+    describe('molecularProfileSortingOrder', () => {
         it('should return specific number for 7 specific molecular profile types', () => {
             assert.equal(decideMolecularProfileSortingOrder("MUTATION_EXTENDED"), 1,
                 "MUTATION_EXTENDED should be the 1st type");
