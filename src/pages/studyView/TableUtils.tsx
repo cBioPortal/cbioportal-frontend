@@ -47,10 +47,10 @@ export function getCancerGeneFilterToggleIcon(isFilteredByCancerGeneList:boolean
     return <span data-test='cancer-gene-filter' className={classnames(styles.cancerGeneIcon, styles.displayFlex)} style={{color: isFilteredByCancerGeneList ? ICON_FILTER_ON : ICON_FILTER_OFF}}><i className='fa fa-filter'></i></span>;
 }
 
-export function getFreqColumnRender(type: 'mutation' | 'cna', numberOfSamplesProfiled: number, numberOfAlteredCases: number, matchingGenePanelIds: string[], toggleModal: (panelName: string) => void, style?:CSSProperties) {
+export function getFreqColumnRender(type: 'mutation' | 'cna', numberOfProfiledCases: number, numberOfAlteredCases: number, matchingGenePanelIds: string[], toggleModal: (panelName: string) => void, style?:CSSProperties) {
     const addTotalProfiledOverlay = () => (
         <span style={{display: 'flex', flexDirection: 'column'}} data-test='freq-cell-tooltip'>
-            <span>{`# of samples profiled for ${type === 'mutation' ? 'mutations' : 'copy number alterations'} in this gene: ${numberOfSamplesProfiled.toLocaleString()}`}</span>
+            <span>{`# of samples profiled for ${type === 'mutation' ? 'mutations' : 'copy number alterations'} in this gene: ${numberOfProfiledCases.toLocaleString()}`}</span>
             <GenePanelList
                 genePanelIds={matchingGenePanelIds}
                 toggleModal={toggleModal}
@@ -65,7 +65,7 @@ export function getFreqColumnRender(type: 'mutation' | 'cna', numberOfSamplesPro
         >
             <span data-test='freq-cell' style={style}>
                 {getFrequencyStr(
-                    (numberOfAlteredCases / numberOfSamplesProfiled) * 100
+                    (numberOfAlteredCases / numberOfProfiledCases) * 100
                 )}
             </span>
         </DefaultTooltip>
