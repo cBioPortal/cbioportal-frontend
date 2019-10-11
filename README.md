@@ -66,16 +66,22 @@ To run unit/integration tests in watch mode (where specName is a fragment of the
 yarn run test:watch -- --grep=#specName#
 ```
 
-To run linting
-```
-yarn run lint
+## Formatting Code with Prettier JS
+We are starting to format commits using Prettier JS. Right now this is optional, but you may run into formatting commits.  
+Things to remember:
+- Keep Prettier JS changes in a separate commit
+- Only run it on files you're changing or creating anyways
+
+To run Prettier JS: 
+```$bash
+yarn run prettier --write <files>
 ```
 
-## precommit hook
-There is a precommit hook installed that lint checks the typescript in this project. The hook can be viewed in [package.json](package.json). You can skip it with 
-```bash
-git commit -n
+To run Prettier JS on your last commit:
+```$bash
+yarn run prettierLastCommit
 ```
+
 
 ## Changing the URL of API
 If the version of the desired API URL is the same as the one used to generate
@@ -221,6 +227,7 @@ E2e-tests on _CircleCI_ and _CircleCI+PR_ context are triggered via _hooks_ conf
 E2e-testing against a local database removes dependence on data provided by public cbioportal instances for testing. This makes it possible to test features for data types that are not provided by public cbioportal instances or test features that depend on a backend feature not yet integrated in  public cbioportal instances. E2e-localdb tests make use of the `BACKEND` environmental variable to test against a specific backend version. Depending on the running context (see section above) setting the `BACKEND` environmental variable is required or optional (see table below).
 
 Requirement for setting the BACKEND variable depends on the context of the job:
+
 | **context**             | **BACKEND var** | **comments** |
 |------------------------ | ----------------- | ------------ |
 | _Local_                   | mandatory        | |
