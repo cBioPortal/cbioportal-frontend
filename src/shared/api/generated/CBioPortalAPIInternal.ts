@@ -146,7 +146,7 @@ export type CopyNumberCountByGene = {
 
         'numberOfAlteredCases': number
 
-        'numberOfProfiledCases': number
+        'numberOfSamplesProfiled': number
 
         'qValue': number
 
@@ -231,10 +231,6 @@ export type ExpressionEnrichment = {
         'hugoGeneSymbol': string
 
         'pValue': number
-
-};
-export type FusionGeneFilter = {
-    'entrezGeneIds': Array < number >
 
 };
 export type Geneset = {
@@ -442,7 +438,7 @@ export type MutationCountByGene = {
 
         'numberOfAlteredCases': number
 
-        'numberOfProfiledCases': number
+        'numberOfSamplesProfiled': number
 
         'qValue': number
 
@@ -525,8 +521,6 @@ export type StudyViewFilter = {
         'clinicalDataIntervalFilters': Array < ClinicalDataIntervalFilter >
 
         'cnaGenes': Array < CopyNumberGeneFilter >
-
-        'fusionGenes': Array < FusionGeneFilter >
 
         'mutatedGenes': Array < MutationGeneFilter >
 
@@ -1893,83 +1887,6 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < Sample >
         > {
             return this.fetchFilteredSamplesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    fetchFusionGenesUsingPOSTURL(parameters: {
-        'studyViewFilter': StudyViewFilter,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/fusion-genes/fetch';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch fusion genes by study view filter
-     * @method
-     * @name CBioPortalAPIInternal#fetchFusionGenesUsingPOST
-     * @param {} studyViewFilter - Study view filter
-     */
-    fetchFusionGenesUsingPOSTWithHttpInfo(parameters: {
-        'studyViewFilter': StudyViewFilter,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/fusion-genes/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['studyViewFilter'] !== undefined) {
-                body = parameters['studyViewFilter'];
-            }
-
-            if (parameters['studyViewFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: studyViewFilter'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch fusion genes by study view filter
-     * @method
-     * @name CBioPortalAPIInternal#fetchFusionGenesUsingPOST
-     * @param {} studyViewFilter - Study view filter
-     */
-    fetchFusionGenesUsingPOST(parameters: {
-            'studyViewFilter': StudyViewFilter,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < MutationCountByGene >
-        > {
-            return this.fetchFusionGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
