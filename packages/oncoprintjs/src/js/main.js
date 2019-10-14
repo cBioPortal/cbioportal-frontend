@@ -1,4 +1,4 @@
-var OncoprintJS = require('./oncoprint.js');
+import OncoprintJS from './oncoprint';
 
 if (typeof window !== "undefined") {
     window.Oncoprint = OncoprintJS;

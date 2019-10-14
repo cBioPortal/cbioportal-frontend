@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es5",
+    "declaration":true
+  },
+  "exclude": ["./node_modules/*"],
+  "include": [
+    "./node_modules/@types/**/*",
+    "./typings/**/*",
+    "./src/**/*"
+  ]
+}
