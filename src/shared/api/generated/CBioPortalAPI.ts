@@ -4593,6 +4593,145 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
+    getAllSamplesUsingGETURL(parameters: {
+        'keyword' ? : string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'sortBy' ? : "sampleId" | "sampleType",
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/samples';
+        if (parameters['keyword'] !== undefined) {
+            queryParameters['keyword'] = parameters['keyword'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all samples
+     * @method
+     * @name CBioPortalAPI#getAllSamplesUsingGET
+     * @param {string} keyword - Search keyword that applies to the study ID
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
+     */
+    getAllSamplesUsingGETWithHttpInfo(parameters: {
+        'keyword' ? : string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'sortBy' ? : "sampleId" | "sampleType",
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/samples';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            if (parameters['keyword'] !== undefined) {
+                queryParameters['keyword'] = parameters['keyword'];
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
+            }
+
+            if (parameters['direction'] !== undefined) {
+                queryParameters['direction'] = parameters['direction'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all samples
+     * @method
+     * @name CBioPortalAPI#getAllSamplesUsingGET
+     * @param {string} keyword - Search keyword that applies to the study ID
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
+     */
+    getAllSamplesUsingGET(parameters: {
+            'keyword' ? : string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'sortBy' ? : "sampleId" | "sampleType",
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < Sample >
+        > {
+            return this.getAllSamplesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchSamplesUsingPOSTURL(parameters: {
         'sampleFilter': SampleFilter,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -4684,11 +4823,30 @@ export default class CBioPortalAPI {
             });
         };
     fetchStructuralVariantsUsingPOSTURL(parameters: {
-        'structuralVariantFilter': StructuralVariantFilter,
-        $queryParameters ? : any
+        'molecularProfileIds' ? : Array < string > ,
+            'entrezGeneIds' ? : Array < number > ,
+            'sampleMolecularIdentifiers0SampleId' ? : string,
+            'sampleMolecularIdentifiers0MolecularProfileId' ? : string,
+            'structuralVariantFilter': StructuralVariantFilter,
+            $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/structuralvariant/fetch';
+        if (parameters['molecularProfileIds'] !== undefined) {
+            queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
+        }
+
+        if (parameters['entrezGeneIds'] !== undefined) {
+            queryParameters['entrezGeneIds'] = parameters['entrezGeneIds'];
+        }
+
+        if (parameters['sampleMolecularIdentifiers0SampleId'] !== undefined) {
+            queryParameters['sampleMolecularIdentifiers[0].sampleId'] = parameters['sampleMolecularIdentifiers0SampleId'];
+        }
+
+        if (parameters['sampleMolecularIdentifiers0MolecularProfileId'] !== undefined) {
+            queryParameters['sampleMolecularIdentifiers[0].molecularProfileId'] = parameters['sampleMolecularIdentifiers0MolecularProfileId'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -4704,12 +4862,20 @@ export default class CBioPortalAPI {
      * Fetch structural variants for entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers
      * @method
      * @name CBioPortalAPI#fetchStructuralVariantsUsingPOST
+     * @param {array} molecularProfileIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {array} entrezGeneIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} sampleMolecularIdentifiers0SampleId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} sampleMolecularIdentifiers0MolecularProfileId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {} structuralVariantFilter - List of entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers
      */
     fetchStructuralVariantsUsingPOSTWithHttpInfo(parameters: {
-        'structuralVariantFilter': StructuralVariantFilter,
-        $queryParameters ? : any,
-        $domain ? : string
+        'molecularProfileIds' ? : Array < string > ,
+            'entrezGeneIds' ? : Array < number > ,
+            'sampleMolecularIdentifiers0SampleId' ? : string,
+            'sampleMolecularIdentifiers0MolecularProfileId' ? : string,
+            'structuralVariantFilter': StructuralVariantFilter,
+            $queryParameters ? : any,
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -4722,6 +4888,22 @@ export default class CBioPortalAPI {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['molecularProfileIds'] !== undefined) {
+                queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
+            }
+
+            if (parameters['entrezGeneIds'] !== undefined) {
+                queryParameters['entrezGeneIds'] = parameters['entrezGeneIds'];
+            }
+
+            if (parameters['sampleMolecularIdentifiers0SampleId'] !== undefined) {
+                queryParameters['sampleMolecularIdentifiers[0].sampleId'] = parameters['sampleMolecularIdentifiers0SampleId'];
+            }
+
+            if (parameters['sampleMolecularIdentifiers0MolecularProfileId'] !== undefined) {
+                queryParameters['sampleMolecularIdentifiers[0].molecularProfileId'] = parameters['sampleMolecularIdentifiers0MolecularProfileId'];
+            }
 
             if (parameters['structuralVariantFilter'] !== undefined) {
                 body = parameters['structuralVariantFilter'];
@@ -4748,12 +4930,20 @@ export default class CBioPortalAPI {
      * Fetch structural variants for entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers
      * @method
      * @name CBioPortalAPI#fetchStructuralVariantsUsingPOST
+     * @param {array} molecularProfileIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {array} entrezGeneIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} sampleMolecularIdentifiers0SampleId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} sampleMolecularIdentifiers0MolecularProfileId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {} structuralVariantFilter - List of entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers
      */
     fetchStructuralVariantsUsingPOST(parameters: {
-            'structuralVariantFilter': StructuralVariantFilter,
-            $queryParameters ? : any,
-            $domain ? : string
+            'molecularProfileIds' ? : Array < string > ,
+                'entrezGeneIds' ? : Array < number > ,
+                'sampleMolecularIdentifiers0SampleId' ? : string,
+                'sampleMolecularIdentifiers0MolecularProfileId' ? : string,
+                'structuralVariantFilter': StructuralVariantFilter,
+                $queryParameters ? : any,
+                $domain ? : string
         }): Promise < Array < StructuralVariant >
         > {
             return this.fetchStructuralVariantsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
