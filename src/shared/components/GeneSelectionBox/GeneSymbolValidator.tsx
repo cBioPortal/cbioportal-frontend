@@ -195,7 +195,9 @@ export default class GeneSymbolValidator extends React.Component<
                 errorMessageOnly={this.props.errorMessageOnly}
                 wrapTheContent={this.props.wrap}
                 replaceGene={this.replaceGene}
-            />
+            >
+                {this.props.children}
+            </GeneSymbolValidatorMessage>
         );
     }
 

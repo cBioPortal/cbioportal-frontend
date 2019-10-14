@@ -13,7 +13,7 @@ import {default as CaseAlterationTable, ICaseAlteration} from "./CaseAlterationT
 import {
     generateCaseAlterationData, generateCnaData, generateDownloadData, generateGeneAlterationData, generateMrnaData,
     generateMutationData, generateMutationDownloadData,
-    generateProteinData, hasValidData, hasValidMutationData, stringify2DArray, generateOtherMolecularProfileData, generateOtherMolecularProfileDownloadData, DOWNLOAD_TABLE_DEFAULT_ROW_LIMIT
+    generateProteinData, hasValidData, hasValidMutationData, stringify2DArray, generateOtherMolecularProfileData, generateOtherMolecularProfileDownloadData
 } from "./DownloadUtils";
 
 import styles from "./styles.module.scss";
@@ -57,8 +57,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         this.handleProteinDownload = this.handleProteinDownload.bind(this);
         this.handleTransposedProteinDownload = this.handleTransposedProteinDownload.bind(this);
     }
-
-    @observable showAllRows: boolean = false;
 
     readonly geneAlterationData = remoteData<IGeneAlteration[]>({
         await: ()=>[
@@ -343,13 +341,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                     {(this.props.store.doNonSelectedMolecularProfilesExist) && this.nonSelectedProfileDownloadRow(this.props.store.nonSelectedMolecularProfilesGroupByName.result!)}
                                 </tbody>
                             </table>
-                            {
-                                this.shouldShowMoreButtonAppear(_.size(this.props.store.nonSelectedMolecularProfilesGroupByName.result!), this.props.store.selectedMolecularProfiles.result!.length) && (
-                                    <div className={classNames(styles.showMoreButtonContainer)}>
-                                        <button className={classNames("btn", "btn-primary", "btn-sm", styles.showMoreButton)} onClick={this.toggleShowAll}>{this.showAllRows ? "Show less" : "Show more"}</button>
-                                    </div>
-                                )
-                            }
                         </div>
                         <hr/>
                         <div className={styles["tables-container"]} data-test="dataDownloadGeneAlterationTable">
@@ -442,10 +433,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             }
             return {"name": profileName}
         });
-
-        const filteredProfileOptions = allProfileOptions.slice(0, Math.min(DOWNLOAD_TABLE_DEFAULT_ROW_LIMIT - this.props.store.selectedMolecularProfiles.result!.length, allProfileOptions.length));
         
-        return _.map(this.showAllRows ? allProfileOptions : filteredProfileOptions, (option) => 
+        return _.map(allProfileOptions, (option) => 
             (
                 <tr>
                     <td style={{width: 500}}>
@@ -572,16 +561,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                             handleDownload,
                                             "sample_matrix.txt"));
     };
-
-    private shouldShowMoreButtonAppear(nonSelectedProfilesCount: number, selectedProfilesCount: number): boolean {
-        return nonSelectedProfilesCount > DOWNLOAD_TABLE_DEFAULT_ROW_LIMIT - selectedProfilesCount;
-    }
-
-    @autobind
-    @action
-    private toggleShowAll() {
-        this.showAllRows = !this.showAllRows;
-    }
 
     private handleMutationDownload()
     {

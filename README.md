@@ -79,7 +79,7 @@ yarn run prettier --write <files>
 
 To run Prettier JS on your last commit:
 ```$bash
-yarn run prettier-last-commit
+yarn run prettierLastCommit
 ```
 
 
