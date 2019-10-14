@@ -508,7 +508,7 @@ describe('genetic profile selection in front page query form', () => {
         // wait for profiles selector to load
         browser.waitForExist(
             'div[data-test="molecularProfileSelector"] input[type="checkbox"]',
-            3000
+            10000
         );
         // mutations, CNA should be selected
         assert(
