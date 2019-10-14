@@ -164,7 +164,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
             }>
                 {
                     (this.props.showAlerts && this.store.genes.isComplete && this.store.genes.result.suggestions.length > 0) && (
-                        <div className="alert alert-danger" style={{marginBottom: 0}}><i className={"fa fa-exclamation-triangle"}/> Your query has
+                        <div className="alert alert-danger" data-test='invalidQueryAlert' style={{marginBottom: 0}}><i className={"fa fa-exclamation-triangle"}/> Your query has
                             invalid or out-dated gene symbols. Please correct below.</div>
                     )
                 }
