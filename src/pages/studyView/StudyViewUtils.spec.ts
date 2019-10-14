@@ -152,6 +152,7 @@ describe('StudyViewUtils', () => {
                     }]
                 }],
                 mutatedGenes: [{ "entrezGeneIds": [1] }],
+                fusionGenes: [{ "entrezGeneIds": [1] }],
                 cnaGenes: [{ "alterations": [{ "entrezGeneId": 2, "alteration": -2 }] }],
                 studyIds: ['study1', 'study2'],
                 sampleIdentifiers: [],
@@ -186,8 +187,8 @@ describe('StudyViewUtils', () => {
                     },
                     genes
                 ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n' +
-                '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n' +
-                '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'));                   
+                '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n' +
+                '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'));
         });
         it('when username is not null', () => {
             assert.isTrue(
@@ -783,7 +784,7 @@ describe('StudyViewUtils', () => {
 
             const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isFalse(needAdditionShift);
-            
+
             const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x),
                 [1.5, 2.5, 3.5, 5]);
@@ -2110,7 +2111,7 @@ describe('StudyViewUtils', () => {
             assert.equal(newLayout.isResizable, false);
         });
     })
-    
+
     describe ('generateMatrixByLayout', () => {
         it('should return the generated matrix', () => {
             const layout = {
@@ -2158,7 +2159,7 @@ describe('StudyViewUtils', () => {
             w: 1,
             h: 1
         } as Layout
-    ];    
+    ];
 
     describe ('getPositionXByUniqueKey', () => {
         it('should return undefined for the not exist uniqueKey', () => {
@@ -2208,7 +2209,7 @@ describe('StudyViewUtils', () => {
         it("should format min max range with no special value", () => {
             const actual = formatRange(1.5, 2.5, undefined)
             const expected = "1.5-2.5";
-            
+
             assert.equal(actual, expected);
         });
 
