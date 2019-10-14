@@ -264,7 +264,9 @@ export default class OQLTextArea extends React.Component<
                     errorMessageOnly={
                         this.props.location === GeneBoxType.STUDY_VIEW_PAGE
                     }
-                />
+                >
+                    {this.props.children}
+                </GeneSymbolValidator>
             </div>
         );
     }
