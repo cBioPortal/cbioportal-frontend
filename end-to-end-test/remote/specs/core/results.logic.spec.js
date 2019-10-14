@@ -360,3 +360,30 @@ describe('genetic profile selection in modify query form', function(){
         assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'), "protein level not selected");
     });
 });
+
+describe('invalid query from url', function(){
+
+    this.retries(1);
+
+    it('show invalid query alert when url contains invalid gene', ()=>{
+        //go to cbioportal with a url that contains an invalid gene symbol RB:
+        var url = `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=mixed_pipseq_2017&case_set_id=mixed_pipseq_2017_sequenced&clinicallist=NUM_SAMPLES_PER_PATIENT&data_priority=0&gene_list=RB&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=mixed_pipseq_2017_mutations&show_samples=false&tab_index=tab_visualize`;
+        goToUrlAndSetLocalStorage(url);
+
+        // check alert message
+        $('[data-test="invalidQueryAlert"]').waitForExist(60000);
+        var text = browser.getText('[data-test="invalidQueryAlert"]')
+        assert.equal(text, 'Your query has invalid or out-dated gene symbols. Please correct below.', 'should show invalid query alert when url contains invalid gene');
+    });
+
+    it('show result view page after correct the invalid gene', ()=>{
+        // correct to valid gene symbol RB1
+        $('[data-test="geneSet"]').setValue('RB1');
+
+        browser.waitForEnabled('[data-test="queryButton"]', 10000);
+        browser.click('[data-test="queryButton"]');
+
+        browser.waitForExist('#modifyQueryBtn', 3000);
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
+    });
+});
