@@ -691,6 +691,43 @@
         }
       }
     },
+    "/fusion-genes/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch fusion genes by study view filter",
+        "operationId": "fetchFusionGenesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MutationCountByGene"
+              }
+            }
+          }
+        }
+      }
+    },
     "/geneset-hierarchy/fetch": {
       "post": {
         "tags": [
@@ -2110,7 +2147,7 @@
           "type": "integer",
           "format": "int32"
         },
-        "numberOfSamplesProfiled": {
+        "numberOfProfiledCases": {
           "type": "integer",
           "format": "int32"
         },
@@ -2303,6 +2340,19 @@
         }
       },
       "title": "ExpressionEnrichment"
+    },
+    "FusionGeneFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "title": "FusionGeneFilter"
     },
     "Geneset": {
       "type": "object",
@@ -2767,7 +2817,7 @@
           "type": "integer",
           "format": "int32"
         },
-        "numberOfSamplesProfiled": {
+        "numberOfProfiledCases": {
           "type": "integer",
           "format": "int32"
         },
@@ -2962,6 +3012,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/CopyNumberGeneFilter"
+          }
+        },
+        "fusionGenes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FusionGeneFilter"
           }
         },
         "mutatedGenes": {
