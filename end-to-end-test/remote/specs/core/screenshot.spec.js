@@ -62,7 +62,7 @@ function runResultsTestSuite(prefix){
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} coexpression tab`, function(){
+    it.skip(`${prefix} coexpression tab`, function(){
         browser.click("a.tabAnchor_coexpression");
         browser.waitForVisible('div[data-test="CoExpressionPlot"]',COEXPRESSION_TIMEOUT);
         var res = browser.checkElement('[data-test="coExpressionTabDiv"]', { hide:['.qtip'] } );
