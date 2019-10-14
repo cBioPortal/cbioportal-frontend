@@ -90,13 +90,6 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
     render() {
         return (
             <div className={styles.QueryAndDownloadTabs}>
-                {
-                    (this.props.showAlerts && this.store.genes.isComplete && this.store.genes.result.suggestions.length > 0) && (
-                        <div className="alert alert-danger"><i className={"fa fa-exclamation-triangle"}/> Your query has
-                            invalid or out-dated gene symbols. Please correct below.</div>
-                    )
-                }
-
                 <If condition={AppConfig.serverConfig.skin_citation_rule_text}>
                     <div className="citationRule"
                          dangerouslySetInnerHTML={{__html: AppConfig.serverConfig.skin_citation_rule_text!}}></div>
@@ -106,7 +99,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
                 <MSKTabs activeTabId={this.activeTabId} onTabClick={this.onSelectTab} className={"mainTabs"}>
                     <MSKTab id={"advanced"} linkText={"Query"} onTabDidMount={() => this.setDefaultTab(undefined)}>
                         <QueryContainer forkedMode={this.props.forkedMode} onSubmit={this.props.onSubmit}
-                                        store={this.store} modifyQueryParams={this.props.modifyQueryParams}/>
+                                        store={this.store} modifyQueryParams={this.props.modifyQueryParams} showAlerts={this.props.showAlerts}/>
                     </MSKTab>
                     <MSKTab id={QUICK_SEARCH_TAB_ID}
                             linkText={<span>Quick Search <strong className={"beta-text"}>Beta!</strong></span>}
@@ -121,7 +114,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
                     <MSKTab id={DOWNLOAD} linkText={"Download"} hide={!this.props.showDownloadTab}
                             onTabDidMount={() => this.setDefaultTab(undefined)}>
                         {/*forked experience is always false for download tab*/}
-                        <QueryContainer forkedMode={false} onSubmit={this.props.onSubmit} store={this.store}/>
+                        <QueryContainer forkedMode={false} onSubmit={this.props.onSubmit} store={this.store} showAlerts={this.props.showAlerts}/>
                     </MSKTab>
                 </MSKTabs>
             </div>
