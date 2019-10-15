@@ -41,6 +41,7 @@ import AlterationFilterWarning from "../banners/AlterationFilterWarning";
 import { selectDisplayValue } from "./DataUtils";
 import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import WindowStore from "../window/WindowStore";
+import {isWebdriver} from "../../lib/tracking";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1072,6 +1073,18 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return ret as IProgressIndicatorItem[];
     }
 
+    @computed get width() {
+        let windowWidth;
+        if (isWebdriver()) {
+            // resize instantly for screenshot tests
+            windowWidth = WindowStore.sizeByMs._0.width;
+        } else {
+            // otherwise only resize every 500ms since its costly
+            windowWidth = WindowStore.sizeByMs._500.width;
+        }
+        return windowWidth - 25;
+    }
+
     public render() {
         return (
             <div style={{ position:"relative" }}>
@@ -1104,7 +1117,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 genesetHeatmapTracks={this.genesetHeatmapTracks.result}
                                 heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this. heatmapTracks.result)}
                                 divId={this.props.divId}
-                                width={WindowStore.size500Ms.width - 100}
+                                width={this.width}
                                 caseLinkOutInTooltips={true}
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}

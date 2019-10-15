@@ -18,6 +18,7 @@ import OncoprinterStore from "./OncoprinterStore";
 import autobind from "autobind-decorator";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
 import WindowStore from "../../../../shared/components/window/WindowStore";
+import {isWebdriver} from "../../../../shared/lib/tracking";
 
 interface IOncoprinterProps {
     divId: string;
@@ -295,6 +296,18 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
         }
     }
 
+    @computed get width() {
+        let windowWidth;
+        if (isWebdriver()) {
+            // resize instantly for screenshot tests
+            windowWidth = WindowStore.sizeByMs._0.width;
+        } else {
+            // otherwise only resize every 500ms since its costly
+            windowWidth = WindowStore.sizeByMs._500.width;
+        }
+        return windowWidth - 25;
+    }
+
     public render() {
         return (
             <div className="posRelative">
@@ -317,7 +330,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                                 genesetHeatmapTracks={[]}
                                 heatmapTracks={[]}
                                 divId={this.props.divId}
-                                width={WindowStore.size500Ms.width - 100}
+                                width={this.width}
                                 caseLinkOutInTooltips={false}
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
