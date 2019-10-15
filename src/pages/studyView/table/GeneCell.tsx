@@ -12,7 +12,7 @@ import {If, Then, Else} from 'react-if';
 import EllipsisTextTooltip from "public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 export type IGeneCellProps = {
-    tableType: 'mutation' | 'cna',
+    tableType: 'mutation' | 'fusion' | 'cna',
     selectedGenes: string[],
     hugoGeneSymbol: string,
     qValue: number,

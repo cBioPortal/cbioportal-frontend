@@ -1,7 +1,7 @@
 import * as React from "react";
 import {observer} from "mobx-react";
 import {VictoryAxis, VictoryBar, VictoryChart, VictorySelectionContainer} from 'victory';
-import {computed} from "mobx";
+import {computed, observable} from "mobx";
 import _ from "lodash";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {ClinicalDataIntervalFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
@@ -19,6 +19,10 @@ import {
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import {getTextDiagonal, getTextHeight, getTextWidth} from "public-lib/lib/TextTruncationUtils";
 import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
+import BarChartToolTip, { ToolTipModel } from "./BarChartToolTip";
+import { IAlterationData } from "pages/resultsView/cancerSummary/CancerSummaryContent";
+import WindowStore from "shared/components/window/WindowStore";
+import ReactDOM from "react-dom";
 
 export interface IBarChartProps {
     data: DataBin[];
@@ -48,6 +52,15 @@ const TILT_ANGLE = 50;
 export default class BarChart extends React.Component<IBarChartProps, {}> implements AbstractChart {
 
     private svgContainer: any;
+    
+    @observable.ref
+    private mousePosition = {x: 0, y: 0};
+
+    @observable
+    private currentBarIndex = -1;
+
+    @observable
+    private toolTipModel: ToolTipModel | null = null;
 
     constructor(props: IBarChartProps) {
         super(props);
@@ -157,10 +170,50 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         return additionRatio * STUDY_VIEW_CONFIG.thresholds.barRatio;
     }
 
+    @autobind
+    private onMouseMove(event: React.MouseEvent<any>): void {
+        this.mousePosition = { x: event.pageX, y: event.pageY };
+    }
+
+     /*
+     * Supplies the BarPlot with the event handlers needed to record when the mouse enters
+     * or leaves a bar on the plot.
+     */
+    private get barPlotEvents(){
+        const self = this;
+        return [{
+            target: "data",
+            eventHandlers: {
+                onMouseEnter: () => {
+                    return [{
+                        target: "data",
+                        mutation: (event: any) => {
+                            self.currentBarIndex = event.datum.eventKey;
+                            self.toolTipModel = {
+                                start: self.barData[self.currentBarIndex].dataBin.start,
+                                end: self.barData[self.currentBarIndex].dataBin.end,
+                                special: self.barData[self.currentBarIndex].dataBin.specialValue,
+                                sampleCount: event.datum.y,                            
+                            }
+                        }
+                    }];
+                },
+                onMouseLeave: () => {
+                    return [{
+                        target: "data",
+                        mutation: () => {
+                            self.toolTipModel = null;
+                        }
+                    }];
+                }
+            }
+        }];
+    }
+
     public render() {
 
         return (
-            <div>
+            <div onMouseMove={this.onMouseMove}>
                 {this.barData.length > 0 &&
                 <VictoryChart
                     containerComponent={
@@ -205,8 +258,19 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                             }
                         }}
                         data={this.barData}
+                        events={this.barPlotEvents}
                     />
                 </VictoryChart>}
+                {ReactDOM.createPortal(
+                    <BarChartToolTip
+                        mousePosition={this.mousePosition}
+                        windowWidth={WindowStore.size.width}
+                        model={this.toolTipModel}
+                        totalBars={this.barData.length}
+                        currentBarIndex={this.currentBarIndex}
+                    />,
+                    document.body
+                )}
             </div>
         );
     }
