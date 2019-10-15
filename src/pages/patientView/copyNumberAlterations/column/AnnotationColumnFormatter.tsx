@@ -95,8 +95,8 @@ export default class AnnotationColumnFormatter
         let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
         let geneVariants:{[name: string]: ICivicVariantData} = getCivicCNAVariants(copyNumberData, geneSymbol, civicVariants);
         let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
-        //Only return data for genes with variants or it has a description provided by the Civic API
-        if (!_.isEmpty(geneVariants) || geneEntry && geneEntry.description !== "") {
+        //geneEntry must exists, and only return data for genes with variants or it has a description provided by the Civic API
+        if (geneEntry && (!_.isEmpty(geneVariants) || geneEntry.description !== "")) {
             civicEntry = buildCivicEntry(geneEntry, geneVariants);
         }
 
@@ -138,14 +138,18 @@ export default class AnnotationColumnFormatter
             oncoKbData.uniqueSampleKeyToTumorType[copyNumberData[0].uniqueSampleKey],
             getAlterationString(copyNumberData[0].alteration));
 
-        let indicator = oncoKbData.indicatorMap[id];
-        if (indicator.query.tumorType === null && studyIdToStudy) {
-            const studyMetaData = studyIdToStudy[copyNumberData[0].studyId];
-            if (studyMetaData.cancerTypeId !== "mixed") {           
-                indicator.query.tumorType = studyMetaData.cancerType.name;
+        if (oncoKbData.indicatorMap[id]) {
+            let indicator = oncoKbData.indicatorMap[id];
+            if (indicator.query.tumorType === null && studyIdToStudy) {
+                const studyMetaData = studyIdToStudy[copyNumberData[0].studyId];
+                if (studyMetaData.cancerTypeId !== "mixed") {           
+                    indicator.query.tumorType = studyMetaData.cancerType.name;
+                }
             }
+            return indicator;
+        } else {
+            return undefined;
         }
-        return indicator;
     }
 
     public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query|undefined
