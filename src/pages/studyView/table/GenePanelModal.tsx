@@ -42,7 +42,7 @@ export const GenePanelList: React.FunctionComponent<IGenePanelTooltipProps> = ({
             </span>
         );
     } else {
-        return <span />;
+        return null;
     }
 };
 
