@@ -1,114 +1,117 @@
 .Safari {
-  // this is necessary to fix hidden scroll bars when position:absolute
-  .oncoprintjs__scroll_div {
-    position:static !important;
-  }
+    // this is necessary to fix hidden scroll bars when position:absolute
+    .oncoprintjs__scroll_div {
+        position: static !important;
+    }
 }
 
 .oncoprintjs__scroll_div {
-  // force scrollbar visible, to indicate when theres more oncoprint offscreen to scroll to
-  // source: https://gist.github.com/devinrhode2/2573411#gistcomment-2243001
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-    background-color: rgba(0,0,0,0);
-    -webkit-border-radius: 100px;
-  }
+    // force scrollbar visible, to indicate when theres more oncoprint offscreen to scroll to
+    // source: https://gist.github.com/devinrhode2/2573411#gistcomment-2243001
+    &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+        background-color: rgba(0, 0, 0, 0);
+        -webkit-border-radius: 100px;
+    }
 
-  &::-webkit-scrollbar:hover {
-    //background-color: rgba(0, 0, 0, 0.09);
-  }
+    &::-webkit-scrollbar:hover {
+        //background-color: rgba(0, 0, 0, 0.09);
+    }
 
-  &::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.21);
-    -webkit-border-radius: 100px;
-    width: 8px;
-    height: 8px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.30);
-  }
+    &::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.21);
+        -webkit-border-radius: 100px;
+        width: 8px;
+        height: 8px;
+    }
 
-  &::-webkit-scrollbar-thumb:active {
-    background: rgba(0, 0, 0, 0.42);
-    -webkit-border-radius: 100px;
-  }
+    &::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    &::-webkit-scrollbar-thumb:active {
+        background: rgba(0, 0, 0, 0.42);
+        -webkit-border-radius: 100px;
+    }
 }
 
 .oncoprintAddClinicalTracks {
-  > .tab-content {
-    padding:10px 0 5px 0 !important;
+    > .tab-content {
+        padding: 10px 0 5px 0 !important;
 
-    > .msk-tab {
-      padding-left:5px !important;
-      padding-right:5px !important;
+        > .msk-tab {
+            padding-left: 5px !important;
+            padding-right: 5px !important;
 
-      .ReactVirtualized__Table > * {
-        width:100% !important;
-      }
+            .ReactVirtualized__Table > * {
+                width: 100% !important;
+            }
+        }
     }
-  }
 }
 
 .oncoprintAddClinicalTracksDropdown {
-  .rc-tooltip-arrow {
-    border:none !important;
-  }
+    .rc-tooltip-arrow {
+        border: none !important;
+    }
 }
 
 .oncoprintContainer {
-  border: none !important;
-  padding: 0 !important;
+    border: none !important;
+    padding: 0 !important;
 
-  #oncoprintDiv {
+    #oncoprintDiv {
+        .oncoprintjs__track_options__toggle_btn_img {
+            border-width: 0px !important;
+            border-radius: $cornerBorderRadius;
+            position: relative;
+            top: 4px;
+            &:hover {
+                background-color: #eee;
+            }
+        }
 
-    .oncoprintjs__track_options__toggle_btn_img {
-      border-width:0px !important;
-      border-radius:$cornerBorderRadius;
-      position:relative;
-      top:4px;
-      &:hover {
-        background-color:#eee;
-      }
+        .oncoprintjs__track_options__dropdown {
+            border: 1px solid rgba(0, 0, 0, 0.15) !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+            border-radius: $cornerBorderRadius;
+            li {
+                &.oncoprintjs__track_options__separator {
+                    border-top: 1px solid #dddddd !important;
+                }
+                &:not(.oncoprintjs__track_options__separator) {
+                    border-width: 0 !important;
+                }
+                padding: 2px 5px;
+                &:hover {
+                    background: #fff !important;
+                    text-decoration: underline;
+                }
+            }
+        }
     }
-
-    .oncoprintjs__track_options__dropdown {
-      border: 1px solid rgba(0, 0, 0, 0.15) !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-      border-radius:$cornerBorderRadius;
-      li {
-        &.oncoprintjs__track_options__separator {
-          border-top: 1px solid #dddddd !important;
-        }
-        &:not(.oncoprintjs__track_options__separator){
-          border-width: 0 !important;
-        }
-        padding: 2px 5px;
-        &:hover {
-          background: #fff !important;
-          text-decoration: underline;
-        }
-
-      }
-    }
-
-  }
 }
 
 .oncoprintContainer {
-  opacity: 0;
-  max-width: 95vw;
-  &.fadeIn {
-    transition: opacity .75s ease-in-out;
-    opacity:1;
-  }
+    opacity: 0;
+    max-width: 95vw;
+    &.fadeIn {
+        transition: opacity 0.75s ease-in-out;
+        opacity: 1;
+    }
 }
 
 .tabMessageContainer {
-  .alert {
-    margin-bottom:5px;
-  }
+    .alert {
+        margin-bottom: 5px;
+    }
+}
+
+#wideGeneBoxValidationStatus > div {
+    white-space: normal;
+    width: 100%;
+    max-width: 555px;
 }

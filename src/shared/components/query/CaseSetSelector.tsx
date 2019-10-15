@@ -50,9 +50,10 @@ export default class CaseSetSelector extends QueryStoreComponent<{modifyQueryPar
 				textLabel:sampleList.name
 			};
 		});
-
+		
 		let filteredcustomCaseSets = getFilteredCustomCaseSets(
-			this.store.isVirtualStudyQuery,
+			this.store.isVirtualStudySelected,
+			this.store.isMultipleNonVirtualStudiesSelected,
 			this.store.profiledSamplesCount.result);
 
 		let customCaseSets = filteredcustomCaseSets.map(s => {

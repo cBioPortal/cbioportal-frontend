@@ -23,17 +23,25 @@ export const CustomCaseSets: CustomCaseSet[] = [
 	{name: 'User-defined Case List', description: 'Specify your own case list', value: CaseSetId.custom, isdefault : true}
 ]
 
-export function getFilteredCustomCaseSets(isVirtualStudy:boolean, profiledSamplesCount: { w_mut: number; w_cna: number; w_mut_cna: number; all: number}) {
-    return _.reduce(CustomCaseSets, (acc: CustomCaseSet[], next) => {
-        if (next.isdefault) {
-            acc.push(next)
-        } else if (isVirtualStudy) {
-            let count =  profiledSamplesCount[next.value as 'w_mut_cna'|'w_mut'|'w_cna'|'all'];
-            //add profile only if it has samples
-            if (count > 0) {
-                acc.push(Object.assign({}, next, { name: `${next.name} (${count})` }))
-            }
-        }
-        return acc;
-    }, []);
+export function getFilteredCustomCaseSets(isVirtualStudy:boolean, isMultipleNonVirtualStudies: boolean, profiledSamplesCount: { w_mut: number; w_cna: number; w_mut_cna: number; all: number}) {
+	return _.reduce(CustomCaseSets, (acc: CustomCaseSet[], next) => {
+		if (next.isdefault) {
+			acc.push(next)
+		} else if (isMultipleNonVirtualStudies && !isVirtualStudy) {
+			// add all non-zero CustomCaseSets options for multiple studies without virtual study
+			let count =  profiledSamplesCount[next.value as 'w_mut_cna'|'w_mut'|'w_cna'|'all'];
+			//add profile only if it has samples
+			if (count > 0) {
+				acc.push(Object.assign({}, next, { name: `${next.name} (${count})` }))
+			}
+		} else if (isVirtualStudy && next.value === CaseSetId.all) {
+			// only add 'all' option for virtual study
+			let count =  profiledSamplesCount[next.value as 'w_mut_cna'|'w_mut'|'w_cna'|'all'];
+			//add profile only if it has samples
+			if (count > 0) {
+				acc.push(Object.assign({}, next, { name: `${next.name} (${count})` }))
+			}
+		}
+		return acc;
+	}, []);
 }
