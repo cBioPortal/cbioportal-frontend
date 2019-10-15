@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import {computed, observable, action} from "mobx";
 import {observer} from 'mobx-react';
 import fileDownload from 'react-file-download';
-import {AnnotatedExtendedAlteration, ExtendedAlteration, ResultsViewPageStore, ModifyQueryParams} from "../ResultsViewPageStore";
+import {AnnotatedExtendedAlteration, ExtendedAlteration, ResultsViewPageStore, ModifyQueryParams, CaseAggregatedData, AlterationTypeConstants} from "../ResultsViewPageStore";
 import {CoverageInformation, getSingleGeneResultKey, getMultipleGeneResultKey} from "../ResultsViewPageStoreUtils";
 import {OQLLineFilterOutput, UnflattenedOQLLineFilterOutput, MergedTrackLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import FeatureTitle from "shared/components/featureTitle/FeatureTitle";
@@ -13,27 +13,29 @@ import {default as CaseAlterationTable, ICaseAlteration} from "./CaseAlterationT
 import {
     generateCaseAlterationData, generateCnaData, generateDownloadData, generateGeneAlterationData, generateMrnaData,
     generateMutationData, generateMutationDownloadData,
-    generateProteinData, hasValidData, hasValidMutationData, stringify2DArray
+    generateProteinData, hasValidData, hasValidMutationData, stringify2DArray, generateOtherMolecularProfileData, generateOtherMolecularProfileDownloadData
 } from "./DownloadUtils";
 
 import styles from "./styles.module.scss";
 import classNames from 'classnames';
 import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
-import WindowStore from "../../../shared/components/window/WindowStore";
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
 import {remoteData} from "../../../public-lib/api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
-import {MolecularProfile, Sample} from "shared/api/generated/CBioPortalAPI";
+import {MolecularProfile, Sample, CancerStudy} from "shared/api/generated/CBioPortalAPI";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import { MakeMobxView } from 'shared/components/MobxView';
 import { CUSTOM_CASE_LIST_ID } from 'shared/components/query/QueryStore';
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { Alteration } from 'shared/lib/oql/oql-parser';
+import ReactSelect from "react-select";
+import autobind from 'autobind-decorator';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
+import FontAwesome from 'react-fontawesome';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -96,7 +98,9 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     readonly mutationData = remoteData<{[key: string]: ExtendedAlteration[]}>({
         await:()=>[this.props.store.nonOqlFilteredCaseAggregatedData],
-        invoke:()=>Promise.resolve(generateMutationData(this.props.store.nonOqlFilteredCaseAggregatedData.result!))
+        invoke:()=>{
+            return Promise.resolve(generateMutationData(this.props.store.nonOqlFilteredCaseAggregatedData.result!));
+        }
     });
 
     readonly mutationDownloadData = remoteData<string[][]>({
@@ -106,19 +110,33 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         ))
     });
 
-    readonly transposedMutationDownloadData = remoteData<string[][]>({
-        await:()=>[this.mutationDownloadData],
-        invoke:()=>Promise.resolve(_.unzip(this.mutationDownloadData.result!))
+    readonly allOtherMolecularProfileDataGroupByProfileName = remoteData<{[profileName: string]: {[key: string]: ExtendedAlteration[]}}>({
+        await:()=>[this.props.store.nonQueriedMolecularData, this.props.store.nonSelectedMolecularProfilesGroupByName],
+        invoke:()=>{
+            const profileNames = _.keys(this.props.store.nonSelectedMolecularProfilesGroupByName.result);
+            if (this.props.store.doNonSelectedMolecularProfilesExist) {
+                const data = {
+                    "samples": _.groupBy(this.props.store.nonQueriedMolecularData.result!, (data) => data.uniqueSampleKey)
+                } as CaseAggregatedData<ExtendedAlteration>
+                const allOtherMolecularProfileDataGroupByProfileName: {[profileName: string]: {[key: string]: ExtendedAlteration[]}} = _.reduce(profileNames, (allOtherMolecularProfileDataGroupByProfileName, profileName) => {
+                    allOtherMolecularProfileDataGroupByProfileName[profileName] = generateOtherMolecularProfileData(this.props.store.nonSelectedMolecularProfilesGroupByName.result[profileName].map(profile => profile.molecularProfileId), data);
+                    return allOtherMolecularProfileDataGroupByProfileName;
+                },{} as {[profileName: string]: {[key: string]: ExtendedAlteration[]}})
+                return Promise.resolve(allOtherMolecularProfileDataGroupByProfileName)
+            }
+            return Promise.resolve({});
+        }
     });
 
-    readonly mutationDataText = remoteData<string>({
-        await:()=>[this.mutationDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.mutationDownloadData.result!))
-    });
-
-    readonly transposedMutationDataText = remoteData<string>({
-        await:()=>[this.transposedMutationDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.transposedMutationDownloadData.result!))
+    readonly allOtherMolecularProfileDownloadDataGroupByProfileName = remoteData<{[key: string]: string[][]}>({
+        await:()=>[this.allOtherMolecularProfileDataGroupByProfileName, this.props.store.samples, this.props.store.genes],
+        invoke:()=>Promise.resolve(
+            _.mapValues(this.allOtherMolecularProfileDataGroupByProfileName.result, (otherMolecularProfileData) => {
+                return generateOtherMolecularProfileDownloadData (
+                    otherMolecularProfileData, this.props.store.samples.result!, this.props.store.genes.result!
+                )
+            })
+        )
     });
 
     readonly mrnaData = remoteData<{[key: string]: ExtendedAlteration[]}>({
@@ -133,21 +151,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         ))
     });
 
-    readonly transposedMrnaDownloadData = remoteData<string[][]>({
-        await:()=>[this.mrnaDownloadData],
-        invoke:()=>Promise.resolve(_.unzip(this.mrnaDownloadData.result!))
-    });
-
-    readonly mrnaDataText = remoteData<string>({
-        await:()=>[this.mrnaDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.mrnaDownloadData.result!))
-    });
-
-    readonly transposedMrnaDataText = remoteData<string>({
-        await:()=>[this.transposedMrnaDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.transposedMrnaDownloadData.result!))
-    });
-
     readonly proteinData = remoteData<{[key: string]: ExtendedAlteration[]}>({
         await:()=>[this.props.store.nonOqlFilteredCaseAggregatedData],
         invoke:()=>Promise.resolve(generateProteinData(this.props.store.nonOqlFilteredCaseAggregatedData.result!))
@@ -160,21 +163,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         ))
     });
 
-    readonly transposedProteinDownloadData = remoteData<string[][]>({
-        await:()=>[this.proteinDownloadData],
-        invoke:()=>Promise.resolve(_.unzip(this.proteinDownloadData.result!))
-    });
-
-    readonly proteinDataText = remoteData<string>({
-        await:()=>[this.proteinDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.proteinDownloadData.result!))
-    });
-
-    readonly transposedProteinDataText = remoteData<string>({
-        await:()=>[this.transposedProteinDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.transposedProteinDownloadData.result!))
-    });
-
     readonly cnaData = remoteData<{[key: string]: ExtendedAlteration[]}>({
         await:()=>[this.props.store.nonOqlFilteredCaseAggregatedData],
         invoke:()=>Promise.resolve(generateCnaData(this.props.store.nonOqlFilteredCaseAggregatedData.result!))
@@ -185,21 +173,6 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         invoke:()=>Promise.resolve(generateDownloadData(
             this.cnaData.result!, this.props.store.samples.result!, this.props.store.genes.result!
         ))
-    });
-
-    readonly transposedCnaDownloadData = remoteData<string[][]>({
-        await:()=>[this.cnaDownloadData],
-        invoke:()=>Promise.resolve(_.unzip(this.cnaDownloadData.result!))
-    });
-
-    readonly cnaDataText = remoteData<string>({
-        await:()=>[this.cnaDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.cnaDownloadData.result!))
-    });
-
-    readonly transposedCnaDataText = remoteData<string>({
-        await:()=>[this.transposedCnaDownloadData],
-        invoke:()=>Promise.resolve(stringify2DArray(this.transposedCnaDownloadData.result!))
     });
 
     readonly alteredCaseAlterationData = remoteData<ICaseAlteration[]>({
@@ -334,7 +307,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     public render() {
         const status = getMobxPromiseGroupStatus(this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationMap, this.cnaData, this.mutationData, 
-            this.mrnaData, this.proteinData, this.unalteredCaseAlterationData, this.alteredCaseAlterationData, this.props.store.virtualStudyParams, this.sampleMatrixText);
+            this.mrnaData, this.proteinData, this.unalteredCaseAlterationData, this.alteredCaseAlterationData, this.props.store.virtualStudyParams, this.sampleMatrixText, this.props.store.nonSelectedMolecularProfilesGroupByName,
+            this.props.store.studies, this.props.store.selectedMolecularProfiles);
 
         switch (status) {
             case "pending":
@@ -359,11 +333,12 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                 <tbody>
                                     {hasValidData(this.cnaData.result!) && this.cnaDownloadControls()}
                                     {hasValidMutationData(this.mutationData.result!) && this.mutationDownloadControls()}
-                                    {hasValidData(this.mrnaData.result!) && this.mrnaExprDownloadControls()}
-                                    {hasValidData(this.proteinData.result!) && this.proteinExprDownloadControls()}
+                                    {hasValidData(this.mrnaData.result!) && this.mrnaExprDownloadControls(this.props.store.selectedMolecularProfiles.result!.find((profile) => profile.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION)!.name)}
+                                    {hasValidData(this.proteinData.result!) && this.proteinExprDownloadControls(this.props.store.selectedMolecularProfiles.result!.find((profile) => profile.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL)!.name)}
                                     {this.alteredSamplesDownloadControls(this.alteredCaseAlterationData.result!, this.props.store.virtualStudyParams.result!)}
                                     {this.unalteredSamplesDownloadControls(this.unalteredCaseAlterationData.result!, this.props.store.virtualStudyParams.result!)}
                                     {this.sampleMatrixDownloadControls(this.sampleMatrixText.result!)}
+                                    {(this.props.store.doNonSelectedMolecularProfilesExist) && this.nonSelectedProfileDownloadRow(this.props.store.nonSelectedMolecularProfilesGroupByName.result!)}
                                 </tbody>
                             </table>
                         </div>
@@ -412,38 +387,86 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                                         this.handleTransposedMutationDownload);
     }
 
-    private mrnaExprDownloadControls(): JSX.Element
+    private mrnaExprDownloadControls(profileName: string): JSX.Element
     {
-        return this.downloadControlsRow("mRNA Expression",
+        return this.downloadControlsRow(profileName,
                                         this.handleMrnaDownload,
                                         this.handleTransposedMrnaDownload);
     }
 
-    private proteinExprDownloadControls(): JSX.Element
+    private proteinExprDownloadControls(profileName: string): JSX.Element
     {
-        return this.downloadControlsRow("Protein Expression",
+        return this.downloadControlsRow(profileName,
                                         this.handleProteinDownload,
                                         this.handleTransposedProteinDownload);
     }
 
-    private downloadControlsRow(title:string,
-                                handleTabDelimitedDownload: () => void,
-                                handleTransposedMatrixDownload: () => void)
+    private downloadControlsRow(profileName:string,
+                                handleTabDelimitedDownload: (name: string) => void,
+                                handleTransposedMatrixDownload: (name: string) => void)
     {
         return (
             <tr>
-                <td style={{width: 500}}>{title}</td>
+                <td style={{width: 500}}>{profileName}</td>
                 <td>
-                    <a onClick={handleTabDelimitedDownload}>
+                    <a onClick={(event) => handleTabDelimitedDownload(profileName)}>
                         <i className='fa fa-cloud-download' style={{marginRight: 5}}/>Tab Delimited Format
                     </a>
                     <span style={{margin:'0px 10px'}}>|</span>
-                    <a onClick={handleTransposedMatrixDownload}>
+                    <a onClick={(event) => handleTransposedMatrixDownload(profileName)}>
                         <i className='fa fa-cloud-download' style={{marginRight: 5}}/>Transposed Matrix
                     </a>
                 </td>
             </tr>
         );
+    }
+
+    private nonSelectedProfileDownloadRow(nonSelectedMolecularProfilesGroupByName:_.Dictionary<MolecularProfile[]>)
+    {
+        const allProfileOptions = _.map(nonSelectedMolecularProfilesGroupByName, (profiles: MolecularProfile[], profileName: string) => {
+            if (this.props.store.studies.result!.length === 1) {
+                const singleStudyProfile = profiles[0];
+                return {
+                    "name": profileName,
+                    "description": singleStudyProfile.description
+                }
+            }
+            return {"name": profileName}
+        });
+        
+        return _.map(allProfileOptions, (option) => 
+            (
+                <tr>
+                    <td style={{width: 500}}>
+                        <div style={{display: "flex", alignItems:"center"}}>
+                            {option.name}
+                            {
+                                (option.description) && (
+                                        <DefaultTooltip
+                                            mouseEnterDelay={0}
+                                            placement="right"
+                                            overlay={<div className={styles.tooltip}>{option.description}</div>}
+                                        >
+                                            <FontAwesome className={styles.infoIcon} name='info-circle'/>
+                                        </DefaultTooltip>
+                                )
+                            }
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <a onClick={(event) => this.handleOtherMolecularProfileDownload(event, option.name)}>
+                            <i className='fa fa-cloud-download' style={{marginRight: 5}}/>Tab Delimited Format
+                            </a>
+                            <span style={{margin:'0px 10px'}}>|</span>
+                            <a onClick={(event) => this.handleTransposedOtherMolecularProfileDownload(event, option.name)}>
+                                <i className='fa fa-cloud-download' style={{marginRight: 5}}/>Transposed Matrix
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            )
+        )
     }
 
     private copyDownloadControlsRow(title:string,
@@ -541,42 +564,84 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     private handleMutationDownload()
     {
-        onMobxPromise(this.mutationDataText, text=>fileDownload(text, "mutations.txt"));
+        onMobxPromise(this.mutationDownloadData, data=>{
+            const text = this.downloadDataText(data);
+            fileDownload(text, "mutations.txt")
+        });
     }
 
     private handleTransposedMutationDownload()
     {
-        onMobxPromise(this.transposedMutationDataText, text=>fileDownload(text, "mutations_transposed.txt"));
+        onMobxPromise(this.mutationDownloadData, data=>{
+            const text = this.downloadDataText(this.unzipDownloadData(data));
+            fileDownload(text, "mutations_transposed.txt")
+        });
     }
 
-    private handleMrnaDownload()
+    private handleMrnaDownload(profileName: string)
     {
-        onMobxPromise(this.mrnaDataText, text=>fileDownload(text, "mRNA_exp.txt"));
+        onMobxPromise(this.mrnaDownloadData, data=>{
+            const text = this.downloadDataText(data);
+            fileDownload(text, `${profileName}.txt`)
+        });
     }
 
-    private handleTransposedMrnaDownload()
+    private handleTransposedMrnaDownload(profileName: string)
     {
-        onMobxPromise(this.transposedMrnaDataText, text=>fileDownload(text, "mRNA_exp_transposed.txt"));
+        onMobxPromise(this.mrnaDownloadData, data=>{
+            const text = this.downloadDataText(this.unzipDownloadData(data));
+            fileDownload(text, `${profileName}.txt`)
+        });
     }
 
-    private handleProteinDownload()
+    private handleProteinDownload(profileName: string)
     {
-        onMobxPromise(this.proteinDataText, text=>fileDownload(text, "protein_exp.txt"));
+        onMobxPromise(this.proteinDownloadData, data=>{
+            const text = this.downloadDataText(data);
+            fileDownload(text, `${profileName}.txt`)
+        });
     }
 
-    private handleTransposedProteinDownload()
+    private handleTransposedProteinDownload(profileName: string)
     {
-        onMobxPromise(this.transposedProteinDataText, text=>fileDownload(text, "protein_exp_transposed.txt"));
+        onMobxPromise(this.proteinDownloadData, data=>{
+            const text = this.downloadDataText(this.unzipDownloadData(data));
+            fileDownload(text, `${profileName}.txt`)
+        });
     }
 
     private handleCnaDownload()
     {
-        onMobxPromise(this.cnaDataText, text=>fileDownload(text, "cna.txt"));
+        onMobxPromise(this.cnaDownloadData, data=>{
+            const text = this.downloadDataText(data);
+            fileDownload(text, "cna.txt")
+        });
     }
 
     private handleTransposedCnaDownload()
     {
-        onMobxPromise(this.transposedCnaDataText, text=>fileDownload(text, "cna_transposed.txt"));
+        onMobxPromise(this.cnaDownloadData, data=>{
+            const text = this.downloadDataText(this.unzipDownloadData(data));
+            fileDownload(text, "cna_transposed.txt")
+        });
+    }
+
+    @autobind
+    private handleOtherMolecularProfileDownload(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>, profileName: string)
+    {
+        onMobxPromise(this.allOtherMolecularProfileDownloadDataGroupByProfileName, downloadDataGroupByProfileName=>{
+            const textMap = this.downloadDataTextGroupByProfileName(downloadDataGroupByProfileName);
+            fileDownload(textMap[profileName], `${profileName}.txt`)
+        });
+    }
+
+    @autobind
+    private handleTransposedOtherMolecularProfileDownload(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>, profileName: string)
+    {
+        onMobxPromise(this.allOtherMolecularProfileDownloadDataGroupByProfileName, downloadDataGroupByProfileName=>{
+            const transposedTextMap = this.downloadDataTextGroupByProfileName(this.unzipDownloadDataGroupByProfileName(downloadDataGroupByProfileName));
+            fileDownload(transposedTextMap[profileName], `${profileName}.txt`)
+        });
     }
 
     @action
@@ -590,25 +655,23 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         this.props.store.queryFormVisible = true;
     }
 
-    @action
-    private async handleVirtualStudyButtonClick(alterations: ICaseAlteration[]) {
-        let studies = _.reduce(_.groupBy(alterations, "studyId"), (acc: { id: string; samples: string[] }[], alteration, studyId) => {
-            acc.push({
-                id: studyId,
-                samples: alterations.map(alteration => alteration.sampleId)
-            })
-            return acc;
-        }, []);
+    private unzipDownloadDataGroupByProfileName(downloadDataGroupByProfileName: {[key: string]: string[][]}): {[key: string]: string[][]} {
+        return _.mapValues(downloadDataGroupByProfileName, (otherMolecularProfileDownloadData) => {
+            return _.unzip(otherMolecularProfileDownloadData);
+        })
+    }
 
-        let parameters = {
-            name: "virtual study",
-            description: "virtual study",
-            origin: studies.map(study => study.id),
-            studies: studies
-        }
-        const saveStudyResult = await sessionServiceClient.saveVirtualStudy(parameters, false);
-        if (saveStudyResult && saveStudyResult.id) {
-            window.open(buildCBioPortalPageUrl({pathname:'study', query: {id: saveStudyResult.id}}), "_blank");
-        }
+    private downloadDataTextGroupByProfileName(downloadDataGroupByProfileName: {[key: string]: string[][]}): {[x: string]: string} {
+        return _.mapValues(downloadDataGroupByProfileName, (downloadData) => {
+            return stringify2DArray(downloadData);
+        })
+    }
+
+    private unzipDownloadData(downloadData: string[][]): string[][] {
+        return _.unzip(downloadData);
+    }
+
+    private downloadDataText(downloadData: string[][]): string {
+        return stringify2DArray(downloadData);
     }
 }

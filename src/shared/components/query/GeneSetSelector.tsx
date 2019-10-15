@@ -1,170 +1,224 @@
 import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
-import {Modal} from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
-import {observer} from "mobx-react";
-import {computed} from 'mobx';
-import {FlexRow, FlexCol} from "../flexbox/FlexBox";
+import { observer } from 'mobx-react';
+import { computed, action } from 'mobx';
+import { FlexRow, FlexCol } from '../flexbox/FlexBox';
 import gene_lists from './gene_lists';
-import GeneSymbolValidator from "./GeneSymbolValidator";
 import classNames from 'classnames';
-import {getOncoQueryDocUrl} from "../../api/urls";
-import {QueryStoreComponent} from "./QueryStore";
-import MutSigGeneSelector from "./MutSigGeneSelector";
-import GisticGeneSelector from "./GisticGeneSelector";
-import SectionHeader from "../sectionHeader/SectionHeader";
-import AppConfig from "appConfig";
-import {ServerConfigHelpers} from "../../../config/config";
+import { getOncoQueryDocUrl } from '../../api/urls';
+import { QueryStoreComponent, Focus, GeneReplacement } from './QueryStore';
+import MutSigGeneSelector from './MutSigGeneSelector';
+import GisticGeneSelector from './GisticGeneSelector';
+import SectionHeader from '../sectionHeader/SectionHeader';
+import AppConfig from 'appConfig';
+import { ServerConfigHelpers } from '../../../config/config';
+import OQLTextArea, { GeneBoxType } from '../GeneSelectionBox/OQLTextArea';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { Gene } from 'shared/api/generated/CBioPortalAPI';
+import { bind } from 'bind-decorator';
+import GenesetsValidator from './GenesetsValidator';
+import FontAwesome from 'react-fontawesome';
+import GeneSymbolValidationError from './GeneSymbolValidationError';
 
 const styles = styles_any as {
-	GeneSetSelector: string,
-	MutSigGeneSelectorWindow: string,
-	GisticGeneSelectorWindow: string,
-	buttonRow: string,
-	geneSet: string,
-	empty: string,
-	notEmpty: string,
-	sectionSpinner: string,
-	learnOql: string;
+    GeneSetSelector: string;
+    MutSigGeneSelectorWindow: string;
+    GisticGeneSelectorWindow: string;
+    buttonRow: string;
+    geneSet: string;
+    empty: string;
+    notEmpty: string;
+    sectionSpinner: string;
+    learnOql: string;
+    geneCount: string;
+    icon: string;
 };
 
 @observer
-export default class GeneSetSelector extends QueryStoreComponent<{}, {}>
-{
-	@computed get selectedGeneListOption()
-	{
-		let option = this.geneListOptions.find(opt => opt.value == this.store.geneQuery);
-		return option ? option.value : '';
-	}
+export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
+    @computed get selectedGeneListOption() {
+        let option = this.geneListOptions.find(
+            opt => opt.value == this.store.geneQuery
+        );
+        return option ? option.value : '';
+    }
 
-	@computed get geneListOptions()
-	{
-	    let geneList: {"id": string, "genes": string[]}[] = gene_lists;
+    @computed get geneListOptions() {
+        let geneList: { id: string; genes: string[] }[] = gene_lists;
 
-	    if (AppConfig.serverConfig.query_sets_of_genes) {
-	    	const parsed = ServerConfigHelpers.parseQuerySetsOfGenes(AppConfig.serverConfig.query_sets_of_genes);
-	    	if (parsed) {
-	    		geneList = parsed;
-			}
-	    }
+        if (AppConfig.serverConfig.query_sets_of_genes) {
+            const parsed = ServerConfigHelpers.parseQuerySetsOfGenes(
+                AppConfig.serverConfig.query_sets_of_genes
+            );
+            if (parsed) {
+                geneList = parsed;
+            }
+        }
 
-	    return [
-	        {
-	            label: 'User-defined List',
-	            value: ''
-	        },
-	        ...geneList.map(item => ({
-	            label: `${item.id} (${item.genes.length} genes)`,
-	            value: item.genes.join(' ')
-	        }))
-	    ];
-	}
+        return [
+            {
+                label: 'User-defined List',
+                value: '',
+            },
+            ...geneList.map(item => ({
+                label: `${item.id} (${item.genes.length} genes)`,
+                value: item.genes.join(' '),
+            })),
+        ];
+    }
 
-	@computed get textAreaRef()
-	{
-		if (this.store.geneQueryErrorDisplayStatus === 'shouldFocus')
-			return (textArea:HTMLTextAreaElement) => {
-				let {error} = this.store.oql;
-				if (textArea && error)
-				{
-					textArea.focus();
-					textArea.setSelectionRange(error.start, error.end);
-					this.store.geneQueryErrorDisplayStatus = 'focused';
-				}
-			};
-	}
+    @bind
+    @action
+    handleOQLUpdate(
+        oql: {
+            query: SingleGeneQuery[];
+            error?: { start: number; end: number; message: string };
+        },
+        genes: { found: Gene[]; suggestions: GeneReplacement[] },
+        queryStr: string
+    ): void {
+        if (queryStr !== this.store.geneQuery) {
+            this.store.geneQuery = queryStr;
+            this.store.oql.error = oql.error;
+        }
+    }
 
-	render()
-	{
-		return (
-			<FlexRow padded overflow className={styles.GeneSetSelector}>
-				<SectionHeader className="sectionLabel"
-							   secondaryComponent={
-								   <a target="_blank" className={styles.learnOql} href={getOncoQueryDocUrl()}><strong>Hint:</strong> Learn Onco Query Language (OQL)<br />to write more powerful queries <i className={"fa fa-external-link"} /></a>
-							   }
-							   promises={[this.store.mutSigForSingleStudy, this.store.gisticForSingleStudy, this.store.genes]}
-				>
-					Enter Genes:
-				</SectionHeader>
+    @computed
+    get customError(): JSX.Element | null {
+        if (this.store.isQueryLimitReached) {
+            return (
+                <div className={styles.geneCount}>
+                    <div
+                        className={''}
+                        title={`Please limit your queries to ${this.store.geneLimit} genes or fewer.`}
+                    >
+                        <FontAwesome
+                            className={styles.icon}
+                            name="exclamation-circle"
+                        />
+                        <GeneSymbolValidationError
+                            sampleCount={
+                                this.store.profiledSamplesCount.result.all
+                            }
+                            queryProductLimit={
+                                AppConfig.serverConfig.query_product_limit
+                            }
+                            email={AppConfig.serverConfig.skin_email_contact}
+                        />
+                    </div>
+                </div>
+            );
+        }
 
-				<FlexCol overflow>
-				<ReactSelect
-					value={this.selectedGeneListOption}
-					options={this.geneListOptions}
-					onChange={(option:any) => this.store.geneQuery = option ? option.value : ''}
-				/>
+        return null;
+    }
 
-				{/* we are hiding these buttons on 02/27/2019 */}
-				{/* {!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
-					<FlexRow padded className={styles.buttonRow}>
-						{!!(this.store.mutSigForSingleStudy.result.length) && (
-							<button className="btn btn-default btn-sm" onClick={() => this.store.showMutSigPopup = true}>
-								Select from Recurrently Mutated Genes (MutSig)
-							</button>
-						)}
-						{!!(this.store.gisticForSingleStudy.result.length) && (
-							<button className="btn btn-default btn-sm" onClick={() => this.store.showGisticPopup = true}>
-								Select Genes from Recurrent CNAs (Gistic)
-							</button>
-						)}
-					</FlexRow>
-				)} */}
+    render() {
+        return (
+            <FlexRow padded overflow className={styles.GeneSetSelector}>
+                <SectionHeader
+                    className="sectionLabel"
+                    secondaryComponent={
+                        <a
+                            target="_blank"
+                            className={styles.learnOql}
+                            href={getOncoQueryDocUrl()}
+                        >
+                            <strong>Hint:</strong> Learn Onco Query Language
+                            (OQL)
+                            <br />
+                            to write more powerful queries{' '}
+                            <i className={'fa fa-external-link'} />
+                        </a>
+                    }
+                    promises={[
+                        this.store.mutSigForSingleStudy,
+                        this.store.gisticForSingleStudy,
+                        this.store.genes,
+                    ]}
+                >
+                    Enter Genes:
+                </SectionHeader>
 
-				<textarea
-					ref={this.textAreaRef}
-					className={classNames(styles.geneSet, this.store.geneQuery ? styles.notEmpty : styles.empty)}
-					rows={5}
-					cols={80}
-					placeholder="Enter HUGO Gene Symbols, Gene Aliases, or OQL"
-					title="Enter HUGO Gene Symbols, Gene Aliases, or OQL"
-					value={this.store.geneQuery}
-					onChange={event => this.store.geneQuery = event.currentTarget.value}
-					data-test='geneSet'
-				/>
+                <FlexCol overflow>
+                    <ReactSelect
+                        value={this.selectedGeneListOption}
+                        options={this.geneListOptions}
+                        onChange={(option: any) =>
+                            (this.store.geneQuery = option ? option.value : '')
+                        }
+                    />
 
-				<GeneSymbolValidator/>
+                    <OQLTextArea
+                        focus={this.store.geneQueryErrorDisplayStatus}
+                        inputGeneQuery={this.store.geneQuery}
+                        validateInputGeneQuery={true}
+                        location={GeneBoxType.DEFAULT}
+                        textBoxPrompt={
+                            'Enter HUGO Gene Symbols, Gene Aliases, or OQL'
+                        }
+                        callback={this.handleOQLUpdate}
+                    >
+                        {this.customError}
+                    </OQLTextArea>
 
-				<Modal
-					className={classNames('cbioportal-frontend',styles.MutSigGeneSelectorWindow)}
-					show={this.store.showMutSigPopup}
-					onHide={() => this.store.showMutSigPopup = false}
-				>
-					<Modal.Header closeButton>
-						<Modal.Title>Recently Mutated Genes</Modal.Title>
-					</Modal.Header>
-					<Modal.Body>
-						<MutSigGeneSelector
-							initialSelection={this.store.geneIds}
-							data={this.store.mutSigForSingleStudy.result}
-							onSelect={map_geneSymbol_selected => {
-								this.store.applyGeneSelection(map_geneSymbol_selected);
-								this.store.showMutSigPopup = false;
-							}}
-						/>
-					</Modal.Body>
-				</Modal>
+                    <GenesetsValidator />
 
-				<Modal
-					className={classNames('cbioportal-frontend',styles.GisticGeneSelectorWindow)}
-					show={this.store.showGisticPopup}
-					onHide={() => this.store.showGisticPopup = false}
-				>
-					<Modal.Header closeButton>
-						<Modal.Title>Recurrent Copy Number Alterations (Gistic)</Modal.Title>
-					</Modal.Header>
-					<Modal.Body>
-						<GisticGeneSelector
-							initialSelection={this.store.geneIds}
-							data={this.store.gisticForSingleStudy.result}
-							onSelect={map_geneSymbol_selected => {
-								this.store.applyGeneSelection(map_geneSymbol_selected);
-								this.store.showGisticPopup = false;
-							}}
-						/>
-					</Modal.Body>
-				</Modal>
-				</FlexCol>
-			</FlexRow>
-		);
-	}
+                    <Modal
+                        className={classNames(
+                            'cbioportal-frontend',
+                            styles.MutSigGeneSelectorWindow
+                        )}
+                        show={this.store.showMutSigPopup}
+                        onHide={() => (this.store.showMutSigPopup = false)}
+                    >
+                        <Modal.Header closeButton>
+                            <Modal.Title>Recently Mutated Genes</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <MutSigGeneSelector
+                                initialSelection={this.store.geneIds}
+                                data={this.store.mutSigForSingleStudy.result}
+                                onSelect={map_geneSymbol_selected => {
+                                    this.store.applyGeneSelection(
+                                        map_geneSymbol_selected
+                                    );
+                                    this.store.showMutSigPopup = false;
+                                }}
+                            />
+                        </Modal.Body>
+                    </Modal>
+
+                    <Modal
+                        className={classNames(
+                            'cbioportal-frontend',
+                            styles.GisticGeneSelectorWindow
+                        )}
+                        show={this.store.showGisticPopup}
+                        onHide={() => (this.store.showGisticPopup = false)}
+                    >
+                        <Modal.Header closeButton>
+                            <Modal.Title>
+                                Recurrent Copy Number Alterations (Gistic)
+                            </Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <GisticGeneSelector
+                                initialSelection={this.store.geneIds}
+                                data={this.store.gisticForSingleStudy.result}
+                                onSelect={map_geneSymbol_selected => {
+                                    this.store.applyGeneSelection(
+                                        map_geneSymbol_selected
+                                    );
+                                    this.store.showGisticPopup = false;
+                                }}
+                            />
+                        </Modal.Body>
+                    </Modal>
+                </FlexCol>
+            </FlexRow>
+        );
+    }
 }

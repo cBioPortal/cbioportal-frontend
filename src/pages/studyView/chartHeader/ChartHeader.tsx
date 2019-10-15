@@ -40,7 +40,7 @@ export interface IChartHeaderProps {
     chartControls?   : ChartControls;
     changeChartType  : (chartType: ChartType) => void;
     getSVG?          : ()=>Promise<SVGElement | null>;
-    getData?         : (dataType?:DataType)=>Promise<string | null>;
+    getData?         : ((dataType?:DataType)=>Promise<string | null>) | ((dataType?:DataType)=>string);
     downloadTypes?   : DownloadControlsButton[];
     openComparisonPage : () => void;
 }
