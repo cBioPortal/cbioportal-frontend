@@ -191,30 +191,31 @@ function pasteToElement(elementSelector, text){
 }
 
 function checkOncoprintElement(selector) {
+    browser.moveToObject("body", 0, 0);
     browser.execute(function() {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
     });
-    return browser.checkElement(selector || "#oncoprintDiv", { hide:[".qtip", '.dropdown-menu', ".oncoprintjs__track_options__dropdown", ".oncoprintjs__cell_overlay_div"] });
+    return checkElementWithMouseDisabled(selector || "#oncoprintDiv", 0, { hide:[".qtip", '.dropdown-menu', ".oncoprintjs__track_options__dropdown", ".oncoprintjs__cell_overlay_div"] });
 }
 
 function executeInBrowser(callback){
     return browser.execute(callback).value;
 }
 
-function checkElementWithTemporaryClass(selectorForChecking, selectorForTemporaryClass, temporaryClass, pauseTime) {
+function checkElementWithTemporaryClass(selectorForChecking, selectorForTemporaryClass, temporaryClass, pauseTime, options) {
     browser.execute(function(selectorForTemporaryClass, temporaryClass){
         $(selectorForTemporaryClass).addClass(temporaryClass);
     }, selectorForTemporaryClass, temporaryClass);
     browser.pause(pauseTime);
-    var res = browser.checkElement(selectorForChecking);
+    var res = browser.checkElement(selectorForChecking, options);
     browser.execute(function(selectorForTemporaryClass, temporaryClass){
         $(selectorForTemporaryClass).removeClass(temporaryClass);
     }, selectorForTemporaryClass, temporaryClass);
     return res;
 }
 
-function checkElementWithMouseDisabled(selector, pauseTime) {
-    return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0);
+function checkElementWithMouseDisabled(selector, pauseTime, options) {
+    return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0, options);
 }
 
 function clickQueryByGeneButton(){
