@@ -297,15 +297,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     }
 
     @computed get width() {
-        let windowWidth;
-        if (isWebdriver()) {
-            // resize instantly for screenshot tests
-            windowWidth = WindowStore.sizeByMs._0.width;
-        } else {
-            // otherwise only resize every 500ms since its costly
-            windowWidth = WindowStore.sizeByMs._500.width;
-        }
-        return windowWidth - 25;
+        return WindowStore.size.width - 25;
     }
 
     public render() {
