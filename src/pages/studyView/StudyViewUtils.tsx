@@ -43,11 +43,13 @@ export type ChartType =
     | 'TABLE'
     | 'SCATTER'
     | 'MUTATED_GENES_TABLE'
+    | 'FUSION_GENES_TABLE'
     | 'CNA_GENES_TABLE'
     | 'NONE';
 
 export enum UniqueKey {
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
+    FUSION_GENES_TABLE = 'FUSION_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
     CUSTOM_SELECT = 'CUSTOM_SELECT',
     SELECTED_COMPARISON_GROUPS = 'SELECTED_COMPARISON_GROUPS',
@@ -58,6 +60,7 @@ export enum UniqueKey {
     MUTATION_COUNT = "SAMPLE_MUTATION_COUNT",
     FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
     WITH_MUTATION_DATA = "WITH_MUTATION_DATA",
+    WITH_FUSION_DATA = "WITH_FUSION_DATA",
     WITH_CNA_DATA = "WITH_CNA_DATA"
 }
 
@@ -124,7 +127,22 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [{
         },
         priority: 0,
         renderWhenDataChange: false
-    }, {
+    },
+    {
+        uniqueKey: UniqueKey.WITH_FUSION_DATA,
+        displayName: 'With Fusion Data',
+        description: 'With Fusion Data',
+        chartType: ChartTypeEnum.PIE_CHART,
+        dataType: ChartMetaDataTypeEnum.GENOMIC,
+        patientAttribute: false,
+        dimension: {
+            w: 1,
+            h: 1
+        },
+        priority: 0,
+        renderWhenDataChange: false
+    },
+    {
         uniqueKey: UniqueKey.WITH_CNA_DATA,
         displayName: 'With CNA Data',
         description: 'With CNA Data',
@@ -232,21 +250,49 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
 
 }
 
+function translateSpecialText(text: string | undefined): string {
+    if (!text) {
+        return "";
+    } else if (text === ">=") {
+        return "≥";
+    } else if (text === "<=") {
+        return "≤";
+    }
+
+    return text;
+}
+
+export function formatRange(min: number | undefined, max: number | undefined, special: string | undefined): string {
+    special = translateSpecialText(special);
+
+    if(min === undefined) {
+        if (max === undefined) {
+            return special;
+        } else {
+            return `${special}${max.toLocaleString()}`;
+        }
+    } else {
+        if (max === undefined) {
+            return `${special}${min.toLocaleString()}`;
+        } else if (min !== max) {
+            return `${special}${min.toLocaleString()}-${max.toLocaleString()}`;
+        } else {
+            return `${special}${min.toLocaleString()}`
+        }
+    }
+}
+
 function getBinStatsForTooltip(d:IStudyViewDensityScatterPlotDatum) {
-    let mutRange = "";
+    let mutRange = formatRange(d.minY, d.maxY, undefined);
     let fgaRange = "";
     if (d.maxX.toFixed(2) !== d.minX.toFixed(2)) {
         fgaRange = `${d.minX.toFixed(2)}-${d.maxX.toFixed(2)}`;
     } else {
         fgaRange = d.minX.toFixed(2);
     }
-    if (d.maxY !== d.minY) {
-        mutRange = `${d.minY.toLocaleString()}-${d.maxY.toLocaleString()}`;
-    } else {
-        mutRange = d.minY.toLocaleString();
-    }
     return {mutRange, fgaRange};
 }
+
 export function mutationCountVsCnaTooltip(d:IStudyViewDensityScatterPlotDatum) {
     const binStats = getBinStatsForTooltip(d);
     return (
@@ -257,49 +303,6 @@ export function mutationCountVsCnaTooltip(d:IStudyViewDensityScatterPlotDatum) {
         </div>
     );
 }
-/*export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
-    return (d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId" | "uniqueSampleKey">[] })=>{
-        const rows = [];
-        const MAX_SAMPLES = 3;
-        const borderStyle = {borderTop: "1px solid black"};
-        for (let i = 0; i < Math.min(MAX_SAMPLES, d.data.length); i++) {
-            const datum = d.data[i];
-            rows.push(
-                <tr key={`${datum.studyId}_${datum.sampleId}`} style={i > 0 ? borderStyle : {}}>
-                    <td style={{padding: 5}}>
-                        <span>Cancer Study: <a target="_blank" href={getStudySummaryUrl(datum.studyId)}>{datum.studyId}</a></span><br/>
-                        <span>Sample ID: <a target="_blank"
-                                            href={getSampleViewUrl(datum.studyId, datum.sampleId)}>{datum.sampleId}</a></span><br/>
-                        <span>CNA Fraction: {datum.x}</span><br/>
-                        <span>Mutation Count: {datum.y}</span>
-                        {!!analysisClinicalAttribute && !!sampleToAnalysisGroup && (
-                            <div>
-                                {analysisClinicalAttribute.displayName}: {sampleToAnalysisGroup[datum.uniqueSampleKey]}
-                            </div>
-                        )}
-                    </td>
-                </tr>
-            );
-        }
-        if (d.data.length > 1) {
-            rows.push(
-                <tr key="see all" style={borderStyle}>
-                    <td style={{padding: 5}}>
-                        <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
-                            all {d.data.length} patients in this region.</a>
-                    </td>
-                </tr>
-            );
-        }
-        return (
-            <div>
-                <table>
-                    {rows}
-                </table>
-            </div>
-        );
-    };
-}*/
 
 export function generateScatterPlotDownloadData(data: IStudyViewScatterPlotData[],
                                                 sampleToAnalysisGroup?: {[sampleKey:string]:string},
@@ -423,6 +426,14 @@ export function getVirtualStudyDescription(
                     }).join(', ').trim();
                 }).map(line => '  - ' + line));
             }
+            if (filter.fusionGenes && filter.fusionGenes.length > 0) {
+                filterLines.push('- Fusion Genes:')
+                filterLines = filterLines.concat(filter.fusionGenes.map(fusionGene => {
+                    return fusionGene.entrezGeneIds.map(entrezGeneId => {
+                        return entrezIdSet[entrezGeneId] || entrezGeneId;
+                    }).join(', ').trim();
+                }).map(line => '  - ' + line));
+            }
 
             if (filter.withMutationData !== undefined) {
                 filterLines.push(`With Mutation data: ${filter.withMutationData ? 'YES' : 'NO'}`);
@@ -465,6 +476,7 @@ export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFi
             _.isEmpty(filter.clinicalDataIntervalFilters) &&
             _.isEmpty(filter.cnaGenes) &&
             _.isEmpty(filter.mutatedGenes) &&
+            _.isEmpty(filter.fusionGenes) &&
             filter.withMutationData === undefined &&
             filter.withCNAData === undefined &&
             !filter.mutationCountVsCNASelection)
@@ -1108,13 +1120,22 @@ export function calculateLayout(
                 throw (new Error("cannot find matching unique key in the grid layout"));
             }
         } else {
-            const visibleAttributeMap = _.map(visibleAttributes, attribute => attribute.uniqueKey);
-            currentGridLayout.forEach(chartLayout => {
-                //add only visible charts
-                if (chartLayout.i && visibleAttributeMap.includes(chartLayout.i)) {
-                    layout.push(chartLayout);
-                    availableChartLayoutsMap[chartLayout.i] = true;
+            const chartOrderMap = _.keyBy(currentGridLayout, chartLayout => chartLayout.i);
+            // order charts based on x and y (first order by y, if y is same for both then order by x)
+            // push all undefined charts to last
+            visibleAttributes.sort((a, b) => {
+                const chart1 = chartOrderMap[a.uniqueKey];
+                const chart2 = chartOrderMap[b.uniqueKey];
+                if (chart1 || chart2) {
+                    if (!chart2) {
+                        return -1;
+                    }
+                    if (!chart1) {
+                        return 1;
+                    }
+                    return (chart1.y === chart2.y ? chart1.x - chart2.x : chart1.y - chart2.y);
                 }
+                return 0;
             });
         }
     }
@@ -1588,6 +1609,7 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
     chartTypeSet: { [uniqueId: string]: ChartType },
     customChartSet: { [uniqueId: string]: CustomChart },
     filterMutatedGenesTableByCancerGenes: boolean = true,
+    filterFusionGenesTableByCancerGenes: boolean = true,
     filterCNAGenesTableByCancerGenes: boolean = true,
     gridLayout?: ReactGridLayout.Layout[]) {
 
@@ -1606,6 +1628,8 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
         }
         if (chartType === UniqueKey.MUTATED_GENES_TABLE) {
             chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
+        } else if (chartType === UniqueKey.FUSION_GENES_TABLE) {
+            chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterFusionGenesTableByCancerGenes;
         } else if (chartType === UniqueKey.CNA_GENES_TABLE) {
             chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterCNAGenesTableByCancerGenes;
         }
