@@ -45,6 +45,7 @@ interface QueryContainerProps {
     onSubmit?: () => void;
     forkedMode?:boolean;
     modifyQueryParams?: ModifyQueryParams | undefined;
+    showAlerts?: boolean;
 }
 
 @providesStoreContext(QueryStore)
@@ -161,6 +162,13 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
             <FlexCol padded overflow className={
                 classNames('small', styles.QueryContainer, { forkedMode:this.props.forkedMode })
             }>
+                {
+                    (this.props.showAlerts && this.store.genes.isComplete && this.store.genes.result.suggestions.length > 0) && (
+                        <div className="alert alert-danger" data-test='invalidQueryAlert' style={{marginBottom: 0}}><i className={"fa fa-exclamation-triangle"}/> Your query has
+                            invalid or out-dated gene symbols. Please correct below.</div>
+                    )
+                }
+
                 {
                     this.store.unknownStudyIds.isComplete &&
                     <UnknownStudiesWarning ids={this.store.unknownStudyIds.result}/>
