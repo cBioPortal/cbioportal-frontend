@@ -1,5 +1,5 @@
 import * as $ from "jquery";
-import {IGeneticAlterationRuleSetParams, RuleSetParams} from "oncoprintjs";
+import {IGeneticAlterationRuleSetParams, RuleSetParams, RuleSetType} from "oncoprintjs";
 import {
 	CNA_COLOR_AMP,
 	CNA_COLOR_GAIN,
@@ -210,14 +210,14 @@ export const germline_rule_params = {
 };
 
 const base_genetic_rule_set_params = {
-	type: 'gene',
+	type: RuleSetType.GENE as RuleSetType.GENE,
 	legend_label: 'Genetic Alteration',
 	na_legend_label: 'Not profiled',
 	legend_base_color: DEFAULT_GREY
 };
 
 export const genetic_rule_set_same_color_for_all_no_recurrence:IGeneticAlterationRuleSetParams =
-	$.extend({}, base_genetic_rule_set_params, {
+	Object.assign({}, base_genetic_rule_set_params, {
 		'rule_params': $.extend({}, non_mutation_rule_params, {
 			'disp_mut': {
 				'trunc,inframe,missense,promoter,other,trunc_rec,inframe_rec,missense_rec,promoter_rec,other_rec': {
