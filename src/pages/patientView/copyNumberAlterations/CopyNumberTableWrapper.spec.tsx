@@ -30,9 +30,9 @@ describe("CopyNumberTableWrapper", ()=>{
         assert(!hasColumn(getTable(["sampleA", "sampleB"], "id"), "mRNA Expr."), "Doesn't have with 2 samples and id");
     });
 
-    it("shows tumors column iff theres more than one sample", ()=>{
-        assert(!hasColumn(getTable(["sampleA"]), "Tumors"), "Doesnt have with one sample");
-        assert(!hasColumn(getTable(["sampleA"]), "Tumors"), "Doesnt have with zero samples");
-        assert(hasColumn(getTable(["sampleA", "sampleB"]), "Tumors"), "Has with two samples");
+    it("shows samples column iff theres more than one sample", ()=>{
+        assert(!hasColumn(getTable(["sampleA"]), "Samples"), "Doesnt have with one sample");
+        assert(!hasColumn(getTable(["sampleA"]), "Samples"), "Doesnt have with zero samples");
+        assert(hasColumn(getTable(["sampleA", "sampleB"]), "Samples"), "Has with two samples");
     });
 });
