@@ -170,6 +170,19 @@ function reactSelectOption(parent, optionText, loose = false) {
     return parent.$('.Select-option='+optionText);
 }
 
+function selectCheckedOption(parent, optionText, loose = false) {
+    parent.$('.default-checked-select').click();
+    if (loose) {
+        return  parent.$('.checked-select-option*='+optionText);
+    }
+    return parent.$('.checked-select-option='+optionText);
+}
+
+function getSelectCheckedOptions(parent) {
+    parent.$('.default-checked-select').click();
+    return parent.$$('.checked-select-option');
+}
+
 function pasteToElement(elementSelector, text){
 
     clipboardy.writeSync(text);
@@ -245,5 +258,7 @@ module.exports = {
     selectReactSelectOption: selectReactSelectOption,
     reactSelectOption: reactSelectOption,
     getReactSelectOptions: getReactSelectOptions,
-    COEXPRESSION_TIMEOUT: 120000
+    COEXPRESSION_TIMEOUT: 120000,
+    getSelectCheckedOptions: getSelectCheckedOptions,
+    selectCheckedOption: selectCheckedOption
 };

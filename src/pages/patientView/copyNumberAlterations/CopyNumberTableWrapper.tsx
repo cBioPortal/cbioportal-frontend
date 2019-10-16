@@ -77,7 +77,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
 
         if (numSamples >= 2) {
             columns.push({
-                name: "Tumors",
+                name: "Samples",
                 render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
                 sortBy:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
                 download: (d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSample(d),
