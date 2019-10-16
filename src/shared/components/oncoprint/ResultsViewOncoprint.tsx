@@ -41,7 +41,7 @@ import AlterationFilterWarning from "../banners/AlterationFilterWarning";
 import { selectDisplayValue } from "./DataUtils";
 import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import WindowStore from "../window/WindowStore";
-import {isWebdriver} from "../../lib/tracking";
+import {isWebdriver} from "../../../public-lib/lib/webdriverUtils";
 
 interface IResultsViewOncoprintProps {
     divId: string;
