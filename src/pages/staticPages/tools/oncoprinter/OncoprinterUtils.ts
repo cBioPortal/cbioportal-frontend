@@ -106,7 +106,10 @@ export function getSampleIds(oncoprinterInput:OncoprinterInputLine[]):string[] {
 }
 
 export function getGeneSymbols(oncoprinterInput:OncoprinterInputLine[]):string[] {
-    return (_.chain(oncoprinterInput).filter(o=>isType2(o)) as any).map((o:OncoprinterInputLineType2)=>o.hugoGeneSymbol).value();
+    return (_.chain(oncoprinterInput).filter(o=>isType2(o)) as any)
+        .map((o:OncoprinterInputLineType2)=>o.hugoGeneSymbol)
+        .uniq()
+        .value();
 }
 
 export async function fetchOncoKbDataForMutations(annotatedGenes:{[entrezGeneId:number]:boolean}|Error,
