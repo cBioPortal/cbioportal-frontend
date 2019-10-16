@@ -18,7 +18,7 @@ import OncoprinterStore from "./OncoprinterStore";
 import autobind from "autobind-decorator";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
 import WindowStore from "../../../../shared/components/window/WindowStore";
-import {isWebdriver} from "../../../../shared/lib/tracking";
+import {isWebdriver} from "../../../../public-lib/lib/webdriverUtils";
 
 interface IOncoprinterProps {
     divId: string;

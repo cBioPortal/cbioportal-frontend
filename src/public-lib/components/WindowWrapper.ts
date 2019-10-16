@@ -1,7 +1,7 @@
 import autobind from "autobind-decorator";
 import _ from 'lodash';
 import {action, observable} from 'mobx';
-import {isWebdriver} from "../../shared/lib/tracking";
+import {isWebdriver} from "../lib/webdriverUtils";
 
 export interface WindowSize {
     width: number,
