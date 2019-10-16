@@ -6,6 +6,7 @@ var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
 var reactSelectOption =  require('../../shared/specUtils').reactSelectOption;
 var selectReactSelectOption =  require('../../shared/specUtils').selectReactSelectOption;
 var getSelectCheckedOptions =  require('../../shared/specUtils').getSelectCheckedOptions;
+var selectCheckedOption =  require('../../shared/specUtils').selectCheckedOption;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 const oncoprintTabUrl = CBIOPORTAL_URL+'/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_all&clinicallist=NUM_SAMPLES_PER_PATIENT%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize';
@@ -113,7 +114,7 @@ describe('treatment feature', function() {
                 openHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 assert($('div.icon*=17-AAG').isExisting());
-                var selectMenuEntry = reactSelectOption($('.oncoprint__controls__heatmap_menu .treatment-selector'), 'Name of 17-AAG', true);
+                var selectMenuEntry = selectCheckedOption($('.oncoprint__controls__heatmap_menu .treatment-selector'), 'Name of 17-AAG', true);
                 assert(selectMenuEntry.getAttribute('class').includes('is-selected'));
             });
 
