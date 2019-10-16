@@ -68,7 +68,7 @@ describe("Oncoprint DeltaUtils", ()=>{
                     expansionCallback: expansionCallback
                 }]
             };
-            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
             (oncoprint.addTracks as SinonStub).returns([1]);
             const trackIdsByKey = {};
             // when instructed to render the track from scratch
@@ -119,7 +119,7 @@ describe("Oncoprint DeltaUtils", ()=>{
                     ]
                 }]
             };
-            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
             (oncoprint.addTracks as SinonStub).returns([1]);
             const trackIdsByKey = {'GENETICTRACK_0': 5};
             // when instructed to render the track from scratch
@@ -249,7 +249,7 @@ describe("Oncoprint DeltaUtils", ()=>{
                     ]
                 }]
             };
-            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
             (oncoprint.addTracks as SinonStub).returns([27]);
             const trackIdsByKey: {[trackKey: string]: number} = {
                 'GENETICTRACK_0': 5
@@ -297,7 +297,7 @@ describe("Oncoprint DeltaUtils", ()=>{
                     labelColor: 'fuchsia'
                 }]
             };
-            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
             (oncoprint.addTracks as SinonStub).returns([1]);
             const trackIdsByKey = {};
             // when instructed to render the track from scratch
@@ -332,7 +332,7 @@ describe("Oncoprint DeltaUtils", ()=>{
                     labelColor: 'olive'
                 }]
             };
-            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
             (oncoprint.addTracks as SinonStub).returns([1]);
             const trackIdsByKey = {};
             // when instructed to render the track from scratch
@@ -559,7 +559,7 @@ describe("Oncoprint DeltaUtils", ()=>{
         const nextProps: IOncoprintProps = makeMinimalOncoprintProps();
         const prevProps: IOncoprintProps = makeMinimalOncoprintProps();
         
-        const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+        const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
 
         beforeEach(function () {
             (oncoprint.shareRuleSet as SinonStub).resetHistory();
@@ -643,7 +643,7 @@ describe("Oncoprint DeltaUtils", ()=>{
         const nextProps: IOncoprintProps = makeMinimalOncoprintProps();
         const prevProps: IOncoprintProps = makeMinimalOncoprintProps();
         
-        const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+        const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
 
         beforeEach(function () {
             (oncoprint.shareRuleSet as SinonStub).resetHistory();

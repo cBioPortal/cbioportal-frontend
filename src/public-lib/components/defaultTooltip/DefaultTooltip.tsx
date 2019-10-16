@@ -39,9 +39,9 @@ function setArrowLeft(tooltipEl:Element, align:any) {
 
     if (arrowEl && align && align.points && align.points[1] && align.points[1][1] === "c") {
         // if aligning to the horizontal center, set arrow left to the horizontal center of the target
-        const offset = $(targetEl).offset();
-        const width = $(targetEl).width();
-        const tooltipOffset = $(tooltipEl).offset();
+        const offset = $(targetEl).offset()!;
+        const width = $(targetEl).width()!;
+        const tooltipOffset = $(tooltipEl).offset()!;
         const arrowLeftOffset = offset.left - tooltipOffset.left;
 
         arrowEl.style.left = `${arrowLeftOffset + width/2}px`;

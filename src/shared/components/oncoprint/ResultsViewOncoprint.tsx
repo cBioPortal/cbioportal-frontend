@@ -40,6 +40,8 @@ import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
 import { selectDisplayValue } from "./DataUtils";
 import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
+import WindowStore from "../window/WindowStore";
+import {isWebdriver} from "../../../public-lib/lib/webdriverUtils";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -134,7 +136,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     public controlsHandlers:IOncoprintControlsHandlers;
     private controlsState:IOncoprintControlsState & IObservableObject;
 
-    @observable.ref private oncoprint:OncoprintJS<any>;
+    @observable.ref private oncoprint:OncoprintJS;
 
     private urlParamsReaction:IReactionDisposer;
 
@@ -739,7 +741,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    private oncoprintRef(oncoprint:OncoprintJS<any>) {
+    private oncoprintRef(oncoprint:OncoprintJS) {
         this.oncoprint = oncoprint;
         if (this.props.addOnBecomeVisibleListener) {
             this.props.addOnBecomeVisibleListener(
@@ -1071,6 +1073,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return ret as IProgressIndicatorItem[];
     }
 
+    @computed get width() {
+        return WindowStore.size.width - 25;
+    }
+
     public render() {
         return (
             <div style={{ position:"relative" }}>
@@ -1103,7 +1109,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 genesetHeatmapTracks={this.genesetHeatmapTracks.result}
                                 heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this. heatmapTracks.result)}
                                 divId={this.props.divId}
-                                width={900}
+                                width={this.width}
                                 caseLinkOutInTooltips={true}
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
