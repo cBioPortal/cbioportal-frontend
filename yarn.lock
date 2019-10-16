@@ -1050,10 +1050,12 @@
   dependencies:
     "@types/sizzle" "*"
 
-"@types/jquery@2.0.46":
-  version "2.0.46"
-  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-2.0.46.tgz#c245426299b43c4bb75f44b813090bd5918d00f2"
-  integrity sha512-U64bkZqTfFi4HXHqOckD1Uxvg+oPooCjD5bQ10t9xOG5Ke6cR8tFnvERXrQtrRWvgS428nhAL1V8qv1b88kgyQ==
+"@types/jquery@^3.3.31":
+  version "3.3.31"
+  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-3.3.31.tgz#27c706e4bf488474e1cb54a71d8303f37c93451b"
+  integrity sha512-Lz4BAJihoFw5nRzKvg4nawXPzutkv7wmfQ5121avptaSIXlDNJCUuxZxX/G+9EVidZGuO0UBlk+YjKbwRKJigg==
+  dependencies:
+    "@types/sizzle" "*"
 
 "@types/js-combinatorics@0.5.29":
   version "0.5.29"
@@ -6045,7 +6047,7 @@ exports-loader@^0.6.3:
     loader-utils "^1.0.2"
     source-map "0.5.x"
 
-express@^4.15.3, express@^4.16.4:
+express@^4.16.4:
   version "4.16.4"
   resolved "https://registry.yarnpkg.com/express/-/express-4.16.4.tgz#fddef61926109e24c515ea97fd2f1bdbf62df12e"
   integrity sha512-j12Uuyb4FMrd/qQAm6uCHAkPtO8FDTRJZBDd5D2KOL2eLaz1yUNdUB/NOIyq0iU4q4cFarsUCrnFDPBcnksuOg==
@@ -9328,6 +9330,11 @@ lodash@^4.0.0, lodash@^4.15.0, lodash@^4.16.2, lodash@^4.17.10, lodash@^4.17.11,
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
   integrity sha512-cQKh8igo5QUhZ7lg38DYWAxMvjSAKG0A8wGSVimP07SIUEK2UO+arSRKbRZWtelMtN5V0Hkwh5ryOto/SshYIg==
 
+lodash@^4.17.15:
+  version "4.17.15"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
+  integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
+
 log-symbols@^2.1.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/log-symbols/-/log-symbols-2.2.0.tgz#5740e1c5d6f0dfda4ad9323b5332107ef6b4c40a"
@@ -10708,17 +10715,16 @@ oncokb-styles@~0.1.0:
   resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-0.1.0.tgz#3a67a03dbdf6ebdde497c77451fef167afe00c4f"
   integrity sha512-4vhF2Q5hAbOyKWlstA/AItd33cnXbp/Z1Zluxnlc7u0Dz6GnqnrZFK/upUleT4CTES6k5+QWT4Zv95+l5FL0hg==
 
-oncoprintjs@2.0.7:
-  version "2.0.7"
-  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-2.0.7.tgz#b0d20501f9441185c998408fa4aaeec7d38d20fe"
-  integrity sha512-TvPnFGUd//G5S1CIxjBbzWgR4/sp8G6LZLM0YugD93E6vfifLGtQs7vrpIBssPNQUz0nOw4POejC7cs1Ah8hPw==
+oncoprintjs@3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-3.0.0.tgz#7a900ac352f22a39f2b04c435638799c28273622"
+  integrity sha512-dWKcwMONPU85jay46snVU1k96BpuvtEGgd9HC1KiIyltzTHx7h3nw3ae4xd6yEj+dsoDtEmIMKDit7D9syEX5A==
   dependencies:
-    express "^4.15.3"
     gl-matrix "2.3.2"
     jquery "^3.0.0"
     jstat "^1.7.1"
+    lodash "^4.17.15"
     tayden-clusterfck "^0.7.0"
-    underscore "^1.7.0"
 
 opener@~1.4.0:
   version "1.4.3"
@@ -15427,7 +15433,7 @@ underscore@1.6.x:
   resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.6.0.tgz#8b38b10cacdef63337b8b24e4ff86d45aea529a8"
   integrity sha1-izixDKze9jM3uLJOT/htRa6lKag=
 
-underscore@^1.7.0, underscore@^1.8.3:
+underscore@^1.8.3:
   version "1.9.1"
   resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.9.1.tgz#06dce34a0e68a7babc29b365b8e74b8925203961"
   integrity sha512-5/4etnCkd9c8gwgowi5/om/mYO5ajCaOgdzj/oW+0eQV9WxKBDZw5+ycmKmeaTXjInS/W0BzpGLo2xR2aBwZdg==
