@@ -1352,6 +1352,17 @@ export default class OncoprintControls extends React.Component<
                         Show whitespace between columns
                     </label>
                 </div>
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            value={EVENT_KEY.showClinicalTrackLegends}
+                            checked={this.props.state.showClinicalTrackLegends}
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Show legends for clinical tracks
+                    </label>
+                </div>
             </CustomDropdown>
         );
     }

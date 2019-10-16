@@ -19,6 +19,7 @@ import autobind from "autobind-decorator";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
 import WindowStore from "../../../../shared/components/window/WindowStore";
 import {isWebdriver} from "../../../../public-lib/lib/webdriverUtils";
+import {getGeneticTrackKey} from "./OncoprinterGeneticUtils";
 
 interface IOncoprinterProps {
     divId: string;
@@ -33,6 +34,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     @observable sortByDrivers:boolean = true;
 
     @observable showWhitespaceBetweenColumns:boolean = true;
+    @observable showClinicalTrackLegends:boolean = true;
 
     @observable showMinimap:boolean = false;
 
@@ -62,6 +64,9 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             },
             get showWhitespaceBetweenColumns() {
                 return self.showWhitespaceBetweenColumns;
+            },
+            get showClinicalTrackLegends() {
+                return self.showClinicalTrackLegends;
             },
             get showMinimap() {
                 return self.showMinimap;
@@ -138,6 +143,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
         return {
             onSelectShowUnalteredColumns:(show:boolean)=>{this.props.store.showUnalteredColumns = show;},
             onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
+            onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show;},
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
             onSelectDistinguishDrivers:action((s:boolean)=>{
@@ -229,6 +235,11 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     private oncoprintRef(oncoprint:OncoprintJS) {
         this.oncoprint = oncoprint;
 
+        onMobxPromise(this.props.store.alteredSampleIds,
+            (alteredUids:string[])=>{
+                this.oncoprint.setHorzZoomToFit(alteredUids);
+            });
+
         this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
     }
@@ -297,7 +308,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     }
 
     @computed get width() {
-        return WindowStore.size.width - 25;
+        return WindowStore.size.width - 75;
     }
 
     public render() {
@@ -315,10 +326,11 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                         <div id="oncoprintDiv">
                             {this.alterationInfo}
                             <Oncoprint
+                                key={this.props.store.submitCount}
                                 oncoprintRef={this.oncoprintRef}
-                                clinicalTracks={[]}
+                                clinicalTracks={this.props.store.clinicalTracks}
                                 geneticTracks={this.props.store.geneticTracks.result}
-                                geneticTracksOrder={this.props.store.geneOrder}
+                                geneticTracksOrder={this.props.store.geneOrder && this.props.store.geneOrder.map(getGeneticTrackKey)}
                                 genesetHeatmapTracks={[]}
                                 heatmapTracks={[]}
                                 divId={this.props.divId}
@@ -328,6 +340,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                                 onSuppressRendering={this.onSuppressRendering}
                                 onReleaseRendering={this.onReleaseRendering}
                                 hiddenIds={this.props.store.hiddenSampleIds.result}
+                                showClinicalTrackLegends={this.showClinicalTrackLegends}
 
                                 horzZoomToFitIds={this.props.store.alteredSampleIds.result}
                                 distinguishMutationType={this.distinguishMutationType}
