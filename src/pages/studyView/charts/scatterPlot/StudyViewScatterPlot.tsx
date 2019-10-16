@@ -91,8 +91,8 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
     }
 
     componentWillUnmount() {
-        $(document).off("keydown",this.onKeyDown);
-        $(document).off("keyup", this.onKeyUp);
+        $(document).off("keydown" as any,this.onKeyDown as any);
+        $(document).off("keyup" as any, this.onKeyUp as any);
     }
 
     public toSVGDOMNode(): Element {
