@@ -12,7 +12,6 @@ import * as React from "react";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 import ComplexKeyCounter from "../../shared/lib/complexKeyDataStructures/ComplexKeyCounter";
-import {GeneIdentifier} from "../studyView/StudyViewPageStore";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import GroupComparisonStore from "./GroupComparisonStore";
 import {MakeMobxView, MobxViewAlwaysComponent} from "../../shared/components/MobxView";
@@ -390,8 +389,7 @@ export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups:number) {
 
 export function getDefaultGroupName(
     filters:StudyViewFilter,
-    customChartFilterSet:{[chartId:string]:string[]},
-    entrezGeneIdToGene:{[entrez:number]:GeneIdentifier}
+    customChartFilterSet:{[chartId:string]:string[]}
 ) {
     const equalityFilters = _.sortBy( // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
         filters.clinicalDataEqualityFilters || [],
@@ -404,13 +402,13 @@ export function getDefaultGroupName(
             .value();
 
     const mutatedGenes =
-        _.flattenDeep<number>((filters.mutatedGenes || []).map(filter=>filter.entrezGeneIds))
-            .map(entrezGeneId=>`${entrezGeneIdToGene[entrezGeneId].hugoGeneSymbol} mutant`);
+        _.flattenDeep<string>((filters.mutatedGenes || []).map(filter=>filter.hugoGeneSymbols))
+            .map(hugoGeneSymbol=>`${hugoGeneSymbol} mutant`);
 
     const cnaGenes =
         _.flattenDeep<CopyNumberGeneFilterElement>((filters.cnaGenes || []).map(filter=>filter.alterations))
             .map(filterElt=>{
-                return `${entrezGeneIdToGene[filterElt.entrezGeneId].hugoGeneSymbol} ${filterElt.alteration === 2 ? "amp" : "del"}`;
+                return `${filterElt.hugoGeneSymbol} ${filterElt.alteration === 2 ? "amp" : "del"}`;
             });
 
     const withData:string[] = [];

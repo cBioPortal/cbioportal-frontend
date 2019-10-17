@@ -1,5 +1,5 @@
 import * as React from "react";
-import {GeneIdentifier, MutatedGenesData, MutationCountByGeneWithCancerGene} from "pages/studyView/StudyViewPageStore";
+import {MutationCountByGeneWithCancerGene} from "pages/studyView/StudyViewPageStore";
 import { observer } from "mobx-react";
 import styles from "./tables.module.scss";
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
@@ -31,8 +31,8 @@ export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutationCountByGeneWithCancerGene[]>;
     width: number;
     height: number;
-    filters: number[];
-    onUserSelection: (value: GeneIdentifier[]) => void;
+    filters: string[];
+    onUserSelection: (hugoGeneSymbols: string[]) => void;
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
@@ -43,7 +43,6 @@ export interface IMutatedGenesTablePros {
 }
 
 type MutatedGenesTableUserSelectionWithIndex = {
-    entrezGeneId: number;
     hugoGeneSymbol: string;
     rowIndex: number;
 };
@@ -209,9 +208,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 },
                 render: (data: MutationCountByGeneWithCancerGene) => (
                     <LabeledCheckbox
-                        checked={this.isChecked(data.entrezGeneId)}
-                        disabled={this.isDisabled(data.entrezGeneId)}
-                        onChange={event => this.togglePreSelectRow(data.entrezGeneId)}
+                        checked={this.isChecked(data.hugoGeneSymbol)}
+                        disabled={this.isDisabled(data.hugoGeneSymbol)}
+                        onChange={event => this.togglePreSelectRow(data.hugoGeneSymbol)}
                         labelProps={{
                             style: {
                                 display: "flex",
@@ -257,10 +256,10 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     }
 
     @autobind
-    isChecked(entrezGeneId: number) {
+    isChecked(hugoGeneSymbol: string) {
         const record = _.find(
             this.preSelectedRows,
-            (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId
+            (row: MutatedGenesTableUserSelectionWithIndex) => row.hugoGeneSymbol === hugoGeneSymbol
         );
         if (_.isUndefined(record)) {
             return (
@@ -269,7 +268,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                     _.find(
                         this.selectedRows,
                         (row: MutatedGenesTableUserSelectionWithIndex) =>
-                            row.entrezGeneId === entrezGeneId
+                            row.hugoGeneSymbol === hugoGeneSymbol
                     )
                 )
             );
@@ -279,20 +278,20 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     }
 
     @autobind
-    isDisabled(entrezGeneId: number) {
+    isDisabled(hugoGeneSymbol: string) {
         return !_.isUndefined(
             _.find(
                 this.selectedRows,
-                (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId
+                (row: MutatedGenesTableUserSelectionWithIndex) => row.hugoGeneSymbol === hugoGeneSymbol
             )
         );
     }
 
     @autobind
-    togglePreSelectRow(entrezGeneId: number) {
+    togglePreSelectRow(hugoGeneSymbol: string) {
         const record: MutatedGenesTableUserSelectionWithIndex | undefined = _.find(
             this.preSelectedRows,
-            (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId
+            (row: MutatedGenesTableUserSelectionWithIndex) => row.hugoGeneSymbol === hugoGeneSymbol
         );
         if (_.isUndefined(record)) {
             let dataIndex = -1;
@@ -300,7 +299,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             const datum: MutationCountByGeneWithCancerGene | undefined = _.find(
                 this.tableData,
                 (row: MutationCountByGeneWithCancerGene, index: number) => {
-                    const exist = row.entrezGeneId === entrezGeneId;
+                    const exist = row.hugoGeneSymbol === hugoGeneSymbol;
                     if (exist) {
                         dataIndex = index;
                     }
@@ -311,7 +310,6 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             if (!_.isUndefined(datum)) {
                 this.preSelectedRows.push({
                     rowIndex: dataIndex,
-                    entrezGeneId: datum.entrezGeneId,
                     hugoGeneSymbol: datum.hugoGeneSymbol
                 });
             }
@@ -323,14 +321,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     @autobind
     @action
     afterSelectingRows() {
-        this.props.onUserSelection(
-            this.preSelectedRows.map(row => {
-                return {
-                    entrezGeneId: row.entrezGeneId,
-                    hugoGeneSymbol: row.hugoGeneSymbol
-                };
-            })
-        );
+        this.props.onUserSelection(this.preSelectedRows.map(row => row.hugoGeneSymbol));
         this.preSelectedRows = [];
     }
 
@@ -346,10 +337,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                     row: MutationCountByGeneWithCancerGene,
                     index: number
                 ) => {
-                    if (_.includes(this.props.filters, row.entrezGeneId)) {
+                    if (_.includes(this.props.filters, row.hugoGeneSymbol)) {
                         acc.push({
                             rowIndex: index,
-                            entrezGeneId: row.entrezGeneId,
                             hugoGeneSymbol: row.hugoGeneSymbol
                         });
                     }
@@ -364,7 +354,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     isSelectedRow(data: MutationCountByGeneWithCancerGene) {
         return !_.isUndefined(
             _.find(_.union(this.selectedRows, this.preSelectedRows), function(row) {
-                return row.entrezGeneId === data.entrezGeneId;
+                return row.hugoGeneSymbol === data.hugoGeneSymbol;
             })
         );
     }

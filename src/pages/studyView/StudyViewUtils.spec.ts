@@ -131,8 +131,7 @@ describe('StudyViewUtils', () => {
                     '',
                     studies as any,
                     {} as any,
-                    {} as any,
-                    []
+                    {} as any
                 ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)'));
         });
         it('when filters are applied', () => {
@@ -151,8 +150,8 @@ describe('StudyViewUtils', () => {
                         'value': `10`
                     }]
                 }],
-                mutatedGenes: [{ "entrezGeneIds": [1] }],
-                cnaGenes: [{ "alterations": [{ "entrezGeneId": 2, "alteration": -2 }] }],
+                mutatedGenes: [{ "hugoGeneSymbols": ["GENE1"] }],
+                cnaGenes: [{ "alterations": [{ "hugoGeneSymbol": "GENE2", "alteration": -2 }] }],
                 studyIds: ['study1', 'study2'],
                 sampleIdentifiers: [],
                 sampleIdentifiersSet: {
@@ -172,8 +171,6 @@ describe('StudyViewUtils', () => {
                 withMutationData: false
             } as StudyViewFilterWithSampleIdentifierFilters;
 
-            let genes = [{ entrezGeneId: 1, hugoGeneSymbol: "GENE1" }, { entrezGeneId: 2, hugoGeneSymbol: "GENE2" }] as Gene[];
-
             assert.isTrue(
                 getVirtualStudyDescription(
                     '',
@@ -183,8 +180,7 @@ describe('StudyViewUtils', () => {
                         'SAMPLE_attribute1': 'attribute1 name',
                         'PATIENT_attribute2': 'attribute2 name',
                         'SAMPLE_attribute3': 'attribute3 name'
-                    },
-                    genes
+                    }
                 ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n' +
                 '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n' +
                 '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'));                   
@@ -196,7 +192,6 @@ describe('StudyViewUtils', () => {
                     studies as any,
                     {} as any,
                     {} as any,
-                    [],
                     'user1'
                 ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)'));
             assert.isTrue(
@@ -205,7 +200,6 @@ describe('StudyViewUtils', () => {
                     studies as any,
                     {} as any,
                     {} as any,
-                    [],
                     'user1'
                 ).endsWith('by user1'));
         });
@@ -218,11 +212,6 @@ describe('StudyViewUtils', () => {
                 }]
             } as StudyViewFilterWithSampleIdentifierFilters;
 
-            let genes = [{entrezGeneId: 1, hugoGeneSymbol: "GENE1"}, {
-                entrezGeneId: 2,
-                hugoGeneSymbol: "GENE2"
-            }] as Gene[];
-
             assert.isTrue(
                 getVirtualStudyDescription(
                     'test\nCreated on ...',
@@ -233,7 +222,6 @@ describe('StudyViewUtils', () => {
                         'PATIENT_attribute2': 'attribute2 name',
                         'SAMPLE_attribute3': 'attribute3 name'
                     },
-                    genes
                 ).startsWith('test\n\nCreated on'));
         });
     });
