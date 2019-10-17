@@ -31,7 +31,7 @@ describe('results page expression tab', ()=>{
 
         var studyCheckboxes = browser.elements('[data-test="ExpressionStudyModal"] input[type=checkbox]').value;
 
-        assert.equal(studyCheckboxes.length, 3, 'all studies are selected');
+        assert.equal(studyCheckboxes.length, 2, 'all studies are selected');
 
         assert.equal(getSelectedStudies(studyCheckboxes).length, 2, 'all studies with data selected by default');
 

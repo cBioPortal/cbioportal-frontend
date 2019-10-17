@@ -18,7 +18,7 @@ function getTable(samples:string[], mrnaId?:string, cnaId?:string):ReactWrapper<
         discreteCNAMolecularProfileId={cnaId}
         columns={[MutationTableColumnType.GENE,
                     MutationTableColumnType.MRNA_EXPR,
-                    MutationTableColumnType.TUMORS,
+                    MutationTableColumnType.SAMPLES,
                     MutationTableColumnType.COPY_NUM]}
         data={[]}
         />);
@@ -47,13 +47,13 @@ describe("PatientViewMutationTable", ()=>{
         assert.isFalse(hasColumn(getTable(["sampleA","sampleB"], undefined, "cnaId"), "Copy #"));
     });
 
-    it("hides the tumors column if theres less than two samples", ()=>{
-        assert(!hasColumn(getTable([]), "Tumors"), "Hides with no samples (this shouldnt happen though)");
-        assert(!hasColumn(getTable(["sampleA"]), "Tumors"), "Hides with one sample");
+    it("hides the samples column if theres less than two samples", ()=>{
+        assert(!hasColumn(getTable([]), "Samples"), "Hides with no samples (this shouldnt happen though)");
+        assert(!hasColumn(getTable(["sampleA"]), "Samples"), "Hides with one sample");
     });
 
-    it("shows the tumors column if theres more than one sample", ()=>{
-        assert(hasColumn(getTable(["sampleA", "sampleB"]), "Tumors"));
+    it("shows the samples column if theres more than one sample", ()=>{
+        assert(hasColumn(getTable(["sampleA", "sampleB"]), "Samples"));
     });
 
     it("hides the copy number column if theres no discrete cna profile", ()=>{
