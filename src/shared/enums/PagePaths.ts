@@ -1,3 +1,3 @@
 export enum PagePath {
-    Patient = "patient",
+    Patient = 'patient',
 }
