@@ -29,7 +29,7 @@ export interface IResultsViewPageProps {
     routing: any;
 }
 
-export function createQueryStore(currentQuery?:any) {
+export function createQueryStore(currentQuery?:any, clear:boolean = true) {
 
     const win:any = window;
 
@@ -41,7 +41,7 @@ export function createQueryStore(currentQuery?:any) {
         query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
         delete query.cancer_study_id;
 
-        win.routingStore.updateRoute(query, "results", true);
+        win.routingStore.updateRoute(query, "results", clear);
 
     };
 

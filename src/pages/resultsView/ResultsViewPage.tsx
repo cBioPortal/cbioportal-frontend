@@ -577,7 +577,7 @@ export default class ResultsViewPage extends React.Component<
                         showDownloadTab={false}
                         showAlerts={true}
                         getQueryStore={() =>
-                            createQueryStore(this.props.routing.query)
+                            createQueryStore(this.props.routing.query, false)
                         }
                     />
                 </div>
