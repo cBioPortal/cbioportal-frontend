@@ -18,7 +18,7 @@ export default class EllipsisTextTooltip extends React.Component<{ text:any; sty
     @action
     onVisibleChange(isVisible:boolean){
         // if shownWidth exist, using the shownWidth
-        let shownWidth =  $(this.el).innerWidth();
+        let shownWidth =  $(this.el).innerWidth()!;
         let actualWidth = this.el.scrollWidth;
         
         const isOverflowed = (actualWidth - shownWidth) > 1;

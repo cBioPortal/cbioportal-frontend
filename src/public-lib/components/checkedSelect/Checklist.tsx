@@ -10,6 +10,9 @@ type ChecklistProps = {
     onChange: (values: {value: string}[]) => void;
     value: {value: string}[];
     options: Option[];
+    getOptionLabel?: (option: Option,
+                      selectedValues: {[optionValue: string]: any},
+                      checkBoxType?: CheckBoxType) => JSX.Element;
     checkBoxType?: CheckBoxType;
     isDisabled?: boolean;
     numberOfColumnsPerRow?: number;
@@ -49,7 +52,9 @@ export default class Checklist extends React.Component<ChecklistProps, {}>
     @autobind
     private getOptionLabel(option: Option): JSX.Element
     {
-        return getOptionLabel(option, this.selectedValues, this.props.checkBoxType);
+        return this.props.getOptionLabel ?
+            this.props.getOptionLabel(option, this.selectedValues, this.props.checkBoxType):
+            getOptionLabel(option, this.selectedValues, this.props.checkBoxType);
     }
 
     @autobind

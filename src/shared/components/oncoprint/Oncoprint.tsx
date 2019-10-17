@@ -146,7 +146,7 @@ export const GENETIC_TRACK_GROUP_INDEX = 1;
 export const CLINICAL_TRACK_GROUP_INDEX = 0;
 
 export interface IOncoprintProps {
-    oncoprintRef?:(oncoprint:OncoprintJS<any>)=>void;
+    oncoprintRef?:(oncoprint:OncoprintJS)=>void;
 
     clinicalTracks: ClinicalTrackSpec[];
     geneticTracks: GeneticTrackSpec[];
@@ -199,7 +199,7 @@ export interface IOncoprintProps {
 @observer
 export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private div:HTMLDivElement;
-    public oncoprint:OncoprintJS<any>|undefined;
+    public oncoprint:OncoprintJS|undefined;
     private trackSpecKeyToTrackId:{[key:string]:TrackId};
     private lastTransitionProps:IOncoprintProps;
 
@@ -230,7 +230,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private refreshOncoprint(props:IOncoprintProps) {
         if (!this.oncoprint) {
             // instantiate new one
-            this.oncoprint = new OncoprintJS<any>(`#${props.divId}`, props.width, props.initParams)
+            this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width, props.initParams)
             this.oncoprint.setTrackGroupLegendOrder([GENETIC_TRACK_GROUP_INDEX, CLINICAL_TRACK_GROUP_INDEX]);
             (window as any).frontendOnc = this.oncoprint;
             if (props.oncoprintRef) {

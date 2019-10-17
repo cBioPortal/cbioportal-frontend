@@ -4,26 +4,20 @@ import {observer} from "mobx-react";
 import {action, computed, observable} from "mobx";
 import _ from "lodash";
 import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
-import {
-    StudyViewPageStore, SurvivalType
-} from "pages/studyView/StudyViewPageStore";
+import {StudyViewPageStore, SurvivalType} from "pages/studyView/StudyViewPageStore";
 import {DataBin, StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import classnames from "classnames";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import MobxPromise from "mobxpromise";
 import SurvivalChart, {LegendLocation} from "../../resultsView/survival/SurvivalChart";
-import {MutatedGenesTable} from "../table/MutatedGenesTable";
-import {CNAGenesTable} from "../table/CNAGenesTable";
 
 import autobind from 'autobind-decorator';
 import BarChart from "./barChart/BarChart";
-import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {
-    AnalysisGroup,
-    ClinicalDataCountSummary,
     ChartMeta,
     ChartType,
+    ClinicalDataCountSummary,
     getHeightByDimension,
     getTableHeightByDimension,
     getWidthByDimension,
@@ -31,18 +25,18 @@ import {
     MutationCountVsCnaYBinsMin,
     UniqueKey
 } from "../StudyViewUtils";
-import {ClinicalAttribute, ClinicalData, GenePanel} from "../../../shared/api/generated/CBioPortalAPI";
+import {GenePanel} from "../../../shared/api/generated/CBioPortalAPI";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import {getComparisonUrl} from "../../../shared/api/urls";
 import {DataType, DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
 import {MAX_GROUPS_IN_SESSION} from "../../groupComparison/GroupComparisonUtils";
 import {Modal} from "react-bootstrap";
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";
-import Timer = NodeJS.Timer;
 import WindowStore from "shared/components/window/WindowStore";
+import Timer = NodeJS.Timer;
+import {GeneTableColumnKey, GeneTable} from "pages/studyView/table/GeneTable";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -69,7 +63,7 @@ export interface IChartContainerProps {
     setComparisonConfirmationModal:StudyViewPageStore["setComparisonConfirmationModal"];
     onValueSelection?: any;
     onDataBinSelection?: any;
-    getData?:(dataType?: DataType)=>Promise<string|null>;
+    getData?: ((dataType?: DataType)=>Promise<string|null>) | ((dataType?:DataType)=>string);
     downloadTypes?:DownloadControlsButton[];
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
@@ -131,12 +125,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 if (this.props.onToggleLogScale) {
                     this.props.onToggleLogScale(this.props.chartMeta);
                 }
-            }),
-            updateCNAGeneFilters: action((filters: CopyNumberGeneFilterElement[]) => {
-                this.props.onValueSelection(filters);
-            }),
-            updateGeneFilters: action((value: number[]) => {
-                this.props.onValueSelection(value);
             }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
                 if (this.mouseLeaveTimeout) {
@@ -295,7 +283,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get chart() {
-        const {BAR_CHART, SURVIVAL, CNA_GENES_TABLE, TABLE, SCATTER, PIE_CHART, MUTATED_GENES_TABLE} = ChartTypeEnum;
+        const {BAR_CHART, SURVIVAL, CNA_GENES_TABLE, TABLE, SCATTER, PIE_CHART, MUTATED_GENES_TABLE, FUSION_GENES_TABLE} = ChartTypeEnum;
         switch (this.chartType) {
             case PIE_CHART: {
                 return ()=>(<PieChart
@@ -337,37 +325,81 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case MUTATED_GENES_TABLE: {
                 return ()=>(
-                    <MutatedGenesTable
+                    <GeneTable
+                        tableType={'mutation'}
                         promise={this.props.promise}
                         width={getWidthByDimension(this.props.dimension, this.borderWidth)}
                         height={getTableHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.updateGeneFilters}
+                        onUserSelection={this.props.onValueSelection}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
                         cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
                         filterByCancerGenes={this.props.filterByCancerGenes!}
                         onChangeCancerGeneFilter={this.props.onChangeCancerGeneFilter!}
+                        columns={[
+                            {columnKey: GeneTableColumnKey.GENE},
+                            {columnKey: GeneTableColumnKey.NUMBER_MUTATIONS},
+                            {columnKey: GeneTableColumnKey.NUMBER},
+                            {columnKey: GeneTableColumnKey.FREQ},
+                        ]}
+
+                        defaultSortBy={GeneTableColumnKey.FREQ}
+                    />
+                );
+            }
+            case FUSION_GENES_TABLE: {
+                return () => (
+                    <GeneTable
+                        tableType={'fusion'}
+                        promise={this.props.promise}
+                        width={getWidthByDimension(this.props.dimension, this.borderWidth)}
+                        height={getTableHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
+                        numOfSelectedSamples={100}
+                        filters={this.props.filters}
+                        onUserSelection={this.props.onValueSelection}
+                        onGeneSelect={this.props.onGeneSelect}
+                        selectedGenes={this.props.selectedGenes}
+                        genePanelCache={this.props.genePanelCache}
+                        cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
+                        filterByCancerGenes={this.props.filterByCancerGenes!}
+                        onChangeCancerGeneFilter={this.props.onChangeCancerGeneFilter!}
+                        columns={[
+                            {columnKey: GeneTableColumnKey.GENE},
+                            {columnKey: GeneTableColumnKey.NUMBER_FUSIONS},
+                            {columnKey: GeneTableColumnKey.NUMBER},
+                            {columnKey: GeneTableColumnKey.FREQ},
+                        ]}
+                        defaultSortBy={GeneTableColumnKey.FREQ}
                     />
                 );
             }
             case CNA_GENES_TABLE: {
                 return ()=>(
-                    <CNAGenesTable
+                    <GeneTable
+                        tableType={'cna'}
                         promise={this.props.promise}
                         width={getWidthByDimension(this.props.dimension, this.borderWidth)}
                         height={getTableHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.updateCNAGeneFilters}
+                        onUserSelection={this.props.onValueSelection}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
                         cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
                         filterByCancerGenes={this.props.filterByCancerGenes!}
                         onChangeCancerGeneFilter={this.props.onChangeCancerGeneFilter!}
+                        columns={[
+                            {columnKey: GeneTableColumnKey.GENE, columnWidthRatio: 0.25},
+                            {columnKey: GeneTableColumnKey.CYTOBAND, columnWidthRatio: 0.25},
+                            {columnKey: GeneTableColumnKey.CNA, columnWidthRatio: 0.14},
+                            {columnKey: GeneTableColumnKey.NUMBER, columnWidthRatio: 0.18},
+                            {columnKey: GeneTableColumnKey.FREQ, columnWidthRatio: 0.18}
+                        ]}
+                        defaultSortBy={GeneTableColumnKey.FREQ}
                     />
                 );
             }

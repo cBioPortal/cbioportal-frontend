@@ -47,7 +47,7 @@ const INIT_PARAMS:InitParams = {
 @observer
 export default class MutationOncoprint extends React.Component<IMutationOncoprintProps, {}> {
 
-    private oncoprint:OncoprintJS<any>|null = null;
+    private oncoprint:OncoprintJS|null = null;
     @observable private showColumnLabels = true;
     @observable private horzZoomSliderState = 100;
 
@@ -58,7 +58,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     }
 
     @autobind
-    private oncoprintRef(oncoprint:OncoprintJS<any>) {
+    private oncoprintRef(oncoprint:OncoprintJS) {
         this.oncoprint = oncoprint;
         this.oncoprint.onHorzZoom(z=>(this.horzZoomSliderState = z));
         this.horzZoomSliderState = this.oncoprint.getHorzZoom();

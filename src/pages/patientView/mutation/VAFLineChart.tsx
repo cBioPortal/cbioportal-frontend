@@ -222,7 +222,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
 
         if (this.dragging && (e.target as SVGElement).classList.contains(DRAG_COVER_CLASSNAME)) {
             // only update drag coordinates based on SVG events
-            const offset = $(e.target).offset();
+            const offset = $(e.target).offset()!;
             this.dragRect.currentX = e.pageX - offset.left;
             this.dragRect.currentY = e.pageY - offset.top;
         }
@@ -235,7 +235,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             // start drag if clicking on background
             this.dragging = true;
 
-            const offset = $(e.target).offset();
+            const offset = $(e.target).offset()!;
             this.dragRect.startX = e.pageX - offset.left;
             this.dragRect.startY = e.pageY - offset.top;
             this.dragRect.currentX = this.dragRect.startX;
