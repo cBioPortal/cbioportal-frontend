@@ -139,6 +139,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable.ref private oncoprint:OncoprintJS;
 
     private urlParamsReaction:IReactionDisposer;
+    private silentUrlParamsReaction:IReactionDisposer;
 
     constructor(props:IResultsViewOncoprintProps) {
         super(props);
@@ -221,6 +222,30 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     newParams[TREATMENT_LIST_URL_PARAM] = this.treatmentsUrlParam;
                 }
                 getBrowserWindow().globalStores.routing.updateRoute(newParams, undefined, true, true);
+            }
+        );
+
+        this.silentUrlParamsReaction = reaction(
+            ()=>[
+                this.sortMode
+            ],
+            ()=>{
+                const regex = new RegExp('&' + ONCOPRINT_SORTBY_URL_PARAM + '=[^&]*');
+                let url = (window.location.href).replace(regex, '');
+                let value:SortByUrlParamValue;
+                switch (this.sortMode.type) {
+                    case 'alphabetical':
+                        value = SortByUrlParamValue.CASE_ID;
+                        break;
+                    case 'caseList':
+                        value = SortByUrlParamValue.CASE_LIST;
+                        break;
+                    default:
+                        value = SortByUrlParamValue.NONE;
+                        break;
+                }
+                url += '&' + ONCOPRINT_SORTBY_URL_PARAM + '=' + value;
+                window.history.replaceState({}, "", url);
             }
         );
 
