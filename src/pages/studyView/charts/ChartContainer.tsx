@@ -446,6 +446,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                            }
                                        }}
                                        fileName={this.props.title.replace(' ', '_')}
+                                       showRangeSelection={false}
                         />
                     );
                 } else {

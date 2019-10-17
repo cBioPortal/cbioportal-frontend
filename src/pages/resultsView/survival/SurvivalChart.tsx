@@ -7,8 +7,8 @@ import styles from "./styles.module.scss";
 import { sleep } from "../../../shared/lib/TimeUtils";
 import * as _ from 'lodash';
 import {
-    VictoryChart, VictoryContainer, VictoryLine, VictoryTooltip,
-    VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryTheme, VictoryZoomContainer
+    VictoryChart, VictoryContainer, VictoryLine,
+    VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryBrushContainer
 } from 'victory';
 import {
     getEstimates, getMedian, getLineData, getScatterData, getScatterDataWithOpacity, getStats, calculateLogRank,
@@ -62,6 +62,7 @@ export interface ISurvivalChartProps {
     className?: string;
     showCurveInTooltip?:boolean;
     legendLabelComponent?:any;
+    showRangeSelection?: boolean;
 }
 
 // Start to down sampling when there are more than 1000 dots in the plot.
@@ -71,7 +72,7 @@ const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
 export default class SurvivalChart extends React.Component<ISurvivalChartProps, {}> implements AbstractChart {
 
     @observable.ref tooltipModel: any;
-    @observable scatterFilter: SurvivalPlotFilters;
+    @observable scatterFilter: SurvivalPlotFilters = {x:[0,60], y:[0,Number.MAX_VALUE]} as SurvivalPlotFilters;
     @observable highlightedCurve = "";
     // The denominator should be determined based on the plot width and height.
     private isTooltipHovered: boolean = false;
@@ -226,6 +227,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         showLogRankPVal: true,
         showNaPatientsHiddenToggle: false,
         showDownloadButtons: true,
+        showRangeSelection: true
     };
 
     constructor(props: ISurvivalChartProps) {
@@ -335,6 +337,11 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         }
     }
 
+    @autobind
+    private onSelection(domain: any, props: any) {
+        this.scatterFilter = domain as SurvivalPlotFilters;
+    }
+
     @computed get analysisGroupsWithData() {
         let analysisGroups = this.props.analysisGroups;
         // filter out groups with no data
@@ -364,6 +371,34 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         ));
         const scatterElements = analysisGroupsWithData.map(grp=>(
             <VictoryScatter key={grp.value} data={this.scatterData[grp.value].scatter}
+                            symbol="circle" style={{ data: { fill: grp.color, fillOpacity: this.hoverCircleFillOpacity} }}
+                            size={10} events={this.events} />
+        ));
+        return lineElements.concat(scatterWithOpacityElements).concat(scatterElements);
+    }
+
+    @computed get unfilteredScattersAndLines() {
+        // sort highlighted group to the end to show its elements on top
+        let analysisGroupsWithData = this.analysisGroupsWithData;
+        analysisGroupsWithData = _.sortBy(analysisGroupsWithData, grp=>(this.highlightedCurve === grp.value ? 1 : 0));
+
+        const lineElements = analysisGroupsWithData.map(grp=>(
+            <VictoryLine key={grp.value} interpolation="stepAfter" data={this.unfilteredScatterData[grp.value].line}
+                        style={{data:{
+                            stroke:grp.color,
+                            strokeWidth: this.highlightedCurve === grp.value ? 4 : 1,
+                            fill:"#000000",
+                            fillOpacity:0
+                        }}}
+            />
+        ));
+        const scatterWithOpacityElements = analysisGroupsWithData.map(grp=>(
+            <VictoryScatter key={grp.value} data={this.unfilteredScatterData[grp.value].scatterWithOpacity}
+                            symbol="plus" style={{ data: { fill: grp.color, opacity: (d:any) => d.opacity } }}
+                            size={3} />
+        ));
+        const scatterElements = analysisGroupsWithData.map(grp=>(
+            <VictoryScatter key={grp.value} data={this.unfilteredScatterData[grp.value].scatter}
                             symbol="circle" style={{ data: { fill: grp.color, fillOpacity: this.hoverCircleFillOpacity} }}
                             size={10} events={this.events} />
         ));
@@ -427,12 +462,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 />
                 }
 
-                <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
-                                                                        disable={this.props.disableZoom}
-                                                                        onZoomDomainChange={_.debounce((domain: any) => {
-                                                                            this.scatterFilter = domain as SurvivalPlotFilters;
-                                                                        }, 1000)}
-                                                                        containerRef={(ref: any) => this.svgContainer = ref}/>}
+                <VictoryChart containerComponent={<VictoryContainer containerRef={(ref: any) => this.svgContainer = ref}/>}
                               height={this.styleOpts.height} width={this.styleOpts.width}
                               padding={this.styleOpts.padding}
                               theme={CBIOPORTAL_VICTORY_THEME}
@@ -453,6 +483,23 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     {this.legendForDownload}
                     {this.pValueText}
                 </VictoryChart>
+
+                {
+                    (this.props.showRangeSelection) && (
+                        <VictoryChart containerComponent={<VictoryBrushContainer brushDimension="x" brushDomain={{x: [0, 60]}} onBrushDomainChange={_.debounce(this.onSelection, 500)}/>}
+                                    height={this.styleOpts.height / 3} width={this.styleOpts.width}
+                                    padding={this.styleOpts.padding}
+                                    theme={CBIOPORTAL_VICTORY_THEME}
+                                    domainPadding={{x: [10, 50], y: [20, 20]}}>
+                            <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={this.xAxisTickCount}
+                                        label={this.props.xAxisLabel}/>
+                            <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`}
+                                        tickCount={11}
+                                        style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
+                            {this.unfilteredScattersAndLines}
+                        </VictoryChart>
+                    )
+                }
             </div>
         );
     }
