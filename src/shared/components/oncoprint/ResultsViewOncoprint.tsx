@@ -38,16 +38,16 @@ import autobind from "autobind-decorator";
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
-import { selectDisplayValue } from "./DataUtils";
-import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import WindowStore from "../window/WindowStore";
-import {isWebdriver} from "../../../public-lib/lib/webdriverUtils";
+import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 
 interface IResultsViewOncoprintProps {
     divId: string;
     store:ResultsViewPageStore;
     routing:any;
     addOnBecomeVisibleListener?:(callback:()=>void)=>void;
+    // replaceRoutingHistoryCallback?:(params:{[name:string]:any}) => void;
+    replaceRoutingHistoryCallback?:(url:string) => void;
 }
 
 export enum SortByUrlParamValue {
@@ -108,6 +108,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable showOqlInLabels = false;
 
     private selectedTreatmentsFromUrl:string[] = [];
+    private routingStore:ExtendedRouterStore;
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
@@ -224,30 +225,35 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 getBrowserWindow().globalStores.routing.updateRoute(newParams, undefined, true, true);
             }
         );
-
-        this.silentUrlParamsReaction = reaction(
-            ()=>[
-                this.sortMode
-            ],
-            ()=>{
-                const regex = new RegExp('&' + ONCOPRINT_SORTBY_URL_PARAM + '=[^&]*');
-                let url = (window.location.href).replace(regex, '');
-                let value:SortByUrlParamValue;
-                switch (this.sortMode.type) {
-                    case 'alphabetical':
-                        value = SortByUrlParamValue.CASE_ID;
-                        break;
-                    case 'caseList':
-                        value = SortByUrlParamValue.CASE_LIST;
-                        break;
-                    default:
-                        value = SortByUrlParamValue.NONE;
-                        break;
+        
+        if (this.props.replaceRoutingHistoryCallback) {
+            this.silentUrlParamsReaction = reaction(
+                ()=>[
+                    this.sortMode
+                ],
+                ()=>{
+                    const regex = new RegExp('&' + ONCOPRINT_SORTBY_URL_PARAM + '=[^&]*');
+                    let url = (window.location.href).replace(regex, '');
+                    let value:SortByUrlParamValue;
+                    switch (this.sortMode.type) {
+                        case 'alphabetical':
+                            value = SortByUrlParamValue.CASE_ID;
+                            break;
+                        case 'caseList':
+                            value = SortByUrlParamValue.CASE_LIST;
+                            break;
+                        default:
+                            value = SortByUrlParamValue.NONE;
+                            break;
+                    }
+                    url += '&' + ONCOPRINT_SORTBY_URL_PARAM + '=' + value;
+                    // const params:{[name:string]:any} = {};
+                    // params[ONCOPRINT_SORTBY_URL_PARAM] = value;
+                    // this.props.replaceRoutingHistoryCallback!(params);
+                    this.props.replaceRoutingHistoryCallback!(url);
                 }
-                url += '&' + ONCOPRINT_SORTBY_URL_PARAM + '=' + value;
-                window.history.replaceState({}, "", url);
-            }
-        );
+            );
+        }
 
         this.controlsHandlers = this.buildControlsHandlers();
 

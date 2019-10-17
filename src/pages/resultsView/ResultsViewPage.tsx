@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import URL from 'url';
 import { inject, observer } from 'mobx-react';
-import { computed, observable, reaction, runInAction } from 'mobx';
+import { computed, observable, reaction, runInAction, action } from 'mobx';
 import { ResultsViewPageStore } from './ResultsViewPageStore';
 import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummaryContainer';
 import Mutations from './mutation/Mutations';
@@ -177,11 +177,22 @@ export default class ResultsViewPage extends React.Component<
 
         this.resultsViewPageStore = initStore(props.appStore);
 
+        this.props.routing
+
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
 
     private handleTabChange(id: string, replace?: boolean) {
         this.props.routing.updateRoute({}, `results/${id}`, false, replace);
+    }
+
+    @autobind
+    private handleSilentUrlUpdate(url:string) {
+    // private handleSilentUrlUpdate(params:{[name:string]:any}) {
+        // this.props.routing.updateRoute(params, undefined, false, true);
+        if (this.props.routing) {
+            this.props.routing.history.replace(url);
+        }
     }
 
     @autobind
@@ -219,6 +230,7 @@ export default class ResultsViewPage extends React.Component<
                         >
                             <ResultsViewOncoprint
                                 divId={'oncoprintDiv'}
+                                replaceRoutingHistoryCallback={this.handleSilentUrlUpdate}
                                 store={store}
                                 key={store.hugoGeneSymbols.join(',')}
                                 routing={this.props.routing}
