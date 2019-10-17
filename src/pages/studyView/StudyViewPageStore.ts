@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import AppConfig from "appConfig";
 import {remoteData} from "../../public-lib/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
@@ -2344,6 +2345,9 @@ export class StudyViewPageStore {
     });
 
     @computed get oncokbCancerGeneFilterEnabled() {
+        if (!AppConfig.serverConfig.show_oncokb) {
+            return false;
+        }
         return !this.oncokbCancerGenes.isError && !this.oncokbGenes.isError;
     }
 
