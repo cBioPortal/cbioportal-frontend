@@ -120,18 +120,18 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.P_VALUE] = {
             name: "p-Value",
-            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
+            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{d.pValue ? toConditionalPrecision(d.pValue, 3, 0.01) : '-'}</span>,
             tooltip: <span>Derived from one-sided Fisher Exact Test</span>,
-            sortBy: (d: AlterationEnrichmentRow) => d.pValue,
-            download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.pValue, 3, 0.01)
+            sortBy: (d: AlterationEnrichmentRow) => Number(d.pValue),
+            download: (d: AlterationEnrichmentRow) => d.pValue ? toConditionalPrecision(d.pValue, 3, 0.01) : '-'
         };
 
         columns[AlterationEnrichmentTableColumnType.Q_VALUE] = {
             name: "q-Value",
-            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{formatSignificanceValueWithStyle(d.qValue)}</span>,
+            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{d.qValue ? formatSignificanceValueWithStyle(d.qValue) : '-'}</span>,
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
-            sortBy: (d: AlterationEnrichmentRow) => d.qValue,
-            download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.qValue, 3, 0.01)
+            sortBy: (d: AlterationEnrichmentRow) => Number(d.qValue),
+            download: (d: AlterationEnrichmentRow) => d.qValue ? toConditionalPrecision(d.qValue, 3, 0.01) : '-'
         };
 
         return columns;
