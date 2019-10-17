@@ -39,7 +39,6 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
                     comparisonGroupSelection={this.props.store.filterComparisonGroups}
                     numberOfSelectedSamplesInCustomSelection={this.props.store.numberOfSelectedSamplesInCustomSelection}
                     customChartsFilter={this.props.store.customChartFilterSet.toJS()}
-                    getSelectedGene={this.props.store.getKnownHugoGeneSymbolByEntrezGeneId}
                     attributesMetaSet={this.props.store.chartMetaSet}
                     updateClinicalDataEqualityFilter={this.props.store.updateClinicalDataEqualityFilters}
                     updateClinicalDataIntervalFilter={this.props.store.updateClinicalDataIntervalFiltersByValues}

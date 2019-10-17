@@ -18,15 +18,13 @@ import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {DEFAULT_NA_COLOR, MUT_COLOR_MISSENSE} from "shared/lib/Colors";
 import {
     caseCounts,
-    getNumPatients,
-    getNumSamples, getSampleIdentifiers,
+    getSampleIdentifiers,
     StudyViewComparisonGroup
 } from "../groupComparison/GroupComparisonUtils";
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     customChartsFilter: {[key:string]:string[]};
-    getSelectedGene: (entrezGeneId: number) => string|undefined;
     numberOfSelectedSamplesInCustomSelection: number;
     comparisonGroupSelection:StudyViewComparisonGroup[];
     attributesMetaSet: { [id: string]: ChartMeta };
@@ -35,7 +33,7 @@ export interface IUserSelectionsProps {
     updateCustomChartFilter: (chartMeta: ChartMeta, values: string[]) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
-    removeGeneFilter: (entrezGeneId: number) => void;
+    removeGeneFilter: (hugoGeneSymbol: string) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
     resetMutationCountVsCNAFilter: () => void;
     removeWithMutationDataFilter: () => void;
@@ -172,16 +170,15 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             components.push(<div className={styles.parentGroupLogic}><GroupLogic
                 components={this.props.filter.mutatedGenes.map(filter => {
                     return <GroupLogic
-                        components={filter.entrezGeneIds.map(entrezGene => {
-                            const hugoGeneSymbol = this.props.getSelectedGene(entrezGene);
+                        components={filter.hugoGeneSymbols.map(hugoGeneSymbol => {
                             return <PillTag
-                                content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoGeneSymbol}
+                                content={hugoGeneSymbol}
                                 backgroundColor={MUT_COLOR_MISSENSE}
-                                onDelete={() => this.props.removeGeneFilter(entrezGene)}
+                                onDelete={() => this.props.removeGeneFilter(hugoGeneSymbol)}
                             />
                         })}
                         operation="or"
-                        group={filter.entrezGeneIds.length > 1}
+                        group={filter.hugoGeneSymbols.length > 1}
                     />
                 })} operation={"and"} group={false}/></div>);
         }
@@ -193,11 +190,10 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                 components={this.props.filter.cnaGenes.map(filter => {
                     return <GroupLogic
                         components={filter.alterations.map(filter => {
-                            const hugoGeneSymbol = this.props.getSelectedGene(filter.entrezGeneId);
                             let tagColor = getCNAColorByAlteration(filter.alteration);
                             tagColor = tagColor === undefined ? DEFAULT_NA_COLOR : tagColor;
                             return <PillTag
-                                content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoGeneSymbol}
+                                content={filter.hugoGeneSymbol}
                                 backgroundColor={tagColor}
                                 onDelete={() => this.props.removeCNAGeneFilter(filter)}
                             />
