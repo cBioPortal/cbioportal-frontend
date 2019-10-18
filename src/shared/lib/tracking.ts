@@ -4,6 +4,7 @@ import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import * as _ from 'lodash';
 import {log} from "./consoleLog";
 import {StudyViewPageStore} from "../../pages/studyView/StudyViewPageStore";
+import {isWebdriver} from "../../public-lib/lib/webdriverUtils";
 
 export type GAEvent = {
   category:"studyPage"|"resultsView"|"quickSearch"|"download"|"groupComparison"|"homePage";
@@ -20,7 +21,7 @@ export function initializeTracking(){
 
     $("body").on("click","[data-event]",(el)=>{
         try {
-            const event:GAEvent = JSON.parse(($(el.currentTarget).attr("data-event"))) as GAEvent;
+            const event:GAEvent = JSON.parse(($(el.currentTarget).attr("data-event")!)) as GAEvent;
             trackEvent(event);
         } catch (ex) {
 
@@ -63,10 +64,6 @@ function sendToLoggly(){
             }
         });
     }
-}
-
-export function isWebdriver(){
-    return window.navigator.webdriver;
 }
 
 export function embedGoogleAnalytics(ga_code:string){

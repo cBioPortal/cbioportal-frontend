@@ -50,7 +50,8 @@ describe('WaterfallPlot', () => {
 
         it('Sort order parameter controls ordering of data', () => {
             
-            // test "ASC"
+            // test "ASC" and horizontal is false
+            testProps.horizontal = false;
             let datum1 = plot.waterfallPlotData[0];
             let datum2 = plot.waterfallPlotData[1];
             assert.equal(datum1.order, 1);
@@ -58,6 +59,7 @@ describe('WaterfallPlot', () => {
             assert.equal(datum2.order, 2);
             assert.equal(datum2.value, 4);
             
+            // test "DESC" and horizontal is false
             testProps.sortOrder = "DESC";
             plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
             
@@ -67,6 +69,29 @@ describe('WaterfallPlot', () => {
             assert.equal(datum1.value, 4);
             assert.equal(datum2.order, 2);
             assert.equal(datum2.value, 2);
+            
+            // test "ASC" and horizontal is true
+            testProps.horizontal = true;
+            testProps.sortOrder = "ASC";
+            plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
+            
+            datum1 = plot.waterfallPlotData[0];
+            datum2 = plot.waterfallPlotData[1];
+            assert.equal(datum1.order, 1);
+            assert.equal(datum1.value, 4);
+            assert.equal(datum2.order, 2);
+            assert.equal(datum2.value, 2);
+            
+            // test "DESC" and horizontal is true
+            testProps.sortOrder = "DESC";
+            plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
+            
+            datum1 = plot.waterfallPlotData[0];
+            datum2 = plot.waterfallPlotData[1];
+            assert.equal(datum1.order, 1);
+            assert.equal(datum1.value, 2);
+            assert.equal(datum2.order, 2);
+            assert.equal(datum2.value, 4);
         });
 
     });

@@ -83,46 +83,51 @@ function volcanoPlotYCoord(pValue:number) {
 }
 
 export function getAlterationScatterData(alterationEnrichments: AlterationEnrichmentRow[], queryGenes: string[]): any[] {
-
-    return alterationEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((alterationEnrichment) => {
-        return {
-            x: roundLogRatio(Number(alterationEnrichment.logRatio), 10),
-            y: volcanoPlotYCoord(alterationEnrichment.pValue),
-            hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
-            pValue: alterationEnrichment.pValue,
-            qValue: alterationEnrichment.qValue,
-            logRatio: alterationEnrichment.logRatio,
-            hovered: false
-        };
-    });
+    return alterationEnrichments
+        .filter(a => a.pValue !== undefined && a.qValue !== undefined && !queryGenes.includes(a.hugoGeneSymbol))
+        .map((alterationEnrichment) => {
+            return {
+                x: roundLogRatio(Number(alterationEnrichment.logRatio), 10),
+                y: volcanoPlotYCoord(alterationEnrichment.pValue!),
+                hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
+                pValue: alterationEnrichment.pValue,
+                qValue: alterationEnrichment.qValue,
+                logRatio: alterationEnrichment.logRatio,
+                hovered: false
+            };
+        });
 }
 
 export function getAlterationFrequencyScatterData(alterationEnrichments: AlterationEnrichmentRow[], queryGenes: string[], group1:string, group2:string): IMiniFrequencyScatterChartData[] {
-    return alterationEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((alterationEnrichment) => {
-        return {
-            x: alterationEnrichment.groupsSet[group1].alteredPercentage,
-            y: alterationEnrichment.groupsSet[group2].alteredPercentage,
-            hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
-            pValue: alterationEnrichment.pValue,
-            qValue: alterationEnrichment.qValue,
-            logRatio: alterationEnrichment.logRatio!
-        };
-    });
+    return alterationEnrichments
+        .filter(a => a.pValue !== undefined && a.qValue !== undefined && !queryGenes.includes(a.hugoGeneSymbol))
+        .map((alterationEnrichment) => {
+            return {
+                x: alterationEnrichment.groupsSet[group1].alteredPercentage,
+                y: alterationEnrichment.groupsSet[group2].alteredPercentage,
+                hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
+                pValue: alterationEnrichment.pValue!,
+                qValue: alterationEnrichment.qValue!,
+                logRatio: alterationEnrichment.logRatio!
+            };
+        });
 }
 
 export function getExpressionScatterData(expressionEnrichments: ExpressionEnrichmentRow[], queryGenes: string[]): any[] {
-    return expressionEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((expressionEnrichment) => {
-        return {
-            x: expressionEnrichment.logRatio,
-            y: volcanoPlotYCoord(expressionEnrichment.pValue),
-            hugoGeneSymbol: expressionEnrichment.hugoGeneSymbol,
-            entrezGeneId: expressionEnrichment.entrezGeneId,
-            pValue: expressionEnrichment.pValue,
-            qValue: expressionEnrichment.qValue,
-            logRatio: expressionEnrichment.logRatio,
-            hovered: false
-        };
-    });
+    return expressionEnrichments
+        .filter(a => !queryGenes.includes(a.hugoGeneSymbol))
+        .map((expressionEnrichment) => {
+            return {
+                x: expressionEnrichment.logRatio,
+                y: volcanoPlotYCoord(expressionEnrichment.pValue),
+                hugoGeneSymbol: expressionEnrichment.hugoGeneSymbol,
+                entrezGeneId: expressionEnrichment.entrezGeneId,
+                pValue: expressionEnrichment.pValue,
+                qValue: expressionEnrichment.qValue,
+                logRatio: expressionEnrichment.logRatio,
+                hovered: false
+            };
+        });
 }
 
 export function getAlterationRowData(
@@ -131,22 +136,25 @@ export function getAlterationRowData(
     groups: { name: string, nameOfEnrichmentDirection?: string }[]): AlterationEnrichmentRow[] {
     return alterationEnrichments.map(alterationEnrichment => {
         let countsWithAlteredPercentage = _.map(alterationEnrichment.counts, datum => {
+            const alteredPercentage = (datum.alteredCount > 0 && datum.profiledCount > 0) ? (datum.alteredCount / datum.profiledCount) * 100 : 0
             return {
                 ...datum,
-                alteredPercentage: (datum.alteredCount / datum.profiledCount) * 100
+                alteredPercentage
             }
-        })
+        });
         let groupsSet = _.keyBy(countsWithAlteredPercentage, count => count.name);
-        let enrichedGroup = '';
+        let enrichedGroup: string | undefined = undefined;
         let logRatio: number | undefined = undefined;
         if (groups.length === 2) {
             let group1Data = groupsSet[groups[0].name];
             let group2Data = groupsSet[groups[1].name];
-            logRatio = Math.log2(group1Data.alteredPercentage / group2Data.alteredPercentage);
-            let group1Name = groups[0].nameOfEnrichmentDirection || groups[0].name;
-            let group2Name = groups[1].nameOfEnrichmentDirection || groups[1].name;
-            enrichedGroup = logRatio > 0 ? group1Name : group2Name;
-        } else {
+            if (alterationEnrichment.pValue !== undefined) {
+                logRatio = Math.log2(group1Data.alteredPercentage / group2Data.alteredPercentage);
+                let group1Name = groups[0].nameOfEnrichmentDirection || groups[0].name;
+                let group2Name = groups[1].nameOfEnrichmentDirection || groups[1].name;
+                enrichedGroup = logRatio > 0 ? group1Name : group2Name;
+            }
+        } else if (alterationEnrichment.pValue !== undefined) {
             countsWithAlteredPercentage.sort((a, b) => b.alteredPercentage - a.alteredPercentage);
             enrichedGroup = countsWithAlteredPercentage[0].name;
         }
@@ -223,7 +231,7 @@ export function getFilteredData(data: (ExpressionEnrichmentRow|AlterationEnrichm
                 return false;
             }
         });
-        if (qValueFilter) {
+        if (qValueFilter && enrichmentDatum.qValue) {
             result = result && enrichmentDatum.qValue < 0.05;
         }
         if (selectedGenes) {
@@ -376,6 +384,9 @@ export function getAlterationEnrichmentColumns(groups: { name: string, descripti
         name: alteredVsUnalteredMode ? AlterationEnrichmentTableColumnType.TENDENCY :
             (groups.length === 2 ? AlterationEnrichmentTableColumnType.ENRICHED : AlterationEnrichmentTableColumnType.MOST_ENRICHED),
         render: (d: AlterationEnrichmentRow) => {
+            if (d.enrichedGroup === undefined || d.qValue === undefined) {
+                return <span>-</span>
+            }
             let groupColor = undefined;
             const significant = d.qValue < 0.05;
             if (!alteredVsUnalteredMode && significant) {
@@ -394,9 +405,9 @@ export function getAlterationEnrichmentColumns(groups: { name: string, descripti
             );
         },
         filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
-            d.enrichedGroup.toUpperCase().includes(filterStringUpper),
-        sortBy: (d: AlterationEnrichmentRow) => d.enrichedGroup,
-        download: (d: AlterationEnrichmentRow) => d.enrichedGroup,
+            (d.enrichedGroup || '').toUpperCase().includes(filterStringUpper),
+        sortBy: (d: AlterationEnrichmentRow) => d.enrichedGroup || '-',
+        download: (d: AlterationEnrichmentRow) => d.enrichedGroup || '-',
         tooltip: <span>The group with the highest alteration frequency</span>
     }
 
@@ -410,7 +421,7 @@ export function getAlterationEnrichmentColumns(groups: { name: string, descripti
         let group2 = groups[1];
         columns.push({
             name: AlterationEnrichmentTableColumnType.LOG_RATIO,
-            render: (d: AlterationEnrichmentRow) => <span>{formatLogOddsRatio(d.logRatio!)}</span>,
+            render: (d: AlterationEnrichmentRow) => <span>{d.logRatio ? formatLogOddsRatio(d.logRatio) : '-'}</span>,
             tooltip: <span>Log2 based ratio of (pct in {group1.name}/ pct in {group2.name})</span>,
             sortBy: (d: AlterationEnrichmentRow) => Number(d.logRatio),
             download: (d: AlterationEnrichmentRow) => formatLogOddsRatio(d.logRatio!)
@@ -457,6 +468,9 @@ export function getExpressionEnrichmentColumns(groups: { name: string, descripti
     let enrichedGroupColum: ExpressionEnrichmentTableColumn = {
         name: alteredVsUnalteredMode ? ExpressionEnrichmentTableColumnType.TENDENCY : ExpressionEnrichmentTableColumnType.EXPRESSED,
         render: (d: ExpressionEnrichmentRow) => {
+            if (d.pValue === undefined) {
+                return <span>-</span>
+            }
             let groupColor = undefined;
             const significant = d.qValue < 0.05;
             if (!alteredVsUnalteredMode && significant) {
@@ -547,7 +561,7 @@ export function getEnrichmentBarPlotData(data: { [gene: string]: AlterationEnric
                 if (!acc[groupName]) {
                     acc[groupName] = {};
                 }
-                const displayedGeneName = gene + (datum.qValue < 0.05 ? '*' : '')
+                const displayedGeneName = gene + (datum.qValue && datum.qValue < 0.05 ? '*' : '');
                 acc[groupName][displayedGeneName] = group.alteredPercentage;
                 usedGenes[displayedGeneName] = true;
             });
@@ -620,7 +634,16 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[], includeAlter
     });
 
     let dataSortedBypValue = _.clone(dataWithOptionName).sort(function (kv1, kv2) {
-        return kv1.pValue - kv2.pValue;
+        if (!kv1.pValue && !kv2.pValue) {
+            return 0;
+        }
+        if (!kv1.pValue) {
+            return 1;
+        }
+        if (!kv2.pValue) {
+            return -1;
+        }
+        return Number(kv1.pValue) - Number(kv2.pValue);
     });
 
     return [

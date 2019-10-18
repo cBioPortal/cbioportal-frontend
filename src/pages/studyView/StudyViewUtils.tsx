@@ -534,8 +534,8 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
         $(svg).find(params.selectorToHide).remove();
     }
 
-    const height = + $(svgElement).height() + legendBBox.height;
-    const width = Math.max($(svgElement).width(), legendBBox.width);
+    const height = + $(svgElement).height()! + legendBBox.height;
+    const width = Math.max($(svgElement).width()!, legendBBox.width);
 
     // adjust width and height to make sure that the legend is fully visible
     $(svg).attr("height", height + 5);
@@ -544,11 +544,11 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
 
     // center elements
     if (params.centerLegend) {
-        const widthDiff = Math.abs($(svgElement).width() - legendBBox.width);
+        const widthDiff = Math.abs($(svgElement).width()! - legendBBox.width);
         const shift = widthDiff / 2;
         const transform = `translate(${shift}, 0)`;
 
-        if ($(svgElement).width() > legendBBox.width) {
+        if ($(svgElement).width()! > legendBBox.width) {
             // legend needs to be centered wrt the chart
             $(svg).find(params.legendGroupSelector).attr("transform", transform);
         }

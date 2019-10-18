@@ -32,7 +32,7 @@ import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCase
 import { AppStore } from "../../AppStore";
 import ActionButtons from "./studyPageHeader/ActionButtons";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
-import { GACustomFieldsEnum, isWebdriver, serializeEvent, trackEvent } from "../../shared/lib/tracking";
+import { GACustomFieldsEnum, serializeEvent, trackEvent } from "../../shared/lib/tracking";
 import ComparisonGroupManager from "../groupComparison/comparisonGroupManager/ComparisonGroupManager";
 import classNames from "classnames";
 import AppConfig from "appConfig";
@@ -42,6 +42,7 @@ import { getStudyViewTabId } from "./StudyViewUtils";
 import InfoBeacon from "shared/components/infoBeacon/InfoBeacon";
 import { WrappedTour } from "shared/components/wrappedTour/WrappedTour";
 import { Alert, Modal } from "react-bootstrap";
+import {isWebdriver} from "../../public-lib/lib/webdriverUtils";
 
 export interface IStudyViewPageProps {
     routing: any;
