@@ -132,15 +132,22 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                 <div>
                     {clinicalGroupMatch.matches.map((genomicGroupMatch: IGenomicGroupMatch) => (
                         <div>
-                            <If condition={genomicGroupMatch.matches.length === 1 &&
-                                genomicGroupMatch.genomicAlteration === `${genomicGroupMatch.matches[0].trueHugoSymbol} ${genomicGroupMatch.matches[0].trueProteinChange}`}>
+                            <If condition={genomicGroupMatch.matchType === 'MUTATION'}>
                                 <Then>
-                                    {this.getGenomicExactMatch(genomicGroupMatch)}
+                                    <If condition={genomicGroupMatch.matches.length === 1 &&
+                                        genomicGroupMatch.genomicAlteration === `${genomicGroupMatch.matches[0].trueHugoSymbol} ${genomicGroupMatch.matches[0].trueProteinChange}`}>
+                                        <Then>
+                                            {this.getGenomicExactMatch(genomicGroupMatch)}
+                                        </Then>
+                                        <Else>
+                                            <span className={styles.firstLeft}>{`${genomicGroupMatch.genomicAlteration}: `}
+                                                {this.getGenomicVariantCategoryMatch(genomicGroupMatch)}
+                                            </span>
+                                        </Else>
+                                    </If>
                                 </Then>
                                 <Else>
-                                    <span className={styles.firstLeft}>{`${genomicGroupMatch.genomicAlteration}: `}
-                                        {this.getGenomicVariantCategoryMatch(genomicGroupMatch)}
-                                    </span>
+                                    {this.getGenomicExactMatch(genomicGroupMatch)}
                                 </Else>
                             </If>
                         </div>
