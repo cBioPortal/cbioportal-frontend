@@ -1243,15 +1243,15 @@ export class ResultsViewPageStore {
     });
 
     readonly coexpressionTabMolecularProfiles = remoteData<MolecularProfile[]>({
-        await: () => [this.molecularProfilesWithData],
+        await: () => [this.molecularProfilesInStudies],
         invoke: () =>
             Promise.resolve(
                 sortRnaSeqProfilesToTop(
                     filterAndSortProfiles(
-                        this.molecularProfilesWithData.result!
+                        this.molecularProfilesInStudies.result!
                     ).concat(
                         getGenesetProfiles(
-                            this.molecularProfilesWithData.result!
+                            this.molecularProfilesInStudies.result!
                         )
                     )
                 )
