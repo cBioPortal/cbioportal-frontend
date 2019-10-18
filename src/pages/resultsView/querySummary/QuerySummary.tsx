@@ -81,8 +81,11 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     @autobind
     @action
     closeQueryForm(){
-        this.toggleQueryFormVisibility();
-        $(document).scrollTop(0);
+        // toggle QueryForm visibility only when queryFormVisible is true
+        if (this.props.store.queryFormVisible === true) {
+            this.toggleQueryFormVisibility();
+            $(document).scrollTop(0);
+        }
     }
 
     readonly multipleStudyUI = MakeMobxView({
