@@ -4,11 +4,13 @@ import {observer} from "mobx-react";
 import './errorScreen.scss';
 import AppConfig from "appConfig";
 import {buildCBioPortalPageUrl} from "shared/api/urls";
+import { If, Then, Else } from 'react-if';
 
 interface IErrorScreenProps {
     errorLog?:string;
     title?:string;
     body?:string|JSX.Element;
+    errorMessages?:string[];
 }
 
 @observer
@@ -26,6 +28,18 @@ export default class ErrorScreen extends React.Component<IErrorScreenProps, {}> 
 
                 {
                     this.props.title && <h4>{this.props.title}</h4>
+                }
+
+                {
+                    (this.props.errorMessages) && (
+                        <div style={{marginTop: 20}} className={"alert alert-danger"} role="alert">
+                            <ul style={{listStyleType: 'none'}}>
+                            {this.props.errorMessages.map((errorMessage: string, index) =>
+                                <li>{`${index + 1}: ${errorMessage}`}</li> )
+                            }
+                            </ul>
+                        </div>
+                    )
                 }
 
                 {
