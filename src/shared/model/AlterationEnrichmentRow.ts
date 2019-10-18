@@ -7,9 +7,9 @@ export interface AlterationEnrichmentRow {
     entrezGeneId: number;
     cytoband: string;
     logRatio?: number;
-    pValue: number;
-    qValue: number;
+    pValue?: number;
+    qValue?: number;
     value?:number; // for copy number, used in group comparison
     groupsSet:{[id:string]:CountSummary & {alteredPercentage:number}};
-    enrichedGroup:string;
+    enrichedGroup?:string;
 }

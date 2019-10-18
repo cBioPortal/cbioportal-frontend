@@ -190,7 +190,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
     setListHeight(){
         const $el = $(ReactDOM.findDOMNode(this) as HTMLDivElement);
-        var h = WindowStore.size.height - $el.offset().top;
+        var h = WindowStore.size.height - $el.offset()!.top;
         h = (h < MIN_LIST_HEIGHT) ? MIN_LIST_HEIGHT : h; // impose limit
         $el.css("height",h-75);
     }

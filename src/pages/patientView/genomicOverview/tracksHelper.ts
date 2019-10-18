@@ -132,16 +132,21 @@ export function getChmInfo(genomeBuild:string) {
     return sel;
 }
 
-export function plotChromosomes(p: any, config: any,chmInfo: any) {
+export function plotChromosomes(p: any, config: any,chmInfo: any, genomeBuild: any) {
     var yRuler = config.rowMargin+config.ticHeight;
     drawLine(config.wideLeftText,yRuler,config.wideLeftText+config.GenomeWidth,yRuler,p,'#000',1);
     // ticks & texts
     for (var i=1; i<chmInfo.genomeRef.length; i++) {
+        if (chmInfo.genomeRef[i] === 0 && genomeBuild === "GRCm38") {
+            // Do not display chromosomes 20, 21 and 22 in mouse, they do not exist
+            // They have length 0 in the file chromosomeSizes.json
+        } else {
         var xt = chmInfo.loc2xpixil(i,0,config);
         drawLine(xt,yRuler,xt,config.rowMargin,p,'#000',1);
 
         var m = chmInfo.middle(i,config);
         p.text(m,yRuler-config.rowMargin,chmInfo.chmName(i));
+        }
     }
     drawLine(config.wideLeftText+config.GenomeWidth,yRuler,config.wideLeftText+config.GenomeWidth,config.rowMargin,p,'#000',1);
 }
@@ -285,10 +290,10 @@ function addToolTip(node: any, tip: any,showDelay: any, position: any) {
         style: { classes: 'qtip-light qtip-rounded' },
         position: {
             my: "bottom right",
-            at: "top left"
+            at: "top left",
+            viewport: $("body")
         }
-        //position: {viewport: $(window)}
-    }; //TODO: viewport causes jquery exception
+    };
     // if (showDelay)
     //     param['show'] = { delay: showDelay };
     // if (position)
