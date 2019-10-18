@@ -565,12 +565,20 @@ export function makeEnrichmentDataPromise<T extends {cytoband?:string, hugoGeneS
                         d.cytoband = refGene.cytoband;
                 }
 
-                const sortedByPvalue = _.sortBy(data, c=>c.pValue);
-                const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));
-                qValues.forEach((qValue, index)=>{
-                    sortedByPvalue[index].qValue = qValue;
+                const dataWithpValue: T[] = [];
+                const dataWithoutpValue: T[] = [];
+                data.forEach(datum => {
+                    datum.pValue === undefined ? dataWithoutpValue.push(datum) : dataWithpValue.push(datum);
                 });
-                return sortEnrichmentData(sortedByPvalue);
+
+                const sortedByPValue = _.sortBy(dataWithpValue, c => c.pValue);
+                const qValues = calculateQValues(sortedByPValue.map(c => c.pValue));
+
+                qValues.forEach((qValue, index) => {
+                    sortedByPValue[index].qValue = qValue;
+                });
+
+                return sortEnrichmentData([...sortedByPValue, ...dataWithoutpValue]);
             } else {
                 return [];
             }

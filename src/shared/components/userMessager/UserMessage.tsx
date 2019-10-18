@@ -8,7 +8,7 @@ import autobind from "autobind-decorator";
 import * as _ from 'lodash';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
-import {isWebdriver} from "shared/lib/tracking";
+import {isWebdriver} from "public-lib/lib/webdriverUtils";
 
 export interface IUserMessage {
     dateStart?:number;
