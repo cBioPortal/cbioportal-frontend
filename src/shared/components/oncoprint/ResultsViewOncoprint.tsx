@@ -1074,7 +1074,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @computed get width() {
-        return WindowStore.size.width - 25;
+        return WindowStore.size.width - 75;
     }
 
     public render() {
