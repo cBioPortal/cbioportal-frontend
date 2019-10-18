@@ -1,5 +1,6 @@
 import * as _ from "lodash";
 import * as React from "react";
+import classNames from "classnames";
 
 export type Option = {
     value: string;
@@ -44,5 +45,12 @@ export function getOptionLabel(option: Option,
     const checkBox = checkBoxType === CheckBoxType.STRING ?
         getStringCheckBox(option, selectedValues): getHtmlCheckBox(option, selectedValues);
 
-    return <span>{checkBox} {option.label || option.value}</span>;
+    return <span
+                className={classNames(
+                    'checked-select-option',
+                    {'is-selected': option.value in selectedValues}
+                )}
+            >
+                {checkBox} {option.label || option.value}
+            </span>;
 }

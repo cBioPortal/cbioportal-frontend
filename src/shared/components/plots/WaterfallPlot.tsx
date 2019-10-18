@@ -60,11 +60,13 @@ const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 export const LEGEND_Y = 30
 const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
-const PLOT_DATA_PADDING_PIXELS = {y: 3, x: [30, 30]};
 const LEFT_PADDING = 25;
 const LEGEND_ITEMS_PER_ROW = 4;
 const LABEL_OFFSET_FRACTION = .02;
 const SEARCH_LABEL_SIZE_MULTIPLIER = 1.5;
+const TOOLTIP_OFFSET_Y = 28.5;
+const TOOLTIP_OFFSET_X = -5;
+const CHART_OFFSET_Y = 30;
 const limitValueAppearanceSupplement = {
     fill: "#ffffff",
     stroke: "#000000",
@@ -72,6 +74,7 @@ const limitValueAppearanceSupplement = {
     strokeOpacity: 1,
     size: 3
 };
+
 @observer
 export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends React.Component<IWaterfallPlotProps<D>, {}> {
 
@@ -103,8 +106,13 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                                 // swap x and y label pos when in horizontal mode
                                 if (this.props.horizontal && !props.datum.searchLabel) {
                                     const x = props.x;
-                                    props.x = props.y;
-                                    props.y = x;
+                                    // to position the tooltip more correctly
+                                    props.x = props.y + TOOLTIP_OFFSET_X;
+                                    props.y = x + TOOLTIP_OFFSET_Y;
+                                } else if (!this.props.horizontal) {
+                                    // to position the tooltip more correctly
+                                    props.x += TOOLTIP_OFFSET_X;
+                                    props.y += TOOLTIP_OFFSET_Y;
                                 }
 
                                 this.tooltipModel = props;
@@ -216,7 +224,7 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
 
         return {
             value: [min!, max!],
-            order: [1, this.waterfallPlotData.length]  // return range defined by the number of samples for the x-axis
+            order: [1, this.waterfallPlotData.length] // return range defined by the number of samples for the x-axis
         };
     }
 
@@ -332,7 +340,10 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
         // sort datapoints according to value
         // default sort order for sortBy is ascending (a.k.a 'ASC') order
         dataPoints = _.sortBy(dataPoints, (d:D) => d.value);
-        if (this.props.sortOrder === "DESC") {
+        if (
+                (this.props.horizontal && this.props.sortOrder === 'ASC') ||
+                (!this.props.horizontal && this.props.sortOrder === 'DESC')
+        ) {
             dataPoints = _.reverse(dataPoints);
         }
         // assign a x value (equivalent to position in array)
@@ -452,6 +463,13 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
         return searchLabels;
     }
     
+    @computed get plotPaddingInPixels() {
+        if (this.props.horizontal) {
+            return {y:30, x:3};
+        }
+        return {y:3, x:30};
+    }
+    
     @bind
     private getChart() {
         return (
@@ -471,33 +489,30 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                     role="img"
                     viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                     >
+                    <g>{this.title}</g>
                     <g
-                        transform={`translate(${LEFT_PADDING},0)`}
+                        transform={`translate(${LEFT_PADDING},${CHART_OFFSET_Y})`}
                         >
                         <VictoryChart
                             theme={CBIOPORTAL_VICTORY_THEME}
                             width={this.props.chartWidth}
                             height={this.props.chartHeight}
                             standalone={false}
-                            domainPadding={PLOT_DATA_PADDING_PIXELS}
-                            singleQuadrantDomainPadding={false}
+                            domainPadding={this.plotPaddingInPixels}
+                            singleQuadrantDomainPadding={this.props.horizontal}
                         >
-                            {this.title}
                             {this.legend}
                             {this.props.horizontal && <VictoryAxis
                                 domain={this.plotDomainX}
                                 orientation="top"
-                                offsetY={80}
                                 crossAxis={false}
                                 tickCount={NUM_AXIS_TICKS}
                                 tickFormat={this.tickFormatX}
                                 axisLabelComponent={<VictoryLabel dy={-20}/>}
                                 label={this.props.axisLabel}
                             />}
-                            {/* invert the y-axis in horizontal view */}
                            {this.props.horizontal && <VictoryAxis
                                 orientation="left"
-                                invertAxis={true}
                                 dependentAxis={true}
                                 tickFormat={() => ''}
                                 style={{ axis: {stroke: "none"}, ticks: {stroke: "none"}, tickLabels: {stroke: "none"} }}
