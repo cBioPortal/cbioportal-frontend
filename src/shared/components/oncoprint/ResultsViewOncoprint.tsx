@@ -46,7 +46,6 @@ interface IResultsViewOncoprintProps {
     store:ResultsViewPageStore;
     routing:any;
     addOnBecomeVisibleListener?:(callback:()=>void)=>void;
-    // replaceRoutingHistoryCallback?:(params:{[name:string]:any}) => void;
     replaceRoutingHistoryCallback?:(url:string) => void;
 }
 
@@ -247,9 +246,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                             break;
                     }
                     url += '&' + ONCOPRINT_SORTBY_URL_PARAM + '=' + value;
-                    // const params:{[name:string]:any} = {};
-                    // params[ONCOPRINT_SORTBY_URL_PARAM] = value;
-                    // this.props.replaceRoutingHistoryCallback!(params);
                     this.props.replaceRoutingHistoryCallback!(url);
                 }
             );

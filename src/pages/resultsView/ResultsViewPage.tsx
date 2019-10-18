@@ -188,8 +188,6 @@ export default class ResultsViewPage extends React.Component<
 
     @autobind
     private handleSilentUrlUpdate(url:string) {
-    // private handleSilentUrlUpdate(params:{[name:string]:any}) {
-        // this.props.routing.updateRoute(params, undefined, false, true);
         if (this.props.routing) {
             this.props.routing.history.replace(url);
         }
