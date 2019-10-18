@@ -15,7 +15,7 @@ describe("TrialMatchTableUtils", () => {
                 "matches": [],
                 "notMatches": [
                     {
-                        "genomicAlteration": "!EGFR !E709_T710delinsD",
+                        "genomicAlteration": "EGFR !E709_T710delinsD",
                         "matches": [
                             {
                                 "trueHugoSymbol": null,
@@ -25,7 +25,7 @@ describe("TrialMatchTableUtils", () => {
                         ]
                     },
                     {
-                        "genomicAlteration": "!EGFR !E709K",
+                        "genomicAlteration": "EGFR !E709K",
                         "matches": [
                             {
                                 "trueHugoSymbol": null,
@@ -35,7 +35,7 @@ describe("TrialMatchTableUtils", () => {
                         ]
                     },
                     {
-                        "genomicAlteration": "!EGFR !L833V",
+                        "genomicAlteration": "EGFR !L833V",
                         "matches": [
                             {
                                 "trueHugoSymbol": null,
@@ -65,7 +65,7 @@ describe("TrialMatchTableUtils", () => {
                 ],
                 "notMatches": [
                     {
-                        "genomicAlteration": "!EGFR !T790M",
+                        "genomicAlteration": "EGFR !T790M",
                         "matches": [
                             {
                                 "trueHugoSymbol": null,
@@ -116,14 +116,10 @@ describe("TrialMatchTableUtils", () => {
                 matchType: "annotated_variant",
                 armDescription: "Part A - Dose Escalation",
                 trueHugoSymbol: "FGFR2",
-                trialAccrualStatus: "open",
-                matchLevel: "arm",
                 sampleId: "P-0002675-T01-IM3",
                 mrn: "P-0002675",
                 trueProteinChange: "FGFR2-BICC1 fusion",
                 genomicAlteration: "FGFR2 Oncogenic Mutations",
-                patientClinical: ">=18 All Solid Tumors",
-                patientGenomic: "FGFR2 FGFR2-BICC1 fusion",
                 trialAgeNumerical: ">=18",
                 trialOncotreePrimaryDiagnosis: "All Solid Tumors"
             },
@@ -135,14 +131,10 @@ describe("TrialMatchTableUtils", () => {
                 matchType: "annotated_variant",
                 armDescription: "Part B - Expansion Cohort",
                 trueHugoSymbol: "FGFR2",
-                trialAccrualStatus: "open",
-                matchLevel: "arm",
                 sampleId: "P-0002675-T01-IM3",
                 mrn: "P-0002675",
                 trueProteinChange: "FGFR2-BICC1 fusion",
                 genomicAlteration: "FGFR2 Fusions",
-                patientClinical: ">=18 All Solid Tumors",
-                patientGenomic: "FGFR2 FGFR2-BICC1 fusion",
                 trialAgeNumerical: ">=18",
                 trialOncotreePrimaryDiagnosis: "All Solid Tumors"
             },
@@ -154,13 +146,9 @@ describe("TrialMatchTableUtils", () => {
                 matchType: "annotated_variant",
                 armDescription: "Cohort C INCB054828",
                 armType: "Control Arm",
-                trialAccrualStatus: "open",
-                matchLevel: "arm",
                 sampleId: "P-0002675-T01-IM3",
                 mrn: "P-0002675",
-                genomicAlteration: "!FGF23 !Oncogenic Mutations",
-                patientClinical: ">=18 Cholangiocarcinoma",
-                patientGenomic: "",
+                genomicAlteration: "FGF23 !Oncogenic Mutations",
                 trialAgeNumerical: ">=18",
                 trialOncotreePrimaryDiagnosis: "Cholangiocarcinoma"
             },
@@ -172,13 +160,9 @@ describe("TrialMatchTableUtils", () => {
                 matchType: "annotated_variant",
                 armDescription: "Cohort C INCB054828",
                 armType: "Control Arm",
-                trialAccrualStatus: "open",
-                matchLevel: "arm",
                 sampleId: "P-0002675-T01-IM3",
                 mrn: "P-0002675",
-                genomicAlteration: "!FGFR1 !Oncogenic Mutations",
-                patientClinical: ">=18 Cholangiocarcinoma",
-                patientGenomic: "",
+                genomicAlteration: "FGFR1 !Oncogenic Mutations",
                 trialAgeNumerical: ">=18",
                 trialOncotreePrimaryDiagnosis: "Cholangiocarcinoma"
             }
@@ -192,14 +176,10 @@ describe("TrialMatchTableUtils", () => {
                 matchType: "annotated_variant",
                 armDescription: "Part A - Dose Escalation",
                 trueHugoSymbol: "FGFR2",
-                trialAccrualStatus: "open",
-                matchLevel: "arm",
                 sampleId: "P-0002675-T01-IM3",
                 mrn: "P-0002675",
                 trueProteinChange: "FGFR2-BICC1 fusion",
                 genomicAlteration: "FGFR2 Oncogenic Mutations",
-                patientClinical: ">=18 All Solid Tumors",
-                patientGenomic: "FGFR2 FGFR2-BICC1 fusion",
                 trialAgeNumerical: ">=18",
                 trialOncotreePrimaryDiagnosis: "All Solid Tumors"
             },
@@ -211,14 +191,10 @@ describe("TrialMatchTableUtils", () => {
                 matchType: "annotated_variant",
                 armDescription: "Part B - Expansion Cohort",
                 trueHugoSymbol: "FGFR2",
-                trialAccrualStatus: "open",
-                matchLevel: "arm",
                 sampleId: "P-0002675-T01-IM3",
                 mrn: "P-0002675",
                 trueProteinChange: "FGFR2-BICC1 fusion",
                 genomicAlteration: "FGFR2 Fusions",
-                patientClinical: ">=18 All Solid Tumors",
-                patientGenomic: "FGFR2 FGFR2-BICC1 fusion",
                 trialAgeNumerical: ">=18",
                 trialOncotreePrimaryDiagnosis: "All Solid Tumors"
             }
