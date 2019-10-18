@@ -131,9 +131,12 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
             name: 'Alteration Overlap',
             headerRender: () => <span>Co-occurrence Pattern</span>,
             render: (data) => {
-
+                if (data.pValue === undefined) {
+                    return <span>-</span>
+                }
                 const groups = _.map(data.groupsSet);
-
+                const queriedGroup1 = this.props.groups[0];
+                const queriedGroup2 = this.props.groups[1];
                   // we want to order groups according to order in prop.groups
                   const group1 = groups.find((group)=>group.name===this.props.groups[0].name)!;
                   const group2 = groups.find((group)=>group.name===this.props.groups[1].name)!;
@@ -142,13 +145,14 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                       throw("No matching groups in Alteration Overlap Cell");
                   }
 
-                const totalUniqueCases = group1.profiledCount + group2.profiledCount;
-
-                const group1Width = (group1.profiledCount/totalUniqueCases)*100;
+                const totalQueriedCases = queriedGroup1.count + queriedGroup2.count;
+                const group1Width = (queriedGroup1.count / totalQueriedCases) * 100;
                 const group2Width = 100 - group1Width;
-                const group1Unaltered = ((group1.profiledCount - group1.alteredCount)/ totalUniqueCases) * 100;
-                const group1Altered = (group1.alteredCount / totalUniqueCases) * 100;
-                const group2Altered = (group2.alteredCount / totalUniqueCases) * 100;
+                const group1Unprofiled = ((queriedGroup1.count - group1.profiledCount) / totalQueriedCases) * 100;
+                const group1Unaltered = ((group1.profiledCount - group1.alteredCount) / totalQueriedCases) * 100;
+                const group2Unprofiled = ((queriedGroup2.count - group2.profiledCount) / totalQueriedCases) * 100;
+                const group1Altered = (group1.alteredCount / totalQueriedCases) * 100;
+                const group2Altered = (group2.alteredCount / totalQueriedCases) * 100;
 
                 const alterationLanguage = this.props.showCNAInTable ? 'copy number alterations' : 'mutations'
 
@@ -159,11 +163,11 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             <tbody>
                             <tr>
                                 <td><strong>{group1.name}: </strong></td>
-                                <td>{group1.alteredCount} of {group1.profiledCount} of {this.props.patientLevelEnrichments ? "patients" : "samples"} ({numeral(group1.alteredPercentage).format('0.0')}%)</td>
+                                <td>{group1.alteredCount} of {group1.profiledCount} of profiled {this.props.patientLevelEnrichments ? "patients" : "samples"} ({numeral(group1.alteredPercentage).format('0.0')}%)</td>
                             </tr>
                             <tr>
                                 <td><strong>{group2.name}: </strong></td>
-                                <td>{group2.alteredCount} of {group2.profiledCount} of {this.props.patientLevelEnrichments ? "patients" : "samples"} ({numeral(group2.alteredPercentage).format('0.0')}%)
+                                <td>{group2.alteredCount} of {group2.profiledCount} of profiled {this.props.patientLevelEnrichments ? "patients" : "samples"} ({numeral(group2.alteredPercentage).format('0.0')}%)
                                 </td>
                             </tr>
                             </tbody>
@@ -181,6 +185,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                               group1Unaltered={group1Unaltered}
                               group1Altered={group1Altered}
                               group2Altered={group2Altered}
+                              group1Unprofiled={group1Unprofiled}
+                              group2Unprofiled={group2Unprofiled}
                               group1Color={this.props.groups[0].color}
                               group2Color={this.props.groups[1].color}
                               width={150}

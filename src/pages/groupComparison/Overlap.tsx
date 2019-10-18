@@ -101,12 +101,12 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             //move patient element down by sample element size
             if (this.areUpsetPlotsSidebySide) {
                 patientElement.setAttribute("x", `${$(sampleElement).width()}`);
-                height = Math.max($(sampleElement).height(), $(patientElement).height());
-                width = $(sampleElement).width() + $(patientElement).width();
+                height = Math.max($(sampleElement).height()!, $(patientElement).height()!);
+                width = $(sampleElement).width()! + $(patientElement).width()!;
             } else {
                 patientElement.setAttribute("y", `${$(sampleElement).height()}`);
-                height = $(sampleElement).height() + $(patientElement).height();
-                width = Math.max($(sampleElement).width(), $(patientElement).width());
+                height = $(sampleElement).height()! + $(patientElement).height()!;
+                width = Math.max($(sampleElement).width()!, $(patientElement).width()!);
             }
 
             $(svg).attr("height", height);

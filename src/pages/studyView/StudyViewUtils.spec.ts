@@ -2209,7 +2209,6 @@ describe('StudyViewUtils', () => {
         it("should format min max range with no special value", () => {
             const actual = formatRange(1.5, 2.5, undefined)
             const expected = "1.5-2.5";
-
             assert.equal(actual, expected);
         });
 
