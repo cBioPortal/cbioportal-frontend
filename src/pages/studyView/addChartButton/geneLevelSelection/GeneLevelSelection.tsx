@@ -1,18 +1,16 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { MolecularProfile, Gene } from 'shared/api/generated/CBioPortalAPI';
-import { CustomChart, GenomicChart } from 'pages/studyView/StudyViewPageStore';
+import { GenomicChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
-import { ValidationResult, CodeEnum, ParseResult } from '../customCaseSelection/CustomCaseSelectionUtils';
 import autobind from 'autobind-decorator';
 import { action, computed, observable } from 'mobx';
 import styles from "./styles.module.scss";
-import { serializeEvent } from 'shared/lib/tracking';
-import { ClinicalDataTypeEnum } from 'pages/studyView/StudyViewUtils';
 import ReactSelect from "react-select";
-import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
+import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import OQLTextArea, { GeneBoxType } from 'shared/components/GeneSelectionBox/OQLTextArea';
 
 export interface IGeneLevelSelectionProps {
     molecularProfiles: MolecularProfile[];
@@ -45,12 +43,16 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
 
     @computed
     get molecularProfileOptions(): { value: string, label: string; }[] {
-        return this.props.molecularProfiles.map((profile: MolecularProfile) => {
-            return {
-                value: profile.molecularProfileId,
-                label: profile.name
-            }
-        })
+        return this.props.molecularProfiles
+            .filter(molecularProfile => {
+                return ([AlterationTypeConstants.MRNA_EXPRESSION, AlterationTypeConstants.PROTEIN_LEVEL, AlterationTypeConstants.METHYLATION]).includes(molecularProfile.molecularAlterationType) ||
+                    (molecularProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && molecularProfile.datatype === "CONTINUOUS");
+            }).map((profile: MolecularProfile) => {
+                return {
+                    value: profile.molecularProfileId,
+                    label: profile.name
+                }
+            });
     }
 
     @autobind
@@ -99,7 +101,7 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
         return (
             <div className={styles.body}>
                 Gene:
-                <GeneSelectionBox
+                <OQLTextArea
                     inputGeneQuery={this.geneInput}
                     validateInputGeneQuery={false}
                     callback={this.updateSelectedGenes}
