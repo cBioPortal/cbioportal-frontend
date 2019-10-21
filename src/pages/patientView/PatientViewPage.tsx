@@ -242,8 +242,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         return sampleIds.length > 1 
             && checkNonProfiledGenesExist(  sampleIds,
                                             entrezGeneIds,
-                                            patientViewPageStore.sampleToMutationGenePanelId,
-                                            patientViewPageStore.genePanelIdToEntrezGeneIds);
+                                            patientViewPageStore.sampleToMutationGenePanelId.result,
+                                            patientViewPageStore.genePanelIdToEntrezGeneIds.result);
     }
 
     cnaTableShowGeneFilterMenu(sampleIds:string[]):boolean {
@@ -251,8 +251,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         return sampleIds.length > 1
             && checkNonProfiledGenesExist(  sampleIds,
                                             entrezGeneIds, 
-                                            patientViewPageStore.sampleToDiscreteGenePanelId,
-                                            patientViewPageStore.genePanelIdToEntrezGeneIds);
+                                            patientViewPageStore.sampleToDiscreteGenePanelId.result,
+                                            patientViewPageStore.genePanelIdToEntrezGeneIds.result);
     }
 
     public render() {
