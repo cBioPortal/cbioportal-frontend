@@ -182,7 +182,7 @@ export class PatientViewPageStore {
     @observable _sampleId = '';
 
     @observable public mutationTableGeneFilterOption = GeneFilterOption.ANY_SAMPLE;
-    @observable public copynumberTableGeneFilterOption = GeneFilterOption.ANY_SAMPLE;
+    @observable public copyNumberTableGeneFilterOption = GeneFilterOption.ANY_SAMPLE;
 
     @computed get sampleId() {
         return this._sampleId;
@@ -861,7 +861,7 @@ export class PatientViewPageStore {
     }
 
     @computed get mergedDiscreteCNADataFilteredByGene():DiscreteCopyNumberData[][] {
-        if (this.copynumberTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
+        if (this.copyNumberTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
             return _.filter(this.mergedDiscreteCNAData,(mutations:DiscreteCopyNumberData[]) => {
                 const entrezGeneId = mutations[0].gene.entrezGeneId;
                 const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(entrezGeneId, this.sampleIds, this.sampleToMutationGenePanelId, this.genePanelIdToEntrezGeneIds);
