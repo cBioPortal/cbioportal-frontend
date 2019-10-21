@@ -16,6 +16,7 @@ import {formatError} from "shared/lib/errorFormatter";
 import {buildCBioPortalPageUrl} from "shared/api/urls";
 import ErrorScreen from "shared/components/errorScreen/ErrorScreen";
 import { ServerConfigHelpers } from 'config/config';
+import {isWebdriver} from "public-lib/lib/webdriverUtils";
 
 interface IContainerProps {
     location: Location;
@@ -47,7 +48,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     render() {
-        if (!ServerConfigHelpers.sessionServiceIsEnabled()) {
+        if (!isWebdriver() && !ServerConfigHelpers.sessionServiceIsEnabled()) {
             return (
                 <div className="contentWrapper">
                     <ErrorScreen
