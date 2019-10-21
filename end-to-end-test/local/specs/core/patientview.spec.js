@@ -70,16 +70,55 @@ describe('patient view page', function() {
 
         });
 
+        describe('filtering of mutation table', () => {
+            
+            let selectMenu;
+            let filterIcon;
+
+            before(() => {
+                goToUrlAndSetLocalStorage(patienViewUrl);
+                waitForPatientView();
+            });
+
+            it('opens selection menu when filter icon clicked', () => {
+                filterIcon = $('div[data-test=patientview-mutation-table]').$('i[data-test=gene-filter-icon]');
+                filterIcon.click();
+                selectMenu = $('.rc-tooltip');
+                assert(selectMenu.isVisible());
+            });
+            
+            it('removes genes profiles profiled in some samples then `all genes` option selected', () => {
+                const allGenesRadio = selectMenu.$('input[value=allSamples]');
+                allGenesRadio.click();
+                const geneEntries = $$('[data-test=mutation-table-gene-column]');
+                assert.equal(geneEntries.length, 1);
+                const geneName = geneEntries[0].getText();
+                assert.equal(geneName, "CADM2");
+            });
+
+            it('re-adds genes when `any genes` option selected', () => {
+                const anyGenesRadio = selectMenu.$('input[value=anySample]');
+                anyGenesRadio.click();
+                const geneEntries = $$('[data-test=mutation-table-gene-column]');
+                assert.equal(geneEntries.length, 4);
+            });
+
+            it('closes selection menu when filter icon clicked again', () => {
+                filterIcon.click();
+                selectMenu = $('.rc-tooltip');
+                assert(!selectMenu.isVisible());
+            });
+
+        });
+
     }
 });
 
 function testSampleIcon(geneSymbol, tableTag, sampleIconTypes, sampleVisibilities) {
 
-    
     const geneCell = $('div[data-test='+tableTag+'] table').$('span='+geneSymbol);
     const samplesCell = geneCell.$('..').$('..').$('div[data-test=samples-cell] ul');
     const icons = samplesCell.$$("li");
-    // browser.debug();
     
     sampleIconTypes.forEach((desiredDataType, i) => {
         const isExpectedIcon = icons[i].$('svg[data-test='+desiredDataType+']').isExisting();
@@ -90,4 +129,5 @@ function testSampleIcon(geneSymbol, tableTag, sampleIconTypes, sampleVisibilitie
         const actualVisibility = icons[i].isVisible();
         assert.equal(actualVisibility, desiredVisibility, "Gene "+geneSymbol+": icon visibility at position "+i+" is not `"+desiredVisibility+"`, but is `"+actualVisibility+"`");
     });
+
 }

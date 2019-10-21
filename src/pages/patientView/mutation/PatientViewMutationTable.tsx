@@ -12,12 +12,16 @@ import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import {isUncalled} from "shared/lib/MutationUtils";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
 import ExonColumnFormatter from "shared/components/mutationTable/column/ExonColumnFormatter";
+import HeaderIconMenu from "./HeaderIconMenu";
+import GeneFilterMenu, { GeneFilterOption } from "./GeneFilterMenu";
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager:SampleManager | null;
     sampleToGenePanelId:{[sampleId: string]: string|undefined};
     genePanelIdToEntrezGeneIds:{[genePanelId: string]: number[]};
     sampleIds?:string[];
+    currentGeneFilter:GeneFilterOption;
+    onFilterGenes?:(option:GeneFilterOption)=>void;
 }
 
 @observer
@@ -120,6 +124,13 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.EXON].sortBy = undefined;
         this._columns[MutationTableColumnType.EXON].render =
             (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, true));
+        this._columns[MutationTableColumnType.GENE].headerRender = (name:string) => {
+            return (
+                <HeaderIconMenu name={name} >
+                    <GeneFilterMenu onOptionChanged={this.props.onFilterGenes} currentSelection={this.props.currentGeneFilter} />
+                </HeaderIconMenu>
+            );
+        };
 
         // order columns
         this._columns[MutationTableColumnType.SAMPLES].order = 5;
