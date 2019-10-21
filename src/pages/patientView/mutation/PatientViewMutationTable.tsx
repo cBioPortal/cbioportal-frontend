@@ -4,7 +4,7 @@ import {observer} from "mobx-react";
 import {
     IMutationTableProps, MutationTableColumnType, default as MutationTable
 } from "shared/components/mutationTable/MutationTable";
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
@@ -15,6 +15,8 @@ import ExonColumnFormatter from "shared/components/mutationTable/column/ExonColu
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager:SampleManager | null;
+    sampleToGenePanelId:{[sampleId: string]: string|undefined};
+    genePanelIdToEntrezGeneIds:{[genePanelId: string]: number[]};
     sampleIds?:string[];
 }
 
@@ -86,7 +88,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
 
         this._columns[MutationTableColumnType.SAMPLES] = {
             name: "Samples",
-            render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
+            render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager, this.props.sampleToGenePanelId, this.props.genePanelIdToEntrezGeneIds),
             sortBy:(d:Mutation[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
             download: (d:Mutation[])=>TumorColumnFormatter.getSample(d),
             resizable: true,

@@ -18,6 +18,11 @@ function waitForCoExpressionTab(timeout) {
     $('//*[@id="coexpressionTabGeneTabs"]').waitForExist(timeout || 20000);
 }
 
+function waitForPatientView(timeout) {
+    $('#patientViewPageTabs').waitForExist(timeout || 20000);
+    waitForNetworkQuiet();
+}
+
 function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
     browser.waitUntil(()=>{
@@ -249,6 +254,7 @@ module.exports = {
     waitForGeneQueryPage: waitForGeneQueryPage,
     waitForOncoprint: waitForOncoprint,
     waitForCoExpressionTab: waitForCoExpressionTab,
+    waitForPatientView: waitForPatientView,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     useExternalFrontend: useExternalFrontend,
     sessionServiceIsEnabled: sessionServiceIsEnabled,
