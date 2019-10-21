@@ -51,10 +51,12 @@ export function groupTrialMatchesByAgeNumerical(armGroup: ITrialMatch[]): IClini
         const negativeCancerTypes: string[] = [];
         _.map(cancerTypes, (item) => {
             // If a cancer type contains a "!", it means this trial cannot be used for the cancer type, which is a "NOT" match.
-            if (item.includes('!')) {
-                negativeCancerTypes.push(item.replace('!', ''));
-            } else {
-                positiveCancerTypes.push(item);
+            if (!_.isUndefined(item)) {
+                if (item.includes('!')) {
+                    negativeCancerTypes.push(item.replace('!', ''));
+                } else {
+                    positiveCancerTypes.push(item);
+                }
             }
         });
         let clinicalGroupMatch: IClinicalGroupMatch = {
@@ -79,7 +81,7 @@ export function groupTrialMatchesByGenomicAlteration(ageGroup: ITrialMatch[]) {
     const matches: IGenomicGroupMatch[] = []; // positive matches
     const notMatches: IGenomicGroupMatch[] = []; // negative matches
     _.forEach(matchesGroupedByGenomicAlteration, (genomicAlterationGroup, genomicAlteration) => {
-        const genomicGroupMatch = groupTrialMatchesByPatientGenomic(genomicAlterationGroup, genomicAlteration);
+        const genomicGroupMatch = formatTrialMatchesByMatchType(genomicAlterationGroup, genomicAlteration);
         // If a genomic alteration(i.e. BRAF V600E) contains a "!",
         // it means this trial cannot be used for the genomic alteration, which is a "NOT" match.
         if(genomicAlteration.includes('!')) {
@@ -91,13 +93,30 @@ export function groupTrialMatchesByGenomicAlteration(ageGroup: ITrialMatch[]) {
     return { notMatches: notMatches, matches: matches };
 }
 
-export function groupTrialMatchesByPatientGenomic(genomicAlterationGroup: ITrialMatch[], genomicAlteration: string): IGenomicGroupMatch {
-    const matchesGroupedByPatientGenomic = _.groupBy(genomicAlterationGroup, (trial: ITrialMatch) => trial.patientGenomic);
+function formatTrialMatchesByMatchType(genomicAlterationGroup: ITrialMatch[], genomicAlteration: string) {
+    const matchType = genomicAlterationGroup[ 0 ][ 'matchType' ];
+    if (matchType === 'MUTATION') {
+        return groupTrialMatchesByPatientGenomic(genomicAlterationGroup, genomicAlteration, matchType);
+    } else {
+        const genomicGroupMatch: IGenomicGroupMatch = {
+            genomicAlteration: genomicAlteration,
+            matchType: matchType,
+            matches: [{
+                sampleIds: _.uniq( _.map( genomicAlterationGroup, ( trial: ITrialMatch ) => trial.sampleId ) )
+            }]
+        };
+        return genomicGroupMatch;
+    }
+}
+
+export function groupTrialMatchesByPatientGenomic(genomicAlterationGroup: ITrialMatch[], genomicAlteration: string, matchType: string): IGenomicGroupMatch {
+    const matchesGroupedByPatientGenomic = _.groupBy( genomicAlterationGroup, ( trial: ITrialMatch ) => trial.trueHugoSymbol! + trial.trueProteinChange! );
     const genomicGroupMatch: IGenomicGroupMatch = {
         genomicAlteration: genomicAlteration,
+        matchType: matchType,
         matches: []
     };
-    genomicGroupMatch.matches = _.map(matchesGroupedByPatientGenomic , (patientGenomicGroup: ITrialMatch[]) => {
+    genomicGroupMatch.matches = _.map(matchesGroupedByPatientGenomic, (patientGenomicGroup: ITrialMatch[]) => {
         const genomicMatch: IGenomicMatch = {
             trueHugoSymbol: patientGenomicGroup[0].trueHugoSymbol!,
             trueProteinChange: patientGenomicGroup[0].trueProteinChange!,
