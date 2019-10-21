@@ -54,6 +54,7 @@ import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
 import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import { GeneFilterOption } from "./mutation/GeneFilterMenu";
+import { checkNonProfiledGenesExist } from "./PatientViewPageUtils";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -236,6 +237,24 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         patientViewPageStore.copyNumberTableGeneFilterOption = option;
     }
 
+    mutationTableShowGeneFilterMenu(sampleIds:string[]):boolean {
+        const entrezGeneIds:number[] = _.uniq(_.map(patientViewPageStore.mergedMutationDataIncludingUncalled, mutations => mutations[0].entrezGeneId));
+        return sampleIds.length > 1 
+            && checkNonProfiledGenesExist(  sampleIds,
+                                            entrezGeneIds,
+                                            patientViewPageStore.sampleToMutationGenePanelId,
+                                            patientViewPageStore.genePanelIdToEntrezGeneIds);
+    }
+
+    cnaTableShowGeneFilterMenu(sampleIds:string[]):boolean {
+        const entrezGeneIds:number[] = _.uniq(_.map(patientViewPageStore.mergedDiscreteCNADataFilteredByGene, alterations => alterations[0].entrezGeneId));
+        return sampleIds.length > 1
+            && checkNonProfiledGenesExist(  sampleIds,
+                                            entrezGeneIds, 
+                                            patientViewPageStore.sampleToDiscreteGenePanelId,
+                                            patientViewPageStore.genePanelIdToEntrezGeneIds);
+    }
+
     public render() {
 
         let sampleManager: SampleManager | null = null;
@@ -310,22 +329,22 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 );
             }
         }
-
+        
         if (patientViewPageStore.patientIdsInCohort && patientViewPageStore.patientIdsInCohort.length > 0) {
             const indexInCohort = patientViewPageStore.patientIdsInCohort.indexOf(patientViewPageStore.studyId + ':' + patientViewPageStore.patientId);
             cohortNav = (
                 <PaginationControls
-                    currentPage={indexInCohort + 1}
-                    showMoreButton={false}
-                    showItemsPerPageSelector={false}
-                    showFirstPage={true}
-                    showLastPage={true}
-                    textBetweenButtons={` of ${patientViewPageStore.patientIdsInCohort.length} patients`}
-                    firstPageDisabled={indexInCohort === 0}
-                    previousPageDisabled={indexInCohort === 0}
-                    nextPageDisabled={indexInCohort === patientViewPageStore.patientIdsInCohort.length-1}
-                    lastPageDisabled={indexInCohort === patientViewPageStore.patientIdsInCohort.length-1}
-                    onFirstPageClick={() => this.handlePatientClick(patientViewPageStore.patientIdsInCohort[0]) }
+                currentPage={indexInCohort + 1}
+                showMoreButton={false}
+                showItemsPerPageSelector={false}
+                showFirstPage={true}
+                showLastPage={true}
+                textBetweenButtons={` of ${patientViewPageStore.patientIdsInCohort.length} patients`}
+                firstPageDisabled={indexInCohort === 0}
+                previousPageDisabled={indexInCohort === 0}
+                nextPageDisabled={indexInCohort === patientViewPageStore.patientIdsInCohort.length-1}
+                lastPageDisabled={indexInCohort === patientViewPageStore.patientIdsInCohort.length-1}
+                onFirstPageClick={() => this.handlePatientClick(patientViewPageStore.patientIdsInCohort[0]) }
                     onPreviousPageClick={() => this.handlePatientClick(patientViewPageStore.patientIdsInCohort[indexInCohort-1]) }
                     onNextPageClick={() => this.handlePatientClick(patientViewPageStore.patientIdsInCohort[indexInCohort+1]) }
                     onLastPageClick={() => this.handlePatientClick(patientViewPageStore.patientIdsInCohort[patientViewPageStore.patientIdsInCohort.length-1]) }
@@ -336,10 +355,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     }}
                     pageNumberEditable={true}
                     className="cohortNav"
-                />
-            );
-        }
+                    />
+                    );
+                }
 
+        let sampleIds:string[] = [];
+        if (sampleManager) {
+            sampleIds = sampleManager.samples.map((sample:ClinicalDataBySampleId) => sample.id );
+        }
+                
         return (
             <PageLayout noMargin={true} hideFooter={true}>
                 {
@@ -466,12 +490,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                     enableMyCancerGenome={AppConfig.serverConfig.mycancergenome_show}
                                                     enableCivic={AppConfig.serverConfig.show_civic}
                                                     columnVisibility={this.mutationTableColumnVisibility}
+                                                    showGeneFilterMenu={this.mutationTableShowGeneFilterMenu(sampleIds)}
                                                     currentGeneFilter={patientViewPageStore.mutationTableGeneFilterOption}
                                                     onFilterGenes={this.onFilterGenesMutationTable}
                                                     columnVisibilityProps={{
                                                         onColumnToggled: this.onMutationTableColumnVisibilityToggled
                                                     }}
-                                                />
+                                                    />
                                             </div>
                                         )
                                     }
@@ -482,7 +507,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                                     {
                                         (patientViewPageStore.studyIdToStudy.isComplete
-                                         && patientViewPageStore.referenceGenes.isComplete) && (
+                                            && patientViewPageStore.referenceGenes.isComplete) && (
                                             <div data-test="patientview-copynumber-table">
                                                 <CopyNumberTableWrapper
                                                     studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
@@ -507,6 +532,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                     mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
                                                     status={this.cnaTableStatus}
                                                     columnVisibility={this.cnaTableColumnVisibility}
+                                                    showGeneFilterMenu={this.cnaTableShowGeneFilterMenu(sampleIds)}
                                                     currentGeneFilter={patientViewPageStore.copyNumberTableGeneFilterOption}
                                                     onFilterGenes={this.onFilterGenesCopyNumberTable}
                                                     columnVisibilityProps={{

@@ -20,6 +20,7 @@ export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleToGenePanelId:{[sampleId: string]: string|undefined};
     genePanelIdToEntrezGeneIds:{[genePanelId: string]: number[]};
     sampleIds?:string[];
+    showGeneFilterMenu?:boolean;
     currentGeneFilter:GeneFilterOption;
     onFilterGenes?:(option:GeneFilterOption)=>void;
 }
@@ -36,6 +37,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         ...MutationTable.defaultProps,
         initialItemsPerPage: 10,
         paginationProps:{ itemsPerPageOptions:[10,25,50,100] },
+        showGeneFilterMenu: true,
         columns: [
             MutationTableColumnType.COHORT,
             MutationTableColumnType.MRNA_EXPR,
@@ -126,7 +128,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, true));
         this._columns[MutationTableColumnType.GENE].headerRender = (name:string) => {
             return (
-                <HeaderIconMenu name={name} >
+                <HeaderIconMenu name={name} showIcon={this.props.showGeneFilterMenu} >
                     <GeneFilterMenu onOptionChanged={this.props.onFilterGenes} currentSelection={this.props.currentGeneFilter} />
                 </HeaderIconMenu>
             );

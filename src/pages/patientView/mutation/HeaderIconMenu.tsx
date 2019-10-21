@@ -6,13 +6,15 @@ import './style.scss';
 
 export interface IHeaderIconMenuProps {
     name:string;
+    showIcon?:boolean;
     suppressClickBubble?:boolean;
 }
 
 export default class HeaderIconMenu extends React.Component<IHeaderIconMenuProps, {}> {
     
     public static defaultProps = {
-        suppressClickBubble: true
+        suppressClickBubble: true,
+        showIcon: true
     };
 
     constructor(props:IHeaderIconMenuProps) {
@@ -28,9 +30,11 @@ export default class HeaderIconMenu extends React.Component<IHeaderIconMenuProps
         return (
             <React.Fragment>
                 <span style={{marginRight:"5px"}} >{this.props.name}</span>
-                <Tooltip trigger={['click']} overlay={this.props.children}  >
-                    <i className="fa fa-filter" onClick={this.iconClicked} data-test="gene-filter-icon" />
-                </Tooltip>
+                {this.props.showIcon && (
+                    <Tooltip trigger={['click']} overlay={this.props.children}  >
+                        <i className="fa fa-filter" onClick={this.iconClicked} data-test="gene-filter-icon" />
+                    </Tooltip>
+                )}
             </React.Fragment>
         );
     }
