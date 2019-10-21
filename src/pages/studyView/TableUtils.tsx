@@ -110,10 +110,10 @@ export function getFreqColumnRender(type: FreqColumnType, numberOfProfiledCases:
             destroyTooltipOnHide={true}
         >
             <span data-test='freq-cell' style={style}>
-            {getFrequencyStr(
-                (numberOfAlteredCases / numberOfProfiledCases) * 100
-            )}
-        </span>
+                {getFrequencyStr(
+                    (numberOfAlteredCases / numberOfProfiledCases) * 100
+                )}
+            </span>
         </DefaultTooltip>
     );
 }
