@@ -80,6 +80,18 @@ describe('patient view page', function() {
                 waitForPatientView();
             });
 
+            it('filter menu icon is shown when gene panels are used', () => {
+                var filterIcon = $('div[data-test=patientview-mutation-table]').$('i[data-test=gene-filter-icon]');
+                assert(filterIcon.isVisible());
+            });
+            
+            it('filter menu icon is not shown when gene panels are not used', () => {
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK');
+                waitForPatientView();
+                var filterIcon = $('div[data-test=patientview-mutation-table]').$('i[data-test=gene-filter-icon]');
+                assert(! filterIcon.isVisible());
+            });
+
             it('opens selection menu when filter icon clicked', () => {
                 filterIcon = $('div[data-test=patientview-mutation-table]').$('i[data-test=gene-filter-icon]');
                 filterIcon.click();
