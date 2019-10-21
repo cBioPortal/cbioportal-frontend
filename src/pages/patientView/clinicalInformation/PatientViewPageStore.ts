@@ -855,7 +855,7 @@ export class PatientViewPageStore {
 
     @computed get mergedMutationDataIncludingUncalledFilteredByGene():Mutation[][] {
         if (this.mutationTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
-            return filterMutationsByProfiledGene(this.mergedMutationDataIncludingUncalled, this.sampleIds, this.sampleToMutationGenePanelId, this.genePanelIdToEntrezGeneIds);
+            return filterMutationsByProfiledGene(this.mergedMutationDataIncludingUncalled, this.sampleIds, this.sampleToMutationGenePanelId.result, this.genePanelIdToEntrezGeneIds.result);
         }
         return this.mergedMutationDataIncludingUncalled;
     }
@@ -864,7 +864,7 @@ export class PatientViewPageStore {
         if (this.copyNumberTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
             return _.filter(this.mergedDiscreteCNAData,(mutations:DiscreteCopyNumberData[]) => {
                 const entrezGeneId = mutations[0].gene.entrezGeneId;
-                const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(entrezGeneId, this.sampleIds, this.sampleToMutationGenePanelId, this.genePanelIdToEntrezGeneIds);
+                const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(entrezGeneId, this.sampleIds, this.sampleToMutationGenePanelId.result, this.genePanelIdToEntrezGeneIds.result);
                 return _(geneProfiledInSamples).values().filter((profiled:boolean) => profiled).value().length === this.sampleIds.length;
             });
         }
