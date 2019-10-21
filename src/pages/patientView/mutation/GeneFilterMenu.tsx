@@ -28,6 +28,8 @@ export enum GeneFilterOption {
     render() {
         return (
             <React.Fragment>
+                <div>Different gene panels were used for the samples.</div>
+                <div>Filter mutations for:</div>
                 <Radio
                     value={GeneFilterOption.ANY_SAMPLE}
                     checked={this.props.currentSelection === GeneFilterOption.ANY_SAMPLE}
