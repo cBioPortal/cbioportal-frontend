@@ -15,7 +15,7 @@ function waitForPlotsTab(timeout) {
 }
 
 function waitForCoExpressionTab(timeout) {
-    $('//*[@id="coexpressionTabGeneTabs"]').waitForExist(timeout || 20000);
+    $('#coexpressionTabGeneTabs').waitForExist(timeout || 20000);
 }
 
 function waitForPatientView(timeout) {
