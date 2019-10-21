@@ -7,6 +7,7 @@ import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.j
 import styles from './patientHeader/style/clinicalAttributes.scss';
 import naturalSort from 'javascript-natural-sort';
 import {ClinicalEvent, ClinicalEventData} from "../../shared/api/generated/CBioPortalAPI";
+import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 
 
 // sort samples based on event, clinical data and id
@@ -24,7 +25,7 @@ export function sortSamples(samples: Array<ClinicalDataBySampleId>,
     // based on sample collection data (timeline event)
     let collectionDayMap: {[s:string]:number} = {};
     if (events) {
-        let specimenEvents = events.filter((e: ClinicalEvent) => (e.eventType === 'SPECIMEN'));
+        const specimenEvents = events.filter((e: ClinicalEvent) => (e.eventType === 'SPECIMEN'));
 
         collectionDayMap = specimenEvents.reduce((map:{[s:string]:number}, specimenEvent: ClinicalEvent) => {
             let sampleAttr = _.find(specimenEvent.attributes, (attr: ClinicalEventData) => {
@@ -160,19 +161,21 @@ class SampleManager {
                           extraTooltipText: string = '',
                           additionalContent: JSX.Element|null = null)
     {
-        let sample = _.find(this.samples, (s: ClinicalDataBySampleId)=> {
+        const sample = _.find(this.samples, (s: ClinicalDataBySampleId)=> {
             return s.id === sampleId;
         });
 
         return sample && (
             <SampleInline
                 sample={sample}
-                sampleNumber={this.sampleIndex[sample.id] + 1}
-                sampleColor={this.sampleColors[sample.id]}
-                fillOpacity={fillOpacity}
                 extraTooltipText={extraTooltipText}
-                additionalContent={additionalContent}
-            />
+                additionalContent={additionalContent} >
+                <SampleLabelHTML
+                    label={(this.sampleIndex[sample.id] + 1).toString()}
+                    fillOpacity={fillOpacity}
+                    color={this.sampleColors[sample.id]}
+                />
+            </SampleInline>
         );
     }
 
@@ -186,6 +189,13 @@ class SampleManager {
 
     getComponentsForSamples() {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
+    }
+
+    getSampleLabel(sampleId:string):string {
+        if (sampleId in this.sampleLabels) {
+            return this.sampleLabels[sampleId];
+        }
+        return "";
     }
 }
 

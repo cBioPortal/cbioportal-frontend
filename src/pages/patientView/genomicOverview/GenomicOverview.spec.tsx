@@ -3,7 +3,7 @@ import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ShallowWrapper, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import {ThumbnailExpandVAFPlot} from "../vafPlot/ThumbnailExpandVAFPlot";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import {MutationFrequenciesBySample} from "../vafPlot/VAFPlot";

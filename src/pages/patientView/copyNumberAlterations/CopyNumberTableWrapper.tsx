@@ -11,7 +11,7 @@ import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import CnaColumnFormatter from "./column/CnaColumnFormatter";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import TumorColumnFormatter from "../mutation/column/TumorColumnFormatter";
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import {IOncoKbCancerGenesWrapper, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
@@ -30,6 +30,8 @@ type ICopyNumberTableWrapperProps = {
     studyIdToStudy?: {[studyId:string]:CancerStudy};
     sampleIds:string[];
     sampleManager:SampleManager|null;
+    sampleToGenePanelId:{[sampleId: string]: string|undefined};
+    genePanelIdToEntrezGeneIds:{[genePanelId: string]: number[]};
     cnaOncoKbData?: IOncoKbDataWrapper;
     cnaCivicGenes?: ICivicGeneDataWrapper;
     cnaCivicVariants?: ICivicVariantDataWrapper;
@@ -78,7 +80,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
         if (numSamples >= 2) {
             columns.push({
                 name: "Samples",
-                render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
+                render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager, this.props.sampleToGenePanelId, this.props.genePanelIdToEntrezGeneIds),
                 sortBy:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
                 download: (d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSample(d),
                 order: 20,
