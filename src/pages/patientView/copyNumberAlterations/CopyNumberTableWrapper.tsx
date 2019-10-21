@@ -52,15 +52,18 @@ type ICopyNumberTableWrapperProps = {
     columnVisibility?: {[columnId: string]: boolean};
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     status:"loading"|"available"|"unavailable";
+    showGeneFilterMenu?:boolean;
     currentGeneFilter:GeneFilterOption;
     onFilterGenes?:(option:GeneFilterOption)=>void;
 };
 
 @observer
 export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
+
     public static defaultProps = {
         enableOncoKb: true,
-        enableCivic: false
+        enableCivic: false,
+        showGeneFilterMenu: true,
     };
 
     @computed get hugoGeneSymbolToCytoband() {
@@ -102,7 +105,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             sortBy: (d:DiscreteCopyNumberData[])=>d[0].gene.hugoGeneSymbol,
             headerRender: (name:string) => {
                 return (
-                    <HeaderIconMenu name={name} >
+                    <HeaderIconMenu name={name} showIcon={this.props.showGeneFilterMenu} >
                         <GeneFilterMenu onOptionChanged={this.props.onFilterGenes} currentSelection={this.props.currentGeneFilter} />
                     </HeaderIconMenu>
                 );
