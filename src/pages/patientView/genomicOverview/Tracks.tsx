@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import * as tracksHelper from './tracksHelper';
 import {CopyNumberSeg, Mutation, Sample} from 'shared/api/generated/CBioPortalAPI';
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 
 interface TracksPropTypes {
