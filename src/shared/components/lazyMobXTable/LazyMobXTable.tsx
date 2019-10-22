@@ -20,9 +20,7 @@ import {SimpleCopyDownloadControls} from "../copyDownloadControls/SimpleCopyDown
 import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
-//@ts-ignore
 import ColumnResizer from "react-column-resizer";
-//@ts-ignore
 import {SortMetric} from "../../lib/ISortMetric";
 import {
     ILazyMobXTableApplicationDataStore,
