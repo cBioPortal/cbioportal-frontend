@@ -106,6 +106,33 @@ describe('treatment feature', function() {
                 searchBox.setValue('17-AAG');
                 var treatments = $('.oncoprint__controls__heatmap_menu .treatment-selector').$$('.checked-select-option');
                 assert.equal(treatments.length, 1);
+                
+                // test if add all button displays number of filtered treatments
+                var addAllButton = $('.oncoprint__controls__heatmap_menu .treatment-selector .default-checked-select button');
+                assert.equal(addAllButton.getText(), 'Select all (1)');
+                
+                // test if add all button only adds filtered treatments
+                addAllButton.click();
+                var selectedTreatments = $('.icon-area.treatment-textarea').$$('div.icon');
+                assert.equal(selectedTreatments.length, 1);
+            });
+            
+            it('keeps the filtered treatments list open after selecting an option', () => {
+                openHeatmapMenu();
+                selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
+               
+                var searchBox = $('.oncoprint__controls__heatmap_menu .treatment-selector .default-checked-select').$('input');
+                searchBox.setValue('AZ');
+                var treatments = $('.oncoprint__controls__heatmap_menu .treatment-selector').$$('.checked-select-option');
+                assert.equal(treatments.length, 2);
+                
+                var treatment = treatments[0];
+                var treatmentName = treatment.getText();
+                treatmentName = treatmentName.replace(/.*\((.*)\).*/, "$1");
+                treatment.$('..').click();
+                $('div.icon*='+treatmentName).waitForExist();
+                assert( $('div.icon*='+treatmentName) );
+                assert.equal(treatments.length, 2);
             });
 
             it('initializes from `treatment_list` URL parameter', () => {
