@@ -405,6 +405,7 @@ describe('gsva feature', function() {
             it('shows gene sets in table when GSVA scores selected in subject profile select box', () => {
                 selectReactSelectOption($('.coexpression-select-query-profile'), 'GSVA scores on oncogenic signatures gene sets (5 samples)');
                 $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+                $('span*=GO_').waitForExist();
                 assert.equal($$('span*=GO_').length, 7);
             });
 
