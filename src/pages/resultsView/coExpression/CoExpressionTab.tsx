@@ -279,6 +279,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
 
     @bind
     private geneTabs() {
+        // we hack together MSKTabs this way because of some particular responsiveness needs and mobxpromise behavior that may or may not still be relevant
         if (this.selectedGeneticEntity.isComplete &&
             this.selectedProfileX.isComplete &&
             this.selectedProfileY.isComplete &&
