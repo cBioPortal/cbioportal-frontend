@@ -5,6 +5,7 @@ import * as tracksHelper from './tracksHelper';
 import {CopyNumberSeg, Mutation, Sample} from 'shared/api/generated/CBioPortalAPI';
 import SampleManager from "../SampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
+import { IKeyedIconData, IIconData } from './GenomicOverviewUtils';
 
 interface TracksPropTypes {
     mutations:Array<Mutation>;
@@ -12,14 +13,24 @@ interface TracksPropTypes {
     sampleManager:SampleManager;
     samples:Sample[];
     width:number;
+    mutationGenePanelIconData?:IKeyedIconData;
+    copyNumberGenePanelIconData?:IKeyedIconData;
 }
 
 export const DEFAULT_GENOME_BUILD="GRCh37";
 
+
 export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
     componentDidMount() {
+        this.drawTracks();
+    }
 
+    componentDidUpdate() {
+        this.drawTracks();
+    }
+
+    drawTracks() {
         // --- construct params ---
         let cnaSamples = _.keyBy(this.props.samples.filter(s=>s.copyNumberSegmentPresent), s=>s.sampleId);
         let mutSamples = _.keyBy(this.props.samples.filter(s=>s.sequenced), s=>s.sampleId);
@@ -40,8 +51,12 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         tracksHelper.plotChromosomes(paper,config,chmInfo, genomeBuild);
         // --- end of chromosome chart ---
 
-
         _.each(this.props.sampleManager.samples, (sample: ClinicalDataBySampleId) => {
+
+            let genePanelIconData:IIconData =  {} as IIconData;
+            if (this.props.mutationGenePanelIconData) {
+                genePanelIconData = this.props.mutationGenePanelIconData[sample.id];
+            }
 
             // --- CNA bar chart ---
             if (cnaSamples[sample.id]) {
@@ -59,7 +74,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
                     _tmp.push(_dataObj.segmentMean);
                     raphaelData.push(_tmp);
                 });
-                tracksHelper.plotCnSegs(paper, config, chmInfo, rowIndex, raphaelData, 1, 3, 2, 5, sample.id);
+                tracksHelper.plotCnSegs(paper, config, chmInfo, rowIndex, raphaelData, 1, 3, 2, 5, sample.id, genePanelIconData);
                 rowIndex = rowIndex + 1;
 
                 if (this.props.sampleManager.samples.length > 1) {
@@ -79,14 +94,19 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         });
         // --- end of CNA bar chart ---
 
-
         // --- mutation events bar chart ---
         _.each(this.props.sampleManager.samples, (sample: ClinicalDataBySampleId) => {
+ 
+            let genePanelIconData:IIconData =  {} as IIconData;
+            if (this.props.mutationGenePanelIconData) {
+                genePanelIconData = this.props.mutationGenePanelIconData[sample.id];
+            }
+
             if (mutSamples[sample.id]) {
                 var _trackData = _.filter(this.props.mutations, function (_mutObj: any) {
                     return _mutObj.sampleId === sample.id;
                 });
-                tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, sample.id);
+                tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, sample.id, genePanelIconData);
                 rowIndex = rowIndex + 1;
 
                 if (this.props.sampleManager.samples.length > 1) {
@@ -107,12 +127,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
             };
         });
         // --- end of mutation events bar chart ---
-
-
-
-
     }
-
 
     public render() {
         return (
