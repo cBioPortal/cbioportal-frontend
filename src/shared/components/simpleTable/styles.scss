@@ -28,4 +28,14 @@
   tbody>tr:nth-of-type(odd).clickable:hover {
     background-color: #a7b6d8 !important;
   }
+
+  td.columnResizer {
+    border-color:transparent !important;
+  }
+
+  thead td.columnResizer {
+    border-color:transparent !important;
+    background-color:$borderColor;
+  }
+
 }
