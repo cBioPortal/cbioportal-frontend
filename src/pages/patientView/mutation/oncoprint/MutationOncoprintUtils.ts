@@ -6,34 +6,47 @@ import {CoverageInformation} from "../../../resultsView/ResultsViewPageStoreUtil
 import {isSampleProfiled} from "../../../../shared/lib/isSampleProfiled";
 import {MutationStatus} from "../PatientViewMutationsTabUtils";
 import {getVariantAlleleFrequency} from "../../../../shared/lib/MutationUtils";
+import {MutationOncoprintMode} from "./MutationOncoprint";
 
 export interface IMutationOncoprintTrackDatum extends IGeneHeatmapTrackDatum {
     mutation:Mutation;
     mutationStatus:MutationStatus;
+    mutationId:string;
 }
 
 export interface IMutationOncoprintTrackSpec extends IHeatmapTrackSpec {
     data:IMutationOncoprintTrackDatum[];
 }
 
+export function getMutationLabel(mutation:Mutation) {
+    return `${mutation.gene.hugoGeneSymbol} ${mutation.proteinChange}`;
+}
+
+function transposeMutationData(mutationDataBySample:{[sampleId:string]:IMutationOncoprintTrackDatum[]}):{[mutationId:string]:IMutationOncoprintTrackDatum[]} {
+    const allData = _.flatMap(mutationDataBySample);
+    return _.groupBy<IMutationOncoprintTrackDatum>(allData, d=>d.mutationId);
+}
+
 export function makeMutationHeatmapData(
     samples:Sample[],
     mutations:Mutation[],
-    coverageInformation:CoverageInformation
+    coverageInformation:CoverageInformation,
+    mode:MutationOncoprintMode
 ) {
     const mutationsByKey = _.keyBy(mutations, generateMutationIdByGeneAndProteinChangeAndEvent);
     const mutationsBySample = _.groupBy(mutations, m=>m.uniqueSampleKey);
     const mutationHasAtLeastOneVAF = _.mapValues(mutationsByKey, ()=>false);
 
-    const everyMutationDataBySample = samples.reduce((map, sample)=>{
+    let oncoprintData:IMutationOncoprintTrackDatum[] = [];
+    for (const sample of samples) {
         const sampleMutations = mutationsBySample[sample.uniqueSampleKey] || [];
-        const mutationKeys:{[uid:string]:boolean} = {};
-        const data:IMutationOncoprintTrackDatum[] = [];
+        const mutationKeys:{[mutationId:string]:boolean} = {};
         for (const mutation of sampleMutations) {
-            const uid = generateMutationIdByGeneAndProteinChangeAndEvent(mutation);
+            const mutationId = generateMutationIdByGeneAndProteinChangeAndEvent(mutation);
+            const uid = mode === MutationOncoprintMode.SAMPLE_TRACKS ? mutationId : sample.sampleId;
             const isUncalled = mutation.mutationStatus.toLowerCase() === "uncalled";
             if (!isUncalled || mutation.tumorAltCount > 0) {
-                mutationKeys[uid] = true;
+                mutationKeys[mutationId] = true;
                 let vaf = getVariantAlleleFrequency(mutation);
 
                 let mutationStatus;
@@ -43,10 +56,10 @@ export function makeMutationHeatmapData(
                     mutationStatus = MutationStatus.MUTATED_BUT_NO_VAF;
                 } else {
                     mutationStatus = MutationStatus.MUTATED_WITH_VAF;
-                    mutationHasAtLeastOneVAF[uid] = true;
+                    mutationHasAtLeastOneVAF[mutationId] = true;
                 }
 
-                data.push({
+                oncoprintData.push({
                     profile_data:vaf,
                     sample: sample.sampleId,
                     patient: sample.patientId,
@@ -54,23 +67,27 @@ export function makeMutationHeatmapData(
                     hugo_gene_symbol:"", // not used by us
                     mutation,
                     uid,
+                    mutationId,
                     mutationStatus
                 });
             }
         }
 
+        // fill in data for missing mutations
+
         const noData = Object.keys(mutationsByKey).filter(key=>!(key in mutationKeys))
                         .map(key=>mutationsByKey[key]);
 
         for (const mutation of noData) {
-            const uid = generateMutationIdByGeneAndProteinChangeAndEvent(mutation);
+            const mutationId = generateMutationIdByGeneAndProteinChangeAndEvent(mutation);
+            const uid = mode === MutationOncoprintMode.SAMPLE_TRACKS ? mutationId : sample.sampleId;
             const isProfiledForGene = isSampleProfiled(
                 sample.uniqueSampleKey,
                 mutation.molecularProfileId,
                 mutation.gene.hugoGeneSymbol,
                 coverageInformation
             );
-            data.push({
+            oncoprintData.push({
                 profile_data:null,
                 sample: sample.sampleId,
                 patient: sample.patientId,
@@ -78,18 +95,22 @@ export function makeMutationHeatmapData(
                 hugo_gene_symbol:"", // not used by us
                 mutation,
                 uid,
+                mutationId,
                 mutationStatus: isProfiledForGene ? MutationStatus.PROFILED_BUT_NOT_MUTATED : MutationStatus.NOT_PROFILED,
                 na: !isProfiledForGene
             });
         }
-        map[sample.sampleId] = data;
-        return map;
-    }, {} as {[sampleId:string]:IMutationOncoprintTrackDatum[]});
+    }
 
     // filter out data for mutations where none of them have data
-    return _.mapValues(everyMutationDataBySample, mutationData=>{
-        return mutationData.filter(d=>mutationHasAtLeastOneVAF[d.uid]);
-    });
+    oncoprintData = oncoprintData.filter(d=>mutationHasAtLeastOneVAF[d.mutationId]);
+
+    // group data by track
+    if (mode === MutationOncoprintMode.SAMPLE_TRACKS) {
+        return _.groupBy(oncoprintData, d=>d.sample);
+    } else {
+        return _.groupBy(oncoprintData, d=>d.mutationId);
+    }
 }
 
 export function getDownloadData(

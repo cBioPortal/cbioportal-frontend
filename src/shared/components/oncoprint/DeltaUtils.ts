@@ -55,8 +55,9 @@ export function transition(
     transitionHiddenIds(nextProps, prevProps, oncoprint);
     transitionHorzZoomToFit(nextProps, prevProps, oncoprint);
     transitionShowClinicalTrackLegends(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
-    tryReleaseRendering(nextProps, prevProps, oncoprint);
     transitionHighlightedIds(nextProps, prevProps, oncoprint);
+    transitionHighlightedTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
+    tryReleaseRendering(nextProps, prevProps, oncoprint);
     if (notKeepingSorted) {
         oncoprint.keepSorted(true);
     }
@@ -82,6 +83,19 @@ export function transitionHighlightedIds(
 ) {
     if (nextProps.highlightedIds !== prevProps.highlightedIds) {
         oncoprint.setHighlightedIds(nextProps.highlightedIds || []);
+    }
+}
+
+export function transitionHighlightedTracks(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS,
+    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId}
+) {
+    if (nextProps.highlightedTracks !== prevProps.highlightedTracks) {
+        const highlightedTrackKeys = nextProps.highlightedTracks || [];
+        const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
+        oncoprint.setHighlightedTracks(highlightedTrackKeys.map(key=>trackSpecKeyToTrackId[key]));
     }
 }
 
