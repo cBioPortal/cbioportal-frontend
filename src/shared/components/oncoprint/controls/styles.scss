@@ -44,6 +44,10 @@
       min-height:50px;
       border:1px solid $borderColor;
       resize: vertical;
+      
+      &.treatment-textarea {
+        border-radius: 2px;
+      }
     }
     > *, button {
       margin-bottom:10px;
