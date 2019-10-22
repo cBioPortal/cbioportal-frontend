@@ -1,5 +1,5 @@
 import * as React from "react";
-import OncoprintJS, {TrackId, CustomTrackOption, TrackSortDirection, InitParams} from "oncoprintjs";
+import OncoprintJS, {TrackId, CustomTrackOption, TrackSortDirection, InitParams, ColumnLabel} from "oncoprintjs";
 import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
@@ -164,8 +164,9 @@ export interface IOncoprintProps {
     horzZoomToFitIds?:string[];
 
     hiddenIds?:string[];
-    columnLabels?:{[uid:string]:string};
+    columnLabels?:{[uid:string]:ColumnLabel};
     highlightedIds?:string[];
+    highlightedTracks?:string[]; // track keys
 
     alterationTypesInQuery?:string[];
 
@@ -213,6 +214,19 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
 
     private divRefHandler(div:HTMLDivElement) {
         this.div = div;
+    }
+
+    public getTrackSpecKey(targetTrackId:TrackId) {
+        let ret:string|null = null;
+
+        _.forEach(this.trackSpecKeyToTrackId, (trackId:TrackId, key:string)=>{
+            if (trackId === targetTrackId) {
+                ret = key;
+                return false;
+            }
+        });
+
+        return ret;
     }
 
     @computed get sortByMutationType() {
