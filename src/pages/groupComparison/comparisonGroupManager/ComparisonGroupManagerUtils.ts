@@ -1,4 +1,4 @@
-import {Group, GroupData} from "../../../shared/api/ComparisonGroupClient";
+import {Group, GroupData, SessionGroupData} from "../../../shared/api/ComparisonGroupClient";
 import {StudyViewPageStore} from "../../studyView/StudyViewPageStore";
 import {PatientIdentifier, SampleIdentifier} from "../../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
@@ -40,10 +40,10 @@ export function getStudiesAttr(
 }
 
 export function getGroupParameters(
-    name:string,
-    selectedSamples:SampleIdentifier[],
-    origin:string[]
-) {
+    name: string,
+    selectedSamples: SampleIdentifier[],
+    origin: string[]
+): SessionGroupData {
     return {
         name,
         description: "",
