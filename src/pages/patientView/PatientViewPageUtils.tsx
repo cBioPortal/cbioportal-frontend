@@ -1,7 +1,4 @@
-import SampleManager from "./SampleManager";
-import { PatientViewPageStore } from "./clinicalInformation/PatientViewPageStore";
 import TumorColumnFormatter from "./mutation/column/TumorColumnFormatter";
-import { ClinicalDataBySampleId } from "shared/api/api-types-extended";
 import _ from "lodash";
 
 export function checkNonProfiledGenesExist( sampleIds:string[],
@@ -9,7 +6,7 @@ export function checkNonProfiledGenesExist( sampleIds:string[],
                                             sampleToGenePanelId:{[sampleId:string]:string},
                                             genePanelIdToEntrezGeneIds:{[genePanelId:string]:number[]}
 ):boolean {
-    return !! _.find(entrezGeneIds, entrezGeneId => {
+    return _.some(entrezGeneIds, entrezGeneId => {
         const profiledSamples = TumorColumnFormatter.getProfiledSamplesForGene( entrezGeneId, 
                                                                                 sampleIds,
                                                                                 sampleToGenePanelId,
