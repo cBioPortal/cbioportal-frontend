@@ -977,11 +977,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     readonly dataTypeToDataSourceOptions = remoteData<{[dataType:string]:{value:string, label:string}[]}>({
         await:()=>[
-            this.props.store.molecularProfilesWithData,
+            this.props.store.molecularProfilesInStudies,
             this.clinicalAttributeOptions
         ],
         invoke:()=>{
-            const profiles = this.props.store.molecularProfilesWithData.result!;
+            const profiles = this.props.store.molecularProfilesInStudies.result!;
             const map = _.mapValues(
                 _.groupBy(profiles, profile=>profile.molecularAlterationType), // create a map from profile type to list of profiles of that type
                 profilesOfType=>(
