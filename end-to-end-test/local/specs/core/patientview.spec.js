@@ -2,7 +2,6 @@ var assert = require('assert');
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
 var waitForPatientView = require('../../../shared/specUtils').waitForPatientView;
-var waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQuiet;
 
 var _ = require('lodash');
 
@@ -121,6 +120,32 @@ describe('patient view page', function() {
             });
         });
 
+        describe('genomic tracks', () => {
+
+            it('shows gene panel icon when gene panels are used for patient samples', () => {
+                assert($('[data-test=cna-track-genepanel-icon-0]').isExisting());
+                assert($('[data-test=mut-track-genepanel-icon-5]').isExisting());
+            });
+            
+            it('shows mouse-over tooltip for gene panel icons with gene panel id', () => {
+                browser.moveToObject('[data-test=cna-track-genepanel-icon-1]');
+                var text = $('div.qtip-content').getText();
+                assert.equal(text, 'Gene panel: TESTPANEL1');
+            });
+            
+            it('shows mouse-over tooltip for gene panel icons with NA for whole-genome analyzed sample', () => {
+                browser.moveToObject('[data-test=cna-track-genepanel-icon-4]');
+                var text = $('div.qtip-content').getText();
+                assert.equal(text, 'Gene panel information not found. Sample is presumed to be whole exome/genome sequenced.');
+            });
+
+            it('hides gene panel icons when no gene panels are used for patient samples', () => {
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK');
+                waitForPatientView();
+                assert(!$('[data-test=mut-track-genepanel-icon-0]').isExisting());
+            });
+
+        });
     }
 });
 
