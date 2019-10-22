@@ -12,8 +12,12 @@ describe('PatientViewPageUtils', () => {
 
         const sampleIds = ['sampleA', 'sampleB'];
         const entrezGeneIds = [1, 2, 3];
-        
+
         const stub = sinon.stub(TumorColumnFormatter, 'getProfiledSamplesForGene');
+        
+        after(() => {
+            stub.restore();
+        });
 
         it('returns false when all samples have been profiled', () => {
 
