@@ -479,7 +479,7 @@ function scatterPlotCnaLegendData(
         })
         .sortBy((v:number)=>-v) // sorted descending
         .value();
-
+        
     const legendData:any[] = uniqueDispCna.map(v=>{
         const appearance = cnaToAppearance[v as -2|-1|0|1|2];
         return {
@@ -1793,6 +1793,11 @@ export function getCnaQueries(
     }
     if (vertSelection.dataType !== CLIN_ATTR_DATA_TYPE
         && horzSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY
+        && vertSelection.entrezGeneId !== undefined) {
+        queries.push({entrezGeneId: vertSelection.entrezGeneId});
+    }
+    if (vertSelection.dataType === AlterationTypeConstants.COPY_NUMBER_ALTERATION
+        && horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY
         && vertSelection.entrezGeneId !== undefined) {
         queries.push({entrezGeneId: vertSelection.entrezGeneId});
     }
