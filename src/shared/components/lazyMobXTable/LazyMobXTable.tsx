@@ -20,7 +20,7 @@ import {SimpleCopyDownloadControls} from "../copyDownloadControls/SimpleCopyDown
 import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
-import {If} from 'react-if';
+import ColumnResizer from "react-column-resizer";
 import {SortMetric} from "../../lib/ISortMetric";
 import {
     ILazyMobXTableApplicationDataStore,
@@ -46,6 +46,7 @@ export type Column<T> = {
     tooltip?:JSX.Element;
     defaultSortDirection?:SortDirection;
     togglable?:boolean;
+    resizable?:boolean;
 };
 
 type LazyMobXTableProps<T> = {
@@ -64,7 +65,7 @@ type LazyMobXTableProps<T> = {
     copyDownloadProps?:ICopyDownloadControlsProps;
     showPagination?:boolean;
 	// used only when showPagination === true (show pagination at bottom otherwise)
-	showPaginationAtTop?:boolean; 
+	showPaginationAtTop?:boolean;
     paginationProps?:IPaginationControlsProps;
     enableHorizontalScroll?:boolean;
     showColumnVisibility?:boolean;
@@ -284,17 +285,17 @@ export class LazyMobXTableStore<T> {
         // if any element of rowData contains a column with multiple values, rowData is written as
         // multiple rows in tableDownloadData
         this.dataStore.sortedData.forEach((rowData:T) => {
-            // retrieve all the download information for each row and store it in an object, 
+            // retrieve all the download information for each row and store it in an object,
             // and calculate the maxColLength (max number of elements found in a column).
             let downloadObject = getDownloadObject(this.columns, rowData);
             // normalize the length of all columns based on the maxColLength (so that every column contains the
             // same number of elements)
             const rowDownloadData: string[][] = getAsList(downloadObject.data, downloadObject.maxColLength);
-            
+
             //rowDownloadData is list of lists, containing all the elements per column.
             //processedRowsDownloadData becomes the transposed of rowDownloadData.
-            let processedRowsDownloadData = rowDownloadData[0].map(function(row:string, i:number) { 
-              return rowDownloadData.map(function(col) { 
+            let processedRowsDownloadData = rowDownloadData[0].map(function(row:string, i:number) {
+              return rowDownloadData.map(function(col) {
                 return col[i];
               })
             });
@@ -346,7 +347,7 @@ export class LazyMobXTableStore<T> {
 
     @computed
     get headers():JSX.Element[] {
-        return this.visibleColumns.map((column:Column<T>)=>{
+        return this.visibleColumns.map((column:Column<T>, index:number)=>{
             const headerProps:{role?:"button",
                 className?:"multilineHeader sort-asc"|"multilineHeader sort-des",
                 onClick?:()=>void} = {};
@@ -384,9 +385,12 @@ export class LazyMobXTableStore<T> {
             }
 
             return (
-                <th className='multilineHeader' {...headerProps} style={style}>
-                    {thContents}
-                </th>
+                <React.Fragment key={index}>
+                    <th className='multilineHeader' {...headerProps} style={style}>
+                        {thContents}
+                    </th>
+                    {column.resizable && <ColumnResizer className="multilineHeader columnResizer" minWidth={0} />}
+                </React.Fragment>
             );
         });
     }
@@ -443,12 +447,20 @@ export class LazyMobXTableStore<T> {
 
     @computed get tds():JSX.Element[][] {
         return this.visibleData.map((datum:T)=>{
-            const _tds:JSX.Element[] = this.visibleColumns.map((column:Column<T>)=>{
-                return (<td key={column.name}>
+            return this.visibleColumns.map((column:Column<T>)=>{
+                const result = (<td key={column.name}>
                     {column.render(datum)}
                 </td>);
+                if (column.resizable) {
+                    return (
+                        <React.Fragment>
+                            {result}
+                            <ColumnResizer className='columnResizer' minWidth={0}/>
+                        </React.Fragment>
+                    )
+                }
+                return result;
             });
-            return _tds;
         });
     }
 
