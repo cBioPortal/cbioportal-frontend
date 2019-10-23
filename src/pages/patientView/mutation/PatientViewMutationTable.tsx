@@ -89,6 +89,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
             sortBy:(d:Mutation[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
             download: (d:Mutation[])=>TumorColumnFormatter.getSample(d),
+            resizable: true,
         };
 
         // customization for allele count columns
@@ -115,9 +116,9 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
 
         // customization for columns
         this._columns[MutationTableColumnType.EXON].sortBy = undefined;
-        this._columns[MutationTableColumnType.EXON].render = 
+        this._columns[MutationTableColumnType.EXON].render =
             (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, true));
-        
+
         // order columns
         this._columns[MutationTableColumnType.SAMPLES].order = 5;
         this._columns[MutationTableColumnType.GENE].order = 20;
