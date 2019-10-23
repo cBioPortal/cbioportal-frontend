@@ -927,7 +927,8 @@ export function toFixedDigit(value: number, fractionDigits: number = 2)
 export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
     const GENOMIC_DATA_TYPES = [
         UniqueKey.MUTATION_COUNT_CNA_FRACTION, UniqueKey.CNA_GENES_TABLE, UniqueKey.MUTATED_GENES_TABLE,
-        UniqueKey.MUTATION_COUNT, UniqueKey.FRACTION_GENOME_ALTERED, UniqueKey.WITH_MUTATION_DATA, UniqueKey.WITH_CNA_DATA
+        UniqueKey.MUTATION_COUNT, UniqueKey.FRACTION_GENOME_ALTERED, UniqueKey.WITH_MUTATION_DATA, UniqueKey.WITH_CNA_DATA,
+        UniqueKey.WITH_FUSION_DATA, UniqueKey.FUSION_GENES_TABLE
     ];
     return _.includes(GENOMIC_DATA_TYPES, uniqueKey) ? ChartMetaDataTypeEnum.GENOMIC : ChartMetaDataTypeEnum.CLINICAL;
 }
@@ -1694,13 +1695,13 @@ export function getGroupedClinicalDataByBins(data: ClinicalData[], dataBins: Dat
         let dataBin: DataBin | undefined;
         // Check if the ClinicalData value is number
         if (!isNaN(datum.value as any)) {
-            //find if it belongs to any of numeric bins. 
+            //find if it belongs to any of numeric bins.
             dataBin = _.find(numericDataBins, dataBin => parseFloat(datum.value) > dataBin.start && parseFloat(datum.value) <= dataBin.end);
         }
 
         //If ClinicalData value is not a number of does not belong to any number bins
         if (dataBin === undefined) {
-            //find if it belongs to any of sepcial bins. 
+            //find if it belongs to any of sepcial bins.
             dataBin = _.find(specialDataBins, dataBin => {
                 if (!isNaN(datum.value as any)) {
                     if (dataBin.end !== undefined) {
@@ -1779,7 +1780,7 @@ export function getGroupsFromQuartiles(samples: Sample[], patientAttribute: bool
         else {
             sampleIdentifiers = quartile.map(d => ({ studyId: d.studyId, sampleId: d.sampleId }));
         }
-        
+
         return getGroupParameters(
             `${quartile[0].value}-${quartile[quartile.length - 1].value}`,
             sampleIdentifiers,
