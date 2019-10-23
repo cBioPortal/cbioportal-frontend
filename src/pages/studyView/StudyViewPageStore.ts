@@ -2458,8 +2458,8 @@ export class StudyViewPageStore {
             };
         }
 
-        if (!_.isEmpty(this.molecularProfileSampleCounts.result)) {
-            if (this.molecularProfileSampleCounts.result!.numberOfFusionProfiledSamples > 0) {
+        if ((!_.isEmpty(this.molecularProfileSampleCounts.result)) &&
+            (this.molecularProfileSampleCounts.result!.numberOfFusionProfiledSamples > 0)) {
                 _chartMetaSet[UniqueKey.FUSION_GENES_TABLE] = {
                     uniqueKey: UniqueKey.FUSION_GENES_TABLE,
                     dataType: getChartMetaDataType(UniqueKey.FUSION_GENES_TABLE),
@@ -2468,8 +2468,7 @@ export class StudyViewPageStore {
                     priority: getDefaultPriorityByUniqueKey(UniqueKey.FUSION_GENES_TABLE),
                     renderWhenDataChange: true,
                     description: ''
-                };
-            }
+            };
         }
 
         if (!_.isEmpty(this.cnaProfiles.result)) {
@@ -4104,10 +4103,9 @@ export class StudyViewPageStore {
             let molecularProfileSampleCounts = await internalClient.fetchMolecularProfileSampleCountsUsingPOST({
                 studyViewFilter: Object.assign({}, this.filters, { withFusionData: undefined })
             });
-            return Promise.resolve(
-                getClinicalDataCountWithColorByCategoryCounts(
+            return getClinicalDataCountWithColorByCategoryCounts(
                     molecularProfileSampleCounts.numberOfFusionProfiledSamples,
-                    molecularProfileSampleCounts.numberOfFusionUnprofiledSamples));
+                    molecularProfileSampleCounts.numberOfFusionUnprofiledSamples);
         },
         default: []
     })
