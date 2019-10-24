@@ -117,7 +117,6 @@ function initStore(appStore: AppStore, genes?: string) {
                             ','
                         );
 
-                        const cancerStudyIds: string[] = cancer_study_list.split(",");
 
                         if(genes){
                             // If query is shallow copied, this line also updates URL which was not intended.

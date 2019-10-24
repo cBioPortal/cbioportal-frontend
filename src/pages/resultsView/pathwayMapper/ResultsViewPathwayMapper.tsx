@@ -23,7 +23,7 @@ import { remoteData } from "cbioportal-frontend-commons";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { fetchGenes } from "shared/lib/StoreUtils";
 import { ErrorMessages } from "shared/enums/ErrorEnums";
-import OqlStatusBanner from "shared/components/oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "shared/components/banners/OqlStatusBanner";
 import {getAlterationData} from "shared/components/oncoprint/OncoprintUtils";
 import 'react-toastify/dist/ReactToastify.css';
 import {ToastContainer, toast} from 'react-toastify';
