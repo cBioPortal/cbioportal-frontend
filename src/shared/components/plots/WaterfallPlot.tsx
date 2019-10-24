@@ -242,12 +242,8 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
         return this.plotDomain.value;
     }
 
-    @computed get rightPadding() {
-        return RIGHT_PADDING;
-    }
-
     @computed get svgWidth() {
-        return LEFT_PADDING + this.props.chartWidth + this.rightPadding;
+        return LEFT_PADDING + this.props.chartWidth + RIGHT_PADDING;
     }
 
     @computed get svgHeight() {
@@ -491,7 +487,7 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                     >
                     <g>{this.title}</g>
                     <g
-                        transform={`translate(${LEFT_PADDING},${CHART_OFFSET_Y})`}
+                        transform={`translate(${LEFT_PADDING},${this.props.horizontal ? CHART_OFFSET_Y : 0})`}
                         >
                         <VictoryChart
                             theme={CBIOPORTAL_VICTORY_THEME}
