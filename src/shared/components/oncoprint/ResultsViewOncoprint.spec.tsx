@@ -37,27 +37,27 @@ describe('Oncoprint sortBy URL parameter', () => {
 
     it('`case_id` provides sorted sample config to oncoprint', () => {
         const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_ID, columnMode: 'sample'});
-        assert.deepEqual( oncoprintView.sortConfig.order, ["Sample1_key","Sample2_key","Sample3_key"]);
+        assert.deepEqual( oncoprintView.oncoprintLibrarySortConfig.order, ["Sample1_key","Sample2_key","Sample3_key"]);
     });
 
     it('`case_id` provides sorted patient config to oncoprint', () => {
         const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_ID, columnMode:'patient'});
-        assert.deepEqual( oncoprintView.sortConfig.order, ["Patient1_key","Patient2_key","Patient3_key"]);
+        assert.deepEqual( oncoprintView.oncoprintLibrarySortConfig.order, ["Patient1_key","Patient2_key","Patient3_key"]);
     });
 
     it('`case_list` provides sorted sample config to oncoprint when case list is available', () => {
         const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_LIST, columnMode: 'sample', caselistEnabled: true});
-        assert.deepEqual(oncoprintView.sortConfig.order,  ["Sample2_key","Sample3_key","Sample1_key"]);
+        assert.deepEqual(oncoprintView.oncoprintLibrarySortConfig.order,  ["Sample2_key","Sample3_key","Sample1_key"]);
     });
 
     it('`case_list` provides sorted patient config to oncoprint when case list is available', () => {
         const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_LIST, columnMode: 'patient', caselistEnabled: true});
-        assert.deepEqual(oncoprintView.sortConfig.order,  ["Patient2_key","Patient3_key","Patient1_key"]);
+        assert.deepEqual(oncoprintView.oncoprintLibrarySortConfig.order,  ["Patient2_key","Patient3_key","Patient1_key"]);
     });
 
     it('`case_list` provides no sort config to oncoprint when case list is unavailable', () => {
         const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_LIST, columnMode: 'patient', caselistEnabled: false});
-        assert.isUndefined(oncoprintView.sortConfig.order);
+        assert.isUndefined(oncoprintView.oncoprintLibrarySortConfig.order);
     });
 
     interface IHelperFunction {

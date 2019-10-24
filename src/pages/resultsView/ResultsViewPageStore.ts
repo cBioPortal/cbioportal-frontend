@@ -184,7 +184,6 @@ import { ISurvivalDescription } from './survival/SurvivalDescriptionTable';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import { Group } from '../../shared/api/ComparisonGroupClient';
 import { AppStore } from '../../AppStore';
-import { CLINICAL_TRACKS_URL_PARAM } from '../../shared/components/oncoprint/ResultsViewOncoprint';
 import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
 import autobind from 'autobind-decorator';
 import { DEFAULT_GENOME } from 'pages/resultsView/ResultsViewPageStoreUtils';

@@ -1,4 +1,4 @@
-import URLWrapper from "../../shared/lib/URLWrapper";
+import URLWrapper, {BooleanString, NumberString} from "../../shared/lib/URLWrapper";
 import ExtendedRouterStore from "../../shared/lib/ExtendedRouterStore";
 import {computed} from "mobx";
 import autobind from "autobind-decorator";
@@ -12,12 +12,16 @@ export type ResultsViewURLQuery = {
     sample_list_ids:string;
     case_set_id:string;
     profileFilter:string;
-    RPPA_SCORE_THRESHOLD:string;
-    Z_SCORE_THRESHOLD:string;
+    RPPA_SCORE_THRESHOLD:NumberString;
+    Z_SCORE_THRESHOLD:NumberString;
     geneset_list:string;
     treatment_list: string;
-    show_samples:string;
+    show_samples:BooleanString;
     heatmap_track_groups:string;
+    oncoprint_sortby:"case_id"|"case_list"|"cluster"|"";
+    oncoprint_cluster_profile:string;
+    oncoprint_sort_by_mutation_type:BooleanString;
+    oncoprint_sort_by_drivers:BooleanString;
 
     genetic_profile_ids_PROFILE_MUTATION_EXTENDED:string;
     genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION:string;
@@ -34,9 +38,14 @@ export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuer
         super(routing, [
 
             // NON session props here
-            { name:"clinicallist", isSessionProp:false },
-            { name:"show_samples", isSessionProp:false },
+            // oncoprint props
+            { name: "clinicallist", isSessionProp:false },
+            { name: "show_samples", isSessionProp:false },
             { name: "heatmap_track_groups", isSessionProp:false },
+            { name: "oncoprint_sortby", isSessionProp:false },
+            { name: "oncoprint_cluster_profile", isSessionProp:false},
+            { name: "oncoprint_sort_by_mutation_type", isSessionProp:false },
+            { name: "oncoprint_sort_by_drivers", isSessionProp:false},
 
             // session props here
             { name: "gene_list", isSessionProp:true },

@@ -13,6 +13,9 @@ import hashString from "shared/lib/hashString";
 import * as _ from "lodash";
 import {log} from "shared/lib/consoleLog";
 
+export type BooleanString = string;
+export type NumberString = string;
+
 export type Property<T> = {
     name: keyof T,
     isSessionProp: boolean,

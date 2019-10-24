@@ -58,12 +58,6 @@ interface IResultsViewOncoprintProps {
     addOnBecomeVisibleListener?:(callback:()=>void)=>void;
 }
 
-export enum SortByUrlParamValue {
-    CASE_ID = "case_id",
-    CASE_LIST = "case_list",
-    NONE = ""
-}
-
 export type SortMode = (
     {type:"data"|"alphabetical"|"caseList", clusteredHeatmapProfile?:undefined} |
     {type:"heatmap", clusteredHeatmapProfile:string}
@@ -76,10 +70,6 @@ export interface IGenesetExpansionRecord {
     correlationValue: number;
 }
 
-export const SAMPLE_MODE_URL_PARAM = "show_samples";
-export const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
-export const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
-export const ONCOPRINT_SORTBY_URL_PARAM = "oncoprint_sortby";
 export const TREATMENT_LIST_URL_PARAM = "treatment_list";
 
 const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
@@ -106,13 +96,39 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return this.props.store.urlWrapper.query.show_samples === "true" ? "sample" : "patient";
     }
 
-    @observable sortMode:SortMode = {type:"data"};
+    @computed get sortMode() {
+        let mode:SortMode;
+
+        switch (this.props.store.urlWrapper.query.oncoprint_sortby) {
+            case "case_id":
+                mode = {type:"alphabetical"};
+                break;
+            case "case_list":
+                mode = {type:"caseList"};
+                break;
+            case "cluster":
+                mode = {type:"heatmap", clusteredHeatmapProfile:this.props.store.urlWrapper.query.oncoprint_cluster_profile};
+                break;
+            case "":
+            default:
+                mode = {type:"data"};
+        }
+
+        return mode;
+    }
+    
+    @computed get sortByMutationType() {
+        return !this.props.store.urlWrapper.query.oncoprint_sort_by_mutation_type || // on by default
+            this.props.store.urlWrapper.query.oncoprint_sort_by_mutation_type === "true";
+    }
+
+    @computed get sortByDrivers() {
+        return !this.props.store.urlWrapper.query.oncoprint_sort_by_drivers || // on by default
+            this.props.store.urlWrapper.query.oncoprint_sort_by_drivers === "true";
+    }
 
     @observable distinguishGermlineMutations:boolean = true;
     @observable distinguishMutationType:boolean = true;
-    @observable sortByMutationType:boolean = true;
-    @observable sortByDrivers:boolean = true;
-
     @observable showUnalteredColumns:boolean = true;
     @observable showWhitespaceBetweenColumns:boolean = true;
     @observable showClinicalTrackLegends:boolean = true;
@@ -547,15 +563,28 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectHideGermlineMutations:(s:boolean)=>{
                 this.props.store.excludeGermlineMutations = s;
             },
-            onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
+            onSelectSortByMutationType:(s:boolean)=>{
+                this.props.store.urlWrapper.updateQuery({ oncoprint_sort_by_mutation_type: s.toString() });
+            },
             onClickSortAlphabetical:()=>{
-                this.sortMode = {type:"alphabetical"};
+                this.props.store.urlWrapper.updateQuery({
+                    oncoprint_sortby:"case_id",
+                    oncoprint_cluster_profile:""
+                });
             },
             onClickSortCaseListOrder:()=>{
-                this.sortMode = {type:"caseList"};
+                this.props.store.urlWrapper.updateQuery({
+                    oncoprint_sortby:"case_list",
+                    oncoprint_cluster_profile:""
+                });
             },
-            onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
-            onClickSortByData:()=>{this.sortMode={type:"data"};},
+            onSelectSortByDrivers:(sort:boolean)=>{
+                this.props.store.urlWrapper.updateQuery({ oncoprint_sort_by_drivers: sort.toString() });
+            },
+            onClickSortByData:()=>{this.props.store.urlWrapper.updateQuery({
+                oncoprint_sortby:"",
+                oncoprint_cluster_profile:""
+            });},
             onChangeSelectedClinicalTracks: this.onChangeSelectedClinicalTracks,
             onChangeHeatmapGeneInputValue:action((s:string)=>{
                 this.heatmapGeneInputValue = s;
@@ -579,7 +608,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 if (this.isClusteredByCurrentSelectedHeatmapProfile) {
                     this.sortByData();
                 } else {
-                    this.sortMode = {type: "heatmap", clusteredHeatmapProfile: this.selectedHeatmapProfile};
+                    this.props.store.urlWrapper.updateQuery({
+                        oncoprint_sortby:"cluster",
+                        oncoprint_cluster_profile:this.selectedHeatmapProfile
+                    });
                 }
             },
             onClickDownload:(type:string)=>{
@@ -704,29 +736,26 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         //     const attrIds = paramsMap[CLINICAL_TRACKS_URL_PARAM].split(",");
         //     attrIds.map((attrId:string)=>this.selectedClinicalAttributeIds.set(attrId, true));
         // }
-        if (paramsMap[ONCOPRINT_SORTBY_URL_PARAM]) {
-            const mode = paramsMap[ONCOPRINT_SORTBY_URL_PARAM];
-            switch (mode) {
-                case SortByUrlParamValue.CASE_ID:                                         // sort by sample or patient id (a.k.a. alphabetical)
-                    this.configureSortMode('alphabetical', false, false);
-                    break;
-                case SortByUrlParamValue.CASE_LIST:                                       // sort by order of appearance in case list (when selected on query page)
-                    if (this.caseListSortPossible) {
-                        this.configureSortMode('caseList', false, false);
-                    }
-                    break;
-            }
-        }
-    }
-
-    private configureSortMode(type:'data'|'caseList'|'alphabetical', byMutation:boolean, byDriver:boolean){
-        this.sortMode = {type: type};
-        this.sortByMutationType = byMutation;
-        this.sortByDrivers = byDriver;
+        // if (paramsMap[ONCOPRINT_SORTBY_URL_PARAM]) {
+        //     const mode = paramsMap[ONCOPRINT_SORTBY_URL_PARAM];
+        //     switch (mode) {
+        //         case "case_id":                                         // sort by sample or patient id (a.k.a. alphabetical)
+        //             this.configureSortMode('alphabetical');
+        //             break;
+        //         case "case_list":                                       // sort by order of appearance in case list (when selected on query page)
+        //             if (this.caseListSortPossible) {
+        //                 this.configureSortMode('caseList');
+        //             }
+        //             break;
+        //     }
+        // }
     }
 
     @action public sortByData() {
-        this.sortMode = {type:"data"};
+        this.props.store.urlWrapper.updateQuery({
+            oncoprint_sortby:"",
+            oncoprint_cluster_profile:""
+        });
     }
 
     @computed get isClusteredByCurrentSelectedHeatmapProfile() {
@@ -992,7 +1021,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return undefined;
     }
 
-    @computed get sortConfig() {
+    @computed get oncoprintLibrarySortConfig() {
         return {
             sortByMutationType:this.sortByMutationType,
             sortByDrivers:this.sortByDrivers,
@@ -1210,7 +1239,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 distinguishMutationType={this.distinguishMutationType}
                                 distinguishDrivers={this.distinguishDrivers}
                                 distinguishGermlineMutations={this.distinguishGermlineMutations}
-                                sortConfig={this.sortConfig}
+                                sortConfig={this.oncoprintLibrarySortConfig}
                                 showClinicalTrackLegends={this.showClinicalTrackLegends}
                                 showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
                                 showMinimap={this.showMinimap}
