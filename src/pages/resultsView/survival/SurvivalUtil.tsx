@@ -259,13 +259,11 @@ export function downSampling(data: ScatterData[], opts: DownSamplingOpts): Scatt
 export function filterScatterData(allScatterData: GroupedScatterData, filters: SurvivalPlotFilters | undefined, downSamplingOpts: DownSamplingOpts):GroupedScatterData {
     let filteredData = _.cloneDeep(allScatterData);
     _.forEach(filteredData, (value:SurvivalCurveData) => {
-        if (filters) {
-            value.scatter = value.scatter.filter((_val) => filterBasedOnCoordinates(filters, _val));
-            value.scatterWithOpacity = value.scatterWithOpacity.filter((_val) => filterBasedOnCoordinates(filters, _val));
-            value.line = value.line.filter((_val) => filterBasedOnCoordinates(filters, _val));
-            value.numOfCases = value.scatter.length;
-        }
         if (value.numOfCases > downSamplingOpts.threshold) {
+            if (filters) {	
+                value.scatter = value.scatter.filter((_val) => filterBasedOnCoordinates(filters, _val));	
+                value.scatterWithOpacity = value.scatterWithOpacity.filter((_val) => filterBasedOnCoordinates(filters, _val));	
+            }
             value.scatter = downSampling(value.scatter, downSamplingOpts);
             value.scatterWithOpacity = downSampling(value.scatterWithOpacity, downSamplingOpts);
             value.numOfCases = value.scatter.length;
