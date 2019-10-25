@@ -5,8 +5,6 @@ import { Sample, Patient } from "shared/api/generated/CBioPortalAPI";
 import getBrowserWindow from "public-lib/lib/getBrowserWindow";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import sinon from "sinon";
-import { isOccupied } from "pages/studyView/StudyViewUtils";
-import { SortByUrlParamValue } from 'shared/components/oncoprint/ResultsViewOncoprint';
 
 describe('Oncoprint sortBy URL parameter', () => {
 

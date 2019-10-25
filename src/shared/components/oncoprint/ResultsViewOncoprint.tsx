@@ -116,7 +116,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         return mode;
     }
-    
+
     @computed get sortByMutationType() {
         return !this.props.store.urlWrapper.query.oncoprint_sort_by_mutation_type || // on by default
             this.props.store.urlWrapper.query.oncoprint_sort_by_mutation_type === "true";
@@ -804,23 +804,30 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         // first delete any existing track for this profileId
         delete tracksMap[molecularProfileId];
 
-        // if we have some entities, add new track for molecularProfile with
-        // entities
+        const molecularAlterationType =
+            this.props.store.molecularProfileIdToMolecularProfile.result[molecularProfileId].molecularAlterationType!;
+
         if (entities && entities.length) {
             tracksMap[molecularProfileId] = {
-                entities: entitiesMap
+                entities: entitiesMap,
+                molecularAlterationType,
+                molecularProfileId,
+                trackGroupIndex:0,
             } as HeatmapTrackGroupRecord
         }
 
         const heatmap_track_groups = _.map(tracksMap, (track, molecularProfileId)=>{
             return `${molecularProfileId},${_.keys(track.entities).join(",")}`;
         }).join(";");
-        
+
         // derive treaments from heatmap tracks since the only way to add treatments right now
         // is to use heatmap UI in oncoprint
         const treatment_list = _.filter(tracksMap, (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
             .map((x:HeatmapTrackGroupRecord)=>`${_.keys(x.entities).join(";")}`)
             .join(";");
+
+
+
 
         this.props.store.urlWrapper.updateQuery({ heatmap_track_groups, treatment_list });
     }
