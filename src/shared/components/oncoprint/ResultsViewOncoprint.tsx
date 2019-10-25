@@ -70,8 +70,6 @@ export interface IGenesetExpansionRecord {
     correlationValue: number;
 }
 
-export const TREATMENT_LIST_URL_PARAM = "treatment_list";
-
 const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
 
 /*  Each heatmap track group can hold tracks of a single entity type.
@@ -719,9 +717,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         // if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
         //     this.columnMode = (paramsMap[SAMPLE_MODE_URL_PARAM] && paramsMap[SAMPLE_MODE_URL_PARAM]==="true") ? "sample" : "patient";
         // }
-        if (paramsMap[TREATMENT_LIST_URL_PARAM]) {
-            this.selectedTreatmentsFromUrl = paramsMap[TREATMENT_LIST_URL_PARAM].split(";");
-        }
+        // if (paramsMap[TREATMENT_LIST_URL_PARAM]) {
+        //     this.selectedTreatmentsFromUrl = paramsMap[TREATMENT_LIST_URL_PARAM].split(";");
+        // }
 
 
         // if (paramsMap[HEATMAP_TRACKS_URL_PARAM]) {
@@ -825,9 +823,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         const treatment_list = _.filter(tracksMap, (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
             .map((x:HeatmapTrackGroupRecord)=>`${_.keys(x.entities).join(";")}`)
             .join(";");
-
-
-
 
         this.props.store.urlWrapper.updateQuery({ heatmap_track_groups, treatment_list });
     }
