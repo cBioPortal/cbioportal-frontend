@@ -1,7 +1,7 @@
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 var waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQuiet;
 var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
-var checkElementWithMouseDisabled = require('../../../shared/specUtils').checkElementWithMouseDisabled;
+var checkElementWithElementHidden = require('../../../shared/specUtils').checkElementWithElementHidden;
 
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
@@ -9,7 +9,7 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 function waitForAndCheckPlotsTab() {
     browser.moveToObject("body", 0, 0);
     browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 10000);
-    var res = checkElementWithMouseDisabled('div[data-test="PlotsTabEntireDiv"]', { hide:['.qtip'] });
+    var res = checkElementWithElementHidden('div[data-test="PlotsTabEntireDiv"]', '.popover', { hide:['.qtip']});
     assertScreenShotMatch(res);
 }
 
