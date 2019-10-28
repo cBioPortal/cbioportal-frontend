@@ -1,3 +1,10 @@
+enum MatchType {
+    MUTATION = 'MUTATION',
+    CNA = 'CNA',
+    MSI = 'MSI',
+    WILDTYPE = 'WILDTYPE'
+}
+
 export interface ITrial {
     id: string;
     nctId: string | '';
@@ -66,9 +73,14 @@ export interface IClinicalGroupMatch {
         positive: string[], // trialOncotreePrimaryDiagnosis not includes '!'
         negative: string[] // trialOncotreePrimaryDiagnosis includes '!'
     };
-    matches: IGenomicGroupMatch[];
-    notMatches: IGenomicGroupMatch[];
+    matches: IGenomicMatchType;
+    notMatches: IGenomicMatchType;
 }
+
+export interface IGenomicMatchType {
+    [key: keyof MatchType]: IGenomicGroupMatch[]
+}
+
 export interface IGenomicGroupMatch {
     genomicAlteration: string;
     matchType: string;
