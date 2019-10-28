@@ -78,7 +78,11 @@ export interface IClinicalGroupMatch {
 }
 
 export interface IGenomicMatchType {
-    [key: keyof MatchType]: IGenomicGroupMatch[]
+    MUTATION: IGenomicGroupMatch[],
+    CNA: IGenomicGroupMatch[],
+    MSI: IGenomicGroupMatch[],
+    WILDTYPE: IGenomicGroupMatch[],
+    [key: string]: IGenomicGroupMatch[]
 }
 
 export interface IGenomicGroupMatch {
