@@ -6,7 +6,7 @@
   border-top-color: rgb(221, 221, 221) !important;
 }
 .alterationUl{
-  margin-bottom: 0 !important;
+  margin-bottom: -20px !important;
   list-style-type: none;
   padding-left: 15px;
 }
@@ -17,6 +17,9 @@
   maxHeight: 400px;
   maxWidth: 600px;
   overflow: auto;
+}
+.commentIcon {
+  color: #3786C2;
 }
 .criteriaContainer {
   display: flex;
