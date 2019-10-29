@@ -2,7 +2,7 @@ import * as React from "react";
 import * as _ from 'lodash';
 import { VictoryChart, VictoryLegend, VictoryScatter, VictoryAxis, VictoryLabel, VictoryStack, VictoryBar } from 'victory';
 import {IAlterationCountMap, IAlterationData, ICancerSummaryChartData} from "./CancerSummaryContent";
-import {observable, computed} from "mobx";
+import {observable, computed, action} from "mobx";
 import {observer, Observer} from "mobx-react";
 import {CSSProperties} from "react";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
@@ -15,6 +15,12 @@ import WindowStore from "shared/components/window/WindowStore";
 import { Popover } from "react-bootstrap";
 import {pluralize} from "../../../public-lib/lib/StringUtils";
 import { HORIZONTAL_OFFSET, VERTICAL_OFFSET } from "pages/studyView/charts/barChart/BarChartToolTip";
+import { sleepUntil } from "shared/lib/TimeUtils";
+import { If, Then, Else } from "react-if";
+import { QueryParameter } from "shared/lib/ExtendedRouterStore";
+import { PagePath } from "shared/enums/PagePaths";
+import URL, {QueryParams} from 'url';
+import { CANCER_SUMMARY_ALL_GENES } from "./CancerSummaryContainer";
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -34,7 +40,9 @@ interface CancerSummaryChartProps {
     xLabels:string[];
     representedAlterations:{ [alterationType:string]:boolean };
     isPercentage:boolean;
+    showLinks:boolean;
     hideGenomicAlterations?:boolean;
+    gene: string;
 };
 
 export function percentageRounder(num:number){
@@ -46,7 +54,8 @@ interface ITooltipModel {
     x:number,
     y:number,
     alterationData:IAlterationData,
-    groupName:string
+    groupName:string,
+    studyId:string,
 }
 
 export const HORIZONTAL_SCROLLING_THRESHOLD = 37;
@@ -79,12 +88,29 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
 
     @observable.ref private barPlotTooltipModel: ITooltipModel | null;
     @observable.ref private scatterPlotTooltipModel: any | null;
+
+    @observable private barToolTipCounter = 0;
+    @observable private isBarPlotTooltipHovered = false;
+    @observable private shouldUpdatePosition = false; // Prevents chasing tooltip
+
     private svg: SVGElement;
     @observable mousePosition = { x:0, y:0 };
 
     constructor(props:CancerSummaryChartProps){
         super(props);
-        this.tickFormat = this.tickFormat.bind(this);
+    }
+
+    @autobind
+    @action
+    private tooltipMouseEnter(): void {
+        this.isBarPlotTooltipHovered = true;
+    }
+    
+    @autobind
+    @action
+    private tooltipMouseLeave(): void {       
+        this.isBarPlotTooltipHovered = false;
+        this.barPlotTooltipModel = null;
     }
 
     @computed get scatterPlotTooltipComponent() {
@@ -129,6 +155,8 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
 
             return (ReactDOM as any).createPortal(
                 <Popover
+                    onMouseLeave={this.tooltipMouseLeave}
+                    onMouseEnter={this.tooltipMouseEnter}
                     arrowOffsetTop={VERTICAL_OFFSET}
                     className={classnames("cbioportal-frontend", "cbioTooltip")}
                     positionLeft={this.mousePosition.x + (tooltipPlacement === "left" ? -HORIZONTAL_OFFSET : HORIZONTAL_OFFSET)}
@@ -140,7 +168,26 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                     placement={tooltipPlacement}
                 >
                     <div>
-                        <strong>Summary for {tooltipModel.groupName}</strong>
+                        <If condition={this.props.showLinks}>
+                            <Then>
+                                <strong>
+                                    <a
+                                        href={this.formatStudyLink(tooltipModel.studyId)}
+                                        target="_blank"
+                                    >
+                                        {tooltipModel.groupName}
+                                        &nbsp;
+                                        <i
+                                            className="fa fa-external-link"
+                                            style={{fontWeight: "bold"}}
+                                        />
+                                    </a>
+                                </strong>
+                            </Then>
+                            <Else>
+                                <strong>Summary for {tooltipModel.groupName}</strong>
+                            </Else>
+                        </If>
                         <p>Gene altered in {percentageRounder(tooltipModel.alterationData.alteredSampleCount / tooltipModel.alterationData.profiledSampleTotal)}% of {tooltipModel.alterationData.profiledSampleTotal} cases</p>
                         <table className="table table-striped">
                             <thead>
@@ -169,6 +216,15 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                                 }
                             </tbody>
                         </table>
+                        <If condition={this.props.showLinks}>
+                            <div
+                                className="btn btn-primary btn-xs"
+                                onClick={() => {this.queryStudy(tooltipModel.studyId)}}
+                            >
+                                Query this study
+                                {this.props.gene == CANCER_SUMMARY_ALL_GENES ? "" : ` for ${this.props.gene}`}
+                            </div>
+                        </If>
                     </div>
                 </Popover>,
                 document.body
@@ -176,9 +232,45 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
         }
     }
 
-    @autobind private onMouseMove(e:React.MouseEvent<any>) {
-        this.mousePosition.x = e.pageX;
-        this.mousePosition.y = e.pageY;
+    /**
+     * Open a new tab with the same url, then change that url via update route
+     * so that it is just for the one study.
+     */
+    private async queryStudy(studyId: string) {
+        const studyWindow = window.open(window.location.href) as any
+
+        if (studyWindow === null) {
+            return;
+        }
+
+        await sleepUntil(()=>{
+            return studyWindow.closed ||
+                (studyWindow.globalStores && studyWindow.globalStores.appStore.appReady);
+        });
+        
+        if (!studyWindow.closed) {
+            const params: any = {[QueryParameter.CANCER_STUDY_LIST]: studyId};
+            if (this.props.gene != CANCER_SUMMARY_ALL_GENES) {
+                params[QueryParameter.GENE_LIST] = this.props.gene;
+            }
+            studyWindow.routingStore.updateRoute(params)
+        }
+    }
+
+    private formatStudyLink(studyId: string): string {
+        return URL.format({
+            pathname: "/" + PagePath.Study,
+            query: {id: studyId}
+        });
+    }
+
+    @autobind
+    @action
+    private onMouseMove(e:React.MouseEvent<any>) {
+        if (this.shouldUpdatePosition) {
+            this.mousePosition.x = e.pageX;
+            this.mousePosition.y = e.pageY;
+        }
     }
 
     private get svgWidth(){
@@ -241,6 +333,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
         return (this.props.isPercentage) ? "Alteration Frequency" : "Absolute Counts";
     }
 
+    @autobind
     private tickFormat(){
         return (this.props.isPercentage) ? (tick:string) => `${tick}%` : (tick:string)=>tick;
     }
@@ -257,12 +350,15 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: (props:any) => {
-                                if (props.datum.xKey in self.props.countsByGroup) {
+                                self.shouldUpdatePosition = true;                                
+                                if (props.datum.xKey in self.props.countsByGroup) {                                    
                                     self.barPlotTooltipModel = {
                                         ...props,
                                         groupName:props.datum.x,
-                                        alterationData:self.props.countsByGroup[props.datum.xKey]
+                                        alterationData:self.props.countsByGroup[props.datum.xKey],
+                                        studyId: props.datum.xKey,
                                     };
+                                    self.barToolTipCounter++;
                                 } else {
                                     self.barPlotTooltipModel = null;
                                 }
@@ -275,8 +371,16 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: () => {
-                                self.barPlotTooltipModel = null;
-                            }
+                                // Freeze tool tip position and give user a moment to mouse over it
+                                self.shouldUpdatePosition = false;
+                                
+                                setTimeout(() => {
+                                    // If they don't, get rid of it
+                                    if (!self.isBarPlotTooltipHovered && self.barToolTipCounter === 1) {
+                                        self.barPlotTooltipModel = null;
+                                    }
+                                    self.barToolTipCounter--;
+                                }, 100);                            }
                         }
                     ];
                 }
@@ -294,7 +398,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: (props: any) => {
-                                 if (props.datum) {
+                                if (props.datum) {
                                     self.scatterPlotTooltipModel = props;
                                 }
                             }
@@ -360,7 +464,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     }
 
     @computed get scatterPlotTopPadding() {
-        // subtract 100 to plot scatter p\lot close to bar plot
+        // subtract 100 to plot scatter plot close to bar plot
         return this.barChartHeight() - 100;
     }
 
