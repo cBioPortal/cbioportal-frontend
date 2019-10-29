@@ -12,93 +12,125 @@ describe("TrialMatchTableUtils", () => {
                     "positive": [ "Non-Small Cell Lung Cancer" ],
                     "negative": []
                 },
-                "matches": [],
-                "notMatches": [
-                    {
-                        "genomicAlteration": "EGFR !E709_T710delinsD",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": null,
-                                "trueProteinChange": null,
-                                "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
-                            }
-                        ]
-                    },
-                    {
-                        "genomicAlteration": "EGFR !E709K",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": null,
-                                "trueProteinChange": null,
-                                "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
-                            }
-                        ]
-                    },
-                    {
-                        "genomicAlteration": "EGFR !L833V",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": null,
-                                "trueProteinChange": null,
-                                "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
-                            }
-                        ]
-                    }
-                ]
+                "matches": {
+                    "MUTATION": [],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+                },
+                "notMatches": {
+                    "MUTATION": [
+                        {
+                            "genomicAlteration": "EGFR !E709_T710delinsD",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": null,
+                                    "trueProteinChange": null,
+                                    "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
+                                }
+                            ]
+                        },
+                        {
+                            "genomicAlteration": "EGFR !E709K",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": null,
+                                    "trueProteinChange": null,
+                                    "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
+                                }
+                            ]
+                        },
+                        {
+                            "genomicAlteration": "EGFR !L833V",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": null,
+                                    "trueProteinChange": null,
+                                    "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
+                                }
+                            ]
+                        }
+                    ],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+                }
             }, {
                 "trialAgeNumerical": ">=18",
                 "trialOncotreePrimaryDiagnosis": {
                     "positive": [ "Non-Small Cell Lung Cancer" ],
                     "negative": []
                 },
-                "matches": [
-                    {
-                        "genomicAlteration": "EGFR 729_761del",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": "EGFR",
-                                "trueProteinChange": "L747_P753delinsS",
-                                "sampleIds": [ "P-0000628-T01-IM3" ]
-                            }
-                        ]
-                    }
-                ],
-                "notMatches": [
-                    {
-                        "genomicAlteration": "EGFR !T790M",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": null,
-                                "trueProteinChange": null,
-                                "sampleIds": [ "P-0000628-T01-IM3" ]
-                            }
-                        ]
-                    }
-                ]
+                "matches": {
+                    "MUTATION": [
+                        {
+                            "genomicAlteration": "EGFR 729_761del",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": "EGFR",
+                                    "trueProteinChange": "L747_P753delinsS",
+                                    "sampleIds": [ "P-0000628-T01-IM3" ]
+                                }
+                            ]
+                        }
+                    ],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+                },
+                "notMatches": {
+                    "MUTATION": [
+                        {
+                            "genomicAlteration": "EGFR !T790M",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": null,
+                                    "trueProteinChange": null,
+                                    "sampleIds": [ "P-0000628-T01-IM3" ]
+                                }
+                            ]
+                        }
+                    ],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+
+                }
             }, {
                 "trialAgeNumerical": ">18",
                 "trialOncotreePrimaryDiagnosis": {
                     "positive": [ "Lung Adenocarcinoma" ],
                     "negative": []
                 },
-                "matches": [
-                    {
-                        "genomicAlteration": "EGFR Oncogenic Mutations",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": "EGFR",
-                                "trueProteinChange": "L747_P753delinsS",
-                                "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
-                            },
-                            {
-                                "trueHugoSymbol": "EGFR",
-                                "trueProteinChange": "T790M",
-                                "sampleIds": [ "P-0000628-T02-IM5" ]
-                            }
-                        ]
-                    }
-                ],
-                "notMatches": []
+                "matches": {
+                    "MUTATION": [
+                        {
+                            "genomicAlteration": "EGFR Oncogenic Mutations",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": "EGFR",
+                                    "trueProteinChange": "L747_P753delinsS",
+                                    "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
+                                },
+                                {
+                                    "trueHugoSymbol": "EGFR",
+                                    "trueProteinChange": "T790M",
+                                    "sampleIds": [ "P-0000628-T02-IM5" ]
+                                }
+                            ]
+                        }
+                    ],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+
+                },
+                "notMatches": {
+                    "MUTATION": [],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+                }
             }];
         const expectedResult = [2, 1, 0];
         _.forEach(clinicalMatchGroup, (item: any, index: number) => {
