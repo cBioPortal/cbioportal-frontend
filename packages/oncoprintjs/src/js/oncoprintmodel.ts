@@ -103,6 +103,14 @@ export type ClusterSortResult = {
     track_id_order:TrackId[];
 };
 
+export type ColumnLabel = {
+    left_padding_percent?:number;
+    text_color?:string;
+    circle_color?:string;
+    angle_in_degrees?:number;
+    text:string;
+};
+
 class UnionOfSets {
     // a set, to be passed in as argument, is an object where the values are truthy
     private union_count:{[key:string]:number} = {};
@@ -203,7 +211,7 @@ export default class OncoprintModel {
     private highlighted_ids:ColumnId[];
     private track_group_legend_order:TrackGroupIndex[];
     private show_track_sublabels:boolean;
-    private column_labels:ColumnProp<string>;
+    private column_labels:ColumnProp<ColumnLabel>;
 
     // Track properties
     private track_important_ids:TrackProp<ColumnProp<boolean>>;// set of "important" ids - only these ids will cause a used rule to become active and thus shown in the legend
@@ -1316,7 +1324,7 @@ export default class OncoprintModel {
         return this.column_labels;
     }
 
-    public setColumnLabels(labels:ColumnProp<string>) {
+    public setColumnLabels(labels:ColumnProp<ColumnLabel>) {
         this.column_labels = labels;
     }
 

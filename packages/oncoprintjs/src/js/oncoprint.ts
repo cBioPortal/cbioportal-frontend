@@ -1,7 +1,7 @@
 import './polyfill';
 
 import OncoprintModel, {
-    ColumnId,
+    ColumnId, ColumnLabel,
     ColumnProp,
     CustomTrackOption,
     Datum,
@@ -1143,7 +1143,7 @@ export default class Oncoprint {
         this.resizeAndOrganize();
     }
 
-    public setColumnLabels(labels:ColumnProp<string>) {
+    public setColumnLabels(labels:ColumnProp<ColumnLabel>) {
         this.model.setColumnLabels(labels);
         this.cell_view.setColumnLabels(this.model);
         this.resizeAndOrganizeAfterTimeout();
