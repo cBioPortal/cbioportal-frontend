@@ -27,11 +27,12 @@ interface ICancerSummaryContainerProps {
     store:ResultsViewPageStore;
 };
 
+export const CANCER_SUMMARY_ALL_GENES = 'all';
 
 @observer
 export default class CancerSummaryContainer extends React.Component<ICancerSummaryContainerProps, {}> {
 
-    @observable private activeTab: string = "all";
+    @observable private activeTab: string = CANCER_SUMMARY_ALL_GENES;
     @observable private resultsViewPageWidth: number = 1150;
     @observable private groupAlterationsBy_userSelection: keyof ExtendedSample;
 
@@ -49,7 +50,7 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
     }
 
     private get defaultTabId(): string {
-        return 'all';
+        return CANCER_SUMMARY_ALL_GENES;
     }
 
     public pivotData(str: keyof ExtendedSample){
@@ -125,8 +126,8 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
                 this.groupAlterationsBy,
                 this.props.store.selectedMolecularProfileIdsByAlterationType.result!,
                 this.props.store.coverageInformation.result!);
-            geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
-                <CancerSummaryContent gene={'all'}
+            geneTabs.unshift(<MSKTab key={CANCER_SUMMARY_ALL_GENES} id="allGenes" linkText="All Queried Genes">
+                <CancerSummaryContent gene={CANCER_SUMMARY_ALL_GENES}
                                       width={this.resultsViewPageWidth}
                                       groupedAlterationData={groupedAlterationDataForAllGenes}
                                       handlePivotChange={this.pivotData}
@@ -167,7 +168,8 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
                              unmountOnHide={true}
                              arrowStyle={{'line-height': .8}}
                              tabButtonStyle="pills"
-                             activeTabId={this.activeTab} className="pillTabs">
+                             activeTabId={this.activeTab}
+                             className="pillTabs">
                         {this.tabs}
                     </MSKTabs>
                 </div>
