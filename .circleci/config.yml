@@ -149,7 +149,8 @@ jobs:
       - attach_workspace:
           at: /tmp/
       # check that no `.only` statements are still in the tests
-      - run: "! git grep '\\.only' end-to-end-tests**/*spec* src**/*spec*"
+      # Ignore doTest.only in oql parser
+      - run: "! grep '\\.only' $(find ./src ./end-to-end-test -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult"
 
   public_lib:
     <<: *defaults

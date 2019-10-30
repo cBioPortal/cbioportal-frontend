@@ -115,7 +115,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                                          overlay={this.tooltipClinicalContent(clinicalGroupMatch.trialOncotreePrimaryDiagnosis.negative)}
                                          destroyTooltipOnHide={true}
                                          onPopupAlign={placeArrowBottomLeft}>
-                                        {this.mainContent(clinicalGroupMatch.trialOncotreePrimaryDiagnosis.negative.length + ` cancer types`)}
+                                         <span>{clinicalGroupMatch.trialOncotreePrimaryDiagnosis.negative.length + ` cancer types`}</span>
                                     </DefaultTooltip>
                                 </Else>
                             </If>
@@ -129,42 +129,64 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
     public getGenomicMatch(clinicalGroupMatch: IClinicalGroupMatch) {
         return (
             <div className={styles.firstLeft}>
-                <div>
-                    {clinicalGroupMatch.matches.map((genomicGroupMatch: IGenomicGroupMatch) => (
-                        <div>
-                            <If condition={genomicGroupMatch.matchType === 'MUTATION'}>
-                                <Then>
-                                    <If condition={genomicGroupMatch.matches.length === 1 &&
-                                        genomicGroupMatch.genomicAlteration === `${genomicGroupMatch.matches[0].trueHugoSymbol} ${genomicGroupMatch.matches[0].trueProteinChange}`}>
-                                        <Then>
-                                            {this.getGenomicExactMatch(genomicGroupMatch)}
-                                        </Then>
-                                        <Else>
-                                            <span className={styles.firstLeft}>{`${genomicGroupMatch.genomicAlteration}: `}
-                                                {this.getGenomicVariantCategoryMatch(genomicGroupMatch)}
-                                            </span>
-                                        </Else>
-                                    </If>
-                                </Then>
-                                <Else>
-                                    {this.getGenomicExactMatch(genomicGroupMatch)}
-                                </Else>
-                            </If>
-                        </div>
-                    ))}
-                </div>
-                <div>
-                    { clinicalGroupMatch.notMatches.length > 0 &&
+                {clinicalGroupMatch.matches.MUTATION.map((genomicGroupMatch: IGenomicGroupMatch) => (
+                    <div>
+                        <If condition={genomicGroupMatch.matches.length === 1 &&
+                            genomicGroupMatch.genomicAlteration === `${genomicGroupMatch.matches[0].trueHugoSymbol} ${genomicGroupMatch.matches[0].trueProteinChange}`}>
+                            <Then>
+                                {this.getGenomicExactMatch(genomicGroupMatch)}
+                            </Then>
+                            <Else>
+                                <span className={styles.firstLeft}>{`${genomicGroupMatch.genomicAlteration}: `}
+                                    {this.getGenomicVariantCategoryMatch(genomicGroupMatch)}
+                                </span>
+                            </Else>
+                        </If>
+                    </div>
+                ))}
+                {clinicalGroupMatch.matches.MSI.length > 0 &&
+                    <div>Tumor is MSI-H</div>
+                }
+                {clinicalGroupMatch.matches.CNA.map((genomicGroupMatch: IGenomicGroupMatch) => (
+                    <div>
+                        {this.getGenomicExactMatch(genomicGroupMatch)}
+                    </div>
+                ))}
+                {clinicalGroupMatch.matches.WILDTYPE.map((genomicGroupMatch: IGenomicGroupMatch) => (
+                    <div>
+                        {this.getGenomicExactMatch(genomicGroupMatch)}
+                    </div>
+                ))}
+                { (clinicalGroupMatch.notMatches.MUTATION.length > 0 || clinicalGroupMatch.notMatches.CNA.length > 0 ) &&
+                    <div>
+                        <span className={styles.genomicSpan}>{this.getDescriptionForNotMatches(clinicalGroupMatch.notMatches.MUTATION.concat(clinicalGroupMatch.notMatches.CNA), 3, 'No alterations in', 'defined by the trial')}</span>
                         <DefaultTooltip
                             placement='bottomLeft'
                             trigger={['hover', 'focus']}
-                            overlay={this.tooltipGenomicContent(clinicalGroupMatch.notMatches)}
+                            overlay={this.tooltipGenomicContent(clinicalGroupMatch.notMatches.MUTATION.concat(clinicalGroupMatch.notMatches.CNA))}
                             destroyTooltipOnHide={false}
                             onPopupAlign={placeArrowBottomLeft}>
-                            {this.mainContent(`No alterations in ${this.getHugoSymbolName(clinicalGroupMatch.notMatches, 3)} defined by the trial`)}
+                            <i className={'fa fa-comment-o ' + styles.commentIcon}></i>
                         </DefaultTooltip>
-                    }
-                </div>
+                    </div>
+
+                }
+                { clinicalGroupMatch.notMatches.MSI.length > 0 &&
+                    <div>Tumor is not MSI-H</div>
+                }
+                { clinicalGroupMatch.notMatches.WILDTYPE.length > 0 &&
+                    <div>
+                        <span className={styles.genomicSpan}>{this.getDescriptionForNotMatches(clinicalGroupMatch.notMatches.WILDTYPE, 3, 'Tumor doesn\'t have', 'defined by the trial')}</span>
+                        <DefaultTooltip
+                            placement='bottomLeft'
+                            trigger={['hover', 'focus']}
+                            overlay={this.tooltipGenomicContent(clinicalGroupMatch.notMatches.WILDTYPE)}
+                            destroyTooltipOnHide={false}
+                            onPopupAlign={placeArrowBottomLeft}>
+                            <i className={'fa fa-comment-o ' + styles.commentIcon}></i>
+                        </DefaultTooltip>
+                    </div>
+                }
             </div>
         );
     }
@@ -240,20 +262,15 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
         );
     }
 
-    public mainContent(content: string) {
-        return (
-            <span>
-                <a>{content}</a>
-            </span>
-        );
-    }
-
-    public getHugoSymbolName(matches: IGenomicGroupMatch[], threshold: number) {
-        const hugoSymbolSet = new Set([...matches].map(x => x.genomicAlteration.split(' ')[0].slice(1)));
+    public getDescriptionForNotMatches(matches: IGenomicGroupMatch[], threshold: number, preContent: string, postContent: string) {
+        const hugoSymbolSet = new Set([...matches].map(x => x.genomicAlteration.split(' ')[0]));
+        let genomicAlterationContent = '';
         if (hugoSymbolSet.size <= threshold) {
-            return [...hugoSymbolSet].join(', ');
+            genomicAlterationContent = [...hugoSymbolSet].join(', ');
+        } else {
+            genomicAlterationContent = `${hugoSymbolSet.size} genes`;
         }
-        return `${hugoSymbolSet.size} genes`;
+        return `${preContent} ${genomicAlterationContent} ${postContent}`;
     }
 
     render() {
