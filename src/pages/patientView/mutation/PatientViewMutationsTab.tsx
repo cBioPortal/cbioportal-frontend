@@ -234,7 +234,6 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     genomeNexusMyVariantInfoCache={this.props.store.genomeNexusMyVariantInfoCache}
                     mrnaExprRankMolecularProfileId={this.props.store.mrnaRankMolecularProfileId.result || undefined}
                     discreteCNAMolecularProfileId={this.props.store.molecularProfileIdDiscrete.result}
-                    data={this.props.store.mergedMutationDataIncludingUncalled}
                     downloadDataFetcher={this.props.store.downloadDataFetcher}
                     mutSigData={this.props.store.mutSigData.result}
                     myCancerGenomeData={this.props.store.myCancerGenomeData}

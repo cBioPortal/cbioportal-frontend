@@ -88,7 +88,11 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         super(getData);
 
         this.dataHighlighter = (d:Mutation[])=>{
-            const highlightedMutations = this.highlightedMutations.slice();
+            const highlightedMutations = [];
+            if (!this.onlyShowHighlightedInTable) {
+                // dont put highlight on highlighted mutations if those are all we're showing
+                highlightedMutations.push(...this.highlightedMutations);
+            }
             if (this.mouseOverMutation) {
                 highlightedMutations.push(this.mouseOverMutation);
             }
