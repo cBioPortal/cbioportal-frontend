@@ -209,6 +209,7 @@ export default class OncoprintModel {
     private id_order:ColumnId[];
     private hidden_ids:ColumnProp<boolean>;
     private highlighted_ids:ColumnId[];
+    private highlighted_tracks:TrackId[];
     private track_group_legend_order:TrackGroupIndex[];
     private show_track_sublabels:boolean;
     private column_labels:ColumnProp<ColumnLabel>;
@@ -296,6 +297,7 @@ export default class OncoprintModel {
         this.id_order = [];
         this.hidden_ids = {};
         this.highlighted_ids = [];
+        this.highlighted_tracks = [];
         this.track_group_legend_order = [];
         this.show_track_sublabels = false;
         this.column_labels = {};
@@ -883,12 +885,20 @@ export default class OncoprintModel {
         this.column_left.update();
     }
 
+    public setHighlightedTracks(track_ids:TrackId[]) {
+        this.highlighted_tracks = track_ids;
+    }
+
+    public getHighlightedTracks() {
+        return this.highlighted_tracks.slice();
+    }
+
     public setHighlightedIds(ids:ColumnId[]) {
         this.highlighted_ids = ids;
     }
 
     public getHighlightedIds() {
-        return this.highlighted_ids;
+        return this.highlighted_ids.slice();
     }
 
     public setTrackGroupOrder(index:TrackGroupIndex, track_order:TrackGroup) {
@@ -1172,11 +1182,12 @@ export default class OncoprintModel {
     };
 
     public getTrackDatum(track_id:TrackId, id:ColumnId) {
-        let datum = this.track_id_to_datum.get()[track_id][id];
-        if (typeof datum === 'undefined') {
-            datum = null;
+        const datumById = this.track_id_to_datum.get()[track_id];
+        if (!datumById) {
+            return null;
         }
-        return datum;
+
+        return datumById[id] || null;
     }
 
     public getTrackTops():TrackProp<number>;

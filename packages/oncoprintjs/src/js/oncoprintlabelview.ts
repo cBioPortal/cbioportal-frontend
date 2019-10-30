@@ -3,6 +3,7 @@ import $ from "jquery";
 import makeSvgElement from './makesvgelement';
 import OncoprintModel, {TrackId, TrackProp} from "./oncoprintmodel";
 import OncoprintToolTip from "./oncoprinttooltip";
+import Oncoprint from "./oncoprint";
 
 const CIRCLE_X = 25;
 
@@ -34,7 +35,7 @@ export default class OncoprintLabelView {
     private show_sublabels:boolean;
 
     private rendering_suppressed = false;
-    private highlighted_track:TrackId|null = null;
+    private highlighted_track_label_only:TrackId|null = null;
     private drag_callback:(target_track:TrackId, new_previous_track:TrackId)=>void;
     private dragged_label_track_id:TrackId|null;
     private drag_mouse_y:number|null;
@@ -60,7 +61,7 @@ export default class OncoprintLabelView {
                     !model.isTrackInClusteredGroup(track_id) &&
                     model.getTrackMovable(track_id)
                 ) {
-                    view.startDragging(track_id, evt.offsetY);
+                    view.startDragging(model, track_id, evt.offsetY);
                 }
             });
 
@@ -72,7 +73,7 @@ export default class OncoprintLabelView {
                     const min_drag_y = view.track_tops[track_group[0]] - 5 - view.scroll_y;
                     view.drag_mouse_y = Math.min(evt.pageY - view.$canvas.offset().top, max_drag_y);
                     view.drag_mouse_y = Math.max(view.drag_mouse_y, min_drag_y);
-                    view.renderAllLabels();
+                    view.renderAllLabels(model);
                 } else {
                     const hovered_track = view.isMouseOnLabel(evt.pageY - view.$canvas.offset().top);
                     if (hovered_track !== null) {
@@ -113,7 +114,7 @@ export default class OncoprintLabelView {
                 if (view.dragged_label_track_id !== null) {
                     const track_group = model.getContainingTrackGroup(view.dragged_label_track_id);
                     const previous_track_id = view.getLabelAboveMouseSpace(track_group, evt.offsetY, view.dragged_label_track_id);
-                    view.stopDragging(previous_track_id);
+                    view.stopDragging(model, previous_track_id);
                 }
                 view.tooltip.hideIfNotAlreadyGoingTo(150);
             });
@@ -197,16 +198,26 @@ export default class OncoprintLabelView {
         header_contents.append(html_label || document.createTextNode(label));
         return $('<b style="display: block;">').append(header_contents);
     }
-    private renderAllLabels() {
+    private renderAllLabels(model:OncoprintModel) {
         if (this.rendering_suppressed) {
             return;
         }
         this.ctx.clearRect(0,0,this.$canvas[0].width,this.$canvas[0].height);
 
-        if (this.highlighted_track !== null) {
-            if (this.cell_tops_this_space.hasOwnProperty(this.highlighted_track)) {
+        const highlightedTracks = [];
+        highlightedTracks.push(...model.getHighlightedTracks());
+        if (this.highlighted_track_label_only !== null) {
+            highlightedTracks.push(this.highlighted_track_label_only);
+        }
+        for (const track_id of highlightedTracks) {
+            if (this.cell_tops_this_space.hasOwnProperty(track_id)) {
                 this.ctx.fillStyle = 'rgba(255,255,0,0.4)';
-                this.ctx.fillRect(0, this.cell_tops_this_space[this.highlighted_track], this.getWidth()*this.supersampling_ratio, this.cell_heights_this_space[this.highlighted_track]);
+                this.ctx.fillRect(
+                    0,
+                    this.cell_tops_this_space[track_id],
+                    this.getWidth()*this.supersampling_ratio,
+                    this.cell_heights_this_space[track_id]
+                );
             }
         }
         const font_size = this.getFontSize();
@@ -318,15 +329,15 @@ export default class OncoprintLabelView {
         }
     }
 
-    private startDragging(track_id:TrackId, mouse_y:number) {
+    private startDragging(model:OncoprintModel, track_id:TrackId, mouse_y:number) {
         this.dragged_label_track_id = track_id;
         this.drag_mouse_y = mouse_y;
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
-    private stopDragging(new_previous_track_id:TrackId) {
+    private stopDragging(model:OncoprintModel, new_previous_track_id:TrackId) {
         this.drag_callback(this.dragged_label_track_id, new_previous_track_id);
         this.dragged_label_track_id = null;
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
 
     private getMaximumLabelLength() {
@@ -346,17 +357,17 @@ export default class OncoprintLabelView {
     public removeTrack(model:OncoprintModel, track_id:TrackId) {
         this.updateFromModel(model);
         this.resizeAndClear(model);
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
     public moveTrack(model:OncoprintModel) {
         this.updateFromModel(model);
         this.resizeAndClear(model);
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
     public setTrackGroupOrder(model:OncoprintModel) {
         this.updateFromModel(model);
         this.resizeAndClear(model);
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
     public addTracks(model:OncoprintModel, track_ids:TrackId[]) {
         for (let i=0; i<track_ids.length; i++) {
@@ -371,13 +382,13 @@ export default class OncoprintLabelView {
         }
         this.updateFromModel(model);
         this.resizeAndClear(model);
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
 
     public setShowTrackSublabels(model:OncoprintModel) {
         this.updateFromModel(model);
         this.resizeAndClear(model);
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
 
     public setScroll(model:OncoprintModel) {
@@ -394,33 +405,37 @@ export default class OncoprintLabelView {
     public setVertScroll(model:OncoprintModel) {
         this.updateFromModel(model);
         this.resizeAndClear(model);
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
 
     public setVertZoom(model:OncoprintModel) {
         this.updateFromModel(model);
         this.resizeAndClear(model);
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
 
     public setZoom(model:OncoprintModel) {
         this.setVertZoom(model);
     }
 
-    public highlightTrack(track_id:TrackId, model:OncoprintModel) {
+    public highlightTrackLabelOnly(track_id:TrackId, model:OncoprintModel) {
         // track_id is a track id, or null to clear highlight
-        this.highlighted_track = track_id;
-        this.renderAllLabels();
+        this.highlighted_track_label_only = track_id;
+        this.renderAllLabels(model);
+    }
+
+    public setHighlightedTracks(model:OncoprintModel) {
+        this.renderAllLabels(model);
     }
 
     public setTrackMovable(model:OncoprintModel) {
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
 
     public sort(model:OncoprintModel) {
         this.updateFromModel(model);
         this.resizeAndClear(model);
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
 
     public suppressRendering() {
@@ -431,7 +446,7 @@ export default class OncoprintLabelView {
         this.rendering_suppressed = false;
         this.updateFromModel(model);
         this.resizeAndClear(model);
-        this.renderAllLabels();
+        this.renderAllLabels(model);
     }
 
     public toSVGGroup(model:OncoprintModel, full_labels:boolean, offset_x:number, offset_y:number) {
