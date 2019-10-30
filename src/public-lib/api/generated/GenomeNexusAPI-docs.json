@@ -2277,10 +2277,6 @@
           "type": "string",
           "description": "HGVSc"
         },
-        "hgvsg": {
-          "type": "string",
-          "description": "HGVSg"
-        },
         "hgvsp": {
           "type": "string",
           "description": "HGVSp"
@@ -2453,9 +2449,6 @@
           "type": "integer",
           "format": "int32",
           "description": "End position"
-        },
-        "hgvsg": {
-          "type": "string"
         },
         "hotspots": {
           "description": "Hotspot Annotation",
