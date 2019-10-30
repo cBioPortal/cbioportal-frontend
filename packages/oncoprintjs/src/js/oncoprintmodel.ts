@@ -890,15 +890,17 @@ export default class OncoprintModel {
     }
 
     public getHighlightedTracks() {
-        return this.highlighted_tracks.slice();
+        const realTracks = _.keyBy(this.getTracks());
+        return this.highlighted_tracks.filter(trackId=>(trackId in realTracks));
     }
 
     public setHighlightedIds(ids:ColumnId[]) {
         this.highlighted_ids = ids;
     }
 
-    public getHighlightedIds() {
-        return this.highlighted_ids.slice();
+    public getVisibleHighlightedIds() {
+        const visibleIds = this.getVisibleIdToIndexMap();
+        return this.highlighted_ids.filter(uid=>(uid in visibleIds));
     }
 
     public setTrackGroupOrder(index:TrackGroupIndex, track_order:TrackGroup) {
