@@ -85,6 +85,9 @@ import {
     submitToPage, ChartMetaWithDimensionAndChartType,
     UniqueKey,
     getChartSettingsMap,
+    getGroupsFromBins,
+    NumericalGroupComparisonType,
+    getGroupsFromQuartiles,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -113,10 +116,9 @@ import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {
     finalizeStudiesAttr,
     getSampleIdentifiers, MAX_GROUPS_IN_SESSION,
-    getQuartiles,
-    StudyViewComparisonGroup
+    StudyViewComparisonGroup,
+    splitData
 } from "../groupComparison/GroupComparisonUtils";
-import {getSelectedGroups, getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import client from "../../shared/api/cbioportalClientInstance";
 import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
@@ -133,6 +135,7 @@ import {
     parseMutationUniqueKey
 } from "pages/studyView/TableUtils";
 import { GeneTableRow } from './table/GeneTable';
+import { getSelectedGroups, getStudiesAttr } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 
 export type ChartUserSetting = {
     id: string,
@@ -450,12 +453,13 @@ export class StudyViewPageStore {
 
     private async createNumberAttributeComparisonSession(
         clinicalAttribute:ClinicalAttribute,
+        categorizationType: NumericalGroupComparisonType,
         statusCallback:(phase:LoadingPhase)=>void
     ) {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
         return new Promise<string>((resolve)=>{
-            onMobxPromise(this.selectedSamples,
-                async (selectedSamples)=>{
+            onMobxPromise<any>([this.selectedSamples, this.clinicalDataBinPromises[getClinicalAttributeUniqueKey(clinicalAttribute)]],
+                async (selectedSamples:Sample[], dataBins:DataBin[])=>{
                     // get clinical data for the given attribute
                     const entityIdKey = (clinicalAttribute.patientAttribute ? "patientId" : "sampleId");
                     let data = await client.fetchClinicalDataUsingPOST({
@@ -466,40 +470,29 @@ export class StudyViewPageStore {
                         }
                     });
 
-                    const quartiles:ClinicalData[][] = getQuartiles(data);
-                    // create groups using data
-                    let patientToSamples:{[uniquePatientKey:string]:SampleIdentifier[]} = {};
-                    if (clinicalAttribute.patientAttribute) {
-                        patientToSamples = _.groupBy(selectedSamples, s=>s.uniquePatientKey);
+                    let groups: SessionGroupData[] = [];
+                    let clinicalAttributeName = '';
+
+                    switch (categorizationType) {
+                        case NumericalGroupComparisonType.BINS:
+                            groups = getGroupsFromBins(selectedSamples, clinicalAttribute.patientAttribute, data, dataBins, this.studyIds);
+                            clinicalAttributeName = `Bins of ${clinicalAttribute.displayName}`
+                            break;
+                        case NumericalGroupComparisonType.MEDIAN:
+                            groups = getGroupsFromQuartiles(selectedSamples, clinicalAttribute.patientAttribute, splitData(data,2), this.studyIds);
+                            clinicalAttributeName = `Median of ${clinicalAttribute.displayName}`;
+                            break;
+                        case NumericalGroupComparisonType.QUARTILES:
+                        default:
+                            groups = getGroupsFromQuartiles(selectedSamples, clinicalAttribute.patientAttribute, splitData(data,4), this.studyIds);
+                            clinicalAttributeName = `Quartiles of ${clinicalAttribute.displayName}`;
                     }
-                    const groups = quartiles.map(quartile=>{
-                        let studies;
-                        if (clinicalAttribute.patientAttribute) {
-                            studies = getStudiesAttr(
-                                _.flatMapDeep(
-                                    quartile,
-                                    (d:ClinicalData)=>{
-                                        return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }));
-                                    }
-                                )
-                            );
-                        } else {
-                            studies = getStudiesAttr(quartile.map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
-                        }
-                        const range = [quartile[0].value, quartile[quartile.length-1].value];
-                        return {
-                            name: `${range[0]}-${range[1]}`,
-                            description: "",
-                            studies,
-                            origin: this.studyIds,
-                        };
-                    });
 
                     statusCallback(LoadingPhase.CREATING_SESSION);
                     // create session and get id
                     const {id} = await comparisonClient.addComparisonSession({
                         groups,
-                        clinicalAttributeName:`Quartiles of ${clinicalAttribute.displayName}`,
+                        clinicalAttributeName,
                         origin:this.studyIds,
                         groupNameOrder: groups.map(g=>g.name)
                     });
@@ -625,6 +618,7 @@ export class StudyViewPageStore {
     @autobind
     public async openComparisonPage(params:{
         chartMeta: ChartMeta,
+        categorizationType?: NumericalGroupComparisonType
         clinicalAttributeValues?: ClinicalDataCountSummary[]
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
@@ -686,6 +680,7 @@ export class StudyViewPageStore {
                     sessionId =
                         await this.createNumberAttributeComparisonSession(
                             params.chartMeta.clinicalAttribute!,
+                            params.categorizationType || NumericalGroupComparisonType.QUARTILES,
                             statusCallback
                         );
                     break;
