@@ -512,8 +512,6 @@ export default class OncoprintWebGLCellView {
 
         if (!dont_resize) {
             this.resizeAndClear(model);
-            this.highlightHighlightedIds(model);
-            this.highlightHighlightedTracks(model);
         }
         this.ctx.clearColor(1.0,1.0,1.0,1.0);
         this.ctx.clear(this.ctx.COLOR_BUFFER_BIT | this.ctx.DEPTH_BUFFER_BIT);
@@ -561,8 +559,12 @@ export default class OncoprintWebGLCellView {
 
             this.ctx.drawArrays(this.ctx.TRIANGLES, first_index, first_index_out - first_index);
         }
-
         this.renderColumnLabels(model, id_order.slice(horz_first_id_in_window_index, horz_first_id_after_window_index === -1 ? undefined : horz_first_id_after_window_index));
+
+        // finally, refresh overlay (highlights)
+        this.clearOverlay();
+        this.highlightHighlightedIds(model);
+        this.highlightHighlightedTracks(model);
     };
 
     private static getColumnLabelsFontSize(model:OncoprintModel) {
