@@ -260,9 +260,9 @@ export function filterScatterData(allScatterData: GroupedScatterData, filters: S
     let filteredData = _.cloneDeep(allScatterData);
     _.forEach(filteredData, (value:SurvivalCurveData) => {
         if (value.numOfCases > downSamplingOpts.threshold) {
-            if (filters) {	
-                value.scatter = value.scatter.filter((_val) => filterBasedOnCoordinates(filters, _val));	
-                value.scatterWithOpacity = value.scatterWithOpacity.filter((_val) => filterBasedOnCoordinates(filters, _val));	
+            if (filters) {
+                value.scatter = value.scatter.filter((_val) => filterBasedOnCoordinates(filters, _val));
+                value.scatterWithOpacity = value.scatterWithOpacity.filter((_val) => filterBasedOnCoordinates(filters, _val));
             }
             value.scatter = downSampling(value.scatter, downSamplingOpts);
             value.scatterWithOpacity = downSampling(value.scatterWithOpacity, downSamplingOpts);

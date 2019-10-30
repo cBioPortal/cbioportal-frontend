@@ -27,6 +27,7 @@ import classnames from "classnames";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
+import RangeSelector from 'shared/components/rangeSelector/RangeSelector';
 
 export enum LegendLocation {
     TOOLTIP = "tooltip",
@@ -34,6 +35,7 @@ export enum LegendLocation {
 }
 
 export const SURVIVAL_CHART_ATTRIBUTES = ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"]
+export const SURVIVAL_CHART_INITIAL_SHOWN_MONTHS = 60;
 
 export interface ISurvivalChartProps {
     patientSurvivals:ReadonlyArray<PatientSurvival>;
@@ -62,7 +64,7 @@ export interface ISurvivalChartProps {
     className?: string;
     showCurveInTooltip?:boolean;
     legendLabelComponent?:any;
-    showRangeSelection?: boolean;
+    showRangeSelector?: boolean;
 }
 
 // Start to down sampling when there are more than 1000 dots in the plot.
@@ -227,12 +229,11 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         showLogRankPVal: true,
         showNaPatientsHiddenToggle: false,
         showDownloadButtons: true,
-        showRangeSelection: true
+        showRangeSelector: true
     };
 
     constructor(props: ISurvivalChartProps) {
         super(props);
-        this.state = {};
         this.tooltipMouseEnter = this.tooltipMouseEnter.bind(this);
         this.tooltipMouseLeave = this.tooltipMouseLeave.bind(this);
     }
@@ -413,8 +414,18 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         return this.victoryLegendData.length > 0;
     }
 
-    @observable.shallow selectedDomain: any = {x: [0, this.maximumDataMonthValue < 60 ? this.maximumDataMonthValue : 60]};
-    @observable.shallow zoomDomain: any = {x: [0, this.maximumDataMonthValue < 60 ? this.maximumDataMonthValue : 60]};
+    @observable.shallow zoomDomain: any = {x: [0, this.initialRangeMaxValue]};
+
+    @autobind
+    private onZoom(domain: any, props: any) {
+        this.zoomDomain = {x: domain.x};
+    }
+
+    @autobind
+    private updateDomain(domain: any) {
+        this.zoomDomain = {x: domain.x};
+    }
+
     @computed get maximumDataMonthValue() {
         let max = Number.MIN_VALUE;
         _.forEach(this.sortedGroupedSurvivals, (survivals) => {
@@ -423,16 +434,19 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         return Math.ceil(max);
     }
 
-    @autobind
-    private onSelection(domain: any, props: any) {
-        this.zoomDomain = {x: domain.x};
-        this.selectedDomain = {x: domain.x};
+    @computed get initialRangeMaxValue() {
+        if (this.maximumDataMonthValue < SURVIVAL_CHART_INITIAL_SHOWN_MONTHS) {
+            return this.maximumDataMonthValue;
+        }
+        return SURVIVAL_CHART_INITIAL_SHOWN_MONTHS;
     }
 
-    @autobind
-    private onZoom(domain: any, props: any) {
-        this.selectedDomain = {x: domain.x};
-        this.zoomDomain = {x: domain.x};
+    @computed get additionalProps() {
+        if (this.props.showRangeSelector) {
+            return {
+                zoomDomain: this.zoomDomain
+            }
+        }
     }
 
     @computed
@@ -453,25 +467,19 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 }
 
                 {
-                    
-                    (this.props.showRangeSelection) && (
-                        <div style={{marginBottom:"-50px"}}>
-                        <VictoryChart containerComponent={<VictoryBrushContainer responsive={false} brushDimension="x" brushDomain={this.selectedDomain} onBrushDomainChange={this.onSelection}/>}
-                                    height={100} width={this.styleOpts.width}
-                                    padding={this.styleOpts.padding}
-                                    theme={CBIOPORTAL_VICTORY_THEME}
-                                    domain={{x: [0, this.maximumDataMonthValue]}}
-                                    domainPadding={{x: [10, 50], y: [20, 20]}}>
-                            <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={this.xAxisTickCount}
-                                        orientation={"top"} offsetY={50}/>
-                            <VictoryLabel x={50} y={60} text={Math.round(this.selectedDomain.x[0])}/>
-                            <VictoryLabel x={this.styleOpts.legend.x - 10} y={60} text={Math.round(this.selectedDomain.x[1])}/>
-                        </VictoryChart>
-                        </div>
+                    (this.props.showRangeSelector) && (
+                        <RangeSelector
+                            initialRange={{min:0, max: this.initialRangeMaxValue}}
+                            maxAxisValue={this.maximumDataMonthValue}
+                            styleOpts={this.styleOpts}
+                            xAxisTickCount={this.xAxisTickCount}
+                            selectedDomain={this.zoomDomain}
+                            updateDomain={this.updateDomain}
+                        />
                     )
                 }
 
-                <VictoryChart containerComponent={<VictoryZoomContainer disable={this.props.disableZoom} responsive={false} zoomDimension={"x"} zoomDomain={this.zoomDomain} onZoomDomainChange={this.onZoom} containerRef={(ref: any) => this.svgContainer = ref}/>}
+                <VictoryChart containerComponent={<VictoryZoomContainer disable={this.props.disableZoom} responsive={false} zoomDimension={"x"} onZoomDomainChange={this.onZoom} containerRef={(ref: any) => this.svgContainer = ref} {...this.additionalProps} />}
                               height={this.styleOpts.height} width={this.styleOpts.width}
                               padding={this.styleOpts.padding}
                               theme={CBIOPORTAL_VICTORY_THEME}
