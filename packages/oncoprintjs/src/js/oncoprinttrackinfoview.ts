@@ -91,12 +91,12 @@ export default class OncoprintTrackInfoView {
         this.$text_ctr.css({'top': -scroll_y});
     };
 
-    private resize(model:OncoprintModel) {
+    private resize(model:OncoprintModel, getCellViewHeight:()=>number) {
         if (this.rendering_suppressed) {
             return;
         }
-        this.$div.css({'width': this.getWidth(), 'height': model.getCellViewHeight()});
-        this.$ctr.css({'width': this.getWidth(), 'height': model.getCellViewHeight()});
+        this.$div.css({'width': this.getWidth(), 'height': getCellViewHeight()});
+        this.$ctr.css({'width': this.getWidth(), 'height': getCellViewHeight()});
     };
 
     public getFontSize() {
@@ -105,25 +105,25 @@ export default class OncoprintTrackInfoView {
     public getWidth() {
         return this.width;
     }
-    public addTracks(model:OncoprintModel) {
+    public addTracks(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllInfo(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
     }
-    public moveTrack(model:OncoprintModel) {
+    public moveTrack(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllInfo(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
     }
-    public setTrackGroupOrder(model:OncoprintModel) {
+    public setTrackGroupOrder(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllInfo(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
     }
-    public removeTrack(model:OncoprintModel) {
+    public removeTrack(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllInfo(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
     }
-    public setTrackInfo(model:OncoprintModel) {
+    public setTrackInfo(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllInfo(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
     }
     public setScroll(model:OncoprintModel) {
         this.setVertScroll(model);
@@ -133,26 +133,26 @@ export default class OncoprintTrackInfoView {
     public setVertScroll(model:OncoprintModel) {
         this.scroll(model.getVertScroll());
     }
-    public setZoom(model:OncoprintModel) {
-        this.setVertZoom(model);
+    public setZoom(model:OncoprintModel, getCellViewHeight:()=>number) {
+        this.setVertZoom(model, getCellViewHeight);
     }
 
-    public setViewport(model:OncoprintModel) {
+    public setViewport(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllInfo(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
         this.scroll(model.getVertScroll());
     }
-    public setVertZoom(model:OncoprintModel) {
+    public setVertZoom(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllInfo(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
     }
     public suppressRendering() {
         this.rendering_suppressed = true;
     }
-    public releaseRendering(model:OncoprintModel) {
+    public releaseRendering(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.rendering_suppressed = false;
         this.renderAllInfo(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
         this.scroll(model.getVertScroll());
     }
     public destroy() {

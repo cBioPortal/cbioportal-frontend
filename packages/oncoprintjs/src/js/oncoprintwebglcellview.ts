@@ -213,7 +213,7 @@ export default class OncoprintWebGLCellView {
                     const left = Math.min(mouseX, drag_start_x);
                     const right = Math.max(mouseX, drag_start_x);
                     const drag_rect_fill = dragIsValid(drag_start_x, drag_end_x) ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.2)';
-                    self.overlayFillRect(left, 0, right-left, model.getCellViewHeight(), drag_rect_fill);
+                    self.overlayFillRect(left, 0, right-left, self.getVisibleAreaHeight(model), drag_rect_fill);
                 }
                 if (overlapping_cells === null) {
                     last_cell_over = null;
@@ -923,7 +923,7 @@ export default class OncoprintWebGLCellView {
         const window_left = Math.round(scroll_x / zoom_x);
         const window_right = Math.round((scroll_x + this.visible_area_width) / zoom_x);
         const window_top = Math.round(scroll_y / zoom_y);
-        const window_bottom = Math.round((scroll_y + model.getCellViewHeight()) / zoom_y);
+        const window_bottom = Math.round((scroll_y + this.getVisibleAreaHeight(model)) / zoom_y);
 
         return {
             'top': window_top,
@@ -1171,7 +1171,7 @@ export default class OncoprintWebGLCellView {
     }
 
     public getVisibleAreaHeight(model:OncoprintModel) {
-        return model.getCellViewHeight() + this.getColumnLabelsHeight();
+        return Math.min(model.getOncoprintHeight(), model.max_height) + this.getColumnLabelsHeight();
     }
 
     public setCellPaddingOn(model:OncoprintModel) {

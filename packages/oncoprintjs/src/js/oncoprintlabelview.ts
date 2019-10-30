@@ -164,11 +164,11 @@ export default class OncoprintLabelView {
         this.ctx.textAlign="start";
         this.ctx.textBaseline="middle";
     }
-    private resizeAndClear(model:OncoprintModel) {
+    private resizeAndClear(model:OncoprintModel, getCellViewHeight:()=>number) {
         if (this.rendering_suppressed) {
             return;
         }
-        const visible_height = model.getCellViewHeight();
+        const visible_height = getCellViewHeight();
         const visible_width = this.getWidth();
         this.$canvas[0].height = this.supersampling_ratio*visible_height;
         this.$canvas[0].width = this.supersampling_ratio*visible_width;
@@ -354,22 +354,22 @@ export default class OncoprintLabelView {
     public setDragCallback(callback:OncoprintLabelView["drag_callback"]) {
         this.drag_callback = callback;
     }
-    public removeTrack(model:OncoprintModel, track_id:TrackId) {
+    public removeTrack(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.updateFromModel(model);
-        this.resizeAndClear(model);
+        this.resizeAndClear(model, getCellViewHeight);
         this.renderAllLabels(model);
     }
-    public moveTrack(model:OncoprintModel) {
+    public moveTrack(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.updateFromModel(model);
-        this.resizeAndClear(model);
+        this.resizeAndClear(model, getCellViewHeight);
         this.renderAllLabels(model);
     }
-    public setTrackGroupOrder(model:OncoprintModel) {
+    public setTrackGroupOrder(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.updateFromModel(model);
-        this.resizeAndClear(model);
+        this.resizeAndClear(model, getCellViewHeight);
         this.renderAllLabels(model);
     }
-    public addTracks(model:OncoprintModel, track_ids:TrackId[]) {
+    public addTracks(model:OncoprintModel, track_ids:TrackId[], getCellViewHeight:()=>number) {
         for (let i=0; i<track_ids.length; i++) {
             this.labels[track_ids[i]] = model.getTrackLabel(track_ids[i]);
             this.sublabels[track_ids[i]] = model.getTrackSublabel(track_ids[i]);
@@ -381,41 +381,41 @@ export default class OncoprintLabelView {
             this.track_link_urls[track_ids[i]] = model.getTrackLinkUrl(track_ids[i]);
         }
         this.updateFromModel(model);
-        this.resizeAndClear(model);
+        this.resizeAndClear(model, getCellViewHeight);
         this.renderAllLabels(model);
     }
 
-    public setShowTrackSublabels(model:OncoprintModel) {
+    public setShowTrackSublabels(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.updateFromModel(model);
-        this.resizeAndClear(model);
+        this.resizeAndClear(model, getCellViewHeight);
         this.renderAllLabels(model);
     }
 
-    public setScroll(model:OncoprintModel) {
-        this.setVertScroll(model);
+    public setScroll(model:OncoprintModel, getCellViewHeight:()=>number) {
+        this.setVertScroll(model, getCellViewHeight);
     }
 
     public setHorzScroll(model:OncoprintModel) {
     }
 
-    public setViewport(model:OncoprintModel) {
-        this.setVertScroll(model);
+    public setViewport(model:OncoprintModel, getCellViewHeight:()=>number) {
+        this.setVertScroll(model, getCellViewHeight);
     }
 
-    public setVertScroll(model:OncoprintModel) {
+    public setVertScroll(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.updateFromModel(model);
-        this.resizeAndClear(model);
+        this.resizeAndClear(model, getCellViewHeight);
         this.renderAllLabels(model);
     }
 
-    public setVertZoom(model:OncoprintModel) {
+    public setVertZoom(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.updateFromModel(model);
-        this.resizeAndClear(model);
+        this.resizeAndClear(model, getCellViewHeight);
         this.renderAllLabels(model);
     }
 
-    public setZoom(model:OncoprintModel) {
-        this.setVertZoom(model);
+    public setZoom(model:OncoprintModel, getCellViewHeight:()=>number) {
+        this.setVertZoom(model, getCellViewHeight);
     }
 
     public highlightTrackLabelOnly(track_id:TrackId, model:OncoprintModel) {
@@ -432,9 +432,9 @@ export default class OncoprintLabelView {
         this.renderAllLabels(model);
     }
 
-    public sort(model:OncoprintModel) {
+    public sort(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.updateFromModel(model);
-        this.resizeAndClear(model);
+        this.resizeAndClear(model, getCellViewHeight);
         this.renderAllLabels(model);
     }
 
@@ -442,10 +442,10 @@ export default class OncoprintLabelView {
         this.rendering_suppressed = true;
     }
 
-    public releaseRendering(model:OncoprintModel) {
+    public releaseRendering(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.rendering_suppressed = false;
         this.updateFromModel(model);
-        this.resizeAndClear(model);
+        this.resizeAndClear(model, getCellViewHeight);
         this.renderAllLabels(model);
     }
 

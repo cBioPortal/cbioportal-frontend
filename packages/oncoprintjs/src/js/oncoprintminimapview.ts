@@ -369,7 +369,7 @@ export default class OncoprintMinimapView {
                     const max_num_cols = model.getIdOrder().length;
                     const min_num_cols = Math.ceil(cell_view.getVisibleAreaWidth() / (model.getCellWidth(true) + model.getCellPadding(true, true)));
                     const max_height = model.getOncoprintHeight(true) * zoom.y;
-                    const min_height = model.getCellViewHeight() * zoom.y;
+                    const min_height = cell_view.getVisibleAreaHeight(model) * zoom.y;
                     const drag_start_right_col = drag_start_rect.col + drag_start_rect.num_cols;
                     const drag_start_bottom = drag_start_rect.top + drag_start_rect.height;
                     if (drag_type === "resize_r") {
