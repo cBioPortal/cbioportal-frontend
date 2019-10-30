@@ -163,12 +163,9 @@ export const makeRoutes = routing => {
                 path="/oncoprinter"
                 getComponent={lazyLoadComponent(OncoprinterTool)}
             />
-
             <Route
                 path="/webAPI"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
+                onEnter={handleEnter}
                 getComponent={lazyLoadComponent(WebAPIPage)}
             />
             <Route
@@ -226,7 +223,6 @@ export const makeRoutes = routing => {
                 }}
                 component={TestimonialsPage}
             />
-
             <Route
                 path="/case.do"
                 onEnter={handleCaseDO}

@@ -81,7 +81,8 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
                 sortBy:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
                 download: (d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSample(d),
-                order: 20
+                order: 20,
+                resizable: true,
             });
         }
 

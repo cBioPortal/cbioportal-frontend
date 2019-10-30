@@ -10,7 +10,6 @@ import ProteinEnrichmentsTab from 'pages/resultsView/enrichments/ProteinEnrichme
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import autobind from 'autobind-decorator';
 import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
-import NotUsingGenePanelWarning from "../NotUsingGenePanelWarning";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 
 export interface IEnrichmentsTabProps {
@@ -52,7 +51,6 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
             <div data-test="enrichmentsTabDiv">
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="enrichments-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
-                    <NotUsingGenePanelWarning store={this.props.store}/>
                     <AlterationFilterWarning store={this.props.store}/>
                 </div>
                 <MSKTabs activeTabId={this.currentTabId} onTabClick={this.handleTabChange} className="secondaryNavigation">

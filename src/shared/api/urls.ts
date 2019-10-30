@@ -5,6 +5,7 @@ import * as _ from 'lodash';
 import {GroupComparisonLoadingParams} from "../../pages/groupComparison/GroupComparisonLoading";
 import {BuildUrlParams} from "../../public-lib/lib/urls";
 import {GroupComparisonURLQuery} from "../../pages/groupComparison/GroupComparisonURLWrapper";
+import { PagePath } from "shared/enums/PagePaths";
 
 export function trimTrailingSlash(str:string){
    return str.replace(/\/$/g,"");
@@ -81,7 +82,7 @@ export function getStudySummaryUrl(studyIds:string | ReadonlyArray<string>) {
 }
 export function redirectToStudyView(studyIds: string | ReadonlyArray<string>) {
     const params = getStudySummaryUrlParams(studyIds);
-    (window as any).routingStore.updateRoute(params.query,"study", true);
+    (window as any).routingStore.updateRoute(params.query, PagePath.Study, true);
 }
 export function getSampleViewUrl(studyId:string, sampleId:string, navIds?:{patientId:string, studyId:string}[]) {
     let hash:any = undefined;
