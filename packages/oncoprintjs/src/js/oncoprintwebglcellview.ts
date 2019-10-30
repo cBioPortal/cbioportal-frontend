@@ -17,6 +17,7 @@ import OncoprintToolTip from "./oncoprinttooltip";
 import {arrayFindIndex, ifndef, sgndiff} from "./utils";
 import MouseUpEvent = JQuery.MouseUpEvent;
 import MouseMoveEvent = JQuery.MouseMoveEvent;
+import {CellClickCallback, CellMouseOverCallback} from "./oncoprint";
 
 type ColorBankIndex = number; // index into vertex bank (e.g. 0, 4, 8, ...)
 type ColorBank = number[]; // flat list of color: [c0,c0,c0,c0,v1,v1,v1,c1,c1,c1,c1,...]
@@ -54,6 +55,8 @@ export type OncoprintTrackBuffer = WebGLBuffer & {
 
 const COLUMN_LABEL_ANGLE = 65;
 const COLUMN_LABEL_MARGIN = 30;
+
+const CELL_HIGHLIGHT_STROKE = "rgba(0,0,0,0.5)";
 
 export default class OncoprintWebGLCellView {
     public readonly position_bit_pack_base = 128;
@@ -96,8 +99,8 @@ export default class OncoprintWebGLCellView {
         model:OncoprintModel,
         private tooltip:OncoprintToolTip,
         private highlight_area_callback:undefined|((left:number, right:number)=>void),
-        cell_over_callback:(uid:ColumnId|null, track_id?:TrackId)=>void,
-        cell_click_callback:(uid:ColumnId|null, track_id?:TrackId)=>void
+        cell_over_callback:CellMouseOverCallback,
+        cell_click_callback:CellClickCallback
     ) {
 
 
@@ -167,6 +170,7 @@ export default class OncoprintWebGLCellView {
                 if (!mouseInOverlayCanvas(evt.pageX, evt.pageY)) {
                     self.clearOverlay();
                     self.highlightHighlightedIds(model);
+                    self.highlightHighlightedTracks(model);
                     tooltip.hide();
                     if (last_cell_over !== null) {
                         last_cell_over = null;
@@ -194,7 +198,8 @@ export default class OncoprintWebGLCellView {
                         last_cell_over = overlapping_cells;
                         cell_over_callback(overlapping_cells.ids[0], overlapping_cells.track);
 
-                        self.highlightColumn(model, overlapping_cells.ids[0], overlapping_cells.track);
+                        self.highlightCell(model, overlapping_cells.track, overlapping_cells.ids[0]);
+                        self.highlightColumn(model, overlapping_cells.ids[0]);
 
                         const clientRect = self.$overlay_canvas[0].getBoundingClientRect();
                         tooltip.show(250, model.getZoomedColumnLeft(overlapping_cells.ids[0]) + model.getCellWidth() / 2 + clientRect.left - self.scroll_x, model.getCellTops(overlapping_cells.track) + clientRect.top - self.scroll_y, model.getTrackTooltipFn(overlapping_cells.track)(overlapping_data));
@@ -216,6 +221,7 @@ export default class OncoprintWebGLCellView {
                 }
 
                 self.highlightHighlightedIds(model, overlapping_cells ? overlapping_cells.ids : []);
+                self.highlightHighlightedTracks(model);
             });
 
             self.$overlay_canvas.on("mousedown", function(evt) {
@@ -243,6 +249,7 @@ export default class OncoprintWebGLCellView {
         $dummy_scroll_div_contents.parent().scroll(function() {
             self.clearOverlay();
             self.highlightHighlightedIds(model);
+            self.highlightHighlightedTracks(model);
         });
     }
 
@@ -505,6 +512,8 @@ export default class OncoprintWebGLCellView {
 
         if (!dont_resize) {
             this.resizeAndClear(model);
+            this.highlightHighlightedIds(model);
+            this.highlightHighlightedTracks(model);
         }
         this.ctx.clearColor(1.0,1.0,1.0,1.0);
         this.ctx.clear(this.ctx.COLOR_BUFFER_BIT | this.ctx.DEPTH_BUFFER_BIT);
@@ -851,22 +860,43 @@ export default class OncoprintWebGLCellView {
         this.setUpShaders();
     }
 
-    public highlightColumn(model:OncoprintModel, uid:ColumnId|null, opt_track_id?:TrackId) {
-        if (uid === null) {
-            return;
+    private highlightCell(model:OncoprintModel, track_id:TrackId, uid:ColumnId) {
+        this.overlayStrokeRect(
+            model.getZoomedColumnLeft(uid) - this.scroll_x,
+            model.getCellTops(track_id) - this.scroll_y,
+            model.getCellWidth() + (model.getTrackHasColumnSpacing(track_id) ? 0 : model.getCellPadding()),
+            model.getCellHeight(track_id),
+            "rgba(0,0,0,1)"
+        );
+    }
+
+    private highlightTrack(model:OncoprintModel, track_id:TrackId) {
+        const highlight_width = model.getCellWidth() + (model.getTrackHasColumnSpacing(track_id) ? 0 : model.getCellPadding());
+        const cell_height = model.getCellHeight(track_id);
+        const uids = model.getIdOrder();
+        const left = model.getZoomedColumnLeft();
+        const top = model.getCellTops(track_id) - this.scroll_y;
+
+        for (const uid of uids) {
+            if (
+                model.getTrackDatum(track_id, uid) !== null &&
+                (uid in left)
+            ) {
+                this.overlayStrokeRect(
+                    left[uid] - this.scroll_x,
+                    top,
+                    highlight_width,
+                    cell_height,
+                    CELL_HIGHLIGHT_STROKE
+                );
+            }
         }
+    }
+
+    private highlightColumn(model:OncoprintModel, uid:ColumnId) {
         const left = model.getZoomedColumnLeft(uid) - this.scroll_x;
         const cell_padding = model.getCellPadding();
         const cell_width = model.getCellWidth();
-        if (opt_track_id) {
-            this.overlayStrokeRect(
-                left,
-                model.getCellTops(opt_track_id) - this.scroll_y,
-                cell_width + (model.getTrackHasColumnSpacing(opt_track_id) ? 0 : cell_padding),
-                model.getCellHeight(opt_track_id),
-                "rgba(0,0,0,1)"
-            );
-        }
         const tracks = model.getTracks();
         for (let i=0; i<tracks.length; i++) {
             if (model.getTrackDatum(tracks[i], uid) !== null) {
@@ -875,7 +905,7 @@ export default class OncoprintWebGLCellView {
                     model.getCellTops(tracks[i]) - this.scroll_y,
                     cell_width + (model.getTrackHasColumnSpacing(tracks[i]) ? 0 : cell_padding),
                     model.getCellHeight(tracks[i]),
-                    opt_track_id === undefined ? "rgba(0,0,0,1)" : "rgba(0,0,0,0.5)"
+                    CELL_HIGHLIGHT_STROKE
                 );
             }
         }
@@ -1162,6 +1192,13 @@ export default class OncoprintWebGLCellView {
     public setHighlightedIds(model:OncoprintModel) {
         this.clearOverlay();
         this.highlightHighlightedIds(model);
+        this.highlightHighlightedTracks(model);
+    }
+
+    public setHighlightedTracks(model:OncoprintModel) {
+        this.clearOverlay();
+        this.highlightHighlightedIds(model);
+        this.highlightHighlightedTracks(model);
     }
 
     public highlightHighlightedIds(model:OncoprintModel, opt_exclude_ids?:ColumnId[]) {
@@ -1171,6 +1208,14 @@ export default class OncoprintWebGLCellView {
             if (!opt_exclude_ids || opt_exclude_ids.indexOf(highlightedIds[i]) === -1) {
                 this.highlightColumn(model, highlightedIds[i]);
             }
+        }
+    }
+
+    public highlightHighlightedTracks(model:OncoprintModel) {
+        // Highlight highlighted ids
+        const highlightedTracks = model.getHighlightedTracks();
+        for (let i=0; i<highlightedTracks.length; i++) {
+            this.highlightTrack(model, highlightedTracks[i]);
         }
     }
 

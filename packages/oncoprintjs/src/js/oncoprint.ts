@@ -44,8 +44,8 @@ export type InitParams = {
 
 export type HorzZoomCallback = (zoom:number)=>void;
 export type MinimapCloseCallback = ()=>void;
-export type CellMouseOverCallback = (uid:ColumnId, track_id:TrackId)=>void;
-export type CellClickCallback = (uid:ColumnId, track_id:TrackId)=>void;
+export type CellMouseOverCallback = (uid:ColumnId|null, track_id?:TrackId)=>void;
+export type CellClickCallback = (uid:ColumnId|null, track_id?:TrackId)=>void;
 export type ClipboardChangeCallback = (ids:ColumnId[])=>void;
 
 const nextTrackId = (function () {
@@ -672,9 +672,9 @@ export default class Oncoprint {
 
     private doCellMouseOver(uid:ColumnId, track_id:TrackId) {
         if (uid !== null) {
-            this.highlightTrack(track_id);
+            this.highlightTrackLabelOnly(track_id);
         } else {
-            this.highlightTrack(null);
+            this.highlightTrackLabelOnly(null);
         }
         for (let i=0; i<this.cell_mouse_over_callbacks.length; i++) {
             this.cell_mouse_over_callbacks[i](uid, track_id);
@@ -1246,11 +1246,20 @@ export default class Oncoprint {
         });
     }
 
-    public highlightTrack(track_id:TrackId) {
+    public highlightTrackLabelOnly(track_id:TrackId) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
-        this.label_view.highlightTrack(track_id, this.model);
+        this.label_view.highlightTrackLabelOnly(track_id, this.model);
+    }
+
+    public setHighlightedTracks(track_ids:TrackId[]) {
+        if(this.webgl_unavailable || this.destroyed) {
+            return;
+        }
+        this.model.setHighlightedTracks(track_ids);
+        this.label_view.setHighlightedTracks(this.model);
+        this.cell_view.setHighlightedTracks(this.model);
     }
 
     public setHighlightedIds(ids:ColumnId[]) {
@@ -1305,6 +1314,6 @@ export default class Oncoprint {
             return;
         }
         this.cell_view.clearOverlay();
-        this.label_view.highlightTrack(null, this.model);
+        this.label_view.highlightTrackLabelOnly(null, this.model);
     }
 }
