@@ -19,17 +19,17 @@ export interface PortalSession {
     version:number;
 }
 
-function saveRemoteSession(data:any){
+export function saveRemoteSession(data:any){
     const dataCopy = Object.assign({}, data);
     delete dataCopy[""]; // artifact of mobx RouterStore URL serialization, when theres & at end of URL, which breaks session service
     return sessionClient.saveSession(dataCopy);
 }
 
-function getRemoteSession(sessionId:string){
+export function getRemoteSession(sessionId:string){
     return sessionClient.getSession(sessionId)
 }
 
-function normalizeLegacySession(sessionData:any){
+export function normalizeLegacySession(sessionData:any){
     // legacy sessions were stored with values as first item in arrays, so undo this
     sessionData.data = _.mapValues(sessionData.data, (value: any) => {
         if (_.isArray(value)) {
@@ -93,12 +93,13 @@ export default class ExtendedRouterStore extends RouterStore {
     }
 
     @computed get needsRemoteSessionLookup(){
-        if (!ServerConfigHelpers.sessionServiceIsEnabled()) {
-            return false;
-        }
-        const needsRemoteSessionLookup = this.session_id !== undefined && this.session_id !== "pending"
-            && (this._session === undefined || (this._session.id !== this.session_id));
-        return needsRemoteSessionLookup;
+        return false;
+        // if (!ServerConfigHelpers.sessionServiceIsEnabled()) {
+        //     return false;
+        // }
+        // const needsRemoteSessionLookup = this.session_id !== undefined && this.session_id !== "pending"
+        //     && (this._session === undefined || (this._session.id !== this.session_id));
+        // return needsRemoteSessionLookup;
     }
 
     remoteSessionData = remoteData({
@@ -134,10 +135,12 @@ export default class ExtendedRouterStore extends RouterStore {
     });
 
     sessionEnabledForPath(path:string){
-        const tests = [
-          /^\/results/,
-        ];
-        return _.some(tests,(test)=>test.test(path));
+        return false;
+        // const tests = [
+        //   /^\/results/,
+        // // ];
+        // const tests = [];
+        // return _.some(tests,(test)=>test.test(path));
     }
 
     @action updateRoute(newParams: QueryParams, path:string | undefined = undefined, clear = false, replace = false) {
@@ -171,6 +174,8 @@ export default class ExtendedRouterStore extends RouterStore {
         } else {
             // we are using session: do we need to make a new session?
 
+            // we need to filter out sessionprops of new query
+
             if (!this._session || !_.isEqual(this._session.query,newQuery) || _.size(newParams) > 0) {
                 const pendingSession = {
                     id:'pending',
@@ -194,7 +199,8 @@ export default class ExtendedRouterStore extends RouterStore {
                     this.replace( URL.format({pathname: this.location.pathname, query: {session_id:sessionResponse.id}, hash:this.location.hash}) );
                 });
             } else { // we already have a session but we only need to update path or hash
-                this[replace ? "replace" : "push"]( URL.format({pathname: path, query: {session_id:this._session.id}, hash:this.location.hash}) );
+
+                this[replace ? "replace" : "push"]( URL.format({pathname: path, query: this.location.query, hash:this.location.hash}) );
             }
         }
 
@@ -204,12 +210,13 @@ export default class ExtendedRouterStore extends RouterStore {
 
     @computed
     public get query(){
+        return this.location.query;
         // this allows url based query to override a session (if sessionId has been cleared in url)
-        if (this._session && this.location.query.session_id) {
-            return this._session.query;
-        } else {
-            return this.location.query;
-        }
+        // if (this._session && this.location.query.session_id) {
+        //     return this._session.query;
+        // } else {
+        //     return this.location.query;
+        // }
     }
 
     @computed

@@ -45,6 +45,7 @@ import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidationError';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import setWindowVariable from 'shared/lib/setWindowVariable';
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     const resultsViewPageStore = new ResultsViewPageStore(
@@ -655,6 +656,11 @@ export default class ResultsViewPage extends React.Component<
     }
 
     public render() {
+
+        if (this.urlWrapper.isPendingSession || this.urlWrapper.isSessionLoading) {
+            return <LoadingIndicator isLoading={true} center={true} size={"big"}/>
+        }
+
         if (
             this.resultsViewPageStore.studies.isComplete &&
             !this.resultsViewPageStore.tabId

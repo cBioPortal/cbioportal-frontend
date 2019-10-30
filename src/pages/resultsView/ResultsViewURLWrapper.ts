@@ -46,6 +46,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuer
             { name: "oncoprint_cluster_profile", isSessionProp:false},
             { name: "oncoprint_sort_by_mutation_type", isSessionProp:false },
             { name: "oncoprint_sort_by_drivers", isSessionProp:false},
+            { name: "treatment_list", isSessionProp:false },
 
             // session props here
             { name: "gene_list", isSessionProp:true },
@@ -57,7 +58,6 @@ export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuer
             { name: "RPPA_SCORE_THRESHOLD", isSessionProp:true },
             { name: "Z_SCORE_THRESHOLD", isSessionProp:true },
             { name: "geneset_list", isSessionProp:true },
-            { name: "treatment_list", isSessionProp:true },
             { name: "genetic_profile_ids_PROFILE_MUTATION_EXTENDED", isSessionProp:true },
             { name: "genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION", isSessionProp:true },
             { name: "genetic_profile_ids_PROFILE_MRNA_EXPRESSION", isSessionProp:true },
