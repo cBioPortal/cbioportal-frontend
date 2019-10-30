@@ -124,7 +124,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                             options={[this.highlightedInVAFChartOptions.true, this.highlightedInVAFChartOptions.false]}
                             clearable={false}
                             searchable={false}
-                            value={this.highlightedInVAFChartOptions[this.dataStore.getOnlyShowHighlightedInVAFChart().toString()]}
+                            value={this.highlightedInVAFChartOptions[this.dataStore.onlyShowHighlightedInVAFChart.toString()]}
                             styles={DROPDOWN_STYLES}
                             theme={DROPDOWN_THEME}
                         />
@@ -209,7 +209,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                         options={[this.highlightedInTableOptions.true, this.highlightedInTableOptions.false]}
                         clearable={false}
                         searchable={false}
-                        value={this.highlightedInTableOptions[this.dataStore.getOnlyShowHighlightedInTable().toString()]}
+                        value={this.highlightedInTableOptions[this.dataStore.onlyShowHighlightedInTable.toString()]}
                         styles={DROPDOWN_STYLES}
                         theme={DROPDOWN_THEME}
                     />
