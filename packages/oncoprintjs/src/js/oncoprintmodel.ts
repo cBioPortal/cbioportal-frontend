@@ -194,7 +194,7 @@ export default class OncoprintModel {
     public rendering_suppressed_depth:number;
 
     // Rendering properties
-    private max_height:number;
+    public readonly max_height:number;
     private cell_width:number;
     private horz_zoom:number;
     private vert_zoom:number;
@@ -1327,10 +1327,6 @@ export default class OncoprintModel {
 
     public getOncoprintWidthNoColumnPadding(base?:boolean) {
         return this.getIdOrder().length*this.getCellWidth(base);
-    }
-
-    public getCellViewHeight() {
-        return Math.min(this.max_height, this.getOncoprintHeight());
     }
 
     public getColumnLabels() {

@@ -85,12 +85,12 @@ export default class OncoprintTrackOptionsView {
         this.$dropdown_ctr.css({'top': -scroll_y});
     }
 
-    private resize(model:OncoprintModel) {
+    private resize(model:OncoprintModel, getCellViewHeight:()=>number) {
         if (this.rendering_suppressed) {
             return;
         }
-        this.$div.css({'width': this.getWidth(), 'height': model.getCellViewHeight()});
-        this.$ctr.css({'width': this.getWidth(), 'height': model.getCellViewHeight()});
+        this.$div.css({'width': this.getWidth(), 'height': getCellViewHeight()});
+        this.$ctr.css({'width': this.getWidth(), 'height': getCellViewHeight()});
     }
 
     private hideTrackMenu(track_id:TrackId) {
@@ -323,10 +323,10 @@ export default class OncoprintTrackOptionsView {
     public suppressRendering() {
         this.rendering_suppressed = true;
     }
-    public releaseRendering(model:OncoprintModel) {
+    public releaseRendering(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.rendering_suppressed = false;
         this.renderAllOptions(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
         this.scroll(model.getVertScroll());
     }
     public setScroll(model:OncoprintModel) {
@@ -337,16 +337,16 @@ export default class OncoprintTrackOptionsView {
     public setVertScroll(model:OncoprintModel) {
         this.scroll(model.getVertScroll());
     }
-    public setZoom(model:OncoprintModel) {
-        this.setVertZoom(model);
+    public setZoom(model:OncoprintModel, getCellViewHeight:()=>number) {
+        this.setVertZoom(model, getCellViewHeight);
     }
-    public setVertZoom(model:OncoprintModel) {
+    public setVertZoom(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllOptions(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
     }
-    public setViewport(model:OncoprintModel) {
+    public setViewport(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllOptions(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
         this.scroll(model.getVertScroll());
     }
     public getWidth() {
@@ -356,13 +356,13 @@ export default class OncoprintTrackOptionsView {
             return 18 + this.img_size;
         }
     }
-    public addTracks(model:OncoprintModel) {
+    public addTracks(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllOptions(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
     }
-    public moveTrack(model:OncoprintModel) {
+    public moveTrack(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllOptions(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
     }
     public setTrackGroupOrder(model:OncoprintModel) {
         this.renderAllOptions(model);
@@ -370,10 +370,10 @@ export default class OncoprintTrackOptionsView {
     public setSortConfig(model:OncoprintModel) {
         this.renderAllOptions(model);
     }
-    public removeTrack(model:OncoprintModel, track_id:TrackId) {
+    public removeTrack(model:OncoprintModel, track_id:TrackId, getCellViewHeight:()=>number) {
         delete this.track_options_$elts[track_id];
         this.renderAllOptions(model);
-        this.resize(model);
+        this.resize(model, getCellViewHeight);
     }
     public destroy() {
         $(document).off("click", this.clickHandler);
