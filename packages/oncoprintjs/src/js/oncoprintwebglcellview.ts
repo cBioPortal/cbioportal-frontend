@@ -1205,7 +1205,7 @@ export default class OncoprintWebGLCellView {
 
     public highlightHighlightedIds(model:OncoprintModel, opt_exclude_ids?:ColumnId[]) {
         // Highlight highlighted ids
-        const highlightedIds = model.getHighlightedIds();
+        const highlightedIds = model.getVisibleHighlightedIds();
         for (let i=0; i<highlightedIds.length; i++) {
             if (!opt_exclude_ids || opt_exclude_ids.indexOf(highlightedIds[i]) === -1) {
                 this.highlightColumn(model, highlightedIds[i]);
