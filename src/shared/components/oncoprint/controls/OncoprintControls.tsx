@@ -617,7 +617,7 @@ export default class OncoprintControls extends React.Component<
             this.props.state.hideHeatmapMenu ||
             !this.props.state.heatmapProfilesPromise
         ) {
-            return <span />;
+            return null;
         }
         let menu = <LoadingIndicator isLoading={true} />;
         if (this.props.state.heatmapProfilesPromise.isComplete) {
@@ -1551,12 +1551,11 @@ export default class OncoprintControls extends React.Component<
                     <Button
                         active={this.showMinimap}
                         onClick={this.toggleShowMinimap}
-                        className="oncoprint__controls__minimap_button"
                     >
                         <img
                             src={require('./toggle-minimap.svg')}
                             alt="icon"
-                            style={{ width: 15, height: 15, margin: 2 }}
+                            style={{ width: 15, height: 15 }}
                         />
                     </Button>
                 </DefaultTooltip>
