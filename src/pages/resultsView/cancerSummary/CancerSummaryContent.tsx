@@ -350,6 +350,19 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         return this.altCasesValue > 0;
     }
 
+    /**
+     * Only show the links in the tool tip of the plot if:
+     * 1. The plot is displaying studies
+     * 2. The plot is displaying more than 1 study
+     */
+    @computed
+    private get showStudyTooltipLinks(): boolean {
+        return (
+            this.props.groupAlterationsBy === "studyId" &&
+            this.chartData.labels.length > 1
+        );
+    }
+
     private transformLabel(str: string) {
         if (this.props.labelTransformer) {
             return this.props.labelTransformer(str);
@@ -431,10 +444,6 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     private handleTotalSliderChangeComplete() {
         this.totalCasesValue = this.tempTotalCasesValue;
     }
-
-    // private toggleShowControls() {
-    //     this.showControls = !this.showControls;
-    // }
 
     @action
     private initializeSliderValue() {
@@ -563,11 +572,6 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                             </ButtonGroup>
                         </div>
 
-                        {/*<div role="group" className="hidden btn-group cancer-summary--chart-buttons">*/}
-                            {/*<button onClick={this.toggleShowControls} className="btn btn-default btn-xs">Customize <i*/}
-                                {/*className="fa fa-cog" aria-hidden="true"></i></button>*/}
-                        {/*</div>*/}
-
                         <div className={classnames("inlineBlock",{hidden: !this.showControls}, 'cancer-summary-secondary-options')}>
                             {/*<button type="button" onClick={this.toggleShowControls} className="close">×</button>*/}
                             {this.controls}
@@ -578,18 +582,20 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                 {`${this.chartData.labels.length} of ${this.groupKeysSorted.length} categories (${_.keyBy(GroupByOptions, "value")[this.props.groupAlterationsBy].label}) are shown based on filtering.`}
                             </span>
                         </div>
-
-                        <CancerSummaryChart key={Date.now()}
-                                        data={this.chartData.data}
-                                        alterationTypeDataCounts={this.chartData.alterationTypeDataCounts}
-                                        ref={(el:any)=>this.chartComponent = el}
-                                        countsByGroup={this.countsData}
-                                        representedAlterations={this.chartData.representedAlterations}
-                                        alterationTypes={OrderedAlterationLabelMap}
-                                        isPercentage={(this.yAxis === "alt-freq")}
-                                        colors={alterationToColor}
-                                        hideGenomicAlterations={this.hideGenomicAlterations}
-                                        xLabels={this.chartData.labels}/>
+                        <CancerSummaryChart
+                            gene={this.props.gene}
+                            key={Date.now()}
+                            data={this.chartData.data}
+                            alterationTypeDataCounts={this.chartData.alterationTypeDataCounts}
+                            ref={(el:any)=>this.chartComponent = el}
+                            countsByGroup={this.countsData}
+                            representedAlterations={this.chartData.representedAlterations}
+                            alterationTypes={OrderedAlterationLabelMap}
+                            isPercentage={(this.yAxis === "alt-freq")}
+                            showLinks={this.showStudyTooltipLinks}
+                            colors={alterationToColor}
+                            hideGenomicAlterations={this.hideGenomicAlterations}
+                            xLabels={this.chartData.labels}/>
 
                     </div>
                 </Then>

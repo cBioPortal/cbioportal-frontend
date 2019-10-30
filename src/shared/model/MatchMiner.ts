@@ -1,3 +1,10 @@
+enum MatchType {
+    MUTATION = 'MUTATION',
+    CNA = 'CNA',
+    MSI = 'MSI',
+    WILDTYPE = 'WILDTYPE'
+}
+
 export interface ITrial {
     id: string;
     nctId: string | '';
@@ -34,23 +41,19 @@ export interface ITrialMatch {
     id: string;
     nctId: string | '';
     protocolNo: string | '';
-    oncotreePrimaryDiagnosisName: string;
-    gender?: string | null;
+    oncotreePrimaryDiagnosisName?: string;
+    gender?: string;
     matchType: string;
-    armDescription: string | null;
-    armType?: string | null;
-    trueHugoSymbol?: string | null;
-    trialAccrualStatus: string;
-    matchLevel: string;
+    armDescription?: string;
+    armType?: string;
     sampleId: string;
     mrn: string;
-    trueProteinChange?: string | null;
+    trueHugoSymbol?: string;
+    trueProteinChange?: string;
     vitalStatus?: string | null;
     genomicAlteration?: string;
-    patientClinical?: string | null;
-    patientGenomic?: string | null;
-    trialAgeNumerical: string;
-    trialOncotreePrimaryDiagnosis: string;
+    trialAgeNumerical?: string;
+    trialOncotreePrimaryDiagnosis?: string;
 }
 
 export interface ITrialQuery {
@@ -59,8 +62,8 @@ export interface ITrialQuery {
 }
 
 export interface IGenomicMatch {
-    trueHugoSymbol: string | null;
-    trueProteinChange: string | null;
+    trueHugoSymbol?: string;
+    trueProteinChange?: string;
     sampleIds: string[];
 }
 
@@ -70,11 +73,21 @@ export interface IClinicalGroupMatch {
         positive: string[], // trialOncotreePrimaryDiagnosis not includes '!'
         negative: string[] // trialOncotreePrimaryDiagnosis includes '!'
     };
-    matches: IGenomicGroupMatch[];
-    notMatches: IGenomicGroupMatch[];
+    matches: IGenomicMatchType;
+    notMatches: IGenomicMatchType;
 }
+
+export interface IGenomicMatchType {
+    MUTATION: IGenomicGroupMatch[],
+    CNA: IGenomicGroupMatch[],
+    MSI: IGenomicGroupMatch[],
+    WILDTYPE: IGenomicGroupMatch[],
+    [key: string]: IGenomicGroupMatch[]
+}
+
 export interface IGenomicGroupMatch {
     genomicAlteration: string;
+    matchType: string;
     matches: IGenomicMatch[];
 }
 

@@ -1,6 +1,6 @@
 import {
     IArmMatch, IClinicalGroupMatch, IDetailedTrialMatch, IGenomicGroupMatch, IGenomicMatch, ITrial,
-    ITrialMatch, IArm, IDrug
+    ITrialMatch, IArm, IDrug, IGenomicMatchType
 } from "../../../shared/model/MatchMiner";
 import * as _ from 'lodash';
 
@@ -51,10 +51,12 @@ export function groupTrialMatchesByAgeNumerical(armGroup: ITrialMatch[]): IClini
         const negativeCancerTypes: string[] = [];
         _.map(cancerTypes, (item) => {
             // If a cancer type contains a "!", it means this trial cannot be used for the cancer type, which is a "NOT" match.
-            if (item.includes('!')) {
-                negativeCancerTypes.push(item.replace('!', ''));
-            } else {
-                positiveCancerTypes.push(item);
+            if (!_.isUndefined(item)) {
+                if (item.includes('!')) {
+                    negativeCancerTypes.push(item.replace('!', ''));
+                } else {
+                    positiveCancerTypes.push(item);
+                }
             }
         });
         let clinicalGroupMatch: IClinicalGroupMatch = {
@@ -63,8 +65,18 @@ export function groupTrialMatchesByAgeNumerical(armGroup: ITrialMatch[]): IClini
                 positive: positiveCancerTypes,
                 negative: negativeCancerTypes
             },
-            matches: [],
-            notMatches: []
+            matches: {
+                MUTATION: [],
+                CNA: [],
+                MSI: [],
+                WILDTYPE: []
+            },
+            notMatches: {
+                MUTATION: [],
+                CNA: [],
+                MSI: [],
+                WILDTYPE: []
+            }
         };
         const positiveAndNegativeMatches = groupTrialMatchesByGenomicAlteration(matchesGroupedByAge[age]);
         clinicalGroupMatch.matches = positiveAndNegativeMatches.matches;
@@ -76,28 +88,55 @@ export function groupTrialMatchesByAgeNumerical(armGroup: ITrialMatch[]): IClini
 
 export function groupTrialMatchesByGenomicAlteration(ageGroup: ITrialMatch[]) {
     const matchesGroupedByGenomicAlteration = _.groupBy(ageGroup, (trial: ITrialMatch) => trial.genomicAlteration);
-    const matches: IGenomicGroupMatch[] = []; // positive matches
-    const notMatches: IGenomicGroupMatch[] = []; // negative matches
+    // positive matches
+    const matches: IGenomicMatchType = {
+        MUTATION: [],
+        CNA: [],
+        MSI: [],
+        WILDTYPE: []
+    };
+    // negative matches
+    const notMatches: IGenomicMatchType = {
+        MUTATION: [],
+        CNA: [],
+        MSI: [],
+        WILDTYPE: []
+    };
     _.forEach(matchesGroupedByGenomicAlteration, (genomicAlterationGroup, genomicAlteration) => {
-        const genomicGroupMatch = groupTrialMatchesByPatientGenomic(genomicAlterationGroup, genomicAlteration);
-        // If a genomic alteration(i.e. BRAF V600E) contains a "!",
-        // it means this trial cannot be used for the genomic alteration, which is a "NOT" match.
+        const genomicGroupMatch = formatTrialMatchesByMatchType(genomicAlterationGroup, genomicAlteration);
         if(genomicAlteration.includes('!')) {
-            notMatches.push(genomicGroupMatch);
+            notMatches[genomicAlterationGroup[ 0 ][ 'matchType' ]].push(genomicGroupMatch);
         } else {
-            matches.push(genomicGroupMatch);
+            matches[genomicAlterationGroup[ 0 ][ 'matchType' ]].push(genomicGroupMatch);
         }
     });
     return { notMatches: notMatches, matches: matches };
 }
 
-export function groupTrialMatchesByPatientGenomic(genomicAlterationGroup: ITrialMatch[], genomicAlteration: string): IGenomicGroupMatch {
-    const matchesGroupedByPatientGenomic = _.groupBy(genomicAlterationGroup, (trial: ITrialMatch) => trial.patientGenomic);
+function formatTrialMatchesByMatchType(genomicAlterationGroup: ITrialMatch[], genomicAlteration: string) {
+    const matchType = genomicAlterationGroup[ 0 ][ 'matchType' ];
+    if (matchType === 'MUTATION') {
+        return groupTrialMatchesByPatientGenomic(genomicAlterationGroup, genomicAlteration, matchType);
+    } else {
+        const genomicGroupMatch: IGenomicGroupMatch = {
+            genomicAlteration: genomicAlteration,
+            matchType: matchType,
+            matches: [{
+                sampleIds: _.uniq( _.map( genomicAlterationGroup, ( trial: ITrialMatch ) => trial.sampleId ) )
+            }]
+        };
+        return genomicGroupMatch;
+    }
+}
+
+export function groupTrialMatchesByPatientGenomic(genomicAlterationGroup: ITrialMatch[], genomicAlteration: string, matchType: string): IGenomicGroupMatch {
+    const matchesGroupedByPatientGenomic = _.groupBy( genomicAlterationGroup, ( trial: ITrialMatch ) => trial.trueHugoSymbol! + trial.trueProteinChange! );
     const genomicGroupMatch: IGenomicGroupMatch = {
         genomicAlteration: genomicAlteration,
+        matchType: matchType,
         matches: []
     };
-    genomicGroupMatch.matches = _.map(matchesGroupedByPatientGenomic , (patientGenomicGroup: ITrialMatch[]) => {
+    genomicGroupMatch.matches = _.map(matchesGroupedByPatientGenomic, (patientGenomicGroup: ITrialMatch[]) => {
         const genomicMatch: IGenomicMatch = {
             trueHugoSymbol: patientGenomicGroup[0].trueHugoSymbol!,
             trueProteinChange: patientGenomicGroup[0].trueProteinChange!,
@@ -121,13 +160,20 @@ export function calculateTrialPriority(armMatches: IArmMatch[]): number {
 export function getMatchPriority(clinicalGroupMatch: IClinicalGroupMatch): number {
     // In trial match tab, positive matches should always display before negative matches(notMatches).
     // The highest and default priority is 0. The priority the higher, the display order the lower.
-    if (clinicalGroupMatch.notMatches.length > 0) {
-        if (clinicalGroupMatch.matches.length === 0) {
+    const matchesLength = getMatchesLength(clinicalGroupMatch.matches);
+    const notMatchesLength = getMatchesLength(clinicalGroupMatch.notMatches);
+    if (notMatchesLength > 0) {
+        if ( matchesLength === 0) {
             return 2; // A trial only has negative matches.
         }
         return 1; // A trial has both positive matches and negative matches.
     }
     return 0; // A trial only has positive matches.
+}
+
+export function getMatchesLength(genomicMatchType: IGenomicMatchType): number {
+    return _.sum([genomicMatchType.MUTATION.length, genomicMatchType.CNA.length,
+        genomicMatchType.MSI.length, genomicMatchType.WILDTYPE.length]);
 }
 
 export function excludeControlArms(trialMatches: ITrialMatch[]): ITrialMatch[] {

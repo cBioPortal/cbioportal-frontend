@@ -1,7 +1,7 @@
 import * as React from "react";
 import styles from "./styles.module.scss";
 import {If} from 'react-if';
-import {ChartType} from "pages/studyView/StudyViewUtils";
+import {ChartType, NumericalGroupComparisonType} from "pages/studyView/StudyViewUtils";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import autobind from 'autobind-decorator';
@@ -42,7 +42,7 @@ export interface IChartHeaderProps {
     getSVG?          : ()=>Promise<SVGElement | null>;
     getData?         : ((dataType?:DataType)=>Promise<string | null>) | ((dataType?:DataType)=>string);
     downloadTypes?   : DownloadControlsButton[];
-    openComparisonPage : () => void;
+    openComparisonPage: (categorizationType?: NumericalGroupComparisonType) => void;
 }
 
 export interface ChartControls {
@@ -59,6 +59,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     @observable menuOpen = false;
     @observable downloadSubmenuOpen = false;
+    @observable comparisonSubmenuOpen = false;
     @observable showCustomBinModal:boolean = false;
     private closeMenuTimeout:number|undefined = undefined;
 
@@ -88,6 +89,70 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     @computed get active() {
         return this.menuOpen || this.props.active;
+    }
+
+    @computed get comparisonButton() {
+        const submenuWidth = 120;
+        if (this.props.chartType === ChartTypeEnum.BAR_CHART) {
+            return (
+                <div className={classnames('dropdown-item', styles.dropdownHoverEffect)}
+                    style={{ 'display': 'flex', justifyContent: 'space-between', padding: '3px 20px' }}
+                    onMouseEnter={() => this.comparisonSubmenuOpen = true}
+                    onMouseLeave={() => this.comparisonSubmenuOpen = false}
+                >
+                    <div>
+                        <img src={require("../../../rootImages/compare_vs.svg")}
+                            className={classnames('fa fa-fw', styles.menuItemIcon)}
+                        />
+                        <span>Compare Groups</span>
+                    </div>
+                    <i className={"fa fa-xs fa-fw fa-caret-right"}
+                        style={{ lineHeight: 'inherit' }} />
+
+                    {this.comparisonSubmenuOpen &&
+                        <ul className={classnames("dropdown-menu", { show: this.comparisonSubmenuOpen })}
+                        style={{
+                            top: 0,
+                            margin: '-6px 0',
+                            left: this.props.placement === 'left' ? -submenuWidth : '100%',
+                            minWidth: submenuWidth
+                        }}>
+                        <li>
+                            <a className="dropdown-item"
+                                onClick={() => {
+                                    console.log('here')
+                                    this.props.openComparisonPage(NumericalGroupComparisonType.QUARTILES)}
+                                }
+                            >Quartiles</a>
+                        </li>
+                        <li>
+                            <a className="dropdown-item"
+                                onClick={() => {
+                                    console.log('here')
+                                    this.props.openComparisonPage(NumericalGroupComparisonType.MEDIAN)}
+                                }
+                            >Median</a>
+                        </li>
+                        <li>
+                            <a className="dropdown-item"
+                                onClick={() => this.props.openComparisonPage(NumericalGroupComparisonType.BINS)}
+                            >Current bins</a>
+                        </li>
+                    </ul>
+                    }
+                </div>
+            )
+        }
+
+        return (
+            <a className="dropdown-item"
+                onClick={() => this.props.openComparisonPage()} >
+                <img src={require("../../../rootImages/compare_vs.svg")}
+                    className={classnames('fa fa-fw', styles.menuItemIcon)}
+                />
+                Compare Groups
+            </a>
+        )
     }
 
     @computed get menuItems() {
@@ -139,15 +204,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
         if (this.props.chartControls && this.props.chartControls.showComparisonPageIcon) {
             items.push(
-                <li>
-                    <a className="dropdown-item"
-                        onClick={this.props.openComparisonPage}
-                    >
-                        <img src={require("../../../rootImages/compare_vs.svg")}
-                             className={classnames('fa fa-fw', styles.menuItemIcon) }
-                        />
-                        Compare Groups
-                    </a>
+                <li style={{ position: 'relative' }}>
+                    {this.comparisonButton}
                 </li>
             );
         }
@@ -300,7 +358,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         />
                                     </button>
                                     <ul data-test='chart-header-hamburger-icon-menu'
-                                        className={classnames("dropdown-menu pull-right", {show:this.menuOpen})}>
+                                        className={classnames("dropdown-menu pull-right", {show:this.menuOpen})}
+                                        style={{width:'190px'}}>
                                         {this.menuItems}
                                     </ul>
                                 </div>
