@@ -10,7 +10,9 @@ export const DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE = "https://www.cbioportal.org
 export const DEFAULT_MY_GENE_URL_TEMPLATE = "https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot";
 export const DEFAULT_UNIPROT_ID_URL_TEMPLATE = "https://www.uniprot.org/uniprot/?query=accession:<%= swissProtAccession %>&format=tab&columns=entry+name";
 export const DEFAULT_GENOME_NEXUS_URL = "https://www.genomenexus.org/";
-export const DEFAULT_ONCO_KB_URL = "https://www.oncokb.org/";
+
+// The legacy instance does not require an authentication but the data will not be update.
+export const DEFAULT_ONCO_KB_URL = "https://legacy.oncokb.org/";
 export const ONCOKB_DEFAULT_DATA: IOncoKbData = {
     indicatorMap : {}
 };
