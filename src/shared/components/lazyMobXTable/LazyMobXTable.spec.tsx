@@ -161,7 +161,7 @@ describe('LazyMobXTable', ()=>{
     let multiData = [[datum0, datum1], [datum2, datum3], datum4];
     let sortedList:any[];
     function downloadName(data:{name:string, num:number, str:string, numList:number[], strList:string[],
-        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[],
         strList:string[], invisibleString:string}[]): string|string[] {
             let result =[];
             if (data instanceof Array) {
@@ -174,7 +174,7 @@ describe('LazyMobXTable', ()=>{
             return result;
         }
     function downloadNumber(data:{name:string, num:number, str:string, numList:number[], strList:string[],
-        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[],
         strList:string[], invisibleString:string}[]): string|string[] {
             let result =[];
             if (data instanceof Array) {
@@ -187,7 +187,7 @@ describe('LazyMobXTable', ()=>{
             return result;
         }
     function downloadString(data:{name:string, num:number, str:string, numList:number[], strList:string[],
-        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[],
         strList:string[], invisibleString:string}[]): string|string[] {
             let result =[];
             if (data instanceof Array) {
@@ -200,7 +200,7 @@ describe('LazyMobXTable', ()=>{
             return result;
         }
     function downloadInvisible(data:{name:string, num:number, str:string, numList:number[], strList:string[],
-        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[],
         strList:string[], invisibleString:string}[]): string|string[] {
             let result =[];
             if (data instanceof Array) {
@@ -411,6 +411,14 @@ describe('LazyMobXTable', ()=>{
 
             table = mount(<Table columns={[]} data={[]}/>);
             assert.deepEqual(table.find(SimpleTable).find("th").length, 0, "no columns given => no column headers rendered, case: no data");
+        });
+
+        it ("should have the column resizer next to the first column", () => {
+            columns[0].resizable = true;
+            let table = mount(<Table columns={columns} data={data}/>);
+            const resizer = table.find('.columnResizer');
+            assert.equal(resizer.length, 12);
+            columns[0].resizable = undefined; // normalize
         });
 
         it("adds the text-align property for a column header according to the specification", ()=>{
@@ -1126,7 +1134,7 @@ describe('LazyMobXTable', ()=>{
                 "4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n" +
                 "2\tnull\tnull\t\t2HELLO123456\t\t\r\n");
         });
-        
+
         it("gives data for data with multiple elements", async ()=>{
             let table = mount(<Table columns={columns} data={multiData}/>)
             assert.deepEqual((await (table.instance() as LazyMobXTable<any>).getDownloadDataPromise()).text,

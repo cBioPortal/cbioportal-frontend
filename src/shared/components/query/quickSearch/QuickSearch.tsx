@@ -9,14 +9,14 @@ import getBrowserWindow from 'public-lib/lib/getBrowserWindow';
 import { sleep } from 'shared/lib/TimeUtils';
 import { Label } from 'react-bootstrap';
 import * as moduleStyles from './styles.module.scss';
-import { action, computed, observable, runInAction } from 'mobx';
+import { action, computed, observable, } from 'mobx';
 import { remoteData } from 'public-lib/api/remoteData';
 import Pluralize from 'pluralize';
 import AppConfig from 'appConfig';
 import { ServerConfigHelpers } from 'config/config';
 import sessionServiceClient from 'shared/api/sessionServiceInstance';
 import { trackEvent } from 'shared/lib/tracking';
-import { PagePath } from 'shared/enums/PagePaths';
+import { PagePath } from "shared/enums/PagePaths";
 
 export const SHOW_MORE_SIZE: number = 20;
 const DEFAULT_PAGE_SIZE: number = 3;
@@ -331,8 +331,8 @@ export default class QuickSearch extends React.Component {
         let route;
         if (newOption.type === OptionType.STUDY) {
             parameters = { id: newOption.studyId };
-            route = 'study';
-            this.trackClick('study', this.inputValue);
+            route = PagePath.Study;
+            this.trackClick(PagePath.Study, this.inputValue);
         } else if (newOption.type === OptionType.GENE) {
             const studyList =
                 this.geneStudyQuery.isComplete &&
