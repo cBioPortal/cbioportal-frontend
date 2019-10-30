@@ -182,7 +182,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     @computed get mutations() {
-        if (this.props.dataStore.getOnlyShowHighlightedInVAFChart()) {
+        if (this.props.dataStore.onlyShowHighlightedInVAFChart) {
             return this.props.mutations.filter(m=>this.props.dataStore.isMutationHighlighted(m[0]));
         } else {
             return this.props.mutations;
@@ -475,7 +475,11 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
 
     @autobind
     private getThickLines() {
-        const highlightedMutations = this.props.dataStore.highlightedMutations.slice();
+        const highlightedMutations = [];
+        if (!this.props.dataStore.onlyShowHighlightedInVAFChart) {
+            // dont bold highlighted mutations if we're only showing highlighted mutations
+            highlightedMutations.push(...this.props.dataStore.highlightedMutations);
+        }
         const mouseOverMutation = this.props.dataStore.getMouseOverMutation();
         if (mouseOverMutation) {
             highlightedMutations.push(mouseOverMutation);
