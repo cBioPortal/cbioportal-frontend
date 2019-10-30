@@ -5,7 +5,7 @@ import {action, computed, observable} from "mobx";
 import _ from "lodash";
 import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
 import {StudyViewPageStore, SurvivalType} from "pages/studyView/StudyViewPageStore";
-import {DataBin, StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
+import {ClinicalDataBin, StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import classnames from "classnames";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
@@ -118,7 +118,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             onValueSelection: action((values: string[]) => {
                 this.props.onValueSelection(this.props.chartMeta, values);
             }),
-            onDataBinSelection: action((dataBins: DataBin[]) => {
+            onDataBinSelection: action((dataBins: ClinicalDataBin[]) => {
                 this.props.onDataBinSelection(this.props.chartMeta, dataBins);
             }),
             onToggleLogScale: action(() => {

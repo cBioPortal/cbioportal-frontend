@@ -143,7 +143,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/DataBin"
+                "$ref": "#/definitions/ClinicalDataBin"
               }
             }
           }
@@ -1157,7 +1157,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/DataBin"
+                "$ref": "#/definitions/GenomicDataBin"
               }
             }
           }
@@ -1857,8 +1857,7 @@
       "required": [
         "counts",
         "entrezGeneId",
-        "hugoGeneSymbol",
-        "pValue"
+        "hugoGeneSymbol"
       ],
       "properties": {
         "counts": {
@@ -1915,6 +1914,35 @@
         }
       },
       "title": "ClinicalAttribute"
+    },
+    "ClinicalDataBin": {
+      "type": "object",
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "clinicalDataType": {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "end": {
+          "type": "number"
+        },
+        "specialValue": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "title": "ClinicalDataBin"
     },
     "ClinicalDataBinCountFilter": {
       "type": "object",
@@ -2287,35 +2315,6 @@
       },
       "title": "DataAccessToken"
     },
-    "DataBin": {
-      "type": "object",
-      "properties": {
-        "attributeId": {
-          "type": "string"
-        },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
-        },
-        "count": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "end": {
-          "type": "number"
-        },
-        "specialValue": {
-          "type": "string"
-        },
-        "start": {
-          "type": "number"
-        }
-      },
-      "title": "DataBin"
-    },
     "DataIntervalFilterValue": {
       "type": "object",
       "properties": {
@@ -2542,6 +2541,41 @@
       },
       "title": "GenesetMolecularData"
     },
+    "GenomicDataBin": {
+      "type": "object",
+      "properties": {
+        "clinicalDataType": {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "end": {
+          "type": "number"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "specialValue": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "title": "GenomicDataBin"
+    },
     "GenomicDataBinCountFilter": {
       "type": "object",
       "properties": {
@@ -2560,6 +2594,13 @@
     "GenomicDataBinFilter": {
       "type": "object",
       "properties": {
+        "clinicalDataType": {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
         "customBins": {
           "type": "array",
           "items": {
@@ -2575,8 +2616,11 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "molecularProfileId": {
-          "type": "string"
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "start": {
           "type": "number"
@@ -2590,8 +2634,11 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "molecularProfileId": {
-          "type": "string"
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "values": {
           "type": "array",

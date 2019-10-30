@@ -153,6 +153,14 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         return this.props.store.visibleAttributes.map(attr => attr.uniqueKey);
     }
 
+    @computed
+    private get hideGeneLevelSelection() {
+        return this.props.disableGeneLevelTab ||
+            this.props.store.molecularProfileOptions.isPending ||
+            this.props.store.molecularProfileOptions.isError ||
+            this.props.store.molecularProfileOptions.result.length === 0;
+    }
+
     @autobind
     @action
     private onChangeSelectedCharts(options: ChartOption[]) {
@@ -274,9 +282,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     />
                 </MSKTab>
                 <MSKTab key={3} id={TabKeysEnum.GENE_LEVEL} linkText={TabNamesEnum.GENE_LEVEL}
-                        hide={this.props.disableGeneLevelTab || this.props.store.molecularProfiles.result.length === 0}>
+                        hide={this.hideGeneLevelSelection}>
                     <GeneLevelSelection
-                        molecularProfiles={this.props.store.molecularProfiles.result}
+                        molecularProfileOptions={this.props.store.molecularProfileOptions.result}
                         submitButtonText={"Add Chart"}
                         onSubmit={(chart: GenomicChart) => {
                             this.infoMessage = `${chart.name} has been added.`;

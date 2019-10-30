@@ -165,7 +165,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         show={this.showCustomBinModal}
                         onHide={() => this.showCustomBinModal = false}
                         chartMeta={this.props.chartMeta}
-                        currentBins={this.props.store.geCurrentBins(this.props.chartMeta)}
+                        currentBins={this.props.store.getCurrentBins(this.props.chartMeta)}
                         updateCustomBins={this.props.store.updateCustomBins}
                     />
                 </li>

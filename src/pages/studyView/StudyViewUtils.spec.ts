@@ -54,7 +54,7 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import {
     DataIntervalFilterValue,
-    DataBin,
+    ClinicalDataBin,
     Sample,
     StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
@@ -1013,21 +1013,21 @@ describe('StudyViewUtils', () => {
             {start: 20, end: 30},
             {start: 30, end: 40},
             {start: 40, end: 50}
-        ] as DataBin[];
+        ] as ClinicalDataBin[];
 
         const everyBinDistinct = [
             {start: 0, end: 0},
             {start: 10, end: 10},
             {start: 20, end: 20},
             {start: 30, end: 30}
-        ] as DataBin[];
+        ] as ClinicalDataBin[];
 
         const someBinsDistinct = [
             {start: 0, end: 0},
             {start: 10, end: 10},
             {start: 20, end: 30},
             {start: 30, end: 40}
-        ] as DataBin[];
+        ] as ClinicalDataBin[];
 
         it ('accepts a list of bins with all distinct values', () => {
             assert.isTrue(isEveryBinDistinct(everyBinDistinct),

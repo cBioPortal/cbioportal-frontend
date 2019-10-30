@@ -8,7 +8,7 @@ import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import {
     DataIntervalFilterValue,
     CopyNumberGeneFilterElement,
-    DataBin,
+    ClinicalDataBin,
     RectangleBounds
 } from "shared/api/generated/CBioPortalAPIInternal";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
@@ -47,7 +47,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             onValueSelection: (chartMeta: ChartMeta, values: string[]) => {
                 this.store.updateClinicalDataEqualityFilters(chartMeta, values);
             },
-            onDataBinSelection: (chartMeta: ChartMeta, dataBins: DataBin[]) => {
+            onDataBinSelection: (chartMeta: ChartMeta, dataBins: ClinicalDataBin[]) => {
                 this.store.updateClinicalDataIntervalFilters(chartMeta, dataBins);
             },
             onToggleLogScale: (chartMeta: ChartMeta) => {

@@ -4,7 +4,7 @@ import {unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
 import {
     ClinicalDataCount,
     DataIntervalFilterValue,
-    DataBin,
+    ClinicalDataBin,
     SampleIdentifier,
     StudyViewFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
@@ -457,7 +457,7 @@ export function getVirtualStudyDescription(
             });
 
             _.each(filter.genomicDataIntervalFilters || [], (genomicDataIntervalFilter) => {
-                let name = attributeNamesSet[genomicDataIntervalFilter.hugoGeneSymbol + '_' + genomicDataIntervalFilter.molecularProfileId];
+                let name = attributeNamesSet[genomicDataIntervalFilter.hugoGeneSymbol + '_' + genomicDataIntervalFilter.molecularProfileIds];
                 filterLines.push(`- ${name}: ${intervalFiltersDisplayValue(genomicDataIntervalFilter.values)}`);
             });
 
@@ -570,7 +570,7 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
     return svg;
 }
 
-export function getDataIntervalFilterValues(data: DataBin[]): DataIntervalFilterValue[]
+export function getDataIntervalFilterValues(data: ClinicalDataBin[]): DataIntervalFilterValue[]
 {
     const values: Partial<DataIntervalFilterValue>[] = data.map(dataBin => ({
         start: dataBin.start,
@@ -581,19 +581,19 @@ export function getDataIntervalFilterValues(data: DataBin[]): DataIntervalFilter
     return values as DataIntervalFilterValue[];
 }
 
-export function filterNumericalBins(data: DataBin[]) {
+export function filterNumericalBins(data: ClinicalDataBin[]) {
     return data.filter(dataBin => dataBin.start !== undefined || dataBin.end !== undefined);
 }
 
-export function filterCategoryBins(data: DataBin[]) {
+export function filterCategoryBins(data: ClinicalDataBin[]) {
     return data.filter(dataBin => dataBin.start === undefined && dataBin.end === undefined);
 }
 
-export function filterIntervalBins(numericalBins: DataBin[]) {
+export function filterIntervalBins(numericalBins: ClinicalDataBin[]) {
     return numericalBins.filter(dataBin => dataBin.start !== undefined && dataBin.end !== undefined);
 }
 
-export function calcIntervalBinValues(intervalBins: DataBin[]) {
+export function calcIntervalBinValues(intervalBins: ClinicalDataBin[]) {
     const values = intervalBins.map(dataBin => dataBin.start);
 
     if (intervalBins.length > 0) {
@@ -607,19 +607,19 @@ export function calcIntervalBinValues(intervalBins: DataBin[]) {
     return values;
 }
 
-export function needAdditionShiftForLogScaleBarChart(numericalBins: DataBin[]):boolean {
+export function needAdditionShiftForLogScaleBarChart(numericalBins: ClinicalDataBin[]):boolean {
     return isLogScaleByDataBins(numericalBins) &&
         numericalBins[0].start !== undefined &&
         numericalBins[0].start !== 0 &&
         !isIntegerPowerOfTen(numericalBins[0].start);
 }
 
-export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
+export function generateNumericalData(numericalBins: ClinicalDataBin[]): BarDatum[] {
     // by default shift all x values by 1 -- we do not want to show a value right on the origin (zero)
     // additional possible shift for log scale
     const xShift = needAdditionShiftForLogScaleBarChart(numericalBins) ? 2 : 1;
 
-    return numericalBins.map((dataBin: DataBin, index: number) => {
+    return numericalBins.map((dataBin: ClinicalDataBin, index: number) => {
         let x;
 
         // we want to show special values (< or <=) right on the tick
@@ -657,10 +657,10 @@ export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
     });
 }
 
-export function generateCategoricalData(categoryBins: DataBin[], startIndex: number): BarDatum[] {
+export function generateCategoricalData(categoryBins: ClinicalDataBin[], startIndex: number): BarDatum[] {
     // x is not the actual data value, it is the normalized data for representation
     // y is the actual count value
-    return categoryBins.map((dataBin: DataBin, index: number) => ({
+    return categoryBins.map((dataBin: ClinicalDataBin, index: number) => ({
         x: startIndex + index + 1,
         y: dataBin.count,
         dataBin
@@ -684,14 +684,14 @@ export function shouldShowChart(filer: Partial<StudyViewFilterWithSampleIdentifi
     return isFiltered(filer) || uniqueDataSize >= 2 || sizeOfAllSamples === 1;
 }
 
-export function isEveryBinDistinct(data?: DataBin[]) {
+export function isEveryBinDistinct(data?: ClinicalDataBin[]) {
     return (
         data && data.length > 0 &&
         data.find(dataBin => dataBin.start !== dataBin.end) === undefined
     );
 }
 
-export function isLogScaleByDataBins(data?: DataBin[]) {
+export function isLogScaleByDataBins(data?: ClinicalDataBin[]) {
     if (!data) {
         return false;
     }
@@ -709,7 +709,7 @@ export function isScientificSmallValue(value: number) {
     return value !== 0 && -0.001 <= value && value <= 0.001;
 }
 
-export function formatNumericalTickValues(numericalBins: DataBin[]) {
+export function formatNumericalTickValues(numericalBins: ClinicalDataBin[]) {
     if (numericalBins.length === 0) {
         return [];
     }

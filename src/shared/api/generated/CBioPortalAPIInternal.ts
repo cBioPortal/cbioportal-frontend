@@ -29,6 +29,20 @@ export type ClinicalAttribute = {
         'studyId': string
 
 };
+export type ClinicalDataBin = {
+    'attributeId': string
+
+        'clinicalDataType': "SAMPLE" | "PATIENT"
+
+        'count': number
+
+        'end': number
+
+        'specialValue': string
+
+        'start': number
+
+};
 export type ClinicalDataBinCountFilter = {
     'attributes': Array < ClinicalDataBinFilter >
 
@@ -183,20 +197,6 @@ export type DataAccessToken = {
         'username': string
 
 };
-export type DataBin = {
-    'attributeId': string
-
-        'clinicalDataType': "SAMPLE" | "PATIENT"
-
-        'count': number
-
-        'end': number
-
-        'specialValue': string
-
-        'start': number
-
-};
 export type DataIntervalFilterValue = {
     'end': number
 
@@ -305,6 +305,22 @@ export type GenesetMolecularData = {
         'value': string
 
 };
+export type GenomicDataBin = {
+    'clinicalDataType': "SAMPLE" | "PATIENT"
+
+        'count': number
+
+        'end': number
+
+        'hugoGeneSymbol': string
+
+        'molecularProfileIds': Array < string >
+
+        'specialValue': string
+
+        'start': number
+
+};
 export type GenomicDataBinCountFilter = {
     'genomicDataBinFilters': Array < GenomicDataBinFilter >
 
@@ -312,7 +328,9 @@ export type GenomicDataBinCountFilter = {
 
 };
 export type GenomicDataBinFilter = {
-    'customBins': Array < number >
+    'clinicalDataType': "SAMPLE" | "PATIENT"
+
+        'customBins': Array < number >
 
         'disableLogScale': boolean
 
@@ -320,7 +338,7 @@ export type GenomicDataBinFilter = {
 
         'hugoGeneSymbol': string
 
-        'molecularProfileId': string
+        'molecularProfileIds': Array < string >
 
         'start': number
 
@@ -328,7 +346,7 @@ export type GenomicDataBinFilter = {
 export type GenomicDataIntervalFilter = {
     'hugoGeneSymbol': string
 
-        'molecularProfileId': string
+        'molecularProfileIds': Array < string >
 
         'values': Array < DataIntervalFilterValue >
 
@@ -777,7 +795,7 @@ export default class CBioPortalAPIInternal {
             'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
             $queryParameters ? : any,
                 $domain ? : string
-        }): Promise < Array < DataBin >
+        }): Promise < Array < ClinicalDataBin >
         > {
             return this.fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
@@ -2790,7 +2808,7 @@ export default class CBioPortalAPIInternal {
             'genomicDataBinCountFilter': GenomicDataBinCountFilter,
             $queryParameters ? : any,
                 $domain ? : string
-        }): Promise < Array < DataBin >
+        }): Promise < Array < GenomicDataBin >
         > {
             return this.fetchGenomicDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;

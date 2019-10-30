@@ -17,7 +17,7 @@ import {
     CopyNumberCountByGene,
     CopyNumberGeneFilter,
     CopyNumberGeneFilterElement,
-    DataBin,
+    ClinicalDataBin,
     DensityPlotBin,
     MolecularProfileSampleCount,
     MutationCountByGene,
@@ -28,7 +28,9 @@ import {
     SampleIdentifier,
     StudyViewFilter,
     DataIntervalFilterValue,
-    GenomicDataIntervalFilter
+    GenomicDataIntervalFilter,
+    GenomicDataBin,
+    GenomicDataBinFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
     CancerStudy,
@@ -135,6 +137,8 @@ import {
     parseMutationUniqueKey
 } from "pages/studyView/TableUtils";
 import { GeneTableRow } from './table/GeneTable';
+import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import { decideMolecularProfileSortingOrder } from 'pages/resultsView/download/DownloadUtils';
 
 export type ChartUserSetting = {
     id: string,
@@ -218,7 +222,7 @@ export type CustomChart = {
 export type GenomicChart = {
     name?: string,
     patientAttribute: boolean,
-    molecularProfileId: string,
+    molecularProfileIds: string[],
     hugoGeneSymbol: string
 }
 
@@ -721,6 +725,7 @@ export class StudyViewPageStore {
     private _genomicDataIntervalFilterSet = observable.shallowMap<GenomicDataIntervalFilter>();
 
     @observable private _clinicalDataBinFilterSet = observable.map<ClinicalDataBinFilter>();
+    @observable private _genomicDataBinFilterSet = observable.map<GenomicDataBinFilter>();
 
     @observable.ref private _mutatedGeneFilter: MutationGeneFilter[] = [];
     @observable.ref private _fusionGeneFilter: FusionGeneFilter[] = [];
@@ -748,7 +753,7 @@ export class StudyViewPageStore {
     private newlyAddedCharts = observable.array<string>();
 
     private unfilteredClinicalDataCountCache: { [uniqueKey: string]: ClinicalDataCountItem } = {};
-    private unfilteredClinicalDataBinCountCache: { [uniqueKey: string]: DataBin[] } = {};
+    private unfilteredClinicalDataBinCountCache: { [uniqueKey: string]: ClinicalDataBin[] } = {};
 
     @observable currentTab: StudyViewPageTabKey;
 
@@ -970,10 +975,10 @@ export class StudyViewPageStore {
     private currentFocusedChartByUser: ChartMeta | undefined = undefined;
     private currentFocusedChartByUserDimension: ChartDimension | undefined = undefined;
 
-    public clinicalDataBinPromises: { [id: string]: MobxPromise<DataBin[]> } = {};
+    public clinicalDataBinPromises: { [id: string]: MobxPromise<ClinicalDataBin[]> } = {};
     public clinicalDataCountPromises: { [id: string]: MobxPromise<ClinicalDataCountSummary[]> } = {};
     public customChartsPromises: { [id: string]: MobxPromise<ClinicalDataCountSummary[]> } = {};
-    public genomicChartPromises: { [id: string]: MobxPromise<DataBin[]> } = {};
+    public genomicChartPromises: { [id: string]: MobxPromise<GenomicDataBin[]> } = {};
 
     private _chartSampleIdentifiersFilterSet =  observable.map<SampleIdentifier[]>();
 
@@ -1217,7 +1222,7 @@ export class StudyViewPageStore {
     }
 
     @action
-    updateClinicalDataIntervalFilters(chartMeta: ChartMeta, dataBins: DataBin[]) {
+    updateClinicalDataIntervalFilters(chartMeta: ChartMeta, dataBins: ClinicalDataBin[]) {
 
         trackStudyViewFilterEvent("clinicalDataInterval", this);
 
@@ -1227,7 +1232,7 @@ export class StudyViewPageStore {
 
     @autobind
     @action
-    updateGenomicDataIntervalFilters(chartMeta: ChartMeta, dataBins: DataBin[]) {
+    updateGenomicDataIntervalFilters(chartMeta: ChartMeta, dataBins: ClinicalDataBin[]) {
 
         trackStudyViewFilterEvent("genomicDataInterval", this);
 
@@ -1258,7 +1263,7 @@ export class StudyViewPageStore {
             const chart = this._customGenomicChartMap.get(chartMeta.uniqueKey);
             const genomicDataIntervalFilter:GenomicDataIntervalFilter = {
                 hugoGeneSymbol: chart!.hugoGeneSymbol,
-                molecularProfileId: chart!.molecularProfileId,
+                molecularProfileIds: chart!.molecularProfileIds,
                 values: values
             };
             this._genomicDataIntervalFilterSet.set(chartMeta.uniqueKey, genomicDataIntervalFilter);
@@ -1519,16 +1524,36 @@ export class StudyViewPageStore {
 
     @action
     toggleLogScale(chartMeta: ChartMeta) {
-        // reset filters before toggling
-        this.updateClinicalDataIntervalFilters(chartMeta, []);
 
-        // the toggle should really only be used by the bar chart.
-        // the clinicalDataBinFilter is guaranteed for bar chart.
-        let ref = this._clinicalDataBinFilterSet.get(chartMeta.uniqueKey);
-        ref!.disableLogScale = !ref!.disableLogScale;
+        if (this.isCustomChart(chartMeta.uniqueKey)) {
+            // reset filters before toggling
+            this.updateGenomicDataIntervalFilters(chartMeta, []);
+
+            // the toggle should really only be used by the bar chart.
+            // the clinicalDataBinFilter is guaranteed for bar chart.
+            let ref = this._genomicDataBinFilterSet.get(chartMeta.uniqueKey);
+            ref!.disableLogScale = !ref!.disableLogScale;
+
+        } else {
+            // reset filters before toggling
+            this.updateClinicalDataIntervalFilters(chartMeta, []);
+
+            // the toggle should really only be used by the bar chart.
+            // the clinicalDataBinFilter is guaranteed for bar chart.
+            let ref = this._clinicalDataBinFilterSet.get(chartMeta.uniqueKey);
+            ref!.disableLogScale = !ref!.disableLogScale;
+        }
+
     }
 
-    public isLogScaleToggleVisible(uniqueKey: string, dataBins?: DataBin[]) {
+    public isLogScaleToggleVisible(uniqueKey: string, dataBins?: ClinicalDataBin[]) {
+        if (this.isCustomChart(uniqueKey)) {
+            return (
+                (this._genomicDataBinFilterSet.get(uniqueKey) !== undefined &&  this._genomicDataBinFilterSet.get(uniqueKey)!.disableLogScale) ||
+                isLogScaleByDataBins(dataBins)
+            );
+        }
+
         return (
             (this._clinicalDataBinFilterSet.get(uniqueKey) !== undefined &&  this._clinicalDataBinFilterSet.get(uniqueKey)!.disableLogScale) ||
             isLogScaleByDataBins(dataBins)
@@ -1536,6 +1561,10 @@ export class StudyViewPageStore {
     }
 
     public isLogScaleChecked(uniqueKey: string) {
+        if (this.isCustomChart(uniqueKey)) {
+            return this._genomicDataBinFilterSet.get(uniqueKey) !== undefined &&
+            !this._genomicDataBinFilterSet.get(uniqueKey)!.disableLogScale;
+        }
         return this._clinicalDataBinFilterSet.get(uniqueKey) !== undefined &&
             !this._clinicalDataBinFilterSet.get(uniqueKey)!.disableLogScale;
     }
@@ -1543,16 +1572,31 @@ export class StudyViewPageStore {
     @autobind
     @action
     public updateCustomBins(uniqueKey: string, bins: number[]) {
-        let newFilter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey))!;
-        newFilter.customBins = bins;
-        this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+        if (this.isCustomChart(uniqueKey)) {
+            let newFilter = _.clone(this._genomicDataBinFilterSet.get(uniqueKey))!;
+            newFilter.customBins = bins;
+            this._genomicDataBinFilterSet.set(uniqueKey, newFilter);
+
+        } else {
+            let newFilter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey))!;
+            newFilter.customBins = bins;
+            this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+        }
     }
 
-    public geCurrentBins(chartMeta: ChartMeta): number[] {
+    public getCurrentBins(chartMeta: ChartMeta): number[] {
         if (this.isCustomChart(chartMeta.uniqueKey)) {
-            return [] as number[];
+            return _.uniq(_.reduce(this.getGenomicChartDataBin(chartMeta).result, (acc, next) => {
+                if (next.start) {
+                    acc.push(next.start);
+                }
+                if (next.end) {
+                    acc.push(next.end);
+                }
+                return acc;
+            }, [] as number[]));
         }
-        
+
         return _.uniq(_.reduce(this.getClinicalDataBin(chartMeta).result, (acc, next) => {
             if (next.start) {
                 acc.push(next.start);
@@ -1822,7 +1866,7 @@ export class StudyViewPageStore {
         }
     });
 
-    readonly newlyAddedUnfilteredClinicalDataBinCount = remoteData<DataBin[]>({
+    readonly newlyAddedUnfilteredClinicalDataBinCount = remoteData<ClinicalDataBin[]>({
         invoke: () => {
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
                 dataBinMethod: 'STATIC',
@@ -1842,7 +1886,7 @@ export class StudyViewPageStore {
         }
     });
 
-    readonly unfilteredClinicalDataBinCount = remoteData<DataBin[]>({
+    readonly unfilteredClinicalDataBinCount = remoteData<ClinicalDataBin[]>({
         invoke: () => {
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
                 dataBinMethod: 'STATIC',
@@ -1923,7 +1967,7 @@ export class StudyViewPageStore {
         if (!this.clinicalDataBinPromises.hasOwnProperty(uniqueKey)) {
             const defaultAttr = _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey);
             const isDefaultAttr = defaultAttr !== undefined;
-            this.clinicalDataBinPromises[uniqueKey] = remoteData<DataBin[]>({
+            this.clinicalDataBinPromises[uniqueKey] = remoteData<ClinicalDataBin[]>({
                 await: () => {
                     return getRequestedAwaitPromisesForClinicalData(
                         isDefaultAttr, this.isInitialFilterState, this.chartsAreFiltered,
@@ -1975,17 +2019,20 @@ export class StudyViewPageStore {
 
     public getGenomicChartDataBin(chartMeta: ChartMeta) {
         if(!this.genomicChartPromises.hasOwnProperty(chartMeta.uniqueKey)) {
-            this.genomicChartPromises[chartMeta.uniqueKey] = remoteData<DataBin[]>({
+            this.genomicChartPromises[chartMeta.uniqueKey] = remoteData<GenomicDataBin[]>({
                 await: () => [],
                 invoke: async () => {
                     const chartInfo = this._customGenomicChartMap.get(chartMeta.uniqueKey);
+                    const attribute = this._genomicDataBinFilterSet.get(chartMeta.uniqueKey)!;
                     if (chartInfo) {
                         return internalClient.fetchGenomicDataBinCountsUsingPOST({
-                            dataBinMethod: 'STATIC',
+                            dataBinMethod: DataBinMethodConstants.STATIC,
                             genomicDataBinCountFilter: {
                                 genomicDataBinFilters: [{
                                     hugoGeneSymbol: chartInfo.hugoGeneSymbol,
-                                    molecularProfileId: chartInfo.molecularProfileId
+                                    molecularProfileIds: chartInfo.molecularProfileIds,
+                                    customBins:attribute.customBins,
+                                    disableLogScale:attribute.disableLogScale
                                 }] as any,
                                 studyViewFilter: this.filters
                             }
@@ -2328,6 +2375,33 @@ export class StudyViewPageStore {
         default: []
     });
 
+    readonly molecularProfileOptions = remoteData({
+        await: ()=>[this.molecularProfiles],
+        invoke: async ()=>{
+
+            return _.chain(this.molecularProfiles.result)
+                .filter(molecularProfile => {
+                    return ([AlterationTypeConstants.MRNA_EXPRESSION, AlterationTypeConstants.PROTEIN_LEVEL, AlterationTypeConstants.METHYLATION]).includes(molecularProfile.molecularAlterationType) ||
+                        (molecularProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && molecularProfile.datatype === "CONTINUOUS");
+                })
+                .sortBy(profile =>
+                    decideMolecularProfileSortingOrder(
+                        profile.molecularAlterationType
+                    ))
+                .groupBy(profile => profile.name)
+                .map((molecularProfiles, label) => {
+                    return {
+                        value: molecularProfiles.map(molecularProfile => molecularProfile.molecularProfileId),
+                        label
+                    }
+                })
+                .value();
+
+        },
+        onError: (error => {}),
+        default: []
+    });
+
     private getDefaultClinicalDataBinFilter(attribute: ClinicalAttribute) {
         return {
             attributeId: attribute.clinicalAttributeId,
@@ -2509,7 +2583,7 @@ export class StudyViewPageStore {
     @autobind
     @action
     addGenomicChart(newChart:GenomicChart) {
-        const uniqueKey = newChart.hugoGeneSymbol + '_' + newChart.molecularProfileId;
+        const uniqueKey = newChart.hugoGeneSymbol + '_' + newChart.molecularProfileIds;
         const newChartName = newChart.name ? newChart.name : this.getDefaultCustomChartName();
         let chartMeta:ChartMeta = {
             uniqueKey: uniqueKey,
@@ -2529,6 +2603,13 @@ export class StudyViewPageStore {
         this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
         this.chartsDimension.set(uniqueKey, {w: 2, h: 1});
 
+        this._genomicDataBinFilterSet.delete(uniqueKey)
+        this._genomicDataBinFilterSet.set(uniqueKey, {
+            clinicalDataType: "SAMPLE",
+            disableLogScale: false,
+            hugoGeneSymbol: newChart.hugoGeneSymbol,
+            molecularProfileIds: newChart.molecularProfileIds
+        } as any);
     }
 
     @autobind
@@ -3048,7 +3129,7 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly initialVisibleAttributesClinicalDataBinCountData = remoteData<DataBin[]>({
+    readonly initialVisibleAttributesClinicalDataBinCountData = remoteData<ClinicalDataBin[]>({
         await: () => [this.initialVisibleAttributesClinicalDataBinAttributes],
         invoke: async () => {
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
@@ -3074,7 +3155,7 @@ export class StudyViewPageStore {
 
     @action
     initializeClinicalDataBinCountCharts() {
-        _.each(_.groupBy(this.initialVisibleAttributesClinicalDataBinCountData.result, 'attributeId'), (item:DataBin[], attributeId:string) => {
+        _.each(_.groupBy(this.initialVisibleAttributesClinicalDataBinCountData.result, 'attributeId'), (item:ClinicalDataBin[], attributeId:string) => {
             const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item[0].clinicalDataType, attributeId);
             this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
             this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);

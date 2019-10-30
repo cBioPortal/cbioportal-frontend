@@ -143,7 +143,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
 
         // Genomic Bar chart filters
         _.reduce((this.props.filter.genomicDataIntervalFilters || []), (acc, genomicDataIntervalFilter) => {
-            const chartMeta = this.props.attributesMetaSet[genomicDataIntervalFilter.hugoGeneSymbol + '_' + genomicDataIntervalFilter.molecularProfileId];
+            const chartMeta = this.props.attributesMetaSet[genomicDataIntervalFilter.hugoGeneSymbol + '_' + genomicDataIntervalFilter.molecularProfileIds];
             if (chartMeta) {
                 acc.push(
                     <div className={styles.parentGroupLogic}><GroupLogic
