@@ -23,11 +23,11 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         return this.mouseOverMutation;
     }
 
-    public getOnlyShowHighlightedInTable() {
+    public get onlyShowHighlightedInTable() {
         return this._onlyShowHighlightedInTable;
     }
 
-    public getOnlyShowHighlightedInVAFChart() {
+    public get onlyShowHighlightedInVAFChart() {
         return this._onlyShowHighlightedInVAFChart;
     }
 
