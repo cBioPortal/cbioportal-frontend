@@ -153,6 +153,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'https://www.uniprot.org/uniprot/?query=accession:<%= swissProtAccession %>&format=tab&columns=entry+name',
 
     query_product_limit: 1000000,
+    
+    skin_show_gsva: false,
 };
 
 export default ServerConfigDefaults;
