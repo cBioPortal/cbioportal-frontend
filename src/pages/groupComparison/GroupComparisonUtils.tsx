@@ -455,19 +455,20 @@ export function MissingSamplesMessage(
     );
 }
 
-export function getQuartiles<D extends {value:string}>(
-    data:D[]
+export function splitData<D extends {value:string}>(
+    data:D[],
+    numberOfSplits:number
 ) {
     data = _.chain(data)
         .filter(d=>!isNaN(d.value as any))
         .sortBy(d=>parseFloat(d.value))
         .value();
 
-    const quarterLength = data.length / 4;
-    const quartileLimits = [0, Math.floor(quarterLength), Math.floor(2*quarterLength), Math.floor(3*quarterLength), data.length];
+    const splitLength = data.length / numberOfSplits;
     const quartiles:D[][] = [];
-    for (const i of [0,1,2,3]) {
-        const newQuartile = data.slice(quartileLimits[i], quartileLimits[i+1]);
+
+    for( var i = 0; i < numberOfSplits; i++ ){
+        const newQuartile = data.slice(splitLength*i, splitLength*(i+1));
         if (newQuartile.length > 0)
             // handle edge case for small amounts of data where some quartile ranges might be empty
             quartiles.push(newQuartile);
