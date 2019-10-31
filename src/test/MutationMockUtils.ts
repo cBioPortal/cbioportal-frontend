@@ -23,6 +23,16 @@ export function emptyMutation(): Mutation
             hugoGeneSymbol: "",
             type: ""
         },
+        alleleSpecificCopyNumber: {
+            ascnIntegerCopyNumber: -1,
+            ascnMethod: "",
+            ccfMCopies: -1,
+            ccfMCopiesUpper: -1,
+            clonal: false,
+            minorCopyNumber: -1,
+            mutantCopies: -1,
+            totalCopyNumber: -1
+        },
         molecularProfileId: "",
         keyword: "",
         linkMsa: "",

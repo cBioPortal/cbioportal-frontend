@@ -218,6 +218,20 @@ function checkElementWithMouseDisabled(selector, pauseTime, options) {
     return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0, options);
 }
 
+function checkElementWithElementHidden(selector, selectorToHide, options) { 
+    browser.execute((selectorToHide) => {
+        $(`<style id="tempHiddenStyles" type="text/css">${selectorToHide}{opacity:0;}</style>`).appendTo("head");
+    }, selectorToHide)
+
+    var res = browser.checkElement(selector, options);
+
+    browser.execute((selectorToHide) => {
+        $("#tempHiddenStyles").remove();
+    }, selectorToHide)
+
+    return res;
+}
+
 function clickQueryByGeneButton(){
     browser.waitForEnabled('a=Query By Gene');
     browser.click('a=Query By Gene');
@@ -229,6 +243,7 @@ function clickModifyStudySelectionButton (){
 }
 
 module.exports = {
+    checkElementWithElementHidden: checkElementWithElementHidden,
     waitForPlotsTab: waitForPlotsTab,
     waitForStudyQueryPage: waitForStudyQueryPage,
     waitForGeneQueryPage: waitForGeneQueryPage,

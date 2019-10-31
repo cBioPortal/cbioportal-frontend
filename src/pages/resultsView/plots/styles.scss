@@ -75,7 +75,7 @@
       bottom: 0;
       position: absolute;
     }
- 
+
     .btn.sort-order {
       margin-right: 10px;
       padding: 4px 9px;
@@ -98,13 +98,13 @@
       color: red;
       margin: 3px;
     }
-    
+
   }
 
   .utilities-menu {
 
     margin-bottom: -20px;
-    
+
     * {
       vertical-align: middle;
       margin: 0;
@@ -166,13 +166,19 @@
     }
 
   }
-    
+    strong.quickPlotsTitle {
+      margin-right: 5px;
+    }
+
+    .quickPlotsContainer {
+      display: flex;
+      margin-right: 5px;
+    }
 }
 
 .color-samples-toolbar-elt {
-  display: inline-block !important;
-  margin-right: 10px !important;
-  margin-top: 0px !important;
-  margin-bottom: 0px !important;
-  
+    display: inline-block !important;
+    margin-right: 10px !important;
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
 }
