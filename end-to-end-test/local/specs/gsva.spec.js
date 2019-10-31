@@ -11,9 +11,8 @@ var selectReactSelectOption = require('../../shared/specUtils').selectReactSelec
 var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 
 var {
-    clickQueryByGeneButton,
+    clickQueryByGeneButton, showGsva
 } = require('../../shared/specUtils');
-
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 const oncoprintTabUrl = CBIOPORTAL_URL+'/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=GO_ACYLGLYCEROL_HOMEOSTASIS%20GO_ANATOMICAL_STRUCTURE_FORMATION_INVOLVED_IN_MORPHOGENESIS%20GO_ANTEROGRADE_AXONAL_TRANSPORT%20GO_APICAL_PROTEIN_LOCALIZATION%20GO_ATP_DEPENDENT_CHROMATIN_REMODELING%20GO_CARBOHYDRATE_CATABOLIC_PROCESS%20GO_CARDIAC_CHAMBER_DEVELOPMENT&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_GENESET_SCORE=study_es_0_gsva_scores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&tab_index=tab_visualize&show_samples=false&clinicallist=PROFILED_IN_study_es_0_gsva_scores%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic';
@@ -30,11 +29,12 @@ describe('gsva feature', function() {
 
             beforeEach(()=>{
                 goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+                showGsva();
                 waitForStudyQueryPage();
             });
 
             it('shows GSVA-profile option when selecting study_es_0', () => {
-
+                
                 checkTestStudy();
 
                 var gsvaProfileCheckbox = browser.$('[data-test=GENESET_SCORE]');
@@ -73,6 +73,7 @@ describe('gsva feature', function() {
 
             beforeEach(()=>{
                 goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+                showGsva();
                 waitForStudyQueryPage();
                 checkTestStudy();
                 checkGSVAprofile();
@@ -157,6 +158,7 @@ describe('gsva feature', function() {
 
             beforeEach(()=>{
                 goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+                showGsva();
                 waitForStudyQueryPage();
                 checkTestStudy();
                 checkGSVAprofile();
