@@ -2463,7 +2463,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             </div>
                         </div>
                         {this.mutationDataCanBeShown && (
-                            <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                            <div style={{marginTop:5}}>* Driver annotation settings are located in the settings menu <i className="fa fa-sliders fa-sm"/> at the top of the page.</div>
                         )}
                         {this.limitValuesCanBeShown && this.plotType.result === PlotType.ScatterPlot && (
                             <div style={{marginTop:5}}>
