@@ -2582,34 +2582,36 @@ export class StudyViewPageStore {
 
     @autobind
     @action
-    addGenomicChart(newChart:GenomicChart) {
-        const uniqueKey = newChart.hugoGeneSymbol + '_' + newChart.molecularProfileIds;
-        const newChartName = newChart.name ? newChart.name : this.getDefaultCustomChartName();
-        let chartMeta:ChartMeta = {
-            uniqueKey: uniqueKey,
-            displayName: newChartName,
-            description: newChartName,
-            dataType: ChartMetaDataTypeEnum.GENOMIC,
-            patientAttribute: false,
-            renderWhenDataChange: false,
-            priority: 1
-        };
+    addGenomicCharts(newCharts: GenomicChart[]) {
+        newCharts.forEach(newChart => {
+            const uniqueKey = newChart.hugoGeneSymbol + '_' + newChart.molecularProfileIds;
+            const newChartName = newChart.name ? newChart.name : this.getDefaultCustomChartName();
+            let chartMeta: ChartMeta = {
+                uniqueKey: uniqueKey,
+                displayName: newChartName,
+                description: newChartName,
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
+                patientAttribute: false,
+                renderWhenDataChange: false,
+                priority: 1
+            };
 
-        this._customCharts.set(uniqueKey, chartMeta);
-        this._customGenomicChartMap.set(uniqueKey, newChart);
-        // // this._customChartMap.set(uniqueKey, newChart)
-        this._chartVisibility.set(uniqueKey, true);
-        // this._customChartsSelectedCases.set(uniqueKey, allCases);
-        this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
-        this.chartsDimension.set(uniqueKey, {w: 2, h: 1});
+            this._customCharts.set(uniqueKey, chartMeta);
+            this._customGenomicChartMap.set(uniqueKey, newChart);
+            // // this._customChartMap.set(uniqueKey, newChart)
+            this._chartVisibility.set(uniqueKey, true);
+            // this._customChartsSelectedCases.set(uniqueKey, allCases);
+            this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
+            this.chartsDimension.set(uniqueKey, { w: 2, h: 1 });
 
-        this._genomicDataBinFilterSet.delete(uniqueKey)
-        this._genomicDataBinFilterSet.set(uniqueKey, {
-            clinicalDataType: "SAMPLE",
-            disableLogScale: false,
-            hugoGeneSymbol: newChart.hugoGeneSymbol,
-            molecularProfileIds: newChart.molecularProfileIds
-        } as any);
+            this._genomicDataBinFilterSet.delete(uniqueKey)
+            this._genomicDataBinFilterSet.set(uniqueKey, {
+                clinicalDataType: "SAMPLE",
+                disableLogScale: false,
+                hugoGeneSymbol: newChart.hugoGeneSymbol,
+                molecularProfileIds: newChart.molecularProfileIds
+            } as any);
+        });
     }
 
     @autobind

@@ -286,9 +286,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     <GeneLevelSelection
                         molecularProfileOptions={this.props.store.molecularProfileOptions.result}
                         submitButtonText={"Add Chart"}
-                        onSubmit={(chart: GenomicChart) => {
-                            this.infoMessage = `${chart.name} has been added.`;
-                            this.props.store.addGenomicChart(chart);
+                        onSubmit={(charts: GenomicChart[]) => {
+                            this.infoMessage = `${charts.map(chart => chart.name).join('<br>')} ${charts.length > 1 ? "<br>are" : "has been"} added.`;
+                            this.props.store.addGenomicCharts(charts);
                         }}
                     />
                 </MSKTab>

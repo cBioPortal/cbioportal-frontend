@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { MolecularProfile, Gene } from 'shared/api/generated/CBioPortalAPI';
+import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { GenomicChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
@@ -9,7 +9,6 @@ import styles from "./styles.module.scss";
 import ReactSelect from "react-select";
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
-import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import OQLTextArea, { GeneBoxType } from 'shared/components/GeneSelectionBox/OQLTextArea';
 
 export interface IGeneLevelSelectionProps {
@@ -18,15 +17,14 @@ export interface IGeneLevelSelectionProps {
         label: string;
     }[];
     submitButtonText: string;
-    onSubmit: (chart: GenomicChart) => void;
+    onSubmit: (charts: GenomicChart[]) => void;
 }
 
 @observer
 export default class GeneLevelSelection extends React.Component<IGeneLevelSelectionProps, {}> {
     @observable private geneInput: string = '';
-    @observable private validGene: Gene | undefined = undefined;
+    @observable private validGenes: Gene[] = [];
     @observable private isQueryInvalid: boolean = true;
-    @observable private isMultipleValidGene: boolean = false;
     @observable private selectedProfileOption?: {
         value: string[];
         label: string;
@@ -36,25 +34,18 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
         disableGrouping: false
     };
 
-    @computed
-    private get newChartInfo(): GenomicChart {
-        return {
-            name: this.validGene!.hugoGeneSymbol + ': ' + this.selectedProfileOption!.label,
-            patientAttribute: false,
-            molecularProfileIds: this.selectedProfileOption!.value,
-            hugoGeneSymbol: this.validGene!.hugoGeneSymbol
-        }
-    }
-
     @autobind
     @action
     private onAddChart() {
-        this.props.onSubmit(this.newChartInfo);
-    }
-
-    @computed
-    private get addChartButtonDisabled() {
-        return !this.validGene || !this.selectedProfileOption;
+        const charts = this.validGenes.map(gene => {
+            return {
+                name: gene.hugoGeneSymbol + ': ' + this.selectedOption.label,
+                patientAttribute: false,
+                molecularProfileIds: this.selectedOption.value,
+                hugoGeneSymbol: gene.hugoGeneSymbol
+            }
+        });
+        this.props.onSubmit(charts);
     }
 
     @autobind
@@ -85,13 +76,9 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
         },
         queryStr: string) {
         this.isQueryInvalid = queryStr === '' || !_.isUndefined(oql.error) || genes.suggestions.length !== 0;
-        this.validGene = undefined;
-        this.isMultipleValidGene = false;
-        if (genes.found.length === 1 && !this.isQueryInvalid) {
-            this.validGene = genes.found[0];
-        }
-        if (genes.found.length > 1 && !this.isQueryInvalid) {
-            this.isMultipleValidGene = true;
+        this.validGenes = [];
+        if (!this.isQueryInvalid) {
+            this.validGenes = genes.found;
         }
         this.geneInput = queryStr;
     }
@@ -106,11 +93,6 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
                     callback={this.updateSelectedGenes}
                     location={GeneBoxType.ONCOPRINT_HEATMAP}
                 />
-                {
-                    (this.geneInput && !this.validGene && this.isMultipleValidGene) && (
-                        <div className="alert alert-warning" role="alert">Should just have one valid gene. Please modify your input.</div>
-                    )
-                }
                 Molecular Profile:
                 <div>
                     <ReactSelect
@@ -124,7 +106,7 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
 
                 <div className={styles.operations}>
                     <button
-                        disabled={this.addChartButtonDisabled}
+                        disabled={this.isQueryInvalid}
                         className="btn btn-primary btn-sm"
                         data-test='GeneLevelSelectionSubmitButton'
                         onClick={this.onAddChart}>
