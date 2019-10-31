@@ -393,16 +393,27 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
                 data-test="CoExpressionGeneTabContent"
             >
                 <div className="clearfix">
-                    <div style={{width:"40%", float:"left", marginTop:6}}>
-                        <Observer>
-                            {this.table}
-                        </Observer>
-                    </div>
-                    <div style={{width:"60%", float:"right", marginTop:6 /*align with table controls*/}}>
-                        <Observer>
-                            {this.plot}
-                        </Observer>
-                    </div>
+                    { this.dataStore.allData.length > 0 ? [
+                        <div style={{width:"40%", float:"left", marginTop:6}}>
+                            <Observer>
+                                {this.table}
+                            </Observer>
+                        </div>,
+                        <div style={{width:"60%", float:"right", marginTop:6 /*align with table controls*/}}>
+                            <Observer>
+                                {this.plot}
+                            </Observer>
+                        </div>
+                    ] : (
+                        <div style={{
+                            position:"absolute",
+                            top:200,
+                            left:"50%",
+                            transform:"translate(-50%, 0)"
+                        }}>
+                            There is no expression data for <strong>{this.props.geneticEntity.geneticEntityName}</strong> with the selected samples in <strong>{this.props.profileX.name}</strong>.
+                        </div>
+                    )}
                 </div>
             </div>
         );

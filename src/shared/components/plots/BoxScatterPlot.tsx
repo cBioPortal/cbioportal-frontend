@@ -401,6 +401,9 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         //  this axis is for numbers, not categories
         return (
             <VictoryAxis
+                style={{
+                    grid: {strokeOpacity: 1}
+                }}
                 orientation="bottom"
                 offsetY={50}
                 crossAxis={false}
