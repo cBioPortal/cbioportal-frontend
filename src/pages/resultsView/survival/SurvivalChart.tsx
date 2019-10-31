@@ -449,10 +449,15 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         }
     }
 
+    @autobind
+    private handleWheel(e: React.WheelEvent) {
+        e.preventDefault();
+    }
+
     @computed
     get chart() {
         return (
-            <div className={this.props.className} data-test={'SurvivalChart'}>
+            <div className={this.props.className} data-test={'SurvivalChart'} onWheel={this.handleWheel}>
 
                 {this.props.showDownloadButtons &&
                 <DownloadControls
