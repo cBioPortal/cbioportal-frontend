@@ -22,6 +22,7 @@ import {getAlterationSummary, getGeneSummary, getPatientSampleSummary, getStudyV
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
 import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
+import ResultsPageSettings from "../settings/ResultsPageSettings";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore, onToggleQueryFormVisiblity:(visible:boolean)=>void }, {}> {
@@ -187,6 +188,15 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                                         <button id="modifyQueryBtn" onClick={this.toggleQueryFormVisibility} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>
                                             {(this.queryFormVisible) ? 'Cancel Modify Query' : 'Modify Query'}
                                         </button>
+                                        <DefaultTooltip
+                                            trigger={["click"]}
+                                            placement="bottom"
+                                            overlay={<ResultsPageSettings store={this.props.store} />}
+                                        >
+                                            <button data-test="GlobalSettingsButton" style={{marginLeft:5}} className="btn btn-primary">
+                                                <i className="fa fa-sliders fa-lg"/>
+                                            </button>
+                                        </DefaultTooltip>
                                     </div>
                                 )
                             }
