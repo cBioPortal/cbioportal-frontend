@@ -1,7 +1,10 @@
 import { assert } from 'chai';
 import * as _ from 'lodash';
-import { getMatchPriority, excludeControlArms, getDrugsFromArm } from './TrialMatchTableUtils';
-import { IArm, ITrialMatch } from "../../../shared/model/MatchMiner";
+import {
+    getMatchPriority, excludeControlArms, getDrugsFromArm,
+    mergeClinicalGroupMatchByAge
+} from './TrialMatchTableUtils';
+import { IArm, IClinicalGroupMatch, ITrialMatch } from "../../../shared/model/MatchMiner";
 
 describe("TrialMatchTableUtils", () => {
 
@@ -310,5 +313,134 @@ describe("TrialMatchTableUtils", () => {
         const armDescription: string = "Cohort B INCB054828";
         const expectedResult:string[][]  = [["Pemigatinib"]];
         assert.deepEqual(getDrugsFromArm(armDescription, arm),  expectedResult, 'Get drugs failed.');
+    });
+
+    it("Test mergeClinicalGroupMatchByAge: merge trial matches by the same clinical age.", () => {
+        const clinicalGroupMatch: IClinicalGroupMatch[] = [
+            {
+                trialAgeNumerical: [
+                    ">0"
+                ],
+                trialOncotreePrimaryDiagnosis: {
+                    positive: [
+                        "All Solid Tumors"
+                    ],
+                    negative: [
+                        "CNS Cancer"
+                    ]
+                },
+                matches: {
+                    MUTATION: [
+                        {
+                            genomicAlteration: "NTRK3 Fusions",
+                            matchType: "MUTATION",
+                            matches: [
+                                {
+                                    trueHugoSymbol: "NTRK3",
+                                    trueProteinChange: "NTRK3-ETV6 fusion - Archer"
+                                },
+                                {
+                                    trueHugoSymbol: "NTRK3",
+                                    trueProteinChange: "ETV6-NTRK3 fusion"
+                                }
+                            ]
+                        }
+                    ],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                },
+                notMatches: {
+                    MUTATION: [],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                }
+            },
+            {
+                trialAgeNumerical: [
+                    "<22"
+                ],
+                trialOncotreePrimaryDiagnosis: {
+                    positive: [
+                        "All Solid Tumors"
+                    ],
+                    negative: [
+                        "CNS Cancer"
+                    ]
+                },
+                matches: {
+                    MUTATION: [
+                        {
+                            genomicAlteration: "NTRK3 Fusions",
+                            matchType: "MUTATION",
+                            matches: [
+                                {
+                                    trueHugoSymbol: "NTRK3",
+                                    trueProteinChange: "NTRK3-ETV6 fusion - Archer"
+                                },
+                                {
+                                    trueHugoSymbol: "NTRK3",
+                                    trueProteinChange: "ETV6-NTRK3 fusion"
+                                }
+                            ]
+                        }
+                    ],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                },
+                notMatches: {
+                    MUTATION: [],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                }
+            }
+        ];
+        const expectedResult: IClinicalGroupMatch[]  = [
+            {
+                trialAgeNumerical: [
+                    ">0",
+                    "<22"
+                ],
+                trialOncotreePrimaryDiagnosis: {
+                    positive: [
+                        "All Solid Tumors"
+                    ],
+                    negative: [
+                        "CNS Cancer"
+                    ]
+                },
+                matches: {
+                    MUTATION: [
+                        {
+                            genomicAlteration: "NTRK3 Fusions",
+                            matchType: "MUTATION",
+                            matches: [
+                                {
+                                    trueHugoSymbol: "NTRK3",
+                                    trueProteinChange: "NTRK3-ETV6 fusion - Archer"
+                                },
+                                {
+                                    trueHugoSymbol: "NTRK3",
+                                    trueProteinChange: "ETV6-NTRK3 fusion"
+                                }
+                            ]
+                        }
+                    ],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                },
+                notMatches: {
+                    MUTATION: [],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                }
+            }
+        ];
+        assert.deepEqual(mergeClinicalGroupMatchByAge(clinicalGroupMatch),  expectedResult, 'Merge trial matches by the same clinical age failed.');
     });
 });
