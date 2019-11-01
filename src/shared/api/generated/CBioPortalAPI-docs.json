@@ -84,10 +84,6 @@
       "description": " "
     }
   ],
-  "schemes": [
-    "http",
-    "https"
-  ],
   "paths": {
     "/cancer-types": {
       "get": {
