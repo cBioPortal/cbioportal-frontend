@@ -96,10 +96,6 @@
       "description": " "
     }
   ],
-  "schemes": [
-    "http",
-    "https"
-  ],
   "paths": {
     "/clinical-data-bin-counts/fetch": {
       "post": {
@@ -1808,8 +1804,7 @@
       "required": [
         "counts",
         "entrezGeneId",
-        "hugoGeneSymbol",
-        "pValue"
+        "hugoGeneSymbol"
       ],
       "properties": {
         "counts": {

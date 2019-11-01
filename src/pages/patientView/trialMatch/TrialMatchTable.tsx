@@ -7,7 +7,7 @@ import {
 import styles from './style/trialMatch.module.scss';
 import { computed } from "mobx";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import DefaultTooltip, { placeArrowBottomLeft } from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 export type ITrialMatchProps = {
