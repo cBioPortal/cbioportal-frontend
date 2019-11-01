@@ -140,7 +140,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     <DownloadControls
                         filename="vafHeatmap"
                         getSvg={()=>this.vafLineChartSvg}
-                        buttons={["SVG", "PNG", "PDF"]}
+                        buttons={["SVG", "PNG"]}
                         type="button"
                         dontFade
                     />

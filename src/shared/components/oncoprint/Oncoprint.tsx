@@ -174,6 +174,7 @@ export interface IOncoprintProps {
     distinguishDrivers?:boolean;
     distinguishGermlineMutations?:boolean;
 
+    showTrackLabels?:boolean;
     showSublabels?:boolean;
 
     sortConfig?:{
