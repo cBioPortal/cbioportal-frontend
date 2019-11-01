@@ -5,7 +5,6 @@ import RightPanel from "./rightPanel/RightPanel";
 import StudySummary from "./studySummary/StudySummary";
 import UserSelections from "../UserSelections";
 import * as _ from 'lodash';
-import {getSelectedGroups} from "../../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 
 
 export interface IStudyPageHeaderProps {
@@ -43,11 +42,12 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
                     updateClinicalDataEqualityFilter={this.props.store.updateClinicalDataEqualityFilters}
                     updateClinicalDataIntervalFilter={this.props.store.updateClinicalDataIntervalFiltersByValues}
                     updateCustomChartFilter={this.props.store.setCustomChartFilters}
-                    removeGeneFilter={this.props.store.removeGeneFilter}
+                    removeMutatedGeneFilter={this.props.store.removeMutatedGeneFilter}
+                    removeFusionGeneFilter={this.props.store.removeFusionGeneFilter}
                     removeCNAGeneFilter={this.props.store.removeCNAGeneFilters}
                     resetMutationCountVsCNAFilter={this.props.store.resetMutationCountVsCNAFilter}
                     clearCNAGeneFilter={this.props.store.clearCNAGeneFilter}
-                    clearGeneFilter={this.props.store.clearGeneFilter}
+                    clearGeneFilter={this.props.store.clearMutatedGeneFilter}
                     removeCustomSelectionFilter={this.props.store.removeCustomSelectFilter}
                     removeComparisonGroupSelectionFilter={this.props.store.removeComparisonGroupSelectionFilter}
                     removeWithMutationDataFilter={this.props.store.removeWithMutationDataFilter}

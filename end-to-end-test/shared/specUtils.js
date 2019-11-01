@@ -170,6 +170,19 @@ function reactSelectOption(parent, optionText, loose = false) {
     return parent.$('.Select-option='+optionText);
 }
 
+function selectCheckedOption(parent, optionText, loose = false) {
+    parent.$('.default-checked-select').click();
+    if (loose) {
+        return  parent.$('.checked-select-option*='+optionText);
+    }
+    return parent.$('.checked-select-option='+optionText);
+}
+
+function getSelectCheckedOptions(parent) {
+    parent.$('.default-checked-select').click();
+    return parent.$$('.checked-select-option');
+}
+
 function pasteToElement(elementSelector, text){
 
     clipboardy.writeSync(text);
@@ -178,30 +191,45 @@ function pasteToElement(elementSelector, text){
 }
 
 function checkOncoprintElement(selector) {
+    browser.moveToObject("body", 0, 0);
     browser.execute(function() {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
     });
-    return browser.checkElement(selector || "#oncoprintDiv", { hide:[".qtip", '.dropdown-menu', ".oncoprintjs__track_options__dropdown", ".oncoprintjs__cell_overlay_div"] });
+    return checkElementWithMouseDisabled(selector || "#oncoprintDiv", 0, { hide:[".qtip", '.dropdown-menu', ".oncoprintjs__track_options__dropdown", ".oncoprintjs__cell_overlay_div"] });
 }
 
 function executeInBrowser(callback){
     return browser.execute(callback).value;
 }
 
-function checkElementWithTemporaryClass(selectorForChecking, selectorForTemporaryClass, temporaryClass, pauseTime) {
+function checkElementWithTemporaryClass(selectorForChecking, selectorForTemporaryClass, temporaryClass, pauseTime, options) {
     browser.execute(function(selectorForTemporaryClass, temporaryClass){
         $(selectorForTemporaryClass).addClass(temporaryClass);
     }, selectorForTemporaryClass, temporaryClass);
     browser.pause(pauseTime);
-    var res = browser.checkElement(selectorForChecking);
+    var res = browser.checkElement(selectorForChecking, options);
     browser.execute(function(selectorForTemporaryClass, temporaryClass){
         $(selectorForTemporaryClass).removeClass(temporaryClass);
     }, selectorForTemporaryClass, temporaryClass);
     return res;
 }
 
-function checkElementWithMouseDisabled(selector, pauseTime) {
-    return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0);
+function checkElementWithMouseDisabled(selector, pauseTime, options) {
+    return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0, options);
+}
+
+function checkElementWithElementHidden(selector, selectorToHide, options) { 
+    browser.execute((selectorToHide) => {
+        $(`<style id="tempHiddenStyles" type="text/css">${selectorToHide}{opacity:0;}</style>`).appendTo("head");
+    }, selectorToHide)
+
+    var res = browser.checkElement(selector, options);
+
+    browser.execute((selectorToHide) => {
+        $("#tempHiddenStyles").remove();
+    }, selectorToHide)
+
+    return res;
 }
 
 function clickQueryByGeneButton(){
@@ -215,6 +243,7 @@ function clickModifyStudySelectionButton (){
 }
 
 module.exports = {
+    checkElementWithElementHidden: checkElementWithElementHidden,
     waitForPlotsTab: waitForPlotsTab,
     waitForStudyQueryPage: waitForStudyQueryPage,
     waitForGeneQueryPage: waitForGeneQueryPage,
@@ -245,5 +274,7 @@ module.exports = {
     selectReactSelectOption: selectReactSelectOption,
     reactSelectOption: reactSelectOption,
     getReactSelectOptions: getReactSelectOptions,
-    COEXPRESSION_TIMEOUT: 120000
+    COEXPRESSION_TIMEOUT: 120000,
+    getSelectCheckedOptions: getSelectCheckedOptions,
+    selectCheckedOption: selectCheckedOption
 };

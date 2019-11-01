@@ -15,6 +15,9 @@
  **/
 
  .studyTagsTooltip{
+    max-height: 45vh;
+    overflow: auto; 
+  
     .json-to-table table {
         width: 100%;
         border-collapse: collapse;

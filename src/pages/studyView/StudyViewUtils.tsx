@@ -8,7 +8,7 @@ import {
     SampleIdentifier,
     StudyViewFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
-import {CancerStudy, ClinicalAttribute, Gene, PatientIdentifier, Sample} from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, ClinicalAttribute, Gene, PatientIdentifier, Sample, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
@@ -27,12 +27,20 @@ import {getTextWidth} from "../../public-lib/lib/TextTruncationUtils";
 import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
 import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
 import styles from './styles.module.scss';
-
+import { getGroupParameters, getStudiesAttr } from "pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
+import { SessionGroupData } from "shared/api/ComparisonGroupClient";
+import { stringListToIndexSet } from "public-lib";
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
     PATIENT = 'PATIENT',
+}
+
+export enum NumericalGroupComparisonType {
+    QUARTILES = 'QUARTILES',
+    MEDIAN='MEDIAN',
+    BINS = 'BINS'
 }
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
@@ -43,11 +51,13 @@ export type ChartType =
     | 'TABLE'
     | 'SCATTER'
     | 'MUTATED_GENES_TABLE'
+    | 'FUSION_GENES_TABLE'
     | 'CNA_GENES_TABLE'
     | 'NONE';
 
 export enum UniqueKey {
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
+    FUSION_GENES_TABLE = 'FUSION_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
     CUSTOM_SELECT = 'CUSTOM_SELECT',
     SELECTED_COMPARISON_GROUPS = 'SELECTED_COMPARISON_GROUPS',
@@ -58,6 +68,7 @@ export enum UniqueKey {
     MUTATION_COUNT = "MUTATION_COUNT",
     FRACTION_GENOME_ALTERED = "FRACTION_GENOME_ALTERED",
     WITH_MUTATION_DATA = "WITH_MUTATION_DATA",
+    WITH_FUSION_DATA = "WITH_FUSION_DATA",
     WITH_CNA_DATA = "WITH_CNA_DATA"
 }
 
@@ -124,7 +135,22 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [{
         },
         priority: 0,
         renderWhenDataChange: false
-    }, {
+    },
+    {
+        uniqueKey: UniqueKey.WITH_FUSION_DATA,
+        displayName: 'With Fusion Data',
+        description: 'With Fusion Data',
+        chartType: ChartTypeEnum.PIE_CHART,
+        dataType: ChartMetaDataTypeEnum.GENOMIC,
+        patientAttribute: false,
+        dimension: {
+            w: 1,
+            h: 1
+        },
+        priority: 0,
+        renderWhenDataChange: false
+    },
+    {
         uniqueKey: UniqueKey.WITH_CNA_DATA,
         displayName: 'With CNA Data',
         description: 'With CNA Data',
@@ -391,6 +417,14 @@ export function getVirtualStudyDescription(
                     return mutatedGene.hugoGeneSymbols.join(', ').trim();
                 }).map(line => '  - ' + line));
             }
+            if (filter.fusionGenes && filter.fusionGenes.length > 0) {
+                filterLines.push('- Fusion Genes:')
+                filterLines = filterLines.concat(filter.fusionGenes.map(fusionGene => {
+                    return fusionGene.entrezGeneIds.map(entrezGeneId => {
+                        return entrezIdSet[entrezGeneId] || entrezGeneId;
+                    }).join(', ').trim();
+                }).map(line => '  - ' + line));
+            }
 
             if (filter.withMutationData !== undefined) {
                 filterLines.push(`With Mutation data: ${filter.withMutationData ? 'YES' : 'NO'}`);
@@ -433,6 +467,7 @@ export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFi
             _.isEmpty(filter.clinicalDataIntervalFilters) &&
             _.isEmpty(filter.cnaGenes) &&
             _.isEmpty(filter.mutatedGenes) &&
+            _.isEmpty(filter.fusionGenes) &&
             filter.withMutationData === undefined &&
             filter.withCNAData === undefined &&
             !filter.mutationCountVsCNASelection)
@@ -490,8 +525,8 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
         $(svg).find(params.selectorToHide).remove();
     }
 
-    const height = + $(svgElement).height() + legendBBox.height;
-    const width = Math.max($(svgElement).width(), legendBBox.width);
+    const height = + $(svgElement).height()! + legendBBox.height;
+    const width = Math.max($(svgElement).width()!, legendBBox.width);
 
     // adjust width and height to make sure that the legend is fully visible
     $(svg).attr("height", height + 5);
@@ -500,11 +535,11 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
 
     // center elements
     if (params.centerLegend) {
-        const widthDiff = Math.abs($(svgElement).width() - legendBBox.width);
+        const widthDiff = Math.abs($(svgElement).width()! - legendBBox.width);
         const shift = widthDiff / 2;
         const transform = `translate(${shift}, 0)`;
 
-        if ($(svgElement).width() > legendBBox.width) {
+        if ($(svgElement).width()! > legendBBox.width) {
             // legend needs to be centered wrt the chart
             $(svg).find(params.legendGroupSelector).attr("transform", transform);
         }
@@ -1565,6 +1600,7 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
     chartTypeSet: { [uniqueId: string]: ChartType },
     customChartSet: { [uniqueId: string]: CustomChart },
     filterMutatedGenesTableByCancerGenes: boolean = true,
+    filterFusionGenesTableByCancerGenes: boolean = true,
     filterCNAGenesTableByCancerGenes: boolean = true,
     gridLayout?: ReactGridLayout.Layout[]) {
 
@@ -1583,6 +1619,8 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
         }
         if (chartType === UniqueKey.MUTATED_GENES_TABLE) {
             chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
+        } else if (chartType === UniqueKey.FUSION_GENES_TABLE) {
+            chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterFusionGenesTableByCancerGenes;
         } else if (chartType === UniqueKey.CNA_GENES_TABLE) {
             chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterCNAGenesTableByCancerGenes;
         }
@@ -1604,4 +1642,122 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
         }
     });
     return chartSettingsMap;
+}
+
+export function getBinName(dataBin: Pick<DataBin, "specialValue"|"start"|"end">) {
+    // specialValue can be any non-numeric character. ex: "=<", ">", "NA"
+    if (dataBin.specialValue !== undefined) {
+        if (dataBin.start !== undefined) {
+            return dataBin.specialValue + dataBin.start;
+        }
+        if (dataBin.end !== undefined) {
+            return dataBin.specialValue + dataBin.end;
+        }
+        return dataBin.specialValue;
+    }
+    if (dataBin.start !== undefined && dataBin.end !== undefined) {
+        return `${dataBin.start}-${dataBin.end}`;
+    }
+    return ''
+}
+
+export function getGroupedClinicalDataByBins(data: ClinicalData[], dataBins: DataBin[]) {
+    const numericDataBins = dataBins.filter(dataBin => dataBin.specialValue === undefined);
+    const specialDataBins = dataBins.filter(dataBin => dataBin.specialValue !== undefined);
+    return _.reduce(data, (acc, datum) => {
+        let dataBin: DataBin | undefined;
+        // Check if the ClinicalData value is number
+        if (!isNaN(datum.value as any)) {
+            //find if it belongs to any of numeric bins. 
+            dataBin = _.find(numericDataBins, dataBin => parseFloat(datum.value) > dataBin.start && parseFloat(datum.value) <= dataBin.end);
+        }
+
+        //If ClinicalData value is not a number of does not belong to any number bins
+        if (dataBin === undefined) {
+            //find if it belongs to any of sepcial bins. 
+            dataBin = _.find(specialDataBins, dataBin => {
+                if (!isNaN(datum.value as any)) {
+                    if (dataBin.end !== undefined) {
+                        return parseFloat(datum.value) <= dataBin.end;
+                    }
+                    else if (dataBin.start !== undefined) {
+                        return parseFloat(datum.value) > dataBin.start;
+                    }
+                }
+                return dataBin.specialValue === datum.value;
+            });
+        }
+        if (dataBin) {
+            let name = getBinName(dataBin);
+            if (acc[name] === undefined) {
+                acc[name] = [];
+            }
+            acc[name].push(datum);
+        }
+        return acc;
+    }, {} as {
+        [id: string]: ClinicalData[];
+    });
+}
+
+export function getGroupsFromBins(samples: Sample[], patientAttribute: boolean, data: ClinicalData[], dataBins: DataBin[], origin: string[]) {
+
+    let patientToSamples: { [uniquePatientKey: string]: SampleIdentifier[] } = {};
+    if (patientAttribute) {
+        patientToSamples = _.groupBy(samples, s => s.uniquePatientKey);
+    }
+
+    const clinicalDataByBins = getGroupedClinicalDataByBins(data, dataBins);
+    const binsOrder = dataBins.map(dataBin=>getBinName(dataBin))
+    const binsOrderSet = stringListToIndexSet(binsOrder)
+
+    return _.reduce(clinicalDataByBins, (acc, clinicalData, name) => {
+        if (clinicalData.length !== 0) {
+            let sampleIdentifiers: SampleIdentifier[] = []
+
+            if (patientAttribute) {
+                sampleIdentifiers = _.flatMapDeep(clinicalData, (d: ClinicalData) => {
+                    return patientToSamples[d.uniquePatientKey].map(s => ({ studyId: s.studyId, sampleId: s.sampleId }));
+                });
+            } else {
+                sampleIdentifiers = clinicalData.map(d => ({ studyId: d.studyId, sampleId: d.sampleId }));
+            }
+
+            acc.push(getGroupParameters(
+                name,
+                sampleIdentifiers,
+                origin
+            ))
+        }
+        return acc;
+    }, [] as SessionGroupData[]).sort((a, b) => binsOrderSet[a.name] - binsOrderSet[b.name]);
+}
+
+export function getGroupsFromQuartiles(samples: Sample[], patientAttribute: boolean, quartiles: ClinicalData[][], origin: string[]) {
+
+    let patientToSamples: {
+        [uniquePatientKey: string]: SampleIdentifier[];
+    } = {};
+    if (patientAttribute) {
+        patientToSamples = _.groupBy(samples, s => s.uniquePatientKey);
+    }
+    // create groups using data
+    return quartiles.map(quartile => {
+
+        let sampleIdentifiers: SampleIdentifier[] = []
+        if (patientAttribute) {
+            sampleIdentifiers = _.flatMapDeep(quartile, (d: ClinicalData) => {
+                return patientToSamples[d.uniquePatientKey].map(s => ({ studyId: s.studyId, sampleId: s.sampleId }));
+            });
+        }
+        else {
+            sampleIdentifiers = quartile.map(d => ({ studyId: d.studyId, sampleId: d.sampleId }));
+        }
+        
+        return getGroupParameters(
+            `${quartile[0].value}-${quartile[quartile.length - 1].value}`,
+            sampleIdentifiers,
+            origin
+        );
+    });
 }

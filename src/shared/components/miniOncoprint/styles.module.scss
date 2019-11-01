@@ -17,8 +17,17 @@
   }
   .alterationRow {
     margin-top:3px;
+    position: relative;
     div {
       height:8px;
+    }
+    .strike {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 1px;
+      width: 100%;
+      background-color:#bbb;
     }
   }
 
