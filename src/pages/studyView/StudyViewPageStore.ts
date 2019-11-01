@@ -37,7 +37,7 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     CopyNumberSeg,
-    Gene, GenePanel,
+    GenePanel,
     MolecularProfile,
     MolecularProfileFilter,
     Patient
@@ -129,8 +129,7 @@ import { AppStore } from 'AppStore';
 import {
     getCnaUniqueKey,
     getMutationUniqueKey,
-    parseCnaUniqueKey,
-    parseMutationUniqueKey
+    parseCnaUniqueKey
 } from "pages/studyView/TableUtils";
 import { GeneTableRow } from './table/GeneTable';
 import { getSelectedGroups, getStudiesAttr } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
@@ -279,10 +278,6 @@ export class StudyViewPageStore {
             }
         }));
 
-        this.reactionDisposers.push(reaction(() => this.uniqueEntrezGeneIdsInFilters, (uniqueEntrezGeneIds) => {
-            this.getGenesInfo(uniqueEntrezGeneIds);
-        }));
-
         // Include special charts into custom charts list
        SPECIAL_CHARTS.forEach((chartMeta:ChartMetaWithDimensionAndChartType) => {
            const uniqueKey = chartMeta.uniqueKey;
@@ -308,29 +303,6 @@ export class StudyViewPageStore {
                }
            }
        });
-    }
-
-    @computed
-    get uniqueEntrezGeneIdsInFilters() {
-        return _.uniq(
-            _.flatten(
-                this._mutatedGeneFilter.map(item => item.entrezGeneIds)
-                    .concat(this._fusionGeneFilter.map(item => item.entrezGeneIds))
-                    .concat(this._cnaGeneFilter.map(item => _.flatten(item.alterations.map(alteration => alteration.entrezGeneId))))
-            ));
-    }
-
-    @action
-    getGenesInfo(entrezGeneIds: number[]) {
-        const unknownEntrezGeneIds = entrezGeneIds.filter(entrezGeneId => !this.geneMapCache[entrezGeneId]).map(entrezGeneId => entrezGeneId.toString());
-        if (unknownEntrezGeneIds.length > 0) {
-            client.fetchGenesUsingPOST({geneIdType: 'ENTREZ_GENE_ID', geneIds: unknownEntrezGeneIds})
-                .then((genes: Gene[]) => {
-                    genes.forEach(gene => {
-                        this.geneMapCache[gene.entrezGeneId] = gene.hugoGeneSymbol;
-                    })
-                })
-        }
     }
 
     @computed get isLoggedIn() {
@@ -451,7 +423,7 @@ export class StudyViewPageStore {
     ) {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
         return new Promise<string>((resolve)=>{
-            onMobxPromise<any>([this.selectedSamples, this.clinicalDataBinPromises[getClinicalAttributeUniqueKey(clinicalAttribute)]],
+            onMobxPromise<any>([this.selectedSamples, this.clinicalDataBinPromises[getUniqueKey(clinicalAttribute)]],
                 async (selectedSamples:Sample[], dataBins:DataBin[])=>{
                     // get clinical data for the given attribute
                     const entityIdKey = clinicalAttribute.patientAttribute ? "patientId" : "sampleId";
@@ -780,7 +752,7 @@ export class StudyViewPageStore {
         if (_.isArray(filters.fusionGenes) && filters.fusionGenes.length > 0) {
             this._fusionGeneFilter = filters.fusionGenes.map(fusionGene => {
                 return {
-                    entrezGeneIds: _.clone(fusionGene.entrezGeneIds)
+                    hugoGeneSymbols: _.clone(fusionGene.hugoGeneSymbols)
                 }
             });
         }
@@ -1208,19 +1180,14 @@ export class StudyViewPageStore {
     addGeneFilters(hugoGeneSymbols: string[]) {
         trackStudyViewFilterEvent("geneFilter", this);
 
-        this._mutatedGeneFilter = [...this._mutatedGeneFilter, {hugoGeneSymbols: hugoGeneSymbols}];
+        this._mutatedGeneFilter = [...this._mutatedGeneFilter, {hugoGeneSymbols}];
     }
 
     @autobind
     @action
     removeMutatedGeneFilter(toBeRemoved: string) {
         this._mutatedGeneFilter = _.reduce(this._mutatedGeneFilter, (acc, next) => {
-            const newGroup = _.reduce(next.hugoGeneSymbols, (list, hugoGeneSymbol) => {
-                if (hugoGeneSymbol !== toBeRemoved) {
-                    list.push(hugoGeneSymbol);
-                }
-                return list;
-            }, [] as string[]);
+            const newGroup = next.hugoGeneSymbols.filter(hugoGeneSymbol => hugoGeneSymbol !== toBeRemoved);
             if (newGroup.length > 0) {
                 acc.push({
                     hugoGeneSymbols: newGroup
@@ -1239,23 +1206,20 @@ export class StudyViewPageStore {
 
     @autobind
     @action
-    addFusionGeneFilters(uniqueKeys: string[]) {
-        const genes = uniqueKeys.map(uniqueKey => parseMutationUniqueKey(uniqueKey));
-
+    addFusionGeneFilters(hugoGeneSymbols: string[]) {
         trackStudyViewFilterEvent("geneFilter", this);
 
-        genes.forEach(gene => this.geneMapCache[gene.entrezGeneId] = gene.hugoGeneSymbol);
-        this._fusionGeneFilter = [...this._fusionGeneFilter, {entrezGeneIds: genes.map(gene => gene.entrezGeneId)}];
+        this._fusionGeneFilter = [...this._fusionGeneFilter, {hugoGeneSymbols}];
     }
 
     @autobind
     @action
-    removeFusionGeneFilter(entrezIdToBeRemoved: number) {
+    removeFusionGeneFilter(toBeRemoved: string) {
         this._fusionGeneFilter = _.reduce(this._fusionGeneFilter, (acc, next) => {
-            const newGroup = next.entrezGeneIds.filter(entrezGeneId => entrezGeneId !== entrezIdToBeRemoved);
+            const newGroup = next.hugoGeneSymbols.filter(hugoGeneSymbol => hugoGeneSymbol !== toBeRemoved);
             if (newGroup.length > 0) {
                 acc.push({
-                    entrezGeneIds: newGroup
+                    hugoGeneSymbols: newGroup
                 });
             }
             return acc;
@@ -1605,7 +1569,7 @@ export class StudyViewPageStore {
     }
 
     public getFusionGenesTableFilters(): string[] {
-        return _.flatMap(this._fusionGeneFilter, filter => filter.entrezGeneIds) as any;
+        return _.flatMap(this._fusionGeneFilter, filter => filter.hugoGeneSymbols);
     }
 
     public getCNAGenesTableFilters() {

@@ -222,7 +222,7 @@ export type ExpressionEnrichment = {
 
 };
 export type FusionGeneFilter = {
-    'entrezGeneIds': Array < number >
+    'hugoGeneSymbols': Array < string >
 
 };
 export type Geneset = {
