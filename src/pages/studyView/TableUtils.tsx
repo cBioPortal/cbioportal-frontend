@@ -8,7 +8,6 @@ import {GenePanelList} from "pages/studyView/table/GenePanelModal";
 import {getFrequencyStr} from "pages/studyView/StudyViewUtils";
 import {CSSProperties} from "react";
 import {
-    GeneIdentifier,
     CopyNumberAlterationIdentifier
 } from "pages/studyView/StudyViewPageStore";
 import * as _ from "lodash";
@@ -26,15 +25,6 @@ export function getMutationUniqueKey(entrezGeneId: number, hugoGeneSymbol: strin
     return [entrezGeneId, hugoGeneSymbol].join(UNIQUE_KEY_SEPARATOR);
 }
 
-export function parseMutationUniqueKey(uniqueKey: string): GeneIdentifier {
-    const parts = uniqueKey.split(UNIQUE_KEY_SEPARATOR);
-
-    return {
-        entrezGeneId: Number(parts[0]),
-        hugoGeneSymbol: parts[1]
-    }
-}
-
 export function getCnaUniqueKey(entrezGeneId: number, hugoGeneSymbol: string, alteration: number) {
     return [entrezGeneId, hugoGeneSymbol, alteration].join(UNIQUE_KEY_SEPARATOR);
 }
@@ -43,7 +33,6 @@ export function parseCnaUniqueKey(uniqueKey: string): CopyNumberAlterationIdenti
     const parts = uniqueKey.split(UNIQUE_KEY_SEPARATOR);
 
     return {
-        entrezGeneId: Number(parts[0]),
         hugoGeneSymbol: parts[1],
         alteration: Number(parts[2]),
     }
