@@ -84,6 +84,11 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
     }
 
     public mainContent() {
+        if (this.props.molecularProfileOptions.length === 0) {
+            return (<div style={{ textAlign: 'center' }}>
+                No molecular profiles found
+            </div>)
+        }
         return (
             <div className={styles.body}>
                 Gene:

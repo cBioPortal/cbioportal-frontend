@@ -157,8 +157,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     private get hideGeneLevelSelection() {
         return this.props.disableGeneLevelTab ||
             this.props.store.molecularProfileOptions.isPending ||
-            this.props.store.molecularProfileOptions.isError ||
-            this.props.store.molecularProfileOptions.result.length === 0;
+            this.props.store.molecularProfileOptions.isError;
     }
 
     @autobind
