@@ -44,6 +44,10 @@
       min-height:50px;
       border:1px solid $borderColor;
       resize: vertical;
+      
+      &.treatment-textarea {
+        border-radius: 2px;
+      }
     }
     > *, button {
       margin-bottom:10px;
@@ -117,10 +121,6 @@
       margin-right:0;
     }
     
-  }
-  
-  .oncoprint__controls__minimap_button {
-    padding: 5px 8px 6px 10px !important;
   }
   
   .Select {

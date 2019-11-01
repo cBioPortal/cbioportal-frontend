@@ -18,7 +18,7 @@ import OncoprintJS, {InitParams, ColumnLabel, TrackId, ColumnId} from "oncoprint
 import autobind from "autobind-decorator";
 import DownloadControls, {DownloadControlsButton} from "../../../../public-lib/components/downloadControls/DownloadControls";
 import _ from "lodash";
-import SampleManager from "../../sampleManager";
+import SampleManager from "../../SampleManager";
 import WindowStore from "../../../../shared/components/window/WindowStore";
 import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../../shared/lib/StoreUtils";
 import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";

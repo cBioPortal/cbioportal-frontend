@@ -6,7 +6,7 @@ import {If, Then, Else} from 'react-if';
 import Tracks from './Tracks';
 import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
 import {Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {MutationFrequenciesBySample} from "../vafPlot/VAFPlot";
 
