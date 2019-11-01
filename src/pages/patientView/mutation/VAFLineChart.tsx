@@ -18,7 +18,7 @@ import {Portal} from "react-portal";
 import {CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
 import SampleLabelSVG from "../../../shared/components/sampleLabel/SampleLabel";
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
 import $ from "jquery";
 import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexKeyMap";

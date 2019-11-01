@@ -149,7 +149,9 @@ export type ChartUserSetting = {
         h: number;
     },
     patientAttribute: boolean,
-    filterByCancerGenes?:boolean
+    filterByCancerGenes?: boolean,
+    customBins?: number[],
+    disableLogScale?: boolean
 }
 
 export type StudyPageSettings = {
@@ -2590,6 +2592,7 @@ export class StudyViewPageStore {
                 this.chartsDimension.toJS(),
                 this.chartsType.toJS(),
                 this._customChartMap.toJS(),
+                this._clinicalDataBinFilterSet.toJS(),
                 this._filterMutatedGenesTableByCancerGenes,
                 this._filterFusionGenesTableByCancerGenes,
                 this._filterCNAGenesTableByCancerGenes,
@@ -2624,6 +2627,7 @@ export class StudyViewPageStore {
         this._filterMutatedGenesTableByCancerGenes = true;
         this._filterFusionGenesTableByCancerGenes = true;
         this._filterCNAGenesTableByCancerGenes = true;
+        this._clinicalDataBinFilterSet = observable.map(toJS(this._defaultClinicalDataBinFilterSet));
     }
 
     @autobind
@@ -2650,6 +2654,7 @@ export class StudyViewPageStore {
     @observable private _defualtChartsDimension = observable.map<ChartDimension>();
     @observable private _defaultChartsType = observable.map<ChartType>();
     @observable private _defaultVisibleChartIds: string[] = [];
+    @observable private _defaultClinicalDataBinFilterSet = observable.map<ClinicalDataBinFilter>();
 
     @autobind
     @action
@@ -2668,7 +2673,8 @@ export class StudyViewPageStore {
             this.columns,
             this._defualtChartsDimension.toJS(),
             this._defaultChartsType.toJS(),
-            {});
+            {},
+            this._defaultClinicalDataBinFilterSet.toJS());
     }
 
     @autobind
@@ -2707,6 +2713,17 @@ export class StudyViewPageStore {
                     break;
                 case UniqueKey.CNA_GENES_TABLE:
                     this._filterCNAGenesTableByCancerGenes = chartUserSettings.filterByCancerGenes === undefined ? true : chartUserSettings.filterByCancerGenes;
+                    break;
+                case ChartTypeEnum.BAR_CHART:
+                    let ref = this._clinicalDataBinFilterSet.get(chartUserSettings.id);
+                    if (ref) {
+                        if (chartUserSettings.customBins) {
+                            ref.customBins = chartUserSettings.customBins;
+                        }
+                        if (chartUserSettings.disableLogScale) {
+                            ref.disableLogScale = chartUserSettings.disableLogScale;
+                        }
+                    }
                     break;
                 default:
                     break;
@@ -2749,10 +2766,10 @@ export class StudyViewPageStore {
 
         this.initializeClinicalDataCountCharts();
         this.initializeClinicalDataBinCountCharts();
-
         this._defualtChartsDimension = observable.map(this.chartsDimension.toJS());
         this._defaultChartsType = observable.map(this.chartsType.toJS());
         this._defaultVisibleChartIds = this.visibleAttributes.map(attribute => attribute.uniqueKey);
+        this._defaultClinicalDataBinFilterSet = observable.map(toJS(this._clinicalDataBinFilterSet));
     }
 
     @action

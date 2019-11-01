@@ -3,7 +3,8 @@ import {
     mergeMutationsIncludingUncalled, generateMutationIdByEvent, generateMutationIdByGeneAndProteinChangeAndEvent,
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, findSamplesWithoutCancerTypeClinicalData,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData,
-    fetchGermlineConsentedSamples
+    fetchGermlineConsentedSamples,
+    noGenePanelUsed
 } from "./StoreUtils";
 import * as _ from 'lodash';
 import { assert } from 'chai';
@@ -498,4 +499,20 @@ describe('StoreUtils', () => {
                 "fetchStudy should be called with the correct study id (study4)");
         });
     });
+
+    describe('noGenePanelUsed()', () => {
+        it('handles undefined values', () => {
+            assert.isTrue(noGenePanelUsed(undefined));
+        });
+        it('handles "WES"-tag values', () => {
+            assert.isTrue(noGenePanelUsed('WES'));
+        });
+        it('handles "WGS"-tag values', () => {
+            assert.isTrue(noGenePanelUsed('WGS'));
+        });
+        it('returns false for any other gene panel id', () => {
+            assert.isFalse(noGenePanelUsed('dummy_gene_panel_id'));
+        });
+    });
+
 });
