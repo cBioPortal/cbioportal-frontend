@@ -1151,6 +1151,12 @@ export default class Oncoprint {
         this.resizeAndOrganizeAfterTimeout();
     }
 
+    public setShowTrackLabels(s:boolean) {
+        this.model.setShowTrackLabels(s);
+        this.label_view.setShowTrackLabels(this.model, this.getCellViewHeight);
+        this.resizeAndOrganizeAfterTimeout();
+    }
+
     public onCellMouseOver(callback:CellMouseOverCallback) {
         this.cell_mouse_over_callbacks.push(callback);
     }
@@ -1177,7 +1183,9 @@ export default class Oncoprint {
 
         const label_view_group = this.label_view.toSVGGroup(this.model, true, 0, 0);
         everything_group.appendChild(label_view_group);
-        const track_info_group_x = label_view_group.getBBox().width + 30;
+        const label_view_width = label_view_group.getBBox().width;
+        const label_view_padding = label_view_width > 0 ? 30 : 0;
+        const track_info_group_x = label_view_width + label_view_padding;
         const track_info_group = this.track_info_view.toSVGGroup(this.model, track_info_group_x, 0);
         everything_group.appendChild(track_info_group);
         const cell_view_group_x = track_info_group_x + track_info_group.getBBox().width + 10;

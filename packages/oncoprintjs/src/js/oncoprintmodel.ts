@@ -212,6 +212,7 @@ export default class OncoprintModel {
     private highlighted_tracks:TrackId[];
     private track_group_legend_order:TrackGroupIndex[];
     private show_track_sublabels:boolean;
+    private show_track_labels:boolean;
     private column_labels:ColumnProp<ColumnLabel>;
 
     // Track properties
@@ -300,6 +301,7 @@ export default class OncoprintModel {
         this.highlighted_tracks = [];
         this.track_group_legend_order = [];
         this.show_track_sublabels = false;
+        this.show_track_labels = true;
         this.column_labels = {};
 
         // Track Properties
@@ -645,6 +647,14 @@ export default class OncoprintModel {
         this.vert_zoom = clamp(z, min_zoom, 1);
         this.track_tops.update();
         return this.vert_zoom;
+    }
+
+    public setShowTrackLabels(s:boolean) {
+        this.show_track_labels = s;
+    }
+
+    public getShowTrackLabels() {
+        return this.show_track_labels;
     }
 
     public hideTrackLegends(track_ids:TrackId[]) {
