@@ -151,7 +151,7 @@ describe('StudyViewUtils', () => {
                     }]
                 }],
                 mutatedGenes: [{ "hugoGeneSymbols": ["GENE1"] }],
-                fusionGenes: [{ "entrezGeneIds": [1] }],
+                fusionGenes: [{ "hugoGeneSymbols": ["GENE1"] }],
                 cnaGenes: [{ "alterations": [{ "hugoGeneSymbol": "GENE2", "alteration": -2 }] }],
                 studyIds: ['study1', 'study2'],
                 sampleIdentifiers: [],
