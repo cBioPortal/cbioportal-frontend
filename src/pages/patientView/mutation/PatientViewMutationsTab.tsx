@@ -7,7 +7,7 @@ import AppConfig from "appConfig";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
 import PatientViewPage from "../PatientViewPage";
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import {IColumnVisibilityDef} from "../../../shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import VAFLineChart from "./VAFLineChart";
@@ -193,7 +193,9 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
             this.props.store.mutationData,
             this.props.store.uncalledMutationData,
             this.props.store.oncoKbAnnotatedGenes,
-            this.props.store.studyIdToStudy
+            this.props.store.studyIdToStudy,
+            this.props.store.sampleToMutationGenePanelId,
+            this.props.store.genePanelIdToEntrezGeneIds
         ],
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
         render:()=>(
@@ -253,6 +255,8 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     columnVisibilityProps={{
                         onColumnToggled: this.props.onMutationTableColumnVisibilityToggled
                     }}
+                    sampleToGenePanelId={this.props.store.sampleToMutationGenePanelId.result!}
+                    genePanelIdToEntrezGeneIds={this.props.store.genePanelIdToEntrezGeneIds.result!}
                 />
             </div>
         )

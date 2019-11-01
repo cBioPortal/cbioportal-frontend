@@ -12,6 +12,8 @@ function hasColumn(tableWrapper:ReactWrapper<any, any>, columnName:string):boole
 function getTable(samples:string[], mrnaMolecularProfileId?:string):ReactWrapper<any, any> {
     return mount(<CopyNumberTableWrapper
         sampleManager={null}
+        sampleToGenePanelId={{}}
+        genePanelIdToEntrezGeneIds={{}}
         sampleIds={samples}
         gisticData={{}}
         status="available"
