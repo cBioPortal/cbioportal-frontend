@@ -48,6 +48,7 @@ export function transition(
     transitionWhitespaceBetweenColumns(nextProps, prevProps, oncoprint);
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
+    transitionShowTrackLabels(nextProps, prevProps, oncoprint);
     transitionShowSublabels(nextProps, prevProps, oncoprint);
     transitionTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId, getMolecularProfileMap);
     transitionSortConfig(nextProps, prevProps, oncoprint);
@@ -98,6 +99,17 @@ export function transitionHighlightedTracks(
         oncoprint.setHighlightedTracks(highlightedTrackKeys.map(key=>trackSpecKeyToTrackId[key]));
     }
 }
+
+export function transitionShowTrackLabels(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint: OncoprintJS
+) {
+    if (nextProps.showTrackLabels !== prevProps.showTrackLabels) {
+        oncoprint.setShowTrackLabels(!!nextProps.showTrackLabels);
+    }
+}
+
 
 export function transitionShowSublabels(
     nextProps:IOncoprintProps,
