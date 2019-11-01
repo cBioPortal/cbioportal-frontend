@@ -420,9 +420,7 @@ export function getVirtualStudyDescription(
             if (filter.fusionGenes && filter.fusionGenes.length > 0) {
                 filterLines.push('- Fusion Genes:')
                 filterLines = filterLines.concat(filter.fusionGenes.map(fusionGene => {
-                    return fusionGene.entrezGeneIds.map(entrezGeneId => {
-                        return entrezIdSet[entrezGeneId] || entrezGeneId;
-                    }).join(', ').trim();
+                    return fusionGene.hugoGeneSymbols.join(', ').trim();
                 }).map(line => '  - ' + line));
             }
 

@@ -96,10 +96,6 @@
       "description": " "
     }
   ],
-  "schemes": [
-    "http",
-    "https"
-  ],
   "paths": {
     "/clinical-data-bin-counts/fetch": {
       "post": {
@@ -1797,8 +1793,7 @@
       "required": [
         "counts",
         "entrezGeneId",
-        "hugoGeneSymbol",
-        "pValue"
+        "hugoGeneSymbol"
       ],
       "properties": {
         "counts": {
@@ -2290,11 +2285,10 @@
     "FusionGeneFilter": {
       "type": "object",
       "properties": {
-        "entrezGeneIds": {
+        "hugoGeneSymbols": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int32"
+            "type": "string"
           }
         }
       },

@@ -34,7 +34,7 @@ export interface IUserSelectionsProps {
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
     removeMutatedGeneFilter: (hugoGeneSymbol: string) => void;
-    removeFusionGeneFilter: (entrezGeneId: number) => void;
+    removeFusionGeneFilter: (hugoGeneSymbol: string) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
     resetMutationCountVsCNAFilter: () => void;
     removeWithMutationDataFilter: () => void;
@@ -190,15 +190,15 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             components.push(<div className={styles.parentGroupLogic}><GroupLogic
                 components={this.props.filter.fusionGenes.map(filter => {
                     return <GroupLogic
-                        components={filter.entrezGeneIds.map(entrezGene => {
+                        components={filter.hugoGeneSymbols.map(hugoGeneSymbol => {
                             return <PillTag
-                                content={`${entrezGene}`}
+                                content={hugoGeneSymbol}
                                 backgroundColor={MUT_COLOR_FUSION}
-                                onDelete={() => this.props.removeFusionGeneFilter(entrezGene)}
+                                onDelete={() => this.props.removeFusionGeneFilter(hugoGeneSymbol)}
                             />
                         })}
                         operation="or"
-                        group={filter.entrezGeneIds.length > 1}
+                        group={filter.hugoGeneSymbols.length > 1}
                     />
                 })} operation={"and"} group={false}/></div>);
         }
