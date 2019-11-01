@@ -167,7 +167,7 @@ import {CLINICAL_TRACKS_URL_PARAM} from "../../shared/components/oncoprint/Resul
 import {getNumSamples} from "../groupComparison/GroupComparisonUtils";
 import autobind from "autobind-decorator";
 import {DEFAULT_GENOME} from "pages/resultsView/ResultsViewPageStoreUtils";
-import { StudyWithSamples, getFilteredStudiesWithSamples, ChartMeta, getClinicalAttributeUniqueKey, getChartMetaDataType, getPriorityByClinicalAttribute, UniqueKey, getDefaultPriorityByUniqueKey } from "pages/studyView/StudyViewUtils";
+import { StudyWithSamples, getFilteredStudiesWithSamples, ChartMeta, getUniqueKey, getChartMetaDataType, getPriorityByClinicalAttribute, UniqueKey, getDefaultPriorityByUniqueKey } from "pages/studyView/StudyViewUtils";
 import { MUTATION_COUNT, FRACTION_GENOME_ALTERED } from "pages/studyView/StudyViewPageStore";
 import { IVirtualStudyProps } from "pages/studyView/virtualStudy/VirtualStudy";
 
@@ -1606,7 +1606,7 @@ export class ResultsViewPageStore {
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
-            const uniqueKey = getClinicalAttributeUniqueKey(attribute);
+            const uniqueKey = getUniqueKey(attribute);
             acc[uniqueKey] = {
                 displayName: attribute.displayName,
                 uniqueKey: uniqueKey,

@@ -55,8 +55,8 @@ export enum UniqueKey {
     DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
     OVERALL_SURVIVAL = 'OS_SURVIVAL',
     CANCER_STUDIES = 'CANCER_STUDIES',
-    MUTATION_COUNT = "SAMPLE_MUTATION_COUNT",
-    FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
+    MUTATION_COUNT = "MUTATION_COUNT",
+    FRACTION_GENOME_ALTERED = "FRACTION_GENOME_ALTERED",
     WITH_MUTATION_DATA = "WITH_MUTATION_DATA",
     WITH_CNA_DATA = "WITH_CNA_DATA"
 }
@@ -344,17 +344,8 @@ export function getPriority(priorities: number[]): number {
     return priority;
 }
 
-export function getClinicalDataType(patientAttribute: boolean): ClinicalDataType {
-    return patientAttribute ? ClinicalDataTypeEnum.PATIENT : ClinicalDataTypeEnum.SAMPLE;
-}
-
-export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): string {
-    const clinicalDataType = getClinicalDataType(attribute.patientAttribute);
-    return getClinicalAttributeUniqueKeyByDataTypeAttrId(clinicalDataType, attribute.clinicalAttributeId);
-}
-
-export function getClinicalAttributeUniqueKeyByDataTypeAttrId(dataType: ClinicalDataType , attrId: string): string {
-    return dataType + '_' + attrId;
+export function getUniqueKey(attribute: ClinicalAttribute): string {
+    return attribute.clinicalAttributeId;
 }
 
 export function getCurrentDate() {
@@ -410,12 +401,12 @@ export function getVirtualStudyDescription(
             }
 
             _.each(filter.clinicalDataEqualityFilters || [], (clinicalDataEqualityFilter) => {
-                let name = attributeNamesSet[clinicalDataEqualityFilter.clinicalDataType + '_' + clinicalDataEqualityFilter.attributeId];
+                let name = attributeNamesSet[clinicalDataEqualityFilter.attributeId];
                 filterLines.push(`- ${name}: ${clinicalDataEqualityFilter.values.join(', ')}`);
             });
 
             _.each(filter.clinicalDataIntervalFilters || [], (clinicalDataIntervalFilter) => {
-                let name = attributeNamesSet[clinicalDataIntervalFilter.clinicalDataType + '_' + clinicalDataIntervalFilter.attributeId];
+                let name = attributeNamesSet[clinicalDataIntervalFilter.attributeId];
                 filterLines.push(`- ${name}: ${intervalFiltersDisplayValue(clinicalDataIntervalFilter.values)}`);
             });
 
@@ -965,7 +956,7 @@ export function getCNAColorByAlteration(alteration: number):string|undefined {
 }
 
 export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: ClinicalAttribute): ChartType | undefined {
-    if (STUDY_VIEW_CONFIG.tableAttrs.includes(getClinicalAttributeUniqueKey(clinicalAttribute))) {
+    if (STUDY_VIEW_CONFIG.tableAttrs.includes(getUniqueKey(clinicalAttribute))) {
         return ChartTypeEnum.TABLE;
     }
 
@@ -1201,7 +1192,7 @@ export function getPriorityByClinicalAttribute(clinicalAttribute: ClinicalAttrib
     // the whether there are priorities predefined
     const priorityFromDB = Number(clinicalAttribute.priority);
     if (priorityFromDB === STUDY_VIEW_CONFIG.defaultPriority) {
-        const uniqueKey = getClinicalAttributeUniqueKey(clinicalAttribute);
+        const uniqueKey = getUniqueKey(clinicalAttribute);
         return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? STUDY_VIEW_CONFIG.defaultPriority : STUDY_VIEW_CONFIG.priority[uniqueKey];
     } else {
         return priorityFromDB
