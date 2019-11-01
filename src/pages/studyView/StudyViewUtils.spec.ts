@@ -51,6 +51,8 @@ import {
     ChartMetaDataTypeEnum,
     getStudyViewTabId,
     formatRange,
+    getBinName,
+    getGroupedClinicalDataByBins,
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -149,6 +151,7 @@ describe('StudyViewUtils', () => {
                     }]
                 }],
                 mutatedGenes: [{ "hugoGeneSymbols": ["GENE1"] }],
+                fusionGenes: [{ "entrezGeneIds": [1] }],
                 cnaGenes: [{ "alterations": [{ "hugoGeneSymbol": "GENE2", "alteration": -2 }] }],
                 studyIds: ['study1', 'study2'],
                 sampleIdentifiers: [],
@@ -180,8 +183,8 @@ describe('StudyViewUtils', () => {
                         'attribute3': 'attribute3 name'
                     }
                 ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n' +
-                '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n' +
-                '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'));                   
+                '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n' +
+                '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'));
         });
         it('when username is not null', () => {
             assert.isTrue(
@@ -767,7 +770,7 @@ describe('StudyViewUtils', () => {
 
             const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isFalse(needAdditionShift);
-            
+
             const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x),
                 [1.5, 2.5, 3.5, 5]);
@@ -2094,7 +2097,7 @@ describe('StudyViewUtils', () => {
             assert.equal(newLayout.isResizable, false);
         });
     })
-    
+
     describe ('generateMatrixByLayout', () => {
         it('should return the generated matrix', () => {
             const layout = {
@@ -2142,7 +2145,7 @@ describe('StudyViewUtils', () => {
             w: 1,
             h: 1
         } as Layout
-    ];    
+    ];
 
     describe ('getPositionXByUniqueKey', () => {
         it('should return undefined for the not exist uniqueKey', () => {
@@ -2192,7 +2195,6 @@ describe('StudyViewUtils', () => {
         it("should format min max range with no special value", () => {
             const actual = formatRange(1.5, 2.5, undefined)
             const expected = "1.5-2.5";
-            
             assert.equal(actual, expected);
         });
 
@@ -2222,6 +2224,131 @@ describe('StudyViewUtils', () => {
             const expected = "10";
 
             assert.equal(actual, expected);
+        });
+    });
+
+    describe("getBinName", () => {
+        it("should return correct bin name", () => {
+            assert.equal(getBinName({ specialValue:"NA" } as any), "NA");
+            assert.equal(getBinName({ start:10, end:20 } as any), "10-20");
+            assert.equal(getBinName({ start:10, specialValue:"<=" } as any), "<=10");
+            assert.equal(getBinName({ specialValue:">", end:20 } as any), ">20");
+        });
+    });
+
+    describe("getGroupedClinicalDataByBins", () => {
+
+        let clinicalData = [{
+            patientId: 'patient1',
+            sampleId: 'sample1',
+            studyId: 'study1',
+            uniquePatientKey: 'patient1',
+            value: 10
+        }, {
+            patientId: 'patient2',
+            sampleId: 'sample2',
+            studyId: 'study1',
+            uniquePatientKey: 'patient2',
+            value: 11
+        }, {
+            patientId: 'patient3',
+            sampleId: 'sample3',
+            studyId: 'study1',
+            uniquePatientKey: 'patient3',
+            value: 20
+        }, {
+            patientId: 'patient4',
+            sampleId: 'sample4',
+            studyId: 'study1',
+            uniquePatientKey: 'patient4',
+            value: 30
+        }, {
+            patientId: 'patient5',
+            sampleId: 'sample5',
+            studyId: 'study1',
+            uniquePatientKey: 'patient5',
+            value: 40
+        }, {
+            patientId: 'patient6',
+            sampleId: 'sample6',
+            studyId: 'study1',
+            uniquePatientKey: 'patient6',
+            value: 45
+        }, {
+            patientId: 'patient7',
+            sampleId: 'sample7',
+            studyId: 'study1',
+            uniquePatientKey: 'patient7',
+            value: 'NA'
+        }]
+
+        let dataBins = [{
+            'end': 10,
+            'specialValue': '<='
+        }, {
+            'start': 10,
+            'end': 20,
+        }, {
+            'start': 20,
+            'end': 40,
+        }, {
+            'start': 40,
+            'specialValue': '>'
+        }, {
+            'specialValue': 'NA'
+        }]
+
+
+        it("should return grouped clinicalData by bins", () => {
+            assert.deepEqual(getGroupedClinicalDataByBins(clinicalData as any, dataBins as any), {
+                "<=10": [{
+                    "patientId": "patient1",
+                    "sampleId": "sample1",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient1",
+                    "value": 10
+                }],
+                "10-20": [{
+                    "patientId": "patient2",
+                    "sampleId": "sample2",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient2",
+                    "value": 11
+                }, {
+                    "patientId": "patient3",
+                    "sampleId": "sample3",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient3",
+                    "value": 20
+                }],
+                "20-40": [{
+                    "patientId": "patient4",
+                    "sampleId": "sample4",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient4",
+                    "value": 30
+                }, {
+                    "patientId": "patient5",
+                    "sampleId": "sample5",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient5",
+                    "value": 40
+                }],
+                ">40": [{
+                    "patientId": "patient6",
+                    "sampleId": "sample6",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient6",
+                    "value": 45
+                }],
+                "NA": [{
+                    "patientId": "patient7",
+                    "sampleId": "sample7",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient7",
+                    "value": "NA"
+                }]
+            } as any);
         });
     });
 });
