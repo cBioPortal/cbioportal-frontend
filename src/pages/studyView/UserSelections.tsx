@@ -15,7 +15,7 @@ import {PillTag} from "../../shared/components/PillTag/PillTag";
 import {GroupLogic} from "./filters/groupLogic/GroupLogic";
 import classnames from 'classnames';
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
-import {DEFAULT_NA_COLOR, MUT_COLOR_MISSENSE} from "shared/lib/Colors";
+import {DEFAULT_NA_COLOR, MUT_COLOR_FUSION, MUT_COLOR_MISSENSE} from "shared/lib/Colors";
 import {
     caseCounts,
     getSampleIdentifiers,
@@ -33,7 +33,8 @@ export interface IUserSelectionsProps {
     updateCustomChartFilter: (chartMeta: ChartMeta, values: string[]) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
-    removeGeneFilter: (hugoGeneSymbol: string) => void;
+    removeMutatedGeneFilter: (hugoGeneSymbol: string) => void;
+    removeFusionGeneFilter: (entrezGeneId: number) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
     resetMutationCountVsCNAFilter: () => void;
     removeWithMutationDataFilter: () => void;
@@ -174,11 +175,30 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                             return <PillTag
                                 content={hugoGeneSymbol}
                                 backgroundColor={MUT_COLOR_MISSENSE}
-                                onDelete={() => this.props.removeGeneFilter(hugoGeneSymbol)}
+                                onDelete={() => this.props.removeMutatedGeneFilter(hugoGeneSymbol)}
                             />
                         })}
                         operation="or"
                         group={filter.hugoGeneSymbols.length > 1}
+                    />
+                })} operation={"and"} group={false}/></div>);
+        }
+
+        // Fusion Genes table
+        chartMeta = this.props.attributesMetaSet[UniqueKey.FUSION_GENES_TABLE];
+        if (chartMeta && !_.isEmpty(this.props.filter.fusionGenes)) {
+            components.push(<div className={styles.parentGroupLogic}><GroupLogic
+                components={this.props.filter.fusionGenes.map(filter => {
+                    return <GroupLogic
+                        components={filter.entrezGeneIds.map(entrezGene => {
+                            return <PillTag
+                                content={`${entrezGene}`}
+                                backgroundColor={MUT_COLOR_FUSION}
+                                onDelete={() => this.props.removeFusionGeneFilter(entrezGene)}
+                            />
+                        })}
+                        operation="or"
+                        group={filter.entrezGeneIds.length > 1}
                     />
                 })} operation={"and"} group={false}/></div>);
         }

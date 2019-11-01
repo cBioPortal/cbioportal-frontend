@@ -81,8 +81,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                 address:"/about",
                 internal:true,
                 hide:()=>AppConfig.serverConfig.skin_show_about_tab === false
-            },
-
+            }
         ];
 
 

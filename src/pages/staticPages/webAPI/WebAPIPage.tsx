@@ -1,12 +1,85 @@
 import * as React from 'react';
 import {observer} from 'mobx-react';
+import {observable} from "mobx";
 import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
+import StaticContent from "../../../shared/components/staticContent/StaticContent";
+import internalClient from "shared/api/cbioportalInternalClientInstance";
 import './styles.scss';
 import Helmet from "react-helmet";
 import { Link } from 'react-router';
+import AppConfig from "appConfig";
+import {isNullOrUndefined} from "util";
+import fileDownload from 'react-file-download';
+import {AppStore} from "../../../AppStore";
+import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
+
+export class UserDataAccessToken {
+    @observable token : string;
+    @observable creationDate: string;
+    @observable expirationDate: string;
+    @observable username: string;
+    constructor(token: string, creationDate: string, expirationDate: string, username: string) {
+        this.token = token;
+        this.creationDate = creationDate;
+        this.expirationDate = expirationDate;
+        this.username = username;
+    }
+}
+
+function buildDataAccessTokenFileContents(dat:UserDataAccessToken | undefined) {
+    if (!isNullOrUndefined(dat)) {
+        var token = dat!.token;
+        var creation_date = new Date(dat!.creationDate).toISOString();
+        var expiration_date = new Date(dat!.expirationDate).toISOString();
+        return `token: ${token}\ncreation_date: ${creation_date}\nexpiration_date: ${expiration_date}\n`;
+    } else {
+        alert("Cannot create Data Access Token file for user with non-existent tokens.");
+        return null;
+    }
+}
 
 @observer
 export default class WebAPIPage extends React.Component<{}, {}> {
+    private get appStore(){
+        return getBrowserWindow().globalStores.appStore;
+    }
+
+    async generateNewDataAccessToken() {
+        if (this.appStore.isLoggedIn) {
+            let _token = await internalClient.createDataAccessTokenUsingPOST(
+                    {'allowRevocationOfOtherTokens':AppConfig.serverConfig.dat_uuid_revoke_other_tokens});
+            const dat = new UserDataAccessToken(_token.token, _token.creation, _token.expiration, _token.username);
+            return dat;
+        } else {
+            return undefined;
+        }
+    }
+
+    async downloadDataAccessTokenFile() {
+        const dat = this.generateNewDataAccessToken();
+        if (!isNullOrUndefined(dat)) {
+            const fileContents = buildDataAccessTokenFileContents(await dat);
+            fileDownload(fileContents, "cbioportal_data_access_token.txt");
+        }
+    }
+
+    renderDataAccessTokensDiv() {
+        if ((AppConfig.serverConfig.authenticationMethod === "social_auth" || (AppConfig.serverConfig.dat_method !== "uuid" && AppConfig.serverConfig.dat_method !== "jwt"))) {
+            return <div></div>;
+        }
+        else {
+            return (
+                <div id="using-data-access-tokens">
+                    <p>To directly access the cBioPortal web services on installations which require login,
+                        clients will need to obtain a data access token and present this token with each web service request.</p>
+                    <button className="btn btn-primary btn-sm" onClick={() => this.downloadDataAccessTokenFile()}>Download Token</button>
+                    <p>There are instructions for making requests to the Web API using Data Access Tokens&nbsp;
+                        <a href="https://docs.cbioportal.org/2.2-authorization-and-authentication/authenticating-users-via-tokens#using-data-access-tokens">here</a></p>
+                </div>
+            );
+        }
+    }
 
     public render() {
 
@@ -37,6 +110,7 @@ export default class WebAPIPage extends React.Component<{}, {}> {
                 all mutation data from PTEN and EGFR in the TCGA Glioblastoma data.</p>
             <p>Please note that the example queries below are accurate, but they are not guaranteed to return data, as
                 our database is constantly being updated.</p>
+            {this.renderDataAccessTokensDiv()}
             <h2 id="the-cgds-r-package">The CGDS R Package</h2>
             <p>If you are interested in accessing CGDS via R, please check out our <Link to={"/rmatlab"}> CGDS-R
                 library</Link>.</p>
@@ -627,7 +701,3 @@ Error:  No case lists available for cancer_study_id:  gbs.
     }
 
 }
-
-
-
-

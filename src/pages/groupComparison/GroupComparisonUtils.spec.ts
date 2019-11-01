@@ -12,7 +12,7 @@ import {
     getOverlapFilteredGroups,
     getOverlappingPatients,
     getOverlappingSamples,
-    getPatientIdentifiers, getQuartiles,
+    getPatientIdentifiers,
     getSampleIdentifiers,
     getStudyIds,
     getVennPlotData,
@@ -21,7 +21,8 @@ import {
     isGroupEmpty,
     partitionCasesByGroupMembership,
     unionPatients,
-    unionSamples
+    unionSamples,
+    splitData
 } from './GroupComparisonUtils';
 import deepEqualInAnyOrder from "deep-equal-in-any-order";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
@@ -1503,23 +1504,23 @@ describe('GroupComparisonUtils', () => {
         });
     });
 
-    describe("getQuartiles", ()=>{
+    describe("splitData", ()=>{
         it("gets quartiles of 1,2,3, and 4 values", ()=>{
             const vals = [0,1,2,3].map(x=>({ value:x.toString() }));
             assert.deepEqual(
-                getQuartiles(vals.slice(0,1)),
+                splitData(vals.slice(0,1),4),
                 [[vals[0]]]
             );
             assert.deepEqual(
-                getQuartiles(vals.slice(0,2)),
+                splitData(vals.slice(0,2),4),
                 [[vals[0]],[vals[1]]]
             );
             assert.deepEqual(
-                getQuartiles(vals.slice(0,3)),
+                splitData(vals.slice(0,3),4),
                 [[vals[0]],[vals[1]], [vals[2]]]
             );
             assert.deepEqual(
-                getQuartiles(vals),
+                splitData(vals,4),
                 [[vals[0]],[vals[1]], [vals[2]], [vals[3]]]
             );
         });
@@ -1529,19 +1530,19 @@ describe('GroupComparisonUtils', () => {
                 vals.push({ value: i.toString() });
             }
             assert.deepEqual(
-                getQuartiles(vals.slice(0, 12)),
+                splitData(vals.slice(0, 12),4),
                 [vals.slice(0,3), vals.slice(3,6), vals.slice(6,9), vals.slice(9,12)]
             );
             assert.deepEqual(
-                getQuartiles(vals.slice(0, 13)),
+                splitData(vals.slice(0, 13),4),
                 [vals.slice(0,3), vals.slice(3,6), vals.slice(6,9), vals.slice(9,13)]
             );
             assert.deepEqual(
-                getQuartiles(vals.slice(0, 14)),
+                splitData(vals.slice(0, 14),4),
                 [vals.slice(0,3), vals.slice(3,7), vals.slice(7,10), vals.slice(10,14)]
             );
             assert.deepEqual(
-                getQuartiles(vals.slice(0, 15)),
+                splitData(vals.slice(0, 15),4),
                 [vals.slice(0,3), vals.slice(3,7), vals.slice(7,11), vals.slice(11,15)]
             );
         });

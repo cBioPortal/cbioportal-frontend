@@ -38,9 +38,6 @@ export enum ExpressionEnrichmentTableColumnType {
 
 export type ExpressionEnrichmentTableColumn = Column<ExpressionEnrichmentRow> & { uniqueName?: string, order?: number };
 
-export class ExpressionEnrichmentTableComponent extends LazyMobXTable<ExpressionEnrichmentRow> {
-}
-
 @observer
 export default class ExpressionEnrichmentTable extends React.Component<IExpressionEnrichmentTableProps, {}> {
 
@@ -130,7 +127,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
             (c: ExpressionEnrichmentTableColumn) => c.order
         );
         return (
-            <ExpressionEnrichmentTableComponent
+            <LazyMobXTable
                 initialItemsPerPage={20}
                 paginationProps={{ itemsPerPageOptions: [20] }}
                 columns={orderedColumns} data={this.props.data}
