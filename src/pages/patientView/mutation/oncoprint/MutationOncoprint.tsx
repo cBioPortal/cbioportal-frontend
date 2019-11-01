@@ -54,7 +54,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
 
     private oncoprint:OncoprintJS|null = null;
     private oncoprintComponent:Oncoprint|null = null;
-    @observable private showColumnLabels = true;
+    @observable private showMutationLabels = true;
     @observable private horzZoomSliderState = 100;
     @observable private mode:MutationOncoprintMode = MutationOncoprintMode.SAMPLE_TRACKS;
 
@@ -245,7 +245,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         await:()=>[this.props.store.mutationData, this.props.store.uncalledMutationData],
         invoke:()=>{
             const ret:{[uid:string]:ColumnLabel} = {};
-            if (this.showColumnLabels) {
+            if (this.showMutationLabels) {
                 for (const mutation of this.props.store.mutationData.result!.concat(this.props.store.uncalledMutationData.result!)) {
                     ret[generateMutationIdByGeneAndProteinChangeAndEvent(mutation)] = {
                         text: getMutationLabel(mutation)
@@ -557,8 +557,8 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     <span style={{marginTop:-3}}>Transpose</span>
                 </LabeledCheckbox>
                 <LabeledCheckbox
-                    checked={this.showColumnLabels}
-                    onChange={()=>{ this.showColumnLabels = !this.showColumnLabels; }}
+                    checked={this.showMutationLabels}
+                    onChange={()=>{ this.showMutationLabels = !this.showMutationLabels; }}
                     labelProps={{style:{ marginRight:10}}}
                 >
                     <span style={{marginTop:-3}}>Show mutation labels</span>
@@ -571,7 +571,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                         const data = _.flatMap(this.heatmapTracks.result!, track=>track.data);
                         return getDownloadData(data);
                     }}
-                    buttons={["SVG", "PNG", "PDF", "Data"]}
+                    buttons={["SVG", "PNG", "Data"]}
                     type="button"
                     dontFade
                     style={{
@@ -603,6 +603,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                             highlightedIds={this.highlightedIds}
                             highlightedTracks={this.highlightedTracks}
                             initParams={INIT_PARAMS}
+                            showTrackLabels={!(this.mode === MutationOncoprintMode.MUTATION_TRACKS && !this.showMutationLabels)}
                             columnLabels={this.columnLabels.result!}
                             clinicalTracks={[]}
                             geneticTracks={[]}
