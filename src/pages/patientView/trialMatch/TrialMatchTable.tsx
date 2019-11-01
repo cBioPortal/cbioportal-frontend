@@ -9,6 +9,7 @@ import { computed } from "mobx";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import SampleManager from "../SampleManager";
 import DefaultTooltip, { placeArrowBottomLeft } from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import { getAgeRangeDisplay } from "./TrialMatchTableUtils";
 
 export type ITrialMatchProps = {
     sampleManager: SampleManager | null;
@@ -98,7 +99,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
     public getClinicalMatch(clinicalGroupMatch: IClinicalGroupMatch) {
         return (
             <div className={styles.firstRight}>
-                <span className={styles.secondLeft}>{clinicalGroupMatch.trialAgeNumerical + ' yrs old'}</span>
+                <span className={styles.secondLeft}>{getAgeRangeDisplay(clinicalGroupMatch.trialAgeNumerical)}</span>
                 <span className={styles.secondRight}>
                     {clinicalGroupMatch.trialOncotreePrimaryDiagnosis.positive.join(', ')}
                     {clinicalGroupMatch.trialOncotreePrimaryDiagnosis.negative.length > 0 &&

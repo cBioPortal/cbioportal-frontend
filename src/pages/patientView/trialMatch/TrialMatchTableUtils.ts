@@ -83,7 +83,39 @@ export function groupTrialMatchesByAgeNumerical(armGroup: ITrialMatch[]): IClini
         clinicalGroupMatch.notMatches = positiveAndNegativeMatches.notMatches;
         return clinicalGroupMatch;
     });
+    if (matches.length > 1) {
+        return removeDuplicationByAge(matches);
+    }
     return matches;
+}
+
+export function removeDuplicationByAge(clinicalGroupMatch: IClinicalGroupMatch[]): IClinicalGroupMatch[] {
+    const uniqClinicalGroupMatch: IClinicalGroupMatch[] = _.clone(clinicalGroupMatch);
+    const duplicateIndexes: number[] = [];
+    for (let i = 0; i < clinicalGroupMatch.length - 1; i++) {
+        for (let j = i + 1; j < clinicalGroupMatch.length; j++) {
+            if (!_.isUndefined(clinicalGroupMatch[i]) && !_.isUndefined(clinicalGroupMatch[j]) &&
+                isIdenticalArrays(clinicalGroupMatch[i].trialOncotreePrimaryDiagnosis.positive, clinicalGroupMatch[j].trialOncotreePrimaryDiagnosis.positive) &&
+                isIdenticalArrays(clinicalGroupMatch[i].trialOncotreePrimaryDiagnosis.negative, clinicalGroupMatch[j].trialOncotreePrimaryDiagnosis.negative)) {
+                if (!uniqClinicalGroupMatch[i].trialAgeNumerical.includes(clinicalGroupMatch[j].trialAgeNumerical)) {
+                    uniqClinicalGroupMatch[i].trialAgeNumerical += ',' + clinicalGroupMatch[j].trialAgeNumerical;
+                }
+                delete clinicalGroupMatch[j]; // Do not messed up indexes
+                duplicateIndexes.push(j);
+            }
+        }
+    }
+    _.forEach(_.uniq(duplicateIndexes), (index) => uniqClinicalGroupMatch.splice(index, 1));
+    return uniqClinicalGroupMatch;
+}
+
+function isIdenticalArrays(a: string[], b: string[]): boolean {
+    if (a.length === b.length) {
+        if (a.length === 0) return true;
+        return a.sort().join(',') === b.sort().join(',');
+    } else {
+        return false;
+    }
 }
 
 export function groupTrialMatchesByGenomicAlteration(ageGroup: ITrialMatch[]) {
@@ -196,4 +228,46 @@ export function getDrugsFromArm(armDescription: string, arms: IArm[]): string[][
         }
     }
     return drugs;
+}
+
+export function getAgeRangeDisplay(trialAgeNumerical: string) {
+    if (trialAgeNumerical.includes(',')) {
+        const ageGroups = trialAgeNumerical.split(',');
+        const ageNumbers = trialAgeNumerical.match(/\d+(\.?\d+)?/g)!.map((v: string) => Number(v));
+        if (ageGroups.length === 2) {
+            let leftAgeText = '';
+            let rightAgeText = '';
+            if (ageGroups[0].includes('>') && ageGroups[1].includes('<')) {
+                if (ageGroups[0].includes('=')) {
+                    leftAgeText = `${ageNumbers[0]} ≤`;
+                } else {
+                    leftAgeText = `${ageNumbers[0]} <`;
+                }
+                if (ageGroups[1].includes('=')) {
+                    rightAgeText = `≤ ${ageNumbers[1]}`;
+                } else {
+                    rightAgeText = `< ${ageNumbers[1]}`;
+                }
+                return `${leftAgeText} Age ${rightAgeText}`;
+            } else if (ageGroups[0].includes('<') && ageGroups[1].includes('>')) {
+                if (ageGroups[1].includes('=')) {
+                    leftAgeText = `${ageNumbers[1]} ≤`;
+                } else {
+                    leftAgeText = `${ageNumbers[1]} <`;
+                }
+                if (ageGroups[0].includes('=')) {
+                    rightAgeText = `≤ ${ageNumbers[0]}`;
+                } else {
+                    rightAgeText = `< ${ageNumbers[0]}`;
+                }
+                return `${leftAgeText} Age ${rightAgeText}`;
+            } else {
+                return `Age: ${trialAgeNumerical}`
+            }
+        } else {
+            return `Age: ${trialAgeNumerical}`;
+        }
+    } else {
+        return `${trialAgeNumerical} yrs old`;
+    }
 }
