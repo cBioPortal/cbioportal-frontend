@@ -1,7 +1,7 @@
 import * as React from "react";
 import ReactSelect from "react-select";
 import autobind from "autobind-decorator";
-import {computed} from "mobx";
+import {computed, observable, action} from "mobx";
 import {observer} from "mobx-react";
 
 import {CheckBoxType, getOptionLabel, getSelectedValuesMap, Option} from "./CheckedSelectUtils";
@@ -23,6 +23,8 @@ type CheckedSelectProps = {
     clearAllLabel?: string | JSX.Element;
     showControls?: boolean;
     height?:number;
+    onInputChange?: (input:string) => void;
+    inputValue?:string;
 };
 
 @observer
@@ -35,7 +37,9 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
         showControls: true,
         checkBoxType: CheckBoxType.STRING
     };
-
+    
+    @observable defaultInputValue = '';
+    
     @computed
     get selectedValues() {
         return getSelectedValuesMap(this.props.value);
@@ -85,6 +89,21 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
     private getOptionLabel(option: Option): JSX.Element
     {
         return getOptionLabel(option, this.selectedValues, this.props.checkBoxType);
+    }
+    
+    @computed get inputValue() {
+        return this.props.inputValue || this.defaultInputValue;
+    }
+    
+    @autobind
+    @action defaultOnInputChange(input:string, options:{action:string}) {
+        // The input value (which is a blank string in the case of action === 'set-value')
+        // will be passed to `this.props.onInputChange` by default without the `if` condition.
+        // This leads to undesirable behaviour so adding the if condition will prevent that.
+        if (options.action !== "set-value") {
+            if (this.props.onInputChange) this.props.onInputChange(input);
+            this.defaultInputValue = input;
+        }
     }
 
     @autobind
@@ -179,6 +198,9 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                     getOptionLabel={this.getOptionLabel}
                     value={this.props.value}
                     labelKey="label"
+                    onInputChange={this.defaultOnInputChange}
+                    inputValue={this.inputValue}
+                    backspaceRemovesValue={false}
                 />
             </div>
         );
