@@ -1,4 +1,4 @@
-import * as sampleManager from './sampleManager';
+import * as sampleManager from './SampleManager';
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';

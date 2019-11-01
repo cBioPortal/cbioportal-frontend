@@ -8,7 +8,7 @@ import 'qtip2';
 import 'qtip2/dist/jquery.qtip.css';
 
 import './styles.scss';
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 
 import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
 import {ClinicalEvent, ClinicalEventData} from "../../../shared/api/generated/CBioPortalAPI";
