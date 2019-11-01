@@ -345,8 +345,11 @@ export default class OncoprintLabelView {
     }
 
     public getWidth() {
-        //return this.maximum_label_width + 20;
-        return Math.max(this.maximum_label_width/this.supersampling_ratio + 10, 70);
+        if (this.model.getShowTrackLabels()) {
+            return Math.max(this.maximum_label_width/this.supersampling_ratio + 10, 70);
+        } else {
+            return 0;
+        }
     }
     public getFontSize(no_supersampling_adjustment?:boolean) {
         return (no_supersampling_adjustment ? 1 : this.supersampling_ratio) * Math.max(Math.min(this.base_font_size, this.minimum_track_height), 7);
@@ -365,6 +368,11 @@ export default class OncoprintLabelView {
         this.renderAllLabels(model);
     }
     public setTrackGroupOrder(model:OncoprintModel, getCellViewHeight:()=>number) {
+        this.updateFromModel(model);
+        this.resizeAndClear(model, getCellViewHeight);
+        this.renderAllLabels(model);
+    }
+    public setShowTrackLabels(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.updateFromModel(model);
         this.resizeAndClear(model, getCellViewHeight);
         this.renderAllLabels(model);
@@ -451,6 +459,11 @@ export default class OncoprintLabelView {
 
     public toSVGGroup(model:OncoprintModel, full_labels:boolean, offset_x:number, offset_y:number) {
         const root = svgfactory.group((offset_x || 0), (offset_y || 0));
+        if (!model.getShowTrackLabels()) {
+            // dont add anything if hiding track labels
+            return root;
+        }
+
         const cell_tops = model.getCellTops() as TrackProp<number>;
         const tracks = model.getTracks();
         for (let i=0; i<tracks.length; i++) {
