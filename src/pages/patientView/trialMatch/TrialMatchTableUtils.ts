@@ -12,6 +12,7 @@ export function groupTrialMatchesById(trials: ITrial[], trialMatches:ITrialMatch
         const matchedTrial: IDetailedTrialMatch = {
             id: originalMatchedTrial.id,
             nctId: originalMatchedTrial.nctId,
+            principalInvestigator: originalMatchedTrial.principalInvestigator,
             protocolNo: originalMatchedTrial.protocolNo,
             phase: originalMatchedTrial.phase,
             shortTitle: originalMatchedTrial.shortTitle,
@@ -32,7 +33,8 @@ export function groupTrialMatchesByArmDescription(trialGroup: ITrialMatch[], ori
         const armMatch: IArmMatch = {
             armDescription: armDescription,
             drugs: [],
-            matches: []
+            matches: [],
+            sampleIds: _.uniq(armGroup.map((trialMatch: ITrialMatch) => trialMatch.sampleId)).sort()
         };
         if (!_.isUndefined(originalMatchedTrial.treatmentList.step[0].arm)) {
             armMatch.drugs = getDrugsFromArm(armDescription, originalMatchedTrial.treatmentList.step[0].arm);
@@ -121,9 +123,7 @@ function formatTrialMatchesByMatchType(genomicAlterationGroup: ITrialMatch[], ge
         const genomicGroupMatch: IGenomicGroupMatch = {
             genomicAlteration: genomicAlteration,
             matchType: matchType,
-            matches: [{
-                sampleIds: _.uniq( _.map( genomicAlterationGroup, ( trial: ITrialMatch ) => trial.sampleId ) )
-            }]
+            matches: []
         };
         return genomicGroupMatch;
     }
@@ -139,8 +139,7 @@ export function groupTrialMatchesByPatientGenomic(genomicAlterationGroup: ITrial
     genomicGroupMatch.matches = _.map(matchesGroupedByPatientGenomic, (patientGenomicGroup: ITrialMatch[]) => {
         const genomicMatch: IGenomicMatch = {
             trueHugoSymbol: patientGenomicGroup[0].trueHugoSymbol!,
-            trueProteinChange: patientGenomicGroup[0].trueProteinChange!,
-            sampleIds: _.uniq(_.map(patientGenomicGroup, (trial: ITrialMatch) => trial.sampleId))
+            trueProteinChange: patientGenomicGroup[0].trueProteinChange!
         };
         return genomicMatch;
     });
