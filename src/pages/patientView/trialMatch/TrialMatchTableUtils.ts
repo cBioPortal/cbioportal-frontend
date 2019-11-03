@@ -186,6 +186,7 @@ export function excludeControlArms(trialMatches: ITrialMatch[]): ITrialMatch[] {
     return filteredTrialMatches;
 }
 
+
 export function getDrugsFromArm(armDescription: string, arms: IArm[]): string[][] {
     const drugs:string[][] = [];
     if ( armDescription !== '' ) { // match for specific arm
