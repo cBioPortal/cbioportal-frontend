@@ -3,6 +3,7 @@ import {ReactWrapper, mount, shallow} from "enzyme";
 import { assert } from 'chai';
 import {default as PatientViewMutationTable} from "./PatientViewMutationTable"
 import {MutationTableColumnType} from "shared/components/mutationTable/MutationTable";
+import { GeneFilterOption } from './GeneFilterMenu';
 
 function hasColumn(tableWrapper:ReactWrapper<any, any>, columnName:string):boolean {
     const columns:string[] = [];
@@ -18,6 +19,7 @@ function getTable(samples:string[], mrnaId?:string, cnaId?:string):ReactWrapper<
         genePanelIdToEntrezGeneIds={{}}
         mrnaExprRankMolecularProfileId={mrnaId}
         discreteCNAMolecularProfileId={cnaId}
+        currentGeneFilter={GeneFilterOption.ANY_SAMPLE}
         columns={[MutationTableColumnType.GENE,
                     MutationTableColumnType.MRNA_EXPR,
                     MutationTableColumnType.SAMPLES,
