@@ -593,7 +593,7 @@ TCGA-25-2393-01
 `;
 
 
-export const exampleClinicalData = `sample\tAGE(number)\tCANCER TYPE\tMUTATION COUNT(lognumber)
+export const exampleClinicalData = `sample\tAGE(number)\tCANCER_TYPE\tMUTATION_COUNT(lognumber)
 TCGA-25-2392-01\t24\tProstate\t63
 TCGA-25-2393-01\t33\tLung\t83
 TCGA-04-1331-01\t22\tLung\t15
