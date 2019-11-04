@@ -6,21 +6,16 @@ import {ServerConfigHelpers} from "../../../config/config";
 import AppConfig from "appConfig";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
-import PatientViewPage from "../PatientViewPage";
 import SampleManager from "../SampleManager";
 import {IColumnVisibilityDef} from "../../../shared/components/columnVisibilityControls/ColumnVisibilityControls";
-import ErrorMessage from "../../../shared/components/ErrorMessage";
 import VAFLineChart from "./VAFLineChart";
 import {computed, observable} from "mobx";
 import autobind from "autobind-decorator";
-import {remoteData} from "../../../public-lib";
 import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import ReactSelect from "react-select";
 import MutationOncoprint from "./oncoprint/MutationOncoprint";
 import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
-import _ from "lodash";
-import {getDownloadData} from "./oncoprint/MutationOncoprintUtils";
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import PatientViewMutationTable from "./PatientViewMutationTable";
 
@@ -267,7 +262,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                 <MSKTabs
                     activeTabId={this.plotTab}
                     onTabClick={(id:PlotTab)=>{ this._plotTab = id; }}
-                    className="secondaryNavigation"
+                    className="secondaryNavigation vafVizNavTabs"
                     unmountOnHide={false}
                 >
                     <MSKTab id={PlotTab.LINE_CHART} linkText="Line Chart">
