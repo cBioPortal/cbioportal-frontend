@@ -128,7 +128,6 @@ import {DataType} from "public-lib/components/downloadControls/DownloadControls"
 import { AppStore } from 'AppStore';
 import {
     getCnaUniqueKey,
-    getMutationUniqueKey,
     parseCnaUniqueKey
 } from "pages/studyView/TableUtils";
 import { GeneTableRow } from './table/GeneTable';
@@ -226,10 +225,6 @@ export type CustomChartIdentifier = {
 
 export type CustomChartIdentifierWithValue = CustomChartIdentifier & {
     value: string
-}
-
-export type CopyNumberAlterationIdentifier = CopyNumberGeneFilterElement & {
-    hugoGeneSymbol: string
 }
 
 export type StatusMessage = {
@@ -1573,7 +1568,7 @@ export class StudyViewPageStore {
     }
 
     public getCNAGenesTableFilters() {
-        return _.flatMap(this._cnaGeneFilter, filter => filter.alterations);
+        return _.flatMap(this._cnaGeneFilter, filter => filter.alterations).map(alteration => getCnaUniqueKey(alteration.hugoGeneSymbol, alteration.alteration));
     }
 
     public getClinicalDataFiltersByUniqueKey(uniqueKey: string): string[] {
@@ -3049,7 +3044,7 @@ export class StudyViewPageStore {
                 return mutatedGenes.map(item => {
                     return {
                         ...item,
-                        uniqueKey: getMutationUniqueKey(item.entrezGeneId, item.hugoGeneSymbol),
+                        uniqueKey: item.hugoGeneSymbol,
                         oncokbAnnotated: this.oncokbCancerGeneFilterEnabled ? this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
                         isOncokbOncogene: this.oncokbCancerGeneFilterEnabled ? this.oncokbOncogeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
                         isOncokbTumorSuppressorGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
@@ -3077,7 +3072,7 @@ export class StudyViewPageStore {
                 return fusionGenes.map(item => {
                     return {
                         ...item,
-                        uniqueKey: getMutationUniqueKey(item.entrezGeneId, item.hugoGeneSymbol),
+                        uniqueKey: item.hugoGeneSymbol,
                         oncokbAnnotated: this.oncokbCancerGeneFilterEnabled ? this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
                         isOncokbOncogene: this.oncokbCancerGeneFilterEnabled ? this.oncokbOncogeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
                         isOncokbTumorSuppressorGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
@@ -3105,7 +3100,7 @@ export class StudyViewPageStore {
                 return cnaGenes.map(item => {
                     return {
                         ...item,
-                        uniqueKey: getCnaUniqueKey(item.entrezGeneId, item.hugoGeneSymbol, item.alteration),
+                        uniqueKey: getCnaUniqueKey(item.hugoGeneSymbol, item.alteration),
                         oncokbAnnotated: this.oncokbCancerGeneFilterEnabled ? this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
                         isOncokbOncogene: this.oncokbCancerGeneFilterEnabled ? this.oncokbOncogeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
                         isOncokbTumorSuppressorGene: this.oncokbCancerGeneFilterEnabled ? this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(item.entrezGeneId) : false,
