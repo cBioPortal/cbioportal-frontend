@@ -1453,7 +1453,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     @computed get waterfallPlotTitle():string {
-        const treatment = this.horzSelection.treatmentId || this.vertSelection.treatmentId;
+        const treatmentName = this.horzSelection.selectedTreatmentOption!.label || this.vertSelection.selectedTreatmentOption!.label;
         const gene = this.utilitiesMenuSelection.selectedGeneOption!.label;
         const profileName = this.horzSelection.selectedDataSourceOption ? this.horzSelection.selectedDataSourceOption!.label : this.vertSelection.selectedDataSourceOption!.label;
         let geneStyle = "";
@@ -1462,7 +1462,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         } else if (this.viewCopyNumber) {
             geneStyle = ` x ${gene} CNA types`;
         }
-        return `${treatment} ${profileName}${geneStyle}`;
+        return `${treatmentName} ${profileName}${geneStyle}`;
     }
 
     @computed get waterfallPlotWidth():number {
