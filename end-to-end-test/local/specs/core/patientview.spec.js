@@ -81,24 +81,16 @@ describe('patient view page', function() {
             });
 
             it('filter menu icon is shown when gene panels are used', () => {
-                var filterIcon = $('div[data-test=patientview-mutation-table]').$('i[data-test=gene-filter-icon]');
+                filterIcon = $('div[data-test=patientview-mutation-table]').$('i[data-test=gene-filter-icon]');
                 assert(filterIcon.isVisible());
-            });
-            
-            it('filter menu icon is not shown when gene panels are not used', () => {
-                goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK');
-                waitForPatientView();
-                var filterIcon = $('div[data-test=patientview-mutation-table]').$('i[data-test=gene-filter-icon]');
-                assert(! filterIcon.isVisible());
             });
 
             it('opens selection menu when filter icon clicked', () => {
-                filterIcon = $('div[data-test=patientview-mutation-table]').$('i[data-test=gene-filter-icon]');
                 filterIcon.click();
                 selectMenu = $('.rc-tooltip');
                 assert(selectMenu.isVisible());
             });
-            
+
             it('removes genes profiles profiled in some samples then `all genes` option selected', () => {
                 const allGenesRadio = selectMenu.$('input[value=allSamples]');
                 allGenesRadio.click();
@@ -121,6 +113,12 @@ describe('patient view page', function() {
                 assert(!selectMenu.isVisible());
             });
 
+            it('filter menu icon is not shown when gene panels are not used', () => {
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK');
+                waitForPatientView();
+                var filterIcon = $('div[data-test=patientview-mutation-table]').$('i[data-test=gene-filter-icon]');
+                assert(! filterIcon.isVisible());
+            });
         });
 
     }
