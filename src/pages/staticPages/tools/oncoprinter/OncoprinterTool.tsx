@@ -30,7 +30,7 @@ const helpSection = (
     <div style={{backgroundColor:"#eee", padding:13, borderRadius: 11, marginTop:10, display:"flex", justifyContent:"space-between"}}>
         <div>
             <h4>Genetic data format</h4>
-            Each row of the data can take one of two formats, with tab-delimited columns:<br/>
+            Each row of the data can take one of two formats, with tab- or space-delimited columns:<br/>
             <strong>(1)</strong> <code>Sample</code> only (e.g. so that percent altered in your data can be properly calculated by including unaltered samples).<br/>
             <strong>(2)</strong> <code>Sample</code>&#9;<code>Gene</code>&#9;<code>Alteration (defined below)</code>&#9;<code>Type (defined below)</code><br/>
             {/*<strong>(3) (MAF format, mutation only)</strong> <code>Sample</code>, <code>Cancer Type</code>, <code>Protein Change</code>, <code>Mutation Type</code>,	<code>Chromosome</code>,
@@ -92,9 +92,9 @@ const helpSection = (
         <div style={{borderLeft:"1px solid black", marginLeft:15, marginRight:15}}/>
         <div>
             <h4>Clinical data format</h4>
-            All rows are tab-delimited.<br/>
+            All rows are tab- or space-delimited.<br/>
             The first (header) row gives the names of the clinical attributes, as well as their data type (number, lognumber, or string, default is string). An example first row is:<br/>
-            <code>Sample</code>&#9;<code>Age(number)</code>&#9;<code>Cancer Type(string)</code>&#9;<code>Mutation Count(lognumber)</code><br/>
+            <code>Sample</code>&#9;<code>Age(number)</code>&#9;<code>Cancer_Type(string)</code>&#9;<code>Mutation_Count(lognumber)</code><br/>
             Each following row gives the sample id, then the value for each clinical attribute, or the special value {ONCOPRINTER_CLINICAL_VAL_NA} which indicates that there's no data.<br/>
             Some example data rows would then be:<br/>
             <code>sample1</code>&#9;<code>30</code>&#9;<code>{ONCOPRINTER_CLINICAL_VAL_NA}</code>&#9;<code>1</code><br/>
@@ -201,7 +201,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
     private getHelpSection() {
         return (
             <div style={{marginBottom:7}}>
-                <span>Please input <strong>tab-delimited</strong> data.</span>
+                <span>Please input <strong>tab-delimited or space-delimited</strong> data.</span>
                 <Button style={{marginLeft:7}} bsStyle="primary" bsSize="small" onClick={this.toggleHelpOpened}>{`${this.helpOpened ? "Close" : "Open"} data format help`}</Button>
                 <Collapse isOpened={this.helpOpened}>
                     {helpSection}
