@@ -46,6 +46,7 @@ export function transition(
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
     transitionShowSublabels(nextProps, prevProps, oncoprint);
+    transitionTrackHeaders(nextProps, prevProps, oncoprint);
     transitionTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId, getMolecularProfileMap);
     transitionSortConfig(nextProps, prevProps, oncoprint);
     transitionTrackGroupSortPriority(nextProps, prevProps, oncoprint);
@@ -59,6 +60,29 @@ export function transition(
     }
     if (suppressingRendering) {
         doReleaseRendering(nextProps, oncoprint);
+    }
+}
+
+function transitionTrackHeaders(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint: OncoprintJS
+) {
+    if (!_.isEqual(nextProps.heatmapTrackHeaders, prevProps.heatmapTrackHeaders)) {
+        const nextHeaders = nextProps.heatmapTrackHeaders || {};
+        const prevHeaders = prevProps.heatmapTrackHeaders || {};
+
+        const nextIndexes = Object.keys(nextHeaders).map(x=>parseInt(x,10));
+        const prevIndexes = Object.keys(prevHeaders).map(x=>parseInt(x,10));
+
+        for (const index of nextIndexes) {
+            oncoprint.setTrackGroupHeader(index, nextHeaders[index]);
+        }
+        for (const index of prevIndexes) {
+            if (!(index in nextHeaders)) {
+                oncoprint.setTrackGroupHeader(index, undefined);
+            }
+        }
     }
 }
 
