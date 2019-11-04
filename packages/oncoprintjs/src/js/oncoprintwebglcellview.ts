@@ -1124,6 +1124,13 @@ export default class OncoprintWebGLCellView {
         this.renderAllTracks(model);
     }
 
+    public setTrackGroupHeader(model:OncoprintModel) {
+        if (this.rendering_suppressed) {
+            return;
+        }
+        this.renderAllTracks(model);
+    }
+
     public setViewport(model:OncoprintModel) {
         this.scroll_x = model.getHorzScroll();
         this.scroll_y = model.getVertScroll();

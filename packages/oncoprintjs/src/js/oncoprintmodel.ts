@@ -13,12 +13,23 @@ import {InitParams} from "./oncoprint";
 import {ComputedShapeParams} from "./oncoprintshape";
 import {CaseItem, EntityItem} from "./workers/clustering-worker";
 import PrecomputedComparator from "./precomputedcomparator";
+import {calculateHeaderTops, calculateTrackTops} from "./modelutils";
 
 export type ColumnId = string;
 export type TrackId = number;
 export type Datum = any;
 export type RuleSetId = number;
-export type TrackGroup = TrackId[];
+export type TrackGroupHeader = {
+    label:{
+        text:string;
+        // more styling options can go here
+    };
+    options:CustomTrackGroupOption[]; // for options menu dropdown
+};
+export type TrackGroup = {
+    header?:TrackGroupHeader;
+    tracks:TrackId[];
+}
 export type TrackGroupIndex = number;
 export type TrackSortDirection = 0|1|-1;
 export type TrackSortComparator<D> = (d1:D, d2:D)=>number;//returns (0|1|2|-1|-2); for comparison-based sort, where 2 and -2 mean force to end or beginning (resp) no matter what direction sorted in
@@ -40,9 +51,9 @@ export type ActiveRules = {[ruleId:number]:boolean};
 export type ActiveRulesCount = {[ruleId:number]:number};
 export type TrackSortDirectionChangeCallback = (track_id:TrackId, dir:number)=>void;
 export type CustomTrackOption = {label?:string, separator?: boolean, onClick?:(id:TrackId)=>void, weight?:string, disabled?:boolean};
+export type CustomTrackGroupOption = {label?:string, separator?: boolean, onClick?:(id:TrackGroupIndex)=>void, weight?:string, disabled?:boolean};
 export type UserTrackSpec<D> = {
     target_group?:TrackGroupIndex;
-    track_group_header?:string;
     cell_height?: number;
     track_padding?: number;
     has_column_spacing?: boolean;
@@ -185,6 +196,7 @@ const MIN_ZOOM_PIXELS = 100;
 const MIN_CELL_HEIGHT_PIXELS = 3;
 
 export type TrackProp<T> = {[trackId:number]:T};
+export type TrackGroupProp<T> = {[trackGroupIndex:number]:T};
 export type ColumnProp<T> = {[columnId:string]:T};
 
 export default class OncoprintModel {
@@ -265,6 +277,7 @@ export default class OncoprintModel {
     private cell_tops:CachedProperty<TrackProp<number>>;
     private label_tops:CachedProperty<TrackProp<number>>;
     private track_tops_zoomed:CachedProperty<TrackProp<number>>;
+    private header_tops_zoomed:CachedProperty<TrackProp<number>>;
     private cell_tops_zoomed:CachedProperty<TrackProp<number>>;
     private label_tops_zoomed:CachedProperty<TrackProp<number>>;
     private column_left:CachedProperty<ColumnProp<number>>;
@@ -274,7 +287,6 @@ export default class OncoprintModel {
 
     private track_groups:TrackGroup[];
     private track_group_sort_priority:TrackGroupIndex[];
-    private track_group_header:string[];
 
     constructor(params:InitParams) {
 
@@ -405,27 +417,9 @@ export default class OncoprintModel {
 
         this.track_groups = [];
         this.track_group_sort_priority = [];
-        this.track_group_header = [];
 
         this.track_tops = new CachedProperty({}, function () {
-            const tops:TrackProp<number> = {};
-            const groups = model.getTrackGroups();
-            let y = 0;
-            for (let i = 0; i < groups.length; i++) {
-                const group = groups[i];
-                if (model.getTrackGroupHeader(i).length > 0 && group.length > 0) {
-                    y += model.getTrackGroupHeaderSize();
-                }
-                for (let j = 0; j < group.length; j++) {
-                    const track_id = group[j];
-                    tops[track_id] = y;
-                    y += model.getTrackHeight(track_id, true);
-                }
-                if (group.length > 0) {
-                    y += model.getTrackGroupPadding(true);
-                }
-            }
-            return tops;
+            return calculateTrackTops(model, false);
         });
         this.cell_tops = new CachedProperty({}, function() {
             const track_tops = model.track_tops.get();
@@ -446,21 +440,10 @@ export default class OncoprintModel {
         this.cell_tops.addBoundProperty(this.label_tops);
 
         this.track_tops_zoomed = new CachedProperty({}, function () {
-            const tops:TrackProp<number> = {};
-            const groups = model.getTrackGroups();
-            let y = 0;
-            for (let i = 0; i < groups.length; i++) {
-                const group = groups[i];
-                for (let j = 0; j < group.length; j++) {
-                    const track_id = group[j];
-                    tops[track_id] = y;
-                    y += model.getTrackHeight(track_id);
-                }
-                if (group.length > 0) {
-                    y += model.getTrackGroupPadding();
-                }
-            }
-            return tops;
+            return calculateTrackTops(model, true);
+        });
+        this.header_tops_zoomed = new CachedProperty({}, function() {
+            return calculateHeaderTops(model, true);
         });
         this.cell_tops_zoomed = new CachedProperty({}, function() {
             const track_tops = model.track_tops_zoomed.get();
@@ -479,6 +462,7 @@ export default class OncoprintModel {
 
         this.track_tops.addBoundProperty(this.track_tops_zoomed);
         this.track_tops_zoomed.addBoundProperty(this.cell_tops_zoomed);
+        this.track_tops_zoomed.addBoundProperty(this.header_tops_zoomed);
         this.cell_tops_zoomed.addBoundProperty(this.label_tops_zoomed);
 
         this.column_left = new CachedProperty({}, function() {
@@ -522,6 +506,22 @@ export default class OncoprintModel {
                 model.getTrackDataIdKey(track_id));
             return curr_precomputed_comparator;
         });// track_id -> PrecomputedComparator
+    }
+
+    public setTrackGroupHeader(index:TrackGroupIndex, header?:TrackGroupHeader) {
+        this.ensureTrackGroupExists(index);
+        this.getTrackGroups()[index].header = header;
+        this.track_tops.update();
+    }
+
+    public getTrackGroupHeaderHeight(trackGroup:TrackGroup) {
+        // TODO?: depends on text style settings
+        // TODO?: depends on zoom? i dont think it should
+        if (trackGroup.header) {
+            return 32;
+        } else {
+            return 0;
+        }
     }
 
     public toggleCellPadding() {
@@ -784,7 +784,7 @@ export default class OncoprintModel {
                 sorted_track_groups.push(track_groups[i]);
             }
         }
-        const sorted_tracks = sorted_track_groups.reduce(function(acc, next) { return acc.concat(next); }, []);
+        const sorted_tracks:TrackId[] = sorted_track_groups.reduce(function(acc:TrackId[], next) { return acc.concat(next.tracks); }, []);
         const rule_set_ids:number[] = sorted_tracks.map(function(track_id:TrackId) {
             return self.track_rule_set_id[track_id];
         });
@@ -913,8 +913,8 @@ export default class OncoprintModel {
         return this.highlighted_ids.filter(uid=>(uid in visibleIds));
     }
 
-    public setTrackGroupOrder(index:TrackGroupIndex, track_order:TrackGroup) {
-        this.track_groups[index] = track_order;
+    public setTrackGroupOrder(index:TrackGroupIndex, track_order:TrackId[]) {
+        this.track_groups[index].tracks = track_order;
 
         this.track_tops.update();
     }
@@ -926,15 +926,12 @@ export default class OncoprintModel {
         for (let i = 0; i < this.track_groups.length; i++) {
             if (i !== from_index && i !== to_index) {
                 new_groups.push(this.track_groups[i]);
-                new_headers.push(this.track_group_header[i]);
             }
             if (i === to_index) {
                 new_groups.push(group_to_move);
-                new_headers.push(this.track_group_header[from_index]);
             }
         }
         this.track_groups = new_groups;
-        this.track_group_header = new_headers;
         this.track_tops.update();
         return this.track_groups;
     }
@@ -1005,15 +1002,9 @@ export default class OncoprintModel {
         this.track_sort_direction[track_id] = ifndef(params.init_sort_direction, 1);
 
         params.target_group = ifndef(params.target_group, 0);
-        while (params.target_group >= this.track_groups.length) {
-            this.track_groups.push([]);
-            this.track_group_header.push("");
-        }
-        if (params.track_group_header) {
-            this.track_group_header[params.target_group] = params.track_group_header;
-        }
+        this.ensureTrackGroupExists(params.target_group);
 
-        const group_array = this.track_groups[params.target_group];
+        const group_array = this.track_groups[params.target_group].tracks;
         const target_index = (params.expansion_of !== undefined
                 ? group_array.indexOf(this.getLastExpansion(params.expansion_of)) + 1
                 : group_array.length
@@ -1038,13 +1029,21 @@ export default class OncoprintModel {
         this.setIdOrder(Object.keys(this.present_ids.get()));
     }
 
+    private ensureTrackGroupExists(index:TrackGroupIndex) {
+        while (index >= this.track_groups.length) {
+            this.track_groups.push({ tracks: [] });
+        }
+    }
+
     // get a reference to the array that stores the order of tracks in
     // the same group
+    private _getMajorTrackGroup(track_id:TrackId, return_index:true):number|null;
+    private _getMajorTrackGroup(track_id:TrackId, return_index?:false):TrackGroup|null;
     private _getMajorTrackGroup(track_id:TrackId, return_index?:boolean) {
         let group;
         let i;
         for (i = 0; i < this.track_groups.length; i++) {
-            if (this.track_groups[i].indexOf(track_id) > -1) {
+            if (this.track_groups[i].tracks.indexOf(track_id) > -1) {
                 group = this.track_groups[i];
                 break;
             }
@@ -1056,14 +1055,14 @@ export default class OncoprintModel {
         }
     }
     // get an array listing the track IDs that a track can move around
-    private _getEffectiveTrackGroup(track_id:TrackId) {
+    private _getEffectiveTrackGroupTracks(track_id:TrackId) {
         const self = this;
         let group,
             parent_id = this.track_expansion_parent[track_id];
         if (parent_id === undefined) {
             group = (function(major_group:TrackGroup) {
                 return (major_group === null ? null
-                    : major_group.filter(function (sibling_id) {
+                    : major_group.tracks.filter(function (sibling_id) {
                         return self.track_expansion_parent[sibling_id] === undefined;
                     }));
             })(this._getMajorTrackGroup(track_id) as TrackGroup);
@@ -1125,8 +1124,8 @@ export default class OncoprintModel {
 
         const containing_track_group = this._getMajorTrackGroup(track_id) as TrackGroup;
         if (containing_track_group !== null) {
-            containing_track_group.splice(
-                containing_track_group.indexOf(track_id), 1);
+            containing_track_group.tracks.splice(
+                containing_track_group.tracks.indexOf(track_id), 1);
         }
         // remove listing of the track as an expansion of its parent track
         const expansion_group = this.track_expansion_tracks[this.track_expansion_parent[track_id]];
@@ -1222,6 +1221,16 @@ export default class OncoprintModel {
         }
     }
 
+    public getZoomedHeaderTops():TrackGroupProp<number>;
+    public getZoomedHeaderTops(track_group_index:TrackGroupIndex):number;
+    public getZoomedHeaderTops(track_group_index?:TrackGroupIndex) {
+        if (typeof track_group_index === 'undefined') {
+            return copyShallowObject(this.header_tops_zoomed.get());
+        } else {
+            return this.header_tops_zoomed.get()[track_group_index];
+        }
+    }
+
     public getCellTops(desired_track_id?:undefined, base?:boolean):TrackProp<number>;
     public getCellTops(desired_track_id:TrackId, base?:boolean):number;
     public getCellTops(desired_track_id?:TrackId, base?:boolean) {
@@ -1243,24 +1252,11 @@ export default class OncoprintModel {
     }
 
     public getContainingTrackGroup(track_id:TrackId) {
-        return this._getEffectiveTrackGroup(track_id);
+        return this._getEffectiveTrackGroupTracks(track_id);
     }
 
     public getContainingTrackGroupIndex(track_id:TrackId) {
         return this._getMajorTrackGroup(track_id, true);
-    }
-
-    public setTrackGroupHeader(track_group_id:TrackGroupIndex, text:string) {
-        this.track_group_header[track_group_id] = text;
-        this.track_tops.update();
-    }
-
-    public getTrackGroupHeader(track_group_id:TrackGroupIndex) {
-        return this.track_group_header[track_group_id] || "";
-    }
-
-    public getTrackGroupHeaderSize() {
-        return 20;
     }
 
     public getTrackGroups() {
@@ -1271,9 +1267,7 @@ export default class OncoprintModel {
     public getTracks() {
         const ret = [];
         for (let i = 0; i < this.track_groups.length; i++) {
-            for (let j = 0; j < this.track_groups[i].length; j++) {
-                ret.push(this.track_groups[i][j]);
-            }
+            ret.push(...this.track_groups[i].tracks);
         }
         return ret;
     }
@@ -1373,7 +1367,7 @@ export default class OncoprintModel {
             } else {
                 flat_previous_track = this.getLastExpansion(new_previous_track);
             }
-            moveContiguousValues(track_group, track_id, this.getLastExpansion(track_id), flat_previous_track);
+            moveContiguousValues(track_group.tracks, track_id, this.getLastExpansion(track_id), flat_previous_track);
         }
 
         // keep the order of expansion siblings up-to-date as well
@@ -1584,7 +1578,7 @@ export default class OncoprintModel {
         const track_group = this.getTrackGroups()[track_group_index];
         let track_ids:TrackId[] = [];
         if (track_group !== undefined) {
-            track_ids = this._getEffectiveTrackGroup(track_group[0]) || [];
+            track_ids = this._getEffectiveTrackGroupTracks(track_group.tracks[0]) || [];
         }
         for (let i = 0; i < track_ids.length; i++) {
             const track_id = track_ids[i];
@@ -1688,8 +1682,8 @@ export default class OncoprintModel {
             });
         }
 
-        const track_sort_priority = track_groups_in_sort_order.reduce(function(acc, next) {
-            return acc.concat(next);
+        const track_sort_priority:TrackId[] = track_groups_in_sort_order.reduce(function(acc:TrackId[], next) {
+            return acc.concat(next.tracks);
         }, []);
 
         const precomputed_comparator = this.precomputed_comparator.get();

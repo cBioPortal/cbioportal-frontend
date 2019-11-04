@@ -28,7 +28,7 @@ function makeIdCounter() {
 const gradientId = makeIdCounter();
 
 export default {
-    text: function(content:string,x?:number,y?:number,size?:number,family?:string,weight?:string,alignment_baseline?:string,fill?:string) {
+    text: function(content:string,x?:number,y?:number,size?:number,family?:string,weight?:string,alignment_baseline?:string,fill?:string,text_decoration?:string) {
         size = size || 12;
         var alignment_baseline_y_offset = size;
         if (alignment_baseline === "middle") {
@@ -43,7 +43,8 @@ export default {
             'font-family':(family || 'serif'),
             'font-weight':(weight || 'normal'),
             'text-anchor':'start',
-            'fill':fill
+            'fill':fill,
+            'text-decoration':text_decoration
         });
         elt.textContent = content + '';
         return elt as SVGTextElement;
