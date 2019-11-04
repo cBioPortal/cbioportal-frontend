@@ -274,7 +274,7 @@ describe('check the filters are working properly', ()=>{
 describe('check the fusion filter is working properly', ()=>{
 
     before(function() {
-        const url = `${CBIOPORTAL_URL}/study/summary?filters=%7B%2522fusionGenes%2522%3A%5B%7B%2522entrezGeneIds%2522%3A%5B2313%5D%7D%5D%7D&id=es_dfarber_broad_2014`;
+        const url = `${CBIOPORTAL_URL}/study/summary?filters=%7B%2522fusionGenes%2522%3A%5B%7B%2522hugoGeneSymbols%2522%3A%5B2313%5D%7D%5D%7D&id=es_dfarber_broad_2014`;
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet(60000);
     });
