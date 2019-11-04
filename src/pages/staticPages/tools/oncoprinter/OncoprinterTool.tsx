@@ -200,7 +200,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
     @autobind
     private getHelpSection() {
         return (
-            <div>
+            <div style={{marginBottom:7}}>
                 <span>Please input <strong>tab-delimited</strong> data.</span>
                 <Button style={{marginLeft:7}} bsStyle="primary" bsSize="small" onClick={this.toggleHelpOpened}>{`${this.helpOpened ? "Close" : "Open"} data format help`}</Button>
                 <Collapse isOpened={this.helpOpened}>
@@ -218,27 +218,53 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
             >
                 <div style={{ display:"flex", justifyContent:"space-between" }}>
                     <div style={{ width:"45%"}}>
-                        <ControlLabel>Input genomic alteration data:<Button className="oncoprinterGeneticExampleData" style={{marginLeft:7}} bsStyle="primary" bsSize="small" onClick={this.populateGeneticExampleData}>Load example data</Button></ControlLabel>
+                        <ControlLabel
+                            style={{marginBottom:7}}
+                        >
+                            Input genomic alteration data:
+                            <Button
+                                className="oncoprinterGeneticExampleData"
+                                style={{marginLeft:7}}
+                                bsStyle="primary"
+                                bsSize="small"
+                                onClick={this.populateGeneticExampleData}
+                            >
+                                Load example data
+                            </Button>
+                        </ControlLabel>
                         <FormControl
                             className="oncoprinterGeneticDataInput"
                             componentClass="textarea"
                             value={this.geneticDataInput}
                             placeholder="Enter data here..."
                             onChange={this.onGeneticDataInputChange}
-                            style={{"height":500, width:"100%"}}
+                            style={{"height":200, width:"100%"}}
                         />
                         <ControlLabel>or input data from file:</ControlLabel>
                         <input ref={this.geneticFileInputRef} type="file"/>
                     </div>
                     <div style={{ width:"45%"}}>
-                        <ControlLabel>Input clinical data:<Button className="oncoprinterClinicalExampleData" style={{marginLeft:7}} bsStyle="primary" bsSize="small" onClick={this.populateClinicalExampleData}>Load example data</Button></ControlLabel>
+                        <ControlLabel
+                            style={{marginBottom:7}}
+                        >
+                            Input clinical data:
+                            <Button
+                                className="oncoprinterClinicalExampleData"
+                                style={{marginLeft:7}}
+                                bsStyle="primary"
+                                bsSize="small"
+                                onClick={this.populateClinicalExampleData}
+                            >
+                                Load example data
+                            </Button>
+                        </ControlLabel>
                         <FormControl
                             className="oncoprinterClinicalDataInput"
                             componentClass="textarea"
                             value={this.clinicalDataInput}
                             placeholder="Enter data here..."
                             onChange={this.onClinicalDataInputChange}
-                            style={{"height":500, width:"100%"}}
+                            style={{"height":200, width:"100%"}}
                         />
                         <ControlLabel>or input data from file:</ControlLabel>
                         <input ref={this.clinicalFileInputRef} type="file"/>
@@ -265,7 +291,16 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                     style={{"height":35, width:475}}
                 />
                 <br/>
-                <Button className="oncoprinterSubmit" bsSize="large" bsStyle="primary" disabled={this.geneticDataInput.trim().length === 0 && this.clinicalDataInput.trim().length === 0} onClick={this.onClickSubmit}>Submit</Button>
+                <Button
+                    className="oncoprinterSubmit"
+                    bsSize="large"
+                    bsStyle="primary"
+                    disabled={this.geneticDataInput.trim().length === 0 && this.clinicalDataInput.trim().length === 0}
+                    onClick={this.onClickSubmit}
+                    style={{marginBottom:20}}
+                >
+                    Submit
+                </Button>
                 { (this.store.parseErrors.length > 0) && (
                     <div className="alert alert-danger" style={{marginTop:5, whiteSpace:"pre-wrap"}}>
                         {this.store.parseErrors.map(err=>(<div>{err}</div>))}
