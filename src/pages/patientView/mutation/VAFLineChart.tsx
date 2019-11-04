@@ -42,7 +42,6 @@ interface IPoint {
     y:number,
     sampleId:string,
     mutation:Mutation;
-    lineData:IPoint[],
     mutationStatus:MutationStatus
 }
 
@@ -291,6 +290,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
 
         const grayPoints:IPoint[] = [];
         const lineData:IPoint[][] = [];
+        const dataPoints:IPoint[] = [];
 
         for (const mergedMutation of this.mutations) {
             // determine data points in line for this mutation
@@ -314,7 +314,6 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 y: vaf,
                                 sampleId,
                                 mutation,
-                                lineData:[],
                                 mutationStatus: MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED
                             });
                             samplesWithData[sampleKey] = true;
@@ -326,7 +325,6 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             y: vaf,
                             sampleId,
                             mutation,
-                            lineData:[],
                             mutationStatus: MutationStatus.MUTATED_WITH_VAF
                         });
                         samplesWithData[sampleKey] = true;
@@ -337,7 +335,6 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         x: this.sampleIdIndex[sampleId],
                         sampleId, mutation,
                         mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
-                        lineData:[]
                     });
                     samplesWithData[sampleKey] = true;
                 }
@@ -358,7 +355,6 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             x: this.sampleIdIndex[sample.sampleId],
                             sampleId: sample.sampleId, mutation,
                             mutationStatus: MutationStatus.NOT_PROFILED,
-                            lineData:[]
                         });
                     } else {
                         thisLineData.push({
@@ -366,7 +362,6 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             y: 0,
                             sampleId: sample.sampleId, mutation,
                             mutationStatus: MutationStatus.PROFILED_BUT_NOT_MUTATED,
-                            lineData:[]
                         });
                     }
                 }
@@ -412,18 +407,19 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             }
             // we know thisLineDataWithoutGrayPoints is nonempty because it could only be empty if every point in
             //  it was gray, in which case it would have been made empty and skipped above.
-            
-            // add copy of line data for hover effect
-            for (const point of thisGrayPoints) {
-                point.lineData = thisLineDataWithoutGrayPoints;
-            }
-            for (const point of thisLineDataWithoutGrayPoints) {
-                point.lineData = thisLineDataWithoutGrayPoints;
-            }
             grayPoints.push(...thisGrayPoints);
-            lineData.push(thisLineDataWithoutGrayPoints);
+            dataPoints.push(...thisLineDataWithoutGrayPoints);
+
+            // only add line if it has more than 1 point
+            if (thisLineDataWithoutGrayPoints.length > 1) {
+                lineData.push(thisLineDataWithoutGrayPoints);
+            }
         }
-        return { lineData, grayPoints};
+        return {
+            lineData,
+            dataPoints,
+            grayPoints,
+        };
     }
 
     @computed get mutationToLineData() {
@@ -578,7 +574,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     render() {
-        if (this.data.lineData.length > 0) {
+        if (this.data.lineData.length > 0 || this.data.dataPoints.length > 0) {
             return (
                 <>
                     <svg
@@ -650,32 +646,36 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             )}
                             <ScaleCapturer scaleCallback={this.scaleCallback}/>
                             <g ref={this.thickLineContainerRef}/> {/*We put this container here so that the highlight layers properly with other elements*/}
-                            <VictoryScatter
-                                style={{
-                                    data: {
-                                        stroke:"gray",
-                                        fill:"white",
-                                        strokeWidth:2
-                                    }
-                                }}
-                                size={2.5}
-                                data={this.data.grayPoints}
-                                events={this.mouseEvents}
-                                y={this.y}
-                            />
-                            <VictoryScatter
-                                style={{
-                                    data: {
-                                        stroke:LINE_COLOR,
-                                        fill:"white",
-                                        strokeWidth:2
-                                    }
-                                }}
-                                size={3}
-                                data={_.flatten(this.data.lineData)}
-                                events={this.mouseEvents}
-                                y={this.y}
-                            />
+                            { this.data.grayPoints.length > 0 && (
+                                <VictoryScatter
+                                    style={{
+                                        data: {
+                                            stroke:"gray",
+                                            fill:"white",
+                                            strokeWidth:2
+                                        }
+                                    }}
+                                    size={2.5}
+                                    data={this.data.grayPoints}
+                                    events={this.mouseEvents}
+                                    y={this.y}
+                                />
+                            )}
+                            { this.data.dataPoints.length > 0 && (
+                                <VictoryScatter
+                                    style={{
+                                        data: {
+                                            stroke:LINE_COLOR,
+                                            fill:"white",
+                                            strokeWidth:2
+                                        }
+                                    }}
+                                    size={3}
+                                    data={this.data.dataPoints}
+                                    events={this.mouseEvents}
+                                    y={this.y}
+                                />
+                            )}
                         </VictoryChart>
                         <Observer>
                             {this.getThickLines}
