@@ -987,6 +987,9 @@ export default class OncoprintMinimapView {
     public setIdOrder(model:OncoprintModel, cell_view:OncoprintWebGLCellView) {
         this.drawOncoprintAndOverlayRect(model, cell_view);
     }
+    public setTrackGroupHeader(model:OncoprintModel, cell_view:OncoprintWebGLCellView) {
+        this.drawOncoprintAndOverlayRect(model, cell_view);
+    }
     public suppressRendering() {
         this.rendering_suppressed = true;
     }

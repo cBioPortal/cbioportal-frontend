@@ -440,6 +440,12 @@ export default class OncoprintLabelView {
         this.renderAllLabels(model);
     }
 
+    public setTrackGroupHeader(model:OncoprintModel, getCellViewHeight:()=>number) {
+        this.updateFromModel(model);
+        this.resizeAndClear(model, getCellViewHeight);
+        this.renderAllLabels(model);
+    }
+
     public sort(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.updateFromModel(model);
         this.resizeAndClear(model, getCellViewHeight);

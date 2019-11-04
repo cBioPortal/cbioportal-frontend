@@ -1,13 +1,16 @@
 import $ from "jquery";
 import menuDotsIcon from '../img/menudots.svg';
-import OncoprintModel, {TrackId, TrackProp, TrackSortDirection} from "./oncoprintmodel";
+import OncoprintModel, {TrackGroupProp, TrackId, TrackProp, TrackSortDirection} from "./oncoprintmodel";
 import ClickEvent = JQuery.ClickEvent;
+import {CLOSE_MENUS_EVENT as HEADER_VIEW_CLOSE_MENUS_EVENT} from "./oncoprintheaderview";
 
 const TOGGLE_BTN_CLASS = "oncoprintjs__track_options__toggle_btn_img";
 const TOGGLE_BTN_OPEN_CLASS = "oncoprintjs__track_options__open";
 const DROPDOWN_CLASS = "oncoprintjs__track_options__dropdown";
 const SEPARATOR_CLASS = "oncoprintjs__track_options__separator";
 const NTH_CLASS_PREFIX = "nth-";
+
+export const CLOSE_MENUS_EVENT = "oncoprint-track-options-view.do-close-menus";
 
 type TrackCallback = (trackId:TrackId)=>void;
 export default class OncoprintTrackOptionsView {
@@ -42,7 +45,7 @@ export default class OncoprintTrackOptionsView {
 
         const self = this;
         this.clickHandler = function() {
-            $(self).trigger('oncoprint-track-options-view.click-out');
+            $(document).trigger(CLOSE_MENUS_EVENT);
         };
         $(document).on("click", this.clickHandler);
     }
@@ -52,8 +55,8 @@ export default class OncoprintTrackOptionsView {
             return;
         }
         const self = this;
-        $(this).off('oncoprint-track-options-view.click-out');
-        $(this).on('oncoprint-track-options-view.click-out', function() {
+        $(document).off(CLOSE_MENUS_EVENT);
+        $(document).on(CLOSE_MENUS_EVENT, function() {
             for (var track_id in self.track_options_$elts) {
                 if (self.track_options_$elts.hasOwnProperty(track_id)) {
                     self.hideTrackMenu(parseInt(track_id, 10));
@@ -121,6 +124,8 @@ export default class OncoprintTrackOptionsView {
                 this.hideTrackMenu(other_track_id);
             }
         }
+
+        $(document).trigger(HEADER_VIEW_CLOSE_MENUS_EVENT);
     }
 
     private static $makeDropdownOption(text:string, weight:string, disabled:boolean, callback:(evt:ClickEvent)=>void) {
@@ -344,6 +349,10 @@ export default class OncoprintTrackOptionsView {
         this.renderAllOptions(model);
         this.resize(model, getCellViewHeight);
     }
+    public setTrackGroupHeader(model:OncoprintModel, getCellViewHeight:()=>number) {
+        this.renderAllOptions(model);
+        this.resize(model, getCellViewHeight);
+    }
     public setViewport(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllOptions(model);
         this.resize(model, getCellViewHeight);
@@ -377,6 +386,7 @@ export default class OncoprintTrackOptionsView {
     }
     public destroy() {
         $(document).off("click", this.clickHandler);
+        $(document).off(CLOSE_MENUS_EVENT);
     };
     public setTrackCustomOptions(model:OncoprintModel) {
         this.renderAllOptions(model);

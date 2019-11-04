@@ -7,7 +7,7 @@ import OncoprintModel, {
     Datum,
     LibraryTrackSpec,
     SortConfig,
-    TrackGroup,
+    TrackGroup, TrackGroupHeader,
     TrackGroupIndex,
     TrackId,
     TrackSortDirection,
@@ -28,6 +28,7 @@ import svgfactory from './svgfactory';
 
 import $ from "jquery";
 import {clamp} from "./utils";
+import OncoprintHeaderView from "./oncoprintheaderview";
 
 export * from "./oncoprintruleset";
 export * from "./oncoprintmodel";
@@ -64,6 +65,7 @@ export default class Oncoprint {
     private $ctr:JQuery;
     private $oncoprint_ctr:JQuery;
     private $cell_div:JQuery;
+    private $header_div:JQuery;
     private $legend_div:JQuery;
     private $track_options_div:JQuery;
     private $track_info_div:JQuery;
@@ -73,6 +75,7 @@ export default class Oncoprint {
     private $cell_overlay_canvas:JQuery;
 
     public model:OncoprintModel;
+    public header_view:OncoprintHeaderView;
     public cell_view:OncoprintWebGLCellView;
     public minimap_view:OncoprintMinimapView;
     public track_options_view:OncoprintTrackOptionsView;
@@ -125,6 +128,10 @@ export default class Oncoprint {
                 'top':'0px'})
             .addClass("noselect")
             .attr({'width':'150', 'height':'250'}) as JQuery<HTMLCanvasElement>;
+
+        const $header_div = $('<div></div>')
+            .css({position:'absolute'})
+            .addClass("oncoprintjs__header_div");
 
         const $track_options_div = $('<div></div>')
             .css({'position':'absolute',
@@ -199,6 +206,7 @@ export default class Oncoprint {
         $cell_div.appendTo($oncoprint_ctr);
         $track_options_div.appendTo($oncoprint_ctr);
         $track_info_div.appendTo($oncoprint_ctr);
+        $header_div.appendTo($oncoprint_ctr); // this needs to go at the end because otherwise canvases cover it up
 
         $legend_div.appendTo($legend_ctr);
 
@@ -216,6 +224,7 @@ export default class Oncoprint {
 
         this.$ctr = $ctr;
         this.$oncoprint_ctr = $oncoprint_ctr;
+        this.$header_div = $header_div;
         this.$cell_div = $cell_div;
         this.$legend_div = $legend_div;
         this.$track_options_div = $track_options_div;
@@ -229,6 +238,8 @@ export default class Oncoprint {
         this.$cell_overlay_canvas = $cell_overlay_canvas;
 
         this.model = new OncoprintModel(params);
+
+        this.header_view = new OncoprintHeaderView(this.$header_div);
 
         this.cell_view = new OncoprintWebGLCellView($cell_div, $cell_canvas, $cell_overlay_canvas, $column_label_canvas, $dummy_scroll_div_contents, this.model, new OncoprintToolTip($tooltip_ctr), function(left, right) {
                 const enclosed_ids = self.model.getIdsInLeftInterval(left, right);
@@ -400,6 +411,12 @@ export default class Oncoprint {
             return;
         }
         this.$track_options_div.css({'left': this.label_view.getWidth()});
+        this.$header_div.css({
+            left: 0,
+            top: 0,
+            width: this.width,
+            height: this.cell_view.getVisibleAreaHeight(this.model)
+        });
         this.$track_info_div.css({'left': this.label_view.getWidth() + this.track_options_view.getWidth()});
         const cell_div_left = this.label_view.getWidth() + this.track_options_view.getWidth() + this.track_info_view.getWidth();
         this.$cell_div.css('left', cell_div_left);
@@ -476,12 +493,17 @@ export default class Oncoprint {
         }
         this.minimap_close_callbacks.push(callback);
     }
+
+
+
+    // methods that propagate/delegate to views
     public moveTrack(target_track:TrackId, new_previous_track:TrackId) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
         this.model.moveTrack(target_track, new_previous_track);
         this.cell_view.moveTrack(this.model);
+        this.header_view.render(this.model);
         this.label_view.moveTrack(this.model, this.getCellViewHeight);
         this.track_options_view.moveTrack(this.model, this.getCellViewHeight);
         this.track_info_view.moveTrack(this.model, this.getCellViewHeight);
@@ -493,12 +515,13 @@ export default class Oncoprint {
 
         this.resizeAndOrganizeAfterTimeout();
     }
-    public setTrackGroupOrder(index:TrackGroupIndex, track_order:TrackGroup, dont_sort?:boolean) {
+    public setTrackGroupOrder(index:TrackGroupIndex, track_order:TrackId[], dont_sort?:boolean) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
         this.model.setTrackGroupOrder(index, track_order);
         this.cell_view.setTrackGroupOrder(this.model);
+        this.header_view.render(this.model);
         this.label_view.setTrackGroupOrder(this.model, this.getCellViewHeight);
         this.track_options_view.setTrackGroupOrder(this.model);
         this.track_info_view.setTrackGroupOrder(this.model, this.getCellViewHeight);
@@ -509,7 +532,7 @@ export default class Oncoprint {
 
         this.resizeAndOrganizeAfterTimeout();
     }
-    public setTrackGroupLegendOrder(group_order:TrackGroup) {
+    public setTrackGroupLegendOrder(group_order:TrackGroupIndex[]) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
@@ -546,6 +569,7 @@ export default class Oncoprint {
         // Update views
         this.cell_view.addTracks(this.model, track_ids);
         this.label_view.addTracks(this.model, track_ids, this.getCellViewHeight);
+        this.header_view.render(this.model);
         this.track_options_view.addTracks(this.model, this.getCellViewHeight);
         this.track_info_view.addTracks(this.model, this.getCellViewHeight);
         this.legend_view.addTracks(this.model);
@@ -566,6 +590,7 @@ export default class Oncoprint {
         this.model.removeTrack(track_id);
         // Update views
         this.cell_view.removeTrack(this.model, track_id);
+        this.header_view.render(this.model);
         this.label_view.removeTrack(this.model, this.getCellViewHeight);
         this.track_options_view.removeTrack(this.model, track_id, this.getCellViewHeight);
         this.track_info_view.removeTrack(this.model, this.getCellViewHeight);
@@ -620,7 +645,7 @@ export default class Oncoprint {
     }
 
     public removeAllExpansionTracksInGroup(index:TrackGroupIndex) {
-        const tracks_in_group = this.model.getTrackGroups()[index],
+        const tracks_in_group = this.model.getTrackGroups()[index].tracks,
             expanded_tracks = [];
         let i;
         for (i = 0; i < tracks_in_group.length ; i++) {
@@ -731,6 +756,7 @@ export default class Oncoprint {
         this.model.setVertZoom(z);
         // Update views
         this.cell_view.setVertZoom(this.model);
+        this.header_view.render(this.model);
         this.label_view.setVertZoom(this.model, this.getCellViewHeight);
         this.track_info_view.setVertZoom(this.model, this.getCellViewHeight);
         this.track_options_view.setVertZoom(this.model, this.getCellViewHeight);
@@ -748,6 +774,7 @@ export default class Oncoprint {
         // Update views
 
         this.cell_view.setScroll(this.model);
+        this.header_view.setScroll(this.model);
         this.label_view.setScroll(this.model, this.getCellViewHeight);
         this.track_info_view.setScroll(this.model);
         this.track_options_view.setScroll(this.model);
@@ -791,6 +818,7 @@ export default class Oncoprint {
         this.model.setZoom(zoom_x, zoom_y);
         // Update views
         this.cell_view.setZoom(this.model);
+        this.header_view.render(this.model);
         this.label_view.setZoom(this.model, this.getCellViewHeight);
         this.track_info_view.setZoom(this.model, this.getCellViewHeight);
         this.track_options_view.setZoom(this.model, this.getCellViewHeight);
@@ -822,6 +850,7 @@ export default class Oncoprint {
         this.model.setVertScroll(Math.min(s, this.maxOncoprintScrollTop()));
         // Update views
         this.cell_view.setVertScroll(this.model);
+        this.header_view.setVertScroll(this.model);
         this.label_view.setVertScroll(this.model, this.getCellViewHeight);
         this.track_info_view.setVertScroll(this.model);
         this.track_options_view.setVertScroll(this.model);
@@ -874,6 +903,7 @@ export default class Oncoprint {
         }
         this.model.setTrackData(track_id, data, data_id_key);
         this.cell_view.setTrackData(this.model, track_id);
+        this.header_view.render(this.model);
         this.legend_view.setTrackData(this.model);
         this.minimap_view.setTrackData(this.model, this.cell_view);
 
@@ -1027,6 +1057,20 @@ export default class Oncoprint {
         }
     }
 
+    public setTrackGroupHeader(index:TrackGroupIndex, header?:TrackGroupHeader) {
+        if (this.webgl_unavailable || this.destroyed) {
+            return;
+        }
+        this.model.setTrackGroupHeader(index, header);
+        this.label_view.setTrackGroupHeader(this.model, this.getCellViewHeight);
+        this.header_view.render(this.model);
+        this.track_info_view.setTrackGroupHeader(this.model, this.getCellViewHeight);
+        this.track_options_view.setTrackGroupHeader(this.model, this.getCellViewHeight);
+        this.minimap_view.setTrackGroupHeader(this.model, this.cell_view);
+        this.cell_view.setTrackGroupHeader(this.model);
+        this.resizeAndOrganizeAfterTimeout();
+    }
+
     public disableInteraction() {
         if(this.webgl_unavailable || this.destroyed) {
             return;
@@ -1053,6 +1097,7 @@ export default class Oncoprint {
         }
         this.model.rendering_suppressed_depth += 1;
         this.label_view.suppressRendering();
+        this.header_view.suppressRendering();
         this.cell_view.suppressRendering();
         this.track_options_view.suppressRendering();
         this.track_info_view.suppressRendering();
@@ -1068,6 +1113,7 @@ export default class Oncoprint {
         this.model.rendering_suppressed_depth = Math.max(0, this.model.rendering_suppressed_depth);
         if (this.model.rendering_suppressed_depth === 0) {
             this.label_view.releaseRendering(this.model, this.getCellViewHeight);
+            this.header_view.releaseRendering(this.model);
             this.cell_view.releaseRendering(this.model);
             this.track_options_view.releaseRendering(this.model, this.getCellViewHeight);
             this.track_info_view.releaseRendering(this.model, this.getCellViewHeight);
@@ -1183,14 +1229,20 @@ export default class Oncoprint {
 
         const label_view_group = this.label_view.toSVGGroup(this.model, true, 0, 0);
         everything_group.appendChild(label_view_group);
+
+        const header_view_group = this.header_view.toSVGGroup(this.model, 0, 0);
+        everything_group.appendChild(header_view_group);
+
         const label_view_width = label_view_group.getBBox().width;
         const label_view_padding = label_view_width > 0 ? 30 : 0;
         const track_info_group_x = label_view_width + label_view_padding;
         const track_info_group = this.track_info_view.toSVGGroup(this.model, track_info_group_x, 0);
         everything_group.appendChild(track_info_group);
+
         const cell_view_group_x = track_info_group_x + track_info_group.getBBox().width + 10;
         const cell_view_group = this.cell_view.toSVGGroup(this.model, cell_view_group_x, 0);
         everything_group.appendChild(cell_view_group);
+
         everything_group.appendChild(this.legend_view.toSVGGroup(this.model, 0, cell_view_group.getBBox().y + cell_view_group.getBBox().height+20));
 
         const everything_box = everything_group.getBBox();
@@ -1314,6 +1366,7 @@ export default class Oncoprint {
             return;
         }
         this.cell_view.destroy();
+        this.header_view.destroy();
         this.track_options_view.destroy();
         this.track_info_view.destroy();
         this.destroyed = true;

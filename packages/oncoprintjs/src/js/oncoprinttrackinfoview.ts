@@ -125,6 +125,10 @@ export default class OncoprintTrackInfoView {
         this.renderAllInfo(model);
         this.resize(model, getCellViewHeight);
     }
+    public setTrackGroupHeader(model:OncoprintModel, getCellViewHeight:()=>number) {
+        this.renderAllInfo(model);
+        this.resize(model, getCellViewHeight);
+    }
     public setScroll(model:OncoprintModel) {
         this.setVertScroll(model);
     }
