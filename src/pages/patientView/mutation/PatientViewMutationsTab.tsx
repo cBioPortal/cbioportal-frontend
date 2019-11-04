@@ -9,7 +9,7 @@ import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore"
 import SampleManager from "../SampleManager";
 import {IColumnVisibilityDef} from "../../../shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import VAFLineChart from "./VAFLineChart";
-import {computed, observable} from "mobx";
+import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
@@ -71,17 +71,27 @@ enum PlotTab {
     HEATMAP="heatmap"
 }
 
+export const LOCAL_STORAGE_PLOT_TAB_KEY = "patient_view_mutations_tab__vaf_plot_choice";
+
 @observer
 export default class PatientViewMutationsTab extends React.Component<IPatientViewMutationsTabProps, {}> {
     private dataStore = new PatientViewMutationsDataStore(()=>this.props.store.mergedMutationDataIncludingUncalled);
     private vafLineChartSvg:SVGElement|null = null;
     @observable vafLineChartLogScale = false;
     // TODO: replace this with URL stuff
-    @observable private _plotTab = PlotTab.LINE_CHART;
+    @observable private _plotTab = localStorage.getItem(LOCAL_STORAGE_PLOT_TAB_KEY) || PlotTab.LINE_CHART;
 
     @computed get plotTab() {
         return this._plotTab;
     }
+
+    @autobind
+    @action
+    private setPlotTab(id:PlotTab) {
+        this._plotTab = id;
+        localStorage.setItem(LOCAL_STORAGE_PLOT_TAB_KEY, id);
+    }
+
     @autobind
     private vafLineChartSvgRef(elt:SVGElement|null) {
         this.vafLineChartSvg = elt;
@@ -261,7 +271,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
             <div>
                 <MSKTabs
                     activeTabId={this.plotTab}
-                    onTabClick={(id:PlotTab)=>{ this._plotTab = id; }}
+                    onTabClick={this.setPlotTab}
                     className="secondaryNavigation vafVizNavTabs"
                     unmountOnHide={false}
                 >
