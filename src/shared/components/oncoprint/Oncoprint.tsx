@@ -1,5 +1,5 @@
 import * as React from "react";
-import OncoprintJS, {TrackId, CustomTrackOption} from "oncoprintjs";
+import OncoprintJS, {TrackId, CustomTrackOption, TrackGroupHeader} from "oncoprintjs";
 import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
@@ -144,6 +144,7 @@ export interface IOncoprintProps {
     geneticTracksOrder?:string[]; // track keys
     genesetHeatmapTracks: IGenesetHeatmapTrackSpec[];
     heatmapTracks: IHeatmapTrackSpec[];
+    heatmapTrackHeaders?:{[trackGroupIndex:number]:TrackGroupHeader};
     divId:string;
     width:number;
     caseLinkOutInTooltips:boolean;

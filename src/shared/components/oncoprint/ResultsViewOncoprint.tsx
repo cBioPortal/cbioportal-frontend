@@ -24,7 +24,7 @@ import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import AppConfig from "appConfig";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import OncoprintJS, {TrackId} from "oncoprintjs";
+import OncoprintJS, {TrackGroupHeader, TrackGroupIndex, TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "public-lib/lib/svgToPdfDownload";
 import tabularDownload from "./tabularDownload";
@@ -888,7 +888,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return (this.columnMode === "sample" ? this.sampleGenesetHeatmapTracks : this.patientGenesetHeatmapTracks);
     }
 
-    @computed get clusterHeatmapTrackGroupIndex() {
+    @computed get clusteredHeatmapTrackGroupIndex() {
         if (this.sortMode.type === "heatmap") {
             const clusteredHeatmapProfile: string = this.sortMode.clusteredHeatmapProfile;
             const genesetHeatmapProfile: string | undefined = (
@@ -911,9 +911,59 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             sortByMutationType:this.sortByMutationType,
             sortByDrivers:this.sortByDrivers,
             order: this.sortOrder,
-            clusterHeatmapTrackGroupIndex: this.clusterHeatmapTrackGroupIndex
+            clusterHeatmapTrackGroupIndex: this.clusteredHeatmapTrackGroupIndex
         };
     }
+
+    @autobind
+    @action
+    private clusterHeatmapByIndex(index:TrackGroupIndex) {
+        const groupEntry = this.molecularProfileIdToHeatmapTracks.entries().find(
+            x=>x[1].trackGroupIndex === index
+        );
+        if (groupEntry) {
+            this.sortMode = {
+                type:"heatmap",
+                clusteredHeatmapProfile: groupEntry[1].molecularProfileId
+            };
+        }
+    }
+
+    @autobind
+    @action
+    private removeHeatmapByIndex(index:TrackGroupIndex) {
+        const groupEntry = this.molecularProfileIdToHeatmapTracks.entries().find(
+            x=>x[1].trackGroupIndex === index
+        );
+        if (groupEntry) {
+            this.molecularProfileIdToHeatmapTracks.delete(groupEntry[1].molecularProfileId);
+        }
+    }
+
+    readonly heatmapTrackHeaders = remoteData({
+        await:()=>[this.props.store.molecularProfileIdToMolecularProfile],
+        invoke:()=>{
+            const profileMap = this.props.store.molecularProfileIdToMolecularProfile.result!;
+            return Promise.resolve(
+                this.molecularProfileIdToHeatmapTracks.entries().reduce((headerMap, nextEntry)=>{
+                    headerMap[nextEntry[1].trackGroupIndex] = {
+                        label:{
+                            text: profileMap[nextEntry[1].molecularProfileId].name
+                        },
+                        options:[{
+                            label: "Cluster",
+                            onClick: this.clusterHeatmapByIndex
+                        },{
+                            label: "Delete",
+                            onClick: this.removeHeatmapByIndex
+                        }]
+                    };
+                    return headerMap;
+                }, {} as {[trackGroupIndex:number]:TrackGroupHeader})
+            );
+        },
+        default:{}
+    });
 
     /* commenting this out because I predict it could make a comeback
     @computed get headerColumnModeButton() {
@@ -1107,7 +1157,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 clinicalTracks={this.clinicalTracks.result}
                                 geneticTracks={this.geneticTracks.result}
                                 genesetHeatmapTracks={this.genesetHeatmapTracks.result}
-                                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this. heatmapTracks.result)}
+                                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this.heatmapTracks.result)}
                                 divId={this.props.divId}
                                 width={this.width}
                                 caseLinkOutInTooltips={true}
@@ -1118,7 +1168,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
                                 alterationTypesInQuery={this.alterationTypesInQuery}
                                 showSublabels={this.showOqlInLabels}
-
+                                heatmapTrackHeaders={this.heatmapTrackHeaders.result!}
                                 horzZoomToFitIds={this.alteredKeys.result}
                                 distinguishMutationType={this.distinguishMutationType}
                                 distinguishDrivers={this.distinguishDrivers}
