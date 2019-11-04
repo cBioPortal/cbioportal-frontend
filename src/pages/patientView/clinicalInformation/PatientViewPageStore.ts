@@ -79,13 +79,13 @@ import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../public-lib/lib/StringUtils";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation } from 'public-lib/api/generated/GenomeNexusAPI';
-import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
-import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
 import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import { fetchTrialsById, fetchTrialMatchesUsingPOST } from "../../../shared/api/MatchMinerAPI";
 import { IDetailedTrialMatch, ITrial, ITrialMatch, ITrialQuery } from "../../../shared/model/MatchMiner";
 import { groupTrialMatchesById } from "../trialMatch/TrialMatchTableUtils";
+import { GeneFilterOption } from '../mutation/GeneFilterMenu';
+import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import {computeGenePanelInformation, CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
 import {getVariantAlleleFrequency} from "../../../shared/lib/MutationUtils";
 
@@ -129,6 +129,14 @@ export function handlePathologyReportCheckResponse(patientId: string, resp: any)
         return [];
     }
 
+}
+
+export function filterMutationsByProfiledGene(mutationRows:Mutation[][], sampleIds:string[], sampleToGenePanelId:{[sampleId:string]:string}, genePanelIdToEntrezGeneIds:{[sampleId:string]:number[]}):Mutation[][] {
+    return _.filter(mutationRows,(mutations:Mutation[]) => {
+        const entrezGeneId = mutations[0].gene.entrezGeneId;
+        const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(entrezGeneId, sampleIds, sampleToGenePanelId, genePanelIdToEntrezGeneIds);
+        return _(geneProfiledInSamples).values().filter((profiled:boolean) => profiled).value().length === sampleIds.length;
+    });
 }
 
 /*
@@ -175,6 +183,9 @@ export class PatientViewPageStore {
     @observable studyId = '';
 
     @observable _sampleId = '';
+
+    @observable public mutationTableGeneFilterOption = GeneFilterOption.ANY_SAMPLE;
+    @observable public copyNumberTableGeneFilterOption = GeneFilterOption.ANY_SAMPLE;
 
     @computed get sampleId() {
         return this._sampleId;
@@ -910,6 +921,24 @@ export class PatientViewPageStore {
 
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
         return mergeMutationsIncludingUncalled(this.mutationData, this.uncalledMutationData);
+    }
+
+    @computed get mergedMutationDataIncludingUncalledFilteredByGene():Mutation[][] {
+        if (this.mutationTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
+            return filterMutationsByProfiledGene(this.mergedMutationDataIncludingUncalled, this.sampleIds, this.sampleToMutationGenePanelId.result, this.genePanelIdToEntrezGeneIds.result);
+        }
+        return this.mergedMutationDataIncludingUncalled;
+    }
+
+    @computed get mergedDiscreteCNADataFilteredByGene():DiscreteCopyNumberData[][] {
+        if (this.copyNumberTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
+            return _.filter(this.mergedDiscreteCNAData,(mutations:DiscreteCopyNumberData[]) => {
+                const entrezGeneId = mutations[0].gene.entrezGeneId;
+                const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(entrezGeneId, this.sampleIds, this.sampleToMutationGenePanelId.result, this.genePanelIdToEntrezGeneIds.result);
+                return _(geneProfiledInSamples).values().filter((profiled:boolean) => profiled).value().length === this.sampleIds.length;
+            });
+        }
+        return this.mergedDiscreteCNAData;
     }
 
     @computed get existsSomeMutationWithVAFData() {
