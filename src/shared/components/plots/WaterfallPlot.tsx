@@ -112,7 +112,6 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                                 } else if (!this.props.horizontal) {
                                     // to position the tooltip more correctly
                                     props.x += TOOLTIP_OFFSET_X;
-                                    props.y += TOOLTIP_OFFSET_Y;
                                 }
 
                                 this.tooltipModel = props;
@@ -209,7 +208,7 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                     rowGutter={this.legendLocation === "right" ? undefined : -5}
                     data={legendData}
                     x={this.legendLocation === "right" ? this.legendX : 50}
-                    y={this.legendLocation === "right" ? 100 : this.svgHeight-this.bottomLegendHeight+5}
+                    y={this.legendLocation === "right" ? 100 : this.svgHeight-this.bottomLegendHeight+3}
                 />
             );
         } else {
