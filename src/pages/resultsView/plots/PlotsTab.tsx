@@ -2358,7 +2358,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     axisLabelY={this.vertLabel.result!}
                                     data={this.boxPlotData.result.data}
                                     chartBase={550}
-                                    tooltip={this.boxPlotTooltip}
+                                    scatterPlotTooltip={this.boxPlotTooltip}
                                     highlight={this.scatterPlotHighlight}
                                     horizontal={horizontal}
                                     logScale={horizontal ? this.horzLogScaleFunction : this.vertLogScaleFunction}
