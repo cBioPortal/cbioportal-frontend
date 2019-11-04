@@ -19,6 +19,8 @@ import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import {IGisticData} from "shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
 import {ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import HeaderIconMenu from '../mutation/HeaderIconMenu';
+import GeneFilterMenu, { GeneFilterOption } from '../mutation/GeneFilterMenu';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
@@ -50,13 +52,18 @@ type ICopyNumberTableWrapperProps = {
     columnVisibility?: {[columnId: string]: boolean};
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     status:"loading"|"available"|"unavailable";
+    showGeneFilterMenu?:boolean;
+    currentGeneFilter:GeneFilterOption;
+    onFilterGenes?:(option:GeneFilterOption)=>void;
 };
 
 @observer
 export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
+
     public static defaultProps = {
         enableOncoKb: true,
-        enableCivic: false
+        enableCivic: false,
+        showGeneFilterMenu: true,
     };
 
     @computed get hugoGeneSymbolToCytoband() {
@@ -96,6 +103,13 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             },
             download: (d:DiscreteCopyNumberData[])=>d[0].gene.hugoGeneSymbol,
             sortBy: (d:DiscreteCopyNumberData[])=>d[0].gene.hugoGeneSymbol,
+            headerRender: (name:string) => {
+                return (
+                    <HeaderIconMenu name={name} showIcon={this.props.showGeneFilterMenu} >
+                        <GeneFilterMenu onOptionChanged={this.props.onFilterGenes} currentSelection={this.props.currentGeneFilter} />
+                    </HeaderIconMenu>
+                );
+            },
             visible: true,
             order: 30
         });
