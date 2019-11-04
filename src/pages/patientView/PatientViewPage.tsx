@@ -53,6 +53,9 @@ import 'cbioportal-frontend-commons/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
 import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
+import { trackPatient, trackEvent } from "shared/lib/tracking";
+import PatientViewUrlWrapper from "./PatientViewUrlWrapper";
+import { PagePath } from "shared/enums/PagePaths";
 import { GeneFilterOption } from "./mutation/GeneFilterMenu";
 import { checkNonProfiledGenesExist } from "./PatientViewPageUtils";
 
@@ -88,17 +91,37 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     @observable private mutationTableColumnVisibility: {[columnId: string]: boolean}|undefined;
     @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
 
+    // use this wrapper rather than interacting with the url directly
+    @observable
+    public urlWrapper: PatientViewUrlWrapper
+
     constructor(props: IPatientViewPageProps) {
 
         super(props);
+        this.urlWrapper = new PatientViewUrlWrapper(props.routing);
 
+        reaction(
+            () => [this.urlWrapper.query.caseId, this.urlWrapper.query.studyId],
+            ([_, studyId]) => {
+                if (
+                    studyId &&
+                    this.props.routing.location.pathname.includes("/" + PagePath.Patient)
+                ) {
+                    trackPatient(studyId);
+                }
+            },
+            { fireImmediately:true }
+        )
         //TODO: this should be done by a module so that it can be reused on other pages
-        const reaction1 = reaction(
-            () => [props.routing.location.query, props.routing.location.hash, props.routing.location.pathname],
-            ([query,hash,pathname]) => {
-
+        reaction(
+            () => [
+                props.routing.location.query,
+                props.routing.location.hash,
+                props.routing.location.pathname
+            ],
+            ([query, hash, pathname]) => {
                 // we don't want to update patient if we aren't on a patient page route
-                if (!pathname.includes("/patient")) {
+                if (!pathname.includes("/" + PagePath.Patient)) {
                     return;
                 }
 
@@ -110,11 +133,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     if ('studyId' in query) {
                         patientViewPageStore.studyId = query.studyId;
-                    }
-                    if ('caseId' in query) {
+                    } if ('caseId' in query) {
                         patientViewPageStore.setPatientId(query.caseId as string);
-                    } else if ('sampleId' in query)
-                    {
+                    } else if ('sampleId' in query) {
                         patientViewPageStore.setSampleId(query.sampleId as string);
                     }
 
@@ -139,25 +160,19 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
         if (!e.shiftKey && !e.altKey && !e.metaKey) {
             e.preventDefault();
-            this.props.routing.updateRoute({ caseId:undefined, sampleId:id });
+            this.urlWrapper.updateQuery({ caseId:undefined, sampleId:id })
         }
         // otherwise do nothing, we want default behavior of link
         // namely that href will open in a new window/tab
-    }
-
-    private handleTabChange(id: string) {
-
-        this.props.routing.updateRoute({}, `patient/${id}`);
-
     }
 
     private handlePatientClick(id: string) {
 
         let values = id.split(":");
         if(values.length == 2){
-            this.props.routing.updateRoute({ studyId: values[0], caseId: values[1], sampleId: undefined });
+            this.urlWrapper.updateQuery({ studyId: values[0], caseId: values[1], sampleId: undefined });
         } else {
-            this.props.routing.updateRoute({ caseId: id, sampleId: undefined });
+            this.urlWrapper.updateQuery({ caseId: id, sampleId: undefined });
         }
 
     }
@@ -239,7 +254,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     mutationTableShowGeneFilterMenu(sampleIds:string[]):boolean {
         const entrezGeneIds:number[] = _.uniq(_.map(patientViewPageStore.mergedMutationDataIncludingUncalled, mutations => mutations[0].entrezGeneId));
-        return sampleIds.length > 1 
+        return sampleIds.length > 1
             && checkNonProfiledGenesExist(  sampleIds,
                                             entrezGeneIds,
                                             patientViewPageStore.sampleToMutationGenePanelId.result,
@@ -250,7 +265,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         const entrezGeneIds:number[] = _.uniq(_.map(patientViewPageStore.mergedDiscreteCNADataFilteredByGene, alterations => alterations[0].entrezGeneId));
         return sampleIds.length > 1
             && checkNonProfiledGenesExist(  sampleIds,
-                                            entrezGeneIds, 
+                                            entrezGeneIds,
                                             patientViewPageStore.sampleToDiscreteGenePanelId.result,
                                             patientViewPageStore.genePanelIdToEntrezGeneIds.result);
     }
@@ -329,7 +344,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 );
             }
         }
-        
+
         if (patientViewPageStore.patientIdsInCohort && patientViewPageStore.patientIdsInCohort.length > 0) {
             const indexInCohort = patientViewPageStore.patientIdsInCohort.indexOf(patientViewPageStore.studyId + ':' + patientViewPageStore.patientId);
             cohortNav = (
@@ -363,7 +378,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         if (sampleManager) {
             sampleIds = sampleManager.samples.map((sample:ClinicalDataBySampleId) => sample.id );
         }
-                
+
         return (
             <PageLayout noMargin={true} hideFooter={true}>
                 {
@@ -407,9 +422,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </div>
                     <If condition={patientViewPageStore.patientViewData.isComplete}>
                         <Then>
-                            <MSKTabs id="patientViewPageTabs" activeTabId={this.props.params.tab || "summaryTab"}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
-
-                        <MSKTab key={0} id="summary" linkText="Summary">
+                            <MSKTabs
+                                id="patientViewPageTabs"
+                                activeTabId={this.props.params.tab || "summaryTab"}
+                                onTabClick={(id:string)=>this.urlWrapper.setTab(id)}
+                                className="mainTabs"
+                            >
+                                <MSKTab key={0} id="summary" linkText="Summary">
 
                                     <LoadingIndicator isLoading={patientViewPageStore.clinicalEvents.isPending} />
 
