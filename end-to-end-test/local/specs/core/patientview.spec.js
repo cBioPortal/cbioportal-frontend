@@ -133,9 +133,9 @@ describe('patient view page', function() {
             });
             
             it('shows mouse-over tooltip for gene panel icons with gene panel id', () => {
-                // tooltip elements are created when hovering the gene panel icon
-                // control logic below is needed to access the last one after it
-                // was created. 
+                // Tooltip elements are created when hovering the gene panel icon.
+                // Control logic below is needed to access the last one after it
+                // was created.
                 var curNumToolTips = $$('div.qtip-content').length;
                 browser.moveToObject('[data-test=cna-track-genepanel-icon-1]');
                 browser.waitUntil(() => $$('div.qtip-content').length > curNumToolTips);
@@ -145,9 +145,9 @@ describe('patient view page', function() {
             });
             
             it('shows mouse-over tooltip for gene panel icons with NA for whole-genome analyzed sample', () => {
-                // tooltip elements are created when hovering the gene panel icon
-                // control logic below is needed to access the last one after it
-                // was created. 
+                // Tooltip elements are created when hovering the gene panel icon.
+                // Control logic below is needed to access the last one after it
+                // was created.
                 var curNumToolTips = $$('div.qtip-content').length;
                 browser.moveToObject('[data-test=cna-track-genepanel-icon-4]');
                 browser.waitUntil(() => $$('div.qtip-content').length > curNumToolTips);
