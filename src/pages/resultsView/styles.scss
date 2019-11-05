@@ -80,6 +80,7 @@
             padding: 0 !important;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
             border-radius: $cornerBorderRadius;
+            z-index:10000;
             li {
                 &.oncoprintjs__track_options__separator, &.oncoprintjs__header__separator {
                     border-top: 1px solid #dddddd !important;
