@@ -122,6 +122,11 @@ describe('patient view page', function() {
 
         describe('genomic tracks', () => {
 
+            before(()=>{
+                goToUrlAndSetLocalStorage(patienViewUrl);
+                waitForPatientView();
+            });
+
             it('shows gene panel icon when gene panels are used for patient samples', () => {
                 assert($('[data-test=cna-track-genepanel-icon-0]').isExisting());
                 assert($('[data-test=mut-track-genepanel-icon-5]').isExisting());
