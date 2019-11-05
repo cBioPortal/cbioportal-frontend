@@ -133,14 +133,26 @@ describe('patient view page', function() {
             });
             
             it('shows mouse-over tooltip for gene panel icons with gene panel id', () => {
+                // tooltip elements are created when hovering the gene panel icon
+                // control logic below is needed to access the last one after it
+                // was created. 
+                var curNumToolTips = $$('div.qtip-content').length;
                 browser.moveToObject('[data-test=cna-track-genepanel-icon-1]');
-                var text = $('div.qtip-content').getText();
+                browser.waitUntil(() => $$('div.qtip-content').length > curNumToolTips);
+                var toolTips = $$('div.qtip-content');
+                var text = toolTips[toolTips.length-1].getText();
                 assert.equal(text, 'Gene panel: TESTPANEL1');
             });
             
             it('shows mouse-over tooltip for gene panel icons with NA for whole-genome analyzed sample', () => {
+                // tooltip elements are created when hovering the gene panel icon
+                // control logic below is needed to access the last one after it
+                // was created. 
+                var curNumToolTips = $$('div.qtip-content').length;
                 browser.moveToObject('[data-test=cna-track-genepanel-icon-4]');
-                var text = $('div.qtip-content').getText();
+                browser.waitUntil(() => $$('div.qtip-content').length > curNumToolTips);
+                var toolTips = $$('div.qtip-content');
+                var text = toolTips[toolTips.length-1].getText();
                 assert.equal(text, 'Gene panel information not found. Sample is presumed to be whole exome/genome sequenced.');
             });
 
