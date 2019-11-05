@@ -10,6 +10,7 @@ import { makeScatterPlotSizeFunction as makePlotSizeFunction } from "./PlotUtils
 import WaterfallPlotTooltip from "./WaterfallPlotTooltip";
 import { tickFormatNumeral } from "./TickUtils";
 import { IAxisLogScaleParams, waterfallSearchIndicatorAppearance, limitValueAppearance, IValue1D } from 'pages/resultsView/plots/PlotsTabUtils';
+import { truncateWithEllipsis, textTruncationUtils } from "cbioportal-frontend-commons";
 
 // TODO make distinction between public and internal interface for waterfall plot data
 export interface IBaseWaterfallPlotData extends IValue1D {
@@ -153,8 +154,9 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
         return this.props.fontFamily || DEFAULT_FONT_FAMILY;
     }
 
-    private get title() {
+    @computed get title() {
         if (this.props.title) {
+            const text = textTruncationUtils(this.props.title, this.props.chartWidth, this.fontFamily, "13px");
             return (
                 <VictoryLabel
                     style={{
@@ -164,12 +166,20 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                     }}
                     x={this.svgWidth/2}
                     y="1.2em"
-                    text={this.props.title}
+                    text={text}
                 />
             );
         } else {
             return null;
         }
+    }
+
+    @computed get axisLabel() {
+        if (this.props.axisLabel) {
+            const maxDimension = this.props.horizontal? this.props.chartWidth : this.props.chartHeight;
+            return textTruncationUtils(this.props.axisLabel, maxDimension, this.fontFamily, "13px");
+        }
+        return "";
     }
 
     @computed get legendX() {
@@ -504,7 +514,7 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                                 tickCount={NUM_AXIS_TICKS}
                                 tickFormat={this.tickFormatX}
                                 axisLabelComponent={<VictoryLabel dy={-20}/>}
-                                label={this.props.axisLabel}
+                                label={this.axisLabel}
                             />}
                            {this.props.horizontal && <VictoryAxis
                                 orientation="left"
@@ -521,7 +531,7 @@ export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends Rea
                                 tickFormat={this.tickFormatY}
                                 dependentAxis={true}
                                 axisLabelComponent={<VictoryLabel dy={-35}/>}
-                                label={this.props.axisLabel}
+                                label={this.axisLabel}
                             />}
                             <VictoryBar
                                 // barRatio={1} // removes spaces between bars
