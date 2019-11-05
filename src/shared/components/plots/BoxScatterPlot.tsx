@@ -369,13 +369,9 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         return this.props.boxWidth || 10;
     }
 
-    @computed get boxWidthDataSpace() {
-        return this.boxWidth * (this.props.horizontal ? ((this.plotDomain.y[1] - this.plotDomain.y[0])/this.chartHeight) : ((this.plotDomain.x[1] - this.plotDomain.x[0])/this.chartWidth));
-    }
-
-    private jitter(d:D, randomNumber:number) {
+    private jitter(d: D, randomNumber: number) {
         // randomNumber: between -1 and 1
-        return 0.5*this.boxWidthDataSpace * randomNumber;
+        return 0.2 * this.boxWidth * randomNumber;
     }
 
     @bind
