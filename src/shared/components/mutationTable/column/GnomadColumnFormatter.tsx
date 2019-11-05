@@ -104,8 +104,8 @@ export default class GnomadColumnFormatter {
             // Checking if gnomad data is valid
             if (gnomadData && (gnomadData.gnomadExome || gnomadData.gnomadGenome)) {
                 // get gnomad link from chrom, location, ref and alt
-                gnomadUrl = (gnomadData && gnomadData.dbsnp) ? GnomadColumnFormatter.generateGnomadUrl(
-                    gnomadData.dbsnp.chrom, gnomadData.dbsnp.hg19.start, gnomadData.dbsnp.ref, gnomadData.dbsnp.alt) : "";
+                gnomadUrl = (gnomadData && gnomadData.vcf) ? GnomadColumnFormatter.generateGnomadUrl(
+                    genomeNexusCacheData.data.seq_region_name, gnomadData.vcf.position, gnomadData.vcf.ref, gnomadData.vcf.alt) : "";
 
                 const gnomadExome : {[key:string]: GnomadData} = {};
                 const gnomadGenome : {[key:string]: GnomadData} = {};
@@ -307,10 +307,10 @@ export default class GnomadColumnFormatter {
 
     }
 
-    public static generateGnomadUrl(chrom: String | null, start: number | null, alt: String | null, ref: String | null) {
+    public static generateGnomadUrl(chrom: string | null, position: string | null, alt: string | null, ref: string | null) {
         
-        if (chrom && start && alt && ref) {
-            return "https://gnomad.broadinstitute.org/variant/" + chrom + "-" + start.toString() + "-" + alt + "-" + ref;
+        if (chrom && position && alt && ref) {
+            return "https://gnomad.broadinstitute.org/variant/" + chrom + "-" + position + "-" + alt + "-" + ref;
         }
         else {
             return "https://gnomad.broadinstitute.org/";
