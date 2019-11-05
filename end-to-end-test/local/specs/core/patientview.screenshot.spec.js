@@ -28,7 +28,7 @@ describe('patient view page', function() {
             var selectMenu = $('.rc-tooltip');
             const allGenesRadio = selectMenu.$('input[value=allSamples]');
             allGenesRadio.click();
-            var res = browser.checkElement('div.qtip-content');
+            var res = browser.checkElement('div.genomicOverviewTracksContainer');
             assertScreenShotMatch(res);
         });
 
