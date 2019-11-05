@@ -57,8 +57,9 @@ export default class OncoprintHeaderView {
         $(document).trigger(TRACK_OPTIONS_VIEW_CLOSE_MENUS_EVENT);
     }
 
-    private static $makeDropdownOption(text:string, weight:string, disabled:boolean, callback:(evt:ClickEvent)=>void) {
+    private static $makeDropdownOption(text:string, weight:string, isDisabled?:()=>boolean, callback?:(evt:ClickEvent)=>void) {
         const li = $('<li>').text(text).css({'font-weight': weight, 'font-size': 12, 'border-bottom': '1px solid rgba(0,0,0,0.3)'});
+        const disabled = isDisabled && isDisabled();
         if (!disabled) {
             if (callback) {
                 li.addClass("clickable");
@@ -143,22 +144,28 @@ export default class OncoprintHeaderView {
 
                     this.$dropdowns.push($dropdown);
 
-                    // add dropdown options
-                    group.header.options.forEach((option)=>{
-                        if (option.separator) {
-                            $dropdown.append(OncoprintHeaderView.$makeDropdownSeparator());
-                        } else {
-                            $dropdown.append(OncoprintHeaderView.$makeDropdownOption(
-                                option.label || "",
-                                option.weight || "normal",
-                                !!option.disabled,
-                                option.onClick && function(evt) {
-                                    evt.stopPropagation();
-                                    option.onClick(trackGroupIndex);
-                                }
-                            ));
-                        }
-                    });
+                    const populateDropdownOptions = ()=>{
+                        // repopulate dropdown every time it opens, and every time an option is clicked,
+                        //      in order to update dynamic disabled status and weight
+                        $dropdown.empty();
+                        // add dropdown options
+                        group.header.options.forEach((option)=>{
+                            if (option.separator) {
+                                $dropdown.append(OncoprintHeaderView.$makeDropdownSeparator());
+                            } else {
+                                $dropdown.append(OncoprintHeaderView.$makeDropdownOption(
+                                    option.label || "",
+                                    option.weight ? option.weight() : "normal",
+                                    option.disabled,
+                                    function(evt) {
+                                        evt.stopPropagation();
+                                        option.onClick && option.onClick(trackGroupIndex);
+                                        populateDropdownOptions();
+                                    }
+                                ));
+                            }
+                        });
+                    };
 
                     // add dropdown button
                     const $img = $("<img/>")
@@ -176,10 +183,11 @@ export default class OncoprintHeaderView {
                         .on("click", (evt)=>{
                             evt.stopPropagation();
                             if ($dropdown.is(":visible")) {
-                                $img.addClass(TOGGLE_BTN_OPEN_CLASS);
+                                $img.removeClass(TOGGLE_BTN_OPEN_CLASS);
                                 $dropdown.fadeOut(FADE_MS);
                             } else {
-                                $img.removeClass(TOGGLE_BTN_OPEN_CLASS);
+                                populateDropdownOptions();
+                                $img.addClass(TOGGLE_BTN_OPEN_CLASS);
                                 $dropdown.fadeIn(FADE_MS);
                                 this.closeDropdownsExcept($dropdown);
                             }

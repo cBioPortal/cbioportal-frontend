@@ -128,7 +128,7 @@ export default class OncoprintTrackOptionsView {
         $(document).trigger(HEADER_VIEW_CLOSE_MENUS_EVENT);
     }
 
-    private static $makeDropdownOption(text:string, weight:string, disabled:boolean, callback:(evt:ClickEvent)=>void) {
+    private static $makeDropdownOption(text:string, weight:string, disabled?:boolean, callback?:(evt:ClickEvent)=>void) {
         const li = $('<li>').text(text).css({'font-weight': weight, 'font-size': 12, 'border-bottom': '1px solid rgba(0,0,0,0.3)'});
         if (!disabled) {
             if (callback) {
@@ -219,14 +219,14 @@ export default class OncoprintTrackOptionsView {
             self.hideMenusExcept(track_id);
         });
 
-        const movingAndSortingDisabled = model.getTrackMovable(track_id) && model.isTrackInClusteredGroup(track_id);
+        const movingDisabled = model.getTrackMovable(track_id) && model.isTrackInClusteredGroup(track_id);
 
         if (model.getTrackMovable(track_id)) {
-            $dropdown.append(OncoprintTrackOptionsView.$makeDropdownOption('Move up', 'normal', movingAndSortingDisabled, function (evt) {
+            $dropdown.append(OncoprintTrackOptionsView.$makeDropdownOption('Move up', 'normal', movingDisabled, function (evt) {
                 evt.stopPropagation();
                 self.moveUpCallback(track_id);
             }));
-            $dropdown.append(OncoprintTrackOptionsView.$makeDropdownOption('Move down', 'normal', movingAndSortingDisabled, function (evt) {
+            $dropdown.append(OncoprintTrackOptionsView.$makeDropdownOption('Move down', 'normal', movingDisabled, function (evt) {
                 evt.stopPropagation();
                 self.moveDownCallback(track_id);
             }));
@@ -242,7 +242,7 @@ export default class OncoprintTrackOptionsView {
             let $sort_inc_li:JQuery;
             let $sort_dec_li:JQuery;
             let $dont_sort_li:JQuery;
-            $sort_inc_li = OncoprintTrackOptionsView.$makeDropdownOption('Sort a-Z', (model.getTrackSortDirection(track_id) === 1 ? 'bold' : 'normal'), movingAndSortingDisabled, function (evt) {
+            $sort_inc_li = OncoprintTrackOptionsView.$makeDropdownOption('Sort a-Z', (model.getTrackSortDirection(track_id) === 1 ? 'bold' : 'normal'), false, function (evt) {
                 evt.stopPropagation();
                 $sort_inc_li.css('font-weight', 'bold');
                 $sort_dec_li.css('font-weight', 'normal');
@@ -250,7 +250,7 @@ export default class OncoprintTrackOptionsView {
                 self.sortChangeCallback(track_id, 1);
                 OncoprintTrackOptionsView.renderSortArrow($sortarrow, model, track_id);
             });
-            $sort_dec_li = OncoprintTrackOptionsView.$makeDropdownOption('Sort Z-a', (model.getTrackSortDirection(track_id) === -1 ? 'bold' : 'normal'), movingAndSortingDisabled, function (evt) {
+            $sort_dec_li = OncoprintTrackOptionsView.$makeDropdownOption('Sort Z-a', (model.getTrackSortDirection(track_id) === -1 ? 'bold' : 'normal'), false, function (evt) {
                 evt.stopPropagation();
                 $sort_inc_li.css('font-weight', 'normal');
                 $sort_dec_li.css('font-weight', 'bold');
@@ -258,7 +258,7 @@ export default class OncoprintTrackOptionsView {
                 self.sortChangeCallback(track_id, -1);
                 OncoprintTrackOptionsView.renderSortArrow($sortarrow, model, track_id);
             });
-            $dont_sort_li = OncoprintTrackOptionsView.$makeDropdownOption('Don\'t sort track', (model.getTrackSortDirection(track_id) === 0 ? 'bold' : 'normal'), movingAndSortingDisabled, function (evt) {
+            $dont_sort_li = OncoprintTrackOptionsView.$makeDropdownOption('Don\'t sort track', (model.getTrackSortDirection(track_id) === 0 ? 'bold' : 'normal'), false, function (evt) {
                 evt.stopPropagation();
                 $sort_inc_li.css('font-weight', 'normal');
                 $sort_dec_li.css('font-weight', 'normal');
@@ -303,7 +303,7 @@ export default class OncoprintTrackOptionsView {
                     if (option.separator) {
                         $dropdown.append(OncoprintTrackOptionsView.$makeDropdownSeparator());
                     } else {
-                        $dropdown.append(OncoprintTrackOptionsView.$makeDropdownOption(option.label || "", option.weight || "normal", !!option.disabled, option.onClick && function (evt) {
+                        $dropdown.append(OncoprintTrackOptionsView.$makeDropdownOption(option.label || "", option.weight || "normal", option.disabled, option.onClick && function (evt) {
                             evt.stopPropagation();
                             option.onClick(track_id);
                         }));
@@ -350,6 +350,10 @@ export default class OncoprintTrackOptionsView {
         this.resize(model, getCellViewHeight);
     }
     public setTrackGroupHeader(model:OncoprintModel, getCellViewHeight:()=>number) {
+        this.renderAllOptions(model);
+        this.resize(model, getCellViewHeight);
+    }
+    public sort(model:OncoprintModel, getCellViewHeight:()=>number) {
         this.renderAllOptions(model);
         this.resize(model, getCellViewHeight);
     }

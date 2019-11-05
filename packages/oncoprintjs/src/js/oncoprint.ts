@@ -936,6 +936,17 @@ export default class Oncoprint {
         this.resizeAndOrganizeAfterTimeout();
     }
 
+    public resetSortableTracksSortDirection() {
+        if(this.webgl_unavailable || this.destroyed) {
+            return;
+        }
+        this.model.resetSortableTracksSortDirection(true);
+
+        if (this.keep_sorted) {
+            this.sort();
+        }
+    }
+
     public setTrackSortDirection(track_id:TrackId, dir:TrackSortDirection) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
@@ -996,6 +1007,7 @@ export default class Oncoprint {
         const self = this;
         this.model.sort().then(function(x) {
             self.label_view.sort(self.model, self.getCellViewHeight);
+            self.track_options_view.sort(self.model, self.getCellViewHeight);
             self.cell_view.sort(self.model);
             self.minimap_view.sort(self.model, self.cell_view);
 
