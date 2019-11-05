@@ -811,6 +811,15 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
+    @autobind
+    @action
+    public clearSortDirectionsAndSortByData() {
+        if (this.oncoprint) {
+            this.oncoprint.resetSortableTracksSortDirection();
+            this.sortByData();
+        }
+    }
+
     @computed get sortOrder() {
         if (this.sortMode.type === "alphabetical") {
             return this.columnMode === "sample" ? this.alphabeticalSampleOrder : this.alphabeticalPatientOrder;
@@ -918,6 +927,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @autobind
     @action
     private clusterHeatmapByIndex(index:TrackGroupIndex) {
+        if (this.oncoprint) {
+            this.oncoprint.resetSortableTracksSortDirection();
+        }
+
         const groupEntry = this.molecularProfileIdToHeatmapTracks.entries().find(
             x=>x[1].trackGroupIndex === index
         );
@@ -943,6 +956,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     readonly heatmapTrackHeaders = remoteData({
         await:()=>[this.props.store.molecularProfileIdToMolecularProfile],
         invoke:()=>{
+            console.log("redomputing");
             const profileMap = this.props.store.molecularProfileIdToMolecularProfile.result!;
             return Promise.resolve(
                 this.molecularProfileIdToHeatmapTracks.entries().reduce((headerMap, nextEntry)=>{
@@ -952,7 +966,30 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         },
                         options:[{
                             label: "Cluster",
-                            onClick: this.clusterHeatmapByIndex
+                            onClick: this.clusterHeatmapByIndex,
+                            weight:()=>{
+                                if (this.clusteredHeatmapTrackGroupIndex === nextEntry[1].trackGroupIndex) {
+                                    return "bold";
+                                } else {
+                                    return "normal";
+                                }
+                            }
+                        },{
+                            label:"Don't cluster",
+                            onClick:()=>{
+                                if (this.clusteredHeatmapTrackGroupIndex === nextEntry[1].trackGroupIndex) {
+                                    this.sortByData();
+                                }
+                            },
+                            weight:()=>{
+                                if (this.clusteredHeatmapTrackGroupIndex === nextEntry[1].trackGroupIndex) {
+                                    return "normal";
+                                } else {
+                                    return "bold";
+                                }
+                            }
+                        }, {
+                            separator:true
                         },{
                             label: "Delete",
                             onClick: this.removeHeatmapByIndex
