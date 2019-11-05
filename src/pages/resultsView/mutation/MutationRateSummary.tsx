@@ -57,22 +57,24 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
     render()
     {
         return (
-            <MutationStatusSelector
-                filter={this.props.mutationStatusFilter}
-                onSelect={this.props.onMutationStatusSelect}
-                rates={{
-                    "Germline": this.germlineMutationRate,
-                    "Somatic": this.somaticMutationRate
-                }}
-                somaticContent={{
-                    title: "Somatic Mutation Frequency",
-                    description: `Percentage of samples with a somatic mutation in ${this.props.hugoGeneSymbol}`
-                }}
-                germlineContent={this.germlineMutationRate > 0 ? {
-                    title: "Germline Mutation Frequency",
-                    description: `Percentage of samples with a germline mutation in ${this.props.hugoGeneSymbol}`
-                }: undefined}
-            />
+            <span data-test="mutation-rate-summary">
+                <MutationStatusSelector
+                    filter={this.props.mutationStatusFilter}
+                    onSelect={this.props.onMutationStatusSelect}
+                    rates={{
+                        "Germline": this.germlineMutationRate,
+                        "Somatic": this.somaticMutationRate
+                    }}
+                    somaticContent={{
+                        title: "Somatic Mutation Frequency",
+                        description: `Percentage of samples with a somatic mutation in ${this.props.hugoGeneSymbol}`
+                    }}
+                    germlineContent={this.germlineMutationRate > 0 ? {
+                        title: "Germline Mutation Frequency",
+                        description: `Percentage of samples with a germline mutation in ${this.props.hugoGeneSymbol}`
+                    }: undefined}
+                />
+            </span>
         );
     }
 }
