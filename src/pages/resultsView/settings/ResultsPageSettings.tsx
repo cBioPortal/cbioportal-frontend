@@ -15,7 +15,7 @@ import {
 import InfoIcon from "../../../shared/components/InfoIcon";
 import styles from "./styles.module.scss";
 import classNames from "classnames";
-import {OncoprintAnalysisCaseType} from "../ResultsViewPageStoreUtils";
+import {AnalysisCaseType} from "../ResultsViewPageStoreUtils";
 
 export interface IResultsPageSettingsProps {
     store:ResultsViewPageStore;
@@ -31,8 +31,8 @@ enum EVENT_KEY {
 
 @observer
 export default class ResultsPageSettings extends React.Component<IResultsPageSettingsProps, {}> {
-    @autobind private onChange(v:{ label:string, value:OncoprintAnalysisCaseType}) {
-        this.props.store.setOncoprintAnalysisCaseType(v.value);
+    @autobind private onChange(v:{ label:string, value:AnalysisCaseType}) {
+        this.props.store.setAnalysisCaseType(v.value);
     }
 
     private driverSettingsState:IDriverAnnotationControlsState & IObservableObject;
@@ -54,10 +54,10 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                 this.props.store.setExcludeGermlineMutations(!this.props.store.excludeGermlineMutations);
                 break;
             case EVENT_KEY.dataTypeSample:
-                this.props.store.setOncoprintAnalysisCaseType(OncoprintAnalysisCaseType.SAMPLE);
+                this.props.store.setAnalysisCaseType(AnalysisCaseType.SAMPLE);
                 break;
             case EVENT_KEY.dataTypePatient:
-                this.props.store.setOncoprintAnalysisCaseType(OncoprintAnalysisCaseType.PATIENT);
+                this.props.store.setAnalysisCaseType(AnalysisCaseType.PATIENT);
                 break;
         }
     }
@@ -69,6 +69,31 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                 className={classNames("cbioportal-frontend", styles.globalSettingsDropdown)}
                 style={{padding:5}}
             >
+                <h5>Data Type</h5>
+                <InfoIcon
+                    divStyle={{display:"inline-block", marginLeft:6}}
+                    style={{color:"rgb(54, 134, 194)"}}
+                    tooltip={
+                        <span>This setting affects the following tabs: {boldedTabList(["Oncoprint", "Enrichments"])}</span>
+                    }
+                />
+                <div className="radio"><label>
+                    <input
+                        type="radio"
+                        value={EVENT_KEY.dataTypeSample}
+                        checked={this.props.store.analysisCaseType === AnalysisCaseType.SAMPLE}
+                        onClick={this.onInputClick}
+                    /> Events per sample
+                </label></div>
+                <div className="radio"><label>
+                    <input
+                        type="radio"
+                        value={EVENT_KEY.dataTypePatient}
+                        checked={this.props.store.analysisCaseType === AnalysisCaseType.PATIENT}
+                        onClick={this.onInputClick}
+                    /> Events per patient
+                </label></div>
+                <hr/>
                 <h5>Annotate Data</h5>
                 <InfoIcon
                     divStyle={{display:"inline-block", marginLeft:6}}
@@ -101,7 +126,7 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                             checked={this.props.store.driverAnnotationSettings.excludeVUS}
                             onClick={this.onInputClick}
                             disabled={!this.driverSettingsState.distinguishDrivers}
-                        /> Hide mutations and copy number alterations of unknown significance
+                        /> Exclude mutations and copy number alterations of unknown significance
                     </label></div>
                     <div className="checkbox"><label>
                         <input
@@ -110,7 +135,7 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                             value={EVENT_KEY.showGermlineMutations}
                             checked={this.props.store.excludeGermlineMutations}
                             onClick={this.onInputClick}
-                        /> Hide germline mutations
+                        /> Exclude germline mutations
                     </label></div>
                 </div>
             </div>

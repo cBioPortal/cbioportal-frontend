@@ -1,21 +1,25 @@
 import * as React from 'react';
 import * as _ from "lodash";
-import { observer } from "mobx-react";
+import {observer} from "mobx-react";
 import numeral from 'numeral';
-import { ResultsViewPageStore } from "../ResultsViewPageStore";
-import {observable, computed, action} from 'mobx';
+import {ResultsViewPageStore} from "../ResultsViewPageStore";
+import {action, computed, observable} from 'mobx';
 import AlterationEnrichmentTable, {AlterationEnrichmentTableColumnType} from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
 import styles from "./styles.module.scss";
 import {
-    getAlterationScatterData,
+    AlterationContainerType,
+    AlterationEnrichmentWithQ,
+    getAlterationEnrichmentColumns,
+    getAlterationFrequencyScatterData,
     getAlterationRowData,
-    getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getAlterationEnrichmentColumns, AlterationContainerType, getFilteredData
+    getAlterationScatterData,
+    getFilteredData
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
+import {AlterationEnrichmentRow} from 'shared/model/AlterationEnrichmentRow';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
-import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
+import {EnrichmentsTableDataStore} from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
 import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
 import {Option} from 'public-lib/components/checkedSelect/CheckedSelectUtils'
@@ -25,6 +29,7 @@ import GeneBarPlot from './GeneBarPlot';
 import WindowStore from "shared/components/window/WindowStore";
 import './styles.scss';
 import ReactSelect from "react-select";
+import {AnalysisCaseType} from "../ResultsViewPageStoreUtils";
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -40,9 +45,20 @@ export interface IAlterationEnrichmentContainerProps {
     store?: ResultsViewPageStore;
     showCNAInTable?:boolean;
     containerType:AlterationContainerType;
-    patientLevelEnrichments:boolean;
-    onSetPatientLevelEnrichments:(patientLevel:boolean)=>void;
+    analysisCaseType:AnalysisCaseType;
+    onSetAnalysisCaseType:(analysisCaseType:AnalysisCaseType)=>void;
 }
+
+const analysisCaseTypeOptions = {
+    [AnalysisCaseType.PATIENT]:{
+        label: "Patient-level enrichments",
+        value: AnalysisCaseType.PATIENT
+    },
+    [AnalysisCaseType.SAMPLE]:{
+        label: "Sample-level enrichments",
+        value: AnalysisCaseType.SAMPLE
+    }
+};
 
 @observer
 export default class AlterationEnrichmentContainer extends React.Component<IAlterationEnrichmentContainerProps, {}> {
@@ -163,11 +179,11 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             <tbody>
                             <tr>
                                 <td><strong>{group1.name}: </strong></td>
-                                <td>{group1.alteredCount} of {group1.profiledCount} of profiled {this.props.patientLevelEnrichments ? "patients" : "samples"} ({numeral(group1.alteredPercentage).format('0.0')}%)</td>
+                                <td>{group1.alteredCount} of {group1.profiledCount} of profiled {this.props.analysisCaseType === AnalysisCaseType.PATIENT ? "patients" : "samples"} ({numeral(group1.alteredPercentage).format('0.0')}%)</td>
                             </tr>
                             <tr>
                                 <td><strong>{group2.name}: </strong></td>
-                                <td>{group2.alteredCount} of {group2.profiledCount} of profiled {this.props.patientLevelEnrichments ? "patients" : "samples"} ({numeral(group2.alteredPercentage).format('0.0')}%)
+                                <td>{group2.alteredCount} of {group2.profiledCount} of profiled {this.props.analysisCaseType === AnalysisCaseType.PATIENT ? "patients" : "samples"} ({numeral(group2.alteredPercentage).format('0.0')}%)
                                 </td>
                             </tr>
                             </tbody>
@@ -198,11 +214,11 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                 <table>
                     <tr>
                         <td>Upper row</td>
-                        <td>: {this.props.patientLevelEnrichments ? "Patients" : "Samples"} colored according to group.</td>
+                        <td>: {this.props.analysisCaseType === AnalysisCaseType.PATIENT ? "Patients" : "Samples"} colored according to group.</td>
                     </tr>
                     <tr>
                         <td>Lower row</td>
-                        <td>: {this.props.patientLevelEnrichments ? "Patients" : "Samples"} with {this.props.showCNAInTable ? 'the listed alteration' : 'a mutation'} in the listed gene are highlighted.</td>
+                        <td>: {this.props.analysisCaseType === AnalysisCaseType.PATIENT ? "Patients" : "Samples"} with {this.props.showCNAInTable ? 'the listed alteration' : 'a mutation'} in the listed gene are highlighted.</td>
                     </tr>
                 </table>,
           });
@@ -335,16 +351,13 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                                 name="select enrichments level: sample or patient"
                                 onChange={(option:any|null)=>{
                                     if (option) {
-                                        this.props.onSetPatientLevelEnrichments(option.value);
+                                        this.props.onSetAnalysisCaseType(option.value);
                                     }
                                 }}
-                                options={[
-                                    { label: "Patient-level enrichments", value: true},
-                                    { label: "Sample-level enrichments", value: false}
-                                ]}
+                                options={_.values(analysisCaseTypeOptions)}
                                 clearable={false}
                                 searchable={false}
-                                value={{ label: this.props.patientLevelEnrichments ? "Patient-level enrichments" : "Sample-level enrichments", value: this.props.patientLevelEnrichments}}
+                                value={analysisCaseTypeOptions[this.props.analysisCaseType]}
                                 styles={{
                                     control: (provided:any)=>({
                                         ...provided,
@@ -405,7 +418,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         </label>
 
                     </div>
-                    <AlterationEnrichmentTable key={this.props.patientLevelEnrichments.toString()}
+                    <AlterationEnrichmentTable key={this.props.analysisCaseType}
                                                 data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
                                                checkedGenes={this.props.store ? this.checkedGenes : undefined}
                                                dataStore={this.dataStore}
