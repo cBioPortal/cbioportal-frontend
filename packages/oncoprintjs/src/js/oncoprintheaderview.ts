@@ -20,16 +20,36 @@ export const CLOSE_MENUS_EVENT = "oncoprint-header-view.do-close-menus";
 
 export default class OncoprintHeaderView {
     private rendering_suppressed = false;
-    private $ctr:JQuery;
+    private $occluded_ctr:JQuery; // holds labels and menu buttons, which can be occluded by scrolling
+    private $dropdowns_ctr:JQuery;
     private clickHandler:()=>void;
     private $dropdowns:JQuery[] = [];
 
-    constructor(private $div:JQuery) {
-        this.$div.css({'overflow-y':'hidden', 'overflow-x':'hidden', 'pointer-events':'none'});
-        this.$ctr = $("<div/>").appendTo(this.$div).css({
+    constructor($div:JQuery) {
+        $div.css({
+            position:'relative',
+            'pointer-events':'none'
+        });
+
+        const $occluding_superctr = $("<div/>").appendTo($div).css({
+            position:'relative',
+            'overflow-y':'hidden',
+            'overflow-x':'hidden',
+            width:"100%",
+            height:"100%"
+        });
+        this.$occluded_ctr = $("<div/>").appendTo($occluding_superctr).css({
+            position:'absolute',
             width: "100%",
             height: "100%"
         });
+
+        this.$dropdowns_ctr = $("<div/>").appendTo($div).css({
+            position:'absolute',
+            width: "100%",
+            height: "100%"
+        });
+
 
         this.clickHandler = ()=>{
             $(document).trigger(CLOSE_MENUS_EVENT);
@@ -37,15 +57,19 @@ export default class OncoprintHeaderView {
         $(document).on("click", this.clickHandler);
 
         $(document).on(CLOSE_MENUS_EVENT, ()=>{
-            for (const $dropdown of this.$dropdowns) {
-                $dropdown.fadeOut(FADE_MS);
-            }
+            this.closeAllDropdowns();
         });
     }
 
     public destroy() {
         $(document).off("click", this.clickHandler);
         $(document).off(CLOSE_MENUS_EVENT);
+    }
+
+    private closeAllDropdowns() {
+        for (const $dropdown of this.$dropdowns) {
+            $dropdown.fadeOut(FADE_MS);
+        }
     }
 
     private closeDropdownsExcept($keep_open_dropdown:JQuery) {
@@ -87,9 +111,12 @@ export default class OncoprintHeaderView {
 
     public render(model:OncoprintModel) {
         // clear existing elements
-        this.$ctr.empty();
-        this.$ctr.css({
-            position:"absolute",
+        this.$occluded_ctr.empty();
+        this.$occluded_ctr.css({
+            top:-model.getVertScroll()
+        });
+        this.$dropdowns_ctr.empty();
+        this.$dropdowns_ctr.css({
             top:-model.getVertScroll()
         });
         this.$dropdowns = [];
@@ -117,17 +144,9 @@ export default class OncoprintHeaderView {
                     }).addClass(LABEL_CLASS);
 
                 if (group.header.options.length > 0) {
-                    // dropdown container
-                    const $dropdown_ctr = $("<div/>")
-                        .appendTo($headerDiv)
-                        .css({
-                            position:"relative",
-                            display:"inline-block"
-                        });
-
                     // add dropdown menu
                     const $dropdown = $('<ul>')
-                        .appendTo($dropdown_ctr)
+                        .appendTo(this.$dropdowns_ctr)
                         .css({
                             'position':'absolute',
                             'width': 120,
@@ -137,9 +156,10 @@ export default class OncoprintHeaderView {
                             'padding-right': '6',
                             'float': 'right',
                             'background-color': 'rgb(255,255,255)',
-                            'left':'0px', 'top': MENU_DOTS_SIZE
+                            'left':'0px',
+                            'top': headerTops[trackGroupIndex] + MENU_DOTS_SIZE,
+                            'pointer-events':'auto'
                         })
-                        .appendTo($dropdown_ctr)
                         .addClass(DROPDOWN_CLASS);
 
                     this.$dropdowns.push($dropdown);
@@ -169,7 +189,7 @@ export default class OncoprintHeaderView {
 
                     // add dropdown button
                     const $img = $("<img/>")
-                        .appendTo($dropdown_ctr)
+                        .appendTo($headerDiv)
                         .attr({
                             src: menuDotsIcon,
                             width:MENU_DOTS_SIZE,
@@ -177,7 +197,8 @@ export default class OncoprintHeaderView {
                         })
                         .css({
                             cursor:"pointer",
-                            border:"1px solid rgba(125,125,125,0)"
+                            border:"1px solid rgba(125,125,125,0)",
+                            display:"inline-block"
                         })
                         .addClass(TOGGLE_BTN_CLASS)
                         .on("click", (evt)=>{
@@ -187,6 +208,7 @@ export default class OncoprintHeaderView {
                                 $dropdown.fadeOut(FADE_MS);
                             } else {
                                 populateDropdownOptions();
+                                $dropdown.css('left', $img.offset().left);
                                 $img.addClass(TOGGLE_BTN_OPEN_CLASS);
                                 $dropdown.fadeIn(FADE_MS);
                                 this.closeDropdownsExcept($dropdown);
@@ -200,15 +222,20 @@ export default class OncoprintHeaderView {
                     left:0,
                     width:"100%"
                 });
-                this.$ctr.append($headerDiv);
+                this.$occluded_ctr.append($headerDiv);
             }
         });
     }
 
     public setScroll(model:OncoprintModel) {
-        this.$ctr.css({
+        this.$occluded_ctr.css({
             top:-model.getVertScroll()
         });
+        this.$dropdowns_ctr.css({
+            top:-model.getVertScroll()
+        });
+
+        this.closeAllDropdowns();
     }
 
     public setVertScroll(model:OncoprintModel) {
