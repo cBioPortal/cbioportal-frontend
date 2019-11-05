@@ -69,6 +69,7 @@ export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
     fontFamily?: string;
     sortOrder: string | undefined;
     pivotThreshold?: number;
+    legendTitle?: string;
 }
 
 const DEFAULT_FONT_FAMILY = 'Verdana,Arial,sans-serif';
@@ -264,6 +265,21 @@ export default class WaterfallPlot<
                         this.legendLocation === 'right'
                             ? 100
                             : this.svgHeight - this.bottomLegendHeight + 3
+                    }
+                    title={this.props.legendTitle}
+                    titleOrientation={
+                        this.legendLocation === 'right' ? 'top' : 'left'
+                    }
+                    style={{
+                        title: {
+                            fontSize: 15,
+                            fontWeight: 'bold',
+                        },
+                    }}
+                    titleComponent={
+                        <VictoryLabel
+                            dx={this.legendLocation === 'right' ? 0 : -10}
+                        />
                     }
                 />
             );
