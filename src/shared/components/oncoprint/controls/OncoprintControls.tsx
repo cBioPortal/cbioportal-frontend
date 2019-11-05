@@ -80,8 +80,6 @@ export interface IOncoprintControlsHandlers {
 
     onClickAddGenesToHeatmap?: () => void;
     onClickAddTreatmentsToHeatmap?: (treatments: string[]) => void;
-    onClickRemoveHeatmap?: () => void;
-    onClickClusterHeatmap?: () => void;
     onSelectHeatmapProfile?: (molecularProfileId: string) => void;
     onChangeHeatmapGeneInputValue?: (value: string) => void;
     onChangeHeatmapTreatmentInputValue?: (value: string) => void;
@@ -130,8 +128,6 @@ export interface IOncoprintControlsState {
     heatmapIsDynamicallyQueried?: boolean;
     heatmapGeneInputValue?: string;
     heatmapTreatmentInputValue?: string;
-    clusterHeatmapButtonActive?: boolean;
-    hideClusterHeatmapButton?: boolean;
     hideHeatmapMenu?: boolean;
 
     customDriverAnnotationBinaryMenuLabel?: string;
@@ -175,9 +171,7 @@ const EVENT_KEY = {
     sortCaseListOrder: '8',
     sortByData: '9',
     sortByDrivers: '10',
-    sortByHeatmapClustering: '11',
     addGenesToHeatmap: '13',
-    removeHeatmap: '14',
     distinguishDrivers: '15',
     annotateOncoKb: '16',
     annotateHotspots: '17',
@@ -443,11 +437,6 @@ export default class OncoprintControls extends React.Component<
                         this._selectedTreatmentIds
                     );
                 break;
-            case EVENT_KEY.removeHeatmap:
-                this.props.handlers.onClickRemoveHeatmap &&
-                    this.props.handlers.onClickRemoveHeatmap();
-                this._selectedTreatmentIds = [];
-                break;
             case EVENT_KEY.downloadSVG:
                 this.props.handlers.onClickDownload &&
                     this.props.handlers.onClickDownload('svg');
@@ -467,10 +456,6 @@ export default class OncoprintControls extends React.Component<
             case EVENT_KEY.downloadTabular:
                 this.props.handlers.onClickDownload &&
                     this.props.handlers.onClickDownload('tabular');
-                break;
-            case EVENT_KEY.sortByHeatmapClustering:
-                this.props.handlers.onClickClusterHeatmap &&
-                    this.props.handlers.onClickClusterHeatmap();
                 break;
         }
     }
@@ -723,34 +708,6 @@ export default class OncoprintControls extends React.Component<
                                     Add Treatment Response to Heatmap
                                 </button>,
                             ]}
-
-                        <button
-                            key="removeHeatmapButton"
-                            className="btn btn-sm btn-default"
-                            name={EVENT_KEY.removeHeatmap}
-                            onClick={this.onButtonClick}
-                        >
-                            Remove Heatmap
-                        </button>
-
-                        {!this.props.state.hideClusterHeatmapButton && (
-                            <button
-                                data-test="clusterHeatmapBtn"
-                                className={classNames(
-                                    'btn',
-                                    'btn-sm',
-                                    'btn-default',
-                                    {
-                                        active: this.props.state
-                                            .clusterHeatmapButtonActive,
-                                    }
-                                )}
-                                name={EVENT_KEY.sortByHeatmapClustering}
-                                onClick={this.onButtonClick}
-                            >
-                                Cluster Heatmap
-                            </button>
-                        )}
                     </div>
                 );
             }
