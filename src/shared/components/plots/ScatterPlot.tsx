@@ -31,6 +31,7 @@ import {
     IPlotSampleData,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
+import { textTruncationUtils } from 'cbioportal-frontend-commons';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -68,6 +69,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     axisLabelX?: string;
     axisLabelY?: string;
     fontFamily?: string;
+    legendTitle?: string;
 }
 // constants related to the gutter
 const GUTTER_TEXT_STYLE = {
@@ -156,6 +158,12 @@ export default class ScatterPlot<
 
     private get title() {
         if (this.props.title) {
+            const text = textTruncationUtils(
+                this.props.title,
+                this.props.chartWidth,
+                this.fontFamily,
+                '14px'
+            );
             return (
                 <VictoryLabel
                     style={{
@@ -163,9 +171,9 @@ export default class ScatterPlot<
                         fontFamily: this.fontFamily,
                         textAnchor: 'middle',
                     }}
-                    x={this.svgWidth / 2}
+                    x={this.props.chartWidth / 2}
                     y="1.2em"
-                    text={this.props.title}
+                    text={text}
                 />
             );
         } else {
@@ -198,6 +206,8 @@ export default class ScatterPlot<
                     x={x}
                     y={this.legendY}
                     width={RIGHT_PADDING}
+                    title={this.props.legendTitle}
+                    style={{ title: { fontSize: 15, fontWeight: 'bold' } }}
                 />
             );
         } else {
