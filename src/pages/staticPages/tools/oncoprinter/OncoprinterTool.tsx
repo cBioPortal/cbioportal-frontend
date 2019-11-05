@@ -221,7 +221,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                         <ControlLabel
                             style={{marginBottom:7}}
                         >
-                            Input genomic alteration data:
+                            Input genomic alteration data (optional):
                             <Button
                                 className="oncoprinterGeneticExampleData"
                                 style={{marginLeft:7}}
@@ -247,7 +247,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                         <ControlLabel
                             style={{marginBottom:7}}
                         >
-                            Input clinical data:
+                            Input clinical data (optional):
                             <Button
                                 className="oncoprinterClinicalExampleData"
                                 style={{marginLeft:7}}
