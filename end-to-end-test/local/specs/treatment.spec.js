@@ -554,10 +554,11 @@ describe('treatment feature', function() {
 
                 var options = geneSelect.$$('.Select-option');
 
-                assert.equal(options[0].getText(), 'CDKN2A');
-                assert.equal(options[1].getText(), 'MDM2');
-                assert.equal(options[2].getText(), 'MDM4');
-                assert.equal(options[3].getText(), 'TP53');
+                assert.equal(options[0].getText(), 'None');
+                assert.equal(options[1].getText(), 'CDKN2A');
+                assert.equal(options[2].getText(), 'MDM2');
+                assert.equal(options[3].getText(), 'MDM4');
+                assert.equal(options[4].getText(), 'TP53');
             });
 
             it('shows sort order button for waterfall plot when `Ordered samples` selected', () => {
