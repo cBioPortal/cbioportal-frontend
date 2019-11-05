@@ -144,7 +144,7 @@ describe('patient view page', function() {
             it('removes genes profiles profiled in some samples then `all genes` option selected', () => {
                 const allGenesRadio = selectMenu.$('input[value=allSamples]');
                 allGenesRadio.click();
-                const geneEntries = $$('[data-test=mutation-table-gene-column]');
+                const geneEntries = $$('[data-test=cna-table-gene-column]');
                 assert.equal(geneEntries.length, 1);
                 const geneName = geneEntries[0].getText();
                 assert.equal(geneName, "CADM2");
@@ -153,7 +153,7 @@ describe('patient view page', function() {
             it('re-adds genes when `any genes` option selected', () => {
                 const anyGenesRadio = selectMenu.$('input[value=anySample]');
                 anyGenesRadio.click();
-                const geneEntries = $$('[data-test=mutation-table-gene-column]');
+                const geneEntries = $$('[data-test=cna-table-gene-column]');
                 assert.equal(geneEntries.length, 3);
             });
 
