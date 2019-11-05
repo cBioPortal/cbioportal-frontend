@@ -18,7 +18,7 @@ import ErrorIcon from '../../ErrorIcon';
 import classNames from 'classnames';
 import {SpecialAttribute} from '../../../cache/ClinicalDataCache';
 import {AlterationTypeConstants, ResultsViewPageStore,} from '../../../../pages/resultsView/ResultsViewPageStore';
-import {OncoprintAnalysisCaseType, ExtendedClinicalAttribute} from '../../../../pages/resultsView/ResultsViewPageStoreUtils';
+import {AnalysisCaseType, ExtendedClinicalAttribute} from '../../../../pages/resultsView/ResultsViewPageStoreUtils';
 import {getNCBIlink} from 'public-lib/lib/urls';
 import OQLTextArea, {GeneBoxType} from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
@@ -122,7 +122,7 @@ export interface IOncoprintControlsState {
     selectedCustomDriverAnnotationTiers?: ObservableMap<boolean>;
     annotateCustomDriverBinary?: boolean;
 
-    columnMode?: OncoprintAnalysisCaseType
+    columnMode?: AnalysisCaseType
 
     horzZoom: number;
 }
@@ -1031,7 +1031,7 @@ export default class OncoprintControls extends React.Component<
                             name="columnType"
                             value={EVENT_KEY.columnTypeSample}
                             checked={
-                                this.props.state.columnMode === OncoprintAnalysisCaseType.SAMPLE
+                                this.props.state.columnMode === AnalysisCaseType.SAMPLE
                             }
                             onClick={this.onInputClick}
                         />{' '}
@@ -1045,7 +1045,7 @@ export default class OncoprintControls extends React.Component<
                             name="columnType"
                             value={EVENT_KEY.columnTypePatient}
                             checked={
-                                this.props.state.columnMode === OncoprintAnalysisCaseType.PATIENT
+                                this.props.state.columnMode === AnalysisCaseType.PATIENT
                             }
                             onClick={this.onInputClick}
                         />{' '}
@@ -1110,7 +1110,7 @@ export default class OncoprintControls extends React.Component<
                             }
                         />{' '}
                         Only show clinical track legends for altered{' '}
-                        {this.props.state.columnMode === OncoprintAnalysisCaseType.PATIENT
+                        {this.props.state.columnMode === AnalysisCaseType.PATIENT
                             ? 'patients'
                             : 'samples'}
                         .

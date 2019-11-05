@@ -95,7 +95,6 @@ export type CancerStudyQueryUrlParams = {
     tab_index: 'tab_download' | 'tab_visualize';
     transpose_matrix?: 'on';
     Action: 'Submit';
-    patient_enrichments?: string;
     show_samples?:string;
     exclude_germline_mutations?:string;
 };

@@ -21,7 +21,8 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     MolecularProfile,
-    MolecularProfileFilter, ReferenceGenomeGene,
+    MolecularProfileFilter,
+    ReferenceGenomeGene,
     Sample,
     SampleFilter
 } from "../../shared/api/generated/CBioPortalAPI";
@@ -35,7 +36,7 @@ import {
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles
 } from "../resultsView/enrichments/EnrichmentsUtil";
-import {makeEnrichmentDataPromise} from "../resultsView/ResultsViewPageStoreUtils";
+import {AnalysisCaseType, makeEnrichmentDataPromise} from "../resultsView/ResultsViewPageStoreUtils";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import autobind from "autobind-decorator";
 import {PatientSurvival} from "shared/model/PatientSurvival";
@@ -118,8 +119,9 @@ export default class GroupComparisonStore {
     }
 
     @autobind
-    @action public setUsePatientLevelEnrichments(e:boolean) {
-        this.urlWrapper.updateQuery({ patientEnrichments: e.toString()});
+    @action public setUsePatientLevelEnrichments(e:AnalysisCaseType) {
+        const patientEnrichments = (e === AnalysisCaseType.PATIENT);
+        this.urlWrapper.updateQuery({ patientEnrichments: patientEnrichments.toString()});
     }
 
     @computed get groupOrder() {
