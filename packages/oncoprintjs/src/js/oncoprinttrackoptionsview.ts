@@ -57,11 +57,7 @@ export default class OncoprintTrackOptionsView {
         const self = this;
         $(document).off(CLOSE_MENUS_EVENT);
         $(document).on(CLOSE_MENUS_EVENT, function() {
-            for (var track_id in self.track_options_$elts) {
-                if (self.track_options_$elts.hasOwnProperty(track_id)) {
-                    self.hideTrackMenu(parseInt(track_id, 10));
-                }
-            }
+            self.hideAllMenus();
         });
 
         this.$buttons_ctr.empty();
@@ -86,6 +82,8 @@ export default class OncoprintTrackOptionsView {
         }
         this.$buttons_ctr.css({'top': -scroll_y});
         this.$dropdown_ctr.css({'top': -scroll_y});
+
+        this.hideAllMenus();
     }
 
     private resize(model:OncoprintModel, getCellViewHeight:()=>number) {
@@ -112,6 +110,14 @@ export default class OncoprintTrackOptionsView {
         $elts.$dropdown.css({'border': '1px solid rgba(125,125,125,1)'});
         $elts.$img.css({'border': '1px solid rgba(125,125,125,1)'});
         $elts.$dropdown.fadeIn(100);
+    }
+
+    private hideAllMenus() {
+        for (const track_id in this.track_options_$elts) {
+            if (this.track_options_$elts.hasOwnProperty(track_id)) {
+                this.hideTrackMenu(parseInt(track_id, 10));
+            }
+        }
     }
 
     private hideMenusExcept(track_id:TrackId) {
