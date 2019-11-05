@@ -789,7 +789,8 @@ describe('PlotsTabUtils', () => {
             mockProps.sortOrder,
             mockProps.pivotThreshold,
             mockProps.axisLabel,
-            mockProps.entrezGeneIdToGene
+            mockProps.entrezGeneIdToGene,
+            true
         );
 
         const elements = _.map(text.split('\n'), d => d.split('\t'));
