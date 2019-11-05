@@ -102,6 +102,7 @@ export type GeneticTrackSpec = {
     removeCallback?: () => void;
     expansionTrackList?: GeneticTrackSpec[];
     labelColor?: string;
+    customOptions?:CustomTrackOption[];
 };
 
 export interface IBaseHeatmapTrackSpec {
