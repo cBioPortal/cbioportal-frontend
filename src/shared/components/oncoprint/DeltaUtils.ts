@@ -8,7 +8,7 @@ import {
     IHeatmapTrackSpec,
     IOncoprintProps,
 } from "./Oncoprint";
-import OncoprintJS, {SortConfig, TrackId} from "oncoprintjs";
+import OncoprintJS, {SortConfig, TrackId, UserTrackSpec} from "oncoprintjs";
 import _ from "lodash";
 import {
     getClinicalTrackRuleSetParams,
@@ -678,7 +678,7 @@ function transitionGeneticTrack(
         return;
     } else if (nextSpec && !prevSpec) {
         // Add track
-        const geneticTrackParams = {
+        const geneticTrackParams:UserTrackSpec<any> = {
             rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers, nextProps.distinguishGermlineMutations),
             label: nextSpec.label,
             sublabel: nextSpec.sublabel,
@@ -701,7 +701,8 @@ function transitionGeneticTrack(
                 expansionParentKey
                 ? trackSpecKeyToTrackId[expansionParentKey]
                 : undefined
-            )
+            ),
+            custom_track_options:nextSpec.customOptions
         };
         const newTrackId = oncoprint.addTracks([geneticTrackParams])[0];
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
