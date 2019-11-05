@@ -10,7 +10,7 @@ import { makeScatterPlotSizeFunction as makePlotSizeFunction } from "./PlotUtils
 import WaterfallPlotTooltip from "./WaterfallPlotTooltip";
 import { tickFormatNumeral } from "./TickUtils";
 import { IAxisLogScaleParams, waterfallSearchIndicatorAppearance, limitValueAppearance, IValue1D } from 'pages/resultsView/plots/PlotsTabUtils';
-import { truncateWithEllipsis, textTruncationUtils } from "cbioportal-frontend-commons";
+import { textTruncationUtils } from "cbioportal-frontend-commons";
 
 // TODO make distinction between public and internal interface for waterfall plot data
 export interface IBaseWaterfallPlotData extends IValue1D {
