@@ -51,7 +51,7 @@ export type ActiveRules = {[ruleId:number]:boolean};
 export type ActiveRulesCount = {[ruleId:number]:number};
 export type TrackSortDirectionChangeCallback = (track_id:TrackId, dir:number)=>void;
 export type CustomTrackOption = {label?:string, separator?: boolean, onClick?:(id:TrackId)=>void, weight?:string, disabled?:boolean};
-export type CustomTrackGroupOption = {label?:string, separator?: boolean, onClick?:(id:TrackGroupIndex)=>void, weight?:string, disabled?:boolean};
+export type CustomTrackGroupOption = {label?:string, separator?: boolean, onClick?:(id:TrackGroupIndex)=>void, weight?:()=>string, disabled?:()=>boolean};
 export type UserTrackSpec<D> = {
     target_group?:TrackGroupIndex;
     cell_height?: number;
@@ -834,6 +834,14 @@ export default class OncoprintModel {
             this.track_sort_direction_change_callback[track_id](track_id, dir);
         }
         this.precomputed_comparator.update(this, track_id);
+    }
+    public resetSortableTracksSortDirection(no_callback?:boolean) {
+        const allTracks = this.getTracks();
+        for (const trackId of allTracks) {
+            if (this.isTrackSortDirectionChangeable(trackId)) {
+                this.setTrackSortDirection(trackId, 0, no_callback);
+            }
+        }
     }
 
     public setCellPaddingOn(cell_padding_on:boolean) {
