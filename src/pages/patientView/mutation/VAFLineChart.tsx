@@ -496,7 +496,13 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     }
                     linePath = (
                         <path
-                            style={{ stroke:HIGHLIGHT_COLOR, strokeOpacity:1, strokeWidth:HIGHLIGHT_LINE_STROKE_WIDTH, fillOpacity:0, pointerEvents:"none"}}
+                            style={{
+                                stroke:HIGHLIGHT_COLOR,
+                                strokeOpacity:1,
+                                strokeWidth:HIGHLIGHT_LINE_STROKE_WIDTH,
+                                fillOpacity:0,
+                                pointerEvents:"none"
+                            }}
                             d={d}
                         />
                     );
@@ -510,7 +516,13 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${-2*SCATTER_DATA_POINT_SIZE},0
                             `
                         }
-                        style={{ stroke:HIGHLIGHT_COLOR, fill:"white", strokeWidth:2, opacity:1}}
+                        style={{
+                            stroke:HIGHLIGHT_COLOR,
+                            fill:"white",
+                            strokeWidth:2,
+                            opacity:1,
+                            pointerEvents:"none"
+                        }}
                     />
                 ));
 
