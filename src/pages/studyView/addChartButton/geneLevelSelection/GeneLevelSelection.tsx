@@ -10,11 +10,13 @@ import ReactSelect from "react-select";
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
 import OQLTextArea, { GeneBoxType } from 'shared/components/GeneSelectionBox/OQLTextArea';
+import classnames from 'classnames';
 
 export interface IGeneLevelSelectionProps {
     molecularProfileOptions: {
         value: string[];
         label: string;
+        description: string;
     }[];
     submitButtonText: string;
     onSubmit: (charts: GenomicChart[]) => void;
@@ -25,9 +27,11 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
     @observable private geneInput: string = '';
     @observable private validGenes: Gene[] = [];
     @observable private isQueryInvalid: boolean = true;
+    @observable private hasOQL: boolean = false;
     @observable private selectedProfileOption?: {
         value: string[];
         label: string;
+        description: string;
     };
 
     public static defaultProps = {
@@ -40,6 +44,7 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
         const charts = this.validGenes.map(gene => {
             return {
                 name: gene.hugoGeneSymbol + ': ' + this.selectedOption.label,
+                description: this.selectedOption.description,
                 patientAttribute: false,
                 molecularProfileIds: this.selectedOption.value,
                 hugoGeneSymbol: gene.hugoGeneSymbol
@@ -75,10 +80,15 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
             suggestions: GeneReplacement[];
         },
         queryStr: string) {
+        this.hasOQL = false;
         this.isQueryInvalid = queryStr === '' || !_.isUndefined(oql.error) || genes.suggestions.length !== 0;
+
         this.validGenes = [];
         if (!this.isQueryInvalid) {
-            this.validGenes = genes.found;
+            this.hasOQL = _.some(oql.query, singleGeneQuery => singleGeneQuery.alterations !== false);
+            if (!this.hasOQL) {
+                this.validGenes = genes.found;
+            }
         }
         this.geneInput = queryStr;
     }
@@ -97,7 +107,16 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
                     validateInputGeneQuery={false}
                     callback={this.updateSelectedGenes}
                     location={GeneBoxType.ONCOPRINT_HEATMAP}
+                    textBoxPrompt={'Enter gene symbols'}
                 />
+                {
+                    (this.hasOQL) && (
+                        <div className={classnames("alert", styles.oqlerror)}>
+                            <span className="fa fa-exclamation-circle"></span>
+                            OQL not allowed
+                        </div>
+                    )
+                }
                 Molecular Profile:
                 <div>
                     <ReactSelect
@@ -111,7 +130,7 @@ export default class GeneLevelSelection extends React.Component<IGeneLevelSelect
 
                 <div className={styles.operations}>
                     <button
-                        disabled={this.isQueryInvalid}
+                        disabled={this.isQueryInvalid || this.hasOQL}
                         className="btn btn-primary btn-sm"
                         data-test='GeneLevelSelectionSubmitButton'
                         onClick={this.onAddChart}>

@@ -43,7 +43,8 @@ import {
     Gene, GenePanel,
     MolecularProfile,
     MolecularProfileFilter,
-    Patient
+    Patient,
+    MolecularDataMultipleStudyFilter
 } from 'shared/api/generated/CBioPortalAPI';
 import {fetchCopyNumberSegmentsForSamples} from "shared/lib/StoreUtils";
 import {PatientSurvival} from 'shared/model/PatientSurvival';
@@ -221,6 +222,7 @@ export type CustomChart = {
 
 export type GenomicChart = {
     name?: string,
+    description?: string,
     patientAttribute: boolean,
     molecularProfileIds: string[],
     hugoGeneSymbol: string
@@ -2377,6 +2379,7 @@ export class StudyViewPageStore {
 
     readonly molecularProfileOptions = remoteData({
         await: ()=>[this.molecularProfiles],
+
         invoke: async ()=>{
 
             return _.chain(this.molecularProfiles.result)
@@ -2392,7 +2395,8 @@ export class StudyViewPageStore {
                 .map((molecularProfiles, label) => {
                     return {
                         value: molecularProfiles.map(molecularProfile => molecularProfile.molecularProfileId),
-                        label
+                        label,
+                        description: molecularProfiles[0].description //TODO: check if is want we want to do
                     }
                 })
                 .value();
@@ -2582,14 +2586,14 @@ export class StudyViewPageStore {
 
     @autobind
     @action
-    addGenomicCharts(newCharts: GenomicChart[]) {
+    addGenomicCharts(newCharts: GenomicChart[], loadedfromUserSettings:boolean=false) {
         newCharts.forEach(newChart => {
             const uniqueKey = newChart.hugoGeneSymbol + '_' + newChart.molecularProfileIds;
             const newChartName = newChart.name ? newChart.name : this.getDefaultCustomChartName();
             let chartMeta: ChartMeta = {
                 uniqueKey: uniqueKey,
                 displayName: newChartName,
-                description: newChartName,
+                description: newChart.description || newChartName,
                 dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 renderWhenDataChange: false,
@@ -2611,6 +2615,11 @@ export class StudyViewPageStore {
                 hugoGeneSymbol: newChart.hugoGeneSymbol,
                 molecularProfileIds: newChart.molecularProfileIds
             } as any);
+
+            if(!loadedfromUserSettings) {
+                this.newlyAddedCharts.clear();
+                this.newlyAddedCharts.push(uniqueKey);
+            }
         });
     }
 
@@ -3520,6 +3529,57 @@ export class StudyViewPageStore {
         }
     }
 
+    @computed get molecularProfileMap() {
+        return _.keyBy(this.molecularProfiles.result, molecularProfile => molecularProfile.molecularProfileId);
+    }
+
+    public async getGenomicData(chartMeta: ChartMeta) {
+        const chartInfo = this._customGenomicChartMap.get(chartMeta.uniqueKey);
+        if (chartInfo) {
+
+            const gene: Gene = await defaultClient.getGeneUsingGET({
+                geneId: chartInfo.hugoGeneSymbol
+            });
+            const molecularProfiles = chartInfo.molecularProfileIds.map(molecularProfileId => this.molecularProfileMap[molecularProfileId]);
+            const molecularProfileMapByStudyId = _.keyBy(molecularProfiles, molecularProfile => molecularProfile.studyId);
+
+            const sampleMolecularIdentifiers = this.selectedSamples.result.map(sample => ({
+                sampleId: sample.sampleId,
+                molecularProfileId: molecularProfileMapByStudyId[sample.studyId].molecularProfileId
+            }))
+
+            const genomicDataList = await defaultClient.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                {
+                    projection: 'DETAILED',
+                    molecularDataMultipleStudyFilter: {
+                        entrezGeneIds: [gene.entrezGeneId],
+                        sampleMolecularIdentifiers: sampleMolecularIdentifiers,
+                    } as MolecularDataMultipleStudyFilter,
+                }
+            );
+
+            const header: string[] = ["Study ID", "Patient ID", "Sample ID", chartMeta.displayName];
+
+            let data = [header.join("\t")];
+
+            data = data.concat(genomicDataList.map(genomicData => {
+                const row = [
+                    genomicData.studyId || NA_DATA,
+                    genomicData.patientId || NA_DATA,
+                    genomicData.sampleId || NA_DATA,
+                    `${genomicData.value}` || NA_DATA
+                ];
+
+                return row.join("\t");
+            }));
+
+            return data.join("\n");
+        }
+        else {
+            return "";
+        }
+    }
+
     public getCustomChartDownloadData(chartMeta: ChartMeta) {
         return new Promise<string>((resolve) => {
             if (chartMeta && chartMeta.uniqueKey && this._customChartsSelectedCases.has(chartMeta.uniqueKey)) {
@@ -4005,6 +4065,12 @@ export class StudyViewPageStore {
                     }, [] as IStudyViewScatterPlotData[]);
                     ret[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = filteredData.length;
                 }
+
+                // Add all custom chart counts, and they should all get 100%
+                _.reduce(this._customCharts.keys(), (acc, next) => {
+                    acc[next] = this.selectedSamples.result.length;
+                    return acc;
+                }, ret);
 
                 return _.reduce(this.chartMetaSet, (acc, next, key) => {
                     acc[key] = ret[key] || 0;

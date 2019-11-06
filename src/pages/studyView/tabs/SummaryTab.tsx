@@ -119,17 +119,18 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     props.filters = this.store.getGenomicDataIntervalFiltersByUniqueKey(props.chartMeta!.uniqueKey);
                     props.onDataBinSelection = this.store.updateGenomicDataIntervalFilters;
                     props.onResetSelection = this.store.updateGenomicDataIntervalFilters;
+                    props.getData = () => this.store.getGenomicData(chartMeta);
                 } else {
                     props.promise = this.store.getClinicalDataBin(chartMeta);
                     props.filters = this.store.getClinicalDataIntervalFiltersByUniqueKey(chartMeta.uniqueKey);
                     props.onDataBinSelection = this.handlers.onDataBinSelection;
                     props.onResetSelection = this.handlers.onDataBinSelection;
+                    props.getData = () => this.store.getClinicalData(chartMeta);
                 }
                 props.onToggleLogScale = this.handlers.onToggleLogScale;
                 props.showLogScaleToggle = this.store.isLogScaleToggleVisible(
                     chartMeta.uniqueKey, props.promise!.result);
                 props.logScaleChecked = this.store.isLogScaleChecked(chartMeta.uniqueKey);
-                props.getData = () => this.store.getClinicalData(chartMeta);
                 props.downloadTypes = ["Data", "SVG", "PDF"];
                 break;
             }
