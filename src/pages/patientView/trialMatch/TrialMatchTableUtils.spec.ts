@@ -241,11 +241,13 @@ describe("TrialMatchTableUtils", () => {
         const arm: IArm[] = [
             {
                 drugs: [
-                    {
-                        synonyms: "",
-                        name: "Pemigatinib",
-                        ncit_code: "C121553"
-                    }
+                    [
+                        {
+                            synonyms: "",
+                            name: "Pemigatinib",
+                            ncit_code: "C121553"
+                        }
+                    ]
                 ],
                 arm_info: "INCB054828 in subjects with FGFR2 translocation with a documented fusion partner in central laboratory report",
                 match: [
@@ -271,11 +273,13 @@ describe("TrialMatchTableUtils", () => {
             },
             {
                 drugs: [
-                    {
-                        synonyms: "",
-                        name: "Pemigatinib",
-                        ncit_code: "C121553"
-                    }
+                    [
+                        {
+                            synonyms: "",
+                            name: "Pemigatinib",
+                            ncit_code: "C121553"
+                        }
+                    ]
                 ],
                 arm_info: "INCB054828 in subjects with other FGF/FGFR alterations",
                 match: [
