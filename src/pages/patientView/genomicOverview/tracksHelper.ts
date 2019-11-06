@@ -8,7 +8,7 @@ import {DEFAULT_GENOME_BUILD} from "pages/patientView/genomicOverview/Tracks";
 import {default as chromosomeSizes} from "./chromosomeSizes.json";
 import { IIconData } from './GenomicOverviewUtils.js';
 
-export function GenomicOverviewConfig(nRows: any,width: any) {
+export function GenomicOverviewConfig(nRows: any,width: any, showGenePanelIcons:boolean) {
     let sel: any = {};
     sel.nRows = nRows;
     sel.canvasWidth = width;
@@ -16,7 +16,7 @@ export function GenomicOverviewConfig(nRows: any,width: any) {
     sel.wideRightText = 35;
     sel.wideGenePanelIcon = 20;
     sel.heigthGenePanelIcon = 18;
-    sel.GenomeWidth = sel.canvasWidth-sel.wideLeftText-sel.wideRightText-sel.wideGenePanelIcon;
+    sel.GenomeWidth = showGenePanelIcons ? sel.canvasWidth-sel.wideLeftText-sel.wideRightText-sel.wideGenePanelIcon : sel.canvasWidth-sel.wideLeftText-sel.wideRightText;
     sel.pixelsPerBinMut = 3;
     sel.rowHeight = 20;
     sel.rowMargin = 5;
