@@ -3,7 +3,7 @@ import styles from "./studySummaryTabStyles.module.scss";
 import chartHeaderStyles from "../chartHeader/styles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
 import {observable} from 'mobx';
-import {CopyNumberAlterationIdentifier, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
+import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import {
     ClinicalDataIntervalFilterValue,
