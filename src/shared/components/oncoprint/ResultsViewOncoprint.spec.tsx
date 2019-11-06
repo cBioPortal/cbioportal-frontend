@@ -7,7 +7,7 @@ import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import sinon from "sinon";
 import { isOccupied } from "pages/studyView/StudyViewUtils";
 import { SortByUrlParamValue } from 'shared/components/oncoprint/ResultsViewOncoprint';
-import {AnalysisCaseType} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
+import {OncoprintAnalysisCaseType} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 
 describe('Oncoprint sortBy URL parameter', () => {
 
@@ -37,33 +37,33 @@ describe('Oncoprint sortBy URL parameter', () => {
     } as any as ResultsViewPageStore;
 
     it('`case_id` provides sorted sample config to oncoprint', () => {
-        const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_ID, analysisCaseType: AnalysisCaseType.SAMPLE});
+        const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_ID, analysisCaseType: OncoprintAnalysisCaseType.SAMPLE});
         assert.deepEqual( oncoprintView.sortConfig.order, ["Sample1_key","Sample2_key","Sample3_key"]);
     });
 
     it('`case_id` provides sorted patient config to oncoprint', () => {
-        const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_ID, analysisCaseType: AnalysisCaseType.PATIENT});
+        const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_ID, analysisCaseType: OncoprintAnalysisCaseType.PATIENT});
         assert.deepEqual( oncoprintView.sortConfig.order, ["Patient1_key","Patient2_key","Patient3_key"]);
     });
 
     it('`case_list` provides sorted sample config to oncoprint when case list is available', () => {
-        const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_LIST, analysisCaseType: AnalysisCaseType.SAMPLE, caselistEnabled: true});
+        const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_LIST, analysisCaseType: OncoprintAnalysisCaseType.SAMPLE, caselistEnabled: true});
         assert.deepEqual(oncoprintView.sortConfig.order,  ["Sample2_key","Sample3_key","Sample1_key"]);
     });
 
     it('`case_list` provides sorted patient config to oncoprint when case list is available', () => {
-        const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_LIST, analysisCaseType: AnalysisCaseType.PATIENT, caselistEnabled: true});
+        const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_LIST, analysisCaseType: OncoprintAnalysisCaseType.PATIENT, caselistEnabled: true});
         assert.deepEqual(oncoprintView.sortConfig.order,  ["Patient2_key","Patient3_key","Patient1_key"]);
     });
 
     it('`case_list` provides no sort config to oncoprint when case list is unavailable', () => {
-        const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_LIST, analysisCaseType: AnalysisCaseType.PATIENT, caselistEnabled: false});
+        const oncoprintView = initResultsViewWithSortByParam({sortByParam:SortByUrlParamValue.CASE_LIST, analysisCaseType: OncoprintAnalysisCaseType.PATIENT, caselistEnabled: false});
         assert.isUndefined(oncoprintView.sortConfig.order);
     });
 
     interface IHelperFunction {
         sortByParam:SortByUrlParamValue;
-        analysisCaseType:AnalysisCaseType;
+        analysisCaseType:OncoprintAnalysisCaseType;
         caselistEnabled?:boolean;
     }
 
@@ -75,7 +75,7 @@ describe('Oncoprint sortBy URL parameter', () => {
         if (params.caselistEnabled !== undefined) {
             storeMock.givenSampleOrder.isComplete = params.caselistEnabled;
         }
-        (storeMock as any).analysisCaseType = params.analysisCaseType;
+        (storeMock as any).oncoprintAnalysisCaseType = params.analysisCaseType;
         const oncoprintView = new ResultsViewOncoprint(
             {divId: "", store: storeMock, routing: ""}
         );

@@ -21,8 +21,7 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     MolecularProfile,
-    MolecularProfileFilter,
-    ReferenceGenomeGene,
+    MolecularProfileFilter, ReferenceGenomeGene,
     Sample,
     SampleFilter
 } from "../../shared/api/generated/CBioPortalAPI";
@@ -36,7 +35,7 @@ import {
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles
 } from "../resultsView/enrichments/EnrichmentsUtil";
-import {AnalysisCaseType, makeEnrichmentDataPromise} from "../resultsView/ResultsViewPageStoreUtils";
+import {makeEnrichmentDataPromise} from "../resultsView/ResultsViewPageStoreUtils";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import autobind from "autobind-decorator";
 import {PatientSurvival} from "shared/model/PatientSurvival";
@@ -59,6 +58,7 @@ import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
 import GroupComparisonURLWrapper from "./GroupComparisonURLWrapper";
+import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
 import {fetchAllReferenceGenomeGenes} from "shared/lib/StoreUtils";
 
 export enum OverlapStrategy {
@@ -119,9 +119,8 @@ export default class GroupComparisonStore {
     }
 
     @autobind
-    @action public setUsePatientLevelEnrichments(e:AnalysisCaseType) {
-        const patientEnrichments = (e === AnalysisCaseType.PATIENT);
-        this.urlWrapper.updateQuery({ patientEnrichments: patientEnrichments.toString()});
+    @action public setUsePatientLevelEnrichments(e:boolean) {
+        this.urlWrapper.updateQuery({ patientEnrichments: e.toString()});
     }
 
     @computed get groupOrder() {

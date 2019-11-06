@@ -82,7 +82,7 @@ export function computeCustomDriverAnnotationReport(mutations:Mutation[]):Custom
     };
 }
 
-export enum AnalysisCaseType {
+export enum OncoprintAnalysisCaseType {
     SAMPLE = "sample",
     PATIENT = "patient"
 };
