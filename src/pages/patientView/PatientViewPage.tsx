@@ -448,13 +448,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     />
 
                                     {
-                                        (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete
-                                            && patientViewPageStore.sequencedSampleIdsInStudy.isComplete && sampleManager)
-                                        && ( patientViewPageStore.mutationData.result.length > 0 || patientViewPageStore.cnaSegments.result.length > 0)
-                                        && (
+                                        (patientViewPageStore.mutationData.isComplete
+                                         && patientViewPageStore.cnaSegments.isComplete
+                                         && patientViewPageStore.sequencedSampleIdsInStudy.isComplete
+                                         && patientViewPageStore.sampleToMutationGenePanelId.isComplete
+                                         && patientViewPageStore.sampleToDiscreteGenePanelId.isComplete
+                                         && (patientViewPageStore.mergedMutationDataFilteredByGene.length > 0 || patientViewPageStore.cnaSegments.result.length > 0)
+                                         && sampleManager) && (
                                             <div>
                                                 <GenomicOverview
-                                                    mergedMutations={patientViewPageStore.mergedMutationData}
+                                                    mergedMutations={patientViewPageStore.mergedMutationDataFilteredByGene}
                                                     samples={patientViewPageStore.samples.result}
                                                     cnaSegments={patientViewPageStore.cnaSegments.result}
                                                     sampleOrder={sampleManager.sampleIndex}
@@ -462,6 +465,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                     sampleColors={sampleManager.sampleColors}
                                                     sampleManager={sampleManager}
                                                     containerWidth={WindowStore.size.width-20}
+                                                    sampleIdToMutationGenePanelId={patientViewPageStore.sampleToMutationGenePanelId.result}
+                                                    sampleIdToCopyNumberGenePanelId={patientViewPageStore.sampleToDiscreteGenePanelId.result}
                                                 />
                                                 <hr />
                                             </div>
@@ -471,8 +476,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.uncalledMutationData.isPending || patientViewPageStore.oncoKbAnnotatedGenes.isPending || patientViewPageStore.studyIdToStudy.isPending} />
 
                                     {
-                                        (patientViewPageStore.oncoKbAnnotatedGenes.isComplete && patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete
-                                         && !!sampleManager && patientViewPageStore.studyIdToStudy.isComplete) && (
+                                        (patientViewPageStore.oncoKbAnnotatedGenes.isComplete
+                                         && patientViewPageStore.mutationData.isComplete
+                                         && patientViewPageStore.uncalledMutationData.isComplete
+                                         && patientViewPageStore.studyIdToStudy.isComplete
+                                         && patientViewPageStore.sampleToMutationGenePanelId.isComplete
+                                         && !!sampleManager) && (
                                             <div data-test="patientview-mutation-table">
                                                 <PatientViewMutationTable
                                                     studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
