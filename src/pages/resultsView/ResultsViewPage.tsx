@@ -14,7 +14,6 @@ import DownloadTab from './download/DownloadTab';
 import AppConfig from 'appConfig';
 import CNSegments from './cnSegments/CNSegments';
 import './styles.scss';
-import Network from './network/Network';
 import ResultsViewPathwayMapper from "./pathwayMapper/ResultsViewPathwayMapper";
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
