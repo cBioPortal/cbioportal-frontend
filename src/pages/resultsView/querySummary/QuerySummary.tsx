@@ -5,7 +5,9 @@ import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
 import classNames from 'classnames';
 import './styles.scss';
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip, {
+    setArrowLeft
+} from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {action, computed, observable} from "mobx";
 import {QueryStore, CUSTOM_CASE_LIST_ID} from "../../../shared/components/query/QueryStore";
@@ -190,10 +192,11 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                                         </button>
                                         <DefaultTooltip
                                             trigger={["click"]}
-                                            placement="bottom"
+                                            placement="bottomRight"
                                             overlay={<ResultsPageSettings store={this.props.store} />}
                                             visible={this.props.store.resultsPageSettingsVisible}
                                             onVisibleChange={visible=>{ this.props.store.resultsPageSettingsVisible = !!visible; }}
+                                            onPopupAlign={tooltipEl=>setArrowLeft(tooltipEl, "22px")}
                                         >
                                             <button data-test="GlobalSettingsButton" style={{marginLeft:5}} className="btn btn-primary">
                                                 <i className="fa fa-sliders fa-lg"/>
