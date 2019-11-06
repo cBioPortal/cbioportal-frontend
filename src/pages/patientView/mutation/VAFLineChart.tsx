@@ -24,6 +24,7 @@ import $ from "jquery";
 import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import invertIncreasingFunction, {invertDecreasingFunction} from "../../../shared/lib/invertIncreasingFunction";
 import {MutationStatus, mutationTooltip} from "./PatientViewMutationsTabUtils";
+import {tickFormatNumeral} from "../../../shared/components/plots/TickUtils";
 
 
 export interface IVAFLineChartProps {
@@ -193,7 +194,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     @action
     private selectPointsInDragRect() {
         if (this.scale) {
-            const points = this.data.grayPoints.concat(_.flatten(this.data.lineData));
+            const points = this.renderData.grayPoints.concat(_.flatten(this.renderData.lineData));
 
             const rectBoundsSvgSpace = {
                 x:[Math.min(this.dragRect.startX, this.dragRect.currentX), Math.max(this.dragRect.startX, this.dragRect.currentX)],
@@ -288,9 +289,9 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         return stringListToIndexSet(this.sampleIdOrder);
     }
 
-    @computed get data() {
+    @computed get renderData() {
 
-        const grayPoints:IPoint[] = [];
+        const grayPoints:IPoint[] = []; // points that are purely interpolated for rendering, dont have data of their own
         const lineData:IPoint[][] = [];
 
         for (const mergedMutation of this.mutations) {
@@ -419,7 +420,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
 
     @computed get mutationToDataPoints() {
         const map = new ComplexKeyMap<IPoint[]>();
-        for (const lineData of this.data.lineData) {
+        for (const lineData of this.renderData.lineData) {
             map.set({
                 hugoGeneSymbol: lineData[0].mutation.gene.hugoGeneSymbol,
                 proteinChange: lineData[0].mutation.proteinChange
@@ -568,30 +569,42 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     @computed get yDomain() {
+        let min = Number.POSITIVE_INFINITY;
+        let max = Number.NEGATIVE_INFINITY;
+        for (const singleLineData of this.renderData.lineData) {
+            for (const d of singleLineData) {
+                min = Math.min(d.y, min);
+                max = Math.max(d.y, max);
+            }
+        }
+
         if (this.props.logScale) {
-            return [Math.log10(MIN_LOG_ARG), Math.log10(1)];
+            min = Math.max(min, MIN_LOG_ARG);
+            max = Math.max(max, MIN_LOG_ARG);
+
+            return [Math.log10(min), Math.log10(max)];
         } else {
-            return [0, 1];
+            return [min, max];
         }
     }
 
     @autobind
-    private tickFormatY(t:number, tickIndex:number) {
+    private tickFormatY(t:number, tickIndex:number, tickValues:number[]) {
         if (this.props.logScale) {
-            const realValue = Math.pow(10, t);
-            if (tickIndex === 0) {
-                // bottom tick - show less-than-or-equal sign
+            const realValue = tickFormatNumeral(t, tickValues, t=>Math.pow(10, t));
+            if (tickIndex === 0 && t <= MIN_LOG_ARG && t > 0) {
+                // bottom tick - if its greater than 0, show less-than-or-equal sign since data is floored at MIN_LOG_ARG
                 return `≤ ${realValue}`;
             } else {
                 return realValue;
             }
         } else {
-            return t;
+            return tickFormatNumeral(t, tickValues);
         }
     }
 
     render() {
-        if (this.data.lineData.length > 0) {
+        if (this.renderData.lineData.length > 0) {
             return (
                 <>
                     <svg
@@ -647,7 +660,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 crossAxis={false}
                                 offsetY={50}
                             />
-                            {this.data.lineData.map(dataForSingleLine=>{
+                            {this.renderData.lineData.map(dataForSingleLine=>{
                                 if (dataForSingleLine.length > 1) {
                                     // cant show line with only 1 point - causes error in svg to pdf conversion
                                     return [
@@ -672,7 +685,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 }
                             })}
                             <ScaleCapturer scaleCallback={this.scaleCallback}/>
-                            { this.data.grayPoints.length > 0 && (
+                            { this.renderData.grayPoints.length > 0 && (
                                 <VictoryScatter
                                     style={{
                                         data: {
@@ -682,12 +695,12 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                         }
                                     }}
                                     size={2.5}
-                                    data={this.data.grayPoints}
+                                    data={this.renderData.grayPoints}
                                     events={this.mouseEvents}
                                     y={this.y}
                                 />
                             )}
-                            { this.data.lineData.length > 0 && (
+                            { this.renderData.lineData.length > 0 && (
                                 <VictoryScatter
                                     style={{
                                         data: {
@@ -697,7 +710,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                         }
                                     }}
                                     size={SCATTER_DATA_POINT_SIZE}
-                                    data={_.flatten(this.data.lineData)}
+                                    data={_.flatten(this.renderData.lineData)}
                                     events={this.mouseEvents}
                                     y={this.y}
                                 />
