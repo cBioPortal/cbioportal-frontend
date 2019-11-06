@@ -6,9 +6,11 @@ import {If, Then, Else} from 'react-if';
 import Tracks from './Tracks';
 import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
 import {Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {MutationFrequenciesBySample} from "../vafPlot/VAFPlot";
+import { computed } from 'mobx';
+import { sampleIdToIconData, IKeyedIconData, genePanelIdToIconData } from './GenomicOverviewUtils';
 
 interface IGenomicOverviewProps {
     mergedMutations: Mutation[][];
@@ -19,32 +21,38 @@ interface IGenomicOverviewProps {
     sampleColors: {[s:string]:string};
     sampleManager: SampleManager;
     containerWidth: number;
+    sampleIdToMutationGenePanelId?:{[sampleId:string]:string};
+    sampleIdToCopyNumberGenePanelId?:{[sampleId:string]:string};
 }
 
 export default class GenomicOverview extends React.Component<IGenomicOverviewProps, { frequencies:MutationFrequenciesBySample }> {
 
-    shouldComponentUpdate(nextProps:IGenomicOverviewProps){
-        // only rerender to resize
-        return nextProps.containerWidth !== this.props.containerWidth;
-    }
-
     constructor(props:IGenomicOverviewProps) {
         super(props);
-        const frequencies = this.computeMutationFrequencyBySample(props.mergedMutations);
-        this.state = {
-            frequencies
-        };
-
     }
 
-    /*componentDidMount(){
+    @computed get frequencies() {
+        return this.computeMutationFrequencyBySample(this.props.mergedMutations);
+    }
 
-        var debouncedResize =  _.debounce(()=>this.forceUpdate(),500);
+    @computed get genePanelIds() {
+        return _.uniq(_.concat(
+                    _.values(this.props.sampleIdToMutationGenePanelId),
+                    _.values(this.props.sampleIdToCopyNumberGenePanelId)
+                ));
+    }
 
-        $(window).resize(debouncedResize);
+    @computed get genePanelIdToIconData():IKeyedIconData {
+        return genePanelIdToIconData(this.genePanelIds);
+    }
+        
+    @computed get sampleIdToMutationGenePanelIconData():IKeyedIconData {
+        return sampleIdToIconData(this.props.sampleIdToMutationGenePanelId, this.genePanelIdToIconData);
+    }
 
-    }*/
-
+    @computed get sampleIdToCopyNumberGenePanelIconData():IKeyedIconData {
+        return sampleIdToIconData(this.props.sampleIdToCopyNumberGenePanelId, this.genePanelIdToIconData);
+    }
 
     public render() {
 
@@ -61,10 +69,12 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
                         width={this.getTracksWidth()}
                         cnaSegments={this.props.cnaSegments}
                         samples={this.props.samples}
+                        mutationGenePanelIconData={this.sampleIdToMutationGenePanelIconData}
+                        copyNumberGenePanelIconData={this.sampleIdToCopyNumberGenePanelIconData}
                 />
                 <If condition={this.shouldShowVAFPlot()}>
                     <ThumbnailExpandVAFPlot
-                        data={this.state.frequencies}
+                        data={this.frequencies}
                         order={this.props.sampleManager.sampleIndex}
                         colors={this.props.sampleColors}
                         labels={labels}
@@ -81,9 +91,9 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
     }
 
     private isFrequencyExist():boolean {
-        for (const frequencyId of Object.keys(this.state.frequencies)){
-            if (this.state.frequencies.hasOwnProperty(frequencyId)){
-                for (const frequency of this.state.frequencies[frequencyId]){
+        for (const frequencyId of Object.keys(this.frequencies)){
+            if (this.frequencies.hasOwnProperty(frequencyId)){
+                for (const frequency of this.frequencies[frequencyId]){
                     return !isNaN(frequency);
                 }
             }

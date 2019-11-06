@@ -7,7 +7,7 @@ import {StudyViewPageStore} from "../../pages/studyView/StudyViewPageStore";
 import {isWebdriver} from "../../public-lib/lib/webdriverUtils";
 
 export type GAEvent = {
-  category:"studyPage"|"resultsView"|"quickSearch"|"download"|"groupComparison"|"homePage";
+  category:"studyPage"|"resultsView"|"quickSearch"|"download"|"groupComparison"|"homePage"|"patientView";
   action:string;
   label?:string|string[];
   fieldsObject?:{ [key:string]:string|number; }
@@ -134,6 +134,10 @@ export function trackQuery(cancerStudyIds:string[], oql:string, geneSymbols:stri
         [GACustomFieldsEnum.Genes]:geneSymbols.join(",")+",",
         [GACustomFieldsEnum.VirtualStudy]: isVirtualStudy.toString()
     });
+}
+
+export function trackPatient(studyId: string): void {
+    trackEvent({category: "patientView", action: "patientViewed", label: studyId,})
 }
 
 

@@ -4,7 +4,7 @@ import {observer} from "mobx-react";
 import {
     IMutationTableProps, MutationTableColumnType, default as MutationTable
 } from "shared/components/mutationTable/MutationTable";
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
@@ -12,10 +12,17 @@ import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import {isUncalled} from "shared/lib/MutationUtils";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
 import ExonColumnFormatter from "shared/components/mutationTable/column/ExonColumnFormatter";
+import HeaderIconMenu from "./HeaderIconMenu";
+import GeneFilterMenu, { GeneFilterOption } from "./GeneFilterMenu";
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager:SampleManager | null;
+    sampleToGenePanelId:{[sampleId: string]: string|undefined};
+    genePanelIdToEntrezGeneIds:{[genePanelId: string]: number[]};
     sampleIds?:string[];
+    showGeneFilterMenu?:boolean;
+    currentGeneFilter:GeneFilterOption;
+    onFilterGenes?:(option:GeneFilterOption)=>void;
 }
 
 @observer
@@ -30,6 +37,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         ...MutationTable.defaultProps,
         initialItemsPerPage: 10,
         paginationProps:{ itemsPerPageOptions:[10,25,50,100] },
+        showGeneFilterMenu: true,
         columns: [
             MutationTableColumnType.COHORT,
             MutationTableColumnType.MRNA_EXPR,
@@ -86,7 +94,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
 
         this._columns[MutationTableColumnType.SAMPLES] = {
             name: "Samples",
-            render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
+            render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager, this.props.sampleToGenePanelId, this.props.genePanelIdToEntrezGeneIds),
             sortBy:(d:Mutation[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
             download: (d:Mutation[])=>TumorColumnFormatter.getSample(d),
             resizable: true,
@@ -118,6 +126,13 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.EXON].sortBy = undefined;
         this._columns[MutationTableColumnType.EXON].render =
             (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, true));
+        this._columns[MutationTableColumnType.GENE].headerRender = (name:string) => {
+            return (
+                <HeaderIconMenu name={name} showIcon={this.props.showGeneFilterMenu} >
+                    <GeneFilterMenu onOptionChanged={this.props.onFilterGenes} currentSelection={this.props.currentGeneFilter} />
+                </HeaderIconMenu>
+            );
+        };
 
         // order columns
         this._columns[MutationTableColumnType.SAMPLES].order = 5;
