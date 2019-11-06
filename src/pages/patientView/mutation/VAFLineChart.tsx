@@ -25,6 +25,7 @@ import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexK
 import invertIncreasingFunction, {invertDecreasingFunction} from "../../../shared/lib/invertIncreasingFunction";
 import {MutationStatus, mutationTooltip} from "./PatientViewMutationsTabUtils";
 import {tickFormatNumeral} from "../../../shared/components/plots/TickUtils";
+import {once} from "mobx/lib/utils/utils";
 
 
 export interface IVAFLineChartProps {
@@ -52,6 +53,9 @@ const HIGHLIGHT_COLOR = "#318ec4";
 const DRAG_COVER_CLASSNAME = "draggingCover";
 const MIN_LOG_ARG = 0.001;
 const SCATTER_DATA_POINT_SIZE = 3;
+
+const THEME:any = _.cloneDeep(CBIOPORTAL_VICTORY_THEME);
+THEME.axis.style.grid.strokeOpacity = 1;
 
 class ScaleCapturer extends React.Component<any, any>{
     render() {
@@ -635,7 +639,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                         onMouseUp={this.onMouseUp}
                     >
                         <VictoryChart
-                            theme={CBIOPORTAL_VICTORY_THEME}
+                            theme={THEME}
                             standalone={false}
                             domain={{ y: this.yDomain }}
                             width={this.chartWidth}
