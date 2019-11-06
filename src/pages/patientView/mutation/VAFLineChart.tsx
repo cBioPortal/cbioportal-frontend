@@ -46,9 +46,11 @@ interface IPoint {
 }
 
 const LINE_COLOR = "#000000";
-const THICK_LINE_STROKE_WIDTH = 6;
+const HIGHLIGHT_LINE_STROKE_WIDTH = 6;
+const HIGHLIGHT_COLOR = "#318ec4";
 const DRAG_COVER_CLASSNAME = "draggingCover";
 const MIN_LOG_ARG = 0.001;
+const SCATTER_DATA_POINT_SIZE = 3;
 
 class ScaleCapturer extends React.Component<any, any>{
     render() {
@@ -102,7 +104,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     private mouseEvents = this.makeMouseEvents();
     @observable.ref mouseEvent:React.MouseEvent<any>|null = null;
     @observable.ref private scale:VictoryScale | null = null;
-    @observable.ref private thickLineContainer:any | null = null;
+    @observable.ref private highlightContainer:any | null = null;
 
     @observable dragRect = {
         startX:0, startY:0, currentX:0, currentY:0
@@ -110,8 +112,8 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     @observable dragging = false;
 
     @autobind
-    private thickLineContainerRef(thickLineContainer:any|null) {
-        this.thickLineContainer = thickLineContainer;
+    private highlightContainerRef(highlightContainer:any|null) {
+        this.highlightContainer = highlightContainer;
     }
 
     @autobind
@@ -290,7 +292,6 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
 
         const grayPoints:IPoint[] = [];
         const lineData:IPoint[][] = [];
-        const dataPoints:IPoint[] = [];
 
         for (const mergedMutation of this.mutations) {
             // determine data points in line for this mutation
@@ -408,21 +409,15 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             // we know thisLineDataWithoutGrayPoints is nonempty because it could only be empty if every point in
             //  it was gray, in which case it would have been made empty and skipped above.
             grayPoints.push(...thisGrayPoints);
-            dataPoints.push(...thisLineDataWithoutGrayPoints);
-
-            // only add line if it has more than 1 point
-            if (thisLineDataWithoutGrayPoints.length > 1) {
-                lineData.push(thisLineDataWithoutGrayPoints);
-            }
+            lineData.push(thisLineDataWithoutGrayPoints);
         }
         return {
             lineData,
-            dataPoints,
             grayPoints,
         };
     }
 
-    @computed get mutationToLineData() {
+    @computed get mutationToDataPoints() {
         const map = new ComplexKeyMap<IPoint[]>();
         for (const lineData of this.data.lineData) {
             map.set({
@@ -470,7 +465,9 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     @autobind
-    private getThickLines() {
+    private getHighlights() {
+        // we have to do it this way because victory rerendering is inefficient
+
         const highlightedMutations = [];
         if (!this.props.dataStore.onlyShowHighlightedInVAFChart) {
             // dont bold highlighted mutations if we're only showing highlighted mutations
@@ -480,26 +477,46 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         if (mouseOverMutation) {
             highlightedMutations.push(mouseOverMutation);
         }
-        if (highlightedMutations.length > 0 && this.scale !== null && this.thickLineContainer !== null) {
+        if (highlightedMutations.length > 0 && this.scale !== null && this.highlightContainer !== null) {
             return highlightedMutations.map(highlightedMutation=>{
-                const points = this.mutationToLineData.get({
+                const points = this.mutationToDataPoints.get({
                     proteinChange: highlightedMutation.proteinChange,
                     hugoGeneSymbol: highlightedMutation.gene.hugoGeneSymbol
                 });
                 if (!points) {
                     return <g/>
                 }
-
-                let d = `M ${this.scale!.x(points[0].x)} ${this.scale!.y(this.y(points[0]))}`;
-                for (let i=1; i<points.length; i++) {
-                    d = `${d} L ${this.scale!.x(points[i].x)} ${this.scale!.y(this.y(points[i]))}`;
-                }
-                return (
-                    <Portal isOpened={true} node={this.thickLineContainer}>
+                let linePath = null;
+                if (points.length > 1) {
+                    // more than one point -> we should render a path
+                    let d = `M ${this.scale!.x(points[0].x)} ${this.scale!.y(this.y(points[0]))}`;
+                    for (let i=1; i<points.length; i++) {
+                        d = `${d} L ${this.scale!.x(points[i].x)} ${this.scale!.y(this.y(points[i]))}`;
+                    }
+                    linePath = (
                         <path
-                            style={{ stroke:"#318ec4", strokeOpacity:1, strokeWidth:THICK_LINE_STROKE_WIDTH, fillOpacity:0, pointerEvents:"none"}}
+                            style={{ stroke:HIGHLIGHT_COLOR, strokeOpacity:1, strokeWidth:HIGHLIGHT_LINE_STROKE_WIDTH, fillOpacity:0, pointerEvents:"none"}}
                             d={d}
                         />
+                    );
+                }
+                const pointPaths = points.map(point=>(
+                    <path
+                        d={
+                            `M ${this.scale!.x(point.x)} ${this.scale!.y(this.y(point))}
+                            m -${SCATTER_DATA_POINT_SIZE}, 0
+                            a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${2*SCATTER_DATA_POINT_SIZE},0
+                            a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${-2*SCATTER_DATA_POINT_SIZE},0
+                            `
+                        }
+                        style={{ stroke:HIGHLIGHT_COLOR, fill:"white", strokeWidth:2, opacity:1}}
+                    />
+                ));
+
+                return (
+                    <Portal isOpened={true} node={this.highlightContainer}>
+                        {linePath}
+                        {pointPaths}
                     </Portal>
                 );
             });
@@ -574,7 +591,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     render() {
-        if (this.data.lineData.length > 0 || this.data.dataPoints.length > 0) {
+        if (this.data.lineData.length > 0) {
             return (
                 <>
                     <svg
@@ -630,27 +647,31 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 crossAxis={false}
                                 offsetY={50}
                             />
-                            {this.data.lineData.map(dataForSingleLine=>
-                                [
-                                    <VictoryLine
-                                        style={{
-                                            data: { stroke: LINE_COLOR, strokeOpacity:0.5, pointerEvents:"none" }
-                                        }}
-                                        data={dataForSingleLine}
-                                        y={this.y}
-                                    />,
-                                    <VictoryLine
-                                        style={{
-                                            data: { strokeOpacity:0, pointerEvents:"stroke", strokeWidth:THICK_LINE_STROKE_WIDTH }
-                                        }}
-                                        data={dataForSingleLine}
-                                        events={this.mouseEvents}
-                                        y={this.y}
-                                    />
-                                ]
-                            )}
+                            {this.data.lineData.map(dataForSingleLine=>{
+                                if (dataForSingleLine.length > 1) {
+                                    // cant show line with only 1 point - causes error in svg to pdf conversion
+                                    return [
+                                        <VictoryLine
+                                            style={{
+                                                data: { stroke: LINE_COLOR, strokeOpacity:0.5, pointerEvents:"none" }
+                                            }}
+                                            data={dataForSingleLine}
+                                            y={this.y}
+                                        />,
+                                        <VictoryLine
+                                            style={{
+                                                data: { strokeOpacity:0, pointerEvents:"stroke", strokeWidth:HIGHLIGHT_LINE_STROKE_WIDTH }
+                                            }}
+                                            data={dataForSingleLine}
+                                            events={this.mouseEvents}
+                                            y={this.y}
+                                        />
+                                    ];
+                                } else {
+                                    return null;
+                                }
+                            })}
                             <ScaleCapturer scaleCallback={this.scaleCallback}/>
-                            <g ref={this.thickLineContainerRef}/> {/*We put this container here so that the highlight layers properly with other elements*/}
                             { this.data.grayPoints.length > 0 && (
                                 <VictoryScatter
                                     style={{
@@ -666,7 +687,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                     y={this.y}
                                 />
                             )}
-                            { this.data.dataPoints.length > 0 && (
+                            { this.data.lineData.length > 0 && (
                                 <VictoryScatter
                                     style={{
                                         data: {
@@ -675,15 +696,16 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                             strokeWidth:2
                                         }
                                     }}
-                                    size={3}
-                                    data={this.data.dataPoints}
+                                    size={SCATTER_DATA_POINT_SIZE}
+                                    data={_.flatten(this.data.lineData)}
                                     events={this.mouseEvents}
                                     y={this.y}
                                 />
                             )}
+                            <g ref={this.highlightContainerRef}/> {/*We put this container here so that the highlight layers properly with other elements*/}
                         </VictoryChart>
                         <Observer>
-                            {this.getThickLines}
+                            {this.getHighlights}
                         </Observer>
                         <Observer>
                             {this.getDragRect}
