@@ -46,6 +46,7 @@ import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidat
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import setWindowVariable from 'shared/lib/setWindowVariable';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import onMobxPromise from "shared/lib/onMobxPromise";
 
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     const resultsViewPageStore = new ResultsViewPageStore(
@@ -184,7 +185,13 @@ export default class ResultsViewPage extends React.Component<
 
         setWindowVariable('urlWrapper', this.urlWrapper);
 
-        this.resultsViewPageStore = initStore(props.appStore, this.urlWrapper);
+        if (this.urlWrapper.hasSessionId) {
+            onMobxPromise(this.urlWrapper.remoteSessionData, () => {
+                this.resultsViewPageStore = initStore(props.appStore, this.urlWrapper);
+            });
+        } else {
+            this.resultsViewPageStore = initStore(props.appStore, this.urlWrapper);
+        }
 
         setWindowVariable('resultsViewPageStore', this.resultsViewPageStore);
     }

@@ -96,7 +96,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @computed get sortMode() {
         let mode:SortMode;
-
         switch (this.props.store.urlWrapper.query.oncoprint_sortby) {
             case "case_id":
                 mode = {type:"alphabetical"};
