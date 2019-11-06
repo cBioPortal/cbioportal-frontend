@@ -10,7 +10,6 @@ import ErrorMessage from "../../../shared/components/ErrorMessage";
 import { AlterationContainerType } from './EnrichmentsUtil';
 import {makeUniqueColorGetter} from "shared/components/plots/PlotUtils";
 import {MakeMobxView} from "../../../shared/components/MobxView";
-import {AnalysisCaseType} from "../ResultsViewPageStoreUtils";
 
 export interface ICopyNumberEnrichmentsTabProps {
     store: ResultsViewPageStore
@@ -40,7 +39,7 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
             this.props.store.selectedCopyNumberEnrichmentProfileMap
         ],
         render:()=>{
-            const patientLevel = this.props.store.analysisCaseType === AnalysisCaseType.PATIENT;
+            const patientLevel = this.props.store.usePatientLevelEnrichments;
             let profileName: string = "";
             const studies = this.props.store.studies.result!;
             if (studies.length === 1) {
@@ -75,8 +74,8 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                                                    headerName={"Deep Deletion" + profileName}
                                                    store={this.props.store}
                                                    containerType={AlterationContainerType.COPY_NUMBER}
-                                                   analysisCaseType={this.props.store.analysisCaseType}
-                                                   onSetAnalysisCaseType={this.props.store.setAnalysisCaseType}
+                                                   patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
+                                                   onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
                     />
                     <hr />
                     <AlterationEnrichmentContainer data={this.props.store.copyNumberAmpEnrichmentData.result!}
@@ -98,8 +97,8 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                                                    headerName={"Amplification - " + profileName}
                                                    store={this.props.store}
                                                    containerType={AlterationContainerType.COPY_NUMBER}
-                                                   analysisCaseType={this.props.store.analysisCaseType}
-                                                   onSetAnalysisCaseType={this.props.store.setAnalysisCaseType}
+                                                   patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
+                                                   onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
                     />
                 </div>
             );

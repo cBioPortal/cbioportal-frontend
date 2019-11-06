@@ -106,7 +106,7 @@ import {countMutations, mutationCountByPositionKey,} from './mutationCountHelper
 import {getPatientSurvivals} from './SurvivalStoreHelper';
 import {CancerStudyQueryUrlParams, QueryStore,} from 'shared/components/query/QueryStore';
 import {
-    AnalysisCaseType,
+    OncoprintAnalysisCaseType,
     annotateMolecularDatum,
     compileMutations,
     computeCustomDriverAnnotationReport,
@@ -654,18 +654,34 @@ export class ResultsViewPageStore {
     }
 
     @computed
-    public get analysisCaseType() {
+    public get usePatientLevelEnrichments() {
         return (
             (this.routing.location.query as CancerStudyQueryUrlParams)
-                .show_samples === 'true'
-        ) ? AnalysisCaseType.SAMPLE : AnalysisCaseType.PATIENT;
+                .patient_enrichments === 'true'
+        );
     }
 
     @autobind
     @action
-    public setAnalysisCaseType(e: AnalysisCaseType) {
+    public setUsePatientLevelEnrichments(e: boolean) {
         this.routing.updateRoute({
-            show_samples: (e === AnalysisCaseType.SAMPLE).toString(),
+            patient_enrichments: e.toString(),
+        } as Partial<CancerStudyQueryUrlParams>);
+    }
+
+    @computed
+    public get oncoprintAnalysisCaseType() {
+        return (
+            (this.routing.location.query as CancerStudyQueryUrlParams)
+                .show_samples === 'true'
+        ) ? OncoprintAnalysisCaseType.SAMPLE : OncoprintAnalysisCaseType.PATIENT;
+    }
+
+    @autobind
+    @action
+    public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {
+        this.routing.updateRoute({
+            show_samples: (e === OncoprintAnalysisCaseType.SAMPLE).toString(),
         } as Partial<CancerStudyQueryUrlParams>);
     }
 
@@ -4434,16 +4450,16 @@ export class ResultsViewPageStore {
         fetchData: () => {
             const molecularProfile = this.selectedMutationEnrichmentProfileMap
                 .result!;
-            const alteredGroup: (Sample | Patient)[] =
-                this.analysisCaseType === AnalysisCaseType.PATIENT
+            const alteredGroup: (Sample | Patient)[] = this
+                .usePatientLevelEnrichments
                 ? this.alteredPatients.result!
                 : this.alteredSamples.result!;
-            const unalteredGroup: (Sample | Patient)[] =
-                this.analysisCaseType === AnalysisCaseType.PATIENT
+            const unalteredGroup: (Sample | Patient)[] = this
+                .usePatientLevelEnrichments
                 ? this.unalteredPatients.result!
                 : this.unalteredSamples.result!;
             return internalClient.fetchMutationEnrichmentsUsingPOST({
-                enrichmentType: this.analysisCaseType === AnalysisCaseType.PATIENT
+                enrichmentType: this.usePatientLevelEnrichments
                     ? 'PATIENT'
                     : 'SAMPLE',
                 groups: [
@@ -4453,7 +4469,7 @@ export class ResultsViewPageStore {
                                 s => molecularProfile[s.studyId] !== undefined
                             )
                             .map(c => ({
-                                caseId: this.analysisCaseType === AnalysisCaseType.PATIENT
+                                caseId: this.usePatientLevelEnrichments
                                     ? c.patientId
                                     : (c as Sample).sampleId,
                                 molecularProfileId:
@@ -4468,7 +4484,7 @@ export class ResultsViewPageStore {
                                 s => molecularProfile[s.studyId] !== undefined
                             )
                             .map(c => ({
-                                caseId: this.analysisCaseType === AnalysisCaseType.PATIENT
+                                caseId: this.usePatientLevelEnrichments
                                     ? c.patientId
                                     : (c as Sample).sampleId,
                                 molecularProfileId:
@@ -4521,15 +4537,17 @@ export class ResultsViewPageStore {
     ): Promise<AlterationEnrichment[]> {
         const molecularProfile = this.selectedCopyNumberEnrichmentProfileMap
             .result!;
-        const alteredGroup: (Sample | Patient)[] = this.analysisCaseType === AnalysisCaseType.PATIENT
+        const alteredGroup: (Sample | Patient)[] = this
+            .usePatientLevelEnrichments
             ? this.alteredPatients.result!
             : this.alteredSamples.result!;
-        const unalteredGroup: (Sample | Patient)[] = this.analysisCaseType === AnalysisCaseType.PATIENT
+        const unalteredGroup: (Sample | Patient)[] = this
+            .usePatientLevelEnrichments
             ? this.unalteredPatients.result!
             : this.unalteredSamples.result!;
         return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             copyNumberEventType: copyNumberEventType,
-            enrichmentType: this.analysisCaseType === AnalysisCaseType.PATIENT
+            enrichmentType: this.usePatientLevelEnrichments
                 ? 'PATIENT'
                 : 'SAMPLE',
             groups: [
@@ -4537,7 +4555,7 @@ export class ResultsViewPageStore {
                     molecularProfileCaseIdentifiers: alteredGroup
                         .filter(s => molecularProfile[s.studyId] !== undefined)
                         .map(c => ({
-                            caseId: this.analysisCaseType === AnalysisCaseType.PATIENT
+                            caseId: this.usePatientLevelEnrichments
                                 ? c.patientId
                                 : (c as Sample).sampleId,
                             molecularProfileId:
@@ -4549,7 +4567,7 @@ export class ResultsViewPageStore {
                     molecularProfileCaseIdentifiers: unalteredGroup
                         .filter(s => molecularProfile[s.studyId] !== undefined)
                         .map(c => ({
-                            caseId: this.analysisCaseType === AnalysisCaseType.PATIENT
+                            caseId: this.usePatientLevelEnrichments
                                 ? c.patientId
                                 : (c as Sample).sampleId,
                             molecularProfileId:
