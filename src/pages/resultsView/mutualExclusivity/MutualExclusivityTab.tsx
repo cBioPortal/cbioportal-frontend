@@ -76,11 +76,21 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
         this.significantPairsFilter = !this.significantPairsFilter;
     }
 
+    @computed get error() {
+        if (_.size(this.props.isSampleAlteredMap.result) < 2) {
+            return "Mutual exclusivity analysis can only be performed when data from at least two genes is provided.";
+        } else if (_.size(this.isSampleAlteredFilteredMap) < 2) {
+            return "Mutual exclusivity analysis can only be performed when at least two of the queried genes have been profiled in the queried samples.";
+        } else {
+            return null;
+        }
+    }
+
     public render() {
         if (this.props.isSampleAlteredMap.isPending) {
             return <Loader isLoading={true} />
         } else if (this.props.isSampleAlteredMap.isComplete) {
-            if (_.size(this.isSampleAlteredFilteredMap) > 1) {
+            if (!this.error) {
                 return (
                     <div data-test="mutualExclusivityTabDiv">
                         {this.props.store && (
@@ -113,13 +123,17 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                     </div>
                 );
             } else {
-                return <div className={"tabMessageContainer"}>
-                            <div className={"alert alert-info"}>Mutual exclusivity analysis can only be performed when at least two of the queried genes have been profiled in the queried samples.</div>
-                            {this.filteredTrackOqls.length > 0 && (
-                                <div className="alert alert-warning" role="alert">{this.filteredTrackOqlsMessage}</div>
-                            )}
-                            {this.props.store && <AlterationFilterWarning store={this.props.store}/>}
+                return (
+                    <div className={"tabMessageContainer"}>
+                        <div className={"alert alert-info"}>
+                            {this.error}
                         </div>
+                        {this.filteredTrackOqls.length > 0 && (
+                            <div className="alert alert-warning" role="alert">{this.filteredTrackOqlsMessage}</div>
+                        )}
+                        {this.props.store && <AlterationFilterWarning store={this.props.store}/>}
+                    </div>
+                );
             }
         } else {
             return null;
