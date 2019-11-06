@@ -262,7 +262,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     cnaTableShowGeneFilterMenu(sampleIds:string[]):boolean {
-        const entrezGeneIds:number[] = _.uniq(_.map(patientViewPageStore.mergedDiscreteCNADataFilteredByGene, alterations => alterations[0].entrezGeneId));
+        const entrezGeneIds:number[] = _.uniq(_.map(patientViewPageStore.mergedDiscreteCNAData, alterations => alterations[0].entrezGeneId));
         return sampleIds.length > 1
             && checkNonProfiledGenesExist(  sampleIds,
                                             entrezGeneIds,
