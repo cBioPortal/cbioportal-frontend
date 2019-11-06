@@ -31,10 +31,13 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
     }
 
     drawTracks() {
+
         // --- construct params ---
         let cnaSamples = _.keyBy(this.props.samples.filter(s=>s.copyNumberSegmentPresent), s=>s.sampleId);
         let mutSamples = _.keyBy(this.props.samples.filter(s=>s.sequenced), s=>s.sampleId);
-        var config = tracksHelper.GenomicOverviewConfig(Object.keys(cnaSamples).length + Object.keys(mutSamples).length, this.props.width);
+        const showGenePanelIcons = !!((this.props.mutationGenePanelIconData   && _.keys(this.props.mutationGenePanelIconData  ).length > 0)
+                                   || (this.props.copyNumberGenePanelIconData && _.keys(this.props.copyNumberGenePanelIconData).length > 0));
+        var config = tracksHelper.GenomicOverviewConfig(Object.keys(cnaSamples).length + Object.keys(mutSamples).length, this.props.width, showGenePanelIcons);
         // --- end of params ---
 
         // --- raphael config ---
