@@ -491,64 +491,13 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     @computed get header() {
         return (
             <div style={{display:"inline-flex", alignItems:"center", marginBottom:5}}>
-                <div style={{display:"flex", alignItems:"center"}}>
-                    <span>Sort configuration:&nbsp;</span>
-                    <div style={{ width: 250, marginRight: 7 }} >
-                        <ReactSelect
-                            name="select sort configuration"
-                            onChange={(option:any|null)=>{
-                                if (option) {
-                                    this.clustered = option.value;
-                                }
-                            }}
-                            options={[
-                                { label: "Cluster", value: true},
-                                { label: "Sample order", value: false}
-                            ]}
-                            clearable={false}
-                            searchable={false}
-                            value={{ label: this.clustered ? "Cluster" : "Sample order", value:this.clustered}}
-                            styles={{
-                                control: (provided:any)=>({
-                                    ...provided,
-                                    height:36,
-                                    minHeight:36,
-                                    border: "1px solid rgb(204,204,204)"
-                                }),
-                                menu: (provided:any)=>({
-                                    ...provided,
-                                    maxHeight: 400
-                                }),
-                                menuList: (provided:any)=>({
-                                    ...provided,
-                                    maxHeight:400
-                                }),
-                                placeholder:(provided:any)=>({
-                                    ...provided,
-                                    color: "#000000"
-                                }),
-                                dropdownIndicator:(provided:any)=>({
-                                    ...provided,
-                                    color:"#000000"
-                                }),
-                                option:(provided:any, state:any)=>{
-                                    return {
-                                        ...provided,
-                                        cursor:"pointer",
-                                    };
-                                }
-                            }}
-                            theme={(theme:any)=>({
-                                ...theme,
-                                colors: {
-                                    ...theme.colors,
-                                    neutral80:"black",
-                                    //primary: theme.colors.primary50
-                                },
-                            })}
-                        />
-                    </div>
-                </div>
+                <LabeledCheckbox
+                    checked={this.clustered}
+                    onChange={()=>{ this.clustered = !this.clustered; }}
+                    labelProps={{style:{ marginRight:10}}}
+                >
+                    <span style={{marginTop:-3}}>Cluster</span>
+                </LabeledCheckbox>
                 <LabeledCheckbox
                     checked={this.mode === MutationOncoprintMode.MUTATION_TRACKS}
                     onChange={()=>{ this.mode = (this.mode === MutationOncoprintMode.MUTATION_TRACKS ? MutationOncoprintMode.SAMPLE_TRACKS : MutationOncoprintMode.MUTATION_TRACKS); }}
