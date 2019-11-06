@@ -161,17 +161,6 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         this.dataStore.setMouseOverMutation(null);
     }
 
-    private highlightedInTableOptions:{[value:string]:{label:string, value:boolean}} = {
-        "true": {
-            label: "Only show highlighted mutations in table",
-            value: true
-        },
-        "false": {
-            label: "Show all mutations in table",
-            value: false
-        }
-    };
-
     readonly table = MakeMobxView({
         await:()=>[
             this.props.store.mutationData,
@@ -184,21 +173,14 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
         render:()=>(
             <div>
-                <div style={{ width: 314, float: "left", marginRight: 15, marginTop: -6 }} >
-                    <ReactSelect
-                        name="select whether table filters out non-highlighted mutations"
-                        onChange={(option:any|null)=>{
-                            if (option) {
-                                this.dataStore.setOnlyShowHighlightedInTable(option.value);
-                            }
-                        }}
-                        options={[this.highlightedInTableOptions.true, this.highlightedInTableOptions.false]}
-                        clearable={false}
-                        searchable={false}
-                        value={this.highlightedInTableOptions[this.dataStore.onlyShowHighlightedInTable.toString()]}
-                        styles={DROPDOWN_STYLES}
-                        theme={DROPDOWN_THEME}
-                    />
+                <div style={{ float: "left", marginRight: 15, marginTop: 4 }} >
+                    <LabeledCheckbox
+                        checked={this.dataStore.onlyShowHighlightedInTable}
+                        onChange={()=>this.dataStore.setOnlyShowHighlightedInTable(!this.dataStore.onlyShowHighlightedInTable)}
+                        labelProps={{style:{ marginRight:10}}}
+                    >
+                        <span style={{marginTop:-3}}>Show only highlighted mutations</span>
+                    </LabeledCheckbox>
                 </div>
                 <PatientViewMutationTable
                     dataStore={this.dataStore}
