@@ -287,13 +287,32 @@ describe('error messaging for 400 error', function(){
 
     it('should show error message for 400 query',function(){
         browser.waitForExist('.errorScreen');
-        var res = browser.checkElement('.errorScreen', { hide:['.form-group'] });
-        assertScreenShotMatch(res);
     });
 
     it('should allow return to homepage after error message', function(){
         $(".errorLogo").click();
         browser.waitForExist(".homePageLayout");
+    });
+
+});
+
+describe('error messaging for 404 error', function(){
+    it('should show error message for wrong sample',function(){
+        var url = `${CBIOPORTAL_URL}/patient?sampleId=not-a-sample&studyId=msk_impact_2017`;
+        goToUrlAndSetLocalStorage(url);
+
+        browser.waitForExist('.errorScreen');
+        var res = browser.checkElement('.errorScreen', { hide:['.form-group'] });
+        assertScreenShotMatch(res);
+    });
+
+    it('should show error message for wrong patient',function(){
+        var url = `${CBIOPORTAL_URL}/patient?studyId=msk_impact_2017&caseId=not-a-patient`;
+        goToUrlAndSetLocalStorage(url);
+
+        browser.waitForExist('.errorScreen');
+        var res = browser.checkElement('.errorScreen', { hide:['.form-group'] });
+        assertScreenShotMatch(res);
     });
 
 });
