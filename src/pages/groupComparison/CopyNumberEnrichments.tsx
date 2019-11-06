@@ -11,8 +11,7 @@ import ErrorMessage from "../../shared/components/ErrorMessage";
 import {MakeEnrichmentsTabUI} from "./GroupComparisonUtils";
 import { remoteData } from "public-lib/api/remoteData";
 import _ from "lodash";
-import {AlterationContainerType} from "pages/resultsView/enrichments/EnrichmentsUtil";
-import {AnalysisCaseType} from "../resultsView/ResultsViewPageStoreUtils";
+import { AlterationContainerType } from "pages/resultsView/enrichments/EnrichmentsUtil";
 
 export interface ICopyNumberEnrichmentsProps {
     store: GroupComparisonStore;
@@ -67,8 +66,8 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                         headerName={headerName}
                         showCNAInTable={true}
                         containerType={AlterationContainerType.COPY_NUMBER}
-                        analysisCaseType={this.props.store.usePatientLevelEnrichments ? AnalysisCaseType.PATIENT : AnalysisCaseType.SAMPLE}
-                        onSetAnalysisCaseType={this.props.store.setUsePatientLevelEnrichments}
+                        patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
+                        onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
                     />
                 </div>
             );

@@ -12,7 +12,6 @@ import { MakeEnrichmentsTabUI } from "./GroupComparisonUtils";
 import { remoteData } from "public-lib/api/remoteData";
 import _ from "lodash";
 import { AlterationContainerType } from "pages/resultsView/enrichments/EnrichmentsUtil";
-import {AnalysisCaseType} from "../resultsView/ResultsViewPageStoreUtils";
 
 export interface IMutationEnrichmentsProps {
     store: GroupComparisonStore
@@ -66,8 +65,8 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                         alteredVsUnalteredMode={false}
                         headerName={headerName}
                         containerType={AlterationContainerType.MUTATION}
-                        analysisCaseType={this.props.store.usePatientLevelEnrichments ? AnalysisCaseType.PATIENT : AnalysisCaseType.SAMPLE}
-                        onSetAnalysisCaseType={this.props.store.setUsePatientLevelEnrichments}
+                        patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
+                        onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
                     />
                 </div>
             );

@@ -1,16 +1,16 @@
 import * as React from 'react';
-import {observer} from "mobx-react";
-import {ResultsViewPageStore} from "../ResultsViewPageStore";
+import { observer } from "mobx-react";
+import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import AlterationEnrichmentContainer from 'pages/resultsView/enrichments/AlterationEnrichmentsContainer';
 import Loader from 'shared/components/loadingIndicator/LoadingIndicator';
 import EnrichmentsDataSetDropdown from 'pages/resultsView/enrichments/EnrichmentsDataSetDropdown';
-import {MolecularProfile} from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import autobind from 'autobind-decorator';
 import ErrorMessage from "../../../shared/components/ErrorMessage";
-import {AlterationContainerType} from './EnrichmentsUtil';
+import { AlterationContainerType } from './EnrichmentsUtil';
 import {makeUniqueColorGetter} from "shared/components/plots/PlotUtils";
 import {MakeMobxView} from "../../../shared/components/MobxView";
-import {AnalysisCaseType} from "../ResultsViewPageStoreUtils";
+import _ from "lodash";
 
 export interface IMutationEnrichmentsTabProps {
     store: ResultsViewPageStore
@@ -41,7 +41,7 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
         renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
         renderError:()=><ErrorMessage/>,
         render:()=>{
-            const patientLevel = this.props.store.analysisCaseType === AnalysisCaseType.PATIENT;
+            const patientLevel = this.props.store.usePatientLevelEnrichments;
             let headerName = "Mutations";
             const studies = this.props.store.studies.result!;
             if (studies.length === 1) {
@@ -76,8 +76,8 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
                                 }
                         ]}
                         containerType={AlterationContainerType.MUTATION}
-                        analysisCaseType={this.props.store.analysisCaseType}
-                        onSetAnalysisCaseType={this.props.store.setAnalysisCaseType}
+                        patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
+                        onSetPatientLevelEnrichments={this.props.store.setUsePatientLevelEnrichments}
                     />
                 </div>
             );
