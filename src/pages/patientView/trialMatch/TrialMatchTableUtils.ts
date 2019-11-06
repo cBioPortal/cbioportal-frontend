@@ -205,11 +205,11 @@ export function excludeControlArms(trialMatches: ITrialMatch[]): ITrialMatch[] {
 }
 
 export function getDrugsFromArm(armDescription: string, arms: IArm[]): string[][] {
-    const drugs:string[][] = [];
+    let drugs: string[][] = [];
     if ( armDescription !== '' ) { // match for specific arm
         const matchedArm: IArm = _.find( arms, (arm) => arm.arm_description === armDescription )!;
         if ( !_.isUndefined(matchedArm.drugs) ) {
-            drugs.push( _.map( matchedArm.drugs, (drug: IDrug) => drug.name ) );
+            drugs = matchedArm.drugs.map(  (drugCombination: IDrug[]) => drugCombination.map((drug: IDrug) => drug.name ));
         }
     }
     return drugs;
