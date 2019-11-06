@@ -600,6 +600,11 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                             height={this.chartHeight}
                             domainPadding={20}
                             singleQuadrantDomainPadding={false}
+                            style={{
+                                parent:{
+                                    backgroundColor:"white"
+                                }
+                            }}
                         >
                             <VictoryAxis
                                 dependentAxis
