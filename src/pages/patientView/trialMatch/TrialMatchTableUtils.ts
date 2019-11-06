@@ -62,7 +62,7 @@ export function groupTrialMatchesByAgeNumerical(armGroup: ITrialMatch[]): IClini
             }
         });
         let clinicalGroupMatch: IClinicalGroupMatch = {
-            trialAgeNumerical: age,
+            trialAgeNumerical: [age],
             trialOncotreePrimaryDiagnosis: {
                 positive: positiveCancerTypes,
                 negative: negativeCancerTypes
@@ -85,7 +85,25 @@ export function groupTrialMatchesByAgeNumerical(armGroup: ITrialMatch[]): IClini
         clinicalGroupMatch.notMatches = positiveAndNegativeMatches.notMatches;
         return clinicalGroupMatch;
     });
+    if (matches.length > 1) {
+        return mergeClinicalGroupMatchByAge(matches);
+    }
     return matches;
+}
+
+// Merge clinical matches by age when they have the same trialOncotreePrimaryDiagnosis but different trialAgeNumericals.
+export function mergeClinicalGroupMatchByAge(clinicalGroupMatch: IClinicalGroupMatch[]): IClinicalGroupMatch[] {
+    const mergedClinicalGroupMatch: IClinicalGroupMatch[] = [];
+    const matchesGroupedByTrialOncotreePrimaryDiagnosis = _.groupBy(clinicalGroupMatch, (match: IClinicalGroupMatch) => match.trialOncotreePrimaryDiagnosis);
+    _.forEach(matchesGroupedByTrialOncotreePrimaryDiagnosis, (clinicalGroup: IClinicalGroupMatch[]) => {
+        _.forEach(clinicalGroup, (clinicalMatch: IClinicalGroupMatch, index: number) => {
+            if (index !== 0) {
+                clinicalGroup[0].trialAgeNumerical = clinicalGroup[0].trialAgeNumerical.concat(clinicalMatch.trialAgeNumerical);
+            }
+        });
+        mergedClinicalGroupMatch.push(clinicalGroup[0]);
+    });
+    return mergedClinicalGroupMatch;
 }
 
 export function groupTrialMatchesByGenomicAlteration(ageGroup: ITrialMatch[]) {
@@ -186,7 +204,6 @@ export function excludeControlArms(trialMatches: ITrialMatch[]): ITrialMatch[] {
     return filteredTrialMatches;
 }
 
-
 export function getDrugsFromArm(armDescription: string, arms: IArm[]): string[][] {
     const drugs:string[][] = [];
     if ( armDescription !== '' ) { // match for specific arm
@@ -196,4 +213,45 @@ export function getDrugsFromArm(armDescription: string, arms: IArm[]): string[][
         }
     }
     return drugs;
+}
+
+export function getAgeRangeDisplay(trialAgeNumerical: string[]) {
+    if (trialAgeNumerical.length > 1) {
+        const ageNumbers = trialAgeNumerical.map((age:string) => age.match(/\d+(\.?\d+)?/g)!.map((v: string) => Number(v)));
+        if (trialAgeNumerical.length === 2) {
+            let leftAgeText = '';
+            let rightAgeText = '';
+            if (trialAgeNumerical[0].includes('>') && trialAgeNumerical[1].includes('<')) {
+                if (trialAgeNumerical[0].includes('=')) {
+                    leftAgeText = `${ageNumbers[0]} ≤`;
+                } else {
+                    leftAgeText = `${ageNumbers[0]} <`;
+                }
+                if (trialAgeNumerical[1].includes('=')) {
+                    rightAgeText = `≤ ${ageNumbers[1]}`;
+                } else {
+                    rightAgeText = `< ${ageNumbers[1]}`;
+                }
+                return `${leftAgeText} Age ${rightAgeText}`;
+            } else if (trialAgeNumerical[0].includes('<') && trialAgeNumerical[1].includes('>')) {
+                if (trialAgeNumerical[1].includes('=')) {
+                    leftAgeText = `${ageNumbers[1]} ≤`;
+                } else {
+                    leftAgeText = `${ageNumbers[1]} <`;
+                }
+                if (trialAgeNumerical[0].includes('=')) {
+                    rightAgeText = `≤ ${ageNumbers[0]}`;
+                } else {
+                    rightAgeText = `< ${ageNumbers[0]}`;
+                }
+                return `${leftAgeText} Age ${rightAgeText}`;
+            } else {
+                return `Age: ${trialAgeNumerical.join(', ')}`
+            }
+        } else {
+            return `Age: ${trialAgeNumerical.join(', ')}`;
+        }
+    } else {
+        return `${trialAgeNumerical[0]} yrs old`;
+    }
 }
