@@ -631,6 +631,39 @@ export default class OncoprintControls extends React.Component<
             return <span />;
         }
     }
+    
+    @computed get heatmapButtonText():string {
+        const texts:string[] = [];
+        const uniqueHeatmapProfiles = _.uniq(this.heatmapProfileOptions.map(option => option.type));
+        uniqueHeatmapProfiles.forEach(profile => {
+            switch (profile) {
+                case AlterationTypeConstants.MRNA_EXPRESSION:
+                    texts.push("mRNA");
+                    break;
+                case AlterationTypeConstants.PROTEIN_LEVEL:
+                    texts.push("Protein");
+                    break;
+                case AlterationTypeConstants.METHYLATION:
+                    texts.push("Methylation");
+                    break;
+                case AlterationTypeConstants.GENERIC_ASSAY:
+                    texts.push("Tx Response");
+                    break;
+                case AlterationTypeConstants.GENESET_SCORE:
+                    texts.push("GSVA");
+                    break;
+                default:
+            }
+        });
+        switch (texts.length) {
+            case 0:
+                return "Heatmap";
+            case 1:
+                return `${texts[0]} Heatmap`;
+            default:
+                return `${texts.join(" / ")} Heatmaps`;
+        }
+    }
 
     private getHeatmapMenu() {
         const showItemSelectionElements = this.props.state
@@ -654,7 +687,7 @@ export default class OncoprintControls extends React.Component<
         let menu = <LoadingIndicator isLoading={true} />;
         if (this.props.state.heatmapProfilesPromise.isComplete) {
             if (!this.props.state.heatmapProfilesPromise.result!.length) {
-                return <span />;
+                return null;
             } else {
                 menu = (
                     <div className="oncoprint__controls__heatmap_menu">
@@ -760,7 +793,7 @@ export default class OncoprintControls extends React.Component<
         return (
             <CustomDropdown
                 bsStyle="default"
-                title="Heatmap"
+                title={this.heatmapButtonText}
                 id="heatmapDropdown"
                 className="heatmap"
             >
