@@ -28,6 +28,7 @@ import superagentCache from 'superagent-cache';
 import getBrowserWindow from "public-lib/lib/getBrowserWindow";
 import {AppStore} from "./AppStore";
 import {handleLongUrls} from "shared/lib/handleLongUrls";
+import {handleTouchAndWheelEventsForChromeBug} from "shared/lib/handleTouchAndWheelEventsForChromeBug";
 import "shared/polyfill/canvasToBlob";
 
 superagentCache(superagent);
@@ -43,48 +44,8 @@ initializeConfiguration();
 // THIS TELLS WEBPACK BUNDLE LOADER WHERE TO LOAD SPLIT BUNDLES
 __webpack_public_path__ = AppConfig.frontendUrl;
 
-// TODO: temparary fix the wheel event described in: https://github.com/facebook/react/issues/14856
-const EVENTS_TO_MODIFY = ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'wheel'];
-
-const originalAddEventListener = document.addEventListener.bind();
-document.addEventListener = (type, listener, options, wantsUntrusted) => {
-  let modOptions = options;
-  if (EVENTS_TO_MODIFY.includes(type)) {
-    if (typeof options === 'boolean') {
-      modOptions = {
-        capture: options,
-        passive: false,
-      };
-    } else if (typeof options === 'object') {
-      modOptions = {
-        passive: false,
-        ...options,
-      };
-    }
-  }
-
-  return originalAddEventListener(type, listener, modOptions, wantsUntrusted);
-};
-
-const originalRemoveEventListener = document.removeEventListener.bind();
-document.removeEventListener = (type, listener, options) => {
-  let modOptions = options;
-  if (EVENTS_TO_MODIFY.includes(type)) {
-    if (typeof options === 'boolean') {
-      modOptions = {
-        capture: options,
-        passive: false,
-      };
-    } else if (typeof options === 'object') {
-      modOptions = {
-        passive: false,
-        ...options,
-      };
-    }
-  }
-  return originalRemoveEventListener(type, listener, modOptions);
-};
-// End temparary fix
+// this fixes a chrome bug related to touch and wheel events
+handleTouchAndWheelEventsForChromeBug(document);
 
 if (!window.hasOwnProperty("$")) {
     window.$ = $;

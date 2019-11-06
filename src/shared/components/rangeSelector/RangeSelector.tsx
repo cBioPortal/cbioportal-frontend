@@ -38,7 +38,7 @@ export default class RangeSelector extends React.Component<IRangeSelectorProps> 
 
     render() {
         return (
-            <div style={{marginBottom:"-50px"}}>
+            <div style={{marginBottom:-50}}>
                 <VictoryChart containerComponent={<VictoryBrushContainer responsive={false} brushDimension="x" brushDomain={this.props.selectedDomain} onBrushDomainChange={this.onSelection}/>}
                             height={100} width={this.props.styleOpts.width}
                             padding={this.props.styleOpts.padding}

@@ -414,7 +414,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         return this.victoryLegendData.length > 0;
     }
 
-    @observable.shallow zoomDomain: any = {x: [0, this.initialRangeMaxValue]};
+    @observable.ref zoomDomain: any = {x: [0, this.initialRangeMaxValue]};
 
     @autobind
     private onZoom(domain: any, props: any) {
@@ -427,11 +427,11 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     }
 
     @computed get maximumDataMonthValue() {
-        let max = Number.MIN_VALUE;
-        _.forEach(this.sortedGroupedSurvivals, (survivals) => {
-            max = Math.max(max, survivals[survivals.length - 1].months)
-        });
-        return Math.ceil(max);
+        return _.chain(this.sortedGroupedSurvivals)
+                .map((survivals) => survivals[survivals.length - 1].months)
+                .max()
+                .ceil()
+                .value();
     }
 
     @computed get initialRangeMaxValue() {
@@ -446,9 +446,12 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
             return {
                 zoomDomain: this.zoomDomain
             }
+        } else {
+            return undefined;
         }
     }
 
+    // prevent scrolling the page when zoom in / out the survival chart
     @autobind
     private handleWheel(e: React.WheelEvent) {
         e.preventDefault();
