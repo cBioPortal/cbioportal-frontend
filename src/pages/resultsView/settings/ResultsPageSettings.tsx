@@ -69,7 +69,9 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                 className={classNames("cbioportal-frontend", styles.globalSettingsDropdown)}
                 style={{padding:5}}
             >
-                <h5>Annotate Data</h5>
+                <h5 style={{ marginTop:"auto", marginBottom:"auto"}}>
+                    Annotate Data
+                </h5>
                 <InfoIcon
                     divStyle={{display:"inline-block", marginLeft:6}}
                     style={{color:"rgb(54, 134, 194)"}}
@@ -84,7 +86,9 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
 
                 <hr/>
 
-                <h5>Filter Data</h5>
+                <h5 style={{ marginTop:"auto", marginBottom:"auto"}}>
+                    Filter Data
+                </h5>
                 <InfoIcon
                     divStyle={{display:"inline-block", marginLeft:6}}
                     style={{color:"rgb(54, 134, 194)"}}
