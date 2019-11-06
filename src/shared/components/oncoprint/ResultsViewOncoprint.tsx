@@ -562,24 +562,24 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.props.store.excludeGermlineMutations = s;
             },
             onSelectSortByMutationType:(s:boolean)=>{
-                this.props.store.urlWrapper.updateQuery({ oncoprint_sort_by_mutation_type: s.toString() });
+                this.props.store.urlWrapper.updateURL({ oncoprint_sort_by_mutation_type: s.toString() });
             },
             onClickSortAlphabetical:()=>{
-                this.props.store.urlWrapper.updateQuery({
+                this.props.store.urlWrapper.updateURL({
                     oncoprint_sortby:"case_id",
                     oncoprint_cluster_profile:""
                 });
             },
             onClickSortCaseListOrder:()=>{
-                this.props.store.urlWrapper.updateQuery({
+                this.props.store.urlWrapper.updateURL({
                     oncoprint_sortby:"case_list",
                     oncoprint_cluster_profile:""
                 });
             },
             onSelectSortByDrivers:(sort:boolean)=>{
-                this.props.store.urlWrapper.updateQuery({ oncoprint_sort_by_drivers: sort.toString() });
+                this.props.store.urlWrapper.updateURL({ oncoprint_sort_by_drivers: sort.toString() });
             },
-            onClickSortByData:()=>{this.props.store.urlWrapper.updateQuery({
+            onClickSortByData:()=>{this.props.store.urlWrapper.updateURL({
                 oncoprint_sortby:"",
                 oncoprint_cluster_profile:""
             });},
@@ -606,7 +606,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 if (this.isClusteredByCurrentSelectedHeatmapProfile) {
                     this.sortByData();
                 } else {
-                    this.props.store.urlWrapper.updateQuery({
+                    this.props.store.urlWrapper.updateURL({
                         oncoprint_sortby:"cluster",
                         oncoprint_cluster_profile:this.selectedHeatmapProfile
                     });
@@ -750,7 +750,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @action public sortByData() {
-        this.props.store.urlWrapper.updateQuery({
+        this.props.store.urlWrapper.updateURL({
             oncoprint_sortby:"",
             oncoprint_cluster_profile:""
         });
@@ -824,7 +824,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             .map((x:HeatmapTrackGroupRecord)=>`${_.keys(x.entities).join(";")}`)
             .join(";");
 
-        this.props.store.urlWrapper.updateQuery({ heatmap_track_groups, treatment_list });
+        this.props.store.urlWrapper.updateURL({ heatmap_track_groups, treatment_list });
     }
 
     private populateHeatMapTracks(molecularProfileId:string, entities:string[], map:any) {
@@ -878,7 +878,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     private setColumnMode(type:"sample"|"patient") {
-        this.props.store.urlWrapper.updateQuery({ show_samples: type==="sample" ? "true" : "false" })
+        this.props.store.urlWrapper.updateURL({ show_samples: type==="sample" ? "true" : "false" })
     }
 
     readonly alteredKeys = remoteData({
@@ -908,7 +908,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @action private onChangeSelectedClinicalTracks(clinicalAttributeIds:(string|SpecialAttribute)[]) {
-        this.props.store.urlWrapper.updateQuery({ clinicallist: clinicalAttributeIds.join(",")  });
+        this.props.store.urlWrapper.updateURL({ clinicallist: clinicalAttributeIds.join(",")  });
     }
 
     private onDeleteClinicalTrack(clinicalTrackKey:string) {
@@ -916,7 +916,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         if (!this.isHidden) {
             const ids = this.selectedClinicalAttributeIds.keys();
             const withoutDeleted = _.filter(ids,(item)=>item!==this.clinicalTrackKeyToAttributeId(clinicalTrackKey));
-            this.props.store.urlWrapper.updateQuery({ clinicallist: withoutDeleted.join(",")  });
+            this.props.store.urlWrapper.updateURL({ clinicallist: withoutDeleted.join(",")  });
         }
     }
 

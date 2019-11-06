@@ -105,7 +105,7 @@ export default class GroupComparisonStore {
     }
 
     @action public updateOverlapStrategy(strategy:OverlapStrategy) {
-        this.urlWrapper.updateQuery({ overlapStrategy: strategy });
+        this.urlWrapper.updateURL({ overlapStrategy: strategy });
     }
 
     @computed get overlapStrategy() {
@@ -119,7 +119,7 @@ export default class GroupComparisonStore {
 
     @autobind
     @action public setUsePatientLevelEnrichments(e:boolean) {
-        this.urlWrapper.updateQuery({ patientEnrichments: e.toString()});
+        this.urlWrapper.updateURL({ patientEnrichments: e.toString()});
     }
 
     @computed get groupOrder() {
@@ -140,11 +140,11 @@ export default class GroupComparisonStore {
         const poppedUid = groupOrder.splice(oldIndex, 1)[0];
         groupOrder.splice(newIndex, 0, poppedUid);
 
-        this.urlWrapper.updateQuery({ groupOrder: JSON.stringify(groupOrder) });
+        this.urlWrapper.updateURL({ groupOrder: JSON.stringify(groupOrder) });
     }
 
     @action private updateUnselectedGroups(names:string[]) {
-        this.urlWrapper.updateQuery({ unselectedGroups: JSON.stringify(names) });
+        this.urlWrapper.updateURL({ unselectedGroups: JSON.stringify(names) });
     }
 
     @computed get unselectedGroups() {
@@ -209,7 +209,7 @@ export default class GroupComparisonStore {
     @action
     private async saveAndGoToSession(newSession:Session) {
         const {id} = await comparisonClient.addComparisonSession(newSession);
-        this.urlWrapper.updateQuery({ sessionId: id});
+        this.urlWrapper.updateURL({ sessionId: id});
     }
 
     readonly _session = remoteData<Session>({

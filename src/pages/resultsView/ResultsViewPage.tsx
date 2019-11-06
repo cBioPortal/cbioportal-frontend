@@ -57,7 +57,7 @@ function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     reaction(
         () => [resultsViewPageStore.studyIds, resultsViewPageStore.oqlText],
         () => {
-            if (resultsViewPageStore.studyIds.isComplete) {
+            if (resultsViewPageStore.studyIds.isComplete && resultsViewPageStore.oqlText) {
                 trackQuery(
                     resultsViewPageStore.studyIds.result!,
                     resultsViewPageStore.oqlText,
@@ -180,6 +180,7 @@ export default class ResultsViewPage extends React.Component<
         super(props);
 
         this.urlWrapper = new ResultsViewURLWrapper(props.routing);
+        //delete getBrowserWindow().submittedURLWrapper;
 
         setWindowVariable('urlWrapper', this.urlWrapper);
 
@@ -576,7 +577,7 @@ export default class ResultsViewPage extends React.Component<
                         showDownloadTab={false}
                         showAlerts={true}
                         getQueryStore={() =>
-                            createQueryStore(this.props.routing.query)
+                            createQueryStore(this.urlWrapper.query)
                         }
                     />
                 </div>
