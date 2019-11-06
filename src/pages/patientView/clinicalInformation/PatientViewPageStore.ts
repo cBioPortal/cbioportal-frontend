@@ -85,6 +85,8 @@ import { IDetailedTrialMatch, ITrial, ITrialMatch, ITrialQuery } from "../../../
 import { groupTrialMatchesById } from "../trialMatch/TrialMatchTableUtils";
 import { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
+import { AppStore, SiteError } from 'AppStore';
+
 
 type PageMode = 'patient' | 'sample';
 
@@ -156,7 +158,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
 
 export class PatientViewPageStore {
 
-    constructor() {
+    constructor(private appStore: AppStore) {
         labelMobxPromises(this);
         this.internalClient = internalClient;
     }
@@ -277,6 +279,9 @@ export class PatientViewPageStore {
     readonly samples = remoteData(
         {
             invoke: async () => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
+            onError: (err: Error) => {
+                this.appStore.siteErrors.push({errorObj: err, dismissed: false, title:"Samples / Patients not valid"} as SiteError);
+            }
         },
         []
     );
