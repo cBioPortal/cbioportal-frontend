@@ -500,6 +500,8 @@ export class ResultsViewPageStore {
 
     public rvQuery: ResultsViewQuery = new ResultsViewQuery();
 
+    @observable public resultsPageSettingsVisible = false;
+
     @observable tabId: ResultsViewTab | undefined = undefined;
 
     @observable public checkingVirtualStudies = false;
