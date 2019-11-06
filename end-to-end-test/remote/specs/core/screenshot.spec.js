@@ -244,7 +244,7 @@ describe("enrichments tab screenshot tests", function() {
     });
 });
 
-describe.skip("multi-study enrichments tab screenshot tests", function() {
+describe("multi-study enrichments tab screenshot tests", function() {
     before(function() {
         var url = `${CBIOPORTAL_URL}/results/enrichments?Action=Submit&cancer_study_list=coadread_tcga_pub%2Cgbm_tcga_pub&case_set_id=all&clinicallist=CANCER_STUDY%2CPROFILED_IN_COPY_NUMBER_ALTERATION%2CPROFILED_IN_MUTATION_EXTENDED&data_priority=0&gene_list=APC%0ACDKN2B&show_samples=false&tab_index=tab_visualize`;
         goToUrlAndSetLocalStorage(url);
