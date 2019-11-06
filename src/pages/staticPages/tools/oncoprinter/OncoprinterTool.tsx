@@ -319,7 +319,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                     <title>{'cBioPortal for Cancer Genomics::Oncoprinter'}</title>
                 </Helmet>
                 <div className="cbioportal-frontend">
-                    <h1 style={{display: "inline"}}>Oncoprinter</h1> generates Oncoprints from your own data.
+                    <h1 style={{display: "inline", marginRight:10}}>Oncoprinter</h1> Generate Oncoprints and perform mutual exclusivity analysis from your own data.
                     <br/><br/>
                     <Observer>
                         {this.getHelpSection}
