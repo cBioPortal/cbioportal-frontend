@@ -97,17 +97,6 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         this.vafLineChartSvg = elt;
     }
 
-    private highlightedInVAFChartOptions:{[value:string]:{label:string, value:boolean}} = {
-        "true": {
-            label: "Only show highlighted mutations in chart",
-            value: true
-        },
-        "false": {
-            label: "Show all mutations in chart",
-            value: false
-        }
-    };
-
     readonly vafLineChart = MakeMobxView({
         await:()=>[
             this.props.store.coverageInformation,
@@ -117,31 +106,21 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
         render:()=>(
             <div>
-                <div style={{display:"flex"}}>
-                    <div style={{ width: 314, marginRight: 15, marginTop: -6 }} >
-                        <ReactSelect
-                            name="select whether chart filters out non-highlighted mutations"
-                            onChange={(option:any|null)=>{
-                                if (option) {
-                                    this.dataStore.setOnlyShowHighlightedInVAFChart(option.value);
-                                }
-                            }}
-                            options={[this.highlightedInVAFChartOptions.true, this.highlightedInVAFChartOptions.false]}
-                            clearable={false}
-                            searchable={false}
-                            value={this.highlightedInVAFChartOptions[this.dataStore.onlyShowHighlightedInVAFChart.toString()]}
-                            styles={DROPDOWN_STYLES}
-                            theme={DROPDOWN_THEME}
-                        />
-                    </div>
-                    <div style={{marginTop:3, marginRight:7}}>
-                        <LabeledCheckbox
-                            checked={this.vafLineChartLogScale}
-                            onChange={()=>{ this.vafLineChartLogScale = !this.vafLineChartLogScale; }}
-                        >
-                            <span style={{marginTop:-3}}>Log scale</span>
-                        </LabeledCheckbox>
-                    </div>
+                <div style={{display:"flex", alignItems:"center", marginBottom:5}}>
+                    <LabeledCheckbox
+                        checked={this.dataStore.onlyShowHighlightedInVAFChart}
+                        onChange={()=>this.dataStore.setOnlyShowHighlightedInVAFChart(!this.dataStore.onlyShowHighlightedInVAFChart)}
+                        labelProps={{style:{ marginRight:10}}}
+                    >
+                        <span style={{marginTop:-3}}>Show only highlighted mutations</span>
+                    </LabeledCheckbox>
+                    <LabeledCheckbox
+                        checked={this.vafLineChartLogScale}
+                        onChange={()=>{ this.vafLineChartLogScale = !this.vafLineChartLogScale; }}
+                        labelProps={{style:{ marginRight:10}}}
+                    >
+                        <span style={{marginTop:-3}}>Log scale</span>
+                    </LabeledCheckbox>
                     <DownloadControls
                         filename="vafHeatmap"
                         getSvg={()=>this.vafLineChartSvg}
