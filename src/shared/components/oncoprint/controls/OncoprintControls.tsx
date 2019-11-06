@@ -925,7 +925,7 @@ export default class OncoprintControls extends React.Component<
             return (
                 <>
                     <h5>Annotate and Filter</h5>
-                    <div style={{display:"flex", flexDirection:"row", alignItems:"center", justifyContent:"center"}}>
+                    <div style={{display:"flex", flexDirection:"row", alignItems:"center", marginLeft:10}}>
                         Please see the
                         <button
                             style={{
