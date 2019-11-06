@@ -97,7 +97,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
 
         columns.push({
             name: "Gene",
-            render: (d:DiscreteCopyNumberData[])=><span>{d[0].gene.hugoGeneSymbol}</span>,
+            render: (d:DiscreteCopyNumberData[])=><span data-test="cna-table-gene-column">{d[0].gene.hugoGeneSymbol}</span>,
             filter: (d:DiscreteCopyNumberData[], filterString:string, filterStringUpper:string)=>{
                 return d[0].gene.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
             },
