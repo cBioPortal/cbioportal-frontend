@@ -11,7 +11,7 @@ import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import CnaColumnFormatter from "./column/CnaColumnFormatter";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import TumorColumnFormatter from "../mutation/column/TumorColumnFormatter";
-import SampleManager from "../sampleManager";
+import SampleManager from "../SampleManager";
 import {IOncoKbCancerGenesWrapper, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
@@ -19,6 +19,8 @@ import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import {IGisticData} from "shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
 import {ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import HeaderIconMenu from '../mutation/HeaderIconMenu';
+import GeneFilterMenu, { GeneFilterOption } from '../mutation/GeneFilterMenu';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
@@ -30,6 +32,8 @@ type ICopyNumberTableWrapperProps = {
     studyIdToStudy?: {[studyId:string]:CancerStudy};
     sampleIds:string[];
     sampleManager:SampleManager|null;
+    sampleToGenePanelId:{[sampleId: string]: string|undefined};
+    genePanelIdToEntrezGeneIds:{[genePanelId: string]: number[]};
     cnaOncoKbData?: IOncoKbDataWrapper;
     cnaCivicGenes?: ICivicGeneDataWrapper;
     cnaCivicVariants?: ICivicVariantDataWrapper;
@@ -48,13 +52,18 @@ type ICopyNumberTableWrapperProps = {
     columnVisibility?: {[columnId: string]: boolean};
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     status:"loading"|"available"|"unavailable";
+    showGeneFilterMenu?:boolean;
+    currentGeneFilter:GeneFilterOption;
+    onFilterGenes?:(option:GeneFilterOption)=>void;
 };
 
 @observer
 export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
+
     public static defaultProps = {
         enableOncoKb: true,
-        enableCivic: false
+        enableCivic: false,
+        showGeneFilterMenu: true,
     };
 
     @computed get hugoGeneSymbolToCytoband() {
@@ -78,7 +87,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
         if (numSamples >= 2) {
             columns.push({
                 name: "Samples",
-                render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
+                render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager, this.props.sampleToGenePanelId, this.props.genePanelIdToEntrezGeneIds),
                 sortBy:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
                 download: (d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSample(d),
                 order: 20,
@@ -94,6 +103,13 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             },
             download: (d:DiscreteCopyNumberData[])=>d[0].gene.hugoGeneSymbol,
             sortBy: (d:DiscreteCopyNumberData[])=>d[0].gene.hugoGeneSymbol,
+            headerRender: (name:string) => {
+                return (
+                    <HeaderIconMenu name={name} showIcon={this.props.showGeneFilterMenu} >
+                        <GeneFilterMenu onOptionChanged={this.props.onFilterGenes} currentSelection={this.props.currentGeneFilter} />
+                    </HeaderIconMenu>
+                );
+            },
             visible: true,
             order: 30
         });

@@ -161,7 +161,7 @@ load_studies_in_db() {
         --override_warning
 
     # import custom studies
-    for DIR in "$TEST_HOME"/studies/*/; do
+    for DIR in "$TEST_HOME"/local/studies/*/; do
 
         docker run --rm \
             --name=cbioportal-importer \
