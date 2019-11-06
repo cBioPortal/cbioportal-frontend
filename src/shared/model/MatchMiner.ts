@@ -75,7 +75,7 @@ export interface IGenomicMatch {
 }
 
 export interface IClinicalGroupMatch {
-    trialAgeNumerical: string;
+    trialAgeNumerical: string[];
     trialOncotreePrimaryDiagnosis: {
         positive: string[], // trialOncotreePrimaryDiagnosis not includes '!'
         negative: string[] // trialOncotreePrimaryDiagnosis includes '!'

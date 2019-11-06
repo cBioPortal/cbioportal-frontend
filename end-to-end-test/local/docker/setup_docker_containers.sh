@@ -96,19 +96,6 @@ run_database_container() {
 
 }
 
-build_cbioportal_image() {
-
-    curdir=$PWD
-
-    if [[ $BACKEND_IMAGE_NAME == $CUSTOM_BACKEND_IMAGE_NAME ]]; then
-        docker build https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git#$BACKEND_BRANCH \
-            -f docker/web-and-data/Dockerfile \
-            -t $BACKEND_IMAGE_NAME
-    fi
-
-    cd $curdir
-}
-
 run_cbioportal_container() {
 
     # stop cbioportal container if running
