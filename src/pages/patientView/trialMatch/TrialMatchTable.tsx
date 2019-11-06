@@ -3,7 +3,7 @@ import { If, Then, Else } from 'react-if';
 import {observer} from "mobx-react";
 import * as _ from 'lodash';
 import {
-    IClinicalGroupMatch, IGenomicGroupMatch, IGenomicMatch, IDetailedTrialMatch, IArmMatch
+    IClinicalGroupMatch, IGenomicGroupMatch, IGenomicMatch, IDetailedTrialMatch, IArmMatch, IDrug
 } from "../../../shared/model/MatchMiner";
 import styles from './style/trialMatch.module.scss';
 import { computed } from "mobx";
@@ -101,7 +101,9 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                                 </If>
                                 <If condition={armMatch.drugs.length > 0}>
                                     <div>
-                                        <span><img src={require("../../../globalStyles/images/drug.png")} style={{ width: 18, marginTop: -5 }} alt="drug icon"/> <b>{armMatch.drugs.join(', ')}</b></span>
+                                        <span>
+                                            <img src={require("../../../globalStyles/images/drug.png")} style={{ width: 18, marginTop: -5 }} alt="drug icon"/>
+                                            <b>{armMatch.drugs.map((drugCombination: string[]) => drugCombination.join(' + ')).join(', ')}</b></span>
                                     </div>
                                 </If>
                             </div>
@@ -116,7 +118,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
         name: ColumnKey.STATUS,
         render: (trial: IDetailedTrialMatch) => (
             <div style={{ margin: '20% 0 20% 0' }}>
-                <span className={styles.statusBackground}>{trial.status}</span>
+                <a target="_blank" href={"https://www.mskcc.org/cancer-care/clinical-trials/" + trial.protocolNo}><span className={styles.statusBackground}>{trial.status}</span></a>
             </div>
         ),
         sortBy: (trial: IDetailedTrialMatch) => trial.status,
@@ -201,7 +203,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                             overlay={this.tooltipGenomicContent(clinicalGroupMatch.notMatches.MUTATION.concat(clinicalGroupMatch.notMatches.CNA))}
                             destroyTooltipOnHide={false}
                             onPopupAlign={placeArrowBottomLeft}>
-                            <i className={'fa fa-comment-o ' + styles.icon}></i>
+                            <i className={'fa fa-info ' + styles.icon}></i>
                         </DefaultTooltip>
                     </div>
 
@@ -218,7 +220,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                             overlay={this.tooltipGenomicContent(clinicalGroupMatch.notMatches.WILDTYPE)}
                             destroyTooltipOnHide={false}
                             onPopupAlign={placeArrowBottomLeft}>
-                            <i className={'fa fa-comment-o ' + styles.commentIcon}></i>
+                            <i className={'fa fa-info ' + styles.commentIcon}></i>
                         </DefaultTooltip>
                     </div>
                 }
