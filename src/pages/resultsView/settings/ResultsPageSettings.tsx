@@ -101,7 +101,7 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                             checked={this.props.store.driverAnnotationSettings.excludeVUS}
                             onClick={this.onInputClick}
                             disabled={!this.driverSettingsState.distinguishDrivers}
-                        /> Hide mutations and copy number alterations of unknown significance
+                        /> Exclude mutations and copy number alterations of unknown significance
                     </label></div>
                     <div className="checkbox"><label>
                         <input
@@ -110,7 +110,7 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                             value={EVENT_KEY.showGermlineMutations}
                             checked={this.props.store.excludeGermlineMutations}
                             onClick={this.onInputClick}
-                        /> Hide germline mutations
+                        /> Exclude germline mutations
                     </label></div>
                 </div>
             </div>
