@@ -12,9 +12,17 @@ export interface ITrial {
     phase: string;
     shortTitle: string;
     status: string;
+    principalInvestigator?: IPrincipalInvestigator;
     treatmentList: {
         step: IStep[];
     };
+}
+
+interface IPrincipalInvestigator {
+    full_name: string;
+    credentials?: string;
+    email?: string;
+    url?: string;
 }
 
 export interface IStep {
@@ -64,7 +72,6 @@ export interface ITrialQuery {
 export interface IGenomicMatch {
     trueHugoSymbol?: string;
     trueProteinChange?: string;
-    sampleIds: string[];
 }
 
 export interface IClinicalGroupMatch {
@@ -95,6 +102,7 @@ export interface IArmMatch {
     armDescription: string | '';
     drugs: string[][];
     matches: IClinicalGroupMatch[];
+    sampleIds: string[];
 }
 
 export interface IDetailedTrialMatch {
@@ -104,6 +112,7 @@ export interface IDetailedTrialMatch {
     phase: string;
     shortTitle: string;
     status: string;
+    principalInvestigator?: IPrincipalInvestigator;
     matches: IArmMatch[];
     priority: number;
 }
