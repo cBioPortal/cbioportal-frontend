@@ -871,6 +871,82 @@ export default class OncoprintControls extends React.Component<
         );
     }
 
+    @computed get driverAnnotationSection() {
+        if (this.props.oncoprinterMode || !this.props.store) {
+            return (
+                <>
+                    <h5>Annotate</h5>
+                    <DriverAnnotationControls
+                        state={this.props.state}
+                        handlers={Object.assign({
+                            onCustomDriverTierCheckboxClick: this.onCustomDriverTierCheckboxClick
+                        } as Partial<IDriverAnnotationControlsHandlers>, this.props.handlers)}
+                    />
+
+                    <h5>Filter</h5>
+                    <div style={{ marginLeft: 10 }}>
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="HideVUS"
+                                    type="checkbox"
+                                    value={EVENT_KEY.hidePutativePassengers}
+                                    checked={
+                                        this.props.state.hidePutativePassengers
+                                    }
+                                    onClick={this.onInputClick}
+                                    disabled={
+                                        !this.props.state.distinguishDrivers
+                                    }
+                                />{' '}
+                                Hide mutations and copy number alterations of
+                                unknown significance
+                            </label>
+                        </div>
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="HideGermline"
+                                    type="checkbox"
+                                    value={EVENT_KEY.hideGermlineMutations}
+                                    checked={
+                                        this.props.state.hideGermlineMutations
+                                    }
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Hide germline mutations
+                            </label>
+                        </div>
+                    </div>
+                </>
+            );
+        } else {
+            const store = this.props.store;
+            return (
+                <>
+                    <h5>Annotate and Filter</h5>
+                    <div style={{display:"flex", flexDirection:"row", alignItems:"center", justifyContent:"center"}}>
+                        Please see the
+                        <button
+                            style={{
+                                marginLeft:5,
+                                marginRight:5,
+                                marginBottom:0,
+                                width:"auto",
+                                padding:"1px 5px 1px 5px"
+                            }}
+                            className="btn btn-primary"
+                            onClick={()=>{ store.resultsPageSettingsVisible = !store.resultsPageSettingsVisible }}
+                        >
+                            <i className="fa fa-sliders"/>
+                        </button>
+                        menu.
+                    </div>
+                </>
+            )
+        }
+    }
+
     private getMutationColorMenu() {
         return (
             <CustomDropdown
@@ -914,50 +990,8 @@ export default class OncoprintControls extends React.Component<
                                 </label>
                             </div>
                         )}
-                        <DriverAnnotationControls
-                            state={this.props.state}
-                            handlers={Object.assign({
-                                onCustomDriverTierCheckboxClick: this.onCustomDriverTierCheckboxClick
-                            } as Partial<IDriverAnnotationControlsHandlers>, this.props.handlers)}
-                        />
                     </div>
-                    <h5>Filter</h5>
-                    <div style={{ marginLeft: 10 }}>
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="HideVUS"
-                                    type="checkbox"
-                                    value={EVENT_KEY.hidePutativePassengers}
-                                    checked={
-                                        this.props.state.hidePutativePassengers
-                                    }
-                                    onClick={this.onInputClick}
-                                    disabled={
-                                        !this.props.state.distinguishDrivers
-                                    }
-                                />{' '}
-                                Hide mutations and copy number alterations of
-                                unknown significance
-                            </label>
-                        </div>
-                        { !this.props.oncoprinterMode && (
-                            <div className="checkbox">
-                                <label>
-                                    <input
-                                        data-test="HideGermline"
-                                        type="checkbox"
-                                        value={EVENT_KEY.hideGermlineMutations}
-                                        checked={
-                                            this.props.state.hideGermlineMutations
-                                        }
-                                        onClick={this.onInputClick}
-                                    />{' '}
-                                    Hide germline mutations
-                                </label>
-                            </div>
-                        )}
-                    </div>
+                    {this.driverAnnotationSection}
                 </div>
             </CustomDropdown>
         );

@@ -192,6 +192,8 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                                             trigger={["click"]}
                                             placement="bottom"
                                             overlay={<ResultsPageSettings store={this.props.store} />}
+                                            visible={this.props.store.resultsPageSettingsVisible}
+                                            onVisibleChange={visible=>{ this.props.store.resultsPageSettingsVisible = !!visible; }}
                                         >
                                             <button data-test="GlobalSettingsButton" style={{marginLeft:5}} className="btn btn-primary">
                                                 <i className="fa fa-sliders fa-lg"/>
