@@ -491,7 +491,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.sortMode = {type:"caseList"};
             },
             onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
-            onClickSortByData:()=>{this.sortMode={type:"data"};},
+            onClickSortByData: this.sortByData,
             onChangeSelectedClinicalTracks: this.onChangeSelectedClinicalTracks,
             onChangeHeatmapGeneInputValue:action((s:string)=>{
                 this.heatmapGeneInputValue = s;
@@ -928,7 +928,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     readonly heatmapTrackHeaders = remoteData({
         await:()=>[this.props.store.molecularProfileIdToMolecularProfile],
         invoke:()=>{
-            console.log("redomputing");
             const profileMap = this.props.store.molecularProfileIdToMolecularProfile.result!;
             return Promise.resolve(
                 this.molecularProfileIdToHeatmapTracks.entries().reduce((headerMap, nextEntry)=>{
