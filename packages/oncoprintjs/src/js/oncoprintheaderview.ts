@@ -11,6 +11,7 @@ const TOGGLE_BTN_CLASS = "oncoprintjs__header__toggle_btn_img";
 const TOGGLE_BTN_OPEN_CLASS = "oncoprintjs__header__open";
 const DROPDOWN_CLASS = "oncoprintjs__header__dropdown";
 const SEPARATOR_CLASS = "oncoprintjs__header__separator";
+const NTH_CLASS_PREFIX = "track-group-";
 
 const FADE_MS = 100;
 
@@ -160,7 +161,7 @@ export default class OncoprintHeaderView {
                             'top': headerTops[trackGroupIndex] + MENU_DOTS_SIZE,
                             'pointer-events':'auto'
                         })
-                        .addClass(DROPDOWN_CLASS);
+                        .addClass(DROPDOWN_CLASS).addClass(NTH_CLASS_PREFIX+(trackGroupIndex));
 
                     this.$dropdowns.push($dropdown);
 
@@ -200,7 +201,7 @@ export default class OncoprintHeaderView {
                             border:"1px solid rgba(125,125,125,0)",
                             display:"inline-block"
                         })
-                        .addClass(TOGGLE_BTN_CLASS)
+                        .addClass(TOGGLE_BTN_CLASS).addClass(NTH_CLASS_PREFIX+(trackGroupIndex))
                         .on("click", (evt)=>{
                             evt.stopPropagation();
                             if ($dropdown.is(":visible")) {
