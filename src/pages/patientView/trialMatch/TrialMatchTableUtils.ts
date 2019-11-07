@@ -61,28 +61,25 @@ export function groupTrialMatchesByAgeNumerical(armGroup: ITrialMatch[]): IClini
                 }
             }
         });
-        let clinicalGroupMatch: IClinicalGroupMatch = {
+        const clinicalGroupMatch: IClinicalGroupMatch = {
             trialAgeNumerical: [age],
             trialOncotreePrimaryDiagnosis: {
                 positive: positiveCancerTypes,
                 negative: negativeCancerTypes
-            },
-            matches: {
-                MUTATION: [],
-                CNA: [],
-                MSI: [],
-                WILDTYPE: []
-            },
-            notMatches: {
-                MUTATION: [],
-                CNA: [],
-                MSI: [],
-                WILDTYPE: []
             }
         };
-        const positiveAndNegativeMatches = groupTrialMatchesByGenomicAlteration(matchesGroupedByAge[age]);
-        clinicalGroupMatch.matches = positiveAndNegativeMatches.matches;
-        clinicalGroupMatch.notMatches = positiveAndNegativeMatches.notMatches;
+        const positiveTrialMatches = _.filter(matchesGroupedByAge[age], (trialMatch:ITrialMatch) => {
+            if (!_.isUndefined(trialMatch.genomicAlteration)) return !trialMatch.genomicAlteration.includes('!')
+        });
+        const negativeTrialMatches = _.filter(matchesGroupedByAge[age], (trialMatch:ITrialMatch) => {
+            if (!_.isUndefined(trialMatch.genomicAlteration)) return trialMatch.genomicAlteration.includes('!')
+        });
+        if (positiveTrialMatches.length > 0) {
+            clinicalGroupMatch.matches = groupPositiveTrialMatchesByMatchType(positiveTrialMatches);
+        }
+        if (negativeTrialMatches.length > 0) {
+            clinicalGroupMatch.notMatches = groupNegativeTrialMatchesByMatchType(negativeTrialMatches);
+        }
         return clinicalGroupMatch;
     });
     if (matches.length > 1) {
@@ -106,62 +103,52 @@ export function mergeClinicalGroupMatchByAge(clinicalGroupMatch: IClinicalGroupM
     return mergedClinicalGroupMatch;
 }
 
-export function groupTrialMatchesByGenomicAlteration(ageGroup: ITrialMatch[]) {
-    const matchesGroupedByGenomicAlteration = _.groupBy(ageGroup, (trial: ITrialMatch) => trial.genomicAlteration);
-    // positive matches
+export function groupPositiveTrialMatchesByMatchType(trialMatches: ITrialMatch[]) {
+    const matchesGroupedByMatchType = _.groupBy(trialMatches, (trial: ITrialMatch) => trial.matchType);
     const matches: IGenomicMatchType = {
         MUTATION: [],
         CNA: [],
         MSI: [],
         WILDTYPE: []
     };
-    // negative matches
-    const notMatches: IGenomicMatchType = {
+    _.forEach(matchesGroupedByMatchType, (matchTypeGroup: ITrialMatch[], matchType: string) => {
+        if (matchType === 'MUTATION') {
+            const matchesGroupedByPatientGenomic = _.groupBy( matchTypeGroup, ( trial: ITrialMatch ) => trial.trueHugoSymbol! + trial.trueProteinChange!);
+            _.forEach(matchesGroupedByPatientGenomic, (patientGenomicGroup: ITrialMatch[]) => {
+                const mutationGroupMatch: IGenomicGroupMatch = {
+                    genomicAlteration: _.uniq(patientGenomicGroup.map((trialMatch: ITrialMatch) => trialMatch.genomicAlteration!)),
+                    patientGenomic: {
+                        trueHugoSymbol: patientGenomicGroup[0].trueHugoSymbol!,
+                        trueProteinChange: patientGenomicGroup[0].trueProteinChange!
+                    }
+                };
+                matches.MUTATION.push(mutationGroupMatch);
+            });
+        } else {
+            const genomicGroupMatch: IGenomicGroupMatch = {
+                genomicAlteration: _.uniq(matchTypeGroup.map((trialMatch: ITrialMatch) => trialMatch.genomicAlteration!))
+            };
+            matches[matchType].push(genomicGroupMatch);
+        }
+    });
+    return matches;
+}
+
+export function groupNegativeTrialMatchesByMatchType(trialMatches: ITrialMatch[]) {
+    const matchesGroupedByMatchType = _.groupBy(trialMatches, (trial: ITrialMatch) => trial.matchType);
+    const matches: IGenomicMatchType = {
         MUTATION: [],
         CNA: [],
         MSI: [],
         WILDTYPE: []
     };
-    _.forEach(matchesGroupedByGenomicAlteration, (genomicAlterationGroup, genomicAlteration) => {
-        const genomicGroupMatch = formatTrialMatchesByMatchType(genomicAlterationGroup, genomicAlteration);
-        if(genomicAlteration.includes('!')) {
-            notMatches[genomicAlterationGroup[ 0 ][ 'matchType' ]].push(genomicGroupMatch);
-        } else {
-            matches[genomicAlterationGroup[ 0 ][ 'matchType' ]].push(genomicGroupMatch);
-        }
-    });
-    return { notMatches: notMatches, matches: matches };
-}
-
-function formatTrialMatchesByMatchType(genomicAlterationGroup: ITrialMatch[], genomicAlteration: string) {
-    const matchType = genomicAlterationGroup[ 0 ][ 'matchType' ];
-    if (matchType === 'MUTATION') {
-        return groupTrialMatchesByPatientGenomic(genomicAlterationGroup, genomicAlteration, matchType);
-    } else {
+    _.forEach(matchesGroupedByMatchType, (matchTypeGroup: ITrialMatch[], matchType: string) => {
         const genomicGroupMatch: IGenomicGroupMatch = {
-            genomicAlteration: genomicAlteration,
-            matchType: matchType,
-            matches: []
+            genomicAlteration: _.uniq(matchTypeGroup.map((trialMatch: ITrialMatch) => trialMatch.genomicAlteration!))
         };
-        return genomicGroupMatch;
-    }
-}
-
-export function groupTrialMatchesByPatientGenomic(genomicAlterationGroup: ITrialMatch[], genomicAlteration: string, matchType: string): IGenomicGroupMatch {
-    const matchesGroupedByPatientGenomic = _.groupBy( genomicAlterationGroup, ( trial: ITrialMatch ) => trial.trueHugoSymbol! + trial.trueProteinChange! );
-    const genomicGroupMatch: IGenomicGroupMatch = {
-        genomicAlteration: genomicAlteration,
-        matchType: matchType,
-        matches: []
-    };
-    genomicGroupMatch.matches = _.map(matchesGroupedByPatientGenomic, (patientGenomicGroup: ITrialMatch[]) => {
-        const genomicMatch: IGenomicMatch = {
-            trueHugoSymbol: patientGenomicGroup[0].trueHugoSymbol!,
-            trueProteinChange: patientGenomicGroup[0].trueProteinChange!
-        };
-        return genomicMatch;
+        matches[matchType].push(genomicGroupMatch);
     });
-    return genomicGroupMatch;
+    return matches;
 }
 
 export function calculateTrialPriority(armMatches: IArmMatch[]): number {
@@ -177,8 +164,14 @@ export function calculateTrialPriority(armMatches: IArmMatch[]): number {
 export function getMatchPriority(clinicalGroupMatch: IClinicalGroupMatch): number {
     // In trial match tab, positive matches should always display before negative matches(notMatches).
     // The highest and default priority is 0. The priority the higher, the display order the lower.
-    const matchesLength = getMatchesLength(clinicalGroupMatch.matches);
-    const notMatchesLength = getMatchesLength(clinicalGroupMatch.notMatches);
+    let matchesLength = 0;
+    let notMatchesLength = 0;
+    if (!_.isUndefined(clinicalGroupMatch.matches)) {
+        matchesLength = getMatchesLength(clinicalGroupMatch.matches);
+    }
+    if (!_.isUndefined(clinicalGroupMatch.notMatches)) {
+        notMatchesLength = getMatchesLength(clinicalGroupMatch.notMatches);
+    }
     if (notMatchesLength > 0) {
         if ( matchesLength === 0) {
             return 2; // A trial only has negative matches.
