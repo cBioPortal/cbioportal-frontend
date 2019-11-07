@@ -7,7 +7,6 @@ import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPag
 import {Group} from "../../api/ComparisonGroupClient";
 import * as React from "react";
 import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
-import { ISelectedInfoProps } from "pages/studyView/SelectedInfo/SelectedInfo";
 import { ISelectOption } from "./controls/OncoprintControls";
 
 export const alterationTypeToProfiledForText:{[alterationType:string]:string} = {
