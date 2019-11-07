@@ -341,7 +341,7 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.COEXPRESSION}
                             linkText={'Co-expression'}
                         >
-                            <div class={"alert alert-info"}>
+                            <div className={"alert alert-info"}>
                                 The Coexpression feature is temporarily down for maintenance (11/7/2019).  Please check again tomorrow.
                             </div>
                             {/*<CoExpressionTab store={store} />*/}
