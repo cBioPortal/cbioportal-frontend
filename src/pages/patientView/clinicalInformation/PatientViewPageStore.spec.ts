@@ -9,6 +9,7 @@ import { assert } from 'chai';
 import sinon from 'sinon';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { AppStore } from 'AppStore';
 // //import AppConfig from 'appConfig';
 // import request from 'superagent';
 
@@ -17,7 +18,7 @@ describe('PatientViewPageStore', () => {
     let store: PatientViewPageStore;
 
     before(()=>{
-        store = new PatientViewPageStore();
+        store = new PatientViewPageStore(new AppStore());
     });
 
     after(()=>{

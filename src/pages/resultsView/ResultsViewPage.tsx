@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import $ from 'jquery';
+import {If, Then, Else} from 'react-if';
 import URL from 'url';
 import { inject, observer } from 'mobx-react';
 import { computed, observable, reaction, runInAction } from 'mobx';
@@ -341,7 +342,18 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.COEXPRESSION}
                             linkText={'Co-expression'}
                         >
-                            <CoExpressionTab store={store} />
+                            <If condition={getBrowserWindow().location.hostname.includes("cbioportal.org")}>
+                                <Then>
+                                    <div className={"alert alert-info"}>
+                                        The Coexpression feature is temporarily down for maintenance (11/7/2019).  Please check again tomorrow.
+                                    </div>
+                                </Then>
+                                <Else>
+                                    {()=>{
+                                        return <CoExpressionTab store={store} />
+                                    }}
+                                </Else>
+                            </If>
                         </MSKTab>
                     );
                 },
