@@ -79,10 +79,12 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                         <span>These settings affect the following tabs: {boldedTabList(["Oncoprint", "Mutual Exclusivity", "Mutations", "Enrichments", "Survival"])}</span>
                     }
                 />
-                <DriverAnnotationControls
-                    state={this.driverSettingsState}
-                    handlers={this.driverSettingsHandlers}
-                />
+                <div style={{marginLeft:10}}>
+                    <DriverAnnotationControls
+                        state={this.driverSettingsState}
+                        handlers={this.driverSettingsHandlers}
+                    />
+                </div>
 
                 <hr/>
 
