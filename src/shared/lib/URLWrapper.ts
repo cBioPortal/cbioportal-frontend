@@ -59,6 +59,8 @@ export default class URLWrapper<
 
         this.query = observable<QueryParamsType>(initValues as QueryParamsType);
 
+        debugger;
+
         this.setSessionId(routing.query.session_id);
 
         intercept(this.query, change => {
@@ -95,6 +97,7 @@ export default class URLWrapper<
             ([routeQuery,sessionQuery]) => {
                 //const query = this.routing.location.query as QueryParamsType;
                 // if there is a path context and it is not
+                console.log("reacting to change");
                 if (
                     this.pathContext &&
                     !new RegExp(`^/*${this.pathContext}`).test(

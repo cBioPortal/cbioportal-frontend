@@ -181,7 +181,6 @@ export default class ResultsViewPage extends React.Component<
         super(props);
 
         this.urlWrapper = new ResultsViewURLWrapper(props.routing);
-        //delete getBrowserWindow().submittedURLWrapper;
 
         setWindowVariable('urlWrapper', this.urlWrapper);
 
@@ -217,6 +216,7 @@ export default class ResultsViewPage extends React.Component<
 
     componentWillUnmount() {
         this.resultsViewPageStore.destroy();
+        this.urlWrapper.destroy();
     }
 
     @computed

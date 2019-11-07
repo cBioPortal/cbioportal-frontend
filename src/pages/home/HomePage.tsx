@@ -15,6 +15,7 @@ import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import "./homePage.scss";
 import autobind from "autobind-decorator";
 import {ResultsViewTab} from "pages/resultsView/ResultsViewPageHelpers";
+import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 
 (Chart as any).plugins.register({
     beforeDraw: function (chartInstance: any) {
@@ -45,7 +46,11 @@ export function createQueryStore(currentQuery?:any) {
         const tab = (queryStore.physicalStudyIdsInSelection.length > 1 && queryStore.geneIds.length === 1) ?
              ResultsViewTab.CANCER_TYPES_SUMMARY : ResultsViewTab.ONCOPRINT;
 
-        win.routingStore.updateRoute(query, `results/${tab}`, true);
+        const wrapper = new ResultsViewURLWrapper(win.routingStore);
+
+        wrapper.updateURL(query,`results/${tab}`, true, false);
+
+        wrapper.destroy();
 
     };
 
