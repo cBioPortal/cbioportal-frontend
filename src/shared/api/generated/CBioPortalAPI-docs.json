@@ -5342,6 +5342,9 @@
         "copyNumberSegmentPresent": {
           "type": "boolean"
         },
+        "fusionPresent": {
+          "type": "boolean"
+        },
         "patientId": {
           "type": "string"
         },
