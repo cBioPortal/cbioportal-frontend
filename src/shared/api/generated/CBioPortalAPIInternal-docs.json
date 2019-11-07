@@ -2545,6 +2545,14 @@
           "type": "integer",
           "format": "int32"
         },
+        "numberOfFusionProfiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfFusionUnprofiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
         "numberOfMutationProfiledSamples": {
           "type": "integer",
           "format": "int32"
@@ -2787,6 +2795,9 @@
       ],
       "properties": {
         "copyNumberSegmentPresent": {
+          "type": "boolean"
+        },
+        "fusionPresent": {
           "type": "boolean"
         },
         "patientId": {
