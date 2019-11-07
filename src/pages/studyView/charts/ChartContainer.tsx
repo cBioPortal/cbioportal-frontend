@@ -31,7 +31,7 @@ import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import {DataType, DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
+import {DownloadDataType, DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
 import {MAX_GROUPS_IN_SESSION} from "../../groupComparison/GroupComparisonUtils";
 import {Modal} from "react-bootstrap";
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";
@@ -64,7 +64,7 @@ export interface IChartContainerProps {
     setComparisonConfirmationModal:StudyViewPageStore["setComparisonConfirmationModal"];
     onValueSelection?: any;
     onDataBinSelection?: any;
-    getData?: ((dataType?: DataType)=>Promise<string|null>) | ((dataType?:DataType)=>string);
+    getData?: ((dataType?: DownloadDataType)=>Promise<string|null>) | ((dataType?:DownloadDataType)=>string);
     downloadTypes?:DownloadControlsButton[];
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
