@@ -4,6 +4,7 @@ var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScree
 var setInputText = require('../../../shared/specUtils').setInputText;
 var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils').waitForNumberOfStudyCheckboxes;
 var checkOncoprintElement = require('../../../shared/specUtils').checkOncoprintElement;
+var getGroupHeaderOptionsElements = require('../../../shared/specUtils').getOncoprintGroupHeaderOptionsElements;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -89,6 +90,63 @@ describe("oncoprint screenshot tests", function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=acc_tcga_pan_can_atlas_2018&case_set_id=acc_tcga_pan_can_atlas_2018_cnaseq&data_priority=0&gene_list=EGFR%253AAMP%253BEGFR%253AMUT%253B%2520PTEN%253B%2520EGFR%2520EGFR&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_pan_can_atlas_2018_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_pan_can_atlas_2018_mutations&tab_index=tab_visualize`);
         waitForOncoprint(ONCOPRINT_TIMEOUT);
         var res = checkOncoprintElement('.oncoprintContainer');
+        assertScreenShotMatch(res);
+    });
+});
+
+describe("track group headers", function() {
+    beforeEach(function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_ids=&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bcoadread_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF&show_samples=false`);
+        $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
+
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
+
+        // Cluster the mrna heatmap group
+        var mrnaElements = getGroupHeaderOptionsElements(2);
+        browser.click(mrnaElements.button_selector);
+        browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
+        browser.click(mrnaElements.dropdown_selector + ' li:nth-child(1)'); // Click Cluster
+        browser.pause(500); // give it time to sort
+    });
+
+    it("oncoprint should cluster heatmap group correctly", function() {
+        var res = checkOncoprintElement();
+        assertScreenShotMatch(res);
+    });
+
+    it("oncoprint should delete clustered heatmap group correctly", function() {
+        // Remove the mrna heatmap group, leaving the methylation group and everything sorted by data
+        var mrnaElements = getGroupHeaderOptionsElements(2);
+        browser.click(mrnaElements.button_selector);
+        browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
+        browser.click(mrnaElements.dropdown_selector + ' li:nth-child(4)'); // Click Delete
+        waitForOncoprint(2000);
+
+        var res = checkOncoprintElement();
+        assertScreenShotMatch(res);
+    });
+
+    it("oncoprint should delete non-clustered heatmap group correctly", function() {
+        // Remove the methylation group, leaving the mrna group clustered
+        var methylElements = getGroupHeaderOptionsElements(3);
+        browser.click(methylElements.button_selector);
+        browser.waitForVisible(methylElements.dropdown_selector, 1000); // wait for menu to appear
+        browser.click(methylElements.dropdown_selector + ' li:nth-child(4)'); // Click Delete
+        waitForOncoprint(2000);
+
+        var res = checkOncoprintElement();
+        assertScreenShotMatch(res);
+    });
+
+    it("oncoprint should return to non-clustered state correctly", function() {
+        // Cluster the mrna heatmap group
+        var mrnaElements = getGroupHeaderOptionsElements(2);
+        browser.click(mrnaElements.button_selector);
+        browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
+        browser.click(mrnaElements.dropdown_selector + ' li:nth-child(2)'); // Click Don't Cluster
+        browser.pause(500); // give it time to sort
+
+        var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
 });
@@ -422,3 +480,5 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 });
+
+
