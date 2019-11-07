@@ -76,7 +76,7 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                     divStyle={{display:"inline-block", marginLeft:6}}
                     style={{color:"rgb(54, 134, 194)"}}
                     tooltip={
-                        <span>These settings affect the following tabs: {boldedTabList(["Oncoprint", "Mutual Exclusivity", "Mutations", "Enrichments", "Survival"])}</span>
+                        <span>These settings affect every tab except {boldedTabList(["Co-expression", "CN Segments"])}</span>
                     }
                 />
                 <div style={{marginLeft:10}}>
@@ -95,7 +95,7 @@ export default class ResultsPageSettings extends React.Component<IResultsPageSet
                     divStyle={{display:"inline-block", marginLeft:6}}
                     style={{color:"rgb(54, 134, 194)"}}
                     tooltip={
-                        <span>These settings affect the following tabs: {boldedTabList(["Oncoprint", "Mutual Exclusivity", "Mutations", "Enrichments", "Survival"])}</span>
+                        <span>These settings affect every tab except {boldedTabList(["Plots", "Co-expression", "CN Segments"])}</span>
                     }
                 />
                 <div style={{marginLeft:10}}>
