@@ -50,6 +50,9 @@ function parseClinicalDataHeader(headerLine:string[]) {
 }
 
 export function parseClinicalInput(input:string):{ status:"complete", result:{ headers:AttributeSpec[], data:OncoprinterClinicalInputLine[]}, error:undefined }|{ status:"error", result:undefined, error:string } {
+    // Output mimics mobxpromise form but thats just because its a nice way to package status and result.
+    // This isn't meant to be plugged into mobxpromise machinery i.e. with `await`
+
     const lines = input.trim().split("\n").map(line=>line.trim().split(/\s+/));
 
     if (lines.length === 0) {
