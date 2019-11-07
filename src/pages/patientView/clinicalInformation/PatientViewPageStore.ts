@@ -88,6 +88,8 @@ import { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import {computeGenePanelInformation, CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
 import {getVariantAlleleFrequency} from "../../../shared/lib/MutationUtils";
+import { AppStore, SiteError } from 'AppStore';
+
 
 type PageMode = 'patient' | 'sample';
 
@@ -159,7 +161,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
 
 export class PatientViewPageStore {
 
-    constructor() {
+    constructor(private appStore: AppStore) {
         labelMobxPromises(this);
         this.internalClient = internalClient;
     }
@@ -293,7 +295,10 @@ export class PatientViewPageStore {
 
     readonly samples = remoteData(
         {
-            invoke: () => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
+            invoke:  () => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
+            onError: (err: Error) => {
+                this.appStore.siteErrors.push({errorObj: err, dismissed: false, title:"Samples / Patients not valid"} as SiteError);
+            }
         },
         []
     );
