@@ -53,7 +53,6 @@ export default class URLWrapper<
                 if (_.isString(value)) {
                     value = decodeURIComponent(value);
                 }
-
                 initValues[property.name] = value;
            // }
         }
@@ -279,14 +278,8 @@ export default class URLWrapper<
                 if (value !== undefined) break;
             }
         }
-        // if we haven't resolved with an alias AND
-        // there is NO property in incoming query
-        // delete and don't sync
-        if (value === undefined && _.has(query, property.name) === false) {
-            delete this.query[property.name];
-        } else {
-            this.trySyncProperty(property, value);
-        }
+
+        this.trySyncProperty(property, value);
     }
 
     private trySyncProperty(
