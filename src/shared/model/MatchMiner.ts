@@ -35,7 +35,7 @@ export interface IArm {
     arm_type?: string | ''; // Arm type(Control Arm)
     arm_eligibility?: string;
     arm_info?: string; // Real arm description.
-    drugs?: IDrug[];
+    drugs?: IDrug[][];
     match: object[];
 }
 
