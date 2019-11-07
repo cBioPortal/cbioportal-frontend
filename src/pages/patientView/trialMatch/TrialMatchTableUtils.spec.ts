@@ -336,18 +336,18 @@ describe("TrialMatchTableUtils", () => {
                 matches: {
                     MUTATION: [
                         {
-                            genomicAlteration: "NTRK3 Fusions",
-                            matchType: "MUTATION",
-                            matches: [
-                                {
-                                    trueHugoSymbol: "NTRK3",
-                                    trueProteinChange: "NTRK3-ETV6 fusion - Archer"
-                                },
-                                {
-                                    trueHugoSymbol: "NTRK3",
-                                    trueProteinChange: "ETV6-NTRK3 fusion"
-                                }
-                            ]
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "NTRK3-ETV6 fusion - Archer"
+                            }
+                        },
+                        {
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "ETV6-NTRK3 fusion"
+                            }
                         }
                     ],
                     CNA: [],
@@ -376,18 +376,18 @@ describe("TrialMatchTableUtils", () => {
                 matches: {
                     MUTATION: [
                         {
-                            genomicAlteration: "NTRK3 Fusions",
-                            matchType: "MUTATION",
-                            matches: [
-                                {
-                                    trueHugoSymbol: "NTRK3",
-                                    trueProteinChange: "NTRK3-ETV6 fusion - Archer"
-                                },
-                                {
-                                    trueHugoSymbol: "NTRK3",
-                                    trueProteinChange: "ETV6-NTRK3 fusion"
-                                }
-                            ]
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "NTRK3-ETV6 fusion - Archer"
+                            }
+                        },
+                        {
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "ETV6-NTRK3 fusion"
+                            }
                         }
                     ],
                     CNA: [],
@@ -419,18 +419,18 @@ describe("TrialMatchTableUtils", () => {
                 matches: {
                     MUTATION: [
                         {
-                            genomicAlteration: "NTRK3 Fusions",
-                            matchType: "MUTATION",
-                            matches: [
-                                {
-                                    trueHugoSymbol: "NTRK3",
-                                    trueProteinChange: "NTRK3-ETV6 fusion - Archer"
-                                },
-                                {
-                                    trueHugoSymbol: "NTRK3",
-                                    trueProteinChange: "ETV6-NTRK3 fusion"
-                                }
-                            ]
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "NTRK3-ETV6 fusion - Archer"
+                            }
+                        },
+                        {
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "ETV6-NTRK3 fusion"
+                            }
                         }
                     ],
                     CNA: [],
