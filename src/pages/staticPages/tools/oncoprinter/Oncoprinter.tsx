@@ -231,10 +231,8 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
         };
     }
 
-    @autobind
-    private oncoprintRef(oncoprint:OncoprintJS) {
-        this.oncoprint = oncoprint;
-
+    @action
+    private initializeOncoprint() {
         onMobxPromise(this.props.store.alteredSampleIds,
             (alteredUids:string[])=>{
                 this.oncoprint.setHorzZoomToFit(alteredUids);
@@ -242,6 +240,14 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
 
         this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
+    }
+
+    @autobind
+    @action
+    private oncoprintRef(oncoprint:OncoprintJS) {
+        this.oncoprint = oncoprint;
+
+        this.initializeOncoprint();
     }
 
     @autobind

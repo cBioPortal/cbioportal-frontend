@@ -76,7 +76,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
         this.significantPairsFilter = !this.significantPairsFilter;
     }
 
-    @computed get error() {
+    @computed private get notEnoughDataError() {
         if (_.size(this.props.isSampleAlteredMap.result) < 2) {
             return "Mutual exclusivity analysis can only be performed when data from at least two genes is provided.";
         } else if (_.size(this.isSampleAlteredFilteredMap) < 2) {
@@ -90,7 +90,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
         if (this.props.isSampleAlteredMap.isPending) {
             return <Loader isLoading={true} />
         } else if (this.props.isSampleAlteredMap.isComplete) {
-            if (!this.error) {
+            if (!this.notEnoughDataError) {
                 return (
                     <div data-test="mutualExclusivityTabDiv">
                         {this.props.store && (
@@ -126,7 +126,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                 return (
                     <div className={"tabMessageContainer"}>
                         <div className={"alert alert-info"}>
-                            {this.error}
+                            {this.notEnoughDataError}
                         </div>
                         {this.filteredTrackOqls.length > 0 && (
                             <div className="alert alert-warning" role="alert">{this.filteredTrackOqlsMessage}</div>
