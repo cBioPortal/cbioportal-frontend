@@ -17,7 +17,7 @@ import svgToPdfDownload from "public-lib/lib/svgToPdfDownload";
 import {Dropdown, MenuItem} from "react-bootstrap";
 import Timer = NodeJS.Timer;
 import DownloadControls, {
-    DataType,
+    DownloadDataType,
     DownloadControlsButton
 } from "public-lib/components/downloadControls/DownloadControls";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
@@ -40,7 +40,7 @@ export interface IChartHeaderProps {
     chartControls?   : ChartControls;
     changeChartType  : (chartType: ChartType) => void;
     getSVG?          : ()=>Promise<SVGElement | null>;
-    getData?         : ((dataType?:DataType)=>Promise<string | null>) | ((dataType?:DataType)=>string);
+    getData?         : ((dataType?:DownloadDataType)=>Promise<string | null>) | ((dataType?:DownloadDataType)=>string);
     downloadTypes?   : DownloadControlsButton[];
     openComparisonPage: (categorizationType?: NumericalGroupComparisonType) => void;
 }

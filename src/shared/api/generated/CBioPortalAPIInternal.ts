@@ -46,6 +46,8 @@ export type ClinicalDataBinFilter = {
 
         'start': number
 
+        'values': Array < ClinicalDataFilterValue >
+
 };
 export type ClinicalDataCount = {
     'count': number
@@ -75,23 +77,13 @@ export type ClinicalDataEnrichment = {
         'score': number
 
 };
-export type ClinicalDataEqualityFilter = {
-    'attributeId': string
-
-        'values': Array < string >
-
-};
 export type ClinicalDataFilter = {
     'attributeId': string
 
-};
-export type ClinicalDataIntervalFilter = {
-    'attributeId': string
-
-        'values': Array < ClinicalDataIntervalFilterValue >
+        'values': Array < ClinicalDataFilterValue >
 
 };
-export type ClinicalDataIntervalFilterValue = {
+export type ClinicalDataFilterValue = {
     'end': number
 
         'start': number
@@ -508,9 +500,7 @@ export type SampleIdentifier = {
 
 };
 export type StudyViewFilter = {
-    'clinicalDataEqualityFilters': Array < ClinicalDataEqualityFilter >
-
-        'clinicalDataIntervalFilters': Array < ClinicalDataIntervalFilter >
+    'clinicalDataFilters': Array < ClinicalDataFilter >
 
         'cnaGenes': Array < CopyNumberGeneFilter >
 
