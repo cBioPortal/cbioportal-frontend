@@ -687,6 +687,7 @@ export class ResultsViewPageStore {
         } as Partial<CancerStudyQueryUrlParams>);
     }
 
+    @computed
     public get excludeGermlineMutations() {
         return (
             (this.routing.location.query as CancerStudyQueryUrlParams)
