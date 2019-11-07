@@ -480,6 +480,8 @@ export type ReferenceGenomeGene = {
 export type Sample = {
     'copyNumberSegmentPresent': boolean
 
+        'fusionPresent': boolean
+
         'patientId': string
 
         'sampleId': string

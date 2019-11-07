@@ -388,6 +388,10 @@ export type MolecularProfileSampleCount = {
 
         'numberOfCNSegmentSamples': number
 
+        'numberOfFusionProfiledSamples': number
+
+        'numberOfFusionUnprofiledSamples': number
+
         'numberOfMutationProfiledSamples': number
 
         'numberOfMutationUnprofiledSamples': number
@@ -493,6 +497,8 @@ export type RectangleBounds = {
 };
 export type Sample = {
     'copyNumberSegmentPresent': boolean
+
+        'fusionPresent': boolean
 
         'patientId': string
 
