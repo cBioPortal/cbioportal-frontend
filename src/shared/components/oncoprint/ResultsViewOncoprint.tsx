@@ -18,7 +18,7 @@ import OncoprintControls, {
     ISelectOption
 } from "shared/components/oncoprint/controls/OncoprintControls";
 import {Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
-import {AlterationTypeConstants, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
+import {ResultsViewPageStore, AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 import {
     getAlteredUids,
     getUnalteredUids,
@@ -47,9 +47,13 @@ import autobind from "autobind-decorator";
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
+import { selectDisplayValue } from "./DataUtils";
+import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import WindowStore from "../window/WindowStore";
 import {OncoprintAnalysisCaseType} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import {capitalize} from "../../../public-lib";
+import {isWebdriver} from "../../../public-lib/lib/webdriverUtils";
+import {MakeMobxView} from "../MobxView";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -158,6 +162,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     private heatmapGeneInputValueUpdater:IReactionDisposer;
 
     private molecularProfileIdToHeatmapTrackGroupIndex:{[molecularProfileId:string]:number} = {};
+
+    private isLoading_setRenderingCompleteTimeout:any = null;
 
     @computed get selectedClinicalAttributeIds() {
 
@@ -892,6 +898,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @action private onReleaseRendering() {
+        clearTimeout(this.isLoading_setRenderingCompleteTimeout);
+        this.isLoading_setRenderingCompleteTimeout = null;
+
         this.renderingComplete = true;
     }
 
@@ -1153,11 +1162,19 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }*/
 
     @computed get isLoading() {
-        return this.geneticTracks.isPending
-            || this.clinicalTracks.isPending
-            || this.genesetHeatmapTracks.isPending
-            || this.heatmapTracks.isPending
-            || this.treatmentHeatmapTracks.isPending;
+        clearTimeout(this.isLoading_setRenderingCompleteTimeout);
+        this.isLoading_setRenderingCompleteTimeout = setTimeout(()=>{
+            this.renderingComplete = false;
+            // otherwise, there will be a jumpy oncoprint render experience:
+            //  oncoprint hides when loading
+            //  loading finishes and oncoprint shows
+            //  then oncoprint rendering begins, suppress rendering
+            //  loading shows again
+            //  then oncoprint rendering finishes, release rendering
+
+            // by setting renderingComplete = false here, we bridge that gap so theres only one contiguous loading period
+        });
+        return this.oncoprintComponent.isPending;
     }
 
     @computed get isHidden() {
@@ -1178,13 +1195,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return "";
     }
 
-    @computed get alterationTypesInQuery() {
-        if (this.props.store.selectedMolecularProfiles.isComplete) {
-            return _.uniq(this.props.store.selectedMolecularProfiles.result.map(x=>x.molecularAlterationType));
-        } else {
-            return [];
-        }
-    }
+    readonly alterationTypesInQuery = remoteData({
+        await:()=>[this.props.store.selectedMolecularProfiles],
+        invoke:()=>Promise.resolve(_.uniq(this.props.store.selectedMolecularProfiles.result!.map(x=>x.molecularAlterationType)))
+    });
 
     @autobind
     private getControls() {
@@ -1278,8 +1292,55 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return WindowStore.size.width - 75;
     }
 
-    public render() {
+    readonly oncoprintComponent = MakeMobxView({
+        await:()=>[
+            this.clinicalTracks,
+            this.geneticTracks,
+            this.genesetHeatmapTracks,
+            this.treatmentHeatmapTracks,
+            this.heatmapTracks,
+            this.props.store.molecularProfileIdToMolecularProfile,
+            this.alterationTypesInQuery,
+            this.alteredKeys,
+            this.heatmapTrackHeaders,
+            this.props.store.treatmentsInStudies
+        ],
+        render:()=>(
+            <Oncoprint
+                oncoprintRef={this.oncoprintRef}
+                clinicalTracks={this.clinicalTracks.result}
+                geneticTracks={this.geneticTracks.result}
+                genesetHeatmapTracks={this.genesetHeatmapTracks.result}
+                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this.heatmapTracks.result)}
+                divId={this.props.divId}
+                width={this.width}
+                caseLinkOutInTooltips={true}
+                suppressRendering={this.isLoading}
+                onSuppressRendering={this.onSuppressRendering}
+                onReleaseRendering={this.onReleaseRendering}
+                hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
+                molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
+                alterationTypesInQuery={this.alterationTypesInQuery.result}
+                showSublabels={this.showOqlInLabels}
+                heatmapTrackHeaders={this.heatmapTrackHeaders.result!}
+                horzZoomToFitIds={this.alteredKeys.result}
+                distinguishMutationType={this.distinguishMutationType}
+                distinguishDrivers={this.distinguishDrivers}
+                distinguishGermlineMutations={this.distinguishGermlineMutations}
+                sortConfig={this.oncoprintLibrarySortConfig}
+                showClinicalTrackLegends={this.showClinicalTrackLegends}
+                showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
+                showMinimap={this.showMinimap}
 
+                onMinimapClose={this.onMinimapClose}
+                onDeleteClinicalTrack={this.onDeleteClinicalTrack}
+                onTrackSortDirectionChange={this.onTrackSortDirectionChange}
+            />
+        ),
+        showLastRenderWhenPending: true, // otherwise oncoprint will reconstruct every time anything changes -- inefficient
+    });
+
+    public render() {
         return (
             <div style={{ position:"relative" }}>
 
@@ -1304,36 +1365,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                     <div style={{position:"relative", marginTop:15}} >
                         <div>
-                            <Oncoprint
-                                oncoprintRef={this.oncoprintRef}
-                                clinicalTracks={this.clinicalTracks.result}
-                                geneticTracks={this.geneticTracks.result}
-                                genesetHeatmapTracks={this.genesetHeatmapTracks.result}
-                                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this.heatmapTracks.result)}
-                                divId={this.props.divId}
-                                width={this.width}
-                                caseLinkOutInTooltips={true}
-                                suppressRendering={this.isLoading}
-                                onSuppressRendering={this.onSuppressRendering}
-                                onReleaseRendering={this.onReleaseRendering}
-                                hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
-                                molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
-                                alterationTypesInQuery={this.alterationTypesInQuery}
-                                showSublabels={this.showOqlInLabels}
-                                heatmapTrackHeaders={this.heatmapTrackHeaders.result!}
-                                horzZoomToFitIds={this.alteredKeys.result}
-                                distinguishMutationType={this.distinguishMutationType}
-                                distinguishDrivers={this.distinguishDrivers}
-                                distinguishGermlineMutations={this.distinguishGermlineMutations}
-                                sortConfig={this.oncoprintLibrarySortConfig}
-                                showClinicalTrackLegends={this.showClinicalTrackLegends}
-                                showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
-                                showMinimap={this.showMinimap}
-
-                                onMinimapClose={this.onMinimapClose}
-                                onDeleteClinicalTrack={this.onDeleteClinicalTrack}
-                                onTrackSortDirectionChange={this.onTrackSortDirectionChange}
-                            />
+                            {this.oncoprintComponent.component}
                         </div>
                     </div>
                 </div>

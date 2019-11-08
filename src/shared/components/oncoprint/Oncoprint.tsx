@@ -194,7 +194,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
 
     constructor(props:IOncoprintProps) {
         super(props);
-
+        
         this.trackSpecKeyToTrackId = {};
         this.divRefHandler = this.divRefHandler.bind(this);
         this.refreshOncoprint = _.debounce(this.refreshOncoprint.bind(this),  0);
