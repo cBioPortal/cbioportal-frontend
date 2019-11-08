@@ -184,6 +184,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                 </div>
                 <PatientViewMutationTable
                     dataStore={this.dataStore}
+                    showGeneFilterMenu={this.props.store.mutationTableShowGeneFilterMenu.result}
                     currentGeneFilter={this.props.store.mutationTableGeneFilterOption}
                     onRowClick={this.onTableRowClick}
                     onRowMouseEnter={this.onTableRowMouseEnter}
