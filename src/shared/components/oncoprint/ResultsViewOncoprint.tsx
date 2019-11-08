@@ -42,6 +42,7 @@ import { selectDisplayValue } from "./DataUtils";
 import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import WindowStore from "../window/WindowStore";
 import {isWebdriver} from "../../../public-lib/lib/webdriverUtils";
+import {MakeMobxView} from "../MobxView";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -977,13 +978,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return "";
     }
 
-    @computed get alterationTypesInQuery() {
-        if (this.props.store.selectedMolecularProfiles.isComplete) {
-            return _.uniq(this.props.store.selectedMolecularProfiles.result.map(x=>x.molecularAlterationType));
-        } else {
-            return [];
-        }
-    }
+    readonly alterationTypesInQuery = remoteData({
+        await:()=>[this.props.store.selectedMolecularProfiles],
+        invoke:()=>Promise.resolve(_.uniq(this.props.store.selectedMolecularProfiles.result!.map(x=>x.molecularAlterationType)))
+    });
 
     @autobind
     private getControls() {
@@ -1077,6 +1075,51 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return WindowStore.size.width - 25;
     }
 
+    readonly oncoprintComponent = MakeMobxView({
+        await:()=>[
+            this.clinicalTracks,
+            this.geneticTracks,
+            this.genesetHeatmapTracks,
+            this.treatmentHeatmapTracks,
+            this.heatmapTracks,
+            this.props.store.molecularProfileIdToMolecularProfile,
+            this.alterationTypesInQuery,
+            this.alteredKeys
+        ],
+        render:()=>(
+            <Oncoprint
+                oncoprintRef={this.oncoprintRef}
+                clinicalTracks={this.clinicalTracks.result}
+                geneticTracks={this.geneticTracks.result}
+                genesetHeatmapTracks={this.genesetHeatmapTracks.result}
+                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this.heatmapTracks.result)}
+                divId={this.props.divId}
+                width={this.width}
+                caseLinkOutInTooltips={true}
+                suppressRendering={this.isLoading}
+                onSuppressRendering={this.onSuppressRendering}
+                onReleaseRendering={this.onReleaseRendering}
+                hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
+                molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
+                alterationTypesInQuery={this.alterationTypesInQuery.result}
+                showSublabels={this.showOqlInLabels}
+
+                horzZoomToFitIds={this.alteredKeys.result}
+                distinguishMutationType={this.distinguishMutationType}
+                distinguishDrivers={this.distinguishDrivers}
+                distinguishGermlineMutations={this.distinguishGermlineMutations}
+                sortConfig={this.sortConfig}
+                showClinicalTrackLegends={this.showClinicalTrackLegends}
+                showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
+                showMinimap={this.showMinimap}
+
+                onMinimapClose={this.onMinimapClose}
+                onDeleteClinicalTrack={this.onDeleteClinicalTrack}
+                onTrackSortDirectionChange={this.onTrackSortDirectionChange}
+            />
+        )
+    });
+
     public render() {
         return (
             <div style={{ position:"relative" }}>
@@ -1102,36 +1145,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                     <div style={{position:"relative", marginTop:15}} >
                         <div>
-                            <Oncoprint
-                                oncoprintRef={this.oncoprintRef}
-                                clinicalTracks={this.clinicalTracks.result}
-                                geneticTracks={this.geneticTracks.result}
-                                genesetHeatmapTracks={this.genesetHeatmapTracks.result}
-                                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this. heatmapTracks.result)}
-                                divId={this.props.divId}
-                                width={this.width}
-                                caseLinkOutInTooltips={true}
-                                suppressRendering={this.isLoading}
-                                onSuppressRendering={this.onSuppressRendering}
-                                onReleaseRendering={this.onReleaseRendering}
-                                hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
-                                molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
-                                alterationTypesInQuery={this.alterationTypesInQuery}
-                                showSublabels={this.showOqlInLabels}
-
-                                horzZoomToFitIds={this.alteredKeys.result}
-                                distinguishMutationType={this.distinguishMutationType}
-                                distinguishDrivers={this.distinguishDrivers}
-                                distinguishGermlineMutations={this.distinguishGermlineMutations}
-                                sortConfig={this.sortConfig}
-                                showClinicalTrackLegends={this.showClinicalTrackLegends}
-                                showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
-                                showMinimap={this.showMinimap}
-
-                                onMinimapClose={this.onMinimapClose}
-                                onDeleteClinicalTrack={this.onDeleteClinicalTrack}
-                                onTrackSortDirectionChange={this.onTrackSortDirectionChange}
-                            />
+                            {this.oncoprintComponent.component}
                         </div>
                     </div>
                 </div>
