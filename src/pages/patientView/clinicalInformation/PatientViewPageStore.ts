@@ -89,6 +89,7 @@ import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import {computeGenePanelInformation, CoverageInformation} from "../../resultsView/ResultsViewPageStoreUtils";
 import {getVariantAlleleFrequency} from "../../../shared/lib/MutationUtils";
 import { AppStore, SiteError } from 'AppStore';
+import {checkNonProfiledGenesExist} from "../PatientViewPageUtils";
 
 
 type PageMode = 'patient' | 'sample';
@@ -961,6 +962,44 @@ export class PatientViewPageStore {
             });
         });
     }
+
+    readonly mutationTableShowGeneFilterMenu = remoteData({
+        await:()=>[
+            this.samples,
+            this.sampleToMutationGenePanelId,
+            this.genePanelIdToEntrezGeneIds
+        ],
+        invoke:()=>{
+            const entrezGeneIds:number[] = _.uniq(_.map(this.mergedMutationDataIncludingUncalled, mutations => mutations[0].entrezGeneId));
+            const sampleIds = this.samples.result!.map(s=>s.sampleId);
+            return Promise.resolve(
+                sampleIds.length > 1
+                && checkNonProfiledGenesExist(  sampleIds,
+                    entrezGeneIds,
+                    this.sampleToMutationGenePanelId.result,
+                    this.genePanelIdToEntrezGeneIds.result)
+            );
+        }
+    });
+
+    readonly cnaTableShowGeneFilterMenu = remoteData({
+        await:()=>[
+            this.samples,
+            this.sampleToMutationGenePanelId,
+            this.genePanelIdToEntrezGeneIds
+        ],
+        invoke:()=>{
+            const entrezGeneIds:number[] = _.uniq(_.map(this.mergedDiscreteCNAData, alterations => alterations[0].entrezGeneId));
+            const sampleIds = this.samples.result!.map(s=>s.sampleId);
+            return Promise.resolve(
+                sampleIds.length > 1
+                && checkNonProfiledGenesExist(  sampleIds,
+                entrezGeneIds,
+                this.sampleToMutationGenePanelId.result,
+                this.genePanelIdToEntrezGeneIds.result)
+            );
+        }
+    });
 
     @computed get uniqueSampleKeyToTumorType(): {[sampleId: string]: string} {
         return generateUniqueSampleKeyToTumorTypeMap(this.clinicalDataForSamples,
