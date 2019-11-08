@@ -246,24 +246,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.patientViewPageStore.copyNumberTableGeneFilterOption = option;
     }
 
-    mutationTableShowGeneFilterMenu(sampleIds:string[]):boolean {
-        const entrezGeneIds:number[] = _.uniq(_.map(this.patientViewPageStore.mergedMutationDataIncludingUncalled, mutations => mutations[0].entrezGeneId));
-        return sampleIds.length > 1
-            && checkNonProfiledGenesExist(  sampleIds,
-                                            entrezGeneIds,
-                                            this.patientViewPageStore.sampleToMutationGenePanelId.result,
-                                            this.patientViewPageStore.genePanelIdToEntrezGeneIds.result);
-    }
-
-    cnaTableShowGeneFilterMenu(sampleIds:string[]):boolean {
-        const entrezGeneIds:number[] = _.uniq(_.map(this.patientViewPageStore.mergedDiscreteCNAData, alterations => alterations[0].entrezGeneId));
-        return sampleIds.length > 1
-            && checkNonProfiledGenesExist(  sampleIds,
-                                            entrezGeneIds,
-                                            this.patientViewPageStore.sampleToDiscreteGenePanelId.result,
-                                            this.patientViewPageStore.genePanelIdToEntrezGeneIds.result);
-    }
-
     readonly sampleManager = remoteData({
         await:()=>[
             this.patientViewPageStore.patientViewData,
@@ -376,11 +358,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     />
                     );
                 }
-
-        let sampleIds:string[] = [];
-        if (sampleManager) {
-            sampleIds = sampleManager.samples.map((sample:ClinicalDataBySampleId) => sample.id );
-        }
 
         return (
             <PageLayout noMargin={true} hideFooter={true}>
@@ -521,7 +498,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                     enableMyCancerGenome={AppConfig.serverConfig.mycancergenome_show}
                                                     enableCivic={AppConfig.serverConfig.show_civic}
                                                     columnVisibility={this.mutationTableColumnVisibility}
-                                                    showGeneFilterMenu={this.mutationTableShowGeneFilterMenu(sampleIds)}
+                                                    showGeneFilterMenu={this.patientViewPageStore.mutationTableShowGeneFilterMenu.result}
                                                     currentGeneFilter={this.patientViewPageStore.mutationTableGeneFilterOption}
                                                     onFilterGenes={this.onFilterGenesMutationTable}
                                                     columnVisibilityProps={{
@@ -563,7 +540,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                     mrnaExprRankMolecularProfileId={this.patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
                                                     status={this.cnaTableStatus}
                                                     columnVisibility={this.cnaTableColumnVisibility}
-                                                    showGeneFilterMenu={this.cnaTableShowGeneFilterMenu(sampleIds)}
+                                                    showGeneFilterMenu={this.patientViewPageStore.cnaTableShowGeneFilterMenu.result}
                                                     currentGeneFilter={this.patientViewPageStore.copyNumberTableGeneFilterOption}
                                                     onFilterGenes={this.onFilterGenesCopyNumberTable}
                                                     columnVisibilityProps={{
