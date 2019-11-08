@@ -13,7 +13,7 @@ import {DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD, getDownsampledData, MAX_DOT_SIZE} f
 import {ClinicalAttribute, SampleIdentifier} from "../../../../shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator"
 import $ from "jquery";
-import {AnalysisGroup} from "../../StudyViewUtils";
+import {AnalysisGroup, Datalabel} from "../../StudyViewUtils";
 import {AbstractChart} from "../ChartContainer";
 
 export interface IStudyViewScatterPlotData {
@@ -203,7 +203,7 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
     @computed get scatters() {
         // sort NA to the beginning - it should be rendered at the bottom
         // otherwise, order doesnt matter. here we'll just use the same order as given in the prop, bc _.sortBy is stable sort
-        const sortedAnalysisGroups = _.sortBy(this.props.analysisGroups, g=>(g.value === "NA" ? 0 : 1));
+        const sortedAnalysisGroups = _.sortBy(this.props.analysisGroups, g=>(g.value === Datalabel.NA ? 0 : 1));
         return _.reduce(sortedAnalysisGroups, (scatters, group)=>{
             const groupData = this.data[group.value];
             if (groupData && groupData.length > 0) {
