@@ -225,7 +225,7 @@ function testSampleIcon(geneSymbol, tableTag, sampleIconTypes, sampleVisibilitie
     const icons = samplesCell.$$("li");
 
     sampleIconTypes.forEach((desiredDataType, i) => {
-        const isExpectedIcon = icons[i].$('svg[data-test='+desiredDataType+']').isExistinskin_patientview_filter_genes_profiled_all_samplesg();
+        const isExpectedIcon = icons[i].$('svg[data-test='+desiredDataType+']').isExisting();
         assert.equal(isExpectedIcon, true, "Gene "+geneSymbol+": icon type at position "+i+" is not `"+desiredDataType+"`");
     });
 
