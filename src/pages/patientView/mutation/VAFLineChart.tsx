@@ -37,6 +37,7 @@ export interface IVAFLineChartProps {
     dataStore:PatientViewMutationsDataStore;
     svgRef:(elt:SVGElement|null)=>void;
     logScale:boolean;
+    zeroToOneAxis:boolean;
 }
 
 interface IPoint {
@@ -585,23 +586,29 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     @computed get yDomain() {
-        let min = Number.POSITIVE_INFINITY;
-        let max = Number.NEGATIVE_INFINITY;
-        for (const singleLineData of this.renderData.lineData) {
-            for (const d of singleLineData) {
-                min = Math.min(d.y, min);
-                max = Math.max(d.y, max);
-            }
-        }
+        let domain;
 
-        if (this.props.logScale) {
-            min = Math.max(min, MIN_LOG_ARG);
-            max = Math.max(max, MIN_LOG_ARG);
-
-            return [Math.log10(min), Math.log10(max)];
+        // determine true domain
+        if (this.props.zeroToOneAxis) {
+            domain = [0,1];
         } else {
-            return [min, max];
+            let min = Number.POSITIVE_INFINITY;
+            let max = Number.NEGATIVE_INFINITY;
+            for (const singleLineData of this.renderData.lineData) {
+                for (const d of singleLineData) {
+                    min = Math.min(d.y, min);
+                    max = Math.max(d.y, max);
+                }
+            }
+            domain = [min, max];
         }
+
+        // log-transform if necessary
+        if (this.props.logScale) {
+            domain = domain.map(x=>Math.log10(Math.max(x, MIN_LOG_ARG)));
+        }
+
+        return domain;
     }
 
     @autobind

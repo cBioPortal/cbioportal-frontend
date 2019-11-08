@@ -78,6 +78,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
     private dataStore = new PatientViewMutationsDataStore(()=>this.props.store.mergedMutationDataIncludingUncalled);
     private vafLineChartSvg:SVGElement|null = null;
     @observable vafLineChartLogScale = false;
+    @observable vafLineChartFixedAxis = false;
     // TODO: replace this with URL stuff
     @observable private _plotTab = localStorage.getItem(LOCAL_STORAGE_PLOT_TAB_KEY) || PlotTab.LINE_CHART;
 
@@ -121,6 +122,13 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     >
                         <span style={{marginTop:-3}}>Log scale</span>
                     </LabeledCheckbox>
+                    <LabeledCheckbox
+                        checked={this.vafLineChartFixedAxis}
+                        onChange={()=>{ this.vafLineChartFixedAxis = !this.vafLineChartFixedAxis; }}
+                        labelProps={{style:{ marginRight:10}}}
+                    >
+                        <span style={{marginTop:-3}}>Fix axis range to 0-1</span>
+                    </LabeledCheckbox>
                     <DownloadControls
                         filename="vafHeatmap"
                         getSvg={()=>this.vafLineChartSvg}
@@ -138,6 +146,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     sampleManager={this.props.sampleManager}
                     svgRef={this.vafLineChartSvgRef}
                     logScale={this.vafLineChartLogScale}
+                    zeroToOneAxis={this.vafLineChartFixedAxis}
                 />
             </div>
         ),
