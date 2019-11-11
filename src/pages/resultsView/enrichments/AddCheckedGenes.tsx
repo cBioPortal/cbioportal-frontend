@@ -10,7 +10,6 @@ import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip"
 
 export interface IAddCheckedGenesProps {
     checkedGenes:  string[];
-    store: ResultsViewPageStore;
 }
 
 @observer
