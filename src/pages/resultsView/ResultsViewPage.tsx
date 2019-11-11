@@ -196,7 +196,7 @@ export default class ResultsViewPage extends React.Component<
     }
 
     private handleTabChange(id: string, replace?: boolean) {
-        this.props.routing.updateRoute({}, `results/${id}`, false, replace);
+        this.urlWrapper.updateURL({}, `results/${id}`, false, replace);
     }
 
     @autobind

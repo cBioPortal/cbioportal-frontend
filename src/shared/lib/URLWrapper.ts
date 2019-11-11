@@ -42,27 +42,36 @@ export default class URLWrapper<
 
     constructor(
         protected routing: ExtendedRouterStore,
-        protected properties: Property<QueryParamsType>[]
+        protected properties: Property<QueryParamsType>[],
+        protected sessionEnabled = false
     ) {
+
         const initValues: Partial<QueryParamsType> = {};
+
+        // init values MUST include all properties in type
+        // even if they are not represented in browser url at the moment
+        // they need to be there so that they will observable in the future upon assignment
         for (const property of properties) {
-            //only init the property if it exists in url
-            //if (property.name in routing.location.query) {
-                let value = (routing.location
-                    .query as QueryParamsType)[property.name];
-                if (_.isString(value)) {
-                    value = decodeURIComponent(value);
-                }
-                initValues[property.name] = value;
-           // }
+            let value = (routing.location
+                .query as QueryParamsType)[property.name];
+            if (_.isString(value)) {
+                // @ts-ignore
+                value = decodeURIComponent(value);
+            }
+            initValues[property.name] = value;
         }
 
+        // consumers of wrapper read from this query
         this.query = observable<QueryParamsType>(initValues as QueryParamsType);
 
-        debugger;
+        // if we have a session id, set it so that fetching will begin
+        if (routing.query.session_id) {
+            this.setSessionId(routing.query.session_id);
+        }
 
-        this.setSessionId(routing.query.session_id);
-
+        //per reaction below, any update to URL will result in all properties being reset.
+        //to avoid update signal when properties haven't actually changed (set to existing value)
+        //we intercept changes and cancel them when old === new
         intercept(this.query, change => {
             if (
                 change.newValue ===
@@ -80,31 +89,22 @@ export default class URLWrapper<
                 return change;
             }
         });
+
+        // whenever a change is made either to the url querystring or to internal representation of
+        // query (when in session mode),
+        // we want to sync query
+        // note that the above intercept will avoid resetting properties with existing values
         this.reactionDisposer = reaction(
             () => {
-                // this is necessary to register these properties reaction
-                // it doesn't work if it happens inside runInAction below
                 return [this.routing.location.query, this._sessionData && this._sessionData.query];
-                // for (const property of properties) {
-                //     // @ts-ignore
-                //
-                // }
-                // for (const property of properties) {
-                //     // @ts-ignore
-                //     this.query[property.name];
-                // }
             },
             ([routeQuery,sessionQuery]) => {
-                //const query = this.routing.location.query as QueryParamsType;
-                // if there is a path context and it is not
-                console.log("reacting to change");
                 if (
                     this.pathContext &&
                     !new RegExp(`^/*${this.pathContext}`).test(
                         routing.location.pathname
                     )
                 ) {
-                    console.log("killing update b/c path doesn't match")
                     return;
                 }
                 runInAction(() => {
@@ -112,10 +112,13 @@ export default class URLWrapper<
                     this.setSessionId(routeQuery.session_id);
 
                     for (const property of properties) {
+                        // if property is not a session prop
+                        // it will always be represented in URL
                         if (!property.isSessionProp) {
                             // @ts-ignore
                             this.syncProperty(property, routeQuery);
                         } else {
+                            // if there is a session, then sync it with session
                             sessionQuery && this.syncProperty(property, sessionQuery)
                         }
                     }
@@ -125,8 +128,6 @@ export default class URLWrapper<
     }
 
     @observable _sessionId: string;
-
-    //@observable sessionParams = {};
 
     @action
     public updateURL(updatedParams: Partial<QueryParamsType>, path:string | undefined = undefined, clear = false, replace = false) {
@@ -155,25 +156,32 @@ export default class URLWrapper<
             { sessionProps: {}, nonSessionProps: {} }
         );
 
-        const needSession = true;
+        const url = _.reduce(paramsMap.sessionProps,(agg:string[], val, key)=>{
+            if (val !== undefined) {
+                agg.push(`${key}=${encodeURIComponent(val)}`);
+            }
+            return agg;
+        }, []).join("&");
 
         // determine which of the MODIFIED params are session props
         const sessionParametersChanged = _.some(_.keys(updatedParams), (key)=>key in sessionProps);
 
+        // we need session if url is longer than this
+        const needSession = sessionParametersChanged && this.sessionEnabled &&
+            (this._sessionId !== undefined || url.length > 2000);
+
         // if we need to make a new session due to url constraints AND we have a changed session prop
         // then save a new remote session and put the session props in memory for consumption by app
         // otherwise just update the URL
-
         if (
             needSession
         ) {
             if (sessionParametersChanged) {
-
                 this._sessionData = {
                     id: "pending",
                     query: paramsMap.sessionProps,
                     path: path || this.pathName,
-                    version:""
+                    version:3
                 };
 
                 // we need to make a new session
@@ -204,6 +212,7 @@ export default class URLWrapper<
                 );
             }
         } else {
+            console.log("updating", updatedParams);
             this.routing.updateRoute(updatedParams, path, clear, replace);
         }
 

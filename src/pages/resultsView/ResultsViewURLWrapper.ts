@@ -65,9 +65,9 @@ export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuer
             { name: "genetic_profile_ids_PROFILE_GENESET_SCORE", isSessionProp:true },
             { name: "genetic_profile_ids_GENERIC_ASSAY", isSessionProp:true },
             { name: "genetic_profile_ids", isSessionProp:true },
-
-
-        ]);
+            ],
+              true
+        );
     }
 
     pathContext = "/results";
