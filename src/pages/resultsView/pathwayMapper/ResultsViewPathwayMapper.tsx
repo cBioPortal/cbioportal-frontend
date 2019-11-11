@@ -6,7 +6,7 @@ import {ResultsViewPageStore, SamplesSpecificationElement, IQueriedMergedTrackCa
 import { ResultsViewTab } from "../ResultsViewPageHelpers";
 import { generateGeneAlterationData } from "../download/DownloadUtils";
 import PathwayMapper, {ICBioData} from "pathway-mapper";
-import "react-pathway-mapper/dist/base.css";
+import "pathway-mapper/dist/base.css";
 import PathwayMapperTable, { IPathwayMapperTable } from "./PathwayMapperTable";
 import { observer } from "mobx-react";
 import autobind from "autobind-decorator";

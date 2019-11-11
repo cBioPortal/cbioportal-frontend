@@ -14680,6 +14680,63 @@ pathval@^1.1.0:
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.0.tgz#b942e6d4bde653005ef6b71361def8727d0645e0"
   integrity sha1-uULm1L3mUwBe9rcTYd74cn0GReA=
 
+"pathway-mapper@github:iVis-at-Bilkent/pathway-mapper#master":
+  version "2.0.1"
+  resolved "https://codeload.github.com/iVis-at-Bilkent/pathway-mapper/tar.gz/558b5f0c05284a73cecf5af82363ab5b432d9e22"
+  dependencies:
+    "@datastructures-js/max-heap" "^2.0.0"
+    "@types/cytoscape" "^3.4.0"
+    "@types/jest" "24.0.11"
+    "@types/jquery" "^3.3.29"
+    "@types/node" "11.13.4"
+    "@types/react" "16.8.13"
+    "@types/react-bootstrap" "^0.32.19"
+    "@types/react-dom" "16.8.4"
+    autobind-decorator "^2.4.0"
+    bootstrap "^4.3.1"
+    cytoscape "^3.8.2"
+    cytoscape-context-menus "^3.0"
+    cytoscape-cose-bilkent "^4.0.0"
+    cytoscape-edge-editing "^2.0.0"
+    cytoscape-edgehandles "^3.5.1"
+    cytoscape-grid-guide "^2.2.1"
+    cytoscape-navigator "^1.3.3"
+    cytoscape-node-resize "^3.2.0"
+    cytoscape-panzoom "~2.5.2"
+    cytoscape-qtip iVis-at-Bilkent/cytoscape.js-qtip#master
+    cytoscape-undo-redo "^1.3.2"
+    cytoscape-view-utilities "^2.0.6"
+    express "^4.17.1"
+    extract-text-webpack-plugin "^4.0.0-beta.0"
+    file-loader latest
+    file-saver "^2.0.2"
+    jquery latest
+    jquery-ui-dist "^1.12.1"
+    konva "^1.6.3"
+    mobx "^5.10.1"
+    mobx-react "^5.4.3"
+    multer "^1.4.1"
+    net "^1.0.2"
+    raw-loader "^3.0.0"
+    react "^16.8.6"
+    react-bootstrap "^0.32.0"
+    react-dom "^16.8.6"
+    react-loader-spinner "^2.3.0"
+    react-scripts "2.1.8"
+    react-scrollbar "^0.5.6"
+    react-table "^6.10.0"
+    react-toastify "^5.3.1"
+    react-tooltip "^3.10.0"
+    sharedb latest
+    sharedb-mongo latest
+    source-map-loader "^0.1.6"
+    ts-loader "^6.0.2"
+    typescript "3.4.3"
+    underscore "~1.8.3"
+    url-loader "^1.1.2"
+    websocket-json-stream "0.0.3"
+    ws latest
+
 pbf@^3.0.5:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/pbf/-/pbf-3.2.0.tgz#e76f9f5114e395c25077ad6fe463b3507d6877fc"
@@ -17022,63 +17079,6 @@ react-overlays@^0.8.0:
     prop-types-extra "^1.0.1"
     react-transition-group "^2.2.0"
     warning "^3.0.0"
-
-"react-pathway-mapper@github:iVis-at-Bilkent/pathway-mapper#unstable":
-  version "0.0.1"
-  resolved "https://codeload.github.com/iVis-at-Bilkent/pathway-mapper/tar.gz/6ee1cdc413a3c99d74f4d2bfa22e4967084b09ce"
-  dependencies:
-    "@datastructures-js/max-heap" "^2.0.0"
-    "@types/cytoscape" "^3.4.0"
-    "@types/jest" "24.0.11"
-    "@types/jquery" "^3.3.29"
-    "@types/node" "11.13.4"
-    "@types/react" "16.8.13"
-    "@types/react-bootstrap" "^0.32.19"
-    "@types/react-dom" "16.8.4"
-    autobind-decorator "^2.4.0"
-    bootstrap "^4.3.1"
-    cytoscape "^3.8.2"
-    cytoscape-context-menus "^3.0"
-    cytoscape-cose-bilkent "^4.0.0"
-    cytoscape-edge-editing "^2.0.0"
-    cytoscape-edgehandles "^3.5.1"
-    cytoscape-grid-guide "^2.2.1"
-    cytoscape-navigator "^1.3.3"
-    cytoscape-node-resize "^3.2.0"
-    cytoscape-panzoom "~2.5.2"
-    cytoscape-qtip iVis-at-Bilkent/cytoscape.js-qtip#master
-    cytoscape-undo-redo "^1.3.2"
-    cytoscape-view-utilities "^2.0.6"
-    express "^4.17.1"
-    extract-text-webpack-plugin "^4.0.0-beta.0"
-    file-loader latest
-    file-saver "^2.0.2"
-    jquery latest
-    jquery-ui-dist "^1.12.1"
-    konva "^1.6.3"
-    mobx "^5.10.1"
-    mobx-react "^5.4.3"
-    multer "^1.4.1"
-    net "^1.0.2"
-    raw-loader "^3.0.0"
-    react "^16.8.6"
-    react-bootstrap "^0.32.0"
-    react-dom "^16.8.6"
-    react-loader-spinner "^2.3.0"
-    react-scripts "2.1.8"
-    react-scrollbar "^0.5.6"
-    react-table "^6.10.0"
-    react-toastify "^5.3.1"
-    react-tooltip "^3.10.0"
-    sharedb latest
-    sharedb-mongo latest
-    source-map-loader "^0.1.6"
-    ts-loader "^6.0.2"
-    typescript "3.4.3"
-    underscore "~1.8.3"
-    url-loader "^1.1.2"
-    websocket-json-stream "0.0.3"
-    ws latest
 
 react-portal@^4.2.0:
   version "4.2.0"
