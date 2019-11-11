@@ -23,7 +23,7 @@ describe('PatientViewPage', () => {
         beforeEach(() => {
             updateRouteStub = sinon.stub();
             urlWrapper = new PatientViewUrlWrapper(new ExtendedRouterStore());
-            urlWrapper.updateQuery = updateRouteStub;
+            urlWrapper.updateURL = updateRouteStub;
             preventDefaultStub = sinon.stub();
 
             mock = {

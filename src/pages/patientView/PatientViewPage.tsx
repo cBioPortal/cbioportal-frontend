@@ -158,7 +158,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
         if (!e.shiftKey && !e.altKey && !e.metaKey) {
             e.preventDefault();
-            this.urlWrapper.updateQuery({ caseId:undefined, sampleId:id })
+            this.urlWrapper.updateURL({ caseId:undefined, sampleId:id })
         }
         // otherwise do nothing, we want default behavior of link
         // namely that href will open in a new window/tab
@@ -168,9 +168,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         let values = id.split(":");
         if(values.length == 2){
-            this.urlWrapper.updateQuery({ studyId: values[0], caseId: values[1], sampleId: undefined });
+            this.urlWrapper.updateURL({ studyId: values[0], caseId: values[1], sampleId: undefined });
         } else {
-            this.urlWrapper.updateQuery({ caseId: id, sampleId: undefined });
+            this.urlWrapper.updateURL({ caseId: id, sampleId: undefined });
         }
 
     }
@@ -252,7 +252,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     mutationTableShowGeneFilterMenu(sampleIds:string[]):boolean {
         const entrezGeneIds:number[] = _.uniq(_.map(this.patientViewPageStore.mergedMutationDataIncludingUncalled, mutations => mutations[0].entrezGeneId));
-        return sampleIds.length > 1 
+        return sampleIds.length > 1
             && checkNonProfiledGenesExist(  sampleIds,
                                             entrezGeneIds,
                                             this.patientViewPageStore.sampleToMutationGenePanelId.result,
@@ -263,7 +263,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         const entrezGeneIds:number[] = _.uniq(_.map(this.patientViewPageStore.mergedDiscreteCNAData, alterations => alterations[0].entrezGeneId));
         return sampleIds.length > 1
             && checkNonProfiledGenesExist(  sampleIds,
-                                            entrezGeneIds, 
+                                            entrezGeneIds,
                                             this.patientViewPageStore.sampleToDiscreteGenePanelId.result,
                                             this.patientViewPageStore.genePanelIdToEntrezGeneIds.result);
     }
@@ -342,7 +342,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 );
             }
         }
-        
+
         if (this.patientViewPageStore.patientIdsInCohort && this.patientViewPageStore.patientIdsInCohort.length > 0) {
             const indexInCohort = this.patientViewPageStore.patientIdsInCohort.indexOf(this.patientViewPageStore.studyId + ':' + this.patientViewPageStore.patientId);
             cohortNav = (
