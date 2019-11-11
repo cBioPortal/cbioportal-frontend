@@ -1,5 +1,5 @@
 import * as React from "react";
-import {CoExpression, Geneset} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {Geneset} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {Gene} from "../../../shared/api/generated/CBioPortalAPI";
 import {correlationColor, correlationSortBy} from "./CoExpressionTableUtils";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
@@ -27,18 +27,18 @@ const Q_VALUE_COLUMN_NAME = "q-Value";
 const COLUMNS = [
     {
         name: "Correlated Gene",
-        render: (d:CoExpression)=>(<span style={{fontWeight:"bold"}}>{d.geneticEntityName}</span>),
-        filter:(d:CoExpression, f:string, filterStringUpper:string)=>(d.geneticEntityName.indexOf(filterStringUpper) > -1),
-        download:(d:CoExpression)=>d.geneticEntityName,
-        sortBy:(d:CoExpression)=>d.geneticEntityName,
+        render: (d:CoExpressionWithQ)=>(<span style={{fontWeight:"bold"}}>{d.geneticEntityName}</span>),
+        filter:(d:CoExpressionWithQ, f:string, filterStringUpper:string)=>(d.geneticEntityName.indexOf(filterStringUpper) > -1),
+        download:(d:CoExpressionWithQ)=>d.geneticEntityName,
+        sortBy:(d:CoExpressionWithQ)=>d.geneticEntityName,
         width:"30%"
     },
     {
         name:"Cytoband",
-        render:(d:CoExpression)=>(<span>{d.cytoband}</span>),
+        render:(d:CoExpressionWithQ)=>(<span>{d.cytoband}</span>),
         filter:cytobandFilter,
-        download:(d:CoExpression)=>d.cytoband,
-        sortBy:(d:CoExpression)=>d.cytoband,
+        download:(d:CoExpressionWithQ)=>d.cytoband,
+        sortBy:(d:CoExpressionWithQ)=>d.cytoband,
         width:"30%"
     },
     makeNumberColumn(SPEARMANS_CORRELATION_COLUMN_NAME, "spearmansCorrelation", true, false),
