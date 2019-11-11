@@ -22,6 +22,7 @@ import { Popover } from "react-bootstrap";
 import * as ReactDOM from "react-dom";
 import classnames from "classnames";
 import WindowStore from "../window/WindowStore";
+import { textTruncationUtils } from "cbioportal-frontend-commons";
 
 export interface IBaseBoxScatterPlotPoint {
     value:number;
@@ -84,6 +85,7 @@ const BOTTOM_LEGEND_PADDING = 15;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const HORIZONTAL_OFFSET = 8;
 const VERTICAL_OFFSET = 17;
+const UTILITIES_MENU_HEIGHT = 20;
 
 
 const BOX_STYLES = {
@@ -454,6 +456,27 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
             />
         );
     }
+    
+    @computed get yAxisLabel():string[] {
+        if (this.props.axisLabelY) {
+            return textTruncationUtils(
+                this.props.axisLabelY,
+                this.chartHeight - UTILITIES_MENU_HEIGHT,
+                axisTickLabelStyles.fontFamily,
+                `${axisTickLabelStyles.fontSize}px`
+            );
+        }
+        return [];
+    }
+    
+    @computed get yAxisLabelVertOffset():number {
+        if (this.props.horizontal) {
+            return -1*this.biggestCategoryLabelSize - 24;
+        } else if (this.yAxisLabel.length > 1) {
+            return -30;
+        }
+        return -50;
+    }
 
     @computed get vertAxis() {
         return (
@@ -461,12 +484,12 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 orientation="left"
                 offsetX={50}
                 crossAxis={false}
-                label={this.props.axisLabelY}
+                label={this.yAxisLabel}
                 dependentAxis={true}
                 tickValues={this.props.horizontal ? this.categoryTickValues : undefined}
                 tickCount={this.props.horizontal ? undefined : NUM_AXIS_TICKS}
                 tickFormat={this.props.horizontal ? this.formatCategoryTick : this.formatNumericalTick}
-                axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? -1*this.biggestCategoryLabelSize - 24 : -50}/>}
+                axisLabelComponent={<VictoryLabel dy={this.yAxisLabelVertOffset}/>}
             />
         );
     }
