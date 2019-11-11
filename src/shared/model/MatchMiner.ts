@@ -70,8 +70,13 @@ export interface ITrialQuery {
 }
 
 export interface IGenomicMatch {
-    trueHugoSymbol?: string;
-    trueProteinChange?: string;
+    trueHugoSymbol: string;
+    trueProteinChange: string;
+}
+
+export interface IPatientGenomic {
+    trueHugoSymbol: string;
+    trueProteinChange: string;
 }
 
 export interface IClinicalGroupMatch {
@@ -80,8 +85,8 @@ export interface IClinicalGroupMatch {
         positive: string[], // trialOncotreePrimaryDiagnosis not includes '!'
         negative: string[] // trialOncotreePrimaryDiagnosis includes '!'
     };
-    matches: IGenomicMatchType;
-    notMatches: IGenomicMatchType;
+    matches?: IGenomicMatchType;
+    notMatches?: IGenomicMatchType;
 }
 
 export interface IGenomicMatchType {
@@ -93,9 +98,8 @@ export interface IGenomicMatchType {
 }
 
 export interface IGenomicGroupMatch {
-    genomicAlteration: string;
-    matchType: string;
-    matches: IGenomicMatch[];
+    genomicAlteration: string[];
+    patientGenomic?: IPatientGenomic;
 }
 
 export interface IArmMatch {

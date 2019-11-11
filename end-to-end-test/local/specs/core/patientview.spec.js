@@ -214,6 +214,7 @@ describe('patient view page', function() {
             });
 
         });
+
     }
 });
 

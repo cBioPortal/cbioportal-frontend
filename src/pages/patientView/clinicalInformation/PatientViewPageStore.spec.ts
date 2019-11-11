@@ -1,9 +1,7 @@
 /**
  * Created by aaronlisman on 3/2/17.
  */
-
-import { handlePathologyReportCheckResponse, PatientViewPageStore, filterMutationsByProfiledGene } from './PatientViewPageStore';
-// import React from 'react';
+import { handlePathologyReportCheckResponse, PatientViewPageStore } from './PatientViewPageStore';
 import { assert } from 'chai';
 // import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
@@ -19,10 +17,6 @@ describe('PatientViewPageStore', () => {
 
     before(()=>{
         store = new PatientViewPageStore(new AppStore());
-    });
-
-    after(()=>{
-
     });
 
     it('if there are pdf items in response and their name starts with a given patientId, return collection, otherwise returns empty array', ()=>{
