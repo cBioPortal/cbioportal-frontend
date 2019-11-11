@@ -182,7 +182,9 @@ export default class Oncoprint {
             .attr({'width':'0px', 'height':'0px'})
             .css({'position':'absolute',
                 'top':'0px',
-                'left':'0px'})
+                'left':'0px',
+                'pointer-events':'none' // since column label canvas is on top of cell overlay canvas, we need to make it not capture any mouse events
+            })
             .addClass("noselect")
             .addClass('oncoprintjs__column_label_canvas') as JQuery<HTMLCanvasElement>;
 
@@ -214,7 +216,7 @@ export default class Oncoprint {
 
         $cell_canvas.appendTo($cell_div);
         $cell_overlay_canvas.appendTo($cell_div);
-        $column_label_canvas.appendTo($cell_div);
+        $column_label_canvas.appendTo($cell_div);// column labels should show above the overlay canvas because the text should show over the highlights
         $dummy_scroll_div.appendTo($cell_div);
         $dummy_scroll_div.on("mousemove mousedown mouseup", function(evt) {
             $cell_overlay_canvas.trigger(evt);
