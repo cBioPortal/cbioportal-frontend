@@ -4593,7 +4593,7 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
-    getAllSamplesUsingGETURL(parameters: {
+    getSamplesByKeywordUsingGETURL(parameters: {
         'keyword' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -4639,9 +4639,9 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all samples
+     * Get all samples matching keyword
      * @method
-     * @name CBioPortalAPI#getAllSamplesUsingGET
+     * @name CBioPortalAPI#getSamplesByKeywordUsingGET
      * @param {string} keyword - Search keyword that applies to the study ID
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
@@ -4649,7 +4649,7 @@ export default class CBioPortalAPI {
      * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
-    getAllSamplesUsingGETWithHttpInfo(parameters: {
+    getSamplesByKeywordUsingGETWithHttpInfo(parameters: {
         'keyword' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -4707,9 +4707,9 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all samples
+     * Get all samples matching keyword
      * @method
-     * @name CBioPortalAPI#getAllSamplesUsingGET
+     * @name CBioPortalAPI#getSamplesByKeywordUsingGET
      * @param {string} keyword - Search keyword that applies to the study ID
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
@@ -4717,7 +4717,7 @@ export default class CBioPortalAPI {
      * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
-    getAllSamplesUsingGET(parameters: {
+    getSamplesByKeywordUsingGET(parameters: {
             'keyword' ? : string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
@@ -4728,7 +4728,7 @@ export default class CBioPortalAPI {
                 $domain ? : string
         }): Promise < Array < Sample >
         > {
-            return this.getAllSamplesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.getSamplesByKeywordUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
