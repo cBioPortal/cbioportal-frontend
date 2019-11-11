@@ -43,7 +43,6 @@ import {RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 import {ISelectOption} from "./controls/OncoprintControls";
 import {ICBioData} from "pathway-mapper";
 
-
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IHeatmapTrackSpec[];
 }
