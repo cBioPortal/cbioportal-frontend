@@ -92,6 +92,7 @@ export interface IServerConfig {
     skin_show_tissue_image_tab: boolean;
     skin_title: string;
     skin_authorization_message: string | null;
+    skin_patientview_filter_genes_profiled_all_samples: boolean;
     quick_search_enabled: boolean;
     default_cross_cancer_study_list: string; // this has a default
     default_cross_cancer_study_list_name: string; // this has a default
