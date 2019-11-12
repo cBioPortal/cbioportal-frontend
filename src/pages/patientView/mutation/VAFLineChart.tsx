@@ -666,6 +666,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 crossAxis={false}
                                 offsetX={50}
                                 tickFormat={this.tickFormatY}
+                                orientation="left"
                             />
                             <VictoryAxis
                                 style={{
@@ -682,6 +683,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                 }
                                 crossAxis={false}
                                 offsetY={50}
+                                orientation="bottom"
                             />
                             {this.renderData.lineData.map(dataForSingleLine=>{
                                 if (dataForSingleLine.length > 1) {
