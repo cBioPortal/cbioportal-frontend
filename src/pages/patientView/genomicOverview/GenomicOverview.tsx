@@ -1,8 +1,6 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
-import $ from 'jquery';
-import {If, Then, Else} from 'react-if';
+import { If } from 'react-if';
 import Tracks from './Tracks';
 import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
 import {Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
@@ -80,6 +78,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
                         labels={labels}
                         overlayPlacement="right"
                         cssClass="vafPlot"
+                        genePanelIconData={this.sampleIdToMutationGenePanelIconData}
                     />
                 </If>
             </div>
