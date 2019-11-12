@@ -121,6 +121,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                         checked={this.dataStore.onlyShowHighlightedInVAFChart}
                         onChange={()=>this.dataStore.setOnlyShowHighlightedInVAFChart(!this.dataStore.onlyShowHighlightedInVAFChart)}
                         labelProps={{style:{ marginRight:10}}}
+                        inputProps={{"data-test":"VAFOnlyHighlighted"}}
                     >
                         <span style={{marginTop:-3}}>Show only highlighted mutations</span>
                     </LabeledCheckbox>
@@ -128,6 +129,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                         checked={this.vafLineChartLogScale}
                         onChange={()=>{ this.vafLineChartLogScale = !this.vafLineChartLogScale; }}
                         labelProps={{style:{ marginRight:10}}}
+                        inputProps={{"data-test":"VAFLogScale"}}
                     >
                         <span style={{marginTop:-3}}>Log scale</span>
                     </LabeledCheckbox>
@@ -135,6 +137,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                         checked={!this.vafLineChartZeroToOneYAxis}
                         onChange={()=>{ this.vafLineChartZeroToOneYAxis = !this.vafLineChartZeroToOneYAxis; }}
                         labelProps={{style:{ marginRight:10}}}
+                        inputProps={{"data-test":"VAFDataRange"}}
                     >
                         <span style={{marginTop:-3}}>Set y-axis to data range</span>
                     </LabeledCheckbox>
@@ -195,12 +198,13 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
         ],
         renderPending:()=><LoadingIndicator isLoading={true} size="small"/>,
         render:()=>(
-            <div>
+            <div data-test="GenomicEvolutionMutationTable">
                 <div style={{ float: "left", marginRight: 15, marginTop: 4 }} >
                     <LabeledCheckbox
                         checked={this.dataStore.onlyShowHighlightedInTable}
                         onChange={()=>this.dataStore.setOnlyShowHighlightedInTable(!this.dataStore.onlyShowHighlightedInTable)}
                         labelProps={{style:{ marginRight:10}}}
+                        inputProps={{"data-test":"TableShowOnlyHighlighted"}}
                     >
                         <span style={{marginTop:-3}}>Show only highlighted mutations</span>
                     </LabeledCheckbox>
@@ -257,7 +261,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
     });
     render() {
         return (
-            <div>
+            <div data-test="GenomicEvolutionTab">
                 <MSKTabs
                     activeTabId={this.plotTab}
                     onTabClick={this.setPlotTab}

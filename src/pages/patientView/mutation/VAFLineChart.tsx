@@ -631,6 +631,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
             return (
                 <>
                     <svg
+                        data-test="VAFLineChart"
                         ref={this.props.svgRef}
                         style={{
                             width: this.svgWidth,
