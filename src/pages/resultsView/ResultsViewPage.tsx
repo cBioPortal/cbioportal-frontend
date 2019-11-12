@@ -342,18 +342,7 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.COEXPRESSION}
                             linkText={'Co-expression'}
                         >
-                            <If condition={getBrowserWindow().location.hostname.includes("cbioportal.org")}>
-                                <Then>
-                                    <div className={"alert alert-info"}>
-                                        The Coexpression feature is temporarily down for maintenance (11/7/2019).  Please check again tomorrow.
-                                    </div>
-                                </Then>
-                                <Else>
-                                    {()=>{
-                                        return <CoExpressionTab store={store} />
-                                    }}
-                                </Else>
-                            </If>
+                            <CoExpressionTab store={store} />
                         </MSKTab>
                     );
                 },
