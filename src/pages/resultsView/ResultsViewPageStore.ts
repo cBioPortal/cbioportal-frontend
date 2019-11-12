@@ -218,7 +218,7 @@ export const AlterationTypeConstants = {
     FUSION: 'FUSION',
     GENESET_SCORE: 'GENESET_SCORE',
     METHYLATION: 'METHYLATION',
-    GENERIC_ASSAY: 'GENERIC_ASSAY',
+    GENERIC_ASSAY: 'TREATMENT',
 };
 
 export const AlterationTypeDisplayConstants = {
