@@ -14,7 +14,7 @@ var {
 } = require('../../../shared/specUtils');
 
 
-describe.skip("coexpression tab screenshot tests", function() {
+describe("coexpression tab screenshot tests", function() {
 
     this.retries(2);
 
