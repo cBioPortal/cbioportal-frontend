@@ -1,5 +1,5 @@
 import * as React from "react";
-import {CoExpression, Geneset} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {Geneset} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {Gene} from "../../../shared/api/generated/CBioPortalAPI";
 import {correlationColor, correlationSortBy} from "./CoExpressionTableUtils";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
@@ -26,12 +26,12 @@ const Q_VALUE_COLUMN_NAME = "q-Value";
 const COLUMNS = [
     {
         name: "Correlated Gene Set",
-        render: (d:CoExpression)=>(<span style={{fontWeight:"bold"}}>{d.geneticEntityName.length > 28 ? 
+        render: (d:CoExpressionWithQ)=>(<span style={{fontWeight:"bold"}}>{d.geneticEntityName.length > 28 ? 
             d.geneticEntityName.substring(0, 25) + "..." : 
             d.geneticEntityName}</span>),
-        filter:(d:CoExpression, f:string, filterStringUpper:string)=>(d.geneticEntityName.indexOf(filterStringUpper) > -1),
-        download:(d:CoExpression)=>d.geneticEntityName,
-        sortBy:(d:CoExpression)=>d.geneticEntityName,
+        filter:(d:CoExpressionWithQ, f:string, filterStringUpper:string)=>(d.geneticEntityName.indexOf(filterStringUpper) > -1),
+        download:(d:CoExpressionWithQ)=>d.geneticEntityName,
+        sortBy:(d:CoExpressionWithQ)=>d.geneticEntityName,
         width:"60%"
     },
     makeNumberColumn(SPEARMANS_CORRELATION_COLUMN_NAME, "spearmansCorrelation", true, false),
