@@ -19,6 +19,7 @@ import DownloadControls from "../../../public-lib/components/downloadControls/Do
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import PatientViewMutationTable from "./PatientViewMutationTable";
 import {GeneFilterOption} from "./GeneFilterMenu";
+import {isFusion} from "../../../shared/lib/MutationUtils";
 
 export interface IPatientViewMutationsTabProps {
     store:PatientViewPageStore;
@@ -76,7 +77,7 @@ export const LOCAL_STORAGE_PLOT_TAB_KEY = "patient_view_mutations_tab__vaf_plot_
 
 @observer
 export default class PatientViewMutationsTab extends React.Component<IPatientViewMutationsTabProps, {}> {
-    private dataStore = new PatientViewMutationsDataStore(()=>this.props.store.mergedMutationDataIncludingUncalledFilteredByGene);
+    private dataStore = new PatientViewMutationsDataStore(()=>this.mergedMutations);
     private vafLineChartSvg:SVGElement|null = null;
     @observable vafLineChartLogScale = false;
     @observable vafLineChartZeroToOneYAxis = true;
@@ -97,6 +98,13 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
     @autobind
     private vafLineChartSvgRef(elt:SVGElement|null) {
         this.vafLineChartSvg = elt;
+    }
+
+    @computed get mergedMutations() {
+        // remove fusions
+        return this.props.store.mergedMutationDataIncludingUncalledFilteredByGene.filter(mutationArray=>{
+            return !isFusion(mutationArray[0]);
+        });
     }
 
     readonly vafLineChart = MakeMobxView({
@@ -139,7 +147,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     />
                 </div>
                 <VAFLineChart
-                    mutations={this.props.store.mergedMutationDataIncludingUncalledFilteredByGene}
+                    mutations={this.mergedMutations}
                     dataStore={this.dataStore}
                     samples={this.props.store.samples.result!}
                     coverageInformation={this.props.store.coverageInformation.result!}

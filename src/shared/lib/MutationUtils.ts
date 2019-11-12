@@ -13,6 +13,7 @@ import {
     MUT_COLOR_TRUNC
 } from "shared/lib/Colors";
 import {normalizeMutations} from "../components/mutationMapper/MutationMapperUtils";
+import {getSimplifiedMutationType} from "./oql/AccessorsForOqlFilter";
 
 
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
@@ -21,6 +22,10 @@ export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     truncatingColor: MUT_COLOR_TRUNC,
     otherColor: MUT_COLOR_OTHER
 };
+
+export function isFusion(mutation:Mutation) {
+    return getSimplifiedMutationType(mutation.mutationType) === "fusion";
+}
 
 export function isUncalled(molecularProfileId:string) {
     const r = new RegExp(MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX + "$");
