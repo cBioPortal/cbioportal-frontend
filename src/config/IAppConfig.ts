@@ -52,6 +52,7 @@ export interface IServerConfig {
     pubmed_url: string | null;
     priority_studies: string | null;
     api_cache_limit: number;
+    enable_persistent_cache: boolean;
     show_hotspot: boolean | undefined;
     show_oncokb: boolean;
     show_civic: boolean;
