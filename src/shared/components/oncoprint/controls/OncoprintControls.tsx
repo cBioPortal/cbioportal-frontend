@@ -207,6 +207,7 @@ export default class OncoprintControls extends React.Component<
     @observable heatmapGenesReady = false;
     @observable private _selectedTreatmentIds: string[] = [];
     private textareaTreatmentText = '';
+    @observable treatmentFilter = '';
 
     constructor(props: IOncoprintControlsProps) {
         super(props);
@@ -568,9 +569,40 @@ export default class OncoprintControls extends React.Component<
         }));
     }
     
+    @computed get filteredTreatmentOptions() {
+        if (this.treatmentFilter && this.props.treatmentSelectOptions) {
+            const regex = new RegExp(this.treatmentFilter, 'i');
+            return this.props.treatmentSelectOptions.filter(
+                option => regex.test(option.label) || regex.test(option.value)
+            );
+        }
+        return this.props.treatmentSelectOptions;
+    }
+
+    @autobind
+    @action
+    onInputChange(input: string) {
+        this.treatmentFilter = input;
+    }
+
+    @autobind onAddAllTreatments() {
+        if (this.filteredTreatmentOptions) {
+            // merge the current selected options with all the filtered ones and remove duplicates
+            this.onSelectTreatments(
+                _.uniqBy(
+                    [
+                        ...this.selectedTreatmentsJS,
+                        ...this.filteredTreatmentOptions,
+                    ],
+                    option => option.value
+                )
+            );
+        }
+    }
+
     @computed get addAllLabel() {
-        if (this.props.treatmentSelectOptions) {
-            return `Select all (${this.props.treatmentSelectOptions.length})`;
+        if (this.filteredTreatmentOptions) {
+            return `Select all (${this.filteredTreatmentOptions.length})`;
         }
         return 'Select all';
     }
@@ -617,7 +649,7 @@ export default class OncoprintControls extends React.Component<
             this.props.state.hideHeatmapMenu ||
             !this.props.state.heatmapProfilesPromise
         ) {
-            return <span />;
+            return null;
         }
         let menu = <LoadingIndicator isLoading={true} />;
         if (this.props.state.heatmapProfilesPromise.isComplete) {
@@ -665,6 +697,7 @@ export default class OncoprintControls extends React.Component<
                                         this.onChangeTreatmentTextArea
                                     }
                                     onIconClicked={this.onTreatmentRemoved}
+                                    classNames={['treatment-textarea']}
                                 />,
                                 <div
                                     className={classNames('treatment-selector')}
@@ -672,10 +705,13 @@ export default class OncoprintControls extends React.Component<
                                     <CheckedSelect
                                         name="treatment-select"
                                         placeholder="Search for Treatments..."
-                                        options={this.props.treatmentSelectOptions}
+                                        options={this.filteredTreatmentOptions}
                                         onChange={this.onSelectTreatments}
-                                        value={this.selectedTreatments}
+                                        value={this.selectedTreatmentsJS}
+                                        onInputChange={this.onInputChange}
                                         addAllLabel={this.addAllLabel}
+                                        onAddAll={this.onAddAllTreatments}
+                                        inputValue={this.treatmentFilter}
                                     />
                                 </div>,
                                 <button
@@ -916,23 +952,25 @@ export default class OncoprintControls extends React.Component<
                                 Type
                             </label>
                         </div>
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="ColorByGermline"
-                                    type="checkbox"
-                                    value={
-                                        EVENT_KEY.distinguishGermlineMutations
-                                    }
-                                    checked={
-                                        this.props.state
-                                            .distinguishGermlineMutations
-                                    }
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Somatic vs Germline
-                            </label>
-                        </div>
+                        { !this.props.oncoprinterMode && (
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        data-test="ColorByGermline"
+                                        type="checkbox"
+                                        value={
+                                            EVENT_KEY.distinguishGermlineMutations
+                                        }
+                                        checked={
+                                            this.props.state
+                                                .distinguishGermlineMutations
+                                        }
+                                        onClick={this.onInputClick}
+                                    />{' '}
+                                    Somatic vs Germline
+                                </label>
+                            </div>
+                        )}
                         <div className="checkbox">
                             <label>
                                 <input
@@ -1257,20 +1295,22 @@ export default class OncoprintControls extends React.Component<
                                 unknown significance
                             </label>
                         </div>
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="HideGermline"
-                                    type="checkbox"
-                                    value={EVENT_KEY.hideGermlineMutations}
-                                    checked={
-                                        this.props.state.hideGermlineMutations
-                                    }
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Hide germline mutations
-                            </label>
-                        </div>
+                        { !this.props.oncoprinterMode && (
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        data-test="HideGermline"
+                                        type="checkbox"
+                                        value={EVENT_KEY.hideGermlineMutations}
+                                        checked={
+                                            this.props.state.hideGermlineMutations
+                                        }
+                                        onClick={this.onInputClick}
+                                    />{' '}
+                                    Hide germline mutations
+                                </label>
+                            </div>
+                        )}
                     </div>
                 </div>
             </CustomDropdown>
@@ -1314,6 +1354,17 @@ export default class OncoprintControls extends React.Component<
                             onClick={this.onInputClick}
                         />{' '}
                         Show whitespace between columns
+                    </label>
+                </div>
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            value={EVENT_KEY.showClinicalTrackLegends}
+                            checked={this.props.state.showClinicalTrackLegends}
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Show legends for clinical tracks
                     </label>
                 </div>
             </CustomDropdown>
@@ -1551,12 +1602,11 @@ export default class OncoprintControls extends React.Component<
                     <Button
                         active={this.showMinimap}
                         onClick={this.toggleShowMinimap}
-                        className="oncoprint__controls__minimap_button"
                     >
                         <img
                             src={require('./toggle-minimap.svg')}
                             alt="icon"
-                            style={{ width: 15, height: 15, margin: 2 }}
+                            style={{ width: 15, height: 15 }}
                         />
                     </Button>
                 </DefaultTooltip>

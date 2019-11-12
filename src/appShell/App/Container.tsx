@@ -12,7 +12,7 @@ import Helmet from "react-helmet";
 import {computed} from "mobx";
 import { If, Else, Then } from 'react-if';
 import UserMessager from "shared/components/userMessager/UserMessage";
-import {formatError} from "shared/lib/errorFormatter";
+import {formatErrorLog, formatErrorTitle, formatErrorMessages} from "shared/lib/errorFormatter";
 import {buildCBioPortalPageUrl} from "shared/api/urls";
 import ErrorScreen from "shared/components/errorScreen/ErrorScreen";
 import { ServerConfigHelpers } from 'config/config';
@@ -79,9 +79,10 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         <Then>
                             <div className="contentWrapper">
                                 <ErrorScreen
-                                    title={"Oops. There was an error retrieving data."}
+                                    title={formatErrorTitle(this.appStore.undismissedSiteErrors) || "Oops. There was an error retrieving data."}
                                     body={<a href={buildCBioPortalPageUrl("/")}>Return to homepage</a>}
-                                    errorLog={formatError(this.appStore.undismissedSiteErrors)}
+                                    errorLog={formatErrorLog(this.appStore.undismissedSiteErrors)}
+                                    errorMessages={formatErrorMessages(this.appStore.undismissedSiteErrors)}
                                 />
                             </div>
                         </Then>

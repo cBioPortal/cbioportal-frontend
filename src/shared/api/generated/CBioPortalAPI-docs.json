@@ -2401,8 +2401,8 @@
         "tags": [
           "D. Samples"
         ],
-        "summary": "Get all samples",
-        "operationId": "getAllSamplesUsingGET",
+        "summary": "Get all samples matching keyword",
+        "operationId": "getSamplesByKeywordUsingGET",
         "produces": [
           "application/json"
         ],
