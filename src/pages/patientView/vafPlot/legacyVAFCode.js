@@ -1,5 +1,8 @@
 import * as d3 from 'd3';
 
+const GENEPANEL_ICON_WIDTH = 1.25;
+const GENEPANEL_ICON_HEIGHT = 1.1;
+
 const AlleleFreqPlotUtils = (function() {
     var NO_DATA = undefined;       // this was set by the patient view
 
@@ -92,7 +95,7 @@ const AlleleFreqPlotUtils = (function() {
     };
 }());
 
-export const AlleleFreqPlotMulti = function(component, data, options, order, colors, labels) {
+export const AlleleFreqPlotMulti = function(component, data, options, order, colors, labels, genepanel_icon_data) {
     // If nolegend is false, the div this is called on must be attached and
     // rendered at call time or else Firefox will throw an error on the call
     // to getBBox
@@ -189,6 +192,7 @@ export const AlleleFreqPlotMulti = function(component, data, options, order, col
     var svg = d3.select(div).append("svg")
         .attr("width", width + margin.left + (options.yticks === 0 ? 0 : margin.right) + (options.nolegend? 0 : 100))
         .attr("height", height + margin.top + margin.bottom)
+        .attr("data-test", 'vaf-plot')
         .append("g")
         .attr("transform", "translate(" + (options.yticks === 0 ? margin.left / 2 : margin.left) + "," + margin.top + ")");
 
@@ -322,7 +326,7 @@ export const AlleleFreqPlotMulti = function(component, data, options, order, col
                 .attr('transform', 'translate('+(width+25)+',0)')
                 .style('font-size', legend_font_size+"px")
             ;
-        d3.legend(component, legend, legend_font_size, labels, order);
+        d3.legend(component, legend, legend_font_size, labels, order, genepanel_icon_data);
     }
     return div;
 };
@@ -352,7 +356,7 @@ var showSamples = function (div, show_histogram, show_curve) {
         $(div).find('.viz_curve').show();
     }
 }
-d3.legend = function(component, g, font_size, labels, order) {
+d3.legend = function(component, g, font_size, labels, order, genepanel_icon_data) {
     g.each(function() {
         var g= d3.select(this),
             items = {},
@@ -377,12 +381,14 @@ d3.legend = function(component, g, font_size, labels, order) {
 
         var maxLabelLength = 10;
         var spacing = 0.4;
+
+        // sample name text
         li.selectAll("text")
             .data(items,function(d) { return d.key;})
             .call(function(d) { d.enter().append("text");})
             .call(function(d) { d.exit().remove();})
-            .attr("y",function(d,i) { return (i-0.1+i*spacing)+"em";})
-            .attr("x","1em")
+            .attr("y",function(d,i) { return (i-0.2+i*spacing)+"em";})
+            .attr("x", 0.75+GENEPANEL_ICON_WIDTH+'em')
             .text(function(d) {
                 var key = d.key;
                 var label = key.length > maxLabelLength ? key.substring(0,4) + "..." + key.slice(-3) : key;
@@ -394,29 +400,64 @@ d3.legend = function(component, g, font_size, labels, order) {
             .call(function(d) { d.enter().append("circle");})
             .call(function(d) { d.exit().remove()})
             .attr("cy",function(d,i) { return (i-0.5+i*spacing)+"em"})
-            .attr("cx",0)
+            .attr("cx",GENEPANEL_ICON_WIDTH+'em')
             .attr("r","0.5em")
             .style("fill",function(d) { return d.value.color;})
         ;
+
+        // sample index icon text
         for (var i=0, keys=Object.keys(items); i<keys.length; i++) {
             li.append("text")
-                .attr("x",0)
+                .attr("x",0.4+GENEPANEL_ICON_WIDTH+'em')
                 .attr("y", (i-0.5+i*spacing)*font_size)
                 .attr("fill","white")
                 .attr("font-size","10")
                 .attr("dy","0.34em")
                 .attr("text-anchor","middle")
                 .text(labels[items[keys[i]].key])
+                .attr("class", "sample-icon-text")
             ;
         }
-        li.selectAll("rect")
+
+        // gene panel icon
+        for (var i=0, keys=Object.keys(items); i<keys.length; i++) {
+            var sample_id = items[i].key;
+            if (Object.keys(genepanel_icon_data).includes(sample_id)) {
+
+                var label = genepanel_icon_data[sample_id].label;
+                var color = genepanel_icon_data[sample_id].color;
+
+                li.append("rect")
+                    .attr("x",'-0.75em')
+                    .attr("y", (i-1.06+i*spacing)+"em")
+                    .attr('width',function(d) {return GENEPANEL_ICON_WIDTH+'em'})
+                    .attr('height',function(d) {return GENEPANEL_ICON_HEIGHT+'em'})
+                    .attr('rx', 4)
+                    .attr('ry', 4)
+                    .attr("fill",function(d) {return color})
+                    .attr("class", "genepanel-icon")
+                    ;
+                li.append("text")
+                    .attr("x","-0.15em")
+                    .attr("y", (i-0.5+i*spacing)*font_size)
+                    .attr("fill","white")
+                    .attr("font-size","10")
+                    .attr("dy","0.34em")
+                    .attr("text-anchor","middle")
+                    .text(label)
+                    .attr("class", "genepanel-icon-text")
+                ;
+            };
+        }
+
+        li.selectAll("rect:not(.genepanel-icon)")
             .data(items, function(d) { return d.key;})
             .call(function(d) { d.enter().append("rect");})
             .call(function(d) { d.exit().remove();})
             .attr("id", function(d) { return d.key+"legend_hover_rect";})
             .attr("y", function(d,i) { return (i-1+i*spacing-spacing/2)+"em";})
-            .attr("x","-0.8em")
-            .attr('width',function(d) { return '110px';})
+            .attr("x","-1em")
+            .attr('width',function(d) { return '117px';})
             .attr('height',(1+spacing)+'em')
             .style('fill',function(d) { return d.value.color;})
             .attr('opacity', '0')
@@ -445,6 +486,7 @@ d3.legend = function(component, g, font_size, labels, order) {
             .attr("y",(lbbox.y-legendPadding))
             .attr("height",(lbbox.height+2*legendPadding))
             .attr("width",(lbbox.width+2*legendPadding));
+
     });
     return g;
 };
