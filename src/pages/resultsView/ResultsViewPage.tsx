@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import $ from 'jquery';
+import {If, Then, Else} from 'react-if';
 import URL from 'url';
 import { inject, observer } from 'mobx-react';
 import { computed, observable, reaction, runInAction } from 'mobx';
@@ -13,7 +14,6 @@ import DownloadTab from './download/DownloadTab';
 import AppConfig from 'appConfig';
 import CNSegments from './cnSegments/CNSegments';
 import './styles.scss';
-import Network from './network/Network';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
 import ExpressionWrapper from './expression/ExpressionWrapper';
@@ -342,7 +342,18 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.COEXPRESSION}
                             linkText={'Co-expression'}
                         >
-                            <CoExpressionTab store={store} />
+                            <If condition={getBrowserWindow().location.hostname.includes("cbioportal.org")}>
+                                <Then>
+                                    <div className={"alert alert-info"}>
+                                        The Coexpression feature is temporarily down for maintenance (11/7/2019).  Please check again tomorrow.
+                                    </div>
+                                </Then>
+                                <Else>
+                                    {()=>{
+                                        return <CoExpressionTab store={store} />
+                                    }}
+                                </Else>
+                            </If>
                         </MSKTab>
                     );
                 },
@@ -417,13 +428,7 @@ export default class ResultsViewPage extends React.Component<
             {
                 id: ResultsViewTab.NETWORK,
                 hide: () => {
-                    if (!this.resultsViewPageStore.studies.isComplete) {
-                        return true;
-                    } else {
-                        return (
-                            this.resultsViewPageStore.studies.result!.length > 1
-                        );
-                    }
+                    return true;
                 },
                 getTab: () => {
                     return (
@@ -432,36 +437,10 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.NETWORK}
                             linkText={'Network'}
                         >
-                            {store.studies.isComplete &&
-                                store.sampleLists.isComplete &&
-                                store.samples.isComplete && (
-                                    <Network
-                                        genes={store.genes.result!}
-                                        profileIds={
-                                            store.rvQuery
-                                                .selectedMolecularProfileIds
-                                        }
-                                        cancerStudyId={
-                                            store.studies.result.length > 0
-                                                ? store.studies.result![0]
-                                                      .studyId
-                                                : ''
-                                        }
-                                        zScoreThreshold={
-                                            store.rvQuery.zScoreThreshold
-                                        }
-                                        caseSetId={
-                                            store.sampleLists.result!.length > 0
-                                                ? store.sampleLists.result![0]
-                                                      .sampleListId
-                                                : '-1'
-                                        }
-                                        sampleIds={store.samples.result.map(
-                                            sample => sample.sampleId
-                                        )}
-                                        caseIdsKey={''}
-                                    />
-                                )}
+                            <div className="alert alert-info">The Network tab has been retired. For similar
+                                functionality, please visit <a href="http://www.pathwaycommons.org/pcviz/"
+                                                               target="_blank">http://www.pathwaycommons.org/pcviz/</a>
+                            </div>
                         </MSKTab>
                     );
                 },

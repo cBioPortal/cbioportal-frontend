@@ -44,7 +44,7 @@ export default class GeneColumnFormatter
         const text = GeneColumnFormatter.getDisplayValue(data);
 
         return (
-                <span>{text}</span>
+                <span data-test="mutation-table-gene-column">{text}</span>
         );
     }
 }
