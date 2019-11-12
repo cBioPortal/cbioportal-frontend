@@ -876,12 +876,14 @@ export default class OncoprintControls extends React.Component<
             return (
                 <>
                     <h5>Annotate</h5>
-                    <DriverAnnotationControls
-                        state={this.props.state}
-                        handlers={Object.assign({
-                            onCustomDriverTierCheckboxClick: this.onCustomDriverTierCheckboxClick
-                        } as Partial<IDriverAnnotationControlsHandlers>, this.props.handlers)}
-                    />
+                    <div style={{ marginLeft: 10 }}>
+                        <DriverAnnotationControls
+                            state={this.props.state}
+                            handlers={Object.assign({
+                                onCustomDriverTierCheckboxClick: this.onCustomDriverTierCheckboxClick
+                            } as Partial<IDriverAnnotationControlsHandlers>, this.props.handlers)}
+                        />
+                    </div>
 
                     <h5>Filter</h5>
                     <div style={{ marginLeft: 10 }}>
@@ -901,20 +903,6 @@ export default class OncoprintControls extends React.Component<
                                 />{' '}
                                 Hide mutations and copy number alterations of
                                 unknown significance
-                            </label>
-                        </div>
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="HideGermline"
-                                    type="checkbox"
-                                    value={EVENT_KEY.hideGermlineMutations}
-                                    checked={
-                                        this.props.state.hideGermlineMutations
-                                    }
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Hide germline mutations
                             </label>
                         </div>
                     </div>
