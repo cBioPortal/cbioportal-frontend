@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
     ClinicalData, MolecularProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
     CopyNumberCount, ClinicalDataMultiStudyFilter, ReferenceGenomeGene, GenePanelData, GenePanel
@@ -7,7 +6,7 @@ import {
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 import {
-    Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
+    default as CBioPortalAPIInternal
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action, runInAction} from "mobx";
 import {remoteData} from "../../../public-lib/api/remoteData";
@@ -26,7 +25,6 @@ import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotIndex, indexHotspotsData} from "react-mutation-mapper";
-import {IMutSigData} from "shared/model/MutSig";
 import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
@@ -78,14 +76,16 @@ import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../public-lib/lib/StringUtils";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation } from 'public-lib/api/generated/GenomeNexusAPI';
-import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
-import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
 import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import { fetchTrialsById, fetchTrialMatchesUsingPOST } from "../../../shared/api/MatchMinerAPI";
 import { IDetailedTrialMatch, ITrial, ITrialMatch, ITrialQuery } from "../../../shared/model/MatchMiner";
 import { groupTrialMatchesById } from "../trialMatch/TrialMatchTableUtils";
-
+import { GeneFilterOption } from '../mutation/GeneFilterMenu';
+import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
+import { AppStore, SiteError } from 'AppStore';
+import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
+import getBrowserWindow from 'public-lib/lib/getBrowserWindow';
 
 type PageMode = 'patient' | 'sample';
 
@@ -129,6 +129,14 @@ export function handlePathologyReportCheckResponse(patientId: string, resp: any)
 
 }
 
+export function filterMutationsByProfiledGene(mutationRows:Mutation[][], sampleIds:string[], sampleToGenePanelId:{[sampleId:string]:string}, genePanelIdToEntrezGeneIds:{[sampleId:string]:number[]}):Mutation[][] {
+    return _.filter(mutationRows,(mutations:Mutation[]) => {
+        const entrezGeneId = mutations[0].gene.entrezGeneId;
+        const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(entrezGeneId, sampleIds, sampleToGenePanelId, genePanelIdToEntrezGeneIds);
+        return _(geneProfiledInSamples).values().filter((profiled:boolean) => profiled).value().length === sampleIds.length;
+    });
+}
+
 /*
  * Transform clinical data from API to clinical data shape as it will be stored
  * in the store
@@ -149,7 +157,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
 
 export class PatientViewPageStore {
 
-    constructor() {
+    constructor(private appStore: AppStore) {
         labelMobxPromises(this);
         this.internalClient = internalClient;
     }
@@ -173,6 +181,9 @@ export class PatientViewPageStore {
     @observable studyId = '';
 
     @observable _sampleId = '';
+
+    @observable public mutationTableGeneFilterOption:GeneFilterOption = getGeneFilterDefault(getBrowserWindow().frontendConfig);
+    @observable public copyNumberTableGeneFilterOption:GeneFilterOption = getGeneFilterDefault(getBrowserWindow().frontendConfig);
 
     @computed get sampleId() {
         return this._sampleId;
@@ -267,6 +278,9 @@ export class PatientViewPageStore {
     readonly samples = remoteData(
         {
             invoke: async () => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
+            onError: (err: Error) => {
+                this.appStore.siteErrors.push({errorObj: err, dismissed: false, title:"Samples / Patients not valid"} as SiteError);
+            }
         },
         []
     );
@@ -838,9 +852,34 @@ export class PatientViewPageStore {
     @computed get mergedMutationData(): Mutation[][] {
         return mergeMutations(this.mutationData);
     }
-
+    
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
         return mergeMutationsIncludingUncalled(this.mutationData, this.uncalledMutationData);
+    }
+    
+    @computed get mergedMutationDataFilteredByGene():Mutation[][] {
+        if (this.mutationTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
+            return filterMutationsByProfiledGene(this.mergedMutationData, this.sampleIds, this.sampleToMutationGenePanelId.result, this.genePanelIdToEntrezGeneIds.result);
+        }
+        return this.mergedMutationData;
+    }
+
+    @computed get mergedMutationDataIncludingUncalledFilteredByGene():Mutation[][] {
+        if (this.mutationTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
+            return filterMutationsByProfiledGene(this.mergedMutationDataIncludingUncalled, this.sampleIds, this.sampleToMutationGenePanelId.result, this.genePanelIdToEntrezGeneIds.result);
+        }
+        return this.mergedMutationDataIncludingUncalled;
+    }
+
+    @computed get mergedDiscreteCNADataFilteredByGene():DiscreteCopyNumberData[][] {
+        if (this.copyNumberTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
+            return _.filter(this.mergedDiscreteCNAData,(mutations:DiscreteCopyNumberData[]) => {
+                const entrezGeneId = mutations[0].gene.entrezGeneId;
+                const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(entrezGeneId, this.sampleIds, this.sampleToMutationGenePanelId.result, this.genePanelIdToEntrezGeneIds.result);
+                return _(geneProfiledInSamples).values().filter((profiled:boolean) => profiled).value().length === this.sampleIds.length;
+            });
+        }
+        return this.mergedDiscreteCNAData;
     }
 
     @computed get uniqueSampleKeyToTumorType(): {[sampleId: string]: string} {

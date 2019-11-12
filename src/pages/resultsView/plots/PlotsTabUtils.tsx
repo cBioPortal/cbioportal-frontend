@@ -858,8 +858,9 @@ export function getAxisLabel(
             }
             break;
         case AlterationTypeConstants.GENERIC_ASSAY:
-            if (profile && selection.treatmentId !== undefined) {
-                label = `${selection.treatmentId}: ${profile.name}`;
+            if (!!(profile && selection.selectedTreatmentOption && selection.selectedTreatmentOption.label)) {
+                const treatmentName = selection.selectedTreatmentOption.label;
+                label = `${treatmentName}: ${profile.name}`;
             }
             break;
         default:

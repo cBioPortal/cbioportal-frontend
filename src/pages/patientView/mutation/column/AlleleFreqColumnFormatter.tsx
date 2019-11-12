@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import SampleManager from "../../sampleManager";
+import SampleManager from "../../SampleManager";
 import {isUncalled} from 'shared/lib/MutationUtils';
 import {getFormattedFrequencyValue} from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
 

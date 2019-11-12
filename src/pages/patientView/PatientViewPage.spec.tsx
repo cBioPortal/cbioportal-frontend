@@ -1,8 +1,9 @@
 import  PatientViewPage from './PatientViewPage';
 import React from 'react';
 import {assert} from 'chai';
-import {shallow, mount} from 'enzyme';
 import sinon from 'sinon';
+import PatientViewUrlWrapper from './PatientViewUrlWrapper';
+import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 
 const componentUnderTest: PatientViewPage = (PatientViewPage as any).wrappedComponent;
 
@@ -13,10 +14,16 @@ describe('PatientViewPage', () => {
 
         const handleSampleClick = (componentUnderTest as any).prototype.handleSampleClick;
 
-        let updateRouteStub: sinon.SinonStub, preventDefaultStub: sinon.SinonStub, mock: any, ev: Partial<React.MouseEvent<HTMLAnchorElement>>;
+        let updateRouteStub: sinon.SinonStub,
+        urlWrapper: PatientViewUrlWrapper,
+        preventDefaultStub: sinon.SinonStub,
+        mock: any,
+        ev: Partial<React.MouseEvent<HTMLAnchorElement>>;
 
         beforeEach(() => {
             updateRouteStub = sinon.stub();
+            urlWrapper = new PatientViewUrlWrapper(new ExtendedRouterStore());
+            urlWrapper.updateQuery = updateRouteStub;
             preventDefaultStub = sinon.stub();
 
             mock = {
@@ -24,7 +31,8 @@ describe('PatientViewPage', () => {
                     routing: {
                         updateRoute: updateRouteStub
                     }
-                }
+                },
+                urlWrapper: urlWrapper,
             };
 
             ev = {

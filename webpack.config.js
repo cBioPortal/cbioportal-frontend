@@ -157,7 +157,6 @@ var config = {
             {from: './common-dist', to: 'reactapp'},
             {from: './src/rootImages', to: 'images'},
             {from: './src/common', to: 'common'},
-            {from: './src/pages/resultsView/network', to: 'reactapp/network'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css', to: 'reactapp/prefixed-bootstrap.min.css'},
             {from: './src/shared/lib/data/reference_genome_hg19.json', to: 'reactapp/reference_genome_hg19.json'},
             {from: './src/shared/legacy/igv.min.js', to: 'reactapp/igv.min.js'},
