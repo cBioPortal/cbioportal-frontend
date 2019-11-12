@@ -14,7 +14,7 @@ function hash(str: string) {
     return hash;
 }
 
-function getHash(obj: any) {
+export function getHash(obj: any) {
     return hash(JSON.stringify(obj));
 }
 

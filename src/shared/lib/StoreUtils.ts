@@ -198,12 +198,6 @@ export async function fetchAllReferenceGenomeGenes(
     genomeName: string,
     client: CBioPortalAPI = defaultClient
 ) {
-    if (AppConfig.serverConfig.app_name === 'public-portal') {
-        // this is temporary
-        return $.get(
-            getFrontendAssetUrl('reactapp/reference_genome_hg19.json')
-        );
-    }
     if (genomeName) {
         return await client.getAllReferenceGenomeGenesUsingGET({
             genomeName: genomeName,

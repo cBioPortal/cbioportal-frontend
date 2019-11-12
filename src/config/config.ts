@@ -36,6 +36,10 @@ import {
 import AppConfig from 'appConfig';
 import { sendSentryMessage } from '../shared/lib/tracking';
 import { log } from '../shared/lib/consoleLog';
+import {
+    EndpointUpdateInfo,
+    cacheMethods,
+} from 'shared/api/persistentApiClientCache';
 
 const config: any = (window as any).frontendConfig || { serverConfig: {} };
 
@@ -171,6 +175,34 @@ function cachePostMethods(
     );
 }
 
+function persistantlyCacheMethods(
+    api: any,
+    included: EndpointUpdateInfo[]
+): void {
+    if (AppConfig.serverConfig.enable_persistent_cache) {
+        cacheMethods(api, included, log);
+    }
+}
+
+/**
+ * These requests return static or slow to change data.
+ * The responses are cached in the persistent api cache,
+ * which uses IndexedDb for storage.
+ *
+ * When adding to this list, add the method with the
+ * "WithHttpInfo" suffix. The cache needs the request.Response
+ * object to determine whether or not the response should be
+ * cached. Since the normal GET method uses the
+ * GETWithHttpInfo, the corresponding GET method will
+ * still be leveraging the persistent cache.
+ */
+const CBIO_STATIC_ENDPOINTS = [
+    {
+        tables: ['gene', 'reference_genome_gene'],
+        endpoint: 'getAllReferenceGenomeGenesUsingGETWithHttpInfo',
+    },
+];
+
 export function initializeAPIClients() {
     // we need to set the domain of our api clients
     (client as any).domain = getCbioPortalApiUrl();
@@ -191,6 +223,8 @@ export function initializeAPIClients() {
     cachePostMethods(GenomeNexusAPI, [], /POST$/);
     cachePostMethods(GenomeNexusAPIInternal, [], /POST$/);
     cachePostMethods(OncoKbAPI);
+
+    persistantlyCacheMethods(CBioPortalAPI, CBIO_STATIC_ENDPOINTS);
 }
 
 export function initializeConfiguration() {
