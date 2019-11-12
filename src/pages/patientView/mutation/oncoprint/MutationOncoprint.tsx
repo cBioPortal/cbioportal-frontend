@@ -56,6 +56,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     private oncoprintComponent:Oncoprint|null = null;
     @observable private showMutationLabels = true;
     @observable private horzZoomSliderState = 100;
+    @observable clustered = true;
     @observable private mode:MutationOncoprintMode = MutationOncoprintMode.SAMPLE_TRACKS;
 
     constructor(props:IMutationOncoprintProps) {
@@ -113,8 +114,6 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             }
         });
     }
-
-    @observable clustered = true;
 
     readonly sortConfig = remoteData<IOncoprintProps["sortConfig"]>({
         await:()=>[this.sampleIdOrder],
@@ -495,6 +494,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     checked={this.clustered}
                     onChange={()=>{ this.clustered = !this.clustered; }}
                     labelProps={{style:{ marginRight:10}}}
+                    inputProps={{"data-test":"HeatmapCluster"}}
                 >
                     <span style={{marginTop:-3}}>Cluster</span>
                 </LabeledCheckbox>
@@ -502,6 +502,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     checked={this.mode === MutationOncoprintMode.MUTATION_TRACKS}
                     onChange={()=>{ this.mode = (this.mode === MutationOncoprintMode.MUTATION_TRACKS ? MutationOncoprintMode.SAMPLE_TRACKS : MutationOncoprintMode.MUTATION_TRACKS); }}
                     labelProps={{style:{ marginRight:10}}}
+                    inputProps={{"data-test":"HeatmapTranspose"}}
                 >
                     <span style={{marginTop:-3}}>Transpose</span>
                 </LabeledCheckbox>
@@ -509,6 +510,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     checked={this.showMutationLabels}
                     onChange={()=>{ this.showMutationLabels = !this.showMutationLabels; }}
                     labelProps={{style:{ marginRight:10}}}
+                    inputProps={{"data-test":"HeatmapMutationLabels"}}
                 >
                     <span style={{marginTop:-3}}>Show mutation labels</span>
                 </LabeledCheckbox>
