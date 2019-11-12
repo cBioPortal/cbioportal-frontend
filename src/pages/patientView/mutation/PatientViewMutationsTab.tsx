@@ -18,6 +18,7 @@ import MutationOncoprint from "./oncoprint/MutationOncoprint";
 import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import PatientViewMutationTable from "./PatientViewMutationTable";
+import {GeneFilterOption} from "./GeneFilterMenu";
 
 export interface IPatientViewMutationsTabProps {
     store:PatientViewPageStore;
@@ -75,10 +76,10 @@ export const LOCAL_STORAGE_PLOT_TAB_KEY = "patient_view_mutations_tab__vaf_plot_
 
 @observer
 export default class PatientViewMutationsTab extends React.Component<IPatientViewMutationsTabProps, {}> {
-    private dataStore = new PatientViewMutationsDataStore(()=>this.props.store.mergedMutationDataIncludingUncalled);
+    private dataStore = new PatientViewMutationsDataStore(()=>this.props.store.mergedMutationDataIncludingUncalledFilteredByGene);
     private vafLineChartSvg:SVGElement|null = null;
     @observable vafLineChartLogScale = false;
-    @observable vafLineChartFixedAxis = false;
+    @observable vafLineChartZeroToOneYAxis = true;
     // TODO: replace this with URL stuff
     @observable private _plotTab = localStorage.getItem(LOCAL_STORAGE_PLOT_TAB_KEY) || PlotTab.LINE_CHART;
 
@@ -123,11 +124,11 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                         <span style={{marginTop:-3}}>Log scale</span>
                     </LabeledCheckbox>
                     <LabeledCheckbox
-                        checked={this.vafLineChartFixedAxis}
-                        onChange={()=>{ this.vafLineChartFixedAxis = !this.vafLineChartFixedAxis; }}
+                        checked={!this.vafLineChartZeroToOneYAxis}
+                        onChange={()=>{ this.vafLineChartZeroToOneYAxis = !this.vafLineChartZeroToOneYAxis; }}
                         labelProps={{style:{ marginRight:10}}}
                     >
-                        <span style={{marginTop:-3}}>Fix axis range to 0-1</span>
+                        <span style={{marginTop:-3}}>Set y-axis to data range</span>
                     </LabeledCheckbox>
                     <DownloadControls
                         filename="vafHeatmap"
@@ -138,7 +139,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     />
                 </div>
                 <VAFLineChart
-                    mutations={this.props.store.mergedMutationDataIncludingUncalled}
+                    mutations={this.props.store.mergedMutationDataIncludingUncalledFilteredByGene}
                     dataStore={this.dataStore}
                     samples={this.props.store.samples.result!}
                     coverageInformation={this.props.store.coverageInformation.result!}
@@ -146,7 +147,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     sampleManager={this.props.sampleManager}
                     svgRef={this.vafLineChartSvgRef}
                     logScale={this.vafLineChartLogScale}
-                    zeroToOneAxis={this.vafLineChartFixedAxis}
+                    zeroToOneAxis={this.vafLineChartZeroToOneYAxis}
                 />
             </div>
         ),
@@ -168,6 +169,11 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
     @autobind
     private onTableRowMouseLeave() {
         this.dataStore.setMouseOverMutation(null);
+    }
+
+    @autobind
+    private onFilterGenesMutationTable(option:GeneFilterOption):void {
+        this.props.store.mutationTableGeneFilterOption = option;
     }
 
     readonly table = MakeMobxView({
@@ -193,8 +199,11 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                 </div>
                 <PatientViewMutationTable
                     dataStore={this.dataStore}
+
                     showGeneFilterMenu={this.props.store.mutationTableShowGeneFilterMenu.result}
                     currentGeneFilter={this.props.store.mutationTableGeneFilterOption}
+                    onFilterGenes={this.onFilterGenesMutationTable}
+
                     onRowClick={this.onTableRowClick}
                     onRowMouseEnter={this.onTableRowMouseEnter}
                     onRowMouseLeave={this.onTableRowMouseLeave}
