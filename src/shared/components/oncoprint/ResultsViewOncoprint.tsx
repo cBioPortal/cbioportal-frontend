@@ -24,7 +24,7 @@ import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import AppConfig from "appConfig";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import OncoprintJS, {TrackId} from "oncoprintjs";
+import OncoprintJS, {TrackGroupHeader, TrackGroupIndex, TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "public-lib/lib/svgToPdfDownload";
 import tabularDownload from "./tabularDownload";
@@ -323,20 +323,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get heatmapIsDynamicallyQueried () {
                 return self.heatmapIsDynamicallyQueried;
             },
-            get clusterHeatmapButtonActive() {
-                return self.isClusteredByCurrentSelectedHeatmapProfile;
-            },
-            get hideClusterHeatmapButton() {
-                const genesetHeatmapProfile: string | undefined = (
-                    self.props.store.genesetMolecularProfile.result &&
-                    self.props.store.genesetMolecularProfile.result.value &&
-                    self.props.store.genesetMolecularProfile.result.value.molecularProfileId
-                );
-                return !(
-                    self.molecularProfileIdToHeatmapTracks.get(self.selectedHeatmapProfile) ||
-                    self.selectedHeatmapProfile === genesetHeatmapProfile
-                );
-            },
             get heatmapGeneInputValue() {
                 return self.heatmapGeneInputValue;
             },
@@ -502,7 +488,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.sortMode = {type:"caseList"};
             },
             onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
-            onClickSortByData:()=>{this.sortMode={type:"data"};},
+            onClickSortByData: this.sortByData,
             onChangeSelectedClinicalTracks: this.onChangeSelectedClinicalTracks,
             onChangeHeatmapGeneInputValue:action((s:string)=>{
                 this.heatmapGeneInputValue = s;
@@ -515,16 +501,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             onClickAddTreatmentsToHeatmap:(treatmentIds:string[])=>{
                 this.addHeatmapTracks(this.selectedHeatmapProfile, treatmentIds);
-            },
-            onClickRemoveHeatmap:action(() => {
-                this.molecularProfileIdToHeatmapTracks.clear();
-            }),
-            onClickClusterHeatmap:()=>{
-                if (this.isClusteredByCurrentSelectedHeatmapProfile) {
-                    this.sortByData();
-                } else {
-                    this.sortMode = {type: "heatmap", clusteredHeatmapProfile: this.selectedHeatmapProfile};
-                }
             },
             onClickDownload:(type:string)=>{
                 switch(type) {
@@ -669,10 +645,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.sortMode = {type:"data"};
     }
 
-    @computed get isClusteredByCurrentSelectedHeatmapProfile() {
-        return (this.sortMode.type === "heatmap" && (this.selectedHeatmapProfile === this.sortMode.clusteredHeatmapProfile));
-    }
-
     @computed get clinicalTracksUrlParam() {
         return this.selectedClinicalAttributeIds.keys().join(",");
     }
@@ -808,6 +780,15 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
+    @autobind
+    @action
+    public clearSortDirectionsAndSortByData() {
+        if (this.oncoprint) {
+            this.oncoprint.resetSortableTracksSortDirection();
+            this.sortByData();
+        }
+    }
+
     @computed get sortOrder() {
         if (this.sortMode.type === "alphabetical") {
             return this.columnMode === "sample" ? this.alphabeticalSampleOrder : this.alphabeticalPatientOrder;
@@ -885,7 +866,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return (this.columnMode === "sample" ? this.sampleGenesetHeatmapTracks : this.patientGenesetHeatmapTracks);
     }
 
-    @computed get clusterHeatmapTrackGroupIndex() {
+    @computed get clusteredHeatmapTrackGroupIndex() {
         if (this.sortMode.type === "heatmap") {
             const clusteredHeatmapProfile: string = this.sortMode.clusteredHeatmapProfile;
             const genesetHeatmapProfile: string | undefined = (
@@ -908,9 +889,86 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             sortByMutationType:this.sortByMutationType,
             sortByDrivers:this.sortByDrivers,
             order: this.sortOrder,
-            clusterHeatmapTrackGroupIndex: this.clusterHeatmapTrackGroupIndex
+            clusterHeatmapTrackGroupIndex: this.clusteredHeatmapTrackGroupIndex
         };
     }
+
+    @autobind
+    @action
+    private clusterHeatmapByIndex(index:TrackGroupIndex) {
+        if (this.oncoprint) {
+            this.oncoprint.resetSortableTracksSortDirection();
+        }
+
+        const groupEntry = this.molecularProfileIdToHeatmapTracks.entries().find(
+            x=>x[1].trackGroupIndex === index
+        );
+        if (groupEntry) {
+            this.sortMode = {
+                type:"heatmap",
+                clusteredHeatmapProfile: groupEntry[1].molecularProfileId
+            };
+        }
+    }
+
+    @autobind
+    @action
+    private removeHeatmapByIndex(index:TrackGroupIndex) {
+        const groupEntry = this.molecularProfileIdToHeatmapTracks.entries().find(
+            x=>x[1].trackGroupIndex === index
+        );
+        if (groupEntry) {
+            this.molecularProfileIdToHeatmapTracks.delete(groupEntry[1].molecularProfileId);
+        }
+    }
+
+    readonly heatmapTrackHeaders = remoteData({
+        await:()=>[this.props.store.molecularProfileIdToMolecularProfile],
+        invoke:()=>{
+            const profileMap = this.props.store.molecularProfileIdToMolecularProfile.result!;
+            return Promise.resolve(
+                this.molecularProfileIdToHeatmapTracks.entries().reduce((headerMap, nextEntry)=>{
+                    headerMap[nextEntry[1].trackGroupIndex] = {
+                        label:{
+                            text: profileMap[nextEntry[1].molecularProfileId].name
+                        },
+                        options:[{
+                            label: "Cluster",
+                            onClick: this.clusterHeatmapByIndex,
+                            weight:()=>{
+                                if (this.clusteredHeatmapTrackGroupIndex === nextEntry[1].trackGroupIndex) {
+                                    return "bold";
+                                } else {
+                                    return "normal";
+                                }
+                            }
+                        },{
+                            label:"Don't cluster",
+                            onClick:()=>{
+                                if (this.clusteredHeatmapTrackGroupIndex === nextEntry[1].trackGroupIndex) {
+                                    this.sortByData();
+                                }
+                            },
+                            weight:()=>{
+                                if (this.clusteredHeatmapTrackGroupIndex === nextEntry[1].trackGroupIndex) {
+                                    return "normal";
+                                } else {
+                                    return "bold";
+                                }
+                            }
+                        }, {
+                            separator:true
+                        },{
+                            label: "Delete",
+                            onClick: this.removeHeatmapByIndex
+                        }]
+                    };
+                    return headerMap;
+                }, {} as {[trackGroupIndex:number]:TrackGroupHeader})
+            );
+        },
+        default:{}
+    });
 
     /* commenting this out because I predict it could make a comeback
     @computed get headerColumnModeButton() {
@@ -1071,7 +1129,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @computed get width() {
-        return WindowStore.size.width - 25;
+        return WindowStore.size.width - 75;
     }
 
     public render() {
@@ -1104,7 +1162,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 clinicalTracks={this.clinicalTracks.result}
                                 geneticTracks={this.geneticTracks.result}
                                 genesetHeatmapTracks={this.genesetHeatmapTracks.result}
-                                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this. heatmapTracks.result)}
+                                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.treatmentHeatmapTracks.result).concat(this.heatmapTracks.result)}
                                 divId={this.props.divId}
                                 width={this.width}
                                 caseLinkOutInTooltips={true}
@@ -1115,7 +1173,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
                                 alterationTypesInQuery={this.alterationTypesInQuery}
                                 showSublabels={this.showOqlInLabels}
-
+                                heatmapTrackHeaders={this.heatmapTrackHeaders.result!}
                                 horzZoomToFitIds={this.alteredKeys.result}
                                 distinguishMutationType={this.distinguishMutationType}
                                 distinguishDrivers={this.distinguishDrivers}

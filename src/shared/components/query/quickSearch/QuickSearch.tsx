@@ -191,13 +191,13 @@ export default class QuickSearch extends React.Component {
                         keyword: input,
                         projection: 'META',
                     }),
-                    client.getAllSamplesUsingGETWithHttpInfo({
+                    client.getSamplesByKeywordUsingGETWithHttpInfo({
                         keyword: input,
                         pageSize:
                             DEFAULT_PAGE_SIZE +
                             SHOW_MORE_SIZE * this.samplePageMultiplier,
                     }),
-                    client.getAllSamplesUsingGETWithHttpInfo({
+                    client.getSamplesByKeywordUsingGETWithHttpInfo({
                         keyword: input,
                         projection: 'META',
                     }),

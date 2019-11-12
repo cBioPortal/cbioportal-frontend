@@ -127,7 +127,8 @@ describe('OncoprintUtils', () => {
             sequencedPatientKeysByGene: {'BRCA1': [], 'PTEN': [], 'TP53': []},
             selectedMolecularProfiles: [],
             expansionIndexMap: observable.map<number[]>(),
-            hideGermlineMutations: false
+            hideGermlineMutations: false,
+            oncoprint: {} as any
         });
         const makeMinimal3Patient3GeneCaseData = () => ({
             samples: {},
