@@ -952,23 +952,25 @@ export default class OncoprintControls extends React.Component<
                                 Type
                             </label>
                         </div>
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="ColorByGermline"
-                                    type="checkbox"
-                                    value={
-                                        EVENT_KEY.distinguishGermlineMutations
-                                    }
-                                    checked={
-                                        this.props.state
-                                            .distinguishGermlineMutations
-                                    }
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Somatic vs Germline
-                            </label>
-                        </div>
+                        { !this.props.oncoprinterMode && (
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        data-test="ColorByGermline"
+                                        type="checkbox"
+                                        value={
+                                            EVENT_KEY.distinguishGermlineMutations
+                                        }
+                                        checked={
+                                            this.props.state
+                                                .distinguishGermlineMutations
+                                        }
+                                        onClick={this.onInputClick}
+                                    />{' '}
+                                    Somatic vs Germline
+                                </label>
+                            </div>
+                        )}
                         <div className="checkbox">
                             <label>
                                 <input
@@ -1293,20 +1295,22 @@ export default class OncoprintControls extends React.Component<
                                 unknown significance
                             </label>
                         </div>
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="HideGermline"
-                                    type="checkbox"
-                                    value={EVENT_KEY.hideGermlineMutations}
-                                    checked={
-                                        this.props.state.hideGermlineMutations
-                                    }
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Hide germline mutations
-                            </label>
-                        </div>
+                        { !this.props.oncoprinterMode && (
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        data-test="HideGermline"
+                                        type="checkbox"
+                                        value={EVENT_KEY.hideGermlineMutations}
+                                        checked={
+                                            this.props.state.hideGermlineMutations
+                                        }
+                                        onClick={this.onInputClick}
+                                    />{' '}
+                                    Hide germline mutations
+                                </label>
+                            </div>
+                        )}
                     </div>
                 </div>
             </CustomDropdown>
@@ -1350,6 +1354,17 @@ export default class OncoprintControls extends React.Component<
                             onClick={this.onInputClick}
                         />{' '}
                         Show whitespace between columns
+                    </label>
+                </div>
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            value={EVENT_KEY.showClinicalTrackLegends}
+                            checked={this.props.state.showClinicalTrackLegends}
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Show legends for clinical tracks
                     </label>
                 </div>
             </CustomDropdown>

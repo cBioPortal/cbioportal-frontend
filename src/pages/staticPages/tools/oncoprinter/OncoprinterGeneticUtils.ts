@@ -34,10 +34,10 @@ type OncoprinterGeneticTrackSpec = {
     data: OncoprinterGeneticTrackDatum[];
 };
 
-export type OncoprinterInputLineType1 = {
+export type OncoprinterGeneticInputLineType1 = {
     sampleId:string;
 }
-export type OncoprinterInputLineType2 = OncoprinterInputLineType1 & {
+export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 & {
     hugoGeneSymbol:string;
     alteration:OncoprintMutationType | "amp" | "homdel" | "gain" | "hetloss" | "mrnaHigh" | "mrnaLow" | "protHigh" | "protLow";
     proteinChange?:string; // optional parameter: protein change
@@ -62,9 +62,9 @@ export type OncoprinterInputLineType3 = OncoprinterInputLineType3_Incomplete & {
 export type OncoprinterInputLineIncomplete = OncoprinterInputLineType1 | OncoprinterInputLineType2 | OncoprinterInputLineType3_Incomplete;
 */
 
-export type OncoprinterInputLine = OncoprinterInputLineType1 | OncoprinterInputLineType2;
+export type OncoprinterGeneticInputLine = OncoprinterGeneticInputLineType1 | OncoprinterGeneticInputLineType2;
 
-export function isType2(inputLine:OncoprinterInputLine):inputLine is OncoprinterInputLineType2 {
+export function isType2(inputLine:OncoprinterGeneticInputLine):inputLine is OncoprinterGeneticInputLineType2 {
     return inputLine.hasOwnProperty("alteration");
 }
 /* Leaving commented only for reference, this will be replaced by unified input strategy
@@ -101,12 +101,15 @@ export function initDriverAnnotationSettings(store:OncoprinterStore) {
     });
 }
 
-export function getSampleIds(oncoprinterInput:OncoprinterInputLine[]):string[] {
+export function getSampleIds(oncoprinterInput:Pick<OncoprinterGeneticInputLine, "sampleId">[]):string[] {
     return _.chain(oncoprinterInput).map(o=>o.sampleId).uniq().value();
 }
 
-export function getGeneSymbols(oncoprinterInput:OncoprinterInputLine[]):string[] {
-    return (_.chain(oncoprinterInput).filter(o=>isType2(o)) as any).map((o:OncoprinterInputLineType2)=>o.hugoGeneSymbol).value();
+export function getGeneSymbols(oncoprinterInput:OncoprinterGeneticInputLine[]):string[] {
+    return (_.chain(oncoprinterInput).filter(o=>isType2(o)) as any)
+        .map((o:OncoprinterGeneticInputLineType2)=>o.hugoGeneSymbol)
+        .uniq()
+        .value();
 }
 
 export async function fetchOncoKbDataForMutations(annotatedGenes:{[entrezGeneId:number]:boolean}|Error,
@@ -159,7 +162,7 @@ export async function fetchOncoKbDataForCna(annotatedGenes:{[entrezGeneId:number
     return queryOncoKbData(queryVariants, {}, client, "ONCOGENIC");
 }
 
-function makeGeneticTrackDatum_Data(oncoprinterInputLine:OncoprinterInputLineType2, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
+function makeGeneticTrackDatum_Data(oncoprinterInputLine:OncoprinterGeneticInputLineType2, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
     return makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine, hugoGeneSymbolToGene);
 }
 /* Leaving commented only for reference, this will be replaced by unified input strategy
@@ -208,7 +211,7 @@ function makeGeneticTrackDatum_Data_Type3(oncoprinterInputLine:OncoprinterInputL
     return ret as OncoprinterGeneticTrackDatum_Data;
 }*/
 
-export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:OncoprinterInputLineType2, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
+export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:OncoprinterGeneticInputLineType2, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
     let ret:Partial<OncoprinterGeneticTrackDatum_Data> = {
         // we'll never set these values - theyre not needed for oncoprinter
         driverFilter:"",
@@ -355,12 +358,12 @@ function getPercentAltered(data:OncoprinterGeneticTrackDatum[]) {
 }
 
 export function getSampleGeneticTrackData(
-    oncoprinterInput:OncoprinterInputLine[],
+    oncoprinterInput:OncoprinterGeneticInputLine[],
     hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}
 ):{[hugoGeneSymbol:string]:{ sampleId:string, data:OncoprinterGeneticTrackDatum_Data[]}[]} {
     const geneToSampleIdToData:{[hugoGeneSymbol:string]:{[sampleId:string]:OncoprinterGeneticTrackDatum["data"]}} = {};
 
-    const type2Lines = oncoprinterInput.filter(d=>(isType2(d))) as OncoprinterInputLineType2[];
+    const type2Lines = oncoprinterInput.filter(d=>(isType2(d))) as OncoprinterGeneticInputLineType2[];
     // collect data by gene x sample
     for (const inputLine of type2Lines) {
         if (!(inputLine.hugoGeneSymbol in geneToSampleIdToData)) {
@@ -385,7 +388,7 @@ export function getSampleGeneticTrackData(
     return _.mapValues(geneToSampleIdToData, sampleIdToData=>_.chain(sampleIdToData).map((data, sampleId)=>({ sampleId, data })).value());
 }
 
-export function getOncoprintData(
+export function getGeneticOncoprintData(
     geneToSampleData:{[hugoGeneSymbol:string]:{ sampleId:string, data:OncoprinterGeneticTrackDatum_Data[]}[]}
 ):{[hugoGeneSymbol:string]:OncoprinterGeneticTrackDatum[]} {
     return _.mapValues(
@@ -397,6 +400,10 @@ export function getOncoprintData(
             ) as OncoprinterGeneticTrackDatum
         ))
     );
+}
+
+export function getGeneticTrackKey(hugoGeneSymbol:string) {
+    return `geneticTrack_${hugoGeneSymbol}`;
 }
 
 export function getGeneticTracks(
@@ -411,7 +418,7 @@ export function getGeneticTracks(
     const geneToPercentAltered:{[hugoGeneSymbol:string]:string} = _.mapValues(geneToOncoprintData, getPercentAltered);
     const genes = geneOrder ? geneOrder.filter(gene=>(gene in geneToOncoprintData)) : Object.keys(geneToOncoprintData);
     return genes.map(gene=>({
-        key: gene,
+        key: getGeneticTrackKey(gene),
         label: gene,
         info: geneToPercentAltered[gene],
         data: geneToOncoprintData[gene]
@@ -513,7 +520,7 @@ export function annotateGeneticTrackData(
     });
 }
 
-export function parseInput(input:string):{status:"complete", result:OncoprinterInputLine[], error:undefined}|{status:"error", result:undefined, error:string} {
+export function parseGeneticInput(input:string):{status:"complete", result:OncoprinterGeneticInputLine[], error:undefined}|{status:"error", result:undefined, error:string} {
     const lines = input.trim().split("\n").map(line=>line.trim().split(/\s+/));
     try {
         const result = lines.map((line, lineIndex)=>{
@@ -521,7 +528,7 @@ export function parseInput(input:string):{status:"complete", result:OncoprinterI
                 _.isEqual(lines[0].map(s=>s.toLowerCase()), ["sample", "gene", "alteration", "type"])) {
                 return null; // skip header line
             }
-            const errorPrefix = `Data input error on line ${lineIndex+1}: \n${line.join("\t")}\n\n`;
+            const errorPrefix = `Genetic data input error on line ${lineIndex+1}: \n${line.join("\t")}\n\n`;
             if (line.length === 1) {
                 // Type 1 line
                 return { sampleId: line[0] };
@@ -533,7 +540,7 @@ export function parseInput(input:string):{status:"complete", result:OncoprinterI
                 const lcAlteration = alteration.toLowerCase();
                 const type = line[3];
                 const lcType = type.toLowerCase();
-                let ret:Partial<OncoprinterInputLineType2> = { sampleId, hugoGeneSymbol };
+                let ret:Partial<OncoprinterGeneticInputLineType2> = { sampleId, hugoGeneSymbol };
 
                 switch (lcType) {
                     case "cna":
@@ -572,14 +579,14 @@ export function parseInput(input:string):{status:"complete", result:OncoprinterI
                         ret.alteration = lcType as OncoprintMutationType;
                         ret.proteinChange = alteration;
                 }
-                return ret as OncoprinterInputLineType2;
+                return ret as OncoprinterGeneticInputLineType2;
             } else {
                 throw new Error(`${errorPrefix}input lines must have either 1 or 4 columns.`);
             }
         });
         return {
             status: "complete",
-            result: result.filter(x=>!!x) as OncoprinterInputLine[],
+            result: result.filter(x=>!!x) as OncoprinterGeneticInputLine[],
             error:undefined
         };
     } catch (e) {
