@@ -7,14 +7,14 @@ import {
     fetchOncoKbDataForMutations,
     getGeneSymbols,
     getGeneticTracks,
-    getOncoprintData,
+    getGeneticOncoprintData,
     getSampleGeneticTrackData,
     getSampleIds,
     initDriverAnnotationSettings,
     isAltered, isType2,
-    OncoprinterInputLine, OncoprinterInputLineType2,
-    parseInput
-} from "./OncoprinterUtils";
+    OncoprinterGeneticInputLine, OncoprinterGeneticInputLineType2,
+    parseGeneticInput
+} from "./OncoprinterGeneticUtils";
 import {remoteData} from "../../../../public-lib/api/remoteData";
 import {IOncoKbData} from "../../../../shared/model/OncoKB";
 import {fetchOncoKbCancerGenes, ONCOKB_DEFAULT} from "../../../../shared/lib/StoreUtils";
@@ -25,6 +25,7 @@ import {Mutation, MutationCountByPosition} from "../../../../shared/api/generate
 import {SampleAlteredMap} from "../../../resultsView/ResultsViewPageStoreUtils";
 import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import { AlteredStatus } from "pages/resultsView/mutualExclusivity/MutualExclusivityUtil";
+import {getClinicalTracks, parseClinicalInput} from "./OncoprinterClinicalUtils";
 
 export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "excludeVUS" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
 
@@ -42,10 +43,13 @@ export default class OncoprinterStore {
     // NOTE: we are not annotating hotspot because that needs nucleotide positions
     //      we are not annotating COSMIC because that needs keywords
 
+    @observable submitCount = 0;
+
     @observable.ref _inputSampleIdOrder:string | undefined = undefined;
     @observable.ref _geneOrder:string | undefined = undefined;
     @observable driverAnnotationSettings:OncoprinterDriverAnnotationSettings = initDriverAnnotationSettings(this);
-    @observable.ref _dataInput:string|undefined = undefined;
+    @observable.ref _geneticDataInput:string|undefined = undefined;
+    @observable.ref _clinicalDataInput:string|undefined = undefined;
     @observable public showUnalteredColumns:boolean = true;
 
     @computed get didOncoKbFail() {
@@ -61,8 +65,9 @@ export default class OncoprinterStore {
     }
 
     @computed get allSampleIds() {
-        if (this.parsedInputLines.result) {
-            return getSampleIds(this.parsedInputLines.result);
+        const parsedInputLines = (this.parsedGeneticInputLines.result || []).concat(this.parsedClinicalInputLines.result && this.parsedClinicalInputLines.result.data || []);
+        if (parsedInputLines.length > 0) {
+            return getSampleIds(parsedInputLines);
         } else {
             return [];
         }
@@ -109,28 +114,30 @@ export default class OncoprinterStore {
 
 
     public hasData() {
-        return !!this._dataInput;
+        return (!!this._geneticDataInput) || (!!this._clinicalDataInput);
     }
 
-    @action setDataInput(input:string) {
-        this._dataInput = input;
+    @action setDataInput(geneticData:string, clinicalData:string) {
+        this._geneticDataInput = geneticData;
+        this._clinicalDataInput = clinicalData;
     }
 
-    @action public setInput(data:string, genes:string, samples:string) {
-        this.setDataInput(data);
+    @action public setInput(geneticData:string, clinicalData:string, genes:string, samples:string) {
+        this.submitCount += 1;
+        this.setDataInput(geneticData, clinicalData);
         this.setGeneOrder(genes);
         this.setSampleIdOrder(samples);
     }
 
-    @computed get parsedInputLines() {
-        if (!this._dataInput) {
+    @computed get parsedGeneticInputLines() {
+        if (!this._geneticDataInput) {
             return {
                 error:null,
                 result:[]
             };
         }
 
-        const parsed = parseInput(this._dataInput);
+        const parsed = parseGeneticInput(this._geneticDataInput);
         if (parsed.status === "error") {
             return {
                 error: parsed.error,
@@ -144,11 +151,45 @@ export default class OncoprinterStore {
         }
     }
 
+    @computed get parsedClinicalInputLines() {
+        if (!this._clinicalDataInput) {
+            return {
+                error:null,
+                result:{ headers:[], data:[]}
+            };
+        }
+
+        const parsed = parseClinicalInput(this._clinicalDataInput);
+        if (parsed.status === "error") {
+            return {
+                error: parsed.error,
+                result:null
+            };
+        } else {
+            return {
+                error:null,
+                result:parsed.result
+            };
+        }
+    }
+
+    @computed get parseErrors() {
+        const errors = [];
+        if (this.parsedGeneticInputLines.error) {
+            errors.push(this.parsedGeneticInputLines.error);
+        }
+        if (this.parsedClinicalInputLines.error) {
+            errors.push(this.parsedClinicalInputLines.error);
+        }
+
+        return errors;
+    }
+
     @computed get hugoGeneSymbols() {
         if (this.geneOrder) {
             return this.geneOrder;
-        } else if (this.parsedInputLines.result) {
-            return getGeneSymbols(this.parsedInputLines.result);
+        } else if (this.parsedGeneticInputLines.result) {
+            return getGeneSymbols(this.parsedGeneticInputLines.result);
         } else {
             return [];
         }
@@ -331,8 +372,8 @@ export default class OncoprinterStore {
     readonly nonAnnotatedGeneticTrackData = remoteData({
         await:()=>[this.hugoGeneSymbolToGene],
         invoke: async()=>{
-            if (this.parsedInputLines.result) {
-                return getSampleGeneticTrackData(this.parsedInputLines.result, this.hugoGeneSymbolToGene.result!)
+            if (this.parsedGeneticInputLines.result) {
+                return getSampleGeneticTrackData(this.parsedGeneticInputLines.result, this.hugoGeneSymbolToGene.result!)
             } else {
                 return {};
             }
@@ -356,18 +397,28 @@ export default class OncoprinterStore {
         )
     });
 
-    readonly annotatedOncoprintData = remoteData({
+    readonly annotatedGeneticOncoprintData = remoteData({
         await:()=>[this.annotatedGeneticTrackData],
-        invoke: async()=>getOncoprintData(this.annotatedGeneticTrackData.result!)
+        invoke: async()=>getGeneticOncoprintData(this.annotatedGeneticTrackData.result!)
     });
 
     readonly geneticTracks = remoteData({
-        await:()=>[this.annotatedOncoprintData],
+        await:()=>[this.annotatedGeneticOncoprintData],
         invoke:async()=>getGeneticTracks(
-            this.annotatedOncoprintData.result!,
+            this.annotatedGeneticOncoprintData.result!,
             this.geneOrder,
             this.sampleIdsNotInInputOrder
         ),
         default:[]
     });
+
+    @computed get clinicalTracks() {
+        const clinicalResult = this.parsedClinicalInputLines.result;
+
+        if (!clinicalResult) {
+            return [];
+        }
+
+        return getClinicalTracks(clinicalResult.headers, clinicalResult.data, this.sampleIdsNotInInputOrder);
+    }
 }

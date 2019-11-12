@@ -13,7 +13,7 @@ import "./styles.scss";
 
 export type ClinicalTrackDatum = {
     attr_id: string;
-    study_id: string;
+    study_id?: string;
     sample?:string;
     patient?:string;
     uid: string;
@@ -38,7 +38,7 @@ export type ClinicalTrackSpec = {
 } | {
     datatype: "number";
     numberRange:[number, number];
-    numberLogScale:boolean;
+    numberLogScale?:boolean;
 } | {
     datatype: "string";
     category_to_color?:{[category:string]:string}
