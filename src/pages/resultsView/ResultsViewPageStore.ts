@@ -3623,6 +3623,16 @@ export class ResultsViewPageStore {
         },
     });
 
+    readonly entrezGeneIdToReferenceGene = remoteData<{ [hugoSymbol: string]: ReferenceGenomeGene }>({
+        await: () => [
+            this.referenceGenes
+        ],
+        invoke: () => {
+            // build reference gene map
+            return Promise.resolve(_.keyBy(this.referenceGenes.result!, g => g.entrezGeneId));
+        }
+    });
+
     @computed get referenceGenome() {
         const study = this.studies.result ? this.studies.result[0] : undefined;
         return study ? study.referenceGenome : DEFAULT_GENOME;
