@@ -21,9 +21,22 @@ import {LollipopPlot} from 'react-mutation-mapper'
 
 class Example extends React.Component {
   render () {
-    // TODO a better example with props
     return (
-      <LollipopPlot />
+      <LollipopPlot
+        lollipops={[
+          {codon: 36, count: 6, color: "#6600AA"},
+          {codon: 366, count: 4, color: "#00AAFF"},
+          {codon: 606, count: 8, color: "#AA0066"}
+        ]}
+        domains={[
+          {startCodon: 6, endCodon: 66, color: "#FF9900", label: "D1"},
+          {startCodon: 566, endCodon: 616, color: "#0044CC", label: "D2"}
+        ]}
+        vizWidth={640}
+        vizHeight={200}
+        xMax={666}
+        yMax={10}
+      />
     )
   }
 }
@@ -34,13 +47,42 @@ class Example extends React.Component {
 ```tsx
 import * as React from 'react'
 
-import {LollipopMutationPlot} from 'react-mutation-mapper'
+import {
+  DefaultMutationMapperStore, LollipopMutationPlot
+} from 'react-mutation-mapper'
 
 class Example extends React.Component {
   render () {
-    // TODO a better example with props
     return (
-      <LollipopMutationPlot />
+      <LollipopMutationPlot
+        store={
+          new DefaultMutationMapperStore(
+            {hugoGeneSymbol: "TP53", entrezGeneId: 7157},
+            {isoformOverrideSource: "uniprot", filterMutationsBySelectedTranscript: true},
+            () => [{
+              chromosome: "17",
+              startPosition: 41246256,
+              endPosition: 41246256,
+              proteinChange: "V6E",
+              proteinPosEnd: 6,
+              proteinPosStart: 6,
+              referenceAllele: "G",
+              variantAllele: "T",
+              mutationType: "missense"
+            }, {
+              chromosome: "17",
+              startPosition: 41246666,
+              endPosition: 41246666,
+              proteinChange: "V66E",
+              proteinPosEnd: 66,
+              proteinPosStart: 66,
+              referenceAllele: "A",
+              variantAllele: "C",
+              mutationType: "inframe_del"
+            }])
+          }
+        geneWidth={666}
+      />
     )
   }
 }

@@ -1091,6 +1091,13 @@
   dependencies:
     "@types/react" "*"
 
+"@types/react-rangeslider@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@types/react-rangeslider/-/react-rangeslider-2.2.1.tgz#a7f395a8a529d2228f6839b7131a554cf6d5e1bb"
+  integrity sha512-etfwLBPFA05P45JMnLpnfUXULfyO6UCBHn+WH4WgIG2BhorrLOVWasFnug1/GzP5IQS68jCEFJQOunMosKTwHg==
+  dependencies:
+    "@types/react" "*"
+
 "@types/react-select@^2.0.19":
   version "2.0.19"
   resolved "https://registry.yarnpkg.com/@types/react-select/-/react-select-2.0.19.tgz#59a80ef81a4a5cb37f59970c53a4894d15065199"
@@ -3076,10 +3083,10 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-cbioportal-frontend-commons@^0.0.22:
-  version "0.0.22"
-  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.22.tgz#6a547913adadf2ae2de08c2ca31f4d5103a409ed"
-  integrity sha512-ECWVbXvkqF0msXcrcDXN1MmQ1f1cfi6/++IkE4ThpSuxNmK08/BsXbYZCqDof42v70yN1auXEbhs3jWNDjHk1g==
+cbioportal-frontend-commons@^0.0.23:
+  version "0.0.23"
+  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.23.tgz#1bd3f2d2a59f5b9b718eb66e862e9ca374a22cf8"
+  integrity sha512-6jdSgduNDCiJuXW05Of/eC6V3JVrEUcOWtao/tex0PdG6nAV0F5H+QeVIkiQ6GVF21LSrB9Loc+vrVklXOmWXQ==
   dependencies:
     autobind-decorator "^2.1.0"
     babel-polyfill "^6.22.0"
@@ -3231,7 +3238,7 @@ class-utils@^0.3.5:
     isobject "^3.0.0"
     static-extend "^0.1.1"
 
-classnames@^2.2.5, classnames@^2.2.6:
+classnames@^2.2.3, classnames@^2.2.5, classnames@^2.2.6:
   version "2.2.6"
   resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.2.6.tgz#43935bffdd291f326dad0a205309b38d00f650ce"
   integrity sha512-JR/iSQOSt+LQIWwrwEzJ9uk0xfN3mTVYMwt1Ir5mUcSN6pU+V4zQFFaJsclJbPuAUQH+yfWef6tm7l1quW3C8Q==
@@ -10090,6 +10097,14 @@ react-prop-types@^0.4.0:
   dependencies:
     warning "^3.0.0"
 
+react-rangeslider@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/react-rangeslider/-/react-rangeslider-2.2.0.tgz#4362b01f4f5a455f0815d371d496f69ca4c6b5aa"
+  integrity sha512-5K7Woa+cyqZ5wiW5+KhqGV+3+FiFxGKQ9rUxTMh52sObXVYEeBbfxFrp1eBvS8mRIxnUbHz9ppnFP0LhwOyNeg==
+  dependencies:
+    classnames "^2.2.3"
+    resize-observer-polyfill "^1.4.2"
+
 react-scripts-ts@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/react-scripts-ts/-/react-scripts-ts-3.1.0.tgz#3f285c54b242ff6ecbfb91785060db10660ee7b0"
@@ -10553,6 +10568,11 @@ reserved-words@^0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/reserved-words/-/reserved-words-0.1.2.tgz#00a0940f98cd501aeaaac316411d9adc52b31ab1"
   integrity sha1-AKCUD5jNUBrqqsMWQR2a3FKzGrE=
+
+resize-observer-polyfill@^1.4.2:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/resize-observer-polyfill/-/resize-observer-polyfill-1.5.1.tgz#0e9020dd3d21024458d4ebd27e23e40269810464"
+  integrity sha512-LwZrotdHOo12nQuZlHEmtuXdqGoOD0OhaxopaNFxWzInpEgaLWoVuAMbTzixuosCx2nEG58ngzW3vxdWoxIgdg==
 
 resolve-cwd@^2.0.0:
   version "2.0.0"

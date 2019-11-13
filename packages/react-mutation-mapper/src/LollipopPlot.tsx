@@ -10,15 +10,26 @@ import {DomainSpec} from "./model/DomainSpec";
 import LollipopPlotNoTooltip from "./LollipopPlotNoTooltip";
 
 export type LollipopPlotProps = {
-    sequence: SequenceSpec;
+    sequence?: SequenceSpec;
     lollipops: LollipopSpec[];
     domains: DomainSpec[];
     vizWidth: number;
     vizHeight: number;
     xMax: number;
     yMax?: number;
-    hugoGeneSymbol: string;
-    dataStore: DataStore;
+    bottomYMax?: number;
+    yMaxFractionDigits?: number;
+    yMaxLabelPostfix?: string;
+    yAxisLabelPadding?: number;
+    showYAxis?: boolean;
+    xAxisOnTop?: boolean;
+    xAxisOnBottom?: boolean;
+    groups?: string[];
+    topYAxisSymbol?: string;
+    bottomYAxisSymbol?: string;
+    zeroStickBaseY?: boolean;
+    hugoGeneSymbol?: string;
+    dataStore?: DataStore;
     onXAxisOffset?: (offset: number) => void;
 };
 
@@ -28,6 +39,10 @@ export default class LollipopPlot extends React.Component<LollipopPlotProps, {}>
 
     private plot: LollipopPlotNoTooltip|undefined;
     private handlers: any;
+
+    public static defaultProps: Partial<LollipopPlotProps> = {
+        vizHeight: 200
+    };
 
     constructor(props: LollipopPlotProps) {
         super(props);

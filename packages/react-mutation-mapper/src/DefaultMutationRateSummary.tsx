@@ -1,6 +1,8 @@
 import {DefaultTooltip} from "cbioportal-frontend-commons";
 import * as React from "react";
 
+import {formatPercentValue} from "./util/FormatUtils";
+
 import styles from "./defaultMutationRateSummary.module.scss"
 
 export type MutationRate = {
@@ -11,6 +13,7 @@ export type MutationRate = {
 
 export type DefaultMutationRateSummaryProps = {
     rates: MutationRate[];
+    fractionDigits?: number;
 };
 
 export default class DefaultMutationRateSummary extends React.Component<DefaultMutationRateSummaryProps>
@@ -21,7 +24,7 @@ export default class DefaultMutationRateSummary extends React.Component<DefaultM
                 {this.props.rates.map(r => (
                     <div key={r.title} className={styles.mutationRateSummary}>
                         <span>{r.title}: </span>
-                        <span>{r.rate.toFixed(1)}%</span>
+                        <span>{formatPercentValue(r.rate, this.props.fractionDigits)}%</span>
                         {r.description &&
                             <DefaultTooltip
                                 placement="right"

@@ -14,13 +14,7 @@ class ColumnHeader extends React.Component<ColumnHeaderProps>
     };
 
     public render() {
-        let content= (
-            <span
-                className={this.props.className || ColumnHeader.defaultProps.className}
-            >
-                {this.props.headerContent}
-            </span>
-        );
+        let content= this.props.headerContent;
 
         if (this.props.overlay)
         {
@@ -36,7 +30,13 @@ class ColumnHeader extends React.Component<ColumnHeaderProps>
             );
         }
 
-        return content;
+        return (
+            <span
+                className={this.props.className || ColumnHeader.defaultProps.className}
+            >
+                {content}
+            </span>
+        );
     }
 }
 

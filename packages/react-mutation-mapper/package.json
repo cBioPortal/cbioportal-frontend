@@ -1,6 +1,6 @@
 {
   "name": "react-mutation-mapper",
-  "version": "0.2.7",
+  "version": "0.3.0",
   "description": "Generic Mutation Mapper",
   "author": "cBioPortal",
   "license": "GNU Affero General Public License v3.0",
@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.4.0",
-    "cbioportal-frontend-commons": "^0.0.22",
+    "cbioportal-frontend-commons": "^0.0.23",
     "classnames": "^2.2.6",
     "jquery": "^3.3.1",
     "lodash": "^4.17.11",
@@ -33,6 +33,7 @@
     "oncokb-styles": "~0.1.0",
     "react-collapse": "^4.0.3",
     "react-motion": "^0.5.2",
+    "react-rangeslider": "^2.2.0",
     "react-select": "^3.0.4",
     "react-table": "^6.10.0",
     "seamless-immutable": "^7.1.4",
@@ -58,6 +59,7 @@
     "@types/react-bootstrap": "^0.32.19",
     "@types/react-collapse": "^4.0.2",
     "@types/react-dom": "^16.8.3",
+    "@types/react-rangeslider": "^2.2.1",
     "@types/react-select": "^2.0.19",
     "@types/react-table": "^6.8.1",
     "@types/rollup-plugin-commonjs": "^9.2.0",

@@ -1,60 +1,126 @@
 import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import * as React from "react";
+import {ReactNode} from "react";
 import {TableProps} from "react-table";
 
 import {DefaultPubMedCache} from "./cache/DefaultPubMedCache";
 import FilterResetPanel from "./component/FilterResetPanel";
+import {DataFilter} from "./model/DataFilter";
+import {ApplyFilterFn, FilterApplier} from "./model/FilterApplier";
+import {LollipopPlotControlsConfig} from "./model/LollipopPlotControlsConfig";
 import {MobxCache} from "./model/MobxCache";
 import {Mutation} from "./model/Mutation";
 import MutationMapperStore from "./model/MutationMapperStore";
+import {DefaultLollipopPlotControlsConfig} from "./store/DefaultLollipopPlotControlsConfig";
 import DefaultMutationMapperStore from "./store/DefaultMutationMapperStore";
 import {initDefaultTrackVisibility} from "./util/TrackUtils";
 import {getDefaultWindowInstance} from "./util/DefaultWindowInstance";
-import {DataTableColumn} from "./DataTable";
+import {ColumnSortDirection, DataTableColumn} from "./DataTable";
 import DefaultMutationRateSummary, {MutationRate} from "./DefaultMutationRateSummary";
 import DefaultMutationTable from "./DefaultMutationTable";
 import GeneSummary from "./GeneSummary";
 import LollipopMutationPlot from "./LollipopMutationPlot";
+import {DEFAULT_MUTATION_COLUMNS} from "./MutationColumnHelper";
 import {TrackDataStatus, TrackName, TrackVisibility} from "./TrackSelector";
 
 export type MutationMapperProps = {
     hugoSymbol?: string;
+    entrezGeneId?: number;
     data?: Partial<Mutation>[];
     store?: MutationMapperStore;
+    lollipopPlotControlsConfig?: LollipopPlotControlsConfig;
     windowWrapper?: {size: {width: number, height: number}};
     trackVisibility?: TrackVisibility;
     tracks?: TrackName[];
-    customMutationTableColumns?: DataTableColumn<Partial<Mutation>>[];
+    showTrackSelector?: boolean;
+    mutationTableColumns?: DataTableColumn<Partial<Mutation>>[];
     customMutationTableProps?: Partial<TableProps<Partial<Mutation>>>;
+    showFilterResetPanel?: boolean;
+    showPlotYAxis?: boolean;
     showPlotYMaxSlider?: boolean;
     showPlotLegendToggle?: boolean;
     showPlotDownloadControls?: boolean;
+    plotYMaxFractionDigits?: number;
+    plotYMaxLabelPostfix?: string;
+    plotTopYAxisSymbol?: string;
+    plotBottomYAxisSymbol?: string;
+    plotTopYAxisDefaultMax?: number;
+    plotTopYAxisDefaultMin?: number;
+    plotBottomYAxisDefaultMax?: number;
+    plotBottomYAxisDefaultMin?: number;
+    plotYAxisLabelPadding?: number;
+    plotLollipopTooltipCountInfo?: (count: number, mutations?: Partial<Mutation>[]) => JSX.Element;
+    plotVizHeight?: number;
+    customControls?: JSX.Element;
     mutationTable?: JSX.Element;
+    mutationTableInitialSortColumn?: string;
+    mutationTableInitialSortDirection?: ColumnSortDirection;
     mutationRates?: MutationRate[];
     pubMedCache?: MobxCache;
     // TODO annotateMutations?: boolean;
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
+    cachePostMethodsOnClients?: boolean;
+    apiCacheLimit?: number;
     showTranscriptDropDown?: boolean;
     showOnlyAnnotatedTranscriptsInDropdown?: boolean;
     filterMutationsBySelectedTranscript?: boolean;
     isoformOverrideSource?: string;
+    annotationFields?: string[];
     mainLoadingIndicator?: JSX.Element;
     geneSummaryLoadingIndicator?: JSX.Element;
     getLollipopColor?: (mutations: Partial<Mutation>[]) => string;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
+    getTumorType?: (mutation: Partial<Mutation>) => string;
     onXAxisOffset?: (offset:number) => void;
     onTrackVisibilityChange?: (selectedTrackIds: string[]) => void;
+
+    dataFilters?: DataFilter[];
+    selectionFilters?: DataFilter[];
+    highlightFilters?: DataFilter[];
+    groupFilters?: {group: string, filter: DataFilter}[];
+    filterAppliersOverride?: {[filterType: string]: ApplyFilterFn};
+    filterApplier?: FilterApplier;
 };
+
+export function initDefaultMutationMapperStore(props: MutationMapperProps)
+{
+    return new DefaultMutationMapperStore(
+        {
+            entrezGeneId: props.entrezGeneId, // entrezGeneId is required to display uniprot id
+            hugoGeneSymbol: props.hugoSymbol ? props.hugoSymbol! : ""
+        },
+        {
+            annotationFields: props.annotationFields,
+            isoformOverrideSource: props.isoformOverrideSource,
+            filterMutationsBySelectedTranscript: props.filterMutationsBySelectedTranscript,
+            genomeNexusUrl: props.genomeNexusUrl,
+            oncoKbUrl: props.oncoKbUrl,
+            cachePostMethodsOnClients: props.cachePostMethodsOnClients,
+            apiCacheLimit: props.apiCacheLimit,
+            getMutationCount: props.getMutationCount,
+            getTumorType: props.getTumorType,
+            dataFilters: props.dataFilters,
+            selectionFilters: props.selectionFilters,
+            highlightFilters: props.highlightFilters,
+            groupFilters: props.groupFilters
+        },
+        () => (props.data || []) as Mutation[],
+        props.filterApplier,
+        props.filterAppliersOverride
+    );
+}
 
 @observer
 export default class MutationMapper<P extends MutationMapperProps = MutationMapperProps> extends React.Component<P, {}>
 {
     public static defaultProps: Partial<MutationMapperProps> = {
+        showFilterResetPanel: true,
         showOnlyAnnotatedTranscriptsInDropdown: false,
         showTranscriptDropDown: false,
         filterMutationsBySelectedTranscript: false,
+        cachePostMethodsOnClients: true
     };
 
     @observable
@@ -64,7 +130,7 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
     protected lollipopPlotGeneX: number | undefined;
 
     @computed
-    protected get geneWidth()
+    protected get geneWidth(): number
     {
         if (this.lollipopPlotGeneX) {
             return this.windowWrapper.size.width * 0.7 - this.lollipopPlotGeneX;
@@ -96,25 +162,53 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
     }
 
     @computed
-    protected get store(): MutationMapperStore
-    {
-        return this.props.store ? this.props.store! : new DefaultMutationMapperStore(
-            {
-                // TODO entrezGeneId: ???, -> we need entrezGeneId to display uniprot id
-                hugoGeneSymbol: this.props.hugoSymbol ? this.props.hugoSymbol! : ""
-            },
-            {
-                isoformOverrideSource: this.props.isoformOverrideSource,
-                filterMutationsBySelectedTranscript: this.props.filterMutationsBySelectedTranscript,
-                genomeNexusUrl: this.props.genomeNexusUrl,
-                oncoKbUrl: this.props.oncoKbUrl,
-                getMutationCount: this.props.getMutationCount
-            },
-            () => (this.props.data || []) as Mutation[]);
+    protected get plotTopYAxisSymbol(): string | undefined {
+        return this.props.plotTopYAxisSymbol;
     }
 
-    protected get pubMedCache() {
-        return this.props.pubMedCache || new DefaultPubMedCache();
+    @computed
+    protected get plotYMaxLabelPostfix(): string | undefined {
+        return this.props.plotYMaxLabelPostfix;
+    }
+
+    @computed
+    protected get plotBottomYAxisSymbol(): string | undefined {
+        return this.props.plotBottomYAxisSymbol;
+    }
+
+    @computed
+    protected get plotTopYAxisDefaultMax(): number | undefined {
+        return this.props.plotTopYAxisDefaultMax;
+    }
+
+    @computed
+    protected get plotTopYAxisDefaultMin(): number | undefined {
+        return this.props.plotTopYAxisDefaultMin;
+    }
+
+    @computed
+    protected get plotBottomYAxisDefaultMax(): number | undefined {
+        return this.props.plotBottomYAxisDefaultMax;
+    }
+
+    @computed
+    protected get plotBottomYAxisDefaultMin(): number | undefined {
+        return this.props.plotBottomYAxisDefaultMin;
+    }
+
+    @computed
+    protected get store(): MutationMapperStore
+    {
+        return this.props.store ? this.props.store!: initDefaultMutationMapperStore(this.props);
+    }
+
+    @computed
+    protected get lollipopPlotControlsConfig(): LollipopPlotControlsConfig {
+        return this.props.lollipopPlotControlsConfig ? this.props.lollipopPlotControlsConfig!: new DefaultLollipopPlotControlsConfig();
+    }
+
+    protected get pubMedCache(): MobxCache {
+        return this.props.pubMedCache ? this.props.pubMedCache!: new DefaultPubMedCache();
     }
 
     @computed
@@ -122,33 +216,51 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
         return this.props.windowWrapper ? this.props.windowWrapper! : getDefaultWindowInstance();
     }
 
-    // TODO for this we need to implement data table items label first
-    // @computed
-    // get multipleMutationInfo(): string {
-    //     const count = this.store.dataStore.duplicateMutationCountInMultipleSamples;
-    //     const mutationsLabel = count === 1 ? "mutation" : "mutations";
-    //
-    //     return count > 0 ? `: includes ${count} duplicate ${mutationsLabel} in patients with multiple samples` : "";
-    // }
-    //
-    // @computed get itemsLabelPlural(): string {
-    //     return `Mutations${this.multipleMutationInfo}`;
-    // }
-
-    protected get mutationTableComponent(): JSX.Element | null
+    protected get mutationTableInfo(): JSX.Element | undefined
     {
-        return this.props.mutationTable ? this.props.mutationTable! : (
-            <DefaultMutationTable
-                dataStore={this.store.dataStore}
-                columns={this.props.customMutationTableColumns}
-                reactTableProps={this.props.customMutationTableProps}
-                hotspotData={this.store.indexedHotspotData}
-                oncoKbData={this.store.oncoKbData}
-                oncoKbCancerGenes={this.store.oncoKbCancerGenes}
-                oncoKbEvidenceCache={this.store.oncoKbEvidenceCache}
-                pubMedCache={this.pubMedCache}
-            />
-        );
+        // TODO implement default
+        // @computed
+        // get multipleMutationInfo(): string {
+        //     const count = this.store.dataStore.duplicateMutationCountInMultipleSamples;
+        //     const mutationsLabel = count === 1 ? "mutation" : "mutations";
+        //
+        //     return count > 0 ? `: includes ${count} duplicate ${mutationsLabel} in patients with multiple samples` : "";
+        // }
+        //
+        // @computed get itemsLabelPlural(): string {
+        //     return `Mutations${this.multipleMutationInfo}`;
+        // }
+
+        return undefined;
+    }
+
+    protected get mutationTableComponent(): JSX.Element | null {
+        if (this.props.mutationTable) {
+            return this.props.mutationTable!;
+        } else {
+            let columns: DataTableColumn<Partial<Mutation>>[] = DEFAULT_MUTATION_COLUMNS;
+            if (this.props.mutationTableColumns) {
+                columns = this.props.mutationTableColumns!;
+            }
+
+            return (
+                <DefaultMutationTable
+                    dataStore={this.store.dataStore}
+                    columns={columns}
+                    initialSortColumn={this.props.mutationTableInitialSortColumn}
+                    initialSortDirection={this.props.mutationTableInitialSortDirection}
+                    reactTableProps={this.props.customMutationTableProps}
+                    hotspotData={this.store.indexedHotspotData}
+                    oncoKbData={this.store.oncoKbData}
+                    oncoKbCancerGenes={this.store.oncoKbCancerGenes}
+                    oncoKbEvidenceCache={this.store.oncoKbEvidenceCache}
+                    indexedMyVariantInfoAnnotations={this.store.indexedMyVariantInfoAnnotations}
+                    indexedVariantAnnotations={this.store.indexedVariantAnnotations}
+                    pubMedCache={this.pubMedCache}
+                    info={this.mutationTableInfo}
+                />
+            );
+        }
     }
 
     protected get mutationPlot(): JSX.Element | null
@@ -156,20 +268,44 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
         return (
             <LollipopMutationPlot
                 store={this.store}
+                controlsConfig={this.lollipopPlotControlsConfig}
                 pubMedCache={this.pubMedCache}
                 geneWidth={this.geneWidth}
+                vizHeight={this.props.plotVizHeight}
                 trackVisibility={this.trackVisibility}
+                customControls={this.customControls}
                 tracks={this.props.tracks}
                 showYMaxSlider={this.props.showPlotYMaxSlider}
                 showLegendToggle={this.props.showPlotLegendToggle}
                 showDownloadControls={this.props.showPlotDownloadControls}
+                filterResetPanel={
+                    this.props.showFilterResetPanel && this.isFiltered && this.filterResetPanel ?
+                        this.filterResetPanel: undefined
+                }
                 trackDataStatus={this.trackDataStatus}
+                showTrackSelector={this.props.showTrackSelector}
                 onXAxisOffset={this.onXAxisOffset}
                 onTrackVisibilityChange={this.props.onTrackVisibilityChange}
                 getMutationCount={this.props.getMutationCount}
                 getLollipopColor={this.props.getLollipopColor}
+                yMaxLabelPostfix={this.plotYMaxLabelPostfix}
+                yMaxFractionDigits={this.props.plotYMaxFractionDigits}
+                yAxisLabelPadding={this.props.plotYAxisLabelPadding}
+                showYAxis={this.props.showPlotYAxis}
+                topYAxisSymbol={this.plotTopYAxisSymbol}
+                bottomYAxisSymbol={this.plotBottomYAxisSymbol}
+                topYAxisDefaultMax={this.plotTopYAxisDefaultMax}
+                topYAxisDefaultMin={this.plotBottomYAxisDefaultMin}
+                bottomYAxisDefaultMax={this.plotBottomYAxisDefaultMax}
+                bottomYAxisDefaultMin={this.plotBottomYAxisDefaultMin}
+                lollipopTooltipCountInfo={this.props.plotLollipopTooltipCountInfo}
             />
         );
+    }
+
+    protected get customControls(): JSX.Element | undefined
+    {
+        return this.props.customControls;
     }
 
     protected get geneSummary(): JSX.Element | null
@@ -193,16 +329,22 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
         );
     }
 
-    protected get mutationRateSummary(): JSX.Element | null
+    @computed
+    protected get mutationRates(): MutationRate[] | undefined
     {
-        return this.props.mutationRates ? <DefaultMutationRateSummary rates={this.props.mutationRates!} /> : null;
+        return this.props.mutationRates;
     }
 
-    protected get isFiltered() {
+    protected get mutationRateSummary(): JSX.Element | null
+    {
+        return this.mutationRates ? <DefaultMutationRateSummary rates={this.mutationRates!} /> : null;
+    }
+
+    protected get isFiltered(): boolean {
         return this.store.dataStore.selectionFilters.length > 0 || this.store.dataStore.dataFilters.length > 0;
     }
 
-    protected get isMutationTableDataLoading()
+    protected get isMutationTableDataLoading(): boolean
     {
         // Child classes should override this method
         return false;
@@ -217,10 +359,10 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
 
         return (
             <FilterResetPanel
-                mutationsShown={`${tableData.length}/${allData.length}`}
+                filterInfo={`Showing ${tableData.length} of ${allData.length} mutations.`}
                 resetFilters={this.resetFilters}
             />
-        )
+        );
     }
 
     protected get mutationTable(): JSX.Element | null
@@ -250,23 +392,23 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
         return null;
     }
 
-    protected get isMutationPlotDataLoading() {
+    protected get isMutationPlotDataLoading(): boolean {
         return this.store.pfamDomainData.isPending;
     }
 
-    protected get isLoading() {
+    protected get isLoading(): boolean {
         return this.store.mutationData.isPending || this.isMutationPlotDataLoading || this.isMutationTableDataLoading;
     }
 
-    protected get loadingIndicator() {
-        return this.props.mainLoadingIndicator || <i className="fa fa-spinner fa-pulse fa-2x" />;
+    protected get loadingIndicator(): JSX.Element {
+        return this.props.mainLoadingIndicator ?
+            this.props.mainLoadingIndicator!: <i className="fa fa-spinner fa-pulse fa-2x" />;
     }
 
-    public render()
+    public render(): ReactNode
     {
         return this.isLoading ? this.loadingIndicator : (
             <div>
-                {this.isFiltered && this.filterResetPanel}
                 <div style={{ display:'flex' }}>
                     <div className="borderedChart" style={{ marginRight: "1rem" }}>
                         {this.mutationPlot}

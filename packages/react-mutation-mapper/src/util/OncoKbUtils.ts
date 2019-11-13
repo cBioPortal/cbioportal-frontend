@@ -3,6 +3,7 @@ import _ from "lodash";
 import {
     Evidence,
     EvidenceQueryRes,
+    generateQueryVariant,
     generateQueryVariantId,
     LEVELS
 } from "cbioportal-frontend-commons";
@@ -454,6 +455,19 @@ export function initEvidence()
         mutationEffectRefs: [],
         summary: ''
     };
+}
+
+export function getEvidenceQuery(mutation: Mutation,
+                                 resolveEntrezGeneId: (mutation: Mutation) => number,
+                                 resolveTumorType: (mutation: Mutation) => string)
+{
+    return generateQueryVariant(
+        resolveEntrezGeneId(mutation),
+        resolveTumorType(mutation),
+        mutation.proteinChange,
+        mutation.mutationType,
+        mutation.proteinPosStart,
+        mutation.proteinPosEnd);
 }
 
 export function getTumorTypeFromEvidence(evidence: any) {
