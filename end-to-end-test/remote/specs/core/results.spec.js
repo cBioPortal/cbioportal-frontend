@@ -233,7 +233,7 @@ describe('Results Page', function() {
             assert(!browser.isVisible(`${noBannerSelector}.mutations-oql-status-banner`));
             assert(!browser.isVisible(`${unaffectedBannerSelector}.mutations-oql-status-banner`));
         });
-        it.skip("should not be present in coexpression tab with simple query", function(){
+        it("should not be present in coexpression tab with simple query", function(){
             browser.click("a.tabAnchor_coexpression");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.coexp-oql-status-banner`));
@@ -296,7 +296,7 @@ describe('Results Page', function() {
             assert(!browser.isVisible(`${noBannerSelector}.mutations-oql-status-banner`));
             assert(browser.isVisible(`${unaffectedBannerSelector}.mutations-oql-status-banner`));
         });
-        it.skip("should be present in coexpression tab with explicit query", function(){
+        it("should be present in coexpression tab with explicit query", function(){
             browser.click("a.tabAnchor_coexpression");
             browser.waitForVisible(`${noBannerSelector}.coexp-oql-status-banner`, 10000);
             assert(!browser.isVisible(`${yesBannerSelector}.coexp-oql-status-banner`));
