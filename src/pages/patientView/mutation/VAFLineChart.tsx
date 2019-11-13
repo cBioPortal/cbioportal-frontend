@@ -29,7 +29,6 @@ import {once} from "mobx/lib/utils/utils";
 
 
 export interface IVAFLineChartProps {
-    mutations:Mutation[][];
     samples:Sample[];
     coverageInformation:CoverageInformation;
     mutationProfileId:string;
@@ -190,9 +189,9 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
 
     @computed get mutations() {
         if (this.props.dataStore.onlyShowHighlightedInVAFChart) {
-            return this.props.mutations.filter(m=>this.props.dataStore.isMutationHighlighted(m[0]));
+            return this.props.dataStore.allData.filter(m=>this.props.dataStore.isMutationHighlighted(m[0]));
         } else {
-            return this.props.mutations;
+            return this.props.dataStore.allData;
         }
     }
 

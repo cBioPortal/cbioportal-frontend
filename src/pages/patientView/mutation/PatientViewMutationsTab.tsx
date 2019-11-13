@@ -150,7 +150,6 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     />
                 </div>
                 <VAFLineChart
-                    mutations={this.mergedMutations}
                     dataStore={this.dataStore}
                     samples={this.props.store.samples.result!}
                     coverageInformation={this.props.store.coverageInformation.result!}
