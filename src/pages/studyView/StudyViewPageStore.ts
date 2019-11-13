@@ -1870,7 +1870,6 @@ export class StudyViewPageStore {
                         this.initialVisibleAttributesClinicalDataBinCountData);
                 },
                 invoke: async () => {
-                    const clinicalDataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
                     const dataBinMethod = DataBinMethodConstants.STATIC;
                     let result = [];
@@ -1885,7 +1884,7 @@ export class StudyViewPageStore {
                         !attributeChanged) {
                         result = this.initialVisibleAttributesClinicalDataBinCountData.result;
                     } else {
-                        if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
+                        if (this._clinicalDataIntervalFilterSet.has(uniqueKey) || this.isInitialFilterState) {
                             result = await internalClient.fetchClinicalDataBinCountsUsingPOST({
                                 dataBinMethod,
                                 clinicalDataBinCountFilter: {
