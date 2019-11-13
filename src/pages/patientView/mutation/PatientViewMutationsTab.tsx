@@ -274,7 +274,11 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                         </div>
                     </MSKTab>
                     <MSKTab id={PlotTab.HEATMAP} linkText="Heatmap">
-                        <MutationOncoprint store={this.props.store} dataStore={this.dataStore} sampleManager={this.props.sampleManager}/>
+                        <MutationOncoprint
+                            store={this.props.store}
+                            dataStore={this.dataStore}
+                            sampleManager={this.props.sampleManager}
+                        />
                     </MSKTab>
                 </MSKTabs>
                 <div style={{marginTop:30}}>

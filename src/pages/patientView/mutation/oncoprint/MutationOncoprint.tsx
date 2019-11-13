@@ -115,6 +115,10 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         });
     }
 
+    @computed get mutations() {
+        return _.flatten(this.props.dataStore.allData);
+    }
+
     readonly sortConfig = remoteData<IOncoprintProps["sortConfig"]>({
         await:()=>[this.sampleIdOrder],
         invoke:()=>{
@@ -170,17 +174,10 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     });
 
     readonly mutationWithIdOrder = remoteData({
-        await:()=>[this.props.store.mutationData, this.props.store.uncalledMutationData],
         invoke:()=>{
             // TODO: any specific order?
             const mutations = [];
-            for (const d of this.props.store.mutationData.result!) {
-                mutations.push({
-                    mutation: d,
-                    id: generateMutationIdByGeneAndProteinChangeAndEvent(d)
-                });
-            }
-            for (const d of this.props.store.uncalledMutationData.result!) {
+            for (const d of this.mutations) {
                 mutations.push({
                     mutation: d,
                     id: generateMutationIdByGeneAndProteinChangeAndEvent(d)
@@ -210,14 +207,10 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     }
 
     @computed get mutationKeyToMutation() {
-        if (this.props.store.mutationData.isComplete && this.props.store.uncalledMutationData.isComplete) {
-            return _.keyBy(
-                this.props.store.mutationData.result!.concat(this.props.store.uncalledMutationData.result!),
-                generateMutationIdByGeneAndProteinChangeAndEvent
-            );
-        } else {
-            return {};
-        }
+        return _.keyBy(
+            this.mutations,
+            generateMutationIdByGeneAndProteinChangeAndEvent
+        );
     }
 
     // Members that change based on the mode
@@ -241,11 +234,10 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     });
 
     private readonly sampleModeColumnLabels = remoteData({
-        await:()=>[this.props.store.mutationData, this.props.store.uncalledMutationData],
         invoke:()=>{
             const ret:{[uid:string]:ColumnLabel} = {};
             if (this.showMutationLabels) {
-                for (const mutation of this.props.store.mutationData.result!.concat(this.props.store.uncalledMutationData.result!)) {
+                for (const mutation of this.mutations) {
                     ret[generateMutationIdByGeneAndProteinChangeAndEvent(mutation)] = {
                         text: getMutationLabel(mutation)
                     };
@@ -303,19 +295,17 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         await:()=>[
             this.props.store.samples,
             this.sampleIdOrder,
-            this.props.store.mutationData,
-            this.props.store.uncalledMutationData,
             this.props.store.mutationMolecularProfile,
             this.props.store.coverageInformation,
         ],
         invoke:()=>{
-            if (this.props.store.mutationData.result!.length === 0) {
+            if (this.mutations.length === 0) {
                 return Promise.resolve([]);
             }
             const profile = this.props.store.mutationMolecularProfile.result!;
             const trackData = makeMutationHeatmapData(
                 this.props.store.samples.result!,
-                this.props.store.mutationData.result!.concat(this.props.store.uncalledMutationData.result!),
+                this.mutations,
                 this.props.store.coverageInformation.result!,
                 MutationOncoprintMode.SAMPLE_TRACKS
             );
@@ -371,19 +361,17 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         await:()=>[
             this.props.store.samples,
             this.mutationWithIdOrder,
-            this.props.store.mutationData,
-            this.props.store.uncalledMutationData,
             this.props.store.mutationMolecularProfile,
             this.props.store.coverageInformation,
         ],
         invoke:()=>{
-            if (this.props.store.mutationData.result!.length === 0) {
+            if (this.mutations.length === 0) {
                 return Promise.resolve([]);
             }
             const profile = this.props.store.mutationMolecularProfile.result!;
             const trackData = makeMutationHeatmapData(
                 this.props.store.samples.result!,
-                this.props.store.mutationData.result!.concat(this.props.store.uncalledMutationData.result!),
+                this.mutations,
                 this.props.store.coverageInformation.result!,
                 MutationOncoprintMode.MUTATION_TRACKS
             );
