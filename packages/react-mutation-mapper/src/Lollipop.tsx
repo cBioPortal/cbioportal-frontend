@@ -2,7 +2,7 @@ import * as React from 'react';
 import {observer} from "mobx-react";
 import {computed, observable} from "mobx";
 
-import {LollipopSpec} from "./model/LollipopSpec";
+import {LollipopPlacement, LollipopSpec} from "./model/LollipopSpec";
 
 type LollipopProps = {
     x:number;
@@ -39,6 +39,15 @@ export default class Lollipop extends React.Component<LollipopProps, {}> {
         return this.props.stickBaseY - this.props.stickHeight;
     }
 
+    @computed private get textY() {
+        if (this.props.spec.placement === LollipopPlacement.BOTTOM) {
+            return this.props.stickBaseY - this.props.stickHeight + this.props.headRadius + 5;
+        }
+        else {
+            return this.props.stickBaseY - this.props.stickHeight - this.props.headRadius - 5
+        }
+    }
+
     @computed public get circleHitRect() {
         return {
             x: this.circleX - this.props.hoverHeadRadius,
@@ -59,8 +68,9 @@ export default class Lollipop extends React.Component<LollipopProps, {}> {
                         fontFamily: this.props.label.fontFamily || "arial",
                     }}
                     textAnchor={this.props.label.textAnchor || "middle"}
+                    dominantBaseline={this.props.spec.placement === LollipopPlacement.BOTTOM ? "hanging" : "baseline"}
                     x={this.props.x}
-                    y={this.props.stickBaseY - this.props.stickHeight - this.props.headRadius - 5}
+                    y={this.textY}
                 >
                     {this.props.label.text}
                 </text>

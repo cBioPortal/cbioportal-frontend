@@ -1,14 +1,15 @@
-import {HotspotFilter} from "./HotspotFilter";
-import {OncoKbFilter} from "./OncoKbFilter";
-import {MutationFilter} from "./MutationFilter";
-
-export type DataFilter = {
-    position?: number[];
-    hotspot?: HotspotFilter[];
-    oncokb?: OncoKbFilter[];
-    mutation?: MutationFilter[];
+export enum DataFilterType {
+    ONCOKB = "oncokb",
+    HOTSPOT = "hotspot",
+    POSITION = "position",
+    MUTATION = "mutation",
+    CANCER_TYPE = "cancerType",
+    PROTEIN_IMPACT_TYPE = "proteinImpactType",
+    MUTATION_STATUS = "mutationStatus"
 }
 
-export type CustomFilterApplier = (filter: DataFilter,
-                                   datum: any,
-                                   positions: {[position: string]: {position: number}}) => boolean;
+export type DataFilter<T = any> = {
+    id?: string;
+    type: string;
+    values: T[];
+}

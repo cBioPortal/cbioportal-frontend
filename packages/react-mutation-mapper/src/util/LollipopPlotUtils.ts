@@ -1,5 +1,6 @@
 import {getTextWidth, longestCommonStartingSubstring} from "cbioportal-frontend-commons";
 
+import {LollipopSpec} from "../model/LollipopSpec";
 import {Mutation} from "../model/Mutation";
 import {countMutationsByProteinChange} from "./MutationUtils";
 
@@ -58,4 +59,66 @@ export function lollipopLabelTextAnchor(labelText: string,
     }
 
     return anchor;
+}
+
+export function calcYMaxInput(yMaxInput: number | undefined,
+                              yMaxStep: number,
+                              countRange: number[],
+                              oppositeCountRange: number[],
+                              yAxisSameScale?: boolean)
+{
+    // allow the user input value to go over the actual count range
+    let input = yMaxInput;
+
+    if (input === undefined) {
+        input = yAxisSameScale ?
+            getCommonYAxisMaxSliderValue(yMaxStep, countRange, oppositeCountRange):
+            getYAxisMaxSliderValue(yMaxStep, countRange);
+    }
+
+    return input;
+}
+
+export function getCommonYAxisMaxSliderValue(yMaxStep: number,
+                                             countRange: number[],
+                                             oppositeCountRange: number[],
+                                             yMaxInput?: number)
+{
+    const defaultTopMin = getYAxisMaxSliderValue(yMaxStep, countRange, yMaxInput);
+    const defaultBottomMin = getYAxisMaxSliderValue(yMaxStep, oppositeCountRange, yMaxInput);
+
+    return Math.max(defaultTopMin, defaultBottomMin);
+}
+
+export function getYAxisMaxSliderValue(yMaxStep: number, countRange: number[], yMaxInput?: number) {
+    const defaultMin = yMaxStep * Math.ceil(countRange[1] / yMaxStep);
+    // we don't want max slider value to go over the actual max, even if the user input goes over it
+    return Math.min(defaultMin, yMaxInput || defaultMin);
+}
+
+export function getYAxisMaxInputValue(yMaxStep: number, input: string)
+{
+    const value = parseFloat(input);
+    return value < yMaxStep ? yMaxStep : value;
+}
+
+export function calcCountRange(lollipops: LollipopSpec[],
+                               defaultMax: number = 5,
+                               defaultMin: number = 1): [number, number]
+{
+    if (lollipops.length === 0) {
+        return [0,0];
+    }
+    else
+    {
+        let max = defaultMax;
+        let min = defaultMin;
+
+        for (const lollipop of lollipops) {
+            max = Math.max(max, lollipop.count);
+            min = Math.min(min, lollipop.count);
+        }
+
+        return [min, Math.max(min, max)];
+    }
 }

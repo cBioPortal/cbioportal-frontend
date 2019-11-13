@@ -7,6 +7,7 @@ import styles from './proteinChange.module.scss';
 
 type ProteinChangeProps = {
     mutation: Mutation;
+    enableMutationStatusIndicator?: boolean;
 };
 
 export function proteinChangeSortMethod(a: string, b: string)
@@ -19,6 +20,10 @@ export function proteinChangeSortMethod(a: string, b: string)
 
 export default class ProteinChange extends React.Component<ProteinChangeProps, {}>
 {
+    public static defaultProps: Partial<ProteinChangeProps> = {
+        enableMutationStatusIndicator: true
+    };
+
     public render() {
         // use text as display value
         const mutation = this.props.mutation;
@@ -38,8 +43,9 @@ export default class ProteinChange extends React.Component<ProteinChangeProps, {
         let content = <span className={styles.proteinChange}>{proteinChange}</span>;
 
         // add a germline indicator next to protein change if it is a germline mutation!
-        if (mutationStatus &&
-            mutationStatus.toLowerCase().indexOf("germline") > -1)
+        if (this.props.enableMutationStatusIndicator &&
+            mutationStatus &&
+            mutationStatus.toLowerCase().includes("germline"))
         {
             content = (
                 <React.Fragment>

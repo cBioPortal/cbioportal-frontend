@@ -1,5 +1,5 @@
 // TODO do not use generated models
-import {VariantAnnotation} from "cbioportal-frontend-commons";
+import {MyVariantInfo, VariantAnnotation} from "cbioportal-frontend-commons";
 
 import {Hotspot, IHotspotIndex} from "./CancerHotspot";
 import DataStore from "./DataStore";
@@ -19,12 +19,15 @@ export interface MutationMapperStore {
     activeTranscript?: string;
     canonicalTranscript: RemoteData<EnsemblTranscript | undefined>,
     mutationAlignerLinks: RemoteData<{[pfamAccession:string]:string} | undefined>;
-    mutationData: RemoteData<Mutation[]>;
+    mutationData: RemoteData<Partial<Mutation>[] | undefined>;
     pfamDomainData: RemoteData<PfamDomain[] | undefined>;
     allTranscripts: RemoteData<EnsemblTranscript[] | undefined>;
     transcriptsByTranscriptId: {[transcriptId: string]: EnsemblTranscript};
-    mutationsByPosition: {[pos:number]: Mutation[]};
+    mutationsByPosition: {[pos: number]: Mutation[]};
+    groupedMutationsByPosition: {group: string, mutations : {[pos: number]: Mutation[]}}[];
+    mutationCountsByProteinImpactType: {[proteinImpactType: string] : number};
     uniqueMutationCountsByPosition: {[pos: number]: number};
+    uniqueGroupedMutationCountsByPosition: {group: string, counts: {[pos: number]: number}}[];
     ptmDataByProteinPosStart: RemoteData<{[pos: number]: PostTranslationalModification[]} | undefined>;
     ptmDataByTypeAndProteinPosStart: RemoteData<{[type: string] : {[position: number] : PostTranslationalModification[]}} | undefined>;
     indexedHotspotData: RemoteData<IHotspotIndex | undefined>;
@@ -34,6 +37,7 @@ export interface MutationMapperStore {
     oncoKbDataByPosition: {[pos: number]: IndicatorQueryResp[]};
     oncoKbEvidenceCache?: SimpleCache;
     indexedVariantAnnotations: RemoteData<{[genomicLocation: string]: VariantAnnotation} | undefined>;
+    indexedMyVariantInfoAnnotations?: RemoteData<{[genomicLocation: string]: MyVariantInfo} | undefined>;
     transcriptsWithAnnotations: RemoteData<string[] | undefined>;
     transcriptsWithProteinLength: RemoteData<string[] | undefined>;
     mutationsByTranscriptId: {[transcriptId:string]: Mutation[]};

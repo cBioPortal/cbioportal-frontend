@@ -5,34 +5,58 @@ import {Mutation} from "../../model/Mutation";
 import styles from "./mutationStatus.module.scss";
 
 type MutationStatusProps = {
-    mutation: Mutation;
+    value?: string;
+    mutation?: Mutation;
     displayValueMap?: {[mutationStatus: string]: string};
+    enableTooltip?: boolean;
+    styleMap?: {[mutationStatus: string]: React.CSSProperties};
 };
 
 export default class MutationStatus extends React.Component<MutationStatusProps, {}>
 {
+    public static defaultProps: Partial<MutationStatusProps> = {
+        enableTooltip: true
+    };
+
     public render() {
-        const value = this.props.mutation.mutationStatus;
+        const value = this.props.value || (this.props.mutation ? this.props.mutation.mutationStatus : undefined);
         let content: JSX.Element;
-        let needTooltip = false;
 
         if (value)
         {
-            if (value.toLowerCase().indexOf("somatic") > -1) {
+            if (value.toLowerCase().includes("somatic"))
+            {
                 content = (
-                    <span className={styles.somatic}>
-                        {(this.props.displayValueMap && this.props.displayValueMap["somatic"]) || "Somatic"}
+                    <span
+                        className={styles.somatic}
+                        style={this.props.styleMap ?
+                            this.props.styleMap[value.toLowerCase()]: undefined}
+                    >
+                        {
+                            (this.props.displayValueMap && (
+                                this.props.displayValueMap[value.toLowerCase()] || this.props.displayValueMap["somatic"]
+                            )) ||
+                            "Somatic"
+                        }
                     </span>
                 );
-                needTooltip = this.props.displayValueMap !== undefined;
             }
-            else if (value.toLowerCase().indexOf("germline") > -1) {
+            else if (value.toLowerCase().includes("germline"))
+            {
                 content = (
-                    <span className={styles.germline}>
-                        {(this.props.displayValueMap && this.props.displayValueMap["germline"]) || "Germline"}
+                    <span
+                        className={styles.germline}
+                        style={this.props.styleMap ?
+                            this.props.styleMap[value.toLowerCase()]: undefined}
+                    >
+                        {
+                            (this.props.displayValueMap && (
+                                this.props.displayValueMap[value.toLowerCase()] || this.props.displayValueMap["germline"]
+                            )) ||
+                            "Germline"
+                        }
                     </span>
                 );
-                needTooltip = this.props.displayValueMap !== undefined;
             }
             else {
                 content = <span className={styles.unknown}>{value}</span>;
@@ -42,7 +66,7 @@ export default class MutationStatus extends React.Component<MutationStatusProps,
             content = <span />;
         }
 
-        if (needTooltip)
+        if (this.props.enableTooltip)
         {
             content = (
                 <DefaultTooltip

@@ -1,12 +1,21 @@
+import {getProteinImpactType, ProteinImpactType} from "cbioportal-frontend-commons";
 import _ from "lodash";
 
+import {MutationFilter, MutationFilterValue} from "../filter/MutationFilter";
+import {MutationStatusFilter} from "../filter/MutationStatusFilter";
+import {PositionFilter} from "../filter/PositionFilter";
+import {ProteinImpactTypeFilter} from "../filter/ProteinImpactTypeFilter";
 import DataStore from "../model/DataStore";
-import {DataFilter} from "../model/DataFilter";
+import {DataFilter, DataFilterType} from "../model/DataFilter";
+import {ApplyFilterFn} from "../model/FilterApplier";
+import {Mutation} from "../model/Mutation";
+
+export const TEXT_INPUT_FILTER_ID = "_mutationTableTextInputFilter_";
 
 export function updatePositionSelectionFilters(dataStore: DataStore,
                                                position: number,
                                                isMultiSelect: boolean = false,
-                                               defaultFilterProps: Partial<DataFilter> = {})
+                                               defaultFilters: DataFilter[] = [])
 {
     const currentlySelected = dataStore.isPositionSelected(position);
     let selectedPositions: number[] = [];
@@ -27,29 +36,160 @@ export function updatePositionSelectionFilters(dataStore: DataStore,
         selectedPositions.push(position);
     }
 
-    const positionFilter = {...defaultFilterProps, position: selectedPositions};
+    const positionFilter = {type: DataFilterType.POSITION, values: selectedPositions};
     // we want to keep other filters (filters not related to positions) as is
-    const otherFilters = dataStore.selectionFilters.filter(f => f.position === undefined);
+    const otherFilters = dataStore.selectionFilters.filter(f => f.type !== DataFilterType.POSITION);
 
     // reset filters
     dataStore.clearSelectionFilters();
-    dataStore.setSelectionFilters([positionFilter, ...otherFilters]);
+    dataStore.setSelectionFilters([positionFilter, ...defaultFilters, ...otherFilters]);
 }
 
 export function updatePositionHighlightFilters(dataStore: DataStore,
                                                position: number,
-                                               defaultFilterProps: Partial<DataFilter> = {})
+                                               defaultFilters: DataFilter[] = [])
 {
     dataStore.clearHighlightFilters();
-    dataStore.setHighlightFilters([{...defaultFilterProps, position: [position]}]);
+
+    const positionFilter = {type: DataFilterType.POSITION, values: [position]};
+    dataStore.setHighlightFilters([...defaultFilters, positionFilter]);
 }
 
 export function findAllUniquePositions(filters: DataFilter[]): number[]
 {
     return _.uniq(_.flatten(
         filters
-            // remove filters with undefined positions
-            .filter(f => f.position !== undefined)
-            .map(f => [...f.position!])
+            // pick only position filters
+            .filter(f => f.type === DataFilterType.POSITION)
+            // we need to spread f.values, since it might be an observable mobx array
+            // (mobx observable arrays does not play well with some array functions)
+            .map(f => [...f.values])
     ));
+}
+
+export function indexPositions(filters: DataFilter[]): {[position: string]: {position: number}}
+{
+    return _.keyBy(findAllUniquePositions(filters).map(p => ({position: p})), 'position');
+}
+
+export function includesSearchTextIgnoreCase(value?: string, searchText?: string) {
+    return searchText && (value || "").toLowerCase().includes(searchText.toLowerCase());
+}
+
+export function findTextInputFilter(dataFilters: DataFilter[])
+{
+    return dataFilters.find(f => f.id === TEXT_INPUT_FILTER_ID);
+}
+
+export function findNonTextInputFilters(dataFilters: DataFilter[])
+{
+    return dataFilters.filter(f => f.id !== TEXT_INPUT_FILTER_ID);
+}
+
+export function findOneMutationFilterValue(filter: MutationFilter)
+{
+    return filter.values.length > 0 ? _.values(filter.values[0])[0]: undefined;
+}
+
+export function applyDefaultPositionFilter(filter: PositionFilter, mutation: Mutation)
+{
+    // const positions: {[position: string]: {position: number}} = indexPositions([filter]);
+    // return !positions || !!positions[mutation.proteinPosStart+""];
+
+    return filter.values.includes(mutation.proteinPosStart);
+}
+
+export function applyDefaultProteinImpactTypeFilter(filter: ProteinImpactTypeFilter, mutation: Mutation)
+{
+    return filter.values.includes(getProteinImpactType(mutation.mutationType || "other"));
+}
+
+export function applyDefaultMutationStatusFilter(filter: MutationStatusFilter, mutation: Mutation)
+{
+    return mutation.mutationStatus !== undefined && filter.values.includes(mutation.mutationStatus);
+}
+
+export function applyDefaultMutationFilter(filter: MutationFilter, mutation: Mutation)
+{
+    const filterPredicates = filter.values.map((value: MutationFilterValue) => {
+        const valuePredicates = Object.keys(value).map(key =>
+            includesSearchTextIgnoreCase(mutation[key] ? mutation[key].toString() : undefined,
+                value[key] ? value[key.toString()]: undefined));
+
+        // all predicates should be true in order for a match with a single MutationFilterValue
+        // (multiple values within the same MutationFilterValue are subject to AND)
+        return !valuePredicates.includes(false);
+    });
+
+    // a single true within a set of MutationFilterValues is a match for the entire filter
+    // (multiple MutationFilterValues within the same MutationFilter are subject to OR)
+    return filterPredicates.includes(true);
+}
+
+export function groupDataByGroupFilters(groupFilters: {group: string, filter: DataFilter}[],
+                                        sortedFilteredData: any[],
+                                        applyFilter: ApplyFilterFn)
+{
+    return groupFilters.map(groupFilter => ({
+        group: groupFilter.group,
+        data: sortedFilteredData.filter(
+            // TODO simplify array flatten if possible
+            m => applyFilter(groupFilter.filter, _.flatten([m])[0]))
+    }));
+}
+
+export function groupDataByProteinImpactType(sortedFilteredData: any[])
+{
+    const filters = Object.keys(ProteinImpactType).map(key => ({
+        group: ProteinImpactType[key],
+        filter: {
+            type: DataFilterType.PROTEIN_IMPACT_TYPE,
+            values: [ProteinImpactType[key]]
+        }
+    }));
+
+    const groupedData = groupDataByGroupFilters(filters, sortedFilteredData, applyDefaultProteinImpactTypeFilter);
+
+    return _.keyBy(groupedData, d => d.group);
+}
+
+export function onFilterOptionSelect(selectedValues: string[],
+                                     allValuesSelected: boolean,
+                                     dataStore: DataStore,
+                                     dataFilterType: string,
+                                     dataFilterId: string)
+{
+    // all other filters except the current filter with the given data filter id
+    const otherFilters = dataStore.dataFilters.filter((f: DataFilter) => f.id !== dataFilterId);
+
+    if (allValuesSelected) {
+        // if all values are selected just remove the existing filter with the given data filter id
+        // (assuming that no filtering required if everything is selected)
+        dataStore.setDataFilters(otherFilters);
+    }
+    else {
+        const dataFilter = {
+            id: dataFilterId,
+            type: dataFilterType,
+            values: selectedValues
+        };
+
+        // replace the existing data filter wrt the current selection (other filters + new data filter)
+        dataStore.setDataFilters([...otherFilters, dataFilter]);
+    }
+}
+
+export function applyDataFiltersOnDatum(datum: any, dataFilters: DataFilter[], applyFilter: ApplyFilterFn) {
+    return (
+        dataFilters.length > 0 &&
+        !dataFilters
+            .map(dataFilter => applyFilter(dataFilter, datum))
+            .includes(false)
+    );
+}
+
+export function applyDataFilters(data: any[], dataFilters: DataFilter[], applyFilter: ApplyFilterFn) {
+    return dataFilters.length > 0 ? data.filter(
+        m => applyDataFiltersOnDatum(m, dataFilters, applyFilter)
+    ): data;
 }
