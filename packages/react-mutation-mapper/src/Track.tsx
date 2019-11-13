@@ -32,7 +32,7 @@ export type TrackProps = {
     trackTitle?: JSX.Element;
     hideBaseline?: boolean;
     xOffset?: number;
-    defaultFilterProps?: Partial<DataFilter>;
+    defaultFilters?: DataFilter[];
     idClassPrefix?: string;
 };
 
@@ -100,7 +100,7 @@ export default class Track extends React.Component<TrackProps, {}>
         updatePositionSelectionFilters(this.props.dataStore,
             circleComponent.props.spec.codon,
             this.shiftPressed,
-            this.props.defaultFilterProps);
+            this.props.defaultFilters);
     }
 
     @autobind
@@ -108,7 +108,7 @@ export default class Track extends React.Component<TrackProps, {}>
     onTrackCircleHover(circleComponent: TrackCircle) {
         updatePositionHighlightFilters(this.props.dataStore,
             circleComponent.props.spec.codon,
-            this.props.defaultFilterProps);
+            this.props.defaultFilters);
         circleComponent.isHovered = true;
     }
 

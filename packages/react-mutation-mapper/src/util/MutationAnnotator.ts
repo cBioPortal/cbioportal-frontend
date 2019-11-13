@@ -220,6 +220,19 @@ export function findCanonicalTranscript(annotationSummary: VariantAnnotationSumm
 
 export function indexAnnotationsByGenomicLocation(variantAnnotations: VariantAnnotation[]): {[genomicLocation: string]: VariantAnnotation}
 {
-    return _.keyBy(variantAnnotations, annotation =>
-        genomicLocationString(annotation.annotation_summary.genomicLocation));
+    return _.keyBy(variantAnnotations, annotation => annotation.annotation_summary ?
+        genomicLocationString(annotation.annotation_summary.genomicLocation) : genomicLocationStringFromVariantAnnotation(annotation));
+}
+
+export function genomicLocationStringFromVariantAnnotation(annotation: VariantAnnotation)
+{
+    const chromosome = annotation.seq_region_name;
+    const start = annotation.start;
+    const end = annotation.end;
+    const referenceAllele = annotation.allele_string.split("/")[0];
+    const variantAllele = annotation.allele_string.split("/")[1];
+
+    return genomicLocationString({
+        chromosome, start, end, referenceAllele, variantAllele
+    });
 }

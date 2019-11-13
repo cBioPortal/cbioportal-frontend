@@ -6,7 +6,7 @@ import styles from "./filterResetPanel.module.scss";
 
 type FilterResetPanelProps = {
     resetFilters: () => void;
-    mutationsShown: string;
+    filterInfo?: JSX.Element | string;
     className?: string;
     buttonText?: string;
     buttonClass?: string;
@@ -16,7 +16,7 @@ type FilterResetPanelProps = {
 export class FilterResetPanel extends React.Component<FilterResetPanelProps, {}>
 {
     public static defaultProps: Partial<FilterResetPanelProps> = {
-        buttonText: "Show all mutations",
+        buttonText: "Show all",
         buttonClass: classNames("btn", "btn-secondary", "btn-sm"),
         className: classNames("alert" , "alert-success", styles.filterResetPanel),
     };
@@ -26,7 +26,7 @@ export class FilterResetPanel extends React.Component<FilterResetPanelProps, {}>
         return (
             <div className={this.props.className}>
                 <span style={{verticalAlign: "middle"}}>
-                    {`${this.props.mutationsShown} mutations are shown based on your filtering.`}
+                    {this.props.filterInfo}
                     <button
                         className={this.props.buttonClass}
                         style={{cursor:"pointer", marginLeft:6}}

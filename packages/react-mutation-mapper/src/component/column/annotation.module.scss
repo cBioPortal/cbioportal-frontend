@@ -1,11 +1,9 @@
 .annotation-item-load {
-    margin-left: 0.2em;
-    margin-right: -0.2em;
     color: #AAAAAA;
+    height: 18px;
 }
 
 .annotation-item-text {
-  display: inline-block;
   font-size: 9px;
   width: 22px;
   cursor: default;
@@ -15,8 +13,6 @@
   width: 16px;
   height: 18px;
   float: left;
-  line-height: 22px;
-  display: inline-block;
 }
 
 .annotation-item {

@@ -11,7 +11,7 @@ type SequenceProps = {
     height:number;
     color?:string;
     hitzoneClassName?:string;
-    spec:SequenceSpec;
+    spec?:SequenceSpec;
 };
 
 @observer

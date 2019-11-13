@@ -94,7 +94,7 @@ export function getColorForProteinImpactType(mutations: Partial<Mutation>[],
             mutations.map(m =>
             // create an array of elements for a single mutation, since the mutation count may be different than 1,
             // this adjusts the weight of a particular mutation with a high count
-            _.fill(Array(getMutationCount(m)), getCanonicalMutationType(m.mutationType || "")))
+            _.fill(Array(Math.ceil(getMutationCount(m))), getCanonicalMutationType(m.mutationType || "")))
         ).sort(mutationTypeSort);
 
     const chosenCanonicalType: CanonicalMutationType | undefined = findFirstMostCommonElt(sortedCanonicalMutationTypes);

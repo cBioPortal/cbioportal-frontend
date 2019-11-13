@@ -1,4 +1,3 @@
-import {generateQueryVariant} from "cbioportal-frontend-commons";
 import _ from "lodash";
 import {observer} from "mobx-react";
 import * as React from "react";
@@ -10,7 +9,7 @@ import {RemoteData} from "../../model/RemoteData";
 import {CancerGene, IndicatorQueryResp, IOncoKbData} from "../../model/OncoKb";
 import {SimpleCache} from "../../model/SimpleCache";
 import {is3dHotspot, isRecurrentHotspot} from "../../util/CancerHotspotsUtils";
-import {getIndicatorData} from "../../util/OncoKbUtils";
+import {getEvidenceQuery, getIndicatorData} from "../../util/OncoKbUtils";
 import {defaultArraySortMethod} from "../../util/ReactTableUtils";
 import OncoKB, {sortValue as oncoKbSortValue} from "../oncokb/OncoKB";
 import HotspotAnnotation, {sortValue as hotspotSortValue} from "./HotspotAnnotation";
@@ -71,18 +70,11 @@ function getDefaultTumorType(): string {
     return "Unknown";
 }
 
-// TODO partial duplicate of DefaultMutationMapperDataFetcher.fetchOncoKbData, move into a utility function
-function getEvidenceQuery(mutation: Mutation,
-                          resolveEntrezGeneId: (mutation: Mutation) => number = getDefaultEntrezGeneId,
-                          resolveTumorType: (mutation: Mutation) => string = getDefaultTumorType)
+function getDefaultEvidenceQuery(mutation: Mutation,
+                                 resolveEntrezGeneId: (mutation: Mutation) => number = getDefaultEntrezGeneId,
+                                 resolveTumorType: (mutation: Mutation) => string = getDefaultTumorType)
 {
-    return generateQueryVariant(
-        resolveEntrezGeneId(mutation),
-        resolveTumorType(mutation),
-        mutation.proteinChange,
-        mutation.mutationType,
-        mutation.proteinPosStart,
-        mutation.proteinPosEnd);
+    return getEvidenceQuery(mutation, resolveEntrezGeneId, resolveTumorType);
 }
 
 export function getAnnotationData(mutation?: Mutation,
@@ -196,7 +188,7 @@ export default class Annotation extends React.Component<AnnotationProps, {}>
 {
     public render() {
         const annotation = this.getAnnotationData(this.props);
-        const evidenceQuery = getEvidenceQuery(this.props.mutation,
+        const evidenceQuery = getDefaultEvidenceQuery(this.props.mutation,
             this.props.resolveEntrezGeneId,
             this.props.resolveTumorType);
 

@@ -1,4 +1,9 @@
-import {GenomeNexusAPI, GenomeNexusAPIInternal, OncoKbAPI} from "cbioportal-frontend-commons";
+import {
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+    OncoKbAPI,
+    cachePostMethodsOnClient
+} from "cbioportal-frontend-commons";
 import _ from "lodash";
 
 import {Mutation} from "../model/Mutation";
@@ -48,14 +53,38 @@ export async function fetchVariantAnnotationsIndexedByGenomicLocation(mutations:
     return indexAnnotationsByGenomicLocation(variantAnnotations);
 }
 
-export function initGenomeNexusClient(genomeNexusUrl?: string): GenomeNexusAPI {
-    return new GenomeNexusAPI(genomeNexusUrl || DEFAULT_GENOME_NEXUS_URL);
+export function initGenomeNexusClient(genomeNexusUrl?: string,
+                                      cachePostMethods?: boolean,
+                                      apiCacheLimit?: number): GenomeNexusAPI {
+    const client = new GenomeNexusAPI(genomeNexusUrl || DEFAULT_GENOME_NEXUS_URL);
+
+    if (cachePostMethods) {
+        cachePostMethodsOnClient(GenomeNexusAPI, [], /POST$/, apiCacheLimit);
+    }
+
+    return client;
 }
 
-export function initGenomeNexusInternalClient(genomeNexusUrl?: string): GenomeNexusAPIInternal {
-    return new GenomeNexusAPIInternal(genomeNexusUrl || DEFAULT_GENOME_NEXUS_URL);
+export function initGenomeNexusInternalClient(genomeNexusUrl?: string,
+                                              cachePostMethods?: boolean,
+                                              apiCacheLimit?: number): GenomeNexusAPIInternal {
+    const client = new GenomeNexusAPIInternal(genomeNexusUrl || DEFAULT_GENOME_NEXUS_URL);
+
+    if (cachePostMethods) {
+        cachePostMethodsOnClient(GenomeNexusAPIInternal, [], /POST$/, apiCacheLimit);
+    }
+
+    return client;
 }
 
-export function initOncoKbClient(oncoKbUrl?: string): OncoKbAPI {
-    return new OncoKbAPI(oncoKbUrl || DEFAULT_ONCO_KB_URL);
+export function initOncoKbClient(oncoKbUrl?: string,
+                                 cachePostMethods?: boolean,
+                                 apiCacheLimit?: number): OncoKbAPI {
+    const client = new OncoKbAPI(oncoKbUrl || DEFAULT_ONCO_KB_URL);
+
+    if (cachePostMethods) {
+        cachePostMethodsOnClient(OncoKbAPI, [], undefined, apiCacheLimit);
+    }
+
+    return client;
 }

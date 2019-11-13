@@ -1,15 +1,15 @@
 import autobind from "autobind-decorator";
+import {MyVariantInfo, remoteData, VariantAnnotation} from "cbioportal-frontend-commons";
 import _ from "lodash";
 import {computed, observable} from "mobx";
 import MobxPromise, {cached} from "mobxpromise";
 
-// TODO define VariantAnnotation model?
-import {remoteData, VariantAnnotation} from "cbioportal-frontend-commons";
-
+import OncoKbEvidenceCache from "../cache/OncoKbEvidenceCache";
 import {AggregatedHotspots, GenomicLocation, Hotspot, IHotspotIndex} from "../model/CancerHotspot";
-import {DataFilter} from "../model/DataFilter";
+import {DataFilter, DataFilterType} from "../model/DataFilter";
 import DataStore from "../model/DataStore";
 import {EnsemblTranscript} from "../model/EnsemblTranscript";
+import {ApplyFilterFn, FilterApplier} from "../model/FilterApplier";
 import {Gene} from "../model/Gene";
 import {Mutation} from "../model/Mutation";
 import MutationMapperStore from "../model/MutationMapperStore";
@@ -20,28 +20,35 @@ import {
     defaultHotspotFilter,
     groupCancerHotspotDataByPosition,
     groupHotspotsByMutations,
-    indexHotspotsData,
-    isHotspot
+    indexHotspotsData
 } from "../util/CancerHotspotsUtils";
 import {ONCOKB_DEFAULT_DATA} from "../util/DataFetcherUtils";
+import {applyDataFilters, groupDataByProteinImpactType} from "../util/FilterUtils";
 import {getMutationsToTranscriptId} from "../util/MutationAnnotator";
 import {genomicLocationString, groupMutationsByProteinStartPos, uniqueGenomicLocations} from "../util/MutationUtils";
 import {
-    defaultOncoKbFilter,
     defaultOncoKbIndicatorFilter,
     groupOncoKbIndicatorDataByMutations
 } from "../util/OncoKbUtils";
 import {groupPtmDataByPosition, groupPtmDataByTypeAndPosition} from "../util/PtmUtils";
 import {DefaultMutationMapperDataStore} from "./DefaultMutationMapperDataStore";
 import {DefaultMutationMapperDataFetcher} from "./DefaultMutationMapperDataFetcher";
-import OncoKbEvidenceCache from "../cache/OncoKbEvidenceCache";
+import {DefaultMutationMapperFilterApplier} from "./DefaultMutationMapperFilterApplier";
 
 interface DefaultMutationMapperStoreConfig {
+    annotationFields?: string[];
     isoformOverrideSource?: string;
     filterMutationsBySelectedTranscript?: boolean;
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
+    cachePostMethodsOnClients?: boolean;
+    apiCacheLimit?: number;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
+    getTumorType?: (mutation: Partial<Mutation>) => string;
+    dataFilters?: DataFilter[];
+    selectionFilters?: DataFilter[];
+    highlightFilters?: DataFilter[];
+    groupFilters?: {group: string, filter: DataFilter}[];
 }
 
 class DefaultMutationMapperStore implements MutationMapperStore
@@ -52,9 +59,19 @@ class DefaultMutationMapperStore implements MutationMapperStore
     constructor(
         public gene: Gene,
         protected config: DefaultMutationMapperStoreConfig,
-        protected getMutations: () => Mutation[]
+        protected getMutations: () => Mutation[],
+        protected filterApplier?: FilterApplier,
+        protected filterAppliersOverride?: {[filterType: string]: ApplyFilterFn}
     ) {
-
+        if (!this.filterApplier) {
+            this.filterApplier = new DefaultMutationMapperFilterApplier(
+                this.indexedHotspotData,
+                this.oncoKbData,
+                this.getDefaultTumorType,
+                this.getDefaultEntrezGeneId,
+                this.filterAppliersOverride
+            );
+        }
     }
 
     @computed
@@ -99,9 +116,21 @@ class DefaultMutationMapperStore implements MutationMapperStore
         return this.config.isoformOverrideSource || "uniprot";
     }
 
+    @computed
+    public get annotationFields(): string[] {
+        return _.uniq(["annotation_summary", "hotspots"].concat(this.config.annotationFields || []));
+    }
+
     @cached
     public get dataStore(): DataStore {
-        return new DefaultMutationMapperDataStore(this.mutations, this.customFilterApplier);
+        return new DefaultMutationMapperDataStore(
+            this.mutations,
+            this.filterApplier,
+            this.config.dataFilters,
+            this.config.selectionFilters,
+            this.config.highlightFilters,
+            this.config.groupFilters
+        );
     }
 
     @cached
@@ -136,34 +165,91 @@ class DefaultMutationMapperStore implements MutationMapperStore
     public get dataFetcher(): DefaultMutationMapperDataFetcher {
         return new DefaultMutationMapperDataFetcher({
             genomeNexusUrl: this.config.genomeNexusUrl,
-            oncoKbUrl: this.config.oncoKbUrl
+            oncoKbUrl: this.config.oncoKbUrl,
+            cachePostMethodsOnClients: this.config.cachePostMethodsOnClients,
+            apiCacheLimit: this.config.apiCacheLimit
         });
     }
 
     @computed
-    public get mutationsByPosition(): {[pos:number]: Mutation[]} {
+    public get mutationsByPosition(): {[pos: number]: Mutation[]} {
         return groupMutationsByProteinStartPos(_.flatten(this.dataStore.sortedFilteredData));
     }
 
     @computed
+    public get groupedMutationsByPosition(): {group: string, mutations: {[pos: number]: Mutation[]}}[]
+    {
+        return this.dataStore.sortedFilteredGroupedData.map(
+            groupedData => ({
+                group: groupedData.group,
+                mutations: groupMutationsByProteinStartPos(_.flatten(groupedData.data))
+            })
+        );
+    }
+
+    @computed
+    protected get mutationsGroupedByProteinImpactType()
+    {
+        const filtersWithoutProteinImpactTypeFilter =
+            this.dataStore.dataFilters.filter(f => f.type !== DataFilterType.PROTEIN_IMPACT_TYPE);
+
+        // apply filters excluding the protein impact type filters
+        // this prevents number of unchecked protein impact types from being counted as zero
+        const sortedFilteredData = applyDataFilters(
+            this.dataStore.allData, filtersWithoutProteinImpactTypeFilter, this.dataStore.applyFilter);
+
+        return groupDataByProteinImpactType(sortedFilteredData);
+    }
+
+    @computed
+    public get mutationCountsByProteinImpactType(): {[proteinImpactType: string] : number}
+    {
+        const map: {[proteinImpactType: string] : number} = {};
+
+        Object.keys(this.mutationsGroupedByProteinImpactType)
+            .forEach(proteinImpactType => {
+                const g = this.mutationsGroupedByProteinImpactType[proteinImpactType];
+                map[g.group] = g.data.length;
+            });
+
+        return map;
+    }
+
+    @computed
     public get uniqueMutationCountsByPosition(): {[pos: number]: number} {
+        return this.countUniqueMutationsByPosition(this.mutationsByPosition);
+    }
+
+    @computed
+    public get uniqueGroupedMutationCountsByPosition(): {group: string, counts: {[pos: number]: number}}[]
+    {
+        return this.groupedMutationsByPosition.map(
+            groupedMutations => ({
+                group: groupedMutations.group,
+                counts: this.countUniqueMutationsByPosition(groupedMutations.mutations)
+            })
+        );
+    }
+
+    @computed
+    public get transcriptsByTranscriptId(): {[transcriptId:string]: EnsemblTranscript} {
+        return _.keyBy(this.allTranscripts.result, (transcript: EnsemblTranscript) => transcript.transcriptId);
+    }
+
+    public countUniqueMutationsByPosition(mutationsByPosition: {[pos:number]: Mutation[]}): {[pos: number]: number}
+    {
         const map: {[pos: number]: number} = {};
 
-        Object.keys(this.mutationsByPosition).forEach(pos => {
+        Object.keys(mutationsByPosition).forEach(pos => {
             const position = parseInt(pos, 10);
             // for each position multiple mutations for the same patient is counted only once
-            const mutations = this.mutationsByPosition[position];
+            const mutations = mutationsByPosition[position];
             if (mutations) {
                 map[position] = this.countUniqueMutations(mutations);
             }
         });
 
         return map;
-    }
-
-    @computed
-    public get transcriptsByTranscriptId(): {[transcriptId:string]: EnsemblTranscript} {
-        return _.keyBy(this.allTranscripts.result, (transcript: EnsemblTranscript) => transcript.transcriptId);
     }
 
     public countUniqueMutations(mutations: Mutation[]): number
@@ -180,7 +266,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
         return mutations.map(m => getMutationCount(m)).reduce((sum, count) => sum + count);
     }
 
-    readonly mutationData = remoteData({
+    readonly mutationData: MobxPromise<Partial<Mutation>[] | undefined> = remoteData({
         await: () => {
             if (this.config.filterMutationsBySelectedTranscript) {
                 return [this.canonicalTranscript, this.indexedVariantAnnotations];
@@ -357,7 +443,7 @@ class DefaultMutationMapperStore implements MutationMapperStore
         }
     }, undefined);
 
-    readonly transcriptsWithAnnotations = remoteData<string[] | undefined>({
+    readonly transcriptsWithAnnotations: MobxPromise<string[] | undefined> = remoteData({
         await: () => [
             this.indexedVariantAnnotations,
             this.allTranscripts,
@@ -537,7 +623,20 @@ class DefaultMutationMapperStore implements MutationMapperStore
     readonly indexedVariantAnnotations: MobxPromise<{[genomicLocation: string]: VariantAnnotation} | undefined> = remoteData({
         invoke: async () => this.getMutations() ?
             await this.dataFetcher.fetchVariantAnnotationsIndexedByGenomicLocation(
-                this.getMutations(), ["annotation_summary", "hotspots"], this.isoformOverrideSource) :
+                this.getMutations(), this.annotationFields, this.isoformOverrideSource) :
+            undefined,
+        onError: () => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
+    }, undefined);
+
+    readonly indexedMyVariantInfoAnnotations: MobxPromise<{[genomicLocation: string]: MyVariantInfo} | undefined> = remoteData({
+        await: () => [
+            this.mutationData
+        ],
+        invoke: async () => this.getMutations() ?
+            await this.dataFetcher.fetchMyVariantInfoAnnotationsIndexedByGenomicLocation(
+                this.getMutations(), this.isoformOverrideSource) :
             undefined,
         onError: () => {
             // fail silently, leave the error handling responsibility to the data consumer
@@ -563,57 +662,13 @@ class DefaultMutationMapperStore implements MutationMapperStore
 
     @autobind
     protected getDefaultTumorType(mutation: Mutation): string {
-        // TODO get actual tumor type for a given mutation (if possible)
-        return mutation ? "Unknown" : "";
+        return this.config.getTumorType ? this.config.getTumorType(mutation) : "Unknown";
     }
 
     @autobind
     protected getDefaultEntrezGeneId(mutation: Mutation): number {
         // assuming all mutations in this store is for the same gene
         return this.gene.entrezGeneId || (mutation.gene && mutation.gene.entrezGeneId) || 0;
-    }
-
-    @autobind
-    protected customFilterApplier(filter: DataFilter,
-                                  mutation: Mutation,
-                                  positions: {[position: string]: {position: number}})
-    {
-        let pick = true;
-
-        if (filter.position) {
-            pick = !!positions[mutation.proteinPosStart+""];
-        }
-
-        if (pick &&
-            filter.hotspot &&
-            this.indexedHotspotData.result)
-        {
-            // TODO for now ignoring the actual filter value and treating as a boolean
-            pick = isHotspot(mutation, this.indexedHotspotData.result, defaultHotspotFilter);
-        }
-
-        if (pick &&
-            filter.oncokb &&
-            this.oncoKbData.result &&
-            !(this.oncoKbData.result instanceof Error))
-        {
-            // TODO for now ignoring the actual filter value and treating as a boolean
-            pick = defaultOncoKbFilter(mutation,
-                this.oncoKbData.result,
-                this.getDefaultTumorType,
-                this.getDefaultEntrezGeneId);
-        }
-
-        if (pick &&
-            filter.mutation)
-        {
-            // TODO add a separate function to apply mutation filters
-            pick = !filter.mutation
-                .map(f => f.mutationType === undefined || mutation.mutationType === f.mutationType)
-                .includes(false);
-        }
-
-        return pick;
     }
 }
 

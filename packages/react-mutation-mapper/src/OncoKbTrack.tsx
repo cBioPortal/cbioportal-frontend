@@ -3,8 +3,9 @@ import * as _ from "lodash";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
 
+import {OncoKbFilterValue} from "./filter/OncoKbFilter";
+import {DataFilterType} from "./model/DataFilter";
 import MutationMapperStore from "./model/MutationMapperStore";
-import {OncoKbFilter} from "./model/OncoKbFilter";
 import OncoKbTrackTooltip from "./OncoKbTrackTooltip";
 import {default as Track, TrackProps} from "./Track";
 import {TrackItemSpec} from "./TrackCircle";
@@ -63,7 +64,7 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}>
         return (
             <Track
                 dataStore={this.props.dataStore}
-                defaultFilterProps={{oncokb: [OncoKbFilter.Oncogenic]}}
+                defaultFilters={[{type: DataFilterType.ONCOKB, values: [OncoKbFilterValue.Oncogenic]}]}
                 width={this.props.width}
                 xOffset={this.props.xOffset}
                 proteinLength={this.props.proteinLength}

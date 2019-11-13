@@ -5,7 +5,6 @@ import Response = request.Response;
 import {
     EnsemblFilter,
     generatePartialEvidenceQuery,
-    generateQueryVariant,
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
     GenomicLocation,
@@ -30,12 +29,16 @@ import {
     initOncoKbClient,
     ONCOKB_DEFAULT_DATA
 } from "../util/DataFetcherUtils";
+import {getMyVariantInfoAnnotationsFromIndexedVariantAnnotations} from "../util/VariantAnnotationUtils";
 import {uniqueGenomicLocations} from "../util/MutationUtils";
+import {getEvidenceQuery} from "../util/OncoKbUtils";
 
 export interface MutationMapperDataFetcherConfig {
     myGeneUrlTemplate?: string;
     uniprotIdUrlTemplate?: string;
     mutationAlignerUrlTemplate?: string;
+    cachePostMethodsOnClients?: boolean;
+    apiCacheLimit?: number;
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
 }
@@ -52,9 +55,12 @@ export class DefaultMutationMapperDataFetcher
         genomeNexusInternalClient?: Partial<GenomeNexusAPIInternal>,
         oncoKbClient?: Partial<OncoKbAPI>
     ) {
-        this.genomeNexusClient = genomeNexusClient as GenomeNexusAPI || initGenomeNexusClient(config.genomeNexusUrl);
-        this.genomeNexusInternalClient = genomeNexusInternalClient as GenomeNexusAPIInternal || initGenomeNexusInternalClient(config.genomeNexusUrl);
-        this.oncoKbClient = oncoKbClient as OncoKbAPI || initOncoKbClient(config.oncoKbUrl);
+        this.genomeNexusClient = genomeNexusClient as GenomeNexusAPI ||
+            initGenomeNexusClient(config.genomeNexusUrl, config.cachePostMethodsOnClients, config.apiCacheLimit);
+        this.genomeNexusInternalClient = genomeNexusInternalClient as GenomeNexusAPIInternal ||
+            initGenomeNexusInternalClient(config.genomeNexusUrl, config.cachePostMethodsOnClients, config.apiCacheLimit);
+        this.oncoKbClient = oncoKbClient as OncoKbAPI ||
+            initOncoKbClient(config.oncoKbUrl, config.cachePostMethodsOnClients, config.apiCacheLimit);
     }
 
     public async fetchSwissProtAccession(entrezGeneId: number)
@@ -95,9 +101,19 @@ export class DefaultMutationMapperDataFetcher
     {
         return await fetchVariantAnnotationsIndexedByGenomicLocation(mutations, fields, isoformOverrideSource, client);
     }
+
+    public async fetchMyVariantInfoAnnotationsIndexedByGenomicLocation(mutations: Partial<Mutation>[],
+                                                                       isoformOverrideSource: string = "uniprot",
+                                                                       client: GenomeNexusAPI = this.genomeNexusClient)
+    {
+        const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
+            mutations, ["my_variant_info"], isoformOverrideSource, client);
+
+        return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(indexedVariantAnnotations);
+    }
+
     /*
-     * Gets the canonical transcript. If there is none pick the transcript with max
-     * length.
+     * Gets the canonical transcript. If there is none pick the transcript with max length.
      */
     public async fetchCanonicalTranscriptWithFallback(hugoSymbol:string,
                                                       isoformOverrideSource: string,
@@ -195,15 +211,11 @@ export class DefaultMutationMapperDataFetcher
 
         const mutationsToQuery = _.filter(mutations, m => !!annotatedGenes[getEntrezGeneId(m)]);
         const queryVariants = _.uniqBy(_.map(mutationsToQuery, (mutation: Mutation) => {
-            return generateQueryVariant(
-                // mutation.gene.entrezGeneId,
-                getEntrezGeneId(mutation),
-                // cancerTypeForOncoKb(mutation.uniqueSampleKey, uniqueSampleKeyToTumorType),
-                getTumorType(mutation),
-                mutation.proteinChange,
-                mutation.mutationType,
-                mutation.proteinPosStart,
-                mutation.proteinPosEnd) as Query;
+            return getEvidenceQuery(
+                mutation,
+                getEntrezGeneId, // mutation.gene.entrezGeneId
+                getTumorType // cancerTypeForOncoKb(mutation.uniqueSampleKey, uniqueSampleKeyToTumorType)
+            ) as Query;
         }), "id");
 
         return this.queryOncoKbData(queryVariants, evidenceTypes, client);

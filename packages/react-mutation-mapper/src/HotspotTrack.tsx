@@ -3,11 +3,12 @@ import * as _ from "lodash";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
 
+import {HotspotFilterValue} from "./filter/HotspotFilter";
 import {Hotspot, IHotspotIndex} from "./model/CancerHotspot";
-import {HotspotFilter} from "./model/HotspotFilter";
-import HotspotInfo from "./HotspotInfo";
+import {DataFilterType} from "./model/DataFilter";
 import {Mutation} from "./model/Mutation";
 import MutationMapperStore from "./model/MutationMapperStore";
+import HotspotInfo from "./HotspotInfo";
 import {
     defaultHotspotFilter,
     filter3dHotspotsByMutations,
@@ -95,7 +96,7 @@ export default class HotspotTrack extends React.Component<HotspotTrackProps, {}>
         return (
             <Track
                 dataStore={this.props.dataStore}
-                defaultFilterProps={{hotspot: [HotspotFilter.DefaultHotspot]}}
+                defaultFilters={[{type: DataFilterType.HOTSPOT, values: [HotspotFilterValue.DefaultHotspot]}]}
                 width={this.props.width}
                 xOffset={this.props.xOffset}
                 proteinLength={this.props.proteinLength}
