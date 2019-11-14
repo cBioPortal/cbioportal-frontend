@@ -1,7 +1,7 @@
 import {DefaultTooltip} from "cbioportal-frontend-commons";
 import * as React from "react";
 
-import {formatPercentValue} from "./util/FormatUtils";
+import {formatPercentValue} from "../../util/FormatUtils";
 
 import styles from "./defaultMutationRateSummary.module.scss"
 

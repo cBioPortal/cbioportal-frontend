@@ -3,10 +3,10 @@ import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import {HitZoneConfig, defaultHitzoneConfig, initHitZoneFromConfig, DefaultTooltip} from "cbioportal-frontend-commons";
 
-import DataStore from "./model/DataStore";
-import {SequenceSpec} from "./model/SequenceSpec";
-import {LollipopSpec} from "./model/LollipopSpec";
-import {DomainSpec} from "./model/DomainSpec";
+import DataStore from "../../model/DataStore";
+import {SequenceSpec} from "../../model/SequenceSpec";
+import {LollipopSpec} from "../../model/LollipopSpec";
+import {DomainSpec} from "../../model/DomainSpec";
 import LollipopPlotNoTooltip from "./LollipopPlotNoTooltip";
 
 export type LollipopPlotProps = {

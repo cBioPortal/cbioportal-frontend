@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import {loaderIcon} from "../StatusHelpers";
-import HotspotInfo from "../../HotspotInfo";
+import HotspotInfo from "../hotspot/HotspotInfo";
 import {DefaultTooltip} from "cbioportal-frontend-commons";
 
 import hotspotImg from '../../images/cancer-hotspots.svg';

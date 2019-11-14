@@ -2,7 +2,7 @@ import * as React from 'react';
 import {observer} from "mobx-react";
 import {observable} from "mobx";
 
-import {SequenceSpec} from "./model/SequenceSpec";
+import {SequenceSpec} from "../../model/SequenceSpec";
 
 type SequenceProps = {
     x:number;

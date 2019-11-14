@@ -3,9 +3,9 @@ import * as _ from "lodash";
 
 import {LEVELS} from "cbioportal-frontend-commons";
 
-import {Mutation} from "./model/Mutation";
-import {IndicatorQueryResp} from "./model/OncoKb";
-import OncoKbSummaryTable from "./OncoKbSummaryTable";
+import {Mutation} from "../../model/Mutation";
+import {IndicatorQueryResp} from "../../model/OncoKb";
+import OncoKbSummaryTable from "../oncokb/OncoKbSummaryTable";
 
 type OncoKbTrackTooltipProps = {
     mutations: Mutation[];

@@ -1,4 +1,4 @@
-import {TrackName, TrackVisibility} from "../TrackSelector";
+import {TrackName, TrackVisibility} from "../component/track/TrackSelector";
 
 export function initDefaultTrackVisibility(): TrackVisibility {
     return {

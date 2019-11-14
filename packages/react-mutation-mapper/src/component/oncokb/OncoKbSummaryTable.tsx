@@ -9,8 +9,8 @@ import {
     EllipsisTextTooltip
 } from "cbioportal-frontend-commons";
 
-import {defaultSortMethod, defaultStringArraySortMethod} from "./util/ReactTableUtils";
-import {levelIconClassNames} from "./util/OncoKbUtils";
+import {defaultSortMethod, defaultStringArraySortMethod} from "../../util/ReactTableUtils";
+import {levelIconClassNames} from "../../util/OncoKbUtils";
 
 export type OncoKbSummaryTableProps = {
     data: OncoKbSummary[];

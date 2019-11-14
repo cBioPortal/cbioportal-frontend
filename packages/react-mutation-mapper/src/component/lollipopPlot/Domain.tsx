@@ -4,7 +4,7 @@ import {computed, observable} from "mobx";
 
 import $ from 'jquery';
 
-import {DomainSpec} from "./model/DomainSpec";
+import {DomainSpec} from "../../model/DomainSpec";
 
 type DomainProps = {
     x:number;

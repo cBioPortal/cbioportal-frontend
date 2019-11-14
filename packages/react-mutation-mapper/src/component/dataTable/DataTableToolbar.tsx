@@ -2,7 +2,7 @@ import _ from "lodash";
 import {observer} from "mobx-react";
 import * as React from "react";
 
-import {ColumnSelector, ColumnSelectorProps, ColumnVisibilityDef} from "../ColumnSelector";
+import {ColumnSelector, ColumnSelectorProps, ColumnVisibilityDef} from "./ColumnSelector";
 import {SearchBox} from "./SearchBox";
 
 type DataTableToolbarProps = {

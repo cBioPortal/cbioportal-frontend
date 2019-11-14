@@ -6,11 +6,11 @@ import {Collapse} from 'react-collapse';
 import autobind from "autobind-decorator";
 import {DefaultTooltip, EllipsisTextTooltip} from "cbioportal-frontend-commons";
 
-import {MobxCache} from "./model/MobxCache";
-import MutationMapperStore from "./model/MutationMapperStore";
-import {compareByPtmTypePriority, ptmColor} from "./util/PtmUtils";
-import PtmAnnotationTable from "./PtmAnnotationTable";
-import {PostTranslationalModification} from "./model/PostTranslationalModification";
+import {MobxCache} from "../../model/MobxCache";
+import MutationMapperStore from "../../model/MutationMapperStore";
+import {compareByPtmTypePriority, ptmColor} from "../../util/PtmUtils";
+import PtmAnnotationTable from "../ptm/PtmAnnotationTable";
+import {PostTranslationalModification} from "../../model/PostTranslationalModification";
 import {default as Track, TrackProps} from "./Track";
 import {TrackItemSpec} from "./TrackCircle";
 

@@ -3,22 +3,22 @@ import * as _ from "lodash";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
 
-import {HotspotFilterValue} from "./filter/HotspotFilter";
-import {Hotspot, IHotspotIndex} from "./model/CancerHotspot";
-import {DataFilterType} from "./model/DataFilter";
-import {Mutation} from "./model/Mutation";
-import MutationMapperStore from "./model/MutationMapperStore";
-import HotspotInfo from "./HotspotInfo";
+import {HotspotFilterValue} from "../../filter/HotspotFilter";
+import {Hotspot, IHotspotIndex} from "../../model/CancerHotspot";
+import {DataFilterType} from "../../model/DataFilter";
+import {Mutation} from "../../model/Mutation";
+import MutationMapperStore from "../../model/MutationMapperStore";
+import HotspotInfo from "../hotspot/HotspotInfo";
 import {
     defaultHotspotFilter,
     filter3dHotspotsByMutations,
     filterRecurrentHotspotsByMutations,
     isHotspot
-} from "./util/CancerHotspotsUtils";
+} from "../../util/CancerHotspotsUtils";
 import Track, {TrackProps} from "./Track";
 import {TrackItemSpec} from "./TrackCircle";
 
-import hotspotImg from './images/cancer-hotspots.svg';
+import hotspotImg from '../../images/cancer-hotspots.svg';
 
 type HotspotTrackProps = TrackProps & {
     store: MutationMapperStore;
