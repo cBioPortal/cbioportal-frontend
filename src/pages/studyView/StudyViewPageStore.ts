@@ -4056,10 +4056,24 @@ export class StudyViewPageStore {
                         await: () => {
                             return _.includes([UniqueKey.WITH_MUTATION_DATA, UniqueKey.WITH_CNA_DATA], uniqueKey) ? [this.molecularProfileSampleCounts, this.selectedSamples] : [this.selectedSamples];
                         },
-                        invoke: () => {
+                        invoke: async () => {
                             let dataCountSet: { [id: string]: ClinicalDataCount } = {};
-                            dataCountSet = _.reduce(this.selectedSamples.result, (acc, sample) => {
-                                const matchedCases = _.filter(this._customChartsSelectedCases.get(uniqueKey), (selectedCase: CustomChartIdentifierWithValue) => selectedCase.sampleId === sample.sampleId);
+
+                            let selectedSamples: Sample[] = [];
+                            if (this._chartSampleIdentifiersFilterSet.has(uniqueKey)) {
+                                selectedSamples = await getSamplesByExcludingFiltersOnChart(
+                                    uniqueKey,
+                                    this.filters,
+                                    this._chartSampleIdentifiersFilterSet.toJS(),
+                                    this.queriedSampleIdentifiers.result,
+                                    this.queriedPhysicalStudyIds.result
+                                );
+                            } else {
+                                selectedSamples = this.selectedSamples.result
+                            }
+
+                            dataCountSet = _.reduce(selectedSamples, (acc, sample) => {
+                                const matchedCases = _.filter(this._customChartsSelectedCases.get(uniqueKey), (selectedCase: CustomChartIdentifierWithValue) => (selectedCase.studyId === sample.studyId) && (selectedCase.sampleId === sample.sampleId));
                                 const valDefault = Datalabel.NA;
                                 let matchedValues: string[] = [];
                                 if (matchedCases.length >= 1) {
