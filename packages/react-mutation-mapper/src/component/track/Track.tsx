@@ -15,9 +15,9 @@ import {
     unhoverAllComponents
 } from "cbioportal-frontend-commons";
 
-import {DataFilter} from "./model/DataFilter";
-import DataStore from "./model/DataStore";
-import {updatePositionHighlightFilters, updatePositionSelectionFilters} from "./util/FilterUtils";
+import {DataFilter} from "../../model/DataFilter";
+import DataStore from "../../model/DataStore";
+import {updatePositionHighlightFilters, updatePositionSelectionFilters} from "../../util/FilterUtils";
 import TrackCircle, {TrackItemSpec} from "./TrackCircle";
 
 import styles from "./trackStyles.module.scss";

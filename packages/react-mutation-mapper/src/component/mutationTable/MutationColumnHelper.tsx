@@ -1,15 +1,15 @@
 import _ from "lodash";
 import * as React from "react";
 
-import ColumnHeader from "./component/column/ColumnHeader";
+import ColumnHeader from "../column/ColumnHeader";
 import {Column} from "react-table";
-import {Mutation} from "./model/Mutation";
-import ProteinChange, {proteinChangeSortMethod} from "./component/column/ProteinChange";
-import {annotationSortMethod} from "./component/column/Annotation";
-import {gnomadSortMethod} from "./component/column/Gnomad";
-import {clinVarSortMethod} from "./component/column/ClinVar";
-import MutationType from "./component/column/MutationType";
-import MutationStatus from "./component/column/MutationStatus";
+import {Mutation} from "../../model/Mutation";
+import ProteinChange, {proteinChangeSortMethod} from "../column/ProteinChange";
+import {annotationSortMethod} from "../column/Annotation";
+import {gnomadSortMethod} from "../column/Gnomad";
+import {clinVarSortMethod} from "../column/ClinVar";
+import MutationType from "../column/MutationType";
+import MutationStatus from "../column/MutationStatus";
 
 export enum MutationColumn {
     PROTEIN_CHANGE = "proteinChange",

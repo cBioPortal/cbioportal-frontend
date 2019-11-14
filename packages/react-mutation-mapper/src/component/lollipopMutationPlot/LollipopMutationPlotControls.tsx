@@ -6,9 +6,9 @@ import Slider from 'react-rangeslider'
 import {computed} from "mobx";
 import {observer} from "mobx-react";
 
-import {numberOfLeadingDecimalZeros} from "./util/FormatUtils";
-import {calcYMaxInput} from "./util/LollipopPlotUtils";
-import TrackSelector, {TrackDataStatus, TrackName, TrackVisibility} from "./TrackSelector";
+import {numberOfLeadingDecimalZeros} from "../../util/FormatUtils";
+import {calcYMaxInput} from "../../util/LollipopPlotUtils";
+import TrackSelector, {TrackDataStatus, TrackName, TrackVisibility} from "../track/TrackSelector";
 
 import "react-rangeslider/lib/index.css";
 import styles from "./lollipopMutationPlot.module.scss";

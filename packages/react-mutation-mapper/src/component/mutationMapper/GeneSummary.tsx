@@ -2,9 +2,9 @@ import {observer} from "mobx-react";
 import * as React from "react";
 import {getNCBIlink, VariantAnnotation} from "cbioportal-frontend-commons";
 
-import {EnsemblTranscript} from "./model/EnsemblTranscript";
-import {Mutation} from "./model/Mutation";
-import {RemoteData} from "./model/RemoteData";
+import {EnsemblTranscript} from "../../model/EnsemblTranscript";
+import {Mutation} from "../../model/Mutation";
+import {RemoteData} from "../../model/RemoteData";
 import TranscriptDropdown from "./TranscriptDropdown";
 import styles from "./geneSummary.module.scss";
 

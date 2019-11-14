@@ -8,9 +8,9 @@ import {action, computed} from "mobx";
 
 import {getComponentIndex, SVGAxis, Tick, unhoverAllComponents} from 'cbioportal-frontend-commons';
 
-import {LollipopPlacement, LollipopSpec} from "./model/LollipopSpec";
-import {DomainSpec} from "./model/DomainSpec";
-import {updatePositionHighlightFilters, updatePositionSelectionFilters} from "./util/FilterUtils";
+import {LollipopPlacement, LollipopSpec} from "../../model/LollipopSpec";
+import {DomainSpec} from "../../model/DomainSpec";
+import {updatePositionHighlightFilters, updatePositionSelectionFilters} from "../../util/FilterUtils";
 import Sequence from "./Sequence";
 import Lollipop from "./Lollipop";
 import Domain from "./Domain";
