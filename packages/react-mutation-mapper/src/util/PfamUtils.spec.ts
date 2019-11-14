@@ -6,7 +6,7 @@ import {generatePfamDomainColorMap} from "./PfamUtils";
 
 let domains: PfamDomainRange[];
 
-before(() => {
+beforeAll(() => {
     domains = [{
         pfamDomainId: "PF0002",
         pfamDomainStart: 7,
