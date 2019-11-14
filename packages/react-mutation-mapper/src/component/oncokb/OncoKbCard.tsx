@@ -7,6 +7,7 @@ import {Collapse} from 'react-collapse';
 
 import {Citations, OncoKbTreatment} from "../../model/OncoKb";
 import {ICache} from "../../model/SimpleCache";
+import {levelIconClassNames} from "../../util/OncoKbUtils";
 import OncoKBSuggestAnnotationLinkout from "./OncoKBSuggestAnnotationLinkout";
 import OncoKbTreatmentTable from "./OncoKbTreatmentTable";
 import OncoKbHelper from "./OncoKbHelper";
@@ -18,7 +19,6 @@ import collapsibleStyles from './collapsible.module.scss';
 import levelStyles from './level.module.scss';
 import mainStyles from './main.module.scss';
 import tabsStyles from './tabs.module.scss';
-import {levelIconClassNames} from "../../util/OncoKbUtils";
 
 
 type OncoKbCardPropsBase = {

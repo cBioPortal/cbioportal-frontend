@@ -6,9 +6,9 @@ import Select from "react-select";
 
 import {VariantAnnotation} from "cbioportal-frontend-commons";
 
-import {EnsemblTranscript} from "./model/EnsemblTranscript";
-import {RemoteData} from "./model/RemoteData";
-import {Mutation} from "./model/Mutation";
+import {EnsemblTranscript} from "../../model/EnsemblTranscript";
+import {RemoteData} from "../../model/RemoteData";
+import {Mutation} from "../../model/Mutation";
 import styles from "./transcriptDropdown.module.scss";
 
 export type TranscriptDropdownProps = {

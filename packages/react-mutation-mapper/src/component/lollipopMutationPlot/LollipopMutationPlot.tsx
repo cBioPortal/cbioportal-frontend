@@ -7,30 +7,30 @@ import {Collapse} from "react-collapse";
 
 import $ from "jquery";
 
-import {DomainSpec} from "./model/DomainSpec";
-import {LollipopPlotControlsConfig} from "./model/LollipopPlotControlsConfig";
-import {LollipopPlacement, LollipopSpec} from "./model/LollipopSpec";
-import {MobxCache} from "./model/MobxCache";
-import {Mutation} from "./model/Mutation";
-import {MutationMapperStore} from "./model/MutationMapperStore";
-import {PfamDomain, PfamDomainRange} from "./model/Pfam";
-import {SequenceSpec} from "./model/SequenceSpec";
-import {DefaultLollipopPlotControlsConfig} from "./store/DefaultLollipopPlotControlsConfig";
+import {DomainSpec} from "../../model/DomainSpec";
+import {LollipopPlotControlsConfig} from "../../model/LollipopPlotControlsConfig";
+import {LollipopPlacement, LollipopSpec} from "../../model/LollipopSpec";
+import {MobxCache} from "../../model/MobxCache";
+import {Mutation} from "../../model/Mutation";
+import {MutationMapperStore} from "../../model/MutationMapperStore";
+import {PfamDomain, PfamDomainRange} from "../../model/Pfam";
+import {SequenceSpec} from "../../model/SequenceSpec";
+import {DefaultLollipopPlotControlsConfig} from "../../store/DefaultLollipopPlotControlsConfig";
 import {
     calcCountRange,
     calcYMaxInput,
     getYAxisMaxInputValue,
     lollipopLabelText,
     lollipopLabelTextAnchor
-} from "./util/LollipopPlotUtils";
-import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS, getColorForProteinImpactType} from "./util/MutationUtils";
-import {generatePfamDomainColorMap} from "./util/PfamUtils";
-import {initDefaultTrackVisibility} from "./util/TrackUtils";
+} from "../../util/LollipopPlotUtils";
+import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS, getColorForProteinImpactType} from "../../util/MutationUtils";
+import {generatePfamDomainColorMap} from "../../util/PfamUtils";
+import {initDefaultTrackVisibility} from "../../util/TrackUtils";
 import DefaultLollipopPlotLegend from "./DefaultLollipopPlotLegend";
-import LollipopPlot from "./LollipopPlot";
+import LollipopPlot from "../lollipopPlot/LollipopPlot";
 import LollipopMutationPlotControls from "./LollipopMutationPlotControls";
-import {TrackDataStatus, TrackName, TrackVisibility} from "./TrackSelector";
-import TrackPanel from "./TrackPanel";
+import {TrackDataStatus, TrackName, TrackVisibility} from "../track/TrackSelector";
+import TrackPanel from "../track/TrackPanel";
 
 import "./lollipopMutationPlot.scss";
 

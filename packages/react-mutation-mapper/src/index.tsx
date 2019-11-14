@@ -69,31 +69,31 @@ export {
 } from "./component/gnomad/GnomadFrequency";
 export {default as GnomadFrequencyTable} from "./component/gnomad/GnomadFrequencyTable";
 
-export * from "./component/ColumnSelector";
-export * from "./component/FilterResetPanel";
+export * from "./component/dataTable/ColumnSelector";
+export * from "./component/mutationMapper/FilterResetPanel";
 export * from "./component/StatusHelpers";
 
-export {default as DataTable, ColumnSortDirection, DataTableColumn} from "./DataTable";
-export {default as DefaultMutationTable} from "./DefaultMutationTable";
-export * from "./MutationColumnHelper";
-export {default as Domain} from "./Domain";
-export {default as HotspotInfo} from "./HotspotInfo";
-export {default as Lollipop} from "./Lollipop";
-export {default as LollipopMutationPlot} from "./LollipopMutationPlot";
-export {default as LollipopPlot} from "./LollipopPlot";
-export {default as LollipopPlotNoTooltip} from "./LollipopPlotNoTooltip";
-export {default as Sequence} from "./LollipopPlot";
+export {default as DataTable, ColumnSortDirection, DataTableColumn} from "./component/dataTable/DataTable";
+export {default as DefaultMutationTable} from "./component/mutationTable/DefaultMutationTable";
+export * from "./component/mutationTable/MutationColumnHelper";
+export {default as Domain} from "./component/lollipopPlot/Domain";
+export {default as HotspotInfo} from "./component/hotspot/HotspotInfo";
+export {default as Lollipop} from "./component/lollipopPlot/Lollipop";
+export {default as LollipopMutationPlot} from "./component/lollipopMutationPlot/LollipopMutationPlot";
+export {default as LollipopPlot} from "./component/lollipopPlot/LollipopPlot";
+export {default as LollipopPlotNoTooltip} from "./component/lollipopPlot/LollipopPlotNoTooltip";
+export {default as Sequence} from "./component/lollipopPlot/LollipopPlot";
 export {
     default as MutationMapper,
     initDefaultMutationMapperStore,
     MutationMapperProps
-} from "./MutationMapper";
+} from "./component/mutationMapper/MutationMapper";
 export {
     default as TrackSelector,
     TrackDataStatus,
     TrackName,
     TrackVisibility
-} from "./TrackSelector";
+} from "./component/track/TrackSelector";
 
 export {CancerTypeFilter} from "./filter/CancerTypeFilter";
 export {HotspotFilter} from "./filter/HotspotFilter";

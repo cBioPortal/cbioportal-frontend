@@ -2,8 +2,8 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
 
-import {MobxCache} from "./model/MobxCache";
-import MutationMapperStore from "./model/MutationMapperStore";
+import {MobxCache} from "../../model/MobxCache";
+import MutationMapperStore from "../../model/MutationMapperStore";
 import {TrackName, TrackVisibility} from "./TrackSelector";
 import HotspotTrack from "./HotspotTrack";
 import OncoKbTrack from "./OncoKbTrack";

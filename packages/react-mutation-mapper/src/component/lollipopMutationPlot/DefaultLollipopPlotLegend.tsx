@@ -1,5 +1,5 @@
 import * as React from "react";
-import {MUT_COLOR_INFRAME, MUT_COLOR_MISSENSE, MUT_COLOR_OTHER, MUT_COLOR_TRUNC} from "./util/MutationUtils";
+import {MUT_COLOR_INFRAME, MUT_COLOR_MISSENSE, MUT_COLOR_OTHER, MUT_COLOR_TRUNC} from "../../util/MutationUtils";
 
 type DefaultLollipopPlotLegendProps = {
     missenseColor?: string;

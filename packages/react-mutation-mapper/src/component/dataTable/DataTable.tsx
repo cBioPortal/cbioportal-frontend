@@ -10,13 +10,14 @@ import {observer} from "mobx-react";
 import * as React from 'react';
 import ReactTable, {Column, RowInfo, TableProps} from "react-table";
 
-import {ColumnSelectorProps, ColumnVisibilityDef} from "./component/ColumnSelector";
-import {DataTableToolbar} from "./component/toolbar/DataTableToolbar";
-import {DataFilter} from "./model/DataFilter";
-import {DataStore} from "./model/DataStore";
-import {RemoteData} from "./model/RemoteData";
-import {TEXT_INPUT_FILTER_ID} from "./util/FilterUtils";
-import {getRemoteDataGroupStatus} from "./util/RemoteDataUtils";
+import {DataFilter} from "../../model/DataFilter";
+import {DataStore} from "../../model/DataStore";
+import {RemoteData} from "../../model/RemoteData";
+import {TEXT_INPUT_FILTER_ID} from "../../util/FilterUtils";
+import {getRemoteDataGroupStatus} from "../../util/RemoteDataUtils";
+import {ColumnSelectorProps, ColumnVisibilityDef} from "./ColumnSelector";
+import {DataTableToolbar} from "./DataTableToolbar";
+
 
 export type DataTableColumn<T> = Column<T> & {
     name?: string;

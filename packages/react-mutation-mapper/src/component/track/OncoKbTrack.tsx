@@ -3,14 +3,14 @@ import * as _ from "lodash";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
 
-import {OncoKbFilterValue} from "./filter/OncoKbFilter";
-import {DataFilterType} from "./model/DataFilter";
-import MutationMapperStore from "./model/MutationMapperStore";
+import {OncoKbFilterValue} from "../../filter/OncoKbFilter";
+import {DataFilterType} from "../../model/DataFilter";
+import MutationMapperStore from "../../model/MutationMapperStore";
 import OncoKbTrackTooltip from "./OncoKbTrackTooltip";
 import {default as Track, TrackProps} from "./Track";
 import {TrackItemSpec} from "./TrackCircle";
 
-import oncoKbImg from './images/oncogenic-only.svg';
+import oncoKbImg from '../../images/oncogenic-only.svg';
 
 type OncoKbTrackProps = TrackProps & {
     store: MutationMapperStore;
