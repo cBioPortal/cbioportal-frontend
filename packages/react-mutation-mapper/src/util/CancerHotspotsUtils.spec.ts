@@ -143,7 +143,7 @@ describe('CancerHotspotsUtils', () => {
 
     let hotspotIndex: IHotspotIndex;
 
-    before(() => {
+    beforeAll(() => {
         hotspotIndex = indexHotspots(hotspots);
     });
 
@@ -215,10 +215,6 @@ describe('CancerHotspotsUtils', () => {
             assert.isUndefined(grouped[4],
                 "there should NOT be any hotspot mutations at position 4");
         });
-    });
-
-    after(() => {
-
     });
 
 });
