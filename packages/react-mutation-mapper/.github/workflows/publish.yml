@@ -1,7 +1,8 @@
 name: Node Publish
 
 on:
-  release: [published]
+  release:
+    types: [published]
 
 jobs:
   build:
