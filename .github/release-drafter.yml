@@ -1,0 +1,38 @@
+name-template: 'v$NEXT_PATCH_VERSION'
+tag-template: 'v$NEXT_PATCH_VERSION'
+categories:
+  - title: '🧬 Features'
+    labels:
+      - 'feature'
+      - 'enhancement'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: '🗄 Database Migration'
+    labels:
+      - 'includes db changes'
+      - 'migration'
+  - title: '⚠️ Deprecation'
+    labels:
+      - 'deprecation'
+  - title: '📘 Documentation'
+    labels:
+      - 'documentation'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'chore'
+      - 'devops'
+      - 'dependencies'
+      - 'cleanup'
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+template: |
+  ## Changes
+
+  $CHANGES
+  
+  ## 🕵️‍♀️ Full commit logs
+  
+  - Backend: https://github.com/cBioPortal/cbioportal/compare/$PREVIOUS_TAG...v$NEXT_PATCH_VERSION
+  - Frontend: https://github.com/cBioPortal/cbioportal-frontend/compare/$PREVIOUS_TAG...v$NEXT_PATCH_VERSION
