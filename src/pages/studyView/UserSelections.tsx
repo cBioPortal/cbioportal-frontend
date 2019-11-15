@@ -3,8 +3,8 @@ import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import styles from "./styles.module.scss";
-import {ClinicalDataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
-import {UniqueKey} from 'pages/studyView/StudyViewUtils';
+import {ClinicalDataFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
+import {UniqueKey, DataType} from 'pages/studyView/StudyViewUtils';
 import {
     ChartMeta,
     getCNAColorByAlteration, getPatientIdentifiers,
@@ -28,8 +28,7 @@ export interface IUserSelectionsProps {
     numberOfSelectedSamplesInCustomSelection: number;
     comparisonGroupSelection:StudyViewComparisonGroup[];
     attributesMetaSet: { [id: string]: ChartMeta };
-    updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
-    updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
+    updateClinicalDataFilterByValues: (chartMeta: ChartMeta, values: ClinicalDataFilterValue[]) => void;
     updateCustomChartFilter: (chartMeta: ChartMeta, values: string[]) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
@@ -43,6 +42,7 @@ export interface IUserSelectionsProps {
     removeComparisonGroupSelectionFilter: ()=>void,
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters: () => void
+    clinicalAttributeIdToDataType: {[key:string]:string};
 }
 
 
@@ -93,47 +93,54 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                     group={false}/></div>);
         }
 
-        // Pie chart filters
-        _.reduce((this.props.filter.clinicalDataEqualityFilters || []), (acc, clinicalDataEqualityFilter) => {
-            const chartMeta = this.props.attributesMetaSet[clinicalDataEqualityFilter.attributeId];
+        _.reduce((this.props.filter.clinicalDataFilters || []), (acc, clinicalDataFilter) => {
+            const chartMeta = this.props.attributesMetaSet[clinicalDataFilter.attributeId];
             if (chartMeta) {
-                acc.push(
-                    <div className={styles.parentGroupLogic}>
-                        <GroupLogic
-                            components={[
-                                <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
-                                <GroupLogic components={clinicalDataEqualityFilter.values.map(label => {
-                                    return <PillTag
-                                        content={label}
-                                        backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
-                                        onDelete={() => this.props.updateClinicalDataEqualityFilter(chartMeta, _.remove(clinicalDataEqualityFilter.values, value => value !== label))}
+                const dataType = this.props.clinicalAttributeIdToDataType[clinicalDataFilter.attributeId];
+                if(dataType === DataType.STRING) {
+                    // Pie chart filter
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
+                                    <GroupLogic
+                                        components={clinicalDataFilter.values.map(clinicalDataFilterValue => {
+                                            return <PillTag
+                                                content={clinicalDataFilterValue.value}
+                                                backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                                                onDelete={() => this.props.updateClinicalDataFilterByValues(chartMeta,
+                                                    _.remove(clinicalDataFilter.values, value => value.value !== clinicalDataFilterValue.value))}
+                                            />
+                                        })}
+                                        operation={'or'}
+                                        group={false}
                                     />
-                                })} operation={'or'} group={false}/>
-                            ]}
-                            operation={':'}
-                            group={false}/></div>
-                );
-            }
-            return acc;
-        }, components);
-
-        // Bar chart filters
-        _.reduce((this.props.filter.clinicalDataIntervalFilters || []), (acc, clinicalDataIntervalFilter) => {
-            const chartMeta = this.props.attributesMetaSet[clinicalDataIntervalFilter.attributeId];
-            if (chartMeta) {
-                acc.push(
-                    <div className={styles.parentGroupLogic}><GroupLogic
-                        components={[
-                            <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
-                            <PillTag
-                                content={intervalFiltersDisplayValue(clinicalDataIntervalFilter.values)}
-                                backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
-                                onDelete={() => this.props.updateClinicalDataIntervalFilter(chartMeta, [])}
+                                ]}
+                                operation={':'}
+                                group={false}
                             />
-                        ]}
-                        operation={':'}
-                        group={false}/></div>
-                );
+                        </div>
+                    );
+                } else {
+                     // Bar chart filter
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
+                                    <PillTag
+                                        content={intervalFiltersDisplayValue(clinicalDataFilter.values)}
+                                        backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                                        onDelete={() => this.props.updateClinicalDataFilterByValues(chartMeta, [])}
+                                    />
+                                ]}
+                                operation={':'}
+                                group={false}
+                            />
+                        </div>
+                    );
+                }
             }
             return acc;
         }, components);

@@ -55,10 +55,10 @@ import {
     getGroupedClinicalDataByBins,
 } from 'pages/studyView/StudyViewUtils';
 import {
-    ClinicalDataIntervalFilterValue,
     DataBin,
     Sample,
-    StudyViewFilter
+    StudyViewFilter,
+    ClinicalDataFilterValue
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {CancerStudy, ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
 import {
@@ -79,8 +79,7 @@ import { shallow } from 'enzyme';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
-        clinicalDataEqualityFilters: [],
-        clinicalDataIntervalFilters: [],
+        clinicalDataFilters: [],
         cnaGenes: [],
         mutatedGenes: []
     } as any;
@@ -138,11 +137,12 @@ describe('StudyViewUtils', () => {
         });
         it('when filters are applied', () => {
             let filter = {
-                clinicalDataEqualityFilters: [{
+                clinicalDataFilters: [{
                     'attributeId': 'attribute1',
-                    'values': ['value1']
-                }],
-                clinicalDataIntervalFilters: [{
+                    'values': [{
+                        'value':'value1'
+                    }]
+                },{
                     'attributeId': 'attribute2',
                     'values': [{
                         'end': 0,
@@ -170,7 +170,7 @@ describe('StudyViewUtils', () => {
                 numberOfSamplesPerPatient: [],
                 withCNAData: false,
                 withMutationData: false
-            } as StudyViewFilterWithSampleIdentifierFilters;
+            } as any;
 
             assert.isTrue(
                 getVirtualStudyDescription(
@@ -206,11 +206,13 @@ describe('StudyViewUtils', () => {
         });
         it('when previousDescription is defined', () => {
             let filter = {
-                clinicalDataEqualityFilters: [{
+                clinicalDataFilters: [{
                     'attributeId': 'attribute1',
-                    'values': ['value1']
+                    'values': [{
+                        'value':"value1"
+                    }]
                 }]
-            } as StudyViewFilterWithSampleIdentifierFilters;
+            } as any;
 
             assert.isTrue(
                 getVirtualStudyDescription(
@@ -228,14 +230,15 @@ describe('StudyViewUtils', () => {
 
     describe('shouldShowChart', () => {
         const hasInfoFilter = {
-            clinicalDataEqualityFilters: [{
+            clinicalDataFilters: [{
                 'attributeId': 'attribute1',
-                'values': ['value1']
+                'values': [{
+                    'value':"value1"
+                }]
             }],
-            clinicalDataIntervalFilters: [],
             mutatedGenes: [],
             cnaGenes: []
-        };
+        } as any;
         it("return true when there is only one sample in the study", () => {
             assert.isTrue(shouldShowChart(emptyStudyViewFilter, 1, 1));
         });
@@ -613,7 +616,7 @@ describe('StudyViewUtils', () => {
         ] as any;
 
         it('generates clinical data interval filter values from data bins', () => {
-            const values: ClinicalDataIntervalFilterValue[] = getClinicalDataIntervalFilterValues(
+            const values: ClinicalDataFilterValue[] = getClinicalDataIntervalFilterValues(
                 [linearScaleDataBinsWithNa[0], linearScaleDataBinsWithNa[2], linearScaleDataBinsWithNa[5]] as any);
 
             assert.deepEqual(values, [
@@ -848,13 +851,13 @@ describe('StudyViewUtils', () => {
             {start: 20, end: 30},
             {start: 30, end: 40},
             {start: 40, end: 50}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithBothEndsClosedAndSpecialValues = [
             ...filterValuesWithBothEndsClosed,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithBothEndsOpen = [
             {end: 10},
@@ -863,13 +866,13 @@ describe('StudyViewUtils', () => {
             {start: 30, end: 40},
             {start: 40, end: 50},
             {start: 50}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithBothEndsOpenAndSpecialValues = [
             ...filterValuesWithBothEndsOpen,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithStartOpen = [
             {end: 10},
@@ -877,13 +880,13 @@ describe('StudyViewUtils', () => {
             {start: 20, end: 30},
             {start: 30, end: 40},
             {start: 40, end: 50},
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithStartOpenAndSpecialValues = [
             ...filterValuesWithStartOpen,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithEndOpen = [
             {start: 10, end: 20},
@@ -891,40 +894,40 @@ describe('StudyViewUtils', () => {
             {start: 30, end: 40},
             {start: 40, end: 50},
             {start: 50}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithEndOpenAndSpecialValues = [
             ...filterValuesWithEndOpen,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithSpecialValuesOnly = [
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithDistinctNumerals = [
             {start: 20, end: 20},
             {start: 30, end: 30},
             {start: 40, end: 40}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithDistinctNumeralsAndSpecialValues = [
             ...filterValuesWithDistinctNumerals,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithSingleDistinctValue = [
             {start: 666, end: 666}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithSingleDistinctValueAndSpecialValues = [
             ...filterValuesWithSingleDistinctValue,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         it ('generates display value for filter values with both ends closed', () => {
             const value = intervalFiltersDisplayValue(filterValuesWithBothEndsClosed);

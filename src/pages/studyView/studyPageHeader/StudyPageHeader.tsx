@@ -39,8 +39,8 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
                     numberOfSelectedSamplesInCustomSelection={this.props.store.numberOfSelectedSamplesInCustomSelection}
                     customChartsFilter={this.props.store.customChartFilterSet.toJS()}
                     attributesMetaSet={this.props.store.chartMetaSet}
-                    updateClinicalDataEqualityFilter={this.props.store.updateClinicalDataEqualityFilters}
-                    updateClinicalDataIntervalFilter={this.props.store.updateClinicalDataIntervalFiltersByValues}
+                    clinicalAttributeIdToDataType={this.props.store.clinicalAttributeIdToDataType.result!}
+                    updateClinicalDataFilterByValues={this.props.store.updateClinicalDataFilterByValues}
                     updateCustomChartFilter={this.props.store.setCustomChartFilters}
                     removeMutatedGeneFilter={this.props.store.removeMutatedGeneFilter}
                     removeFusionGeneFilter={this.props.store.removeFusionGeneFilter}

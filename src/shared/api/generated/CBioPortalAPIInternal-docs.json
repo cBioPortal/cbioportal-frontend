@@ -1886,6 +1886,12 @@
         },
         "start": {
           "type": "number"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataFilterValue"
+          }
         }
       },
       "title": "ClinicalDataBinFilter"
@@ -1957,46 +1963,22 @@
       },
       "title": "ClinicalDataEnrichment"
     },
-    "ClinicalDataEqualityFilter": {
-      "type": "object",
-      "properties": {
-        "attributeId": {
-          "type": "string"
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "ClinicalDataEqualityFilter"
-    },
     "ClinicalDataFilter": {
       "type": "object",
       "properties": {
         "attributeId": {
           "type": "string"
-        }
-      },
-      "title": "ClinicalDataFilter"
-    },
-    "ClinicalDataIntervalFilter": {
-      "type": "object",
-      "properties": {
-        "attributeId": {
-          "type": "string"
         },
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ClinicalDataIntervalFilterValue"
+            "$ref": "#/definitions/ClinicalDataFilterValue"
           }
         }
       },
-      "title": "ClinicalDataIntervalFilter"
+      "title": "ClinicalDataFilter"
     },
-    "ClinicalDataIntervalFilterValue": {
+    "ClinicalDataFilterValue": {
       "type": "object",
       "properties": {
         "end": {
@@ -2009,7 +1991,7 @@
           "type": "string"
         }
       },
-      "title": "ClinicalDataIntervalFilterValue"
+      "title": "ClinicalDataFilterValue"
     },
     "CoExpression": {
       "type": "object",
@@ -2935,16 +2917,10 @@
     "StudyViewFilter": {
       "type": "object",
       "properties": {
-        "clinicalDataEqualityFilters": {
+        "clinicalDataFilters": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ClinicalDataEqualityFilter"
-          }
-        },
-        "clinicalDataIntervalFilters": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ClinicalDataIntervalFilter"
+            "$ref": "#/definitions/ClinicalDataFilter"
           }
         },
         "cnaGenes": {

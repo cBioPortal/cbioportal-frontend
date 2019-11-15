@@ -4,7 +4,7 @@ import {VictoryAxis, VictoryBar, VictoryChart, VictorySelectionContainer} from '
 import {computed, observable} from "mobx";
 import _ from "lodash";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
-import {ClinicalDataIntervalFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
+import {ClinicalDataFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
 import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import autobind from 'autobind-decorator';
 import BarChartAxisLabel from "./BarChartAxisLabel";
@@ -28,7 +28,7 @@ export interface IBarChartProps {
     data: DataBin[];
     width: number;
     height: number;
-    filters: ClinicalDataIntervalFilterValue[];
+    filters: ClinicalDataFilterValue[];
     onUserSelection: (dataBins: DataBin[]) => void;
 }
 
@@ -72,7 +72,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         this.props.onUserSelection(dataBins);
     }
 
-    private isDataBinSelected(dataBin: DataBin, filters: ClinicalDataIntervalFilterValue[]) {
+    private isDataBinSelected(dataBin: DataBin, filters: ClinicalDataFilterValue[]) {
         return filters.find(filter =>
             (filter.start === dataBin.start && filter.end === dataBin.end) ||
             (filter.value !== undefined && filter.value === dataBin.specialValue)

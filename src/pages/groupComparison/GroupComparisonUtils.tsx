@@ -19,6 +19,7 @@ import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {stringListToIndexSet} from "public-lib/lib/StringUtils";
+import { DataType } from 'pages/studyView/StudyViewUtils';
 
 export enum GroupComparisonTab {
     OVERLAP = "overlap",
@@ -389,12 +390,15 @@ export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups:number) {
 
 export function getDefaultGroupName(
     filters:StudyViewFilter,
-    customChartFilterSet:{[chartId:string]:string[]}
+    customChartFilterSet:{[chartId:string]:string[]},
+    clinicalAttributeIdToDataType:{[chartId:string]:string}
 ) {
-    const equalityFilters = _.sortBy( // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
-        filters.clinicalDataEqualityFilters || [],
-        filter=>filter.attributeId
-    ).map(filter=>filter.values.join("+")); // get each attributes selected values, joined by +
+
+    const equalityFilters = _.chain(filters.clinicalDataFilters || [])
+        .filter(clinicalDataFilter => clinicalAttributeIdToDataType[clinicalDataFilter.attributeId] === DataType.STRING)
+        .sortBy(filter => filter.attributeId) // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
+        .map(filter => filter.values.join("+")) // get each attributes selected values, joined by +
+        .value();
 
     const customChartValues =
         _(customChartFilterSet).keys().sortBy() // sort into a canonical order - lets just do alphabetical by chart id

@@ -3,11 +3,11 @@ import {SingleGeneQuery} from "shared/lib/oql/oql-parser";
 import {unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
 import {
     ClinicalDataCount,
-    ClinicalDataIntervalFilterValue,
     DataBin,
     SampleIdentifier,
     StudyViewFilter,
-    ClinicalDataBinFilter
+    ClinicalDataBinFilter,
+    ClinicalDataFilterValue
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {CancerStudy, ClinicalAttribute, Gene, PatientIdentifier, Sample, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
@@ -42,6 +42,11 @@ export enum NumericalGroupComparisonType {
     QUARTILES = 'QUARTILES',
     MEDIAN='MEDIAN',
     BINS = 'BINS'
+}
+
+export enum DataType {
+    STRING = 'STRING',
+    NUMBER = "NUMBER"
 }
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
@@ -433,14 +438,9 @@ export function getVirtualStudyDescription(
                 filterLines.push(`With CNA data: ${filter.withCNAData ? 'YES' : 'NO'}`);
             }
 
-            _.each(filter.clinicalDataEqualityFilters || [], (clinicalDataEqualityFilter) => {
-                let name = attributeNamesSet[clinicalDataEqualityFilter.attributeId];
-                filterLines.push(`- ${name}: ${clinicalDataEqualityFilter.values.join(', ')}`);
-            });
-
-            _.each(filter.clinicalDataIntervalFilters || [], (clinicalDataIntervalFilter) => {
-                let name = attributeNamesSet[clinicalDataIntervalFilter.attributeId];
-                filterLines.push(`- ${name}: ${intervalFiltersDisplayValue(clinicalDataIntervalFilter.values)}`);
+            _.each(filter.clinicalDataFilters || [], (clinicalDataFilter) => {
+                let name = attributeNamesSet[clinicalDataFilter.attributeId];
+                filterLines.push(`- ${name}: ${intervalFiltersDisplayValue(clinicalDataFilter.values)}`);
             });
 
             _.each(filter.sampleIdentifiersSet || {}, (sampleIdentifiers, id) => {
@@ -462,8 +462,7 @@ export function getVirtualStudyDescription(
 
 export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFilters>) {
     const flag = !(_.isEmpty(filter) || (
-            _.isEmpty(filter.clinicalDataEqualityFilters) &&
-            _.isEmpty(filter.clinicalDataIntervalFilters) &&
+            _.isEmpty(filter.clinicalDataFilters) &&
             _.isEmpty(filter.cnaGenes) &&
             _.isEmpty(filter.mutatedGenes) &&
             _.isEmpty(filter.fusionGenes) &&
@@ -551,15 +550,12 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
     return svg;
 }
 
-export function getClinicalDataIntervalFilterValues(data: DataBin[]): ClinicalDataIntervalFilterValue[]
-{
-    const values: Partial<ClinicalDataIntervalFilterValue>[] = data.map(dataBin => ({
+export function getClinicalDataIntervalFilterValues(data: DataBin[]): ClinicalDataFilterValue[] {
+    return data.map(dataBin => ({
         start: dataBin.start,
         end: dataBin.end,
         value: dataBin.start === undefined && dataBin.end === undefined ? dataBin.specialValue : undefined
-    }));
-
-    return values as ClinicalDataIntervalFilterValue[];
+    } as ClinicalDataFilterValue));
 }
 
 export function filterNumericalBins(data: DataBin[]) {
@@ -821,7 +817,7 @@ export function closestIntegerPowerOfTen(value: number, dataBinPosition: DataBin
     }
 }
 
-export function intervalFiltersDisplayValue(values: ClinicalDataIntervalFilterValue[]) {
+export function intervalFiltersDisplayValue(values: ClinicalDataFilterValue[]) {
     const categories = values
         .filter(value => value.start === undefined && value.end === undefined)
         .map(value => value.value);
@@ -995,11 +991,11 @@ export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: Clinic
     }
 
     // TODO: update logic when number of categories above PIE_TO_TABLE_LIMIT
-    if (clinicalAttribute.datatype === 'STRING') {
+    if (clinicalAttribute.datatype === DataType.STRING) {
         return ChartTypeEnum.PIE_CHART;
     }
 
-    if (clinicalAttribute.datatype === 'NUMBER') {
+    if (clinicalAttribute.datatype === DataType.NUMBER) {
         return ChartTypeEnum.BAR_CHART;
     }
 
@@ -1368,8 +1364,7 @@ export function getSamplesByExcludingFiltersOnChart(
 
     //create filter without study/sample identifiers
     let updatedFilter: StudyViewFilter = {
-        clinicalDataEqualityFilters: filter.clinicalDataEqualityFilters,
-        clinicalDataIntervalFilters: filter.clinicalDataIntervalFilters,
+        clinicalDataFilters: filter.clinicalDataFilters,
         cnaGenes: filter.cnaGenes,
         mutatedGenes: filter.mutatedGenes
     } as any;

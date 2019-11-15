@@ -8,7 +8,8 @@ import {
     getClinicalAttributeOverlay,
     getUniqueKey,
     ChartMeta,
-    UniqueKey
+    UniqueKey,
+    DataType
 } from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
@@ -79,7 +80,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                 (acc: Column<{ [id: string]: string }>[], chartMeta: ChartMeta, index: number) => {
                     if (chartMeta.clinicalAttribute !== undefined) {
                         acc.push({
-                            ...this.getDefaultColumnConfig(getUniqueKey(chartMeta.clinicalAttribute), chartMeta.clinicalAttribute.displayName, chartMeta.clinicalAttribute.datatype === "NUMBER"),
+                            ...this.getDefaultColumnConfig(getUniqueKey(chartMeta.clinicalAttribute), chartMeta.clinicalAttribute.displayName, chartMeta.clinicalAttribute.datatype === DataType.NUMBER),
                             tooltip: getClinicalAttributeOverlay(chartMeta.clinicalAttribute.displayName, chartMeta.description ? chartMeta.description : '', chartMeta.clinicalAttribute ? chartMeta.clinicalAttribute.clinicalAttributeId : undefined)
                         });
                     }
