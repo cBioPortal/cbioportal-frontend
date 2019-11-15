@@ -1788,3 +1788,7 @@ export function getGroupsFromQuartiles(samples: Sample[], patientAttribute: bool
         );
     });
 }
+
+export function getButtonNameWithDownPointer(buttonName: string) {
+    return buttonName + " " + String.fromCharCode(9662);/*small solid down triangle*/
+}
