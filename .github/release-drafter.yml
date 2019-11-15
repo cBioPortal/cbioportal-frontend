@@ -10,12 +10,15 @@ categories:
       - 'fix'
       - 'bugfix'
       - 'bug'
+  - title: '🏎 Performance Tweaks'
+    labels:
+      - 'performance'
   - title: '🎨 Style Tweaks'
     labels:
       - 'style tweak'
   - title: '⚙️ Changes to handle external APIs'
     labels:
-      - 'style tweak'
+      - 'external api'
   - title: '🗄 Database Migration'
     labels:
       - 'includes db changes'
