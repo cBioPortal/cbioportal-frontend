@@ -10,6 +10,12 @@ categories:
       - 'fix'
       - 'bugfix'
       - 'bug'
+  - title: '🎨 Style Tweaks'
+    labels:
+      - 'style tweak'
+  - title: '⚙️ Changes to handle external APIs'
+    labels:
+      - 'style tweak'
   - title: '🗄 Database Migration'
     labels:
       - 'includes db changes'
@@ -20,12 +26,16 @@ categories:
   - title: '📘 Documentation'
     labels:
       - 'documentation'
+  - title: '🧹 Cleanup'
+    labels:
+      - 'cleanup'
+  - title: '👷‍♀️ Testing, Configuration & Deployment'
+    labels:
+      - 'devops'
   - title: '🧰 Maintenance'
     labels:
       - 'chore'
-      - 'devops'
       - 'dependencies'
-      - 'cleanup'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 template: |
   ## Changes
