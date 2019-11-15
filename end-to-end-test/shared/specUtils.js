@@ -73,6 +73,12 @@ function sessionServiceIsEnabled() {
     }).value;
 }
 
+function showGsva() {
+    browser.execute(function() {
+        window.frontendConfig.serverConfig.skin_show_gsva = true;
+    });
+}
+
 function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
     browser.waitUntil(()=>{
         var ret = browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length === expectedNumber;
@@ -224,7 +230,7 @@ function checkElementWithMouseDisabled(selector, pauseTime, options) {
     return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0, options);
 }
 
-function checkElementWithElementHidden(selector, selectorToHide, options) { 
+function checkElementWithElementHidden(selector, selectorToHide, options) {
     browser.execute((selectorToHide) => {
         $(`<style id="tempHiddenStyles" type="text/css">${selectorToHide}{opacity:0;}</style>`).appendTo("head");
     }, selectorToHide)
@@ -298,5 +304,6 @@ module.exports = {
     COEXPRESSION_TIMEOUT: 120000,
     getSelectCheckedOptions: getSelectCheckedOptions,
     selectCheckedOption: selectCheckedOption,
-    getOncoprintGroupHeaderOptionsElements:getOncoprintGroupHeaderOptionsElements
+    getOncoprintGroupHeaderOptionsElements:getOncoprintGroupHeaderOptionsElements,
+    showGsva: showGsva,
 };
