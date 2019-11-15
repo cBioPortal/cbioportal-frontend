@@ -1,6 +1,6 @@
 import LazyMobXCache from "../lib/LazyMobXCache";
-import {Treatment, TreatmentFilter} from "../api/generated/CBioPortalAPIInternal";
-import internalClient from "../api/cbioportalInternalClientInstance";
+import _ from "lodash";
+import { fetchTreatmentByTreatmentIds, Treatment } from "shared/lib/GenericAssayUtils";
 
 type Query = {
     treatmentId:string;
@@ -11,9 +11,7 @@ function key(o:{treatmentId:string}) {
 }
 
 async function fetch(queries:Query[]) {
-    return internalClient.fetchTreatmentsUsingPOST({
-        treatmentFilter: {treatmentIds: queries.map(q=>q.treatmentId.toUpperCase())} as TreatmentFilter
-    });
+    return await fetchTreatmentByTreatmentIds(queries.map(q=>q.treatmentId.toUpperCase()));
 }
 
 export default class TreatmentCache extends LazyMobXCache<Treatment, Query> {

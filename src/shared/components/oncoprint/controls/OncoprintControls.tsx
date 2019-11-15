@@ -24,11 +24,13 @@ import OQLTextArea, {GeneBoxType} from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
 import {SingleGeneQuery} from '../../../lib/oql/oql-parser';
 import AddClinicalTracks from '../../../../pages/resultsView/oncoprint/AddClinicalTracks';
-import {Treatment} from 'shared/api/generated/CBioPortalAPIInternal';
-import TextIconArea, {ITextIconAreaItemProps,} from 'shared/components/textIconArea/TextIconArea';
-import {extractTreatmentSelections} from '../OncoprintUtils';
-import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
 import DriverAnnotationControls, {IDriverAnnotationControlsHandlers} from "../../../../pages/resultsView/settings/DriverAnnotationControls";
+import TextIconArea, {
+    ITextIconAreaItemProps,
+} from 'shared/components/textIconArea/TextIconArea';
+import { extractTreatmentSelections } from '../OncoprintUtils';
+import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
+import { Treatment } from 'shared/lib/GenericAssayUtils';
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;

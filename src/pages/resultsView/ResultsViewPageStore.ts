@@ -25,7 +25,7 @@ import {
     SampleFilter,
     SampleIdentifier,
     SampleList,
-    SampleMolecularIdentifier,
+    SampleMolecularIdentifier
 } from 'shared/api/generated/CBioPortalAPI';
 import client from 'shared/api/cbioportalClientInstance';
 import {action, computed, observable, ObservableMap} from 'mobx';
@@ -94,8 +94,6 @@ import {
     GenesetDataFilterCriteria,
     GenesetMolecularData,
     MolecularProfileCasesGroupFilter,
-    Treatment,
-    TreatmentFilter,
 } from '../../shared/api/generated/CBioPortalAPIInternal';
 import internalClient from '../../shared/api/cbioportalInternalClientInstance';
 import {CancerGene, IndicatorQueryResp,} from '../../public-lib/api/generated/OncoKbAPI';
@@ -183,6 +181,7 @@ import {
 import {FRACTION_GENOME_ALTERED, MUTATION_COUNT,} from 'pages/studyView/StudyViewPageStore';
 import {IVirtualStudyProps} from 'pages/studyView/virtualStudy/VirtualStudy';
 import {decideMolecularProfileSortingOrder} from './download/DownloadUtils';
+import { fetchTreatmentByMolecularProfileIds, Treatment } from 'shared/lib/GenericAssayUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -197,6 +196,10 @@ export const AlterationTypeConstants = {
     GENESET_SCORE: 'GENESET_SCORE',
     METHYLATION: 'METHYLATION',
     TREATMENT_RESPONSE: 'TREATMENT',
+};
+
+export enum GenericAssayTypeConstants {
+    'TREATMENT_RESPONSE' = 'TREATMENT_RESPONSE'
 };
 
 export const AlterationTypeDisplayConstants = {
@@ -3716,13 +3719,9 @@ export class ResultsViewPageStore {
     });
 
     readonly treatmentsInStudies = remoteData<Treatment[]>({
-        await: () => [this.studyIds],
+        await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
-            return internalClient.fetchTreatmentsUsingPOST({
-                treatmentFilter: {
-                    studyIds: this.studyIds.result!,
-                } as TreatmentFilter,
-            });
+            return await fetchTreatmentByMolecularProfileIds(this.molecularProfilesInStudies.result);
         },
         onResult: (treatments: Treatment[]) => {
             this.treatmentCache.addData(treatments);
@@ -3767,15 +3766,10 @@ export class ResultsViewPageStore {
     });
 
     readonly treatmentLinkMap = remoteData<{ [treatmentId: string]: string }>({
+        await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
             if (this.rvQuery.treatmentIds && this.rvQuery.treatmentIds.length) {
-                const treatments = await internalClient.fetchTreatmentsUsingPOST(
-                    {
-                        treatmentFilter: {
-                            studyIds: this.studyIds.result!,
-                        } as TreatmentFilter,
-                    }
-                );
+                const treatments = await fetchTreatmentByMolecularProfileIds(this.molecularProfilesInStudies.result);
                 const linkMap: { [treatmentId: string]: string } = {};
                 treatments.forEach(({ treatmentId, refLink }) => {
                     linkMap[treatmentId] = refLink;
