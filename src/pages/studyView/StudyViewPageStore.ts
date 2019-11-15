@@ -11,10 +11,7 @@ import {
     ClinicalDataCount,
     ClinicalDataCountFilter,
     ClinicalDataCountItem,
-    ClinicalDataEqualityFilter,
     ClinicalDataFilter,
-    ClinicalDataIntervalFilter,
-    ClinicalDataIntervalFilterValue,
     CopyNumberCountByGene,
     CopyNumberGeneFilter,
     CopyNumberGeneFilterElement,
@@ -27,7 +24,8 @@ import {
     RectangleBounds,
     Sample,
     SampleIdentifier,
-    StudyViewFilter
+    StudyViewFilter,
+    ClinicalDataFilterValue
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
     CancerStudy,
@@ -86,6 +84,7 @@ import {
     getGroupsFromBins,
     NumericalGroupComparisonType,
     getGroupsFromQuartiles,
+    DataType,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -123,7 +122,7 @@ import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";
 import {CancerGene, Gene as OncokbGene} from "../../public-lib/api/generated/OncoKbAPI";
-import {DataType} from "public-lib/components/downloadControls/DownloadControls";
+import {DownloadDataType} from "public-lib/components/downloadControls/DownloadControls";
 
 import { AppStore } from 'AppStore';
 import {
@@ -664,8 +663,7 @@ export class StudyViewPageStore {
 
     @observable private sampleIdentifiers: SampleIdentifier[] = [];
 
-    private _clinicalDataEqualityFilterSet = observable.shallowMap<ClinicalDataEqualityFilter>();
-    private _clinicalDataIntervalFilterSet = observable.shallowMap<ClinicalDataIntervalFilter>();
+    private _clinicalDataFilterSet = observable.shallowMap<ClinicalDataFilter>();
 
     @observable private _clinicalDataBinFilterSet = observable.map<ClinicalDataBinFilter>();
 
@@ -710,21 +708,9 @@ export class StudyViewPageStore {
 
     @action
     updateStoreByFilters(filters:Partial<StudyViewFilter>) {
-        if (_.isArray(filters.clinicalDataEqualityFilters) && filters.clinicalDataEqualityFilters.length > 0) {
-            _.each(filters.clinicalDataEqualityFilters, (filter: ClinicalDataEqualityFilter) => {
-                this._clinicalDataEqualityFilterSet.set(filter.attributeId, {
-                    attributeId: filter.attributeId,
-                    values: _.reduce(filter.values, (acc, next) => {
-                        acc.push(next);
-                        return acc;
-                    }, [] as string[])
-                });
-            });
-        }
-
-        if (_.isArray(filters.clinicalDataIntervalFilters) && filters.clinicalDataIntervalFilters.length > 0) {
-            _.each(filters.clinicalDataIntervalFilters, (filter: ClinicalDataIntervalFilter) => {
-                this._clinicalDataIntervalFilterSet.set(filter.attributeId, {
+        if (_.isArray(filters.clinicalDataFilters) && filters.clinicalDataFilters.length > 0) {
+            _.each(filters.clinicalDataFilters, filter => {
+                this._clinicalDataFilterSet.set(filter.attributeId, {
                     attributeId: filter.attributeId,
                     values: _.reduce(filter.values, (acc, next) => {
                         acc.push({
@@ -733,7 +719,7 @@ export class StudyViewPageStore {
                             value: next.value
                         });
                         return acc;
-                    }, [] as ClinicalDataIntervalFilterValue[])
+                    }, [] as ClinicalDataFilterValue[])
                 });
             });
         }
@@ -822,22 +808,22 @@ export class StudyViewPageStore {
 
             const matchedAttr = _.find(clinicalAttributes, (attr: ClinicalAttribute) => attr.clinicalAttributeId.toUpperCase() === query.filterAttributeId!.toUpperCase());
             if (matchedAttr !== undefined) {
-                if (matchedAttr.datatype == "NUMBER") {
-                    filters.clinicalDataIntervalFilters = [{
+                if (matchedAttr.datatype == DataType.NUMBER) {
+                    filters.clinicalDataFilters = [{
                         'attributeId': matchedAttr.clinicalAttributeId,
                         'values': query.filterValues!.split(',').map(range => {
                             const convertResult = range.split('-');
                             return {
                                 start: Number(convertResult[0]),
-                                end: Number(convertResult[1])
-                            } as ClinicalDataIntervalFilterValue
+                                end: Number(convertResult[1]),
+                            } as ClinicalDataFilterValue
                         })
-                    } as ClinicalDataIntervalFilter];
+                    } as ClinicalDataFilter];
                 } else {
-                    filters.clinicalDataEqualityFilters = [{
+                    filters.clinicalDataFilters = [{
                         'attributeId': matchedAttr.clinicalAttributeId,
-                        'values': getClinicalEqualityFilterValuesByString(query.filterValues)
-                    } as ClinicalDataEqualityFilter];
+                        'values': getClinicalEqualityFilterValuesByString(query.filterValues).map(value=>({value}))
+                    } as ClinicalDataFilter];
                 }
                 this.updateStoreByFilters(filters);
             } else {
@@ -1021,8 +1007,7 @@ export class StudyViewPageStore {
     @autobind
     @action
     clearAllFilters() {
-        this._clinicalDataEqualityFilterSet.clear();
-        this._clinicalDataIntervalFilterSet.clear();
+        this._clinicalDataFilterSet.clear();
         this.clearMutatedGeneFilter();
         this.clearFusionGeneFilter();
         this.clearCNAGeneFilter();
@@ -1130,45 +1115,28 @@ export class StudyViewPageStore {
         default: false
     });
 
-    @autobind
-    @action
-    updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
-
-        trackStudyViewFilterEvent("clinicalDataEquality", this);
-
-        if (values.length > 0) {
-            let clinicalDataEqualityFilter = {
-                attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
-                values: values.sort()
-            };
-            this._clinicalDataEqualityFilterSet.set(chartMeta.uniqueKey, clinicalDataEqualityFilter);
-
-        } else {
-            this._clinicalDataEqualityFilterSet.delete(chartMeta.uniqueKey);
-        }
-    }
-
     @action
     updateClinicalDataIntervalFilters(chartMeta: ChartMeta, dataBins: DataBin[]) {
 
         trackStudyViewFilterEvent("clinicalDataInterval", this);
 
-        const values: ClinicalDataIntervalFilterValue[] = getClinicalDataIntervalFilterValues(dataBins);
-        this.updateClinicalDataIntervalFiltersByValues(chartMeta, values);
+        const values: ClinicalDataFilterValue[] = getClinicalDataIntervalFilterValues(dataBins);
+        this.updateClinicalDataFilterByValues(chartMeta, values);
     }
 
     @autobind
     @action
-    updateClinicalDataIntervalFiltersByValues(chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) {
+    updateClinicalDataFilterByValues(chartMeta: ChartMeta, values: ClinicalDataFilterValue[]) {
+        trackStudyViewFilterEvent("clinicalDataFilters", this);
         if (values.length > 0) {
             const clinicalDataIntervalFilter = {
                 attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
                 values: values
             };
-            this._clinicalDataIntervalFilterSet.set(chartMeta.uniqueKey, clinicalDataIntervalFilter);
+            this._clinicalDataFilterSet.set(chartMeta.uniqueKey, clinicalDataIntervalFilter);
 
         } else {
-            this._clinicalDataIntervalFilterSet.delete(chartMeta.uniqueKey);
+            this._clinicalDataFilterSet.delete(chartMeta.uniqueKey);
         }
     }
 
@@ -1384,8 +1352,7 @@ export class StudyViewPageStore {
                     if(chartMeta.uniqueKey === UniqueKey.WITH_CNA_DATA) {
                         this._withCNADataFilter = undefined;
                     }
-                    this._clinicalDataEqualityFilterSet.delete(chartMeta.uniqueKey);
-                    this._clinicalDataIntervalFilterSet.delete(chartMeta.uniqueKey);
+                    this._clinicalDataFilterSet.delete(chartMeta.uniqueKey);
                     this.clearChartSampleIdentifierFilter(chartMeta);
 
                     break;
@@ -1475,28 +1442,18 @@ export class StudyViewPageStore {
         });
     }
 
-    @computed get clinicalDataEqualityFilters() {
-        return this._clinicalDataEqualityFilterSet.values();
-    }
-
-    @computed get clinicalDataIntervalFilters() {
-        return this._clinicalDataIntervalFilterSet.values();
+    @computed get clinicalDataFilters() {
+        return this._clinicalDataFilterSet.values();
     }
 
     @computed
     get filters(): StudyViewFilter {
         const filters: Partial<StudyViewFilter> = {};
 
-        const clinicalDataEqualityFilters = this.clinicalDataEqualityFilters;
-        const clinicalDataIntervalFilters = this.clinicalDataIntervalFilters;
+        const clinicalDataFilters = this.clinicalDataFilters;
 
-        //checking for empty since the api throws error when the clinicalDataEqualityFilter array is empty
-        if (clinicalDataEqualityFilters.length > 0) {
-            filters.clinicalDataEqualityFilters = clinicalDataEqualityFilters;
-        }
-
-        if (clinicalDataIntervalFilters.length > 0) {
-            filters.clinicalDataIntervalFilters = clinicalDataIntervalFilters;
+        if (clinicalDataFilters.length > 0) {
+            filters.clinicalDataFilters = clinicalDataFilters;
         }
 
         if (this._mutatedGeneFilter.length > 0) {
@@ -1573,22 +1530,17 @@ export class StudyViewPageStore {
         return _.flatMap(this._cnaGeneFilter, filter => filter.alterations).map(alteration => getCnaUniqueKey(alteration.hugoGeneSymbol, alteration.alteration));
     }
 
-    public getClinicalDataFiltersByUniqueKey(uniqueKey: string): string[] {
-        const filter = this._clinicalDataEqualityFilterSet.get(uniqueKey);
+    public getClinicalDataFiltersByUniqueKey(uniqueKey: string) {
+        const filter = this._clinicalDataFilterSet.get(uniqueKey);
         return filter ? filter.values : [];
-    }
-
-    public getClinicalDataIntervalFiltersByUniqueKey(uniqueKey: string): ClinicalDataIntervalFilterValue[] {
-        const result = this._clinicalDataIntervalFilterSet.get(uniqueKey);
-        return result ? result.values : [];
     }
 
     @computed
     get unfilteredAttrsForNonNumerical() {
         const visibleNonNumericalAttributes = this.visibleAttributes.filter((chartMeta: ChartMeta) => {
-            if(chartMeta.clinicalAttribute !== undefined && chartMeta.clinicalAttribute.datatype !== "NUMBER") {
+            if(chartMeta.clinicalAttribute !== undefined && chartMeta.clinicalAttribute.datatype !== DataType.NUMBER) {
                 const key = getUniqueKey(chartMeta.clinicalAttribute);
-                return !this._clinicalDataEqualityFilterSet.has(key);
+                return !this._clinicalDataFilterSet.has(key);
             }
             return false;
         });
@@ -1603,7 +1555,7 @@ export class StudyViewPageStore {
     @computed
     get newlyAddedUnfilteredAttrsForNonNumerical() {
         return this.clinicalAttributes.result.filter((attr:ClinicalAttribute) => {
-            if(attr.datatype !== "NUMBER") {
+            if(attr.datatype !== DataType.NUMBER) {
                 const key = getUniqueKey(attr);
                 if(this.newlyAddedCharts.includes(key)) {
                     return true;
@@ -1621,7 +1573,7 @@ export class StudyViewPageStore {
     @computed
     get newlyAddedUnfilteredAttrsForNumerical() {
         return this.clinicalAttributes.result.filter((attr:ClinicalAttribute) => {
-            if(attr.datatype === "NUMBER") {
+            if(attr.datatype === DataType.NUMBER) {
                 const key = getUniqueKey(attr);
                 if(this.newlyAddedCharts.includes(key)) {
                     return true;
@@ -1638,9 +1590,9 @@ export class StudyViewPageStore {
     @computed
     get unfilteredAttrsForNumerical() {
         const visibleNumericalAttributes = this.visibleAttributes.filter((chartMeta: ChartMeta) => {
-            if (chartMeta.clinicalAttribute !== undefined && chartMeta.clinicalAttribute.datatype === "NUMBER") {
+            if (chartMeta.clinicalAttribute !== undefined && chartMeta.clinicalAttribute.datatype === DataType.NUMBER) {
                 const key = getUniqueKey(chartMeta.clinicalAttribute);
-                return !this._clinicalDataIntervalFilterSet.has(key);
+                return !this._clinicalDataFilterSet.has(key);
             }
             return false;
         });
@@ -1742,20 +1694,20 @@ export class StudyViewPageStore {
                     return getRequestedAwaitPromisesForClinicalData(
                         isDefaultAttr,
                         this.isInitialFilterState, this.chartsAreFiltered,
-                        this._clinicalDataEqualityFilterSet.has(uniqueKey),
+                        this._clinicalDataFilterSet.has(uniqueKey),
                         this.unfilteredClinicalDataCount, this.newlyAddedUnfilteredClinicalDataCount,
                         this.initialVisibleAttributesClinicalDataCountData);
                 },
                 invoke: async () => {
                     let result: ClinicalDataCountItem[] = [];
-                    if (this.isInitialFilterState && isDefaultAttr && !this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
+                    if (this.isInitialFilterState && isDefaultAttr && !this._clinicalDataFilterSet.has(uniqueKey)) {
                         result = this.initialVisibleAttributesClinicalDataCountData.result;
                     } else {
                         // Mostly the case when user adds new chart. It would be nice only fetching
                         // the chart specific data instead of using the unfilteredClinicalDataCount which will require
                         // all unfiltered clinical attributes data.
 
-                        if (this._clinicalDataEqualityFilterSet.has(uniqueKey) || this.isInitialFilterState) {
+                        if (this._clinicalDataFilterSet.has(uniqueKey) || this.isInitialFilterState) {
                             result = await internalClient.fetchClinicalDataCountsUsingPOST({
                                 clinicalDataCountFilter: {
                                     attributes: [{
@@ -1795,7 +1747,7 @@ export class StudyViewPageStore {
                 await: () => {
                     return getRequestedAwaitPromisesForClinicalData(
                         isDefaultAttr, this.isInitialFilterState, this.chartsAreFiltered,
-                        this._clinicalDataIntervalFilterSet.has(uniqueKey),
+                        this._clinicalDataFilterSet.has(uniqueKey),
                         this.unfilteredClinicalDataBinCount, this.newlyAddedUnfilteredClinicalDataBinCount,
                         this.initialVisibleAttributesClinicalDataBinCountData);
                 },
@@ -1809,11 +1761,11 @@ export class StudyViewPageStore {
                     const attributeChanged = isDefaultAttr && !_.isEqual(toJS(attribute), initDataBinFilter);
                     if (this.isInitialFilterState &&
                         isDefaultAttr &&
-                        !this._clinicalDataIntervalFilterSet.has(uniqueKey) &&
+                        !this._clinicalDataFilterSet.has(uniqueKey) &&
                         !attributeChanged) {
                         result = this.initialVisibleAttributesClinicalDataBinCountData.result;
                     } else {
-                        if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
+                        if (this._clinicalDataFilterSet.has(uniqueKey)) {
                             result = await internalClient.fetchClinicalDataBinCountsUsingPOST({
                                 dataBinMethod,
                                 clinicalDataBinCountFilter: {
@@ -2184,7 +2136,7 @@ export class StudyViewPageStore {
         onError: (error => {}),
         onResult:(clinicalAttributes)=>{
             clinicalAttributes.forEach((obj:ClinicalAttribute) => {
-                if(obj.datatype === 'NUMBER') {
+                if(obj.datatype === DataType.NUMBER) {
                     const uniqueKey = getUniqueKey(obj);
                     let filter = this.getDefaultClinicalDataBinFilter(obj);
 
@@ -2201,6 +2153,20 @@ export class StudyViewPageStore {
         await:()=>[this.clinicalAttributes],
         invoke:async()=>{
             return _.keyBy(this.clinicalAttributes.result!, "clinicalAttributeId");
+        }
+    });
+
+    readonly clinicalAttributeIdToDataType = remoteData({
+        await: () => [this.clinicalAttributes],
+        invoke: async () => {
+            return _.reduce(this.clinicalAttributes.result!, (acc, clinicalAttribute) => {
+                if (acc[clinicalAttribute.clinicalAttributeId] === undefined) {
+                    acc[clinicalAttribute.clinicalAttributeId] = clinicalAttribute.datatype;
+                } else if (acc[clinicalAttribute.clinicalAttributeId] !== clinicalAttribute.datatype) {
+                    acc[clinicalAttribute.clinicalAttributeId] = DataType.STRING;
+                }
+                return acc;
+            }, {} as { [id: string]: string });
         }
     });
 
@@ -2726,7 +2692,7 @@ export class StudyViewPageStore {
                 }
             }
 
-            if (obj.datatype === 'NUMBER') {
+            if (obj.datatype === DataType.NUMBER) {
                 this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
                 this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
             } else {
@@ -2819,12 +2785,8 @@ export class StudyViewPageStore {
 
             // Also check the initial filters, make sure all clinical attributes in initial filters will be added in default visible attributes
             let initialFilteredAttributeIds:string[] = [];
-            if(this.initialFilters.clinicalDataEqualityFilters !== undefined){
-                initialFilteredAttributeIds = initialFilteredAttributeIds.concat(this.initialFilters.clinicalDataEqualityFilters.map(item => item.attributeId));
-            }
-
-            if(this.initialFilters.clinicalDataIntervalFilters !== undefined){
-                initialFilteredAttributeIds = initialFilteredAttributeIds.concat(this.initialFilters.clinicalDataIntervalFilters.map(item => item.attributeId));
+            if(this.initialFilters.clinicalDataFilters !== undefined){
+                initialFilteredAttributeIds = initialFilteredAttributeIds.concat(this.initialFilters.clinicalDataFilters.map(item => item.attributeId));
             }
 
             if (initialFilteredAttributeIds.length > 0) {
@@ -2843,7 +2805,7 @@ export class StudyViewPageStore {
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
             const attributes = _.uniqBy(
-                _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'STRING').map(attr => {
+                _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === DataType.STRING).map(attr => {
                     return {
                         attributeId: attr.clinicalAttributeId
                     } as ClinicalDataFilter
@@ -2866,7 +2828,7 @@ export class StudyViewPageStore {
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
             return _.chain(this.defaultVisibleAttributes.result)
-                .filter(attr => attr.datatype === 'NUMBER')
+                .filter(attr => attr.datatype === DataType.NUMBER)
                 .map(this.getDefaultClinicalDataBinFilter)
                 .uniqBy(attr => attr.attributeId)
                 .value();
@@ -3181,7 +3143,7 @@ export class StudyViewPageStore {
         return survivalTypes;
     }
 
-    public async getPieChartDataDownload(chartMeta: ChartMeta, dataType?: DataType) {
+    public async getPieChartDataDownload(chartMeta: ChartMeta, dataType?: DownloadDataType) {
         const isCustomChart = this.isCustomChart(chartMeta.uniqueKey);
         if (dataType && dataType === 'summary') {
             if (isCustomChart) {

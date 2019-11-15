@@ -6,10 +6,10 @@ import {observable} from 'mobx';
 import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import {
-    ClinicalDataIntervalFilterValue,
     CopyNumberGeneFilterElement,
     DataBin,
-    RectangleBounds
+    RectangleBounds,
+    ClinicalDataFilterValue
 } from "shared/api/generated/CBioPortalAPIInternal";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ReactGridLayout from 'react-grid-layout';
@@ -20,7 +20,7 @@ import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
-import {DataType} from "public-lib/components/downloadControls/DownloadControls";
+import {DownloadDataType} from "public-lib/components/downloadControls/DownloadControls";
 import {ChartMeta, ChartType} from "../StudyViewUtils";
 
 
@@ -45,7 +45,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
 
         this.handlers = {
             onValueSelection: (chartMeta: ChartMeta, values: string[]) => {
-                this.store.updateClinicalDataEqualityFilters(chartMeta, values);
+                this.store.updateClinicalDataFilterByValues(chartMeta, values.map(value=>({value} as ClinicalDataFilterValue)));
             },
             onDataBinSelection: (chartMeta: ChartMeta, dataBins: DataBin[]) => {
                 this.store.updateClinicalDataIntervalFilters(chartMeta, dataBins);
@@ -103,18 +103,18 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     props.promise = this.store.getCustomChartDataCount(chartMeta);
                 } else {
                     props.promise = this.store.getClinicalDataCount(chartMeta);
-                    props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
+                    props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey).map(clinicalDataFilterValue => clinicalDataFilterValue.value);
                     props.onValueSelection = this.handlers.onValueSelection;
                     props.onResetSelection = this.handlers.onValueSelection;
                 }
                 props.onChangeChartType = this.handlers.onChangeChartType;
-                props.getData = (dataType?: DataType) => this.store.getPieChartDataDownload(chartMeta, dataType);
+                props.getData = (dataType?: DownloadDataType) => this.store.getPieChartDataDownload(chartMeta, dataType);
                 props.downloadTypes = ["Summary Data", "Full Data", "SVG", "PDF"];
                 break;
             }
             case BAR_CHART: {
                 props.promise = this.store.getClinicalDataBin(chartMeta);
-                props.filters = this.store.getClinicalDataIntervalFiltersByUniqueKey(chartMeta.uniqueKey);
+                props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.onDataBinSelection = this.handlers.onDataBinSelection;
                 props.onResetSelection = this.handlers.onDataBinSelection;
                 props.onToggleLogScale = this.handlers.onToggleLogScale;
@@ -132,7 +132,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     props.onResetSelection = this.handlers.setCustomChartFilters;
                     props.promise = this.store.getCustomChartDataCount(chartMeta);
                 } else {
-                    props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
+                    props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey).map(clinicalDataFilterValue => clinicalDataFilterValue.value);
                     props.promise = this.store.getClinicalDataCount(chartMeta);
                     props.onValueSelection = this.handlers.onValueSelection;
                     props.onResetSelection = this.handlers.onValueSelection;
