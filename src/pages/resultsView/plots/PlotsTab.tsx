@@ -73,11 +73,11 @@ import MultipleCategoryBarPlot from "../../../shared/components/plots/MultipleCa
 import {RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
 import "./styles.scss";
-import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 import LastPlotsTabSelectionForDatatype from "./LastPlotsTabSelectionForDatatype";
 import { generateQuickPlots } from "./QuickPlots";
+import { Treatment } from "shared/lib/GenericAssayUtils";
 
 enum EventKey {
     horz_logScale,
