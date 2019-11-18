@@ -5,12 +5,12 @@ import {observer, Observer} from "mobx-react";
 import {AlterationTypeConstants, ResultsViewPageStore, GeneticEntity, GeneticEntityType} from "../ResultsViewPageStore";
 import Select from "react-select1";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
-import {CoExpression, CoExpressionFilter} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {CoExpression, CoExpressionFilter, Geneset} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import _ from "lodash";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import CoExpressionViz from "./CoExpressionViz";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import {filterAndSortProfiles, getGenesetProfiles, getProfileOptions} from "./CoExpressionTabUtils";
+import {filterAndSortProfiles, getGenesetProfiles, getProfileOptions, CoExpressionWithEntityInfo} from "./CoExpressionTabUtils";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
 import {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {bind} from "bind-decorator";
@@ -26,7 +26,7 @@ export interface ICoExpressionTabProps {
 
 export class CoExpressionCache extends MobxPromiseCache<{profileX: MolecularProfile,
     profileY: MolecularProfile, geneticEntityId: string,
-    geneticEntityType: GeneticEntityType, allData:boolean}, CoExpression[]> {}
+    geneticEntityType: GeneticEntityType, allData:boolean}, CoExpressionWithEntityInfo[]> {}
 
 @observer
 export default class CoExpressionTab extends React.Component<ICoExpressionTabProps, {}> {
@@ -192,7 +192,8 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
 
     private coExpressionCache:CoExpressionCache = new CoExpressionCache(
         q=>({
-            invoke: ()=>{
+            await: () => [this.props.store.entrezGeneIdToReferenceGene],
+            invoke: async ()=>{
                 let threshold = 0.3;
                 if (q.allData) {
                     threshold = 0;
@@ -200,15 +201,52 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                 const dataQueryFilter = this.createDataQueryFilterForCoExpression(
                     this.props.store.studyToDataQueryFilter.result![q.profileX.studyId], q.geneticEntityId, q.geneticEntityType);
                 if (dataQueryFilter != undefined) {
-                    // TODO: this sorts by p value asc first, so we can fake
-                    // multi column sort when sorting by q value afterwards. We
-                    // can remove this after implementing multi-sort
-                    return internalClient.fetchCoExpressionsUsingPOST({
+
+                    // temporarily point coexpression traffic to master cbioportal instance
+                    const $domain = (window.location.hostname === "www.cbioportal.org") ? "https://master.cbioportal.org/api" : undefined;
+
+                    const data = await internalClient.fetchCoExpressionsUsingPOST({
                         molecularProfileIdA: q.profileX.molecularProfileId,
                         molecularProfileIdB: q.profileY.molecularProfileId,
                         coExpressionFilter: dataQueryFilter as CoExpressionFilter,
-                        threshold
+                        threshold,
+                        $domain
                     });
+
+                    let genesetMap: { [id: string]: Geneset } = {};
+                    if (q.profileY.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE) {
+                        const genesetIds = _.chain(data)
+                            .map(datum => datum.geneticEntityId)
+                            .uniq()
+                            .value();
+                        const genesets = await internalClient.fetchGenesetsUsingPOST({
+                            genesetIds
+                        });
+                        genesetMap = _.keyBy(genesets, geneset => geneset.genesetId);
+                    }
+
+                    const entrezGeneIdToReferenceGene = this.props.store.entrezGeneIdToReferenceGene.result || {};
+
+                    return Promise.resolve(_.reduce(data, (acc, datum) => {
+                        let geneticEntityName: string | undefined = undefined;
+                        let cytoband = "-";
+                        if (q.profileY.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE) {
+                            geneticEntityName = genesetMap[datum.geneticEntityId].name;
+                        } else if (entrezGeneIdToReferenceGene[datum.geneticEntityId] !== undefined) {
+                            geneticEntityName = entrezGeneIdToReferenceGene[datum.geneticEntityId].hugoGeneSymbol;
+                            cytoband = entrezGeneIdToReferenceGene[datum.geneticEntityId].cytoband;
+                        }
+
+                        if (geneticEntityName !== undefined) {
+                            acc.push({
+                                ...datum,
+                                geneticEntityName,
+                                cytoband
+                            })
+                        }
+
+                        return acc;
+                    }, [] as CoExpressionWithEntityInfo[]));
                 } else {
                     return Promise.resolve([]);
                 }

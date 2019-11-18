@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import $ from 'jquery';
+import {If, Then, Else} from 'react-if';
 import URL from 'url';
 import { inject, observer } from 'mobx-react';
 import { computed, observable, reaction, runInAction } from 'mobx';

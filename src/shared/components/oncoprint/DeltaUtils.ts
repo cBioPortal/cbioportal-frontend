@@ -8,7 +8,7 @@ import {
     IHeatmapTrackSpec,
     IOncoprintProps,
 } from "./Oncoprint";
-import OncoprintJS, {SortConfig, TrackId} from "oncoprintjs";
+import OncoprintJS, {SortConfig, TrackId, UserTrackSpec} from "oncoprintjs";
 import _ from "lodash";
 import {
     getClinicalTrackRuleSetParams,
@@ -46,6 +46,7 @@ export function transition(
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
     transitionShowSublabels(nextProps, prevProps, oncoprint);
+    transitionTrackHeaders(nextProps, prevProps, oncoprint);
     transitionTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId, getMolecularProfileMap);
     transitionSortConfig(nextProps, prevProps, oncoprint);
     transitionTrackGroupSortPriority(nextProps, prevProps, oncoprint);
@@ -59,6 +60,29 @@ export function transition(
     }
     if (suppressingRendering) {
         doReleaseRendering(nextProps, oncoprint);
+    }
+}
+
+function transitionTrackHeaders(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint: OncoprintJS
+) {
+    if (!_.isEqual(nextProps.heatmapTrackHeaders, prevProps.heatmapTrackHeaders)) {
+        const nextHeaders = nextProps.heatmapTrackHeaders || {};
+        const prevHeaders = prevProps.heatmapTrackHeaders || {};
+
+        const nextIndexes = Object.keys(nextHeaders).map(x=>parseInt(x,10));
+        const prevIndexes = Object.keys(prevHeaders).map(x=>parseInt(x,10));
+
+        for (const index of nextIndexes) {
+            oncoprint.setTrackGroupHeader(index, nextHeaders[index]);
+        }
+        for (const index of prevIndexes) {
+            if (!(index in nextHeaders)) {
+                oncoprint.setTrackGroupHeader(index, undefined);
+            }
+        }
     }
 }
 
@@ -654,7 +678,7 @@ function transitionGeneticTrack(
         return;
     } else if (nextSpec && !prevSpec) {
         // Add track
-        const geneticTrackParams = {
+        const geneticTrackParams:UserTrackSpec<any> = {
             rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers, nextProps.distinguishGermlineMutations),
             label: nextSpec.label,
             sublabel: nextSpec.sublabel,
@@ -677,7 +701,8 @@ function transitionGeneticTrack(
                 expansionParentKey
                 ? trackSpecKeyToTrackId[expansionParentKey]
                 : undefined
-            )
+            ),
+            custom_track_options:nextSpec.customOptions
         };
         const newTrackId = oncoprint.addTracks([geneticTrackParams])[0];
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
