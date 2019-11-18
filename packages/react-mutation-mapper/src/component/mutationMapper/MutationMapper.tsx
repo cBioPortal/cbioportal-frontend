@@ -66,6 +66,7 @@ export type MutationMapperProps = {
     showTranscriptDropDown?: boolean;
     showOnlyAnnotatedTranscriptsInDropdown?: boolean;
     filterMutationsBySelectedTranscript?: boolean;
+    transcriptSummaryUrlTemplate?: string;
     isoformOverrideSource?: string;
     annotationFields?: string[];
     mainLoadingIndicator?: JSX.Element;
@@ -324,6 +325,7 @@ export default class MutationMapper<P extends MutationMapperProps = MutationMapp
                 transcriptsWithAnnotations={this.store.transcriptsWithAnnotations}
                 transcriptsWithProteinLength={this.store.transcriptsWithProteinLength}
                 mutationsByTranscriptId={this.store.mutationsByTranscriptId}
+                transcriptSummaryUrlTemplate={this.props.transcriptSummaryUrlTemplate}
                 onTranscriptChange={this.handleTranscriptChange}
             />
         );
