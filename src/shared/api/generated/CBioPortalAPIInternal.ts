@@ -92,11 +92,7 @@ export type ClinicalDataFilterValue = {
 
 };
 export type CoExpression = {
-    'cytoband': string
-
-        'geneticEntityId': string
-
-        'geneticEntityName': string
+    'geneticEntityId': string
 
         'geneticEntityType': "GENE" | "GENESET"
 
