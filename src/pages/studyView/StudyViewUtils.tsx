@@ -1680,7 +1680,7 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
     return chartSettingsMap;
 }
 
-export function getBinName(dataBin: Pick<DataBin, "specialValue"|"start"|"end">) {
+export function getBinName(dataBin: Pick<ClinicalDataBin, "specialValue"|"start"|"end">) {
     // specialValue can be any non-numeric character. ex: "=<", ">", "NA"
     if (dataBin.specialValue !== undefined) {
         if (dataBin.start !== undefined) {
@@ -1697,11 +1697,11 @@ export function getBinName(dataBin: Pick<DataBin, "specialValue"|"start"|"end">)
     return ''
 }
 
-export function getGroupedClinicalDataByBins(data: ClinicalData[], dataBins: DataBin[]) {
+export function getGroupedClinicalDataByBins(data: ClinicalData[], dataBins: Pick<ClinicalDataBin, "specialValue"|"start"|"end">[]) {
     const numericDataBins = dataBins.filter(dataBin => dataBin.specialValue === undefined);
     const specialDataBins = dataBins.filter(dataBin => dataBin.specialValue !== undefined);
     return _.reduce(data, (acc, datum) => {
-        let dataBin: DataBin | undefined;
+        let dataBin:  Pick<ClinicalDataBin, "specialValue"|"start"|"end"> | undefined;
         // Check if the ClinicalData value is number
         if (!isNaN(datum.value as any)) {
             //find if it belongs to any of numeric bins. 
@@ -1736,7 +1736,7 @@ export function getGroupedClinicalDataByBins(data: ClinicalData[], dataBins: Dat
     });
 }
 
-export function getGroupsFromBins(samples: Sample[], patientAttribute: boolean, data: ClinicalData[], dataBins: DataBin[], origin: string[]) {
+export function getGroupsFromBins(samples: Sample[], patientAttribute: boolean, data: ClinicalData[], dataBins: Pick<ClinicalDataBin, "specialValue"|"start"|"end">[], origin: string[]) {
 
     let patientToSamples: { [uniquePatientKey: string]: SampleIdentifier[] } = {};
     if (patientAttribute) {
