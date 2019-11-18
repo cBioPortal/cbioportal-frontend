@@ -5,12 +5,14 @@ import {getNCBIlink, VariantAnnotation} from "cbioportal-frontend-commons";
 import {EnsemblTranscript} from "../../model/EnsemblTranscript";
 import {Mutation} from "../../model/Mutation";
 import {RemoteData} from "../../model/RemoteData";
+import {getUrl} from "../../util/DataFetcherUtils";
 import TranscriptDropdown from "./TranscriptDropdown";
 import styles from "./geneSummary.module.scss";
 
 export type GeneSummaryProps = {
     hugoGeneSymbol: string;
     uniprotId?: string;
+    transcriptSummaryUrlTemplate?: string;
     showDropDown: boolean;
     showOnlyAnnotatedTranscriptsInDropdown: boolean;
     transcriptsByTranscriptId: {[transcriptId: string]: EnsemblTranscript};
@@ -27,6 +29,10 @@ export type GeneSummaryProps = {
 @observer
 export default class GeneSummary extends React.Component<GeneSummaryProps, {}>
 {
+    public static defaultProps: Partial<GeneSummaryProps> = {
+        transcriptSummaryUrlTemplate: "http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>"
+    };
+
     public render()
     {
         const {
@@ -89,7 +95,7 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}>
                     <div>
                         <span>Ensembl: </span>
                         <a
-                            href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${activeTranscript}`}
+                            href={getUrl(this.props.transcriptSummaryUrlTemplate!, {transcriptId: activeTranscript})}
                             target="_blank"
                         >
                             {activeTranscript}
@@ -100,7 +106,7 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}>
                     <div>
                         <span>Ensembl: </span>
                         <a
-                            href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${canonicalTranscriptId}`}
+                            href={getUrl(this.props.transcriptSummaryUrlTemplate!, {transcriptId: canonicalTranscriptId})}
                             target="_blank"
                         >
                             {canonicalTranscriptId}
