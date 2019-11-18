@@ -38,7 +38,7 @@ import classNames from "classnames";
 import AppConfig from "appConfig";
 import SocialAuthButton from "../../shared/components/SocialAuthButton";
 import { ServerConfigHelpers } from "../../config/config";
-import { getStudyViewTabId } from "./StudyViewUtils";
+import { getStudyViewTabId, getButtonNameWithDownPointer } from "./StudyViewUtils";
 import InfoBeacon from "shared/components/infoBeacon/InfoBeacon";
 import { WrappedTour } from "shared/components/wrappedTour/WrappedTour";
 import { Alert, Modal } from "react-bootstrap";
@@ -170,9 +170,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     @computed
     get addChartButtonText() {
         if (this.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
-            return "Charts";
+            return getButtonNameWithDownPointer("Charts");
         } else if (this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
-            return "Columns";
+            return getButtonNameWithDownPointer("Columns");
         } else {
             return "";
         }
@@ -241,7 +241,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             category: "groupComparison",
                         })}
                     >
-                        Groups {String.fromCharCode(9662) /*small solid down triangle*/}
+                        {getButtonNameWithDownPointer("Groups")}
                     </button>
                 </DefaultTooltip>
             </>
@@ -410,7 +410,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                         data-test="custom-selection-button"
                                                         style={{ marginLeft: "10px" }}
                                                     >
-                                                        Custom Selection
+                                                        {getButtonNameWithDownPointer("Custom Selection")}
                                                     </button>
                                                 </DefaultTooltip>
                                             </>

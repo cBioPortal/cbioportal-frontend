@@ -6,9 +6,10 @@ import {
     DataIntervalFilterValue,
     ClinicalDataBin,
     SampleIdentifier,
-    StudyViewFilter
+    StudyViewFilter,
+    ClinicalDataBinFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
-import {CancerStudy, ClinicalAttribute, Gene, PatientIdentifier, Sample} from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, ClinicalAttribute, Gene, PatientIdentifier, Sample, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
@@ -27,12 +28,20 @@ import {getTextWidth} from "../../public-lib/lib/TextTruncationUtils";
 import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
 import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
 import styles from './styles.module.scss';
-
+import { getGroupParameters, getStudiesAttr } from "pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
+import { SessionGroupData } from "shared/api/ComparisonGroupClient";
+import { stringListToIndexSet } from "public-lib";
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
     PATIENT = 'PATIENT',
+}
+
+export enum NumericalGroupComparisonType {
+    QUARTILES = 'QUARTILES',
+    MEDIAN='MEDIAN',
+    BINS = 'BINS'
 }
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
@@ -1617,6 +1626,7 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
     chartDimensionSet: { [uniqueId: string]: ChartDimension },
     chartTypeSet: { [uniqueId: string]: ChartType },
     customChartSet: { [uniqueId: string]: CustomChart },
+    clinicalDataBinFilter: { [uniqueId: string]: ClinicalDataBinFilter },
     filterMutatedGenesTableByCancerGenes: boolean = true,
     filterFusionGenesTableByCancerGenes: boolean = true,
     filterCNAGenesTableByCancerGenes: boolean = true,
@@ -1647,6 +1657,14 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
             chartSettingsMap[id].groups = customChart.groups;
             chartSettingsMap[id].name = attribute.displayName;
         }
+        if (clinicalDataBinFilter[id]) {
+            if (clinicalDataBinFilter[id].disableLogScale) {
+                chartSettingsMap[id].disableLogScale = true;
+            }
+            if (!_.isEmpty(clinicalDataBinFilter[id].customBins)) {
+                chartSettingsMap[id].customBins = clinicalDataBinFilter[id].customBins;
+            }
+        }
     });
     // add layout for each chart
     gridLayout.forEach(layout => {
@@ -1660,4 +1678,126 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
         }
     });
     return chartSettingsMap;
+}
+
+export function getBinName(dataBin: Pick<DataBin, "specialValue"|"start"|"end">) {
+    // specialValue can be any non-numeric character. ex: "=<", ">", "NA"
+    if (dataBin.specialValue !== undefined) {
+        if (dataBin.start !== undefined) {
+            return dataBin.specialValue + dataBin.start;
+        }
+        if (dataBin.end !== undefined) {
+            return dataBin.specialValue + dataBin.end;
+        }
+        return dataBin.specialValue;
+    }
+    if (dataBin.start !== undefined && dataBin.end !== undefined) {
+        return `${dataBin.start}-${dataBin.end}`;
+    }
+    return ''
+}
+
+export function getGroupedClinicalDataByBins(data: ClinicalData[], dataBins: DataBin[]) {
+    const numericDataBins = dataBins.filter(dataBin => dataBin.specialValue === undefined);
+    const specialDataBins = dataBins.filter(dataBin => dataBin.specialValue !== undefined);
+    return _.reduce(data, (acc, datum) => {
+        let dataBin: DataBin | undefined;
+        // Check if the ClinicalData value is number
+        if (!isNaN(datum.value as any)) {
+            //find if it belongs to any of numeric bins. 
+            dataBin = _.find(numericDataBins, dataBin => parseFloat(datum.value) > dataBin.start && parseFloat(datum.value) <= dataBin.end);
+        }
+
+        //If ClinicalData value is not a number of does not belong to any number bins
+        if (dataBin === undefined) {
+            //find if it belongs to any of sepcial bins. 
+            dataBin = _.find(specialDataBins, dataBin => {
+                if (!isNaN(datum.value as any)) {
+                    if (dataBin.end !== undefined) {
+                        return parseFloat(datum.value) <= dataBin.end;
+                    }
+                    else if (dataBin.start !== undefined) {
+                        return parseFloat(datum.value) > dataBin.start;
+                    }
+                }
+                return dataBin.specialValue === datum.value;
+            });
+        }
+        if (dataBin) {
+            let name = getBinName(dataBin);
+            if (acc[name] === undefined) {
+                acc[name] = [];
+            }
+            acc[name].push(datum);
+        }
+        return acc;
+    }, {} as {
+        [id: string]: ClinicalData[];
+    });
+}
+
+export function getGroupsFromBins(samples: Sample[], patientAttribute: boolean, data: ClinicalData[], dataBins: DataBin[], origin: string[]) {
+
+    let patientToSamples: { [uniquePatientKey: string]: SampleIdentifier[] } = {};
+    if (patientAttribute) {
+        patientToSamples = _.groupBy(samples, s => s.uniquePatientKey);
+    }
+
+    const clinicalDataByBins = getGroupedClinicalDataByBins(data, dataBins);
+    const binsOrder = dataBins.map(dataBin=>getBinName(dataBin))
+    const binsOrderSet = stringListToIndexSet(binsOrder)
+
+    return _.reduce(clinicalDataByBins, (acc, clinicalData, name) => {
+        if (clinicalData.length !== 0) {
+            let sampleIdentifiers: SampleIdentifier[] = []
+
+            if (patientAttribute) {
+                sampleIdentifiers = _.flatMapDeep(clinicalData, (d: ClinicalData) => {
+                    return patientToSamples[d.uniquePatientKey].map(s => ({ studyId: s.studyId, sampleId: s.sampleId }));
+                });
+            } else {
+                sampleIdentifiers = clinicalData.map(d => ({ studyId: d.studyId, sampleId: d.sampleId }));
+            }
+
+            acc.push(getGroupParameters(
+                name,
+                sampleIdentifiers,
+                origin
+            ))
+        }
+        return acc;
+    }, [] as SessionGroupData[]).sort((a, b) => binsOrderSet[a.name] - binsOrderSet[b.name]);
+}
+
+export function getGroupsFromQuartiles(samples: Sample[], patientAttribute: boolean, quartiles: ClinicalData[][], origin: string[]) {
+
+    let patientToSamples: {
+        [uniquePatientKey: string]: SampleIdentifier[];
+    } = {};
+    if (patientAttribute) {
+        patientToSamples = _.groupBy(samples, s => s.uniquePatientKey);
+    }
+    // create groups using data
+    return quartiles.map(quartile => {
+
+        let sampleIdentifiers: SampleIdentifier[] = []
+        if (patientAttribute) {
+            sampleIdentifiers = _.flatMapDeep(quartile, (d: ClinicalData) => {
+                return patientToSamples[d.uniquePatientKey].map(s => ({ studyId: s.studyId, sampleId: s.sampleId }));
+            });
+        }
+        else {
+            sampleIdentifiers = quartile.map(d => ({ studyId: d.studyId, sampleId: d.sampleId }));
+        }
+        
+        return getGroupParameters(
+            `${quartile[0].value}-${quartile[quartile.length - 1].value}`,
+            sampleIdentifiers,
+            origin
+        );
+    });
+}
+
+export function getButtonNameWithDownPointer(buttonName: string) {
+    return buttonName + " " + String.fromCharCode(9662);/*small solid down triangle*/
 }

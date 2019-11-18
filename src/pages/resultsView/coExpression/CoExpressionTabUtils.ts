@@ -3,7 +3,9 @@ import {MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
 import {AlterationTypeConstants, GeneticEntityType} from "../ResultsViewPageStore";
 import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
 
-export type CoExpressionWithQ = CoExpression & {geneticEntityType: GeneticEntityType, qValue:number };
+export type CoExpressionWithEntityInfo = CoExpression & { geneticEntityName: string, cytoband: string };
+
+export type CoExpressionWithQ = CoExpressionWithEntityInfo & { geneticEntityType: GeneticEntityType, qValue: number };
 
 export const correlationInformation = "Pearson correlations are computed first. For genes with a correlation greater "+
                                         "than 0.3 or less than -0.3, the Spearman correlations are also computed. By "+

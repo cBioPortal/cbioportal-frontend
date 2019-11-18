@@ -43,9 +43,6 @@ const cnaToAlteration:{[cna:number]:string} = {
 
 export type AlterationEnrichmentTableColumn = Column<AlterationEnrichmentRow> & { order?: number };
 
-export class AlterationEnrichmentTableComponent extends LazyMobXTable<AlterationEnrichmentRow> {
-}
-
 @observer
 export default class AlterationEnrichmentTable extends React.Component<IAlterationEnrichmentTableProps, {}> {
 
@@ -143,7 +140,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
             (c: AlterationEnrichmentTableColumn) => c.order
         );
         return (
-            <AlterationEnrichmentTableComponent initialItemsPerPage={20} paginationProps={{ itemsPerPageOptions: [20] }}
+            <LazyMobXTable initialItemsPerPage={20} paginationProps={{ itemsPerPageOptions: [20] }}
                 columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn} 
                 onRowClick={this.props.onGeneNameClick ? this.onRowClick : undefined} dataStore={this.props.dataStore}/>
         );

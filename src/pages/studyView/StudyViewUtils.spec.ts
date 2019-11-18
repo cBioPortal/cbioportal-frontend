@@ -51,6 +51,8 @@ import {
     ChartMetaDataTypeEnum,
     getStudyViewTabId,
     formatRange,
+    getBinName,
+    getGroupedClinicalDataByBins,
 } from 'pages/studyView/StudyViewUtils';
 import {
     DataIntervalFilterValue,
@@ -2239,6 +2241,131 @@ describe('StudyViewUtils', () => {
             const expected = "10";
 
             assert.equal(actual, expected);
+        });
+    });
+
+    describe("getBinName", () => {
+        it("should return correct bin name", () => {
+            assert.equal(getBinName({ specialValue:"NA" } as any), "NA");
+            assert.equal(getBinName({ start:10, end:20 } as any), "10-20");
+            assert.equal(getBinName({ start:10, specialValue:"<=" } as any), "<=10");
+            assert.equal(getBinName({ specialValue:">", end:20 } as any), ">20");
+        });
+    });
+
+    describe("getGroupedClinicalDataByBins", () => {
+
+        let clinicalData = [{
+            patientId: 'patient1',
+            sampleId: 'sample1',
+            studyId: 'study1',
+            uniquePatientKey: 'patient1',
+            value: 10
+        }, {
+            patientId: 'patient2',
+            sampleId: 'sample2',
+            studyId: 'study1',
+            uniquePatientKey: 'patient2',
+            value: 11
+        }, {
+            patientId: 'patient3',
+            sampleId: 'sample3',
+            studyId: 'study1',
+            uniquePatientKey: 'patient3',
+            value: 20
+        }, {
+            patientId: 'patient4',
+            sampleId: 'sample4',
+            studyId: 'study1',
+            uniquePatientKey: 'patient4',
+            value: 30
+        }, {
+            patientId: 'patient5',
+            sampleId: 'sample5',
+            studyId: 'study1',
+            uniquePatientKey: 'patient5',
+            value: 40
+        }, {
+            patientId: 'patient6',
+            sampleId: 'sample6',
+            studyId: 'study1',
+            uniquePatientKey: 'patient6',
+            value: 45
+        }, {
+            patientId: 'patient7',
+            sampleId: 'sample7',
+            studyId: 'study1',
+            uniquePatientKey: 'patient7',
+            value: 'NA'
+        }]
+
+        let dataBins = [{
+            'end': 10,
+            'specialValue': '<='
+        }, {
+            'start': 10,
+            'end': 20,
+        }, {
+            'start': 20,
+            'end': 40,
+        }, {
+            'start': 40,
+            'specialValue': '>'
+        }, {
+            'specialValue': 'NA'
+        }]
+
+
+        it("should return grouped clinicalData by bins", () => {
+            assert.deepEqual(getGroupedClinicalDataByBins(clinicalData as any, dataBins as any), {
+                "<=10": [{
+                    "patientId": "patient1",
+                    "sampleId": "sample1",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient1",
+                    "value": 10
+                }],
+                "10-20": [{
+                    "patientId": "patient2",
+                    "sampleId": "sample2",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient2",
+                    "value": 11
+                }, {
+                    "patientId": "patient3",
+                    "sampleId": "sample3",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient3",
+                    "value": 20
+                }],
+                "20-40": [{
+                    "patientId": "patient4",
+                    "sampleId": "sample4",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient4",
+                    "value": 30
+                }, {
+                    "patientId": "patient5",
+                    "sampleId": "sample5",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient5",
+                    "value": 40
+                }],
+                ">40": [{
+                    "patientId": "patient6",
+                    "sampleId": "sample6",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient6",
+                    "value": 45
+                }],
+                "NA": [{
+                    "patientId": "patient7",
+                    "sampleId": "sample7",
+                    "studyId": "study1",
+                    "uniquePatientKey": "patient7",
+                    "value": "NA"
+                }]
+            } as any);
         });
     });
 });

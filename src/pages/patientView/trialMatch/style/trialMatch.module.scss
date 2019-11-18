@@ -6,18 +6,53 @@
   border-top-color: rgb(221, 221, 221) !important;
 }
 .alterationUl{
-  margin-bottom: 0 !important;
+  margin-bottom: -20px !important;
   list-style-type: none;
   padding-left: 15px;
 }
 .genomicSpan {
-   margin-right:5px;
+  margin-right:5px;
 }
-.tooltip{
+.tooltip {
   maxHeight: 400px;
   maxWidth: 600px;
   overflow: auto;
 }
+.statusBackground {
+  display: block;
+  padding: 10px;
+  width: 130px;
+  border-radius: 10px;
+  background: #73AD21;
+  text-align: center;
+  color: #ffffff;
+}
+.icon {
+  color: #3786C2;
+  .marginLeft {
+    margin-left:5px;
+  }
+  .marginRight {
+    margin-right:5px;
+  }
+}
+
+.matchInfoContainer {
+  display: flex;
+  justify-content: space-between;
+
+  .sampleIdsContainer {
+    flex: 0 0 auto;
+    width: 30px;
+  }
+
+  .genomicInfoContainer {
+    flex: 1 1 auto;
+    margin: 0 5px 0 0;
+
+  }
+}
+
 .criteriaContainer {
   display: flex;
   justify-content: space-between;
@@ -30,12 +65,12 @@
   .firstRight{
     display:flex;
     flex: 0 0 auto;
-    width: 280px;
+    width: 300px;
     justify-content: space-between;
 
     .secondLeft {
       flex: 0 0 auto;
-      width: 80px;
+      width: 85px;
       margin-right: 10px;
     }
     .secondRight{
@@ -47,4 +82,11 @@
   padding-right: 9px;
   text-align: right;
   font-size: 13px;
+}
+.statusButton {
+  margin: 20% 0 20% 0;
+
+  a:hover {
+    text-decoration: none;
+  }
 }

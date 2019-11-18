@@ -23,7 +23,8 @@ import {
     getWidthByDimension,
     mutationCountVsCnaTooltip,
     MutationCountVsCnaYBinsMin,
-    UniqueKey
+    UniqueKey,
+    NumericalGroupComparisonType
 } from "../StudyViewUtils";
 import {GenePanel} from "../../../shared/api/generated/CBioPortalAPI";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
@@ -80,6 +81,7 @@ export interface IChartContainerProps {
     onChangeCancerGeneFilter?: (filtered: boolean) => void;
     openComparisonPage:(params:{
         chartMeta: ChartMeta,
+        categorizationType?: NumericalGroupComparisonType,
         clinicalAttributeValues?:{ value:string, color:string }[]
     })=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
@@ -212,7 +214,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @autobind
     @action
-    openComparisonPage() {
+    openComparisonPage(categorizationType?:NumericalGroupComparisonType) {
         if (this.comparisonPagePossible) {
             switch (this.props.chartType) {
                 case ChartTypeEnum.PIE_CHART:
@@ -249,6 +251,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 case ChartTypeEnum.BAR_CHART:
                     this.props.openComparisonPage({
                         chartMeta: this.props.chartMeta,
+                        categorizationType
                     });
                     break;
             }

@@ -1,7 +1,10 @@
 import { assert } from 'chai';
 import * as _ from 'lodash';
-import { getMatchPriority, excludeControlArms, getDrugsFromArm } from './TrialMatchTableUtils';
-import { IArm, ITrialMatch } from "../../../shared/model/MatchMiner";
+import {
+    getMatchPriority, excludeControlArms, getDrugsFromArm,
+    mergeClinicalGroupMatchByAge
+} from './TrialMatchTableUtils';
+import { IArm, IClinicalGroupMatch, ITrialMatch } from "../../../shared/model/MatchMiner";
 
 describe("TrialMatchTableUtils", () => {
 
@@ -12,93 +15,125 @@ describe("TrialMatchTableUtils", () => {
                     "positive": [ "Non-Small Cell Lung Cancer" ],
                     "negative": []
                 },
-                "matches": [],
-                "notMatches": [
-                    {
-                        "genomicAlteration": "EGFR !E709_T710delinsD",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": null,
-                                "trueProteinChange": null,
-                                "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
-                            }
-                        ]
-                    },
-                    {
-                        "genomicAlteration": "EGFR !E709K",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": null,
-                                "trueProteinChange": null,
-                                "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
-                            }
-                        ]
-                    },
-                    {
-                        "genomicAlteration": "EGFR !L833V",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": null,
-                                "trueProteinChange": null,
-                                "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
-                            }
-                        ]
-                    }
-                ]
+                "matches": {
+                    "MUTATION": [],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+                },
+                "notMatches": {
+                    "MUTATION": [
+                        {
+                            "genomicAlteration": "EGFR !E709_T710delinsD",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": null,
+                                    "trueProteinChange": null,
+                                    "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
+                                }
+                            ]
+                        },
+                        {
+                            "genomicAlteration": "EGFR !E709K",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": null,
+                                    "trueProteinChange": null,
+                                    "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
+                                }
+                            ]
+                        },
+                        {
+                            "genomicAlteration": "EGFR !L833V",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": null,
+                                    "trueProteinChange": null,
+                                    "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
+                                }
+                            ]
+                        }
+                    ],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+                }
             }, {
                 "trialAgeNumerical": ">=18",
                 "trialOncotreePrimaryDiagnosis": {
                     "positive": [ "Non-Small Cell Lung Cancer" ],
                     "negative": []
                 },
-                "matches": [
-                    {
-                        "genomicAlteration": "EGFR 729_761del",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": "EGFR",
-                                "trueProteinChange": "L747_P753delinsS",
-                                "sampleIds": [ "P-0000628-T01-IM3" ]
-                            }
-                        ]
-                    }
-                ],
-                "notMatches": [
-                    {
-                        "genomicAlteration": "EGFR !T790M",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": null,
-                                "trueProteinChange": null,
-                                "sampleIds": [ "P-0000628-T01-IM3" ]
-                            }
-                        ]
-                    }
-                ]
+                "matches": {
+                    "MUTATION": [
+                        {
+                            "genomicAlteration": "EGFR 729_761del",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": "EGFR",
+                                    "trueProteinChange": "L747_P753delinsS",
+                                    "sampleIds": [ "P-0000628-T01-IM3" ]
+                                }
+                            ]
+                        }
+                    ],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+                },
+                "notMatches": {
+                    "MUTATION": [
+                        {
+                            "genomicAlteration": "EGFR !T790M",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": null,
+                                    "trueProteinChange": null,
+                                    "sampleIds": [ "P-0000628-T01-IM3" ]
+                                }
+                            ]
+                        }
+                    ],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+
+                }
             }, {
                 "trialAgeNumerical": ">18",
                 "trialOncotreePrimaryDiagnosis": {
                     "positive": [ "Lung Adenocarcinoma" ],
                     "negative": []
                 },
-                "matches": [
-                    {
-                        "genomicAlteration": "EGFR Oncogenic Mutations",
-                        "matches": [
-                            {
-                                "trueHugoSymbol": "EGFR",
-                                "trueProteinChange": "L747_P753delinsS",
-                                "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
-                            },
-                            {
-                                "trueHugoSymbol": "EGFR",
-                                "trueProteinChange": "T790M",
-                                "sampleIds": [ "P-0000628-T02-IM5" ]
-                            }
-                        ]
-                    }
-                ],
-                "notMatches": []
+                "matches": {
+                    "MUTATION": [
+                        {
+                            "genomicAlteration": "EGFR Oncogenic Mutations",
+                            "matches": [
+                                {
+                                    "trueHugoSymbol": "EGFR",
+                                    "trueProteinChange": "L747_P753delinsS",
+                                    "sampleIds": [ "P-0000628-T01-IM3", "P-0000628-T02-IM5" ]
+                                },
+                                {
+                                    "trueHugoSymbol": "EGFR",
+                                    "trueProteinChange": "T790M",
+                                    "sampleIds": [ "P-0000628-T02-IM5" ]
+                                }
+                            ]
+                        }
+                    ],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+
+                },
+                "notMatches": {
+                    "MUTATION": [],
+                    "MSI": [],
+                    "CNA": [],
+                    "WILDTYPE": []
+                }
             }];
         const expectedResult = [2, 1, 0];
         _.forEach(clinicalMatchGroup, (item: any, index: number) => {
@@ -206,11 +241,13 @@ describe("TrialMatchTableUtils", () => {
         const arm: IArm[] = [
             {
                 drugs: [
-                    {
-                        synonyms: "",
-                        name: "Pemigatinib",
-                        ncit_code: "C121553"
-                    }
+                    [
+                        {
+                            synonyms: "",
+                            name: "Pemigatinib",
+                            ncit_code: "C121553"
+                        }
+                    ]
                 ],
                 arm_info: "INCB054828 in subjects with FGFR2 translocation with a documented fusion partner in central laboratory report",
                 match: [
@@ -236,11 +273,13 @@ describe("TrialMatchTableUtils", () => {
             },
             {
                 drugs: [
-                    {
-                        synonyms: "",
-                        name: "Pemigatinib",
-                        ncit_code: "C121553"
-                    }
+                    [
+                        {
+                            synonyms: "",
+                            name: "Pemigatinib",
+                            ncit_code: "C121553"
+                        }
+                    ]
                 ],
                 arm_info: "INCB054828 in subjects with other FGF/FGFR alterations",
                 match: [
@@ -278,5 +317,134 @@ describe("TrialMatchTableUtils", () => {
         const armDescription: string = "Cohort B INCB054828";
         const expectedResult:string[][]  = [["Pemigatinib"]];
         assert.deepEqual(getDrugsFromArm(armDescription, arm),  expectedResult, 'Get drugs failed.');
+    });
+
+    it("Test mergeClinicalGroupMatchByAge: merge trial matches by the same clinical age.", () => {
+        const clinicalGroupMatch: IClinicalGroupMatch[] = [
+            {
+                trialAgeNumerical: [
+                    ">0"
+                ],
+                trialOncotreePrimaryDiagnosis: {
+                    positive: [
+                        "All Solid Tumors"
+                    ],
+                    negative: [
+                        "CNS Cancer"
+                    ]
+                },
+                matches: {
+                    MUTATION: [
+                        {
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "NTRK3-ETV6 fusion - Archer"
+                            }
+                        },
+                        {
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "ETV6-NTRK3 fusion"
+                            }
+                        }
+                    ],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                },
+                notMatches: {
+                    MUTATION: [],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                }
+            },
+            {
+                trialAgeNumerical: [
+                    "<22"
+                ],
+                trialOncotreePrimaryDiagnosis: {
+                    positive: [
+                        "All Solid Tumors"
+                    ],
+                    negative: [
+                        "CNS Cancer"
+                    ]
+                },
+                matches: {
+                    MUTATION: [
+                        {
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "NTRK3-ETV6 fusion - Archer"
+                            }
+                        },
+                        {
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "ETV6-NTRK3 fusion"
+                            }
+                        }
+                    ],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                },
+                notMatches: {
+                    MUTATION: [],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                }
+            }
+        ];
+        const expectedResult: IClinicalGroupMatch[]  = [
+            {
+                trialAgeNumerical: [
+                    ">0",
+                    "<22"
+                ],
+                trialOncotreePrimaryDiagnosis: {
+                    positive: [
+                        "All Solid Tumors"
+                    ],
+                    negative: [
+                        "CNS Cancer"
+                    ]
+                },
+                matches: {
+                    MUTATION: [
+                        {
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "NTRK3-ETV6 fusion - Archer"
+                            }
+                        },
+                        {
+                            genomicAlteration: ["NTRK3 Fusions"],
+                            patientGenomic: {
+                                trueHugoSymbol: "NTRK3",
+                                trueProteinChange: "ETV6-NTRK3 fusion"
+                            }
+                        }
+                    ],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                },
+                notMatches: {
+                    MUTATION: [],
+                    CNA: [],
+                    MSI: [],
+                    WILDTYPE: []
+                }
+            }
+        ];
+        assert.deepEqual(mergeClinicalGroupMatchByAge(clinicalGroupMatch),  expectedResult, 'Merge trial matches by the same clinical age failed.');
     });
 });

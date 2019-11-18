@@ -1,8 +1,9 @@
 import React from 'react';
-import {ReactWrapper, mount} from "enzyme";
+import {ReactWrapper, mount, shallow} from "enzyme";
 import { assert } from 'chai';
 import {default as PatientViewMutationTable} from "./PatientViewMutationTable"
 import {MutationTableColumnType} from "shared/components/mutationTable/MutationTable";
+import { GeneFilterOption } from './GeneFilterMenu';
 
 function hasColumn(tableWrapper:ReactWrapper<any, any>, columnName:string):boolean {
     const columns:string[] = [];
@@ -14,8 +15,11 @@ function getTable(samples:string[], mrnaId?:string, cnaId?:string):ReactWrapper<
     return mount(<PatientViewMutationTable
         sampleManager={null}
         sampleIds={samples}
+        sampleToGenePanelId={{}}
+        genePanelIdToEntrezGeneIds={{}}
         mrnaExprRankMolecularProfileId={mrnaId}
         discreteCNAMolecularProfileId={cnaId}
+        currentGeneFilter={GeneFilterOption.ANY_SAMPLE}
         columns={[MutationTableColumnType.GENE,
                     MutationTableColumnType.MRNA_EXPR,
                     MutationTableColumnType.SAMPLES,
@@ -36,12 +40,14 @@ describe("PatientViewMutationTable", ()=>{
     });
 
     it("shows mrna expr column if theres an expression profile and exactly one sample", ()=>{
-        assert(hasColumn(getTable(["sampleA"], "mrnaId"), "mRNA Expr."));
+        assert(hasColumn(getTable(["sampleA"], "[\"sampleA\"]"), "mRNA Expr."));
     });
 
-    /*it("shows copy number column if there's only one sample", ()=>{
-        assert(hasColumn(getTable(["sampleA"], undefined, "cnaId"), "Copy #"));
-    });*/
+    it('should have Samples column resizable', () => {
+        const aTable = getTable(["sampleA", "sampleB"]);
+        const res = aTable.find('.columnResizer');
+        assert.equal(res.length, 2)
+    });
 
     it("hides copy number column if there's more than one sample", ()=>{
         assert.isFalse(hasColumn(getTable(["sampleA","sampleB"], undefined, "cnaId"), "Copy #"));

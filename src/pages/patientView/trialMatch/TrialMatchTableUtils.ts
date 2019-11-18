@@ -1,6 +1,6 @@
 import {
     IArmMatch, IClinicalGroupMatch, IDetailedTrialMatch, IGenomicGroupMatch, IGenomicMatch, ITrial,
-    ITrialMatch, IArm, IDrug
+    ITrialMatch, IArm, IDrug, IGenomicMatchType
 } from "../../../shared/model/MatchMiner";
 import * as _ from 'lodash';
 
@@ -12,6 +12,7 @@ export function groupTrialMatchesById(trials: ITrial[], trialMatches:ITrialMatch
         const matchedTrial: IDetailedTrialMatch = {
             id: originalMatchedTrial.id,
             nctId: originalMatchedTrial.nctId,
+            principalInvestigator: originalMatchedTrial.principalInvestigator,
             protocolNo: originalMatchedTrial.protocolNo,
             phase: originalMatchedTrial.phase,
             shortTitle: originalMatchedTrial.shortTitle,
@@ -32,7 +33,8 @@ export function groupTrialMatchesByArmDescription(trialGroup: ITrialMatch[], ori
         const armMatch: IArmMatch = {
             armDescription: armDescription,
             drugs: [],
-            matches: []
+            matches: [],
+            sampleIds: _.uniq(armGroup.map((trialMatch: ITrialMatch) => trialMatch.sampleId)).sort()
         };
         if (!_.isUndefined(originalMatchedTrial.treatmentList.step[0].arm)) {
             armMatch.drugs = getDrugsFromArm(armDescription, originalMatchedTrial.treatmentList.step[0].arm);
@@ -59,72 +61,94 @@ export function groupTrialMatchesByAgeNumerical(armGroup: ITrialMatch[]): IClini
                 }
             }
         });
-        let clinicalGroupMatch: IClinicalGroupMatch = {
-            trialAgeNumerical: age,
+        const clinicalGroupMatch: IClinicalGroupMatch = {
+            trialAgeNumerical: [age],
             trialOncotreePrimaryDiagnosis: {
                 positive: positiveCancerTypes,
                 negative: negativeCancerTypes
-            },
-            matches: [],
-            notMatches: []
+            }
         };
-        const positiveAndNegativeMatches = groupTrialMatchesByGenomicAlteration(matchesGroupedByAge[age]);
-        clinicalGroupMatch.matches = positiveAndNegativeMatches.matches;
-        clinicalGroupMatch.notMatches = positiveAndNegativeMatches.notMatches;
+        const positiveTrialMatches = _.filter(matchesGroupedByAge[age], (trialMatch:ITrialMatch) => {
+            if (!_.isUndefined(trialMatch.genomicAlteration)) return !trialMatch.genomicAlteration.includes('!')
+        });
+        const negativeTrialMatches = _.filter(matchesGroupedByAge[age], (trialMatch:ITrialMatch) => {
+            if (!_.isUndefined(trialMatch.genomicAlteration)) return trialMatch.genomicAlteration.includes('!')
+        });
+        if (positiveTrialMatches.length > 0) {
+            clinicalGroupMatch.matches = groupPositiveTrialMatchesByMatchType(positiveTrialMatches);
+        }
+        if (negativeTrialMatches.length > 0) {
+            clinicalGroupMatch.notMatches = groupNegativeTrialMatchesByMatchType(negativeTrialMatches);
+        }
         return clinicalGroupMatch;
+    });
+    if (matches.length > 1) {
+        return mergeClinicalGroupMatchByAge(matches);
+    }
+    return matches;
+}
+
+// Merge clinical matches by age when they have the same trialOncotreePrimaryDiagnosis but different trialAgeNumericals.
+export function mergeClinicalGroupMatchByAge(clinicalGroupMatch: IClinicalGroupMatch[]): IClinicalGroupMatch[] {
+    const mergedClinicalGroupMatch: IClinicalGroupMatch[] = [];
+    const matchesGroupedByTrialOncotreePrimaryDiagnosis = _.groupBy(clinicalGroupMatch, (match: IClinicalGroupMatch) => match.trialOncotreePrimaryDiagnosis);
+    _.forEach(matchesGroupedByTrialOncotreePrimaryDiagnosis, (clinicalGroup: IClinicalGroupMatch[]) => {
+        _.forEach(clinicalGroup, (clinicalMatch: IClinicalGroupMatch, index: number) => {
+            if (index !== 0) {
+                clinicalGroup[0].trialAgeNumerical = clinicalGroup[0].trialAgeNumerical.concat(clinicalMatch.trialAgeNumerical);
+            }
+        });
+        mergedClinicalGroupMatch.push(clinicalGroup[0]);
+    });
+    return mergedClinicalGroupMatch;
+}
+
+export function groupPositiveTrialMatchesByMatchType(trialMatches: ITrialMatch[]) {
+    const matchesGroupedByMatchType = _.groupBy(trialMatches, (trial: ITrialMatch) => trial.matchType);
+    const matches: IGenomicMatchType = {
+        MUTATION: [],
+        CNA: [],
+        MSI: [],
+        WILDTYPE: []
+    };
+    _.forEach(matchesGroupedByMatchType, (matchTypeGroup: ITrialMatch[], matchType: string) => {
+        if (matchType === 'MUTATION') {
+            const matchesGroupedByPatientGenomic = _.groupBy( matchTypeGroup, ( trial: ITrialMatch ) => trial.trueHugoSymbol! + trial.trueProteinChange!);
+            _.forEach(matchesGroupedByPatientGenomic, (patientGenomicGroup: ITrialMatch[]) => {
+                const mutationGroupMatch: IGenomicGroupMatch = {
+                    genomicAlteration: _.uniq(patientGenomicGroup.map((trialMatch: ITrialMatch) => trialMatch.genomicAlteration!)),
+                    patientGenomic: {
+                        trueHugoSymbol: patientGenomicGroup[0].trueHugoSymbol!,
+                        trueProteinChange: patientGenomicGroup[0].trueProteinChange!
+                    }
+                };
+                matches.MUTATION.push(mutationGroupMatch);
+            });
+        } else {
+            const genomicGroupMatch: IGenomicGroupMatch = {
+                genomicAlteration: _.uniq(matchTypeGroup.map((trialMatch: ITrialMatch) => trialMatch.genomicAlteration!))
+            };
+            matches[matchType].push(genomicGroupMatch);
+        }
     });
     return matches;
 }
 
-export function groupTrialMatchesByGenomicAlteration(ageGroup: ITrialMatch[]) {
-    const matchesGroupedByGenomicAlteration = _.groupBy(ageGroup, (trial: ITrialMatch) => trial.genomicAlteration);
-    const matches: IGenomicGroupMatch[] = []; // positive matches
-    const notMatches: IGenomicGroupMatch[] = []; // negative matches
-    _.forEach(matchesGroupedByGenomicAlteration, (genomicAlterationGroup, genomicAlteration) => {
-        const genomicGroupMatch = formatTrialMatchesByMatchType(genomicAlterationGroup, genomicAlteration);
-        // If a genomic alteration(i.e. BRAF V600E) contains a "!",
-        // it means this trial cannot be used for the genomic alteration, which is a "NOT" match.
-        if(genomicAlteration.includes('!')) {
-            notMatches.push(genomicGroupMatch);
-        } else {
-            matches.push(genomicGroupMatch);
-        }
-    });
-    return { notMatches: notMatches, matches: matches };
-}
-
-function formatTrialMatchesByMatchType(genomicAlterationGroup: ITrialMatch[], genomicAlteration: string) {
-    const matchType = genomicAlterationGroup[ 0 ][ 'matchType' ];
-    if (matchType === 'MUTATION') {
-        return groupTrialMatchesByPatientGenomic(genomicAlterationGroup, genomicAlteration, matchType);
-    } else {
-        const genomicGroupMatch: IGenomicGroupMatch = {
-            genomicAlteration: genomicAlteration,
-            matchType: matchType,
-            matches: [{
-                sampleIds: _.uniq( _.map( genomicAlterationGroup, ( trial: ITrialMatch ) => trial.sampleId ) )
-            }]
-        };
-        return genomicGroupMatch;
-    }
-}
-
-export function groupTrialMatchesByPatientGenomic(genomicAlterationGroup: ITrialMatch[], genomicAlteration: string, matchType: string): IGenomicGroupMatch {
-    const matchesGroupedByPatientGenomic = _.groupBy( genomicAlterationGroup, ( trial: ITrialMatch ) => trial.trueHugoSymbol! + trial.trueProteinChange! );
-    const genomicGroupMatch: IGenomicGroupMatch = {
-        genomicAlteration: genomicAlteration,
-        matchType: matchType,
-        matches: []
+export function groupNegativeTrialMatchesByMatchType(trialMatches: ITrialMatch[]) {
+    const matchesGroupedByMatchType = _.groupBy(trialMatches, (trial: ITrialMatch) => trial.matchType);
+    const matches: IGenomicMatchType = {
+        MUTATION: [],
+        CNA: [],
+        MSI: [],
+        WILDTYPE: []
     };
-    genomicGroupMatch.matches = _.map(matchesGroupedByPatientGenomic, (patientGenomicGroup: ITrialMatch[]) => {
-        const genomicMatch: IGenomicMatch = {
-            trueHugoSymbol: patientGenomicGroup[0].trueHugoSymbol!,
-            trueProteinChange: patientGenomicGroup[0].trueProteinChange!,
-            sampleIds: _.uniq(_.map(patientGenomicGroup, (trial: ITrialMatch) => trial.sampleId))
+    _.forEach(matchesGroupedByMatchType, (matchTypeGroup: ITrialMatch[], matchType: string) => {
+        const genomicGroupMatch: IGenomicGroupMatch = {
+            genomicAlteration: _.uniq(matchTypeGroup.map((trialMatch: ITrialMatch) => trialMatch.genomicAlteration!))
         };
-        return genomicMatch;
+        matches[matchType].push(genomicGroupMatch);
     });
-    return genomicGroupMatch;
+    return matches;
 }
 
 export function calculateTrialPriority(armMatches: IArmMatch[]): number {
@@ -140,13 +164,26 @@ export function calculateTrialPriority(armMatches: IArmMatch[]): number {
 export function getMatchPriority(clinicalGroupMatch: IClinicalGroupMatch): number {
     // In trial match tab, positive matches should always display before negative matches(notMatches).
     // The highest and default priority is 0. The priority the higher, the display order the lower.
-    if (clinicalGroupMatch.notMatches.length > 0) {
-        if (clinicalGroupMatch.matches.length === 0) {
+    let matchesLength = 0;
+    let notMatchesLength = 0;
+    if (!_.isUndefined(clinicalGroupMatch.matches)) {
+        matchesLength = getMatchesLength(clinicalGroupMatch.matches);
+    }
+    if (!_.isUndefined(clinicalGroupMatch.notMatches)) {
+        notMatchesLength = getMatchesLength(clinicalGroupMatch.notMatches);
+    }
+    if (notMatchesLength > 0) {
+        if ( matchesLength === 0) {
             return 2; // A trial only has negative matches.
         }
         return 1; // A trial has both positive matches and negative matches.
     }
     return 0; // A trial only has positive matches.
+}
+
+export function getMatchesLength(genomicMatchType: IGenomicMatchType): number {
+    return _.sum([genomicMatchType.MUTATION.length, genomicMatchType.CNA.length,
+        genomicMatchType.MSI.length, genomicMatchType.WILDTYPE.length]);
 }
 
 export function excludeControlArms(trialMatches: ITrialMatch[]): ITrialMatch[] {
@@ -161,12 +198,53 @@ export function excludeControlArms(trialMatches: ITrialMatch[]): ITrialMatch[] {
 }
 
 export function getDrugsFromArm(armDescription: string, arms: IArm[]): string[][] {
-    const drugs:string[][] = [];
+    let drugs: string[][] = [];
     if ( armDescription !== '' ) { // match for specific arm
         const matchedArm: IArm = _.find( arms, (arm) => arm.arm_description === armDescription )!;
         if ( !_.isUndefined(matchedArm.drugs) ) {
-            drugs.push( _.map( matchedArm.drugs, (drug: IDrug) => drug.name ) );
+            drugs = matchedArm.drugs.map(  (drugCombination: IDrug[]) => drugCombination.map((drug: IDrug) => drug.name ));
         }
     }
     return drugs;
+}
+
+export function getAgeRangeDisplay(trialAgeNumerical: string[]) {
+    if (trialAgeNumerical.length > 1) {
+        const ageNumbers = trialAgeNumerical.map((age:string) => age.match(/\d+(\.?\d+)?/g)!.map((v: string) => Number(v)));
+        if (trialAgeNumerical.length === 2) {
+            let leftAgeText = '';
+            let rightAgeText = '';
+            if (trialAgeNumerical[0].includes('>') && trialAgeNumerical[1].includes('<')) {
+                if (trialAgeNumerical[0].includes('=')) {
+                    leftAgeText = `${ageNumbers[0]} ≤`;
+                } else {
+                    leftAgeText = `${ageNumbers[0]} <`;
+                }
+                if (trialAgeNumerical[1].includes('=')) {
+                    rightAgeText = `≤ ${ageNumbers[1]}`;
+                } else {
+                    rightAgeText = `< ${ageNumbers[1]}`;
+                }
+                return `${leftAgeText} Age ${rightAgeText}`;
+            } else if (trialAgeNumerical[0].includes('<') && trialAgeNumerical[1].includes('>')) {
+                if (trialAgeNumerical[1].includes('=')) {
+                    leftAgeText = `${ageNumbers[1]} ≤`;
+                } else {
+                    leftAgeText = `${ageNumbers[1]} <`;
+                }
+                if (trialAgeNumerical[0].includes('=')) {
+                    rightAgeText = `≤ ${ageNumbers[0]}`;
+                } else {
+                    rightAgeText = `< ${ageNumbers[0]}`;
+                }
+                return `${leftAgeText} Age ${rightAgeText}`;
+            } else {
+                return `Age: ${trialAgeNumerical.join(', ')}`
+            }
+        } else {
+            return `Age: ${trialAgeNumerical.join(', ')}`;
+        }
+    } else {
+        return `${trialAgeNumerical[0]} yrs old`;
+    }
 }

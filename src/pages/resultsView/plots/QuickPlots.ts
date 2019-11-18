@@ -526,9 +526,6 @@ export function generateQuickPlots(
     horizontal: TypeSourcePair,
     vertical: TypeSourcePair,
 ): ButtonInfo[] {
-    console.log(dataSources);
-    console.log(dataTypes);
-    
     return quickPlots
         .filter((plot) => plot.isApplicableToQuery(dataTypes, dataSources, cancerTypes, mutationCount))
         .map((plot) => plot.toButtonInfo(vertical, horizontal, dataTypes, dataSources));

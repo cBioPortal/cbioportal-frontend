@@ -8,6 +8,7 @@ var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils').setOnco
 var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
 var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils').waitForNumberOfStudyCheckboxes;
 var setInputText = require('../../../shared/specUtils').setInputText;
+var getGroupHeaderOptionsElements = require('../../../shared/specUtils').getOncoprintGroupHeaderOptionsElements;
 
 
 var {
@@ -115,64 +116,61 @@ describe('oncoprint', function() {
     });
 
     describe("heatmap clustering", ()=>{
-        describe("'Cluster Heatmap' button", ()=>{
-            // THESE TESTs ARE RUN IN SERIAL, cannot be run alone
-            var clusterButtonSelector;
-            var heatmapButtonSelector;
-            var heatmapMenuSelector;
+        it("track group options UI reflects clustered state correctly", ()=>{
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_ids=&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bcoadread_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF&show_samples=false`);
+            $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
-            var sortButtonSelector;
-            var sortMenuSelector;
-            var sortMenuDataRadioSelector;
-            var sortMenuHeatmapRadioSelector;
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
 
-            before(()=>{
-                heatmapButtonSelector = "#heatmapDropdown";
-                heatmapMenuSelector = "div.oncoprint__controls__heatmap_menu";
-                clusterButtonSelector = heatmapMenuSelector + ' button[data-test="clusterHeatmapBtn"]';
+            var FONT_WEIGHT_NORMAL = 400;
+            var FONT_WEIGHT_BOLD = 700;
 
-                sortButtonSelector="#sortDropdown";
-                sortMenuSelector = "div.oncoprint__controls__sort_menu";
-                sortMenuDataRadioSelector = sortMenuSelector + ' input[data-test="sortByData"]';
-                sortMenuHeatmapRadioSelector = sortMenuSelector + ' input[data-test="sortByHeatmapClustering"]';
-            });
+            // Open mrna track group menu
+            var mrnaElements = getGroupHeaderOptionsElements(2);
+            browser.click(mrnaElements.button_selector);
+            browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
 
-            it("should be active (pressed) if, and only if, the oncoprint is clustered by the profile selected in the dropdown. should be hidden for a profile with no tracks.", ()=>{
-                browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=blca_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=blca_tcga_pub_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=blca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=blca_tcga_pub_gistic&show_samples=false&heatmap_track_groups=blca_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bblca_tcga_pub_rppa_Zscores%2CKRAS%2CNRAS%2CBRAF');
-                waitForOncoprint(ONCOPRINT_TIMEOUT);
+            // Confirm that 'Dont cluster' is bolded, reflecting current unclustered state
+            assert.equal(
+                $(mrnaElements.dropdown_selector + ' li:nth-child(1)').getCssProperty('font-weight').value,
+                FONT_WEIGHT_NORMAL
+            );
+            assert.equal(
+                $(mrnaElements.dropdown_selector + ' li:nth-child(2)').getCssProperty('font-weight').value,
+                FONT_WEIGHT_BOLD
+            );
 
-                // open heatmap menu
-                $(heatmapButtonSelector).click();
-                browser.waitForVisible(heatmapMenuSelector, 2000);
-                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") === -1, "button not active - 1");
-                // click button
-                browser.click(clusterButtonSelector);
-                browser.pause(100);// wait for oncoprint to sort
-                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active - 1");
-                // change heatmap profile
-                browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(2); });
-                assert(!browser.isExisting(clusterButtonSelector), "button doesnt exist for profile with no heatmap tracks");
-                browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(0); });
-                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active - 2");
-            });
-            it("should return to sort by data when the button is un-clicked", ()=>{
-                // open sort menu, ensure sorted by heatmap clustering order
-                $(sortButtonSelector).click();
-                browser.waitForVisible(sortMenuSelector, 2000);
-                assert(!browser.isSelected(sortMenuDataRadioSelector), "not sorted by data");
-                assert(browser.isSelected(sortMenuHeatmapRadioSelector), "sorted by heatmap clustering");
-                // open heatmap menu and unclick clustering button
-                $(heatmapButtonSelector).click();
-                browser.waitForVisible(heatmapMenuSelector, 2000);
-                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active");
-                browser.click(clusterButtonSelector);
-                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") === -1, "button not active");
-                // open sort menu, ensure sorted by data
-                $(sortButtonSelector).click();
-                browser.waitForVisible(sortMenuSelector, 2000);
-                assert(!browser.isSelected(sortMenuHeatmapRadioSelector), "not sorted by heatmap clustering");
-                assert(browser.isSelected(sortMenuDataRadioSelector), "sorted by data");
-            });
+            // Cluster
+            browser.click(mrnaElements.dropdown_selector + ' li:nth-child(1)'); // Click Cluster
+            browser.pause(500); // give it time to sort
+
+            // Open menu again, which will have closed
+            browser.click(mrnaElements.button_selector);
+            browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
+
+            // Confirm that 'Cluster' is bolded, reflecting current clustered state
+            assert.equal(
+                $(mrnaElements.dropdown_selector + ' li:nth-child(1)').getCssProperty('font-weight').value,
+                FONT_WEIGHT_BOLD
+            );
+            assert.equal(
+                $(mrnaElements.dropdown_selector + ' li:nth-child(2)').getCssProperty('font-weight').value,
+                FONT_WEIGHT_NORMAL
+            );
+
+            // Uncluster
+            browser.click(mrnaElements.dropdown_selector + ' li:nth-child(2)'); // Click Don't clsuter
+            browser.pause(500); // give it time to sort
+
+            // Confirm that 'Don't cluster' is bolded, reflecting current unclustered state
+            assert.equal(
+                $(mrnaElements.dropdown_selector + ' li:nth-child(1)').getCssProperty('font-weight').value,
+                FONT_WEIGHT_NORMAL
+            );
+            assert.equal(
+                $(mrnaElements.dropdown_selector + ' li:nth-child(2)').getCssProperty('font-weight').value,
+                FONT_WEIGHT_BOLD
+            );
         });
     });
     describe("mutation annotation", ()=>{

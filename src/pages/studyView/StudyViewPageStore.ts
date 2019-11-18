@@ -90,6 +90,9 @@ import {
     UniqueKey,
     getChartSettingsMap,
     ChartMetaDataTypeEnum,
+    getGroupsFromBins,
+    NumericalGroupComparisonType,
+    getGroupsFromQuartiles,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -118,10 +121,9 @@ import comparisonClient from "../../shared/api/comparisonGroupClientInstance";
 import {
     finalizeStudiesAttr,
     getSampleIdentifiers, MAX_GROUPS_IN_SESSION,
-    getQuartiles,
-    StudyViewComparisonGroup
+    StudyViewComparisonGroup,
+    splitData
 } from "../groupComparison/GroupComparisonUtils";
-import {getSelectedGroups, getStudiesAttr} from "../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import client from "../../shared/api/cbioportalClientInstance";
 import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
@@ -140,6 +142,7 @@ import {
 import { GeneTableRow } from './table/GeneTable';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import { decideMolecularProfileSortingOrder } from 'pages/resultsView/download/DownloadUtils';
+import { getSelectedGroups, getStudiesAttr } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 
 export type ChartUserSetting = {
     id: string,
@@ -153,7 +156,9 @@ export type ChartUserSetting = {
         h: number;
     },
     patientAttribute: boolean,
-    filterByCancerGenes?:boolean
+    filterByCancerGenes?: boolean,
+    customBins?: number[],
+    disableLogScale?: boolean
 }
 
 export type StudyPageSettings = {
@@ -465,12 +470,13 @@ export class StudyViewPageStore {
 
     private async createNumberAttributeComparisonSession(
         clinicalAttribute:ClinicalAttribute,
+        categorizationType: NumericalGroupComparisonType,
         statusCallback:(phase:LoadingPhase)=>void
     ) {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
         return new Promise<string>((resolve)=>{
-            onMobxPromise(this.selectedSamples,
-                async (selectedSamples)=>{
+            onMobxPromise<any>([this.selectedSamples, this.clinicalDataBinPromises[getClinicalAttributeUniqueKey(clinicalAttribute)]],
+                async (selectedSamples:Sample[], dataBins:ClinicalDataBin[])=>{
                     // get clinical data for the given attribute
                     const entityIdKey = (clinicalAttribute.patientAttribute ? "patientId" : "sampleId");
                     let data = await client.fetchClinicalDataUsingPOST({
@@ -481,40 +487,29 @@ export class StudyViewPageStore {
                         }
                     });
 
-                    const quartiles:ClinicalData[][] = getQuartiles(data);
-                    // create groups using data
-                    let patientToSamples:{[uniquePatientKey:string]:SampleIdentifier[]} = {};
-                    if (clinicalAttribute.patientAttribute) {
-                        patientToSamples = _.groupBy(selectedSamples, s=>s.uniquePatientKey);
+                    let groups: SessionGroupData[] = [];
+                    let clinicalAttributeName = '';
+
+                    switch (categorizationType) {
+                        case NumericalGroupComparisonType.BINS:
+                            groups = getGroupsFromBins(selectedSamples, clinicalAttribute.patientAttribute, data, dataBins, this.studyIds);
+                            clinicalAttributeName = `Bins of ${clinicalAttribute.displayName}`
+                            break;
+                        case NumericalGroupComparisonType.MEDIAN:
+                            groups = getGroupsFromQuartiles(selectedSamples, clinicalAttribute.patientAttribute, splitData(data,2), this.studyIds);
+                            clinicalAttributeName = `Median of ${clinicalAttribute.displayName}`;
+                            break;
+                        case NumericalGroupComparisonType.QUARTILES:
+                        default:
+                            groups = getGroupsFromQuartiles(selectedSamples, clinicalAttribute.patientAttribute, splitData(data,4), this.studyIds);
+                            clinicalAttributeName = `Quartiles of ${clinicalAttribute.displayName}`;
                     }
-                    const groups = quartiles.map(quartile=>{
-                        let studies;
-                        if (clinicalAttribute.patientAttribute) {
-                            studies = getStudiesAttr(
-                                _.flatMapDeep(
-                                    quartile,
-                                    (d:ClinicalData)=>{
-                                        return patientToSamples[d.uniquePatientKey].map(s=>({ studyId:s.studyId, sampleId:s.sampleId }));
-                                    }
-                                )
-                            );
-                        } else {
-                            studies = getStudiesAttr(quartile.map(d=>({ studyId:d.studyId, sampleId:d.sampleId })));
-                        }
-                        const range = [quartile[0].value, quartile[quartile.length-1].value];
-                        return {
-                            name: `${range[0]}-${range[1]}`,
-                            description: "",
-                            studies,
-                            origin: this.studyIds,
-                        };
-                    });
 
                     statusCallback(LoadingPhase.CREATING_SESSION);
                     // create session and get id
                     const {id} = await comparisonClient.addComparisonSession({
                         groups,
-                        clinicalAttributeName:`Quartiles of ${clinicalAttribute.displayName}`,
+                        clinicalAttributeName,
                         origin:this.studyIds,
                         groupNameOrder: groups.map(g=>g.name)
                     });
@@ -640,6 +635,7 @@ export class StudyViewPageStore {
     @autobind
     public async openComparisonPage(params:{
         chartMeta: ChartMeta,
+        categorizationType?: NumericalGroupComparisonType
         clinicalAttributeValues?: ClinicalDataCountSummary[]
     }) {
         // open window before the first `await` call - this makes it a synchronous window.open,
@@ -701,6 +697,7 @@ export class StudyViewPageStore {
                     sessionId =
                         await this.createNumberAttributeComparisonSession(
                             params.chartMeta.clinicalAttribute!,
+                            params.categorizationType || NumericalGroupComparisonType.QUARTILES,
                             statusCallback
                         );
                     break;
@@ -1978,7 +1975,6 @@ export class StudyViewPageStore {
                         this.initialVisibleAttributesClinicalDataBinCountData);
                 },
                 invoke: async () => {
-                    const clinicalDataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
                     const dataBinMethod = DataBinMethodConstants.STATIC;
                     let result = [];
@@ -1993,7 +1989,7 @@ export class StudyViewPageStore {
                         !attributeChanged) {
                         result = this.initialVisibleAttributesClinicalDataBinCountData.result;
                     } else {
-                        if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
+                        if (this._clinicalDataIntervalFilterSet.has(uniqueKey) || this.isInitialFilterState) {
                             result = await internalClient.fetchClinicalDataBinCountsUsingPOST({
                                 dataBinMethod,
                                 clinicalDataBinCountFilter: {
@@ -2797,6 +2793,7 @@ export class StudyViewPageStore {
                 this.chartsDimension.toJS(),
                 this.chartsType.toJS(),
                 this._customChartMap.toJS(),
+                this._clinicalDataBinFilterSet.toJS(),
                 this._filterMutatedGenesTableByCancerGenes,
                 this._filterFusionGenesTableByCancerGenes,
                 this._filterCNAGenesTableByCancerGenes,
@@ -2831,6 +2828,7 @@ export class StudyViewPageStore {
         this._filterMutatedGenesTableByCancerGenes = true;
         this._filterFusionGenesTableByCancerGenes = true;
         this._filterCNAGenesTableByCancerGenes = true;
+        this._clinicalDataBinFilterSet = observable.map(toJS(this._defaultClinicalDataBinFilterSet));
     }
 
     @autobind
@@ -2857,6 +2855,7 @@ export class StudyViewPageStore {
     @observable private _defualtChartsDimension = observable.map<ChartDimension>();
     @observable private _defaultChartsType = observable.map<ChartType>();
     @observable private _defaultVisibleChartIds: string[] = [];
+    @observable private _defaultClinicalDataBinFilterSet = observable.map<ClinicalDataBinFilter>();
 
     @autobind
     @action
@@ -2875,7 +2874,8 @@ export class StudyViewPageStore {
             this.columns,
             this._defualtChartsDimension.toJS(),
             this._defaultChartsType.toJS(),
-            {});
+            {},
+            this._defaultClinicalDataBinFilterSet.toJS());
     }
 
     @autobind
@@ -2914,6 +2914,17 @@ export class StudyViewPageStore {
                     break;
                 case UniqueKey.CNA_GENES_TABLE:
                     this._filterCNAGenesTableByCancerGenes = chartUserSettings.filterByCancerGenes === undefined ? true : chartUserSettings.filterByCancerGenes;
+                    break;
+                case ChartTypeEnum.BAR_CHART:
+                    let ref = this._clinicalDataBinFilterSet.get(chartUserSettings.id);
+                    if (ref) {
+                        if (chartUserSettings.customBins) {
+                            ref.customBins = chartUserSettings.customBins;
+                        }
+                        if (chartUserSettings.disableLogScale) {
+                            ref.disableLogScale = chartUserSettings.disableLogScale;
+                        }
+                    }
                     break;
                 default:
                     break;
@@ -2956,10 +2967,10 @@ export class StudyViewPageStore {
 
         this.initializeClinicalDataCountCharts();
         this.initializeClinicalDataBinCountCharts();
-
         this._defualtChartsDimension = observable.map(this.chartsDimension.toJS());
         this._defaultChartsType = observable.map(this.chartsType.toJS());
         this._defaultVisibleChartIds = this.visibleAttributes.map(attribute => attribute.uniqueKey);
+        this._defaultClinicalDataBinFilterSet = observable.map(toJS(this._clinicalDataBinFilterSet));
     }
 
     @action
@@ -4304,10 +4315,24 @@ export class StudyViewPageStore {
                         await: () => {
                             return _.includes([UniqueKey.WITH_MUTATION_DATA, UniqueKey.WITH_CNA_DATA], uniqueKey) ? [this.molecularProfileSampleCounts, this.selectedSamples] : [this.selectedSamples];
                         },
-                        invoke: () => {
+                        invoke: async () => {
                             let dataCountSet: { [id: string]: ClinicalDataCount } = {};
-                            dataCountSet = _.reduce(this.selectedSamples.result, (acc, sample) => {
-                                const matchedCases = _.filter(this._customChartsSelectedCases.get(uniqueKey), (selectedCase: CustomChartIdentifierWithValue) => selectedCase.sampleId === sample.sampleId);
+
+                            let selectedSamples: Sample[] = [];
+                            if (this._chartSampleIdentifiersFilterSet.has(uniqueKey)) {
+                                selectedSamples = await getSamplesByExcludingFiltersOnChart(
+                                    uniqueKey,
+                                    this.filters,
+                                    this._chartSampleIdentifiersFilterSet.toJS(),
+                                    this.queriedSampleIdentifiers.result,
+                                    this.queriedPhysicalStudyIds.result
+                                );
+                            } else {
+                                selectedSamples = this.selectedSamples.result
+                            }
+
+                            dataCountSet = _.reduce(selectedSamples, (acc, sample) => {
+                                const matchedCases = _.filter(this._customChartsSelectedCases.get(uniqueKey), (selectedCase: CustomChartIdentifierWithValue) => (selectedCase.studyId === sample.studyId) && (selectedCase.sampleId === sample.sampleId));
                                 const valDefault = Datalabel.NA;
                                 let matchedValues: string[] = [];
                                 if (matchedCases.length >= 1) {

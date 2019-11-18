@@ -1,12 +1,13 @@
 /**
  * Created by aaronlisman on 3/2/17.
  */
-
 import { handlePathologyReportCheckResponse, PatientViewPageStore } from './PatientViewPageStore';
-// import React from 'react';
 import { assert } from 'chai';
 // import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
+import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
+import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { AppStore } from 'AppStore';
 // //import AppConfig from 'appConfig';
 // import request from 'superagent';
 
@@ -15,11 +16,7 @@ describe('PatientViewPageStore', () => {
     let store: PatientViewPageStore;
 
     before(()=>{
-        store = new PatientViewPageStore();
-    });
-
-    after(()=>{
-
+        store = new PatientViewPageStore(new AppStore());
     });
 
     it('if there are pdf items in response and their name starts with a given patientId, return collection, otherwise returns empty array', ()=>{

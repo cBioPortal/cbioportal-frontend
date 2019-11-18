@@ -1453,16 +1453,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     @computed get waterfallPlotTitle():string {
-        const treatment = this.horzSelection.treatmentId || this.vertSelection.treatmentId;
-        const gene = this.utilitiesMenuSelection.selectedGeneOption!.label;
-        const profileName = this.horzSelection.selectedDataSourceOption ? this.horzSelection.selectedDataSourceOption!.label : this.vertSelection.selectedDataSourceOption!.label;
+
+        const selection = this.isHorizontalWaterfallPlot? this.horzSelection: this.vertSelection;
+
+        const treatmentName = selection.selectedTreatmentOption!.label;
+        const profileName = selection.selectedDataSourceOption!.label;
+        const geneName = this.utilitiesMenuSelection.selectedGeneOption!.label;
+
         let geneStyle = "";
         if (this.viewMutationType) {
-            geneStyle = ` x ${gene} mutation types`;
+            geneStyle = ` x ${geneName} mutation types`;
         } else if (this.viewCopyNumber) {
-            geneStyle = ` x ${gene} CNA types`;
+            geneStyle = ` x ${geneName} CNA types`;
         }
-        return `${treatment} ${profileName}${geneStyle}`;
+        return `${treatmentName} ${profileName}${geneStyle}`;
     }
 
     @computed get waterfallPlotWidth():number {
@@ -2354,7 +2358,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     axisLabelY={this.vertLabel.result!}
                                     data={this.boxPlotData.result.data}
                                     chartBase={550}
-                                    tooltip={this.boxPlotTooltip}
+                                    scatterPlotTooltip={this.boxPlotTooltip}
                                     highlight={this.scatterPlotHighlight}
                                     horizontal={horizontal}
                                     logScale={horizontal ? this.horzLogScaleFunction : this.vertLogScaleFunction}
