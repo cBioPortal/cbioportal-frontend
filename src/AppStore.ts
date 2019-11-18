@@ -9,6 +9,7 @@ import getBrowserWindow from "./public-lib/lib/getBrowserWindow";
 export type SiteError = {
     errorObj:any;
     dismissed:boolean;
+    title?:string;
 };
 
 export class AppStore {
@@ -20,7 +21,7 @@ export class AppStore {
             try{
                 sendSentryMessage("ERRORHANDLER:" + error);
             } catch (ex) {};
-
+            
             if (error.status && /400|500/.test(error.status)) {
 
                 sendSentryMessage("ERROR DIALOG SHOWN:" + error);

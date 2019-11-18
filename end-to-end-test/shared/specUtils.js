@@ -73,6 +73,12 @@ function sessionServiceIsEnabled() {
     }).value;
 }
 
+function showGsva() {
+    browser.execute(function() {
+        window.frontendConfig.serverConfig.skin_show_gsva = true;
+    });
+}
+
 function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
     browser.waitUntil(()=>{
         var ret = browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length === expectedNumber;
@@ -224,7 +230,7 @@ function checkElementWithMouseDisabled(selector, pauseTime, options) {
     return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0, options);
 }
 
-function checkElementWithElementHidden(selector, selectorToHide, options) { 
+function checkElementWithElementHidden(selector, selectorToHide, options) {
     browser.execute((selectorToHide) => {
         $(`<style id="tempHiddenStyles" type="text/css">${selectorToHide}{opacity:0;}</style>`).appendTo("head");
     }, selectorToHide)
@@ -246,6 +252,20 @@ function clickQueryByGeneButton(){
 
 function clickModifyStudySelectionButton (){
     browser.click('[data-test="modifyStudySelectionButton"]');
+}
+
+function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
+    //trackGroupIndex is 0-indexed
+
+    const button_selector = "#oncoprintDiv .oncoprintjs__header__toggle_btn_img.track-group-"+trackGroupIndex;
+    const dropdown_selector = "#oncoprintDiv .oncoprintjs__header__dropdown.track-group-"+trackGroupIndex;
+
+    return {
+        button: $(button_selector),
+        button_selector,
+        dropdown: $(dropdown_selector),
+        dropdown_selector
+    };
 }
 
 module.exports = {
@@ -283,5 +303,7 @@ module.exports = {
     getReactSelectOptions: getReactSelectOptions,
     COEXPRESSION_TIMEOUT: 120000,
     getSelectCheckedOptions: getSelectCheckedOptions,
-    selectCheckedOption: selectCheckedOption
+    selectCheckedOption: selectCheckedOption,
+    getOncoprintGroupHeaderOptionsElements:getOncoprintGroupHeaderOptionsElements,
+    showGsva: showGsva,
 };

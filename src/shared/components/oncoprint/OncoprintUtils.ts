@@ -427,6 +427,7 @@ export function alterationInfoForCaseAggregatedDataByOQLLine(
 
 interface IGeneticTrackAppState {
     sampleMode: boolean;
+    oncoprint:ResultsViewOncoprint;
     samples: Pick<Sample, 'sampleId'|'studyId'|'uniqueSampleKey'>[];
     patients: Pick<Patient, 'patientId'|'studyId'|'uniquePatientKey'>[];
     coverageInformation: CoverageInformation;
@@ -459,6 +460,7 @@ export function getUnalteredUids(tracks:GeneticTrackSpec[]) {
 
 export function makeGeneticTrackWith({
     sampleMode,
+    oncoprint,
     samples,
     patients,
     coverageInformation,
@@ -536,7 +538,14 @@ export function makeGeneticTrackWith({
             data,
             expansionCallback,
             removeCallback,
-            expansionTrackList: expansions.length ? expansions : undefined
+            expansionTrackList: expansions.length ? expansions : undefined,
+            customOptions:[
+                {separator:true},
+                {
+                    label: "Sort by genes",
+                    onClick:oncoprint.clearSortDirectionsAndSortByData,
+                }
+            ]
         };
     };
 }
@@ -555,13 +564,14 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
         invoke: async () => {
             const trackFunction = makeGeneticTrackWith({
                 sampleMode,
+                oncoprint,
                 samples: oncoprint.props.store.samples.result!,
                 patients: oncoprint.props.store.patients.result!,
                 coverageInformation: oncoprint.props.store.coverageInformation.result!,
                 sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
                 sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene.result!,
                 selectedMolecularProfiles: oncoprint.props.store.selectedMolecularProfiles.result!,
-                expansionIndexMap: oncoprint.expansionsByGeneticTrackKey
+                expansionIndexMap: oncoprint.expansionsByGeneticTrackKey,
             });
             return oncoprint.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.map(
                 (alterationData, trackIndex) => trackFunction(
