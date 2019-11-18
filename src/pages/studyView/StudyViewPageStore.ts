@@ -2552,7 +2552,7 @@ export class StudyViewPageStore {
             dataType: getChartMetaDataType(uniqueKey),
             patientAttribute: false,
             renderWhenDataChange: false,
-            priority: 1
+            priority: 0
         };
         let allCases: CustomChartIdentifierWithValue[] = [];
         if(newChart.patientAttribute) {
@@ -2597,7 +2597,7 @@ export class StudyViewPageStore {
                 dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 renderWhenDataChange: false,
-                priority: 1
+                priority: 0
             };
 
             this._customCharts.set(uniqueKey, chartMeta);
