@@ -35,19 +35,6 @@ import WindowStore from "../window/WindowStore";
 
 import styles from "./mutationMapper.module.scss";
 
-export interface IMutationMapperConfig {
-    show_oncokb?: boolean;
-    show_genomenexus?: boolean;
-    show_hotspot?: boolean;
-    mycancergenome_show?: boolean;
-    show_civic?: boolean;
-    isoformOverrideSource?: string;
-    mygene_info_url: string | null;
-    uniprot_id_url: string | null;
-    genomenexus_url: string | null;
-    oncokb_public_api_url: string | null;
-}
-
 export interface IMutationMapperProps {
     store: MutationMapperStore;
     trackVisibility?: TrackVisibility;
@@ -56,19 +43,28 @@ export interface IMutationMapperProps {
     showPlotDownloadControls?: boolean;
     mutationTable?: JSX.Element;
     pubMedCache?: PubMedCache;
-    genomeNexusUrl?: string;
     showTranscriptDropDown?: boolean;
     showOnlyAnnotatedTranscriptsInDropdown?: boolean;
     filterMutationsBySelectedTranscript?: boolean;
-    isoformOverrideSource?: string;
     mainLoadingIndicator?: JSX.Element;
     geneSummaryLoadingIndicator?: JSX.Element;
-    config: IMutationMapperConfig;
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
     pdbHeaderCache?: PdbHeaderCache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     genomeNexusCache?:GenomeNexusCache;
+    // server config properties
+    genomeNexusUrl?: string;
+    oncoKbPublicApiUrl?: string;
+    isoformOverrideSource?: string;
+    myGeneInfoUrlTemplate?: string;
+    uniprotIdUrlTemplate?: string;
+    transcriptSummaryUrlTemplate?: string;
+    enableOncoKb?: boolean;
+    enableGenomeNexus?: boolean;
+    enableHotspot?: boolean;
+    enableMyCancerGenome?: boolean;
+    enableCivic?: boolean;
 }
 
 @observer

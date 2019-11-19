@@ -3,6 +3,7 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import ResultsViewMutationMapper from "./ResultsViewMutationMapper";
+import {convertToMutationMapperProps} from "shared/components/mutationMapper/MutationMapperConfig";
 import MutationMapperUserSelectionStore from "shared/components/mutationMapper/MutationMapperUserSelectionStore";
 import {observable} from "mobx";
 import AppConfig from 'appConfig';
@@ -108,6 +109,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             />
                         </div>
                         <ResultsViewMutationMapper
+                            {...convertToMutationMapperProps(AppConfig.serverConfig)}
                             store={mutationMapperStore}
                             trackVisibility={this.userSelectionStore.trackVisibility}
                             discreteCNACache={this.props.store.discreteCNACache}
@@ -119,7 +121,6 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             genomeNexusMyVariantInfoCache={this.props.store.genomeNexusMyVariantInfoCache}
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
                             myCancerGenomeData={this.props.store.myCancerGenomeData}
-                            config={AppConfig.serverConfig}
                             userEmailAddress={this.props.appStore.userName!}
                         />
                     </MSKTab>
