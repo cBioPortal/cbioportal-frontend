@@ -152,6 +152,9 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     uniprot_id_url:
         'https://www.uniprot.org/uniprot/?query=accession:<%= swissProtAccession %>&format=tab&columns=entry+name',
 
+    ensembl_transcript_url:
+        'http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>',
+
     query_product_limit: 1000000,
     
     skin_show_gsva: false,
