@@ -6,11 +6,14 @@ import {
     IClinicalGroupMatch, IGenomicGroupMatch, IGenomicMatch, IDetailedTrialMatch, IArmMatch, IGenomicMatchType
 } from "../../../shared/model/MatchMiner";
 import styles from './style/trialMatch.module.scss';
-import { computed } from "mobx";
+import { computed, observable } from "mobx";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import SampleManager from "../SampleManager";
 import DefaultTooltip, { placeArrowBottomLeft } from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import { getAgeRangeDisplay } from "./TrialMatchTableUtils";
+import TrialMatchFeedback from "./TrialMatchFeedback";
+import AppConfig from 'appConfig';
+import { Button } from "react-bootstrap";
 
 export type ITrialMatchProps = {
     sampleManager: SampleManager | null;
@@ -43,6 +46,9 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
             [ColumnKey.MATCHING_CRITERIA]: 0.65 * (this.props.containerWidth - ColumnWidth.STATUS)
         };
     }
+
+    @observable showTrialFeedback = false;
+    @observable showGeneralFeedback = false;
 
     private _columns = [{
         name: ColumnKey.TITLE,
@@ -88,8 +94,10 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                                 <div>
                                     {armMatch.matches.map((clinicalGroupMatch: IClinicalGroupMatch, cgIndex:number) => (
                                         <div className={styles.criteriaContainer}>
-                                            {clinicalGroupMatch.matches && this.getGenomicMatch(clinicalGroupMatch.matches)}
-                                            {clinicalGroupMatch.notMatches && this.getGenomicNotMatch(clinicalGroupMatch.notMatches)}
+                                            <div className={styles.firstLeft}>
+                                                {clinicalGroupMatch.matches && this.getGenomicMatch(clinicalGroupMatch.matches)}
+                                                {clinicalGroupMatch.notMatches && this.getGenomicNotMatch(clinicalGroupMatch.notMatches)}
+                                            </div>
                                             {this.getClinicalMatch(clinicalGroupMatch)}
                                             <If condition={cgIndex < armMatch.matches.length - 1}><hr className={styles.criteriaHr}/></If>
                                         </div>
@@ -118,8 +126,22 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
     }, {
         name: ColumnKey.STATUS,
         render: (trial: IDetailedTrialMatch) => (
-            <div className={styles.statusButton}>
-                <a target="_blank" href={"https://www.mskcc.org/cancer-care/clinical-trials/" + trial.protocolNo}><span className={styles.statusBackground}>{trial.status}</span></a>
+            <div className={styles.statusContainer}>
+                <a target="_blank" href={"https://www.mskcc.org/cancer-care/clinical-trials/" + trial.protocolNo}>
+                    <span className={styles.statusBackground}>{trial.status}</span>
+                </a>
+                <span className={styles.feedback}>
+                    <Button type="button" className={"btn btn-default btn-sm btn-xs " + styles.feedbackButton} onClick={() => this.showTrialFeedback=true}>Feedback</Button>
+                    <TrialMatchFeedback
+                        show={this.showTrialFeedback}
+                        onHide={() => this.showTrialFeedback = false}
+                        isTrialFeedback={true}
+                        title="OncoKB Matched Trial Feedback"
+                        userEmailAddress={AppConfig.serverConfig.user_email_address}
+                        nctId={trial.nctId}
+                        protocolNo={trial.protocolNo}
+                    />
+                </span>
             </div>
         ),
         sortBy: (trial: IDetailedTrialMatch) => trial.status,
@@ -176,7 +198,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
 
     public getGenomicMatch(matches: IGenomicMatchType) {
         return (
-            <div className={styles.firstLeft}>
+            <React.Fragment>
                 {matches.MUTATION.map((genomicGroupMatch: IGenomicGroupMatch) => (
                     <div>
                         <span style={{'marginRight': 5}}><b>{genomicGroupMatch.patientGenomic!.trueHugoSymbol}</b> {genomicGroupMatch.patientGenomic!.trueProteinChange}</span>
@@ -203,7 +225,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                         {this.getGenomicAlteration(genomicGroupMatch.genomicAlteration)}
                     </div>
                 ))}
-            </div>
+            </React.Fragment>
         );
     }
 
@@ -216,7 +238,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
             mutationAndCnagenemicAlterations = mutationAndCnagenemicAlterations.concat(notMatches.CNA[0].genomicAlteration);
         }
         return (
-            <div className={styles.firstLeft}>
+            <React.Fragment>
                 { mutationAndCnagenemicAlterations.length > 0 &&
                 <div>
                     <span className={styles.genomicSpan}>{this.getDescriptionForNotMatches(mutationAndCnagenemicAlterations, 3, 'Negative for alterations in', '')}</span>
@@ -246,7 +268,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                     </DefaultTooltip>
                 </div>
                 }
-            </div>
+            </React.Fragment>
         );
     }
 
@@ -306,6 +328,13 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
     render() {
         return (
             <div>
+                <p style={{marginBottom: '0'}}>Curated genomic and clinical criteria from open clinical trials at Memorial Sloan Kettering. Please <a href="mailto:team@oncokb.org">contact us</a> or submit <a onClick={() => this.showGeneralFeedback=true}>feedback form</a> if you have any questions.</p>
+                <TrialMatchFeedback
+                    show={this.showGeneralFeedback}
+                    onHide={() => this.showGeneralFeedback = false}
+                    title="OncoKB Matched Trials General Feedback"
+                    userEmailAddress={AppConfig.serverConfig.user_email_address}
+                />
                 <TrialMatchTableComponent
                     data={this.props.detailedTrialMatches}
                     columns={this._columns}
