@@ -6,7 +6,7 @@ import {
     IClinicalGroupMatch, IGenomicGroupMatch, IGenomicMatch, IDetailedTrialMatch, IArmMatch, IGenomicMatchType
 } from "../../../shared/model/MatchMiner";
 import styles from './style/trialMatch.module.scss';
-import { computed, observable } from "mobx";
+import { action, computed, observable } from "mobx";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import SampleManager from "../SampleManager";
 import DefaultTooltip, { placeArrowBottomLeft } from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
@@ -19,6 +19,11 @@ export type ITrialMatchProps = {
     sampleManager: SampleManager | null;
     detailedTrialMatches: IDetailedTrialMatch[];
     containerWidth: number;
+}
+
+export type ISelectedTrialFeedbackFormData = {
+    nctId: string;
+    protocolNo: string;
 }
 
 enum ColumnKey {
@@ -47,7 +52,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
         };
     }
 
-    @observable showTrialFeedback = false;
+    @observable selectedTrialFeedbackFormData: ISelectedTrialFeedbackFormData | undefined;
     @observable showGeneralFeedback = false;
 
     private _columns = [{
@@ -131,16 +136,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                     <span className={styles.statusBackground}>{trial.status}</span>
                 </a>
                 <span className={styles.feedback}>
-                    <Button type="button" className={"btn btn-default btn-sm btn-xs " + styles.feedbackButton} onClick={() => this.showTrialFeedback=true}>Feedback</Button>
-                    <TrialMatchFeedback
-                        show={this.showTrialFeedback}
-                        onHide={() => this.showTrialFeedback = false}
-                        isTrialFeedback={true}
-                        title="OncoKB Matched Trial Feedback"
-                        userEmailAddress={AppConfig.serverConfig.user_email_address}
-                        nctId={trial.nctId}
-                        protocolNo={trial.protocolNo}
-                    />
+                    <Button type="button" className={"btn btn-default btn-sm btn-xs " + styles.feedbackButton} onClick={() => this.openCloseFeedbackForm({nctId: trial.nctId, protocolNo: trial.protocolNo})}>Feedback</Button>
                 </span>
             </div>
         ),
@@ -194,6 +190,11 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                 </span>
             </div>
         );
+    }
+
+    @action
+    public openCloseFeedbackForm(data?: ISelectedTrialFeedbackFormData) {
+        this.selectedTrialFeedbackFormData = data;
     }
 
     public getGenomicMatch(matches: IGenomicMatchType) {
@@ -329,12 +330,24 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
         return (
             <div>
                 <p style={{marginBottom: '0'}}>Curated genomic and clinical criteria from open clinical trials at Memorial Sloan Kettering. Please <a href="mailto:team@oncokb.org">contact us</a> or submit <a onClick={() => this.showGeneralFeedback=true}>feedback form</a> if you have any questions.</p>
-                <TrialMatchFeedback
-                    show={this.showGeneralFeedback}
-                    onHide={() => this.showGeneralFeedback = false}
-                    title="OncoKB Matched Trials General Feedback"
-                    userEmailAddress={AppConfig.serverConfig.user_email_address}
-                />
+                {!_.isUndefined(this.showGeneralFeedback) &&
+                    <TrialMatchFeedback
+                        show={this.showGeneralFeedback}
+                        onHide={() => this.showGeneralFeedback = false}
+                        title="OncoKB Matched Trials General Feedback"
+                        userEmailAddress={AppConfig.serverConfig.user_email_address}
+                    />
+                }
+                {this.selectedTrialFeedbackFormData &&
+                    <TrialMatchFeedback
+                        show={!!this.selectedTrialFeedbackFormData}
+                        data={this.selectedTrialFeedbackFormData}
+                        onHide={() => this.openCloseFeedbackForm()}
+                        isTrialFeedback={true}
+                        title="OncoKB Matched Trial Feedback"
+                        userEmailAddress={AppConfig.serverConfig.user_email_address}
+                    />
+                }
                 <TrialMatchTableComponent
                     data={this.props.detailedTrialMatches}
                     columns={this._columns}
