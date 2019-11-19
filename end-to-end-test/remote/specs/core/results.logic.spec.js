@@ -90,12 +90,11 @@ describe('single study query', function() {
             $('a.tabAnchor_mutations').waitForExist(10000);
             $('a.tabAnchor_mutations').click();
 
-            $('[data-test="germlineMutationRate"]').waitForExist(60000);
-            var text = browser.getText('[data-test="germlineMutationRate"]')
+            $('[data-test="mutation-rate-summary"]').waitForExist(60000);
+            var text = browser.getText('[data-test="mutation-rate-summary"]');
             // check germline mutation rate
             assert(text.search('8.2%') > -1);
             // check somatic mutation
-            var text = browser.getText('[data-test="somaticMutationRate"]')
             assert(text.search('3.5%') > -1);
 
         });
