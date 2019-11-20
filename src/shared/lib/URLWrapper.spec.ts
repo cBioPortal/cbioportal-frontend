@@ -133,12 +133,72 @@ describe("URLWrapper", () => {
         assert.equal(wrapper.query.case_ids, "1231", "we have access to session prop on query");
 
         setTimeout(() => {
-            assert.equal(wrapper._sessionId, "someSessionId");
+            assert.equal(wrapper.sessionId, "someSessionId");
             done();
         }, 10);
 
     });
 
+
+    it("respects url length threshold for session", (done) => {
+
+        const stub = sinon.stub(wrapper, "saveRemoteSession");
+
+        stub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    return resolve({id: "someSessionId"});
+                }, 5);
+            });
+        });
+
+        wrapper.sessionEnabled = true;
+
+        wrapper.urlCharThresholdForSession = 14;
+
+        wrapper.updateURL({clinicallist: "one,two,three", case_ids: "1231"});
+
+        assert.equal(routingStore.location.query.case_ids, "1231");
+
+        assert.isFalse(stub.called, "save session method is NOT called b/c thresshold is not met");
+
+        assert.isUndefined(wrapper.sessionId,"no sessionID");
+
+        wrapper.updateURL({clinicallist: "one,two,three", case_ids: "12312341234"});
+
+        assert.isUndefined(routingStore.location.query.case_ids, "case_ids no longer in url");
+
+        assert.isTrue(stub.calledOnce, "save session method IS called when thresshold is met");
+
+        // EVEN IF URL is under threshold, you cannot go back to non session behavior
+        wrapper.updateURL({clinicallist: "one,two,three", case_ids: "2222"});
+
+        assert.isUndefined(routingStore.location.query.case_ids);
+        assert.equal(wrapper.query.case_ids, "2222");
+
+        setTimeout(()=>{
+            assert.equal(wrapper.query.case_ids, "2222");
+            assert.isUndefined(routingStore.location.query.case_ids);
+            done();
+        },50)
+
+
+        // assert.equal(wrapper.query.clinicallist, "one,two,three", "non session is present in query");
+        //
+        // assert.equal(routingStore.location.query.clinicallist, "one,two,three", "non session params present in url");
+        //
+        // assert.isNotTrue("clinicallist" in wrapper._sessionData!.query, "non session params NOT present in internal session store");
+        //
+        // assert.isUndefined(routingStore.location.query.case_ids, "session params NOT in url");
+        //
+        // assert.equal(wrapper.query.case_ids, "1231", "we have access to session prop on query");
+        //
+        // setTimeout(() => {
+        //     assert.equal(wrapper._sessionId, "someSessionId");
+        //     done();
+        // }, 10);
+
+    });
 
     it("respects sessionEnabled flag and thresholds", () => {
 
@@ -216,9 +276,19 @@ describe("URLWrapper", () => {
 
     it("creates new session when session param is changed", (done) => {
 
-        const stub = sinon.stub(wrapper, "getRemoteSession");
+        let getSessionStub = sinon.stub(wrapper, "getRemoteSession");
 
-        stub.callsFake(function (sessionData) {
+        let saveSessionStub = sinon.stub(wrapper, "saveRemoteSession");
+
+        saveSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    return resolve({id: "someSessionId"});
+                }, 5);
+            });
+        });
+
+        getSessionStub.callsFake(function (sessionData) {
             return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({
@@ -241,6 +311,7 @@ describe("URLWrapper", () => {
         });
 
         wrapper.sessionEnabled = true;
+        wrapper.urlCharThresholdForSession = 10;
 
         // // must establish an observer in order for remoteData to invoke
         const disposer = autorun(() => {
@@ -250,29 +321,37 @@ describe("URLWrapper", () => {
         // set first session for loading
         routingStore.updateRoute({session_id: "5dcae586e4b04a9c23e27e5f"});
 
+        assert.isTrue(getSessionStub.calledOnce);
+        assert.isTrue(wrapper.isLoadingSession);
+
         setTimeout(() => {
-            assert.isTrue(stub.calledOnce);
+
+            assert.isFalse(wrapper.isLoadingSession);
 
             wrapper.updateURL({ gene_list:"EGFR TP53" });
+
+            assert.isTrue(saveSessionStub.calledOnce, "it called save session service");
+
+            assert.equal(wrapper.query.gene_list,"EGFR TP53", "sets query params for new session immediately");
 
             assert.isTrue(wrapper.isPendingSession);
             assert.isTrue(wrapper.isLoadingSession);
 
-            assert.equal(wrapper.query.gene_list,"EGFR TP53", "sets query params for new session immediately");
-
-            assert.isTrue(stub.calledTwice);
-
             setTimeout(()=>{
-                assert.isTrue(wrapper.sessionId)
+
+                assert.isTrue(getSessionStub.calledOnce, "did not call get session again");
+                assert.equal(wrapper.sessionId, "someSessionId", "sets session id appropriatly");
+                done();
+
             },50)
 
         }, 50);
 
-        done();
+
 
     });
 
-    it('does what it should',()=>{
+    it('when clear=true, gets rid of any existing params',()=>{
 
         wrapper.updateURL({
            case_ids:"12345",
@@ -281,7 +360,7 @@ describe("URLWrapper", () => {
         assert.equal(wrapper.query.case_ids,"12345");
         assert.equal(routingStore.location.query.case_ids,"12345");
 
-        wrapper.updateURL({}, undefined, true);
+        wrapper.updateURL({ cancer_study_list:"somelist" }, undefined, true);
 
         assert.isUndefined(routingStore.location.query.case_ids);
 
@@ -289,6 +368,7 @@ describe("URLWrapper", () => {
 
         assert.isUndefined(wrapper.query.case_ids, "removes existing params on clear");
 
+        assert.equal(routingStore.location.query.cancer_study_list, "somelist")
 
     });
 
@@ -308,6 +388,54 @@ describe("URLWrapper", () => {
         assert.equal(wrapper.query.cancer_study_list, "789");
 
     });
+
+    it('handles new session before old session finished saving',(done)=>{
+
+        wrapper.urlCharThresholdForSession = 0;
+        wrapper.sessionEnabled = true;
+
+        let saveSessionStub = sinon.stub(wrapper, "saveRemoteSession");
+
+        saveSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    return resolve({id: "sessionId1"});
+                }, 10);
+            });
+        });
+
+        wrapper.updateURL({ gene_list:"12345" });
+
+        assert.isTrue(saveSessionStub.called);
+
+        saveSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    return resolve({id: "sessionId2"});
+                }, 5);
+            });
+        });
+
+        wrapper.updateURL({ gene_list:"54321" });
+
+        assert.isTrue(saveSessionStub.calledTwice);
+
+        // should reflect sequence of sessions, not response
+        // i.e. first session should have been cancelled by second
+        // even though second response sooner
+        setTimeout(()=>{
+            assert.equal(wrapper.sessionId, "sessionId2");
+            assert.equal(wrapper.query.gene_list,"54321");
+            assert.equal(routingStore.location.query.session_id, "sessionId2");
+            done();
+        },20);
+
+
+
+
+    });
+
+
 
 });
 

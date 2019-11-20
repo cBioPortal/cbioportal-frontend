@@ -163,8 +163,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     private molecularProfileIdToHeatmapTrackGroupIndex:{[molecularProfileId:string]:number} = {};
 
-    private isLoading_setRenderingCompleteTimeout:any = null;
-
     @computed get selectedClinicalAttributeIds() {
 
         const list = this.props.store.urlWrapper.query.clinicallist ?
@@ -260,9 +258,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         // The heatmap tracks can only be added when detailed information on
         // molecular profiles has been retrieved from the server.
-        onMobxPromise(props.store.molecularProfileIdToMolecularProfile, (result:any)=>{
-            this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
-        });
+        // onMobxPromise(props.store.molecularProfileIdToMolecularProfile, (result:any)=>{
+        //     this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
+        // });
 
         // onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
         //     if (studyIds.length > 1) {
@@ -520,7 +518,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectShowUnalteredColumns:(show:boolean)=>{this.showUnalteredColumns = show;},
             onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show; },
-            onSelectOnlyShowClinicalLegendForAlteredCases:(show:boolean)=>{this._onlyShowClinicalLegendForAlteredCases = show; },
+            onSelectOnlyShowClinicalLegendForAlteredCases:(show:boolean)=>{
+                this._onlyShowClinicalLegendForAlteredCases = show;
+            },
             onSelectShowOqlInLabels:(show:boolean)=>{this.showOqlInLabels = show;},
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
@@ -618,22 +618,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onClickAddTreatmentsToHeatmap:(treatmentIds:string[])=>{
                 this.addHeatmapTracks(this.selectedHeatmapProfile, treatmentIds);
             },
-            onClickRemoveHeatmap:action(() => {
-                _.forEach(this.molecularProfileIdToHeatmapTracks,(item, molecularProfileId)=>{
-                    // this will delete all heatmap tracks
-                    this.addHeatmapTracks(molecularProfileId,[]);
-                });
-            }),
-            // onClickClusterHeatmap:()=>{
-            //     if (this.isClusteredByCurrentSelectedHeatmapProfile) {
-            //         this.sortByData();
-            //     } else {
-            //         this.props.store.urlWrapper.updateURL({
-            //             oncoprint_sortby:"cluster",
-            //             oncoprint_cluster_profile:this.selectedHeatmapProfile
-            //         });
-            //     }
-            // },
             onClickDownload:(type:string)=>{
                 switch(type) {
                     case "pdf":
@@ -735,42 +719,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         );
     }
 
-    @action private initFromUrlParams(paramsMap:any) {
-        // if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
-        //     this.columnMode = (paramsMap[SAMPLE_MODE_URL_PARAM] && paramsMap[SAMPLE_MODE_URL_PARAM]==="true") ? "sample" : "patient";
-        // }
-        // if (paramsMap[TREATMENT_LIST_URL_PARAM]) {
-        //     this.selectedTreatmentsFromUrl = paramsMap[TREATMENT_LIST_URL_PARAM].split(";");
-        // }
-
-
-        // if (paramsMap[HEATMAP_TRACKS_URL_PARAM]) {
-        //     const groups = paramsMap[HEATMAP_TRACKS_URL_PARAM].split(";").map((x:string)=>x.split(","));
-        //     // for (const group of groups) {
-        //     //     this.addHeatmapTracks(group[0], group.slice(1));
-        //     // }
-        // }
-
-
-        // if (paramsMap[CLINICAL_TRACKS_URL_PARAM]) {
-        //     const attrIds = paramsMap[CLINICAL_TRACKS_URL_PARAM].split(",");
-        //     attrIds.map((attrId:string)=>this.selectedClinicalAttributeIds.set(attrId, true));
-        // }
-        // if (paramsMap[ONCOPRINT_SORTBY_URL_PARAM]) {
-        //     const mode = paramsMap[ONCOPRINT_SORTBY_URL_PARAM];
-        //     switch (mode) {
-        //         case "case_id":                                         // sort by sample or patient id (a.k.a. alphabetical)
-        //             this.configureSortMode('alphabetical');
-        //             break;
-        //         case "case_list":                                       // sort by order of appearance in case list (when selected on query page)
-        //             if (this.caseListSortPossible) {
-        //                 this.configureSortMode('caseList');
-        //             }
-        //             break;
-        //     }
-        // }
-    }
-
     @action public sortByData() {
         this.props.store.urlWrapper.updateURL({
             oncoprint_sortby:"",
@@ -781,20 +729,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @computed get clinicalTracksUrlParam() {
         return this.selectedClinicalAttributeIds.keys().join(",");
     }
-
-    // @computed get heatmapTrackGroupsUrlParam() {
-    //     return _.sortBy(_.values(this.molecularProfileIdToHeatmapTracks), (x:HeatmapTrackGroupRecord)=>x.trackGroupIndex)
-    //     .filter((x:HeatmapTrackGroupRecord)=>!!x.entities.size)
-    //     .map((x:HeatmapTrackGroupRecord)=>`${x.molecularProfileId},${_.keys(x.entities).join(",")}`)
-    //     .join(";");
-    // }
-
-    // treatments selected iin heatmap are added to the `treatment_list` url param
-    // @computed get treatmentsUrlParam():string {
-    //     return _.filter(this.molecularProfileIdToHeatmapTracks, (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
-    //     .map((x:HeatmapTrackGroupRecord)=>`${_.keys(x.entities).join(";")}`)
-    //     .join(";");
-    // }
 
     private readonly unalteredKeys = remoteData({
         await:()=>[this.geneticTracks],
@@ -898,9 +832,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @action private onReleaseRendering() {
-        clearTimeout(this.isLoading_setRenderingCompleteTimeout);
-        this.isLoading_setRenderingCompleteTimeout = null;
-
         this.renderingComplete = true;
     }
 
@@ -1162,18 +1093,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }*/
 
     @computed get isLoading() {
-        clearTimeout(this.isLoading_setRenderingCompleteTimeout);
-        this.isLoading_setRenderingCompleteTimeout = setTimeout(()=>{
-            this.renderingComplete = false;
-            // otherwise, there will be a jumpy oncoprint render experience:
-            //  oncoprint hides when loading
-            //  loading finishes and oncoprint shows
-            //  then oncoprint rendering begins, suppress rendering
-            //  loading shows again
-            //  then oncoprint rendering finishes, release rendering
-
-            // by setting renderingComplete = false here, we bridge that gap so theres only one contiguous loading period
-        });
         return this.oncoprintComponent.isPending;
     }
 
