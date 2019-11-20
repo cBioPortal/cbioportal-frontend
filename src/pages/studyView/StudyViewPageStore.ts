@@ -71,9 +71,7 @@ import {
     getSamplesByExcludingFiltersOnChart,
     isFiltered,
     isLogScaleByDataBins,
-    isSpecialChart,
     MutationCountVsCnaYBinsMin,
-    NA_DATA,
     shouldShowChart,
     showOriginStudiesInSummaryDescription,
     SPECIAL_CHARTS,
@@ -130,7 +128,7 @@ import {
     parseCnaUniqueKey
 } from "pages/studyView/TableUtils";
 import { GeneTableRow } from './table/GeneTable';
-import { getSelectedGroups, getStudiesAttr } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { getSelectedGroups, getGroupParameters } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 
 export type ChartUserSetting = {
     id: string,
@@ -463,111 +461,95 @@ export class StudyViewPageStore {
         });
     }
 
-    private createSpecialChartComparisonSession(
+    private createCategoricalAttributeComparisonSession(
         chartMeta: ChartMeta,
-        statusCallback:(phase:LoadingPhase)=>void
+        clinicalAttributeValues: ClinicalDataCountSummary[],
+        statusCallback: (phase: LoadingPhase) => void
     ) {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
-        // for now, the only one possible is cancer studies
-        return new Promise<string>(resolve=>{
-            onMobxPromise<any>([this.selectedSamples, this.cancerStudiesData],
-                async (selectedSamples:Sample[], cancerStudiesData:ClinicalDataCountSummary[])=>{
 
-                    // group samples by study
-                    const studyIdToSamples:{[studyId:string]:Sample[]} = _.groupBy(selectedSamples, s=>s.studyId);
-                    const studyIdToCountWithColor = _.keyBy(cancerStudiesData, s=>s.value);
-                    const groups = _.map(studyIdToSamples, (samples, studyId)=>{
-                        return {
-                            name: studyId,
-                            description: "",
-                            studies: getStudiesAttr(samples),
-                            origin: this.studyIds,
-                            color: studyIdToCountWithColor[studyId].color
-                        };
-                    });
+        const promises: any = [this.selectedSamples]
+        if (chartMeta.uniqueKey === UniqueKey.WITH_MUTATION_DATA) {
+            promises.push(this.mutationAsClinicalData)
+        } else if (chartMeta.uniqueKey === UniqueKey.WITH_CNA_DATA) {
+            promises.push(this.cnaAsClinicalData)
+        } else if (chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES) {
+            promises.push(this.cancerStudyAsClinicalData)
+        }
 
-                    // create session and get id
-                    const {id} = await comparisonClient.addComparisonSession({
-                        groups,
-                        clinicalAttributeName: chartMeta.displayName,
-                        origin: this.studyIds
-                    });
-                    return resolve(id);
-                }
-            );
-        });
-    }
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(promises,
+                async (selectedSamples: Sample[], clinicalDataList?: ClinicalData[]) => {
 
-    private createStringAttributeComparisonSession(
-        clinicalAttribute:ClinicalAttribute,
-        clinicalAttributeValues:ClinicalDataCountSummary[],
-        statusCallback:(phase:LoadingPhase)=>void
-    ) {
-        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
-        return new Promise<string>((resolve)=>{
-            onMobxPromise(this.selectedSamples,
-                async (selectedSamples)=>{
-                    // get clinical data for the given attribute
-                    const entityIdKey = clinicalAttribute.patientAttribute ? "patientId" : "sampleId";
-                    const data = await client.fetchClinicalDataUsingPOST({
-                        clinicalDataType: clinicalAttribute.patientAttribute ? ClinicalDataTypeEnum.PATIENT : ClinicalDataTypeEnum.SAMPLE,
-                        clinicalDataMultiStudyFilter: {
-                            attributeIds: [clinicalAttribute.clinicalAttributeId],
-                            identifiers: selectedSamples.map(s=>({ studyId: s.studyId, entityId: s[entityIdKey] }))
-                        }
-                    });
+                    let data: CustomChartIdentifierWithValue[] = [];
 
-                    const lcValueToValue:{[lowerCaseValue:string]:string} = {};
-                    const lcValueToColor = _.keyBy(clinicalAttributeValues, d=>d.value.toLowerCase());
-                    let lcValueToSampleIdentifiers:{[value:string]:SampleIdentifier[]} = {};
-                    if (clinicalAttribute.patientAttribute) {
-                        const patientKeyToData = _.keyBy(data, (d:ClinicalData)=>d.uniquePatientKey);
-                        for (const sample of selectedSamples) {
-                            const datum = patientKeyToData[sample.uniquePatientKey];
-                            const value = datum ? datum.value : "NA";
-                            const lcValue = value.toLowerCase();
-                            lcValueToValue[lcValue] = lcValueToValue[lcValue] || value;
-                            lcValueToSampleIdentifiers[lcValue] = lcValueToSampleIdentifiers[lcValue] || [];
-                            lcValueToSampleIdentifiers[lcValue].push({
-                                sampleId: sample.sampleId,
-                                studyId: sample.studyId
+                    if (this.isCustomChart(chartMeta.uniqueKey)) {
+                        if (clinicalDataList === undefined) {
+                            //combine studyId and sampleId to create sample unique key
+                            const sampleKeyToData = _.keyBy(this._customChartsSelectedCases.get(chartMeta.uniqueKey), d => d.studyId + d.sampleId);
+                            data = selectedSamples.map(sample => {
+                                const datum = sampleKeyToData[sample.studyId + sample.sampleId];
+                                return {
+                                    sampleId: sample.sampleId,
+                                    studyId: sample.studyId,
+                                    value: datum ? datum.value : Datalabel.NA,
+                                } as CustomChartIdentifierWithValue
                             });
+                        } else {
+                            const selectedSampleByKey = _.keyBy(selectedSamples, (d: Sample) => d.uniqueSampleKey);
+                            data = _.filter(clinicalDataList, d => selectedSampleByKey[d.uniqueSampleKey] !== undefined);
                         }
                     } else {
-                        lcValueToSampleIdentifiers = _.groupBy(data, (d:ClinicalData)=>{
-                            const value = d.value;
-                            const lcValue = value.toLowerCase();
-                            lcValueToValue[lcValue] = lcValueToValue[lcValue] || value;
-                            return lcValue;
+
+                        // get clinical data for the given attribute
+                        const isPatientAttribute = (chartMeta.clinicalAttribute && chartMeta.clinicalAttribute.patientAttribute) || false;
+                        const entityIdKey = (isPatientAttribute ? "patientId" : "sampleId")
+                        data = await client.fetchClinicalDataUsingPOST({
+                            clinicalDataType: isPatientAttribute ? "PATIENT" : "SAMPLE",
+                            clinicalDataMultiStudyFilter: {
+                                attributeIds: [chartMeta.clinicalAttribute!.clinicalAttributeId],
+                                identifiers: selectedSamples.map(s => ({ studyId: s.studyId, entityId: s[entityIdKey] }))
+                            }
                         });
+
+                        if (isPatientAttribute) {
+                            const patientKeyToData = _.keyBy(data, (d: ClinicalData) => d.uniquePatientKey);
+                            data = selectedSamples.map(sample => {
+                                const datum = patientKeyToData[sample.uniquePatientKey];
+                                return {
+                                    sampleId: sample.sampleId,
+                                    studyId: sample.studyId,
+                                    value: datum ? datum.value : Datalabel.NA,
+                                } as CustomChartIdentifierWithValue
+                            })
+                        }
                     }
+
+                    const lcValueToSampleIdentifiers = _.groupBy(data, d => d.value.toLowerCase());
+                    const lcValueToColor = _.keyBy(clinicalAttributeValues, d => d.value.toLowerCase());
+
+                    const groups: SessionGroupData[] = _.chain(clinicalAttributeValues)
+                        .sortBy(attrVal => -attrVal.count)
+                        // do not slice for comparison on cancer studies chart
+                        .slice(0, chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES ? undefined : MAX_GROUPS_IN_SESSION)
+                        .filter(attrVal => {
+                            const lcValue = attrVal.value.toLowerCase();
+                            const sampleIdentifiers = lcValueToSampleIdentifiers[lcValue];
+                            return sampleIdentifiers && sampleIdentifiers.length > 0
+                        })
+                        .map(attrVal => {
+                            const lcValue = attrVal.value.toLowerCase();
+                            const sampleIdentifiers = lcValueToSampleIdentifiers[lcValue];
+                            return getGroupParameters(attrVal.value, sampleIdentifiers, this.studyIds, lcValueToColor[lcValue].color);
+                        })
+                        .value();
 
                     statusCallback(LoadingPhase.CREATING_SESSION);
 
-                    // create groups using data - up to MAX_GROUPS_IN_SESSION - ordered by size
-                    const groups:SessionGroupData[] = [];
-                    const sortedAttrVals = _.sortBy(clinicalAttributeValues, attrVal=>-attrVal.count);
-                    for (const attrVal of sortedAttrVals) {
-                        if (groups.length >= MAX_GROUPS_IN_SESSION) {
-                            break;
-                        }
-
-                        const lcValue = attrVal.value.toLowerCase();
-                        const sampleIdentifiers = lcValueToSampleIdentifiers[lcValue];
-                        if (sampleIdentifiers && sampleIdentifiers.length > 0) {
-                            groups.push({
-                                name: attrVal.value,
-                                description: "",
-                                studies: getStudiesAttr(sampleIdentifiers),
-                                origin: this.studyIds,
-                                color: lcValueToColor[lcValue].color,
-                            });
-                        }
-                    }
                     // create session and get id
-                    const {id} = await comparisonClient.addComparisonSession({
+                    const { id } = await comparisonClient.addComparisonSession({
                         groups,
-                        clinicalAttributeName: clinicalAttribute.displayName,
+                        clinicalAttributeName: chartMeta.displayName,
                         origin: this.studyIds
                     });
                     return resolve(id);
@@ -582,6 +564,7 @@ export class StudyViewPageStore {
         categorizationType?: NumericalGroupComparisonType
         clinicalAttributeValues?: ClinicalDataCountSummary[]
     }) {
+
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
         const comparisonWindow:any = window.open(getComparisonLoadingUrl({
@@ -621,31 +604,24 @@ export class StudyViewPageStore {
             }
         };
 
-        if (isSpecialChart(params.chartMeta)) {
-            sessionId = await this.createSpecialChartComparisonSession(
-                params.chartMeta,
-                statusCallback
-            );
-        } else {
-            switch (this.chartsType.get(params.chartMeta.uniqueKey)) {
-                case ChartTypeEnum.PIE_CHART:
-                case ChartTypeEnum.TABLE:
-                    sessionId =
-                        await this.createStringAttributeComparisonSession(
-                            params.chartMeta.clinicalAttribute!,
-                            params.clinicalAttributeValues!,
-                            statusCallback
-                        );
-                    break;
-                default:
-                    sessionId =
-                        await this.createNumberAttributeComparisonSession(
-                            params.chartMeta.clinicalAttribute!,
-                            params.categorizationType || NumericalGroupComparisonType.QUARTILES,
-                            statusCallback
-                        );
-                    break;
-            }
+        switch (this.chartsType.get(params.chartMeta.uniqueKey)) {
+            case ChartTypeEnum.PIE_CHART:
+            case ChartTypeEnum.TABLE:
+                sessionId =
+                    await this.createCategoricalAttributeComparisonSession(
+                        params.chartMeta,
+                        params.clinicalAttributeValues!,
+                        statusCallback
+                    );
+                break;
+            default:
+                sessionId =
+                    await this.createNumberAttributeComparisonSession(
+                        params.chartMeta.clinicalAttribute!,
+                        params.categorizationType || NumericalGroupComparisonType.QUARTILES,
+                        statusCallback
+                    );
+                break;
         }
 
         clearInterval(pingInterval);
@@ -3192,13 +3168,13 @@ export class StudyViewPageStore {
             let data = [header.join("\t")];
 
             data = data.concat(clinicalDataList.map(clinicalData => {
-                const row = [clinicalData.studyId || NA_DATA, clinicalData.patientId || NA_DATA];
+                const row = [clinicalData.studyId || Datalabel.NA, clinicalData.patientId || Datalabel.NA];
 
                 if (!chartMeta.clinicalAttribute!.patientAttribute) {
-                    row.push(clinicalData.sampleId || NA_DATA);
+                    row.push(clinicalData.sampleId || Datalabel.NA);
                 }
 
-                row.push(clinicalData.value || NA_DATA);
+                row.push(clinicalData.value || Datalabel.NA);
 
                 return row.join("\t");
             }));
@@ -3227,14 +3203,14 @@ export class StudyViewPageStore {
                         let record = _.find(this._customChartsSelectedCases.get(chartMeta.uniqueKey), (caseIdentifier: CustomChartIdentifierWithValue) => {
                             return caseIdentifier.studyId === patient.studyId && patient.patientId === caseIdentifier.patientId;
                         });
-                        return [patient.studyId || NA_DATA, patient.patientId || NA_DATA, record === undefined ? 'NA' : record.value].join("\t");
+                        return [patient.studyId || Datalabel.NA, patient.patientId || Datalabel.NA, record === undefined ? 'NA' : record.value].join("\t");
                     }));
                 } else {
                     data = data.concat(this.selectedSamples.result!.map((sample: Sample) => {
                         let record = _.find(this._customChartsSelectedCases.get(chartMeta.uniqueKey), (caseIdentifier: CustomChartIdentifierWithValue) => {
                             return caseIdentifier.studyId === sample.studyId && sample.sampleId === caseIdentifier.sampleId;
                         });
-                        return [sample.studyId || NA_DATA, sample.patientId || NA_DATA, sample.sampleId || NA_DATA, record === undefined ? 'NA' : record.value].join("\t");
+                        return [sample.studyId || Datalabel.NA, sample.patientId || Datalabel.NA, sample.sampleId || Datalabel.NA, record === undefined ? 'NA' : record.value].join("\t");
                     }));
                 }
                 resolve(data.join("\n"));
@@ -3285,21 +3261,21 @@ export class StudyViewPageStore {
                 const row: string[] = [];
 
                 if (clinicalDataList && clinicalDataList.length > 0) {
-                    row.push(clinicalDataList[0].studyId || NA_DATA);
-                    row.push(clinicalDataList[0].patientId || NA_DATA);
+                    row.push(clinicalDataList[0].studyId || Datalabel.NA);
+                    row.push(clinicalDataList[0].patientId || Datalabel.NA);
                     const keyed = _.keyBy(clinicalDataList, 'clinicalAttributeId');
 
                     _.each(uniqueClinicalAttributeIds, id => {
-                        row.push(keyed[id] ? keyed[id].value || NA_DATA : NA_DATA);
+                        row.push(keyed[id] ? keyed[id].value || Datalabel.NA : Datalabel.NA);
                     });
                 } else {
                     const selectedPatient = selectedPatientMap[uniquePatientKey];
                     if (selectedPatient) {
-                        row.push(selectedPatient.studyId || NA_DATA);
-                        row.push(selectedPatient.patientId || NA_DATA);
+                        row.push(selectedPatient.studyId || Datalabel.NA);
+                        row.push(selectedPatient.patientId || Datalabel.NA);
 
                         _.each(uniqueClinicalAttributeIds, id => {
-                            row.push(NA_DATA);
+                            row.push(Datalabel.NA);
                         });
                     }
                 }
@@ -3743,7 +3719,7 @@ export class StudyViewPageStore {
 
             acc.push(
                 _.map(Object.keys(clinicalAttributesNameSet), (attributrId) => {
-                    return sampleData[attributrId] || NA_DATA;
+                    return sampleData[attributrId] || Datalabel.NA;
                 })
             );
             return acc;
@@ -3999,6 +3975,77 @@ export class StudyViewPageStore {
                     molecularProfileSampleCounts.numberOfCNAProfiledSamples,
                     molecularProfileSampleCounts.numberOfCNAUnprofiledSamples));
         },
+        default: []
+    });
+
+    readonly mutationAsClinicalData = remoteData<ClinicalData[]>({
+        await: () => [this.samples],
+        invoke: async () => {
+            const filteredSamples = await internalClient.fetchFilteredSamplesUsingPOST({
+                studyViewFilter: Object.assign({}, this.initialFilters, { withMutationData: true })
+            });
+
+            const filteredSampleByKey = _.keyBy(filteredSamples, sample => sample.uniqueSampleKey);
+
+            return Promise.resolve(this.samples.result.map(sample => {
+                return {
+                    clinicalAttributeId: UniqueKey.WITH_MUTATION_DATA,
+                    patientId: sample.patientId,
+                    sampleId: sample.sampleId,
+                    studyId: sample.studyId,
+                    uniquePatientKey: sample.uniquePatientKey,
+                    uniqueSampleKey: sample.uniqueSampleKey,
+                    value: filteredSampleByKey[sample.uniqueSampleKey] !== undefined ? Datalabel.YES : Datalabel.NO
+                } as ClinicalData
+            }));
+        },
+        onError: (error => Promise.resolve([])),
+        default: []
+    });
+
+    readonly cnaAsClinicalData = remoteData<ClinicalData[]>({
+        await: () => [this.samples],
+        invoke: async () => {
+
+            const filteredSamples = await internalClient.fetchFilteredSamplesUsingPOST({
+                studyViewFilter: Object.assign({}, this.initialFilters, { withCNAData: true })
+            });
+
+            const filteredSampleByKey = _.keyBy(filteredSamples, sample => sample.uniqueSampleKey);
+
+            return Promise.resolve(this.samples.result.map(sample => {
+                return {
+                    clinicalAttributeId: UniqueKey.WITH_MUTATION_DATA,
+                    patientId: sample.patientId,
+                    sampleId: sample.sampleId,
+                    studyId: sample.studyId,
+                    uniquePatientKey: sample.uniquePatientKey,
+                    uniqueSampleKey: sample.uniqueSampleKey,
+                    value: filteredSampleByKey[sample.uniqueSampleKey] !== undefined ? Datalabel.YES : Datalabel.NO
+                } as ClinicalData
+            }));
+        },
+        onError: (error => Promise.resolve([])),
+        default: []
+    });
+
+    readonly cancerStudyAsClinicalData = remoteData<ClinicalData[]>({
+        await: () => [this.samples],
+        invoke: async () => {
+
+            return Promise.resolve(this.samples.result.map(sample => {
+                return {
+                    clinicalAttributeId: UniqueKey.CANCER_STUDIES,
+                    patientId: sample.patientId,
+                    sampleId: sample.sampleId,
+                    studyId: sample.studyId,
+                    uniquePatientKey: sample.uniquePatientKey,
+                    uniqueSampleKey: sample.uniqueSampleKey,
+                    value: sample.studyId
+                } as ClinicalData
+            }));
+        },
+        onError: (error => Promise.resolve([])),
         default: []
     });
 

@@ -1917,6 +1917,14 @@ export class QueryStore {
 
         if (this.genes.result.suggestions.length)
             return 'Please edit the gene symbols.';
+
+        // TDOD: remove this condition once multiple entrez gene ids is supported
+        const hugoGeneSymbolSet = _.groupBy(this.genes.result.found, gene => gene.hugoGeneSymbol);
+        const hasGenesWithMultipleEntrezGeneIds = _.some(hugoGeneSymbolSet, genes => genes.length > 1);
+        if (hasGenesWithMultipleEntrezGeneIds) {
+            return 'Please edit the gene symbols.';
+        }
+
     }
 
     private readonly dict_molecularAlterationType_filenameSuffix: {

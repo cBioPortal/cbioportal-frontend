@@ -203,11 +203,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get comparisonPagePossible() {
-        const validChart = (!!this.props.chartMeta.clinicalAttribute ||
-            this.props.chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES);
-
-        return validChart &&
-            this.props.promise.isComplete &&
+        return this.props.promise.isComplete &&
             this.props.promise.result!.length > 1 &&
             (COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1);
     }
