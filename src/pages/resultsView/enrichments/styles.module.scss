@@ -105,3 +105,31 @@
     margin-top:1px !important;
     margin-right:5px !important;
 }
+
+
+.ChartLoader {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform: translate(-50%, -50%);
+    > div {
+        margin-left:0px !important;
+    }
+
+}
+
+.BoxEmpty {
+    width: 350px;
+    height: 350px;
+    display: flex;
+    justify-content: center;
+    align-items: center
+}
+
+.BoxPlot {
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 350px;
+    min-width: 350px;
+    display: flex
+}

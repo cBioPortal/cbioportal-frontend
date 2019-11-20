@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { observer } from "mobx-react";
-import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import { observable, computed, action } from 'mobx';
 import ExpressionEnrichmentTable, { ExpressionEnrichmentTableColumnType } from 'pages/resultsView/enrichments/ExpressionEnrichmentsTable';
 import styles from "./styles.module.scss";
-import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile, Sample } from 'shared/api/generated/CBioPortalAPI';
 import {
     ExpressionEnrichmentWithQ,
     getExpressionRowData,
@@ -15,13 +14,16 @@ import {
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
-import MiniBoxPlot from 'pages/resultsView/enrichments/MiniBoxPlot';
 import * as _ from "lodash";
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
 import { Option } from 'public-lib/components/checkedSelect/CheckedSelectUtils';
 import EllipsisTextTooltip from "public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import { IBoxScatterPlotPoint } from '../plots/PlotsTabUtils';
+import BoxScatterPlot from 'shared/components/plots/BoxScatterPlot';
+import { ExtendedAlteration } from '../ResultsViewPageStore';
+import ExpressionEnrichmentsBoxPlot from './ExpressionEnrichmentsBoxPlot';
 
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];
@@ -31,17 +33,24 @@ export interface IExpressionEnrichmentContainerProps {
         description: string,
         nameOfEnrichmentDirection?: string,
         count: number,
-        color?: string
-    }[]
+        color?: string,
+        samples:Pick<Sample, "uniqueSampleKey">[]
+    }[];
+    sampleKeyToSample: {
+        [uniqueSampleKey: string]: Sample;
+    }
     alteredVsUnalteredMode?: boolean;
-    store?: ResultsViewPageStore;
+    queriedHugoGeneSymbols?: string[];
+    oqlFilteredCaseAggregatedData?: { [uniqueSampleKey: string]: ExtendedAlteration[] };
+    isGeneCheckBoxEnabled?:boolean
 }
 
 @observer
 export default class ExpressionEnrichmentContainer extends React.Component<IExpressionEnrichmentContainerProps, {}> {
 
     static defaultProps: Partial<IExpressionEnrichmentContainerProps> = {
-        alteredVsUnalteredMode: true
+        alteredVsUnalteredMode: true,
+        isGeneCheckBoxEnabled: false
     };
 
     @observable overExpressedFilter: boolean = true;
@@ -53,9 +62,10 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     @observable.ref selectedGenes: string[] | null;
     @observable.ref highlightedRow: ExpressionEnrichmentRow | undefined;
     @observable.ref _expressedGroups: string[] = this.props.groups.map(group => group.name);
+    @observable private svgContainer: SVGElement | null;
 
     @computed get data(): ExpressionEnrichmentRow[] {
-        return getExpressionRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.props.groups);
+        return getExpressionRowData(this.props.data, this.props.queriedHugoGeneSymbols || [], this.props.groups);
     }
 
     @computed get filteredData(): ExpressionEnrichmentRow[] {
@@ -193,27 +203,28 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         });
     }
 
+    @computed get selectedRow() {
+        if (this.clickedGeneHugo) {
+            return this.props.data.filter(d => d.hugoGeneSymbol === this.clickedGeneHugo)[0];
+        }
+        return undefined;
+    }
+
     public render() {
 
         if (this.props.data.length === 0) {
             return <div className={'alert alert-info'}>No data/result available</div>;
         }
 
-        const data: any[] = getExpressionScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
+        const data: any[] = getExpressionScatterData(this.data, this.props.queriedHugoGeneSymbols || []);
         const maxData: any = _.maxBy(data, (d) => {
             return Math.ceil(Math.abs(d.x));
         });
 
-        let selectedGeneQValue: number = 0;
-        if (this.clickedGeneHugo) {
-            selectedGeneQValue = this.props.data.filter(d => d.hugoGeneSymbol === this.clickedGeneHugo)[0].qValue;
-        }
-
         return (
             <div className={styles.Container}>
-
-                {this.isTwoGroupAnalysis &&
-                    <div className={styles.ChartsPanel}>
+                <div className={styles.ChartsPanel}>
+                    {this.isTwoGroupAnalysis &&
                         <MiniScatterChart
                             data={data}
                             selectedGenesSet={this.selectedGenesSet}
@@ -224,22 +235,21 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                             onGeneNameClick={this.onGeneNameClick}
                             onSelection={this.onSelection}
                             onSelectionCleared={this.onSelectionCleared} />
-                        {this.props.store &&
-                            <MiniBoxPlot
-                                selectedGeneHugo={this.clickedGeneHugo}
-                                selectedGeneEntrez={this.clickedGeneEntrez}
-                                selectedProfile={this.props.selectedProfile}
-                                queryGenes={this.props.store.hugoGeneSymbols}
-                                selectedGeneQValue={selectedGeneQValue}
-                                store={this.props.store} />
-                        }
-                    </div>
-                }
+                    }
+                    <ExpressionEnrichmentsBoxPlot
+                        selectedProfile={this.props.selectedProfile}
+                        groups={this.props.groups}
+                        sampleKeyToSample={this.props.sampleKeyToSample}
+                        queriedHugoGeneSymbols={this.props.queriedHugoGeneSymbols}
+                        oqlFilteredCaseAggregatedData={this.props.oqlFilteredCaseAggregatedData}
+                        selectedRow={this.selectedRow}
+                    />
+                </div>
 
                 <div className={styles.TableContainer}>
                     <div>
                         <h3>{this.props.selectedProfile.name}</h3>
-                        {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
+                        {!!this.props.isGeneCheckBoxEnabled && <AddCheckedGenes checkedGenes={this.checkedGenes} />}
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
@@ -265,11 +275,11 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                     </div>
                     <ExpressionEnrichmentTable
                         data={this.filteredData}
-                        onCheckGene={this.props.store ? this.onCheckGene : undefined}
-                        onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined}
+                        onCheckGene={!!this.props.isGeneCheckBoxEnabled ? this.onCheckGene : undefined}
+                        onGeneNameClick={this.onGeneNameClick}
                         dataStore={this.dataStore}
                         mutexTendency={this.props.alteredVsUnalteredMode}
-                        checkedGenes={this.props.store ? this.checkedGenes : undefined}
+                        checkedGenes={!!this.props.isGeneCheckBoxEnabled ? this.checkedGenes : undefined}
                         visibleOrderedColumnNames={this.visibleOrderedColumnNames}
                         customColumns={_.keyBy(this.customColumns, column => column.uniqueName || column.name)}
                     />
