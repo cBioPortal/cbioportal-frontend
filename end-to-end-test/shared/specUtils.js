@@ -53,6 +53,17 @@ function setOncoprintMutationsMenuOpen(open) {
     }, 10000, `Couldn't ${open ? "open" : "close"} Mutations menu in Oncoprint`, 2000);
 }
 
+function setDropdownOpen(open, button_selector, dropdown_selector, failure_message) {
+    browser.waitUntil(()=>{
+        if (open === browser.isVisible(dropdown_selector)) {
+            return true;
+        } else {
+            browser.click(button_selector);
+            return false;
+        }
+    }, 10000, failure_message, 2000);
+}
+
 function goToUrlAndSetLocalStorage(url) {
     if (!useExternalFrontend) {
         browser.url(url);
@@ -306,4 +317,5 @@ module.exports = {
     selectCheckedOption: selectCheckedOption,
     getOncoprintGroupHeaderOptionsElements:getOncoprintGroupHeaderOptionsElements,
     showGsva: showGsva,
+    setDropdownOpen:setDropdownOpen
 };
