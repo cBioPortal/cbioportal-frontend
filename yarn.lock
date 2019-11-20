@@ -3472,10 +3472,10 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-cbioportal-frontend-commons@^0.0.22:
-  version "0.0.22"
-  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.22.tgz#6a547913adadf2ae2de08c2ca31f4d5103a409ed"
-  integrity sha512-ECWVbXvkqF0msXcrcDXN1MmQ1f1cfi6/++IkE4ThpSuxNmK08/BsXbYZCqDof42v70yN1auXEbhs3jWNDjHk1g==
+cbioportal-frontend-commons@^0.0.23:
+  version "0.0.23"
+  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.23.tgz#1bd3f2d2a59f5b9b718eb66e862e9ca374a22cf8"
+  integrity sha512-6jdSgduNDCiJuXW05Of/eC6V3JVrEUcOWtao/tex0PdG6nAV0F5H+QeVIkiQ6GVF21LSrB9Loc+vrVklXOmWXQ==
   dependencies:
     autobind-decorator "^2.1.0"
     babel-polyfill "^6.22.0"
@@ -12623,13 +12623,13 @@ react-motion@^0.5.2:
     prop-types "^15.5.8"
     raf "^3.1.0"
 
-react-mutation-mapper@^0.2.6:
-  version "0.2.6"
-  resolved "https://registry.yarnpkg.com/react-mutation-mapper/-/react-mutation-mapper-0.2.6.tgz#ab3af714e06e51e10a826055f0d86e5f1f96c223"
-  integrity sha512-Q3hqzMSVR84ophZvGieu4hL2o0VJrTaXFw/ErpCXLRq81nfueVvq19MmFNq8BfqvDhL4VquAZngH37eS8c9TAQ==
+react-mutation-mapper@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/react-mutation-mapper/-/react-mutation-mapper-0.3.1.tgz#a7cb97b5babd2f8001f74b927c3b986ff5f1085e"
+  integrity sha512-4eNNt7IPJTsbIzJrPiL471wIvGiG8xGG2lWqwld+TYOK8C7cqcit4BOjz7mkngPLix/CcanflPQQnnH/cCtDsg==
   dependencies:
     autobind-decorator "^2.4.0"
-    cbioportal-frontend-commons "^0.0.22"
+    cbioportal-frontend-commons "^0.0.23"
     classnames "^2.2.6"
     jquery "^3.3.1"
     lodash "^4.17.11"
@@ -12637,6 +12637,7 @@ react-mutation-mapper@^0.2.6:
     oncokb-styles "~0.1.0"
     react-collapse "^4.0.3"
     react-motion "^0.5.2"
+    react-rangeslider "^2.2.0"
     react-select "^3.0.4"
     react-table "^6.10.0"
     seamless-immutable "^7.1.4"
@@ -12660,7 +12661,7 @@ react-portal@^4.2.0:
   dependencies:
     prop-types "^15.5.8"
 
-react-rangeslider@^2.1.0:
+react-rangeslider@^2.1.0, react-rangeslider@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/react-rangeslider/-/react-rangeslider-2.2.0.tgz#4362b01f4f5a455f0815d371d496f69ca4c6b5aa"
   integrity sha512-5K7Woa+cyqZ5wiW5+KhqGV+3+FiFxGKQ9rUxTMh52sObXVYEeBbfxFrp1eBvS8mRIxnUbHz9ppnFP0LhwOyNeg==
