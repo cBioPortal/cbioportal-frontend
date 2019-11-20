@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { inject, observer } from "mobx-react";
 import {action, computed, observable} from "mobx";
-import {bind} from "bind-decorator";
+import autobind from 'autobind-decorator';
 import {Collapse} from 'react-collapse';
 import {ControlLabel, FormControl, FormGroup} from "react-bootstrap";
 import {PageLayout} from "shared/components/PageLayout/PageLayout";
@@ -9,6 +9,7 @@ import Helmet from "react-helmet";
 
 import Loader from "shared/components/loadingIndicator/LoadingIndicator";
 import {MSKTab, MSKTabs} from "shared/components/MSKTabs/MSKTabs";
+import {convertToMutationMapperProps} from "shared/components/mutationMapper/MutationMapperConfig";
 import MutationMapperUserSelectionStore from "shared/components/mutationMapper/MutationMapperUserSelectionStore";
 import {parseInput} from "shared/lib/MutationInputParser";
 
@@ -16,7 +17,6 @@ import StandaloneMutationMapper from "./StandaloneMutationMapper";
 import MutationMapperToolStore from "./MutationMapperToolStore";
 
 import AppConfig from "appConfig";
-import autobind from 'autobind-decorator';
 
 interface IMutationMapperToolProps {
     routing: any;
@@ -374,6 +374,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                 tabs.push(
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <StandaloneMutationMapper
+                            {...convertToMutationMapperProps(AppConfig.serverConfig)}
                             store={mutationMapperStore}
                             trackVisibility={this.userSelectionStore.trackVisibility}
                             downloadDataFetcher={this.store.downloadDataFetcher}
@@ -382,7 +383,6 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                             pubMedCache={this.store.pubMedCache}
                             pdbHeaderCache={this.store.pdbHeaderCache}
                             myCancerGenomeData={this.store.myCancerGenomeData}
-                            config={AppConfig.serverConfig}
                             showTranscriptDropDown={true}
                             showOnlyAnnotatedTranscriptsInDropdown={!this.store.hasInputWithProteinChanges}
                         />
@@ -394,7 +394,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
         return tabs;
     }
 
-    @bind
+    @autobind
     @action
     protected handleFileSelect(e: any)
     {
@@ -411,7 +411,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
         }
     }
 
-    @bind
+    @autobind
     @action
     protected fileLoadEndHandler(e: any)
     {
@@ -424,14 +424,14 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
         }
     }
 
-    @bind
+    @autobind
     @action
     protected handleInputChange(e: any)
     {
         this.inputText = e.target.value;
     }
 
-    @bind
+    @autobind
     @action
     protected handleTabChange(id: string|undefined) {
         // update the hash if routing exits
@@ -444,7 +444,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
         }
     }
 
-    @bind
+    @autobind
     @action
     protected handleModifyInput()
     {
@@ -455,7 +455,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
         this.inputControlsVisible = true;
     }
 
-    @bind
+    @autobind
     @action
     protected handleVisualize()
     {
@@ -471,28 +471,28 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
         this.inputControlsVisible = false;
     }
 
-    @bind
+    @autobind
     @action
     protected handleDataFormatToggle()
     {
         this.dataFormatCollapsed = !this.dataFormatCollapsed;
     }
 
-    @bind
+    @autobind
     @action
     protected handleLoadExamplePartiallyAnnotated()
     {
         this.inputText = require('raw-loader!./resources/standaloneMutationDataExample.txt');
     }
 
-    @bind
+    @autobind
     @action
     protected handleLoadExampleGenomicCoordinates()
     {
         this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleWithGenomicCoordinatesOnly.txt');
     }
 
-    @bind
+    @autobind
     @action
     protected handleLoadExampleGeneAndProteinChange()
     {

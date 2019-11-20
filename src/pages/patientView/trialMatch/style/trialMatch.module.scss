@@ -83,10 +83,20 @@
   text-align: right;
   font-size: 13px;
 }
-.statusButton {
+.statusContainer {
   margin: 20% 0 20% 0;
 
   a:hover {
     text-decoration: none;
+  }
+}
+.feedback {
+  font-size: 12px;
+
+  .feedbackButton {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
   }
 }
