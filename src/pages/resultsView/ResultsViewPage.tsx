@@ -55,6 +55,8 @@ function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
         urlWrapper
     );
 
+    setWindowVariable('resultsViewPageStore', resultsViewPageStore);
+
     reaction(
         () => [resultsViewPageStore.studyIds, resultsViewPageStore.oqlText],
         () => {
@@ -192,7 +194,6 @@ export default class ResultsViewPage extends React.Component<
             this.resultsViewPageStore = initStore(props.appStore, this.urlWrapper);
         }
 
-        setWindowVariable('resultsViewPageStore', this.resultsViewPageStore);
     }
 
     private handleTabChange(id: string, replace?: boolean) {
