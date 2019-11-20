@@ -157,6 +157,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     private heatmapGeneInputValueUpdater:IReactionDisposer;
 
+    private molecularProfileIdToHeatmapTrackGroupIndex:{[molecularProfileId:string]:number} = {};
+
     @computed get selectedClinicalAttributeIds() {
 
         const list = this.props.store.urlWrapper.query.clinicallist ?
@@ -207,12 +209,23 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         const map: { [molecularProfileId:string] : HeatmapTrackGroupRecord } = {};
 
-        let i = 2;
+        let nextTrackGroupIndex:number;
+        // start next track group index based on existing heatmap track groups
+        if (_.isEmpty(this.molecularProfileIdToHeatmapTrackGroupIndex)) {
+            nextTrackGroupIndex = 2;
+        } else {
+            nextTrackGroupIndex = Math.max(..._.values(this.molecularProfileIdToHeatmapTrackGroupIndex))+1;
+        }
         _.forEach(parsedGroups, (entities:string[], molecularProfileId)=>{
             const profile:MolecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[molecularProfileId];
             if (profile && entities && entities.length) {
+                if (!(profile.molecularProfileId in this.molecularProfileIdToHeatmapTrackGroupIndex)) {
+                    // set track group index if doesnt yet exist
+                    this.molecularProfileIdToHeatmapTrackGroupIndex[profile.molecularProfileId] = nextTrackGroupIndex;
+                    nextTrackGroupIndex += 1;
+                }
                 const trackGroup: HeatmapTrackGroupRecord = {
-                      trackGroupIndex: i,
+                      trackGroupIndex: this.molecularProfileIdToHeatmapTrackGroupIndex[profile.molecularProfileId],
                       molecularProfileId: profile.molecularProfileId,
                       molecularAlterationType: profile.molecularAlterationType,
                       entities: {}
@@ -220,7 +233,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 entities.forEach((entity: string) => trackGroup.entities[entity] = true);
                 map[molecularProfileId] = trackGroup;
             }
-            i++;
         });
 
         return map;
