@@ -41,7 +41,7 @@ import {
 } from "shared/lib/MutationUtils";
 import {defaultOncoKbIndicatorFilter} from "shared/lib/OncoKbUtils";
 
-import {IMutationMapperConfig} from "./MutationMapper";
+import {IMutationMapperConfig} from "./MutationMapperConfig";
 import autobind from "autobind-decorator";
 import {normalizeMutation, normalizeMutations} from "./MutationMapperUtils";
 
