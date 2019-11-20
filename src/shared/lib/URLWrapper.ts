@@ -134,7 +134,7 @@ export default class URLWrapper<
         );
     }
 
-    @observable _sessionId: string;
+    //@observable _sessionId: string;
 
     @action
     public updateURL(updatedParams: Partial<QueryParamsType>, path:string | undefined = undefined, clear = false, replace = false) {
@@ -178,22 +178,28 @@ export default class URLWrapper<
         const sessionParametersChanged = _.some(_.keys(updatedParams), (key)=>key in sessionProps);
 
         // we need session if url is longer than this
-        const needSession = sessionParametersChanged && this.sessionEnabled &&
-            (this._sessionId !== undefined || url.length > this.urlCharThresholdForSession);
+        // or if we already have session
+        const inSessionMode = this.sessionEnabled && (this.hasSessionId || url.length > this.urlCharThresholdForSession);
 
         // if we need to make a new session due to url constraints AND we have a changed session prop
         // then save a new remote session and put the session props in memory for consumption by app
         // otherwise just update the URL
         if (
-            needSession
+            inSessionMode
         ) {
             if (sessionParametersChanged) {
+
+                // keep a timestamp to make sure
+                // that async session response matches the
+                // current session and hasn't been invalidated by subsequent session
+                var timeStamp = Date.now();
 
                 this._sessionData = {
                     id: "pending",
                     query: paramsMap.sessionProps,
                     path: path || this.pathName,
-                    version:3
+                    version:3,
+                    timeStamp
                 };
 
                 // we need to make a new session
@@ -203,19 +209,25 @@ export default class URLWrapper<
                     }),
                     path,
                     true,
-                    replace
+                    false
                 );
 
                 log("updating URL (non session)", updatedParams);
+
                 this.saveRemoteSession(paramsMap.sessionProps).then(data => {
-                    this.routing.updateRoute(
-                        { session_id: data.id },
-                        path,
-                        false,
-                        true
-                    );
+                    // make sure that we have sessionData and that timestamp on the session hasn't
+                    // been changed since it started
+                    if (this._sessionData && timeStamp === this._sessionData.timeStamp) {
+                        this.routing.updateRoute(
+                            {session_id: data.id},
+                            path,
+                            false,
+                            true, // we don't want pending to show up in history
+                        );
+                    }
                 });
             } else {
+                // we already have session, we just need to update path or non session params
                 this.routing.updateRoute(
                     Object.assign({}, paramsMap.nonSessionProps),
                     path,
@@ -223,8 +235,9 @@ export default class URLWrapper<
                     replace
                 );
             }
-        } else {
-            log("updating URL (non session)", clear);
+        } else { // WE ARE NOT IN SESSION MODE
+            //this._sessionData = undefined;
+            //updatedParams.session_id = undefined;
             this.routing.updateRoute(updatedParams, path, clear, replace);
         }
 
@@ -235,17 +248,19 @@ export default class URLWrapper<
     }
 
     @computed public get isPendingSession() {
-        return this._sessionId === 'pending';
+        return this.sessionId === 'pending';
     }
 
-    public setSessionId(val:string){
-        if (val !== this._sessionId) {
-            this._sessionId = val;
-        }
+    public setSessionId(val:string|undefined){
+        // val = val === "" ? undefined : val; // empty string is invalid
+        // if (val !== this._sessionId) {
+        //     this._sessionId = val;
+        // }
     }
 
     @computed public get sessionId(){
-        return this._sessionId;
+        return this.routing.location.query.session_id === "" ?
+            undefined : this.routing.location.query.session_id
     }
 
     @observable public _sessionData:PortalSession | undefined;
@@ -255,7 +270,7 @@ export default class URLWrapper<
     }
 
     @computed get hasSessionId(){
-        return this._sessionId !== undefined;
+        return this.sessionId !== undefined;
     }
 
     getRemoteSession(sessionId:string){
@@ -265,7 +280,7 @@ export default class URLWrapper<
     public remoteSessionData = remoteData({
         invoke: async () => {
             log("fetching remote session", this.sessionId);
-            if (this.sessionId && this.sessionId !== 'pending') {
+            if (this.sessionId && this.sessionId !== 'pending' && this._sessionData === undefined) {
                 let sessionData = await this.getRemoteSession(this.sessionId);
 
                 // if it has no version, it's a legacy session and needs to be normalized
