@@ -27,14 +27,15 @@ import ScrollBar from "shared/components/Scrollbar/ScrollBar";
 import BoxScatterPlot, {IBoxScatterPlotData} from "shared/components/plots/BoxScatterPlot";
 import {getMobxPromiseGroupStatus} from "shared/lib/getMobxPromiseGroupStatus";
 import {scatterPlotSize} from "shared/components/plots/PlotUtils";
-import {CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG, ClinicalDataEnrichmentWithQ, ComparisonGroup} from "./GroupComparisonUtils";
+import {CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG, ClinicalDataEnrichmentWithQ} from "./GroupComparisonUtils";
 import MultipleCategoryBarPlot from "../../shared/components/plots/MultipleCategoryBarPlot";
-import {STUDY_VIEW_CONFIG} from "pages/studyView/StudyViewConfig";
 import ReactSelect from "react-select1";
 import {MakeMobxView} from "shared/components/MobxView";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import {RESERVED_CLINICAL_VALUE_COLORS} from "../../shared/lib/Colors";
 import ErrorMessage from "../../shared/components/ErrorMessage";
+import ComplexKeyMap from "shared/lib/complexKeyDataStructures/ComplexKeyMap";
+import { Sample } from "shared/api/generated/CBioPortalAPI";
 
 export interface IClinicalDataProps {
     store: GroupComparisonStore
@@ -254,31 +255,42 @@ export default class ClinicalData extends React.Component<IClinicalDataProps, {}
         }
     });
 
-    private readonly groupSampleDataPromise = remoteData({
-        await: () => [this.props.store.sampleKeyToActiveGroups, this.props.store.uidToGroup, this.props.store._originalGroups],
+    private readonly groupMembershipAxisData = remoteData({
+        await: () => [this.props.store.sampleSet, this.props.store.activeGroups],
         invoke: async () => {
-            const categoryOrder = _.map(this.props.store._originalGroups.result!, group => group.nameWithOrdinal);
-            const axisData = { data: [], datatype: "string", categoryOrder } as IAxisData;
-            const uidToGroup = this.props.store.uidToGroup.result!;
-            if (this.highlightedRow) {
-                const axisData_Data = axisData.data;
-                _.forEach(this.props.store.sampleKeyToActiveGroups.result!, (groupUids, uniqueSampleKey)=>{
-                    axisData_Data.push({
-                        uniqueSampleKey,
-                        value: groupUids.map(uid=>uidToGroup[uid].nameWithOrdinal),
+            const categoryOrder = _.map(this.props.store.activeGroups.result!, group => group.nameWithOrdinal);
+            const axisData = { data: [], datatype: "string", categoryOrder } as IStringAxisData;
+            const sampleSet = this.props.store.sampleSet.result || new ComplexKeyMap<Sample>();
+
+            const sampleKeyToGroupSampleData = _.reduce(this.props.store.activeGroups.result, (acc, group) => {
+                group.studies.forEach(studyEntry => {
+                    studyEntry.samples.forEach(sampleId => {
+                        if (sampleSet.has({ studyId: studyEntry.id, sampleId })) {
+                            const uniqueSampleKey = sampleSet.get({ studyId: studyEntry.id, sampleId })!.uniqueSampleKey;
+                            if (acc[uniqueSampleKey] === undefined) {
+                                acc[uniqueSampleKey] = {
+                                    uniqueSampleKey,
+                                    value: []
+                                }
+                            }
+                            acc[uniqueSampleKey].value.push(group.nameWithOrdinal);
+                        }
                     });
                 });
-            }
+                return acc;
+            }, {} as { [uniqueSampleKey: string]: { uniqueSampleKey: string, value: string[] } });
+
+            axisData.data = _.values(sampleKeyToGroupSampleData);
             return Promise.resolve(axisData);
         }
     });
 
     @computed get vertAxisDataPromise() {
-        return this.swapAxes ? this.groupSampleDataPromise : this.clinicalDataPromise;
+        return this.swapAxes ? this.groupMembershipAxisData : this.clinicalDataPromise;
     }
 
     @computed get horzAxisDataPromise() {
-        return this.swapAxes ? this.clinicalDataPromise : this.groupSampleDataPromise;
+        return this.swapAxes ? this.clinicalDataPromise : this.groupMembershipAxisData;
     }
 
     @computed get horzLabel() {
