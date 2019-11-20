@@ -89,7 +89,6 @@ export default class GnomadFrequency extends React.Component<GnomadFrequencyProp
         let gnomadUrl = "";
         let display: JSX.Element;
         let overlay: (() => JSX.Element) | null = null;
-        let content: JSX.Element | null = null;
         let result : {[key:string]: GnomadSummary} = {};
 
         // Checking if gnomad data is valid
@@ -144,37 +143,27 @@ export default class GnomadFrequency extends React.Component<GnomadFrequencyProp
             // The column will show the total frequency
             // Column will show 0 if the total frequency is 0, still has the tooltip to show the gnomad table (since gnomad data is still available)
             if (result["Total"].alleleFrequency === 0) {
-                display = <span>0</span>
+                display = <span>0</span>;
             } else {
-                display = <span>{parseFloat(result["Total"].alleleFrequency.toString()).toExponential(1)}</span>
+                display = <span>{parseFloat(result["Total"].alleleFrequency.toString()).toExponential(1)}</span>;
             }
 
             overlay = () => <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl} />;
         }
         else {
-            display =
-                <DefaultTooltip
-                    placement="topRight"
-                    overlay={(<span>Variant has no data in gnomAD.</span>)}
-                >
-                    <span style={{height: '100%', width: '100%', display: 'block', overflow: 'hidden'}}>&nbsp;</span>
-                </DefaultTooltip>
+            display = <span style={{height: '100%', width: '100%', display: 'block', overflow: 'hidden'}}>&nbsp;</span>;
+            overlay = () => <span>Variant has no data in gnomAD.</span>;
         }
 
-        // add a tooltip if the gnomad value is valid
-        if (overlay) {
-            content = (
-                <DefaultTooltip
-                    overlay={overlay}
-                    placement="topRight"
-                    trigger={['hover', 'focus']}
-                    destroyTooltipOnHide={true}
-                >
-                    {display}
-                </DefaultTooltip>
-            );
-        }
-
-        return content;
+        return (
+            <DefaultTooltip
+                overlay={overlay}
+                placement="topRight"
+                trigger={['hover', 'focus']}
+                destroyTooltipOnHide={true}
+            >
+                {display}
+            </DefaultTooltip>
+        );
     }
 }
