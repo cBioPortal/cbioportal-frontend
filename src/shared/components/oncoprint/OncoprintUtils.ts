@@ -706,7 +706,11 @@ export function makeHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                         const trackGroup = oncoprint.molecularProfileIdToHeatmapTracks[molecularProfileId];
                         if (trackGroup) {
                             const newEntities = _.keys(trackGroup.entities).filter((entity)=>entity!==gene);
-                            oncoprint.addHeatmapTracks(molecularProfileId, newEntities);
+                            if (newEntities.length === 0) {
+                                oncoprint.removeHeatmapByMolecularProfileId(molecularProfileId);
+                            } else {
+                                oncoprint.addHeatmapTracks(molecularProfileId, newEntities);
+                            }
                         }
 
                         if (trackGroup === undefined

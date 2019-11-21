@@ -1004,8 +1004,15 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             group=>group.trackGroupIndex === index
         );
         if (groupEntry) {
-            this.addHeatmapTracks(groupEntry.molecularProfileId,[]);
+            this.removeHeatmapByMolecularProfileId(groupEntry.molecularProfileId);
         }
+    }
+
+    @autobind
+    @action
+    public removeHeatmapByMolecularProfileId(molecularProfileId:string) {
+        delete this.molecularProfileIdToHeatmapTrackGroupIndex[molecularProfileId];
+        this.addHeatmapTracks(molecularProfileId,[]);
     }
 
     readonly heatmapTrackHeaders = remoteData({
