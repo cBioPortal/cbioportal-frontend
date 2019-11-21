@@ -134,6 +134,7 @@ import {
 } from "pages/studyView/TableUtils";
 import { GeneTableRow } from './table/GeneTable';
 import { getSelectedGroups, getGroupParameters } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
 
 export type ChartUserSetting = {
     id: string,
@@ -155,13 +156,6 @@ export type ChartUserSetting = {
 export type StudyPageSettings = {
     chartSettings:ChartUserSetting[],
     origin:string[]
-}
-
-export enum StudyViewPageTabKeyEnum {
-    SUMMARY = 'summary',
-    CLINICAL_DATA = 'clinicalData',
-    HEATMAPS = 'heatmaps',
-    CN_SEGMENTS = 'cnSegments'
 }
 
 export type StudyViewPageTabKey =

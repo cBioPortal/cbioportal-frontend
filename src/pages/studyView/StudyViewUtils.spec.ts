@@ -61,9 +61,7 @@ import {
     StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {CancerStudy, ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
-import {
-    StudyViewPageTabKeyEnum
-} from "./StudyViewPageStore";
+import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
 import {
     UniqueKey
 } from "./StudyViewUtils";
