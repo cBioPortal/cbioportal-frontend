@@ -33,28 +33,30 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
                     store={this.props.store}/>
                 </div>
 
-                <UserSelections
-                    filter={this.props.store.userSelections}
-                    comparisonGroupSelection={this.props.store.filterComparisonGroups}
-                    numberOfSelectedSamplesInCustomSelection={this.props.store.numberOfSelectedSamplesInCustomSelection}
-                    customChartsFilter={this.props.store.customChartFilterSet.toJS()}
-                    attributesMetaSet={this.props.store.chartMetaSet}
-                    clinicalAttributeIdToDataType={this.props.store.clinicalAttributeIdToDataType.result!}
-                    updateClinicalDataFilterByValues={this.props.store.updateClinicalDataFilterByValues}
-                    updateCustomChartFilter={this.props.store.setCustomChartFilters}
-                    removeMutatedGeneFilter={this.props.store.removeMutatedGeneFilter}
-                    removeFusionGeneFilter={this.props.store.removeFusionGeneFilter}
-                    removeCNAGeneFilter={this.props.store.removeCNAGeneFilters}
-                    resetMutationCountVsCNAFilter={this.props.store.resetMutationCountVsCNAFilter}
-                    clearCNAGeneFilter={this.props.store.clearCNAGeneFilter}
-                    clearGeneFilter={this.props.store.clearMutatedGeneFilter}
-                    removeCustomSelectionFilter={this.props.store.removeCustomSelectFilter}
-                    removeComparisonGroupSelectionFilter={this.props.store.removeComparisonGroupSelectionFilter}
-                    removeWithMutationDataFilter={this.props.store.removeWithMutationDataFilter}
-                    removeWithCNADataFilter={this.props.store.removeWithCNADataFilter}
-                    clearChartSampleIdentifierFilter={this.props.store.clearChartSampleIdentifierFilter}
-                    clearAllFilters={this.props.store.clearAllFilters}
-                />
+                {this.props.store.clinicalAttributeIdToDataType.isComplete &&
+                    <UserSelections
+                        filter={this.props.store.userSelections}
+                        comparisonGroupSelection={this.props.store.filterComparisonGroups}
+                        numberOfSelectedSamplesInCustomSelection={this.props.store.numberOfSelectedSamplesInCustomSelection}
+                        customChartsFilter={this.props.store.customChartFilterSet.toJS()}
+                        attributesMetaSet={this.props.store.chartMetaSet}
+                        clinicalAttributeIdToDataType={this.props.store.clinicalAttributeIdToDataType.result!}
+                        updateClinicalDataFilterByValues={this.props.store.updateClinicalDataFilterByValues}
+                        updateCustomChartFilter={this.props.store.setCustomChartFilters}
+                        removeMutatedGeneFilter={this.props.store.removeMutatedGeneFilter}
+                        removeFusionGeneFilter={this.props.store.removeFusionGeneFilter}
+                        removeCNAGeneFilter={this.props.store.removeCNAGeneFilters}
+                        resetMutationCountVsCNAFilter={this.props.store.resetMutationCountVsCNAFilter}
+                        clearCNAGeneFilter={this.props.store.clearCNAGeneFilter}
+                        clearGeneFilter={this.props.store.clearMutatedGeneFilter}
+                        removeCustomSelectionFilter={this.props.store.removeCustomSelectFilter}
+                        removeComparisonGroupSelectionFilter={this.props.store.removeComparisonGroupSelectionFilter}
+                        removeWithMutationDataFilter={this.props.store.removeWithMutationDataFilter}
+                        removeWithCNADataFilter={this.props.store.removeWithCNADataFilter}
+                        clearChartSampleIdentifierFilter={this.props.store.clearChartSampleIdentifierFilter}
+                        clearAllFilters={this.props.store.clearAllFilters}
+                    />
+                }
             </div>
         )
     }
