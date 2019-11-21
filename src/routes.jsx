@@ -14,6 +14,8 @@ import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 /* HOW TO ADD A NEW ROUTE
  * 1. Import the "page" component using the bundle-loader directives as seen in imports below
  * 2. Add a Route element with getComponent set to the result the lazyLoadComponent function passed your new component
+ * If your route includes tabs, include `null, tabParamValidator(YourPageTabEnum) in the lazyLoadComponent call.
+ * This ensures that invalid sub routes 404 correctly
  */
 
 // import page components here
@@ -39,27 +41,40 @@ import News from 'bundle-loader?lazy!babel-loader!./pages/staticPages/news/News'
 import FAQ from 'bundle-loader?lazy!babel-loader!./pages/staticPages/faq/FAQ';
 import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
 import GroupComparisonPage from 'bundle-loader?lazy!babel-loader!./pages/groupComparison/GroupComparisonPage';
+import ErrorPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ErrorPage';
 
-import AppConfig from 'appConfig';
 
-import { getBasePath } from 'shared/api/urls';
 import $ from 'jquery';
-import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import getBrowserWindow from 'public-lib/lib/getBrowserWindow';
 import { seekUrlHash } from 'shared/lib/seekUrlHash';
-import queryString from 'query-string';
 import { PagePath } from 'shared/enums/PagePaths';
+import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers'
+import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs'
+import { PatientViewPageTabs } from 'pages/patientView/PatientViewPageTabs'
+import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs'
+
+/**
+ * Validates that the parameters either do not have
+ * a tab parameter, or have a parameter that matches a
+ * value in `tabEnum`
+ * @param tabEnum a TypeScript string enum
+ */
+function tabParamValidator(tabEnum) {
+    return function(params) {
+        return !params.tab || Object.values(tabEnum).indexOf(params.tab) > -1;
+    }
+}
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
-function lazyLoadComponent(loader, loadingCallback) {
+function lazyLoadComponent(loader, loadingCallback, validator = (_) => {return true;}) {
     return (location, cb) => {
+        if (location && !validator(location.params)) {
+            loader = ErrorPage;
+        }
         loader(module => {
-            if (cb) cb(null, module.default);
-            if (loadingCallback) loadingCallback();
-            // if (typeof window.onReactAppReady === 'function') {
-            //     window.onReactAppReady();
-            // }
+            if (cb) { cb(null, module.default); }
+            if (loadingCallback) { loadingCallback(); }
         });
     };
 }
@@ -123,28 +138,29 @@ export const makeRoutes = routing => {
             />
             <Route
                 path="/results(/:tab)"
-                getComponent={lazyLoadComponent(ResultsViewPage)}
+                onEnter={() => {}}
+                getComponent={lazyLoadComponent(ResultsViewPage, null, tabParamValidator(ResultsViewTab))}
             />
             <Route
                 path={'/' + PagePath.Patient + '(/:tab)'}
                 onEnter={() => {
                     $(document).scrollTop(0);
                 }}
-                getComponent={lazyLoadComponent(PatientViewPage)}
+                getComponent={lazyLoadComponent(PatientViewPage, null, tabParamValidator(PatientViewPageTabs))}
             />
             <Route
-                path="/study(/:tab)"
+                path={"/" + PagePath.Study + "(/:tab)" }
                 onEnter={() => {
                     $(document).scrollTop(0);
                 }}
-                getComponent={lazyLoadComponent(StudyViewPage)}
+                getComponent={lazyLoadComponent(StudyViewPage, null, tabParamValidator(StudyViewPageTabKeyEnum))}
             />
             <Route
                 path="/comparison(/:tab)"
                 onEnter={() => {
                     $(document).scrollTop(0);
                 }}
-                getComponent={lazyLoadComponent(GroupComparisonPage)}
+                getComponent={lazyLoadComponent(GroupComparisonPage, null, tabParamValidator(GroupComparisonTab))}
             />
 
             <Route

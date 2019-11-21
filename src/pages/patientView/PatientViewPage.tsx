@@ -59,6 +59,7 @@ import { PagePath } from "shared/enums/PagePaths";
 import { GeneFilterOption } from "./mutation/GeneFilterMenu";
 import { checkNonProfiledGenesExist } from "./PatientViewPageUtils";
 import PatientViewGenePanelModal from "./PatientViewGenePanelModal/PatientViewGenePanelModal";
+import { PatientViewPageTabs } from "./PatientViewPageTabs";
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -269,7 +270,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             this.patientViewPageStore.sampleToDiscreteGenePanelId.result,
                                             this.patientViewPageStore.genePanelIdToEntrezGeneIds.result);
     }
-    
+
     @autobind
     @action toggleGenePanelModal(genePanelId?:string|undefined) {
         this.genePanelModal = {
@@ -277,7 +278,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             genePanelId: genePanelId || ''
         };
     }
-    
+
     @computed get modalSelectedGenePanel() {
         return this.patientViewPageStore.genePanelIdToPanel.result[this.genePanelModal.genePanelId];
     }
@@ -403,8 +404,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     )
                 }
                 <div className="patientViewPage">
-                    {this.genePanelModal.isOpen && 
-                        <PatientViewGenePanelModal 
+                    {this.genePanelModal.isOpen &&
+                        <PatientViewGenePanelModal
                             genePanel={this.modalSelectedGenePanel}
                             show={this.genePanelModal.isOpen}
                             onHide={this.toggleGenePanelModal}
@@ -448,7 +449,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 onTabClick={(id:string)=>this.urlWrapper.setTab(id)}
                                 className="mainTabs"
                             >
-                                <MSKTab key={0} id="summary" linkText="Summary">
+                                <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
 
                                     <LoadingIndicator isLoading={this.patientViewPageStore.clinicalEvents.isPending} />
 
@@ -599,7 +600,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     }
                                 </MSKTab>
 
-                    <MSKTab key={2} id="clinicalData" linkText="Clinical Data">
+                    <MSKTab key={2} id={PatientViewPageTabs.ClinicalData} linkText="Clinical Data">
 
                         <div className="clearfix">
                             <FeatureTitle title="Patient"
@@ -626,7 +627,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
 
 
-                    <MSKTab key={3} id="pathologyReport" linkText="Pathology Report"
+                    <MSKTab key={3} id={PatientViewPageTabs.PathologyReport} linkText="Pathology Report"
                             hide={!this.shouldShowPathologyReport(this.patientViewPageStore)}
                     >
                         <div>
@@ -634,7 +635,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </div>
                     </MSKTab>
 
-                    <MSKTab key={5} id="tissueImage" linkText="Tissue Image"
+                    <MSKTab key={5} id={PatientViewPageTabs.TissueImage} linkText="Tissue Image"
                             hide={this.hideTissueImageTab()}
                     >
                         <div>
@@ -643,7 +644,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
 
                     {(this.patientViewPageStore.studyId === "mskimpact" && this.wholeSlideViewerUrl.result) && (
-                    <MSKTab key={6} id="MSKTissueImage" linkText="Tissue Image"
+                    <MSKTab key={6} id={PatientViewPageTabs.MSKTissueImage} linkText="Tissue Image"
                             unmountOnHide = {false}
                     >
                         <div>
@@ -654,7 +655,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     {
                         this.shouldShowTrialMatch(this.patientViewPageStore) && (
-                            <MSKTab key={7} id="trialMatchTab" linkText="Matched Trials">
+                            <MSKTab key={7} id={PatientViewPageTabs.TrialMatchTab} linkText="Matched Trials">
                                 <TrialMatchTable
                                     sampleManager={sampleManager}
                                     detailedTrialMatches={this.patientViewPageStore.detailedTrialMatches.result}
@@ -664,7 +665,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         )
                     }
 
-                    {/*<MSKTab key={5} id="mutationalSignatures" linkText="Mutational Signature Data" hide={true}>*/}
+                    {/*<MSKTab key={5} id={{PatientViewPageTabs.MutationalSignatures}} linkText="Mutational Signature Data" hide={true}>*/}
                         {/*<div className="clearfix">*/}
                             {/*<FeatureTitle title="Mutational Signatures" isLoading={ this.patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />*/}
                             {/*<LoadingIndicator isLoading={this.patientViewPageStore.mutationalSignatureData.isPending}/>*/}
