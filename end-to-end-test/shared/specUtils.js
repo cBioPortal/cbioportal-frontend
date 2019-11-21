@@ -38,6 +38,20 @@ function getTextInOncoprintLegend() {
     return browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
 }
 
+function setResultsPageSettingsMenuOpen(open) {
+    const button = 'button[data-test="GlobalSettingsButton"]';
+    const dropdown = 'div[data-test="GlobalSettingsDropdown"]';
+    browser.waitForVisible(button);
+    browser.waitUntil(()=>{
+        if (open === browser.isVisible(dropdown)) {
+            return true;
+        } else {
+            browser.click(button);
+            return false;
+        }
+    }, 10000, `Couldn't ${open ? "open" : "close"} results page settings menu`, 2000);
+}
+
 function setOncoprintMutationsMenuOpen(open) {
     const mutationColorMenuButton = "#mutationColorDropdown";
     const mutationColorMenuDropdown = "div.oncoprint__controls__mutation_color_menu";
@@ -51,6 +65,17 @@ function setOncoprintMutationsMenuOpen(open) {
             return false;
         }
     }, 10000, `Couldn't ${open ? "open" : "close"} Mutations menu in Oncoprint`, 2000);
+}
+
+function setDropdownOpen(open, button_selector, dropdown_selector, failure_message) {
+    browser.waitUntil(()=>{
+        if (open === browser.isVisible(dropdown_selector)) {
+            return true;
+        } else {
+            browser.click(button_selector);
+            return false;
+        }
+    }, 10000, failure_message, 2000);
 }
 
 function goToUrlAndSetLocalStorage(url) {
@@ -71,6 +96,12 @@ function sessionServiceIsEnabled() {
     return browser.execute(function() {
         return window.frontendConfig.serverConfig.sessionServiceEnabled;
     }).value;
+}
+
+function showGsva() {
+    browser.execute(function() {
+        window.frontendConfig.serverConfig.skin_show_gsva = true;
+    });
 }
 
 function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
@@ -224,7 +255,7 @@ function checkElementWithMouseDisabled(selector, pauseTime, options) {
     return checkElementWithTemporaryClass(selector, selector, "disablePointerEvents", pauseTime || 0, options);
 }
 
-function checkElementWithElementHidden(selector, selectorToHide, options) { 
+function checkElementWithElementHidden(selector, selectorToHide, options) {
     browser.execute((selectorToHide) => {
         $(`<style id="tempHiddenStyles" type="text/css">${selectorToHide}{opacity:0;}</style>`).appendTo("head");
     }, selectorToHide)
@@ -298,5 +329,8 @@ module.exports = {
     COEXPRESSION_TIMEOUT: 120000,
     getSelectCheckedOptions: getSelectCheckedOptions,
     selectCheckedOption: selectCheckedOption,
-    getOncoprintGroupHeaderOptionsElements:getOncoprintGroupHeaderOptionsElements
+    getOncoprintGroupHeaderOptionsElements:getOncoprintGroupHeaderOptionsElements,
+    showGsva: showGsva,
+    setResultsPageSettingsMenuOpen:setResultsPageSettingsMenuOpen,
+    setDropdownOpen:setDropdownOpen
 };

@@ -223,7 +223,6 @@ export const COLORS = [
     '#651062', '#329267', '#5574a1', '#3b3ea5'
 ];
 
-export const NA_DATA = "NA";
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
 
 export const MutationCountVsCnaYBinsMin = 52; // calibrated so that the dots are right up against each other. needs to correspond with the width and height of the chart
@@ -342,10 +341,10 @@ export function generateScatterPlotDownloadData(data: IStudyViewScatterPlotData[
         if (analysisClinicalAttribute !== undefined && sampleToAnalysisGroup !== undefined) {
             const value = sampleToAnalysisGroup[datum.uniqueSampleKey];
 
-            row.push(value !== undefined ? `${value}` : 'NA');
+            row.push(value !== undefined ? `${value}` : Datalabel.NA);
 
             if (analysisGroups !== undefined && value !== undefined) {
-                row.push(valueToGroup[value] !== undefined ? valueToGroup[value].color : 'NA');
+                row.push(valueToGroup[value] !== undefined ? valueToGroup[value].color : Datalabel.NA);
             }
         }
 
@@ -957,7 +956,7 @@ export function correctColumnWidth(columnWidth: number) {
 export function getFrequencyStr(value: number) {
     let str = '';
     if (value < 0) {
-        return 'NA';
+        return Datalabel.NA;
     } else if (value === 0) {
         str = '0';
     } else if (value < 100 && value >= 99.9) {
@@ -1787,4 +1786,8 @@ export function getGroupsFromQuartiles(samples: Sample[], patientAttribute: bool
             origin
         );
     });
+}
+
+export function getButtonNameWithDownPointer(buttonName: string) {
+    return buttonName + " " + String.fromCharCode(9662);/*small solid down triangle*/
 }

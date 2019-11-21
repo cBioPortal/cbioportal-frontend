@@ -202,11 +202,15 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                     this.props.store.studyToDataQueryFilter.result![q.profileX.studyId], q.geneticEntityId, q.geneticEntityType);
                 if (dataQueryFilter != undefined) {
 
+                    // temporarily point coexpression traffic to master cbioportal instance
+                    const $domain = (window.location.hostname === "www.cbioportal.org") ? "https://master.cbioportal.org/api" : undefined;
+
                     const data = await internalClient.fetchCoExpressionsUsingPOST({
                         molecularProfileIdA: q.profileX.molecularProfileId,
                         molecularProfileIdB: q.profileY.molecularProfileId,
                         coExpressionFilter: dataQueryFilter as CoExpressionFilter,
-                        threshold
+                        threshold,
+                        $domain
                     });
 
                     let genesetMap: { [id: string]: Geneset } = {};

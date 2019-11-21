@@ -34,10 +34,10 @@ export default class StandaloneMutationMapper extends MutationMapper<IStandalone
                 myCancerGenomeData={this.props.myCancerGenomeData}
                 hotspotData={this.props.store.indexedHotspotData}
                 oncoKbData={this.props.store.oncoKbData}
-                enableOncoKb={this.props.config.show_oncokb}
-                enableFunctionalImpact={this.props.config.show_genomenexus}
-                enableHotspot={this.props.config.show_hotspot}
-                enableMyCancerGenome={this.props.config.mycancergenome_show}
+                enableOncoKb={this.props.enableOncoKb}
+                enableFunctionalImpact={this.props.enableGenomeNexus}
+                enableHotspot={this.props.enableHotspot}
+                enableMyCancerGenome={this.props.enableMyCancerGenome}
                 enableCivic={false}
             />
         );
