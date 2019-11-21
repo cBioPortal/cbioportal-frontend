@@ -11,6 +11,7 @@ var plotsTabUrl = require('./gsva.spec').plotsTabUrl;
 var oncoprintTabUrl = require('./gsva.spec').oncoprintTabUrl;
 var coexpressionTabUrl = require('./gsva.spec').coexpressionTabUrl;
 var selectReactSelectOption = require('../../shared/specUtils').selectReactSelectOption;
+var showGsva = require('../../shared/specUtils').showGsva;
 
 describe('gsva feature', () => {
 
@@ -18,6 +19,7 @@ describe('gsva feature', () => {
 
         beforeEach(()=>{
             goToUrlAndSetLocalStorage(queryPageUrl);
+            showGsva();
             waitForStudyQueryPage(20000);
             checkTestStudy();
             checkGSVAprofile();

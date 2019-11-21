@@ -11,7 +11,8 @@ import {
     GroupComparisonTab,
     IOverlapComputations,
     isGroupEmpty,
-    partitionCasesByGroupMembership
+    partitionCasesByGroupMembership,
+    getNumSamples
 } from "./GroupComparisonUtils";
 import {remoteData} from "../../public-lib/api/remoteData";
 import {
@@ -359,6 +360,33 @@ export default class GroupComparisonStore {
     readonly activeGroups = remoteData<ComparisonGroup[]>({
         await:()=>[this.availableGroups],
         invoke:()=>Promise.resolve(this.availableGroups.result!.filter(group=>this.isGroupSelected(group.uid) && !isGroupEmpty(group)))
+    });
+
+    readonly enrichmentAnalysisGroups = remoteData({
+        await: () => [this.activeGroups, this.sampleSet],
+        invoke: () => {
+            const sampleSet = this.sampleSet.result || new ComplexKeyMap<Sample>();
+            const groups = this.activeGroups.result!.map(group => {
+                const samples: Sample[] = [];
+                group.studies.forEach(studyEntry => {
+                    const studyId = studyEntry.id;
+                    studyEntry.samples.forEach(sampleId => {
+                        if (sampleSet.has({ studyId: studyId, sampleId })) {
+                            const sample = sampleSet.get({ studyId: studyId, sampleId })!;
+                            samples.push(sample);
+                        }
+                    });
+                });
+                return {
+                    name: group.nameWithOrdinal,
+                    description: "",
+                    count: getNumSamples(group),
+                    color: group.color,
+                    samples
+                }
+            });
+            return Promise.resolve(groups);
+        }
     });
 
     readonly _originalGroupsOverlapRemoved = remoteData<ComparisonGroup[]>({
@@ -879,29 +907,6 @@ export default class GroupComparisonStore {
                 return acc;
             }, {} as { [uniqueSampleKey: string]: Sample });
             return Promise.resolve(sampleSet);
-        }
-    });
-
-    public readonly sampleKeyToActiveGroups = remoteData({
-        await:()=>[
-            this.activeGroups,
-            this.sampleSet
-        ],
-        invoke:()=>{
-            const sampleKeyToGroups:{[sampleKey:string]:string[]} = {};
-            const sampleSet = this.sampleSet.result!;
-            for (const group of this.activeGroups.result!) {
-                for (const studyEntry of group.studies) {
-                    for (const sampleId of studyEntry.samples) {
-                        const sample = sampleSet.get({ studyId: studyEntry.id, sampleId });
-                        if (sample) {
-                            sampleKeyToGroups[sample.uniqueSampleKey] = sampleKeyToGroups[sample.uniqueSampleKey] || [];
-                            sampleKeyToGroups[sample.uniqueSampleKey].push(group.uid);
-                        }
-                    }
-                }
-            }
-            return Promise.resolve(sampleKeyToGroups);
         }
     });
 

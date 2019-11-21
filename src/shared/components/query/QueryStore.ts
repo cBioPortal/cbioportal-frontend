@@ -96,6 +96,8 @@ export type CancerStudyQueryUrlParams = {
     transpose_matrix?: 'on';
     Action: 'Submit';
     patient_enrichments?: string;
+    show_samples?:string;
+    exclude_germline_mutations?:string;
 };
 
 export type GeneReplacement = { alias: string; genes: Gene[] };
@@ -1917,6 +1919,14 @@ export class QueryStore {
 
         if (this.genes.result.suggestions.length)
             return 'Please edit the gene symbols.';
+
+        // TDOD: remove this condition once multiple entrez gene ids is supported
+        const hugoGeneSymbolSet = _.groupBy(this.genes.result.found, gene => gene.hugoGeneSymbol);
+        const hasGenesWithMultipleEntrezGeneIds = _.some(hugoGeneSymbolSet, genes => genes.length > 1);
+        if (hasGenesWithMultipleEntrezGeneIds) {
+            return 'Please edit the gene symbols.';
+        }
+
     }
 
     private readonly dict_molecularAlterationType_filenameSuffix: {

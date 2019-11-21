@@ -5,6 +5,7 @@ var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndS
 var getNthOncoprintTrackOptionsElements = require('../../../shared/specUtils').getNthOncoprintTrackOptionsElements;
 var getTextInOncoprintLegend = require('../../../shared/specUtils').getTextInOncoprintLegend;
 var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils').setOncoprintMutationsMenuOpen;
+var setResultsPageSettingsMenuOpen = require('../../../shared/specUtils').setResultsPageSettingsMenuOpen;
 var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
 var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils').waitForNumberOfStudyCheckboxes;
 var setInputText = require('../../../shared/specUtils').setInputText;
@@ -174,8 +175,7 @@ describe('oncoprint', function() {
         });
     });
     describe("mutation annotation", ()=>{
-        let mutationColorMenuButton;
-        let mutationColorMenuDropdown;
+        let resultsPageSettingsDropdown;
         let oncoKbCheckbox;
         let hotspotsCheckbox;
         let cbioportalCheckbox;
@@ -185,16 +185,15 @@ describe('oncoprint', function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_cna_seq&gene_list=FBXW7&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations');
             waitForOncoprint(ONCOPRINT_TIMEOUT);
 
-            mutationColorMenuButton = "#mutationColorDropdown";
-            mutationColorMenuDropdown = "div.oncoprint__controls__mutation_color_menu";
+            resultsPageSettingsDropdown = 'div[data-test="GlobalSettingsDropdown"]';
 
-            oncoKbCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateOncoKb"]';
-            hotspotsCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateHotspots"]';
-            cbioportalCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCBioPortalCount"]';
-            cosmicCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCOSMICCount"]';
+            oncoKbCheckbox = resultsPageSettingsDropdown + ' input[data-test="annotateOncoKb"]';
+            hotspotsCheckbox = resultsPageSettingsDropdown + ' input[data-test="annotateHotspots"]';
+            cbioportalCheckbox = resultsPageSettingsDropdown + ' input[data-test="annotateCBioPortalCount"]';
+            cosmicCheckbox = resultsPageSettingsDropdown + ' input[data-test="annotateCOSMICCount"]';
         });
         it("annotates all types of mutations with cbioportal count and cosmic", ()=>{
-            setOncoprintMutationsMenuOpen(true);
+            setResultsPageSettingsMenuOpen(true);
             // select only mutation coloring by cbioportal count
             browser.click(cbioportalCheckbox);
             waitForOncoprint(2000);
@@ -212,7 +211,7 @@ describe('oncoprint', function() {
             assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cbio count annotates truncating mutations");
 
             // select only mutation coloring by cosmic count
-            setOncoprintMutationsMenuOpen(true);
+            setResultsPageSettingsMenuOpen(true);
             browser.click(cosmicCheckbox);
             waitForOncoprint(2000);
             browser.click(cbioportalCheckbox);
@@ -287,7 +286,7 @@ describe('oncoprint', function() {
             assert(legendText.indexOf("Germline Mutation") > -1, "by default, there are germline mutations");
             assert(oncoprintDivText.indexOf("12%") > -1, "by default, 12% altered");
 
-            setOncoprintMutationsMenuOpen(true);
+            setResultsPageSettingsMenuOpen(true);
             const hideGermlineButton = 'input[data-test="HideGermline"]';
             browser.waitForVisible(hideGermlineButton, 1000);
             browser.click(hideGermlineButton);
@@ -297,7 +296,7 @@ describe('oncoprint', function() {
             assert(legendText.indexOf("Germline Mutation") === -1, "now, there are no germline mutations");
             assert(oncoprintDivText.indexOf("4%") > -1, "now, 4% altered");
 
-            setOncoprintMutationsMenuOpen(true);
+            setResultsPageSettingsMenuOpen(true);
             browser.waitForVisible(hideGermlineButton, 1000);
             browser.click(hideGermlineButton);
             waitForOncoprint(ONCOPRINT_TIMEOUT);

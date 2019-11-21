@@ -54,15 +54,21 @@ export function serializeEvent(gaEvent:GAEvent){
 }
 
 function sendToLoggly(){
-    // temporary
-    if (window.location.hostname==="www.cbioportal.org" && !isWebdriver()) {
-        const LOGGLY_TOKEN = "b7a422a1-9878-49a2-8a30-2a8d5d33518f";
-        $.ajax({
-            url:`//logs-01.loggly.com/inputs/${LOGGLY_TOKEN}.gif`,
-            data:{
-                message:"PAGE_VIEW"
-            }
-        });
+    try {
+        if (window.location.hostname === "www.cbioportal.org") {
+            const LOGGLY_TOKEN = "b7a422a1-9878-49a2-8a30-2a8d5d33518f";
+
+            $.ajax({
+                       url: `//logs-01.loggly.com/inputs/${LOGGLY_TOKEN}.gif`,
+                       data: {
+                           location: window.location.href.replace(/#.*$/, ""),
+                           message: "PAGE_VIEW",
+                           e2e: isWebdriver() ? "true" : "false"
+                       }
+                   });
+        }
+    } catch (ex) {
+        // do nothing
     }
 }
 

@@ -3,12 +3,14 @@ import {computed} from "mobx";
 import MobxPromise, {cached, labelMobxPromises} from "mobxpromise";
 
 import {
-    DataFilter, defaultHotspotFilter,
+    applyDataFilters,
+    DataFilterType,
     DefaultMutationMapperDataFetcher,
-    DefaultMutationMapperStore, defaultOncoKbFilter,
+    DefaultMutationMapperStore,
     getMutationsToTranscriptId,
+    groupDataByProteinImpactType,
     groupOncoKbIndicatorDataByMutations,
-    IHotspotIndex, isHotspot
+    IHotspotIndex
 } from "react-mutation-mapper";
 
 import genomeNexusClient from "shared/api/genomeNexusClientInstance";
@@ -39,7 +41,7 @@ import {
 } from "shared/lib/MutationUtils";
 import {defaultOncoKbIndicatorFilter} from "shared/lib/OncoKbUtils";
 
-import {IMutationMapperConfig} from "./MutationMapper";
+import {IMutationMapperConfig} from "./MutationMapperConfig";
 import autobind from "autobind-decorator";
 import {normalizeMutation, normalizeMutations} from "./MutationMapperUtils";
 
@@ -130,43 +132,6 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
         return mutation.gene.entrezGeneId;
     }
 
-    @autobind
-    protected customFilterApplier(filter: DataFilter,
-                                  mutation: Mutation,
-                                  positions: {[position: string]: {position: number}})
-    {
-
-        mutation = normalizeMutation(mutation);
-
-        let pick = false;
-
-        if (filter.position) {
-            pick = !!positions[mutation.proteinPosStart+""];
-        }
-
-        if (pick &&
-            filter.hotspot &&
-            this.indexedHotspotData.result)
-        {
-            // TODO for now ignoring the actual filter value and treating as a boolean
-            pick = isHotspot(mutation, this.indexedHotspotData.result, defaultHotspotFilter);
-        }
-
-        if (pick &&
-            filter.oncokb &&
-            this.oncoKbData.result &&
-            !(this.oncoKbData.result instanceof Error))
-        {
-            // TODO for now ignoring the actual filter value and treating as a boolean
-            pick = defaultOncoKbFilter(mutation,
-                this.oncoKbData.result,
-                this.getDefaultTumorType,
-                this.getDefaultEntrezGeneId);
-        }
-
-        return pick;
-    }
-
     // TODO remove when done refactoring react-mutation-mapper
     @computed get unfilteredMutationsByPosition(): {[pos: number]: Mutation[]} {
         return groupMutationsByProteinStartPos(this.dataStore.sortedData);
@@ -188,6 +153,23 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
         else {
             return {};
         }
+    }
+
+    @computed
+    protected get mutationsGroupedByProteinImpactType()
+    {
+        const filtersWithoutProteinImpactTypeFilter =
+            this.dataStore.dataFilters.filter(f => f.type !== DataFilterType.PROTEIN_IMPACT_TYPE);
+
+        // apply filters excluding the protein impact type filters
+        // this prevents number of unchecked protein impact types from being counted as zero
+        let sortedFilteredData = applyDataFilters(
+            this.dataStore.allData, filtersWithoutProteinImpactTypeFilter, this.dataStore.applyFilter);
+
+        // also apply lazy mobx table search filter
+        sortedFilteredData = sortedFilteredData.filter(m => this.dataStore.applyLazyMobXTableFilter(m));
+
+        return groupDataByProteinImpactType(sortedFilteredData);
     }
 
     @computed get processedMutationData(): Mutation[][] {
@@ -242,7 +224,14 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
     }
 
     @cached get dataStore(): MutationMapperDataStore {
-        return new MutationMapperDataStore(this.processedMutationData, this.customFilterApplier);
+        return new MutationMapperDataStore(
+            this.processedMutationData,
+            this.filterApplier,
+            this.config.dataFilters,
+            this.config.selectionFilters,
+            this.config.highlightFilters,
+            this.config.groupFilters
+        );
     }
 
     @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
