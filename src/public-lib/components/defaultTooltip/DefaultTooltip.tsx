@@ -14,7 +14,7 @@ export default class DefaultTooltip extends React.Component<DefaultTooltipProps,
         mouseEnterDelay: TOOLTIP_MOUSE_ENTER_DELAY_MS,
         mouseLeaveDelay: 0.05,
         arrowContent: <div className="rc-tooltip-arrow-inner"/>,
-        onPopupAlign:setArrowLeft
+        onPopupAlign:defaultSetArrowLeft
     };
 
     render() {
@@ -32,7 +32,7 @@ export default class DefaultTooltip extends React.Component<DefaultTooltipProps,
     }
 }
 
-function setArrowLeft(tooltipEl:Element, align:any) {
+function defaultSetArrowLeft(tooltipEl:Element, align:any) {
     // Corrects for screen overflow adjustment (should really be handled by the library...)
     const arrowEl:HTMLDivElement = tooltipEl.querySelector('div.rc-tooltip-arrow') as HTMLDivElement;
     const targetEl = this.getRootDomNode();  // eslint-disable-line no-invalid-this
@@ -46,6 +46,11 @@ function setArrowLeft(tooltipEl:Element, align:any) {
 
         arrowEl.style.left = `${arrowLeftOffset + width/2}px`;
     }
+}
+
+export function setArrowLeft(tooltipEl:any, left:string) {
+    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
+    arrowEl.style.left = left;
 }
 
 // we need this to account for issue with rc-tooltip when dealing with large tooltip overlay content
