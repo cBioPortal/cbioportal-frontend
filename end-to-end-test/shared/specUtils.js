@@ -38,6 +38,20 @@ function getTextInOncoprintLegend() {
     return browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
 }
 
+function setResultsPageSettingsMenuOpen(open) {
+    const button = 'button[data-test="GlobalSettingsButton"]';
+    const dropdown = 'div[data-test="GlobalSettingsDropdown"]';
+    browser.waitForVisible(button);
+    browser.waitUntil(()=>{
+        if (open === browser.isVisible(dropdown)) {
+            return true;
+        } else {
+            browser.click(button);
+            return false;
+        }
+    }, 10000, `Couldn't ${open ? "open" : "close"} results page settings menu`, 2000);
+}
+
 function setOncoprintMutationsMenuOpen(open) {
     const mutationColorMenuButton = "#mutationColorDropdown";
     const mutationColorMenuDropdown = "div.oncoprint__controls__mutation_color_menu";
@@ -317,5 +331,6 @@ module.exports = {
     selectCheckedOption: selectCheckedOption,
     getOncoprintGroupHeaderOptionsElements:getOncoprintGroupHeaderOptionsElements,
     showGsva: showGsva,
+    setResultsPageSettingsMenuOpen:setResultsPageSettingsMenuOpen,
     setDropdownOpen:setDropdownOpen
 };
