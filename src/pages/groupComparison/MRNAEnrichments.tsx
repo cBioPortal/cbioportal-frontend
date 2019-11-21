@@ -8,8 +8,9 @@ import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIn
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupComparisonStore from "./GroupComparisonStore";
 import ExpressionEnrichmentContainer from "../resultsView/enrichments/ExpressionEnrichmentsContainer";
-import {MakeEnrichmentsTabUI, getNumSamples} from "./GroupComparisonUtils";
+import {MakeEnrichmentsTabUI} from "./GroupComparisonUtils";
 import { remoteData } from "cbioportal-frontend-commons";
+import * as _ from "lodash";
 
 export interface IMRNAEnrichmentsProps {
     store: GroupComparisonStore
@@ -22,16 +23,15 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
         this.props.store.setMRNAEnrichmentProfileMap(profileMap);
     }
 
-    private readonly enrichmentAnalysisGroups = remoteData({
-        await: () => [this.props.store.activeGroups],
+    private readonly mrnaEnrichmentAnalysisGroups = remoteData({
+        await: () => [this.props.store.enrichmentAnalysisGroups],
         invoke: () => {
-            const groups = this.props.store.activeGroups.result!.map(group => ({
-                name: group.nameWithOrdinal,
-                description: `samples in ${group.nameWithOrdinal}`,
-                count: getNumSamples(group),
-                color: group.color
+            return Promise.resolve(_.map(this.props.store.enrichmentAnalysisGroups.result, group => {
+                return {
+                    ...group,
+                    description: `samples in ${group.name}`
+                }
             }));
-            return Promise.resolve(groups);
         }
     });
 
@@ -41,8 +41,9 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
         await:()=>[
             this.props.store.mRNAEnrichmentData,
             this.props.store.selectedmRNAEnrichmentProfileMap,
-            this.enrichmentAnalysisGroups,
-            this.props.store.studies
+            this.mrnaEnrichmentAnalysisGroups,
+            this.props.store.studies,
+            this.props.store.sampleKeyToSample
         ],
         render:()=>{
             // since mRNA enrichments tab is enabled only for one study, selectedProteinEnrichmentProfileMap
@@ -60,9 +61,10 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
                     />
                     <ExpressionEnrichmentContainer
                         data={this.props.store.mRNAEnrichmentData.result!}
-                        groups={this.enrichmentAnalysisGroups.result}
+                        groups={this.mrnaEnrichmentAnalysisGroups.result}
                         selectedProfile={selectedProfile}
                         alteredVsUnalteredMode={false}
+                        sampleKeyToSample={this.props.store.sampleKeyToSample.result!}
                     />
                 </div>
             );

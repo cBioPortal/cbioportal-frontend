@@ -1,3 +1,5 @@
+import {LevelOfEvidence} from "../api/model/oncokb";
+
 export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2B', '2A', '1', '0'],
     resistance: ['R3', 'R2', 'R1'],
@@ -13,7 +15,7 @@ export function generatePartialEvidenceQuery(evidenceTypes?:string)
     return {
         evidenceTypes: evidenceTypes ? evidenceTypes : "GENE_SUMMARY,GENE_BACKGROUND,ONCOGENIC,MUTATION_EFFECT,VUS,MUTATION_SUMMARY,TUMOR_TYPE_SUMMARY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE",
         highestLevelOnly: false,
-        levels: ['LEVEL_1', 'LEVEL_2A', 'LEVEL_2B', 'LEVEL_3A', 'LEVEL_3B', 'LEVEL_4', 'LEVEL_R1', 'LEVEL_R2'],
+        levels: [LevelOfEvidence.LEVEL_1, LevelOfEvidence.LEVEL_2A, LevelOfEvidence.LEVEL_2B, LevelOfEvidence.LEVEL_3A, LevelOfEvidence.LEVEL_3B, LevelOfEvidence.LEVEL_4, LevelOfEvidence.LEVEL_R1, LevelOfEvidence.LEVEL_R2],
         source: "cbioportal"
     };
 }

@@ -480,11 +480,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     }
 
-    @computed get loadingPromises() {
-        const ret = [this.props.promise];
-        return ret;
-    }
-
     @computed
     get highlightChart() {
         return this.newlyAdded;
