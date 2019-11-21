@@ -58,6 +58,7 @@ import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
 import GroupComparisonURLWrapper from "./GroupComparisonURLWrapper";
+import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
 import {fetchAllReferenceGenomeGenes} from "shared/lib/StoreUtils";
 
 export enum OverlapStrategy {
