@@ -9,6 +9,7 @@ import {
     generatePartialEvidenceQuery,
     LEVELS,
 } from "public-lib/lib/OncoKbUtils";
+import {LevelOfEvidence} from "public-lib/api/model/oncokb";
 
 export function generateIdToIndicatorMap(data:IndicatorQueryResp[]): {[queryId:string]: IndicatorQueryResp}
 {
@@ -120,7 +121,7 @@ export function processEvidence(evidences:EvidenceQueryRes[]) {
                     datum.alteration.push(_datum);
                 } else if (evidence.levelOfEvidence) {
                     //if evidence has level information, that means this is treatment evidence.
-                    if (['LEVEL_0'].indexOf(evidence.levelOfEvidence) === -1) {
+                    if ([LevelOfEvidence.LEVEL_0].indexOf(evidence.levelOfEvidence) === -1) {
                         var _treatment:any = {};
                         _treatment.alterations = evidence.alterations;
                         _treatment.articles = evidence.articles;
