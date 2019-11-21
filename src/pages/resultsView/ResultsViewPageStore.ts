@@ -84,6 +84,8 @@ import GenesetCorrelatedGeneCache from '../../shared/cache/GenesetCorrelatedGene
 import TreatmentMolecularDataCache from '../../shared/cache/TreatmentMolecularDataCache';
 import GeneCache from '../../shared/cache/GeneCache';
 import GenesetCache from '../../shared/cache/GenesetCache';
+import { IOncoKbData } from '../../shared/model/OncoKB';
+import { generateQueryVariantId } from '../../public-lib/lib/OncoKbUtils';
 import TreatmentCache from '../../shared/cache/TreatmentCache';
 import {IOncoKbData} from '../../shared/model/OncoKB';
 import {generateQueryVariantId} from '../../public-lib/lib/OncoKbUtils';
@@ -3826,10 +3828,7 @@ export class ResultsViewPageStore {
                     studyIds: this.studyIds.result!,
                 } as TreatmentFilter,
             });
-        },
-        onResult: (treatments: Treatment[]) => {
-            this.treatmentCache.addData(treatments);
-        },
+        }
     });
 
     readonly selectedTreatments = remoteData<Treatment[]>({
@@ -4959,7 +4958,6 @@ export class ResultsViewPageStore {
 
     readonly geneCache = new GeneCache();
     readonly genesetCache = new GenesetCache();
-    readonly treatmentCache = new TreatmentCache();
 
     public numericGeneMolecularDataCache = new MobxPromiseCache<
         { entrezGeneId: number; molecularProfileId: string },
