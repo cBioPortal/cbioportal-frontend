@@ -5,9 +5,10 @@ import {ChildButton, MainButton, Menu} from 'react-mfb';
 import 'react-mfb/mfb.css';
 import {
     CustomChart,
-    StudyViewPageStore, StudyViewPageTabKey,
-    StudyViewPageTabKeyEnum
+    StudyViewPageStore,
+    StudyViewPageTabKey,
 } from "../StudyViewPageStore";
+import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
 import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
 import AddChartByType from "./addChartByType/AddChartByType";
