@@ -96,6 +96,8 @@ export type CancerStudyQueryUrlParams = {
     transpose_matrix?: 'on';
     Action: 'Submit';
     patient_enrichments?: string;
+    show_samples?:string;
+    exclude_germline_mutations?:string;
 };
 
 export type GeneReplacement = { alias: string; genes: Gene[] };
