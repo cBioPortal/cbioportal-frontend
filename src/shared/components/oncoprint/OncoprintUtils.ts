@@ -734,7 +734,8 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(oncoprint:ResultsVi
             oncoprint.props.store.patients,
             oncoprint.props.store.molecularProfileIdToMolecularProfile,
             oncoprint.props.store.treatmentMolecularDataCache,
-            oncoprint.props.store.treatmentLinkMap
+            oncoprint.props.store.treatmentLinkMap,
+            oncoprint.props.store.treatmentsInStudies
         ],
         invoke:async()=>{
 
@@ -742,15 +743,14 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(oncoprint:ResultsVi
             const molecularProfileIdToHeatmapTracks = oncoprint.molecularProfileIdToHeatmapTracks;
             const treatmentLinkMap = oncoprint.props.store.treatmentLinkMap.result!;
 
+            const treatmentsById = _.keyBy(oncoprint.props.store.treatmentsInStudies.result!, t=>t.treatmentId);
             const treatmentProfiles = _.filter(molecularProfileIdToHeatmapTracks, d => d.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY);
-            const neededTreatments = _.flatten(treatmentProfiles.map(v=>_.keys(v.entities)));
-            await oncoprint.props.store.treatmentCache.getPromise(neededTreatments.map(g=>({treatmentId:g})), true);
 
             const cacheQueries = _.flatten(treatmentProfiles.map(entry=>(
-                _.keys(entry.entities).map(g=>({
+                _.keys(entry.entities).map(treatmentId=>({
                     molecularProfileId: entry.molecularProfileId,
-                    treatmentId: oncoprint.props.store.treatmentCache.get({ treatmentId:g })!.data!.treatmentId,
-                    treatmentName: oncoprint.props.store.treatmentCache.get({ treatmentId:g })!.data!.name
+                    treatmentId,
+                    treatmentName: treatmentsById[treatmentId].name
                 }))
             )));
 
