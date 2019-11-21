@@ -82,6 +82,11 @@ export function computeCustomDriverAnnotationReport(mutations:Mutation[]):Custom
     };
 }
 
+export enum OncoprintAnalysisCaseType {
+    SAMPLE = "sample",
+    PATIENT = "patient"
+};
+
 export const DEFAULT_GENOME = "hg19";
 
 export const initializeCustomDriverAnnotationSettings = action((

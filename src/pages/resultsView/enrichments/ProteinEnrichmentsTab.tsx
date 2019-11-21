@@ -24,28 +24,35 @@ export default class ProteinEnrichmentsTab extends React.Component<IProteinEnric
     }
 
     private readonly enrichmentAnalysisGroups = remoteData({
-        await: () => [this.props.store.unalteredSampleKeys],
+        await: () => [this.props.store.alteredSamples, this.props.store.unalteredSamples],
         invoke: () => {
             const uniqueColorGetter = makeUniqueColorGetter();
             const groups = [{
                 name: "Altered group",
                 description: "samples that have alterations in the query gene(s).",
                 nameOfEnrichmentDirection: "Over-expressed",
-                count: this.props.store.alteredSampleKeys.result!.length,
-                color: uniqueColorGetter()
+                count: this.props.store.alteredSamples.result!.length,
+                color: uniqueColorGetter(),
+                samples: this.props.store.alteredSamples.result || []
             }, {
                 name: "Unaltered group",
                 description: "samples that do not have alterations in the query gene(s).",
                 nameOfEnrichmentDirection: "Under-expressed",
-                count: this.props.store.unalteredSampleKeys.result!.length,
-                color: uniqueColorGetter()
+                count: this.props.store.unalteredSamples.result!.length,
+                color: uniqueColorGetter(),
+                samples: this.props.store.unalteredSamples.result || []
             }];
             return Promise.resolve(groups);
         }
     });
     
     readonly tabUI = MakeMobxView({
-        await: () => [this.props.store.studies,  this.props.store.proteinEnrichmentData, this.props.store.selectedProteinEnrichmentProfileMap, this.enrichmentAnalysisGroups],
+        await: () => [
+            this.props.store.studies,
+            this.props.store.proteinEnrichmentData,
+            this.props.store.selectedProteinEnrichmentProfileMap,
+            this.enrichmentAnalysisGroups,
+            this.props.store.oqlFilteredCaseAggregatedData],
         render: () => {
             // since protein enrichments tab is enabled only for one study, selectedProteinEnrichmentProfileMap
             // would contain only one key.
@@ -64,7 +71,10 @@ export default class ProteinEnrichmentsTab extends React.Component<IProteinEnric
                         data={this.props.store.proteinEnrichmentData.result!}
                         groups={this.enrichmentAnalysisGroups.result}
                         selectedProfile={selectedProfile}
-                        store={this.props.store} />
+                        sampleKeyToSample={this.props.store.sampleKeyToSample.result!}
+                        queriedHugoGeneSymbols={this.props.store.hugoGeneSymbols}
+                        oqlFilteredCaseAggregatedData={this.props.store.oqlFilteredCaseAggregatedData.result!.samples}
+                        isGeneCheckBoxEnabled={true} />
                 </div>
             );
         },
