@@ -814,7 +814,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     private setColumnMode(type:OncoprintAnalysisCaseType) {
-        this.props.store.urlWrapper.updateURL({ show_samples: type===OncoprintAnalysisCaseType.sample ? "true" : "false" })
+        this.props.store.urlWrapper.updateURL({ show_samples: type===OncoprintAnalysisCaseType.SAMPLE ? "true" : "false" })
     }
 
     readonly alteredKeys = remoteData({
