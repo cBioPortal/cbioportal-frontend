@@ -2,6 +2,7 @@ import React from 'react';
 import {ReactWrapper, mount} from "enzyme";
 import { assert } from 'chai';
 import {default as CopyNumberTableWrapper} from "./CopyNumberTableWrapper"
+import { GeneFilterOption } from '../mutation/GeneFilterMenu';
 
 function hasColumn(tableWrapper:ReactWrapper<any, any>, columnName:string):boolean {
     const columns:string[] = [];
@@ -12,10 +13,13 @@ function hasColumn(tableWrapper:ReactWrapper<any, any>, columnName:string):boole
 function getTable(samples:string[], mrnaMolecularProfileId?:string):ReactWrapper<any, any> {
     return mount(<CopyNumberTableWrapper
         sampleManager={null}
+        sampleToGenePanelId={{}}
+        genePanelIdToEntrezGeneIds={{}}
         sampleIds={samples}
         gisticData={{}}
         status="available"
         referenceGenes={[]}
+        currentGeneFilter={GeneFilterOption.ANY_SAMPLE}
         data={[]}
         mrnaExprRankMolecularProfileId={mrnaMolecularProfileId}
     />);

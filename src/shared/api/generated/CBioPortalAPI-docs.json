@@ -76,6 +76,10 @@
       "description": " "
     },
     {
+      "name": "P. Generic Assay",
+      "description": " "
+    },
+    {
       "name": "Q. Structural Variants",
       "description": " "
     },
@@ -714,6 +718,166 @@
             "description": "OK",
             "schema": {
               "$ref": "#/definitions/GenePanel"
+            }
+          }
+        }
+      }
+    },
+    "/generic_assay_data/fetch": {
+      "post": {
+        "tags": [
+          "P. Generic Assay"
+        ],
+        "summary": "Fetch generic_assay_data",
+        "operationId": "fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genericAssayDataMultipleStudyFilter",
+            "description": "List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Generic Assay IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenericAssayDataMultipleStudyFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayData"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generic_assay_data/{molecularProfileId}/fetch": {
+      "post": {
+        "tags": [
+          "P. Generic Assay"
+        ],
+        "summary": "fetch generic_assay_data in a molecular profile",
+        "operationId": "fetchGenericAssayDataInMolecularProfileUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "genericAssayDataFilter",
+            "description": "List of Sample IDs/Sample List ID and Generic Assay IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenericAssayDataFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayData"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generic_assay_meta/fetch": {
+      "post": {
+        "tags": [
+          "P. Generic Assay"
+        ],
+        "summary": "Fetch meta data for generic-assay by ID",
+        "operationId": "fetchGenericAssayMetaDataUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genericAssayMetaFilter",
+            "description": "List of Molecular Profile ID or List of Stable ID",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenericAssayMetaFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayMeta"
+              }
             }
           }
         }
@@ -2401,8 +2565,8 @@
         "tags": [
           "D. Samples"
         ],
-        "summary": "Get all samples",
-        "operationId": "getAllSamplesUsingGET",
+        "summary": "Get all samples matching keyword",
+        "operationId": "getSamplesByKeywordUsingGET",
         "produces": [
           "application/json"
         ],
@@ -4869,6 +5033,128 @@
       },
       "title": "GenePanelToGene"
     },
+    "GenericAssayData": {
+      "type": "object",
+      "required": [
+        "genericAssayStableId",
+        "molecularProfileId",
+        "patientId",
+        "sampleId",
+        "studyId",
+        "value"
+      ],
+      "properties": {
+        "genericAssayStableId": {
+          "type": "string"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "stableId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "GenericAssayData"
+    },
+    "GenericAssayDataFilter": {
+      "type": "object",
+      "properties": {
+        "genericAssayStableIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleListId": {
+          "type": "string"
+        }
+      },
+      "title": "GenericAssayDataFilter"
+    },
+    "GenericAssayDataMultipleStudyFilter": {
+      "type": "object",
+      "properties": {
+        "genericAssayStableIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleMolecularIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleMolecularIdentifier"
+          }
+        }
+      },
+      "title": "GenericAssayDataMultipleStudyFilter"
+    },
+    "GenericAssayMeta": {
+      "type": "object",
+      "properties": {
+        "entityType": {
+          "type": "string"
+        },
+        "genericEntityMetaProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "stableId": {
+          "type": "string"
+        }
+      },
+      "title": "GenericAssayMeta"
+    },
+    "GenericAssayMetaFilter": {
+      "type": "object",
+      "properties": {
+        "genericAssayStableIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "GenericAssayMetaFilter"
+    },
     "MolecularDataFilter": {
       "type": "object",
       "properties": {
@@ -4933,6 +5219,9 @@
         "description": {
           "type": "string"
         },
+        "genericAssayType": {
+          "type": "string"
+        },
         "molecularAlterationType": {
           "type": "string",
           "enum": [
@@ -4952,6 +5241,7 @@
             "PROTEIN_ARRAY_PROTEIN_LEVEL",
             "PROTEIN_ARRAY_PHOSPHORYLATION",
             "GENESET_SCORE",
+            "TREATMENT",
             "GENERIC_ASSAY"
           ]
         },

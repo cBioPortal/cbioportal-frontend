@@ -1,25 +1,24 @@
 import * as React from "react";
 import {If, Else, Then} from 'react-if';
-import {SampleLabelHTML} from "shared/components/sampleLabel/SampleLabel";
-import {ClinicalDataBySampleId} from "shared/api/api-types-extended";
-import ClinicalInformationPatientTable from "../clinicalInformation/ClinicalInformationPatientTable";
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {placeArrowBottomLeft} from "public-lib/components/defaultTooltip/DefaultTooltip";
+import { ClinicalDataBySampleId } from "shared/api/api-types-extended";
+import ClinicalInformationPatientTable from "../clinicalInformation/ClinicalInformationPatientTable";
+import './styles.scss';
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
-    sampleNumber: number;
-    sampleColor: string;
-    fillOpacity: number;
     tooltipEnabled?: boolean;
     extraTooltipText?: string;
     additionalContent?: JSX.Element|null;
+    hideClinicalTable?:boolean;
 }
 
 export default class SampleInline extends React.Component<ISampleInlineProps, {}> {
 
     public static defaultProps = {
-        tooltipEnabled: true
+        tooltipEnabled: true,
+        hideClinicalInfoTable: false
     };
 
     public render() {
@@ -35,19 +34,6 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
         );
     }
 
-    public sampleLabelHTML()
-    {
-        const {sampleNumber, sampleColor, fillOpacity} = this.props;
-
-        return (
-            <SampleLabelHTML
-                fillOpacity={fillOpacity}
-                color={sampleColor}
-                label={(sampleNumber).toString()}
-            />
-        );
-    }
-
     public tooltipContent()
     {
         const {sample, extraTooltipText} = this.props;
@@ -55,18 +41,18 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
         return (
             <div style={{ maxHeight:400, maxWidth:600, overflow:'auto' }}>
                 <h5 style={{ marginBottom: 1 }}>
-                    <svg height="12" width="12" style={{ marginRight: 5}}>
-                        {this.sampleLabelHTML()}
-                    </svg>
+                    <span className='sample-inline-tooltip-children' >
+                        {this.props.children}
+                    </span>
                     {sample.id}
                 </h5>
-                <h5>{extraTooltipText}</h5>
-                <ClinicalInformationPatientTable
+                {extraTooltipText && <h5>{extraTooltipText}</h5>}
+                {!this.props.hideClinicalTable && <ClinicalInformationPatientTable
                     showFilter={false}
                     showCopyDownload={false}
                     showTitleBar={false}
                     data={sample.clinicalData}
-                />
+                />}
             </div>
         );
     }
@@ -77,7 +63,7 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
 
         let content = (
             <svg height="12" width="12">
-                {this.sampleLabelHTML()}
+                {this.props.children}
             </svg>
         );
 

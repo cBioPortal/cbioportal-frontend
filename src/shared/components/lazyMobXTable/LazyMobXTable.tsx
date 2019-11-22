@@ -348,12 +348,24 @@ export class LazyMobXTableStore<T> {
     @computed
     get headers():JSX.Element[] {
         return this.visibleColumns.map((column:Column<T>, index:number)=>{
-            const headerProps:{role?:"button",
+            const headerProps:{
+                role?:"button",
                 className?:"multilineHeader sort-asc"|"multilineHeader sort-des",
-                onClick?:()=>void} = {};
+                onClick?:(e:React.MouseEvent)=>void
+            } = {};
             if (column.sortBy) {
                 headerProps.role = "button";
-                headerProps.onClick = () => this.defaultHeaderClick(column);
+                headerProps.onClick = (e:React.MouseEvent) => {
+                    const target = e.target as HTMLElement;
+                    // Click of rc-tooltip in the header element bubbles the
+                    // on-click event, even though it is not a child of the 
+                    // header cell in the DOM. The check below make sure the
+                    // click event originated from a a true child in the DOM.
+                    const parent = $(target).closest('.multilineHeader');
+                    if (parent && parent.length > 0) {
+                        this.defaultHeaderClick(column);
+                    }
+                };
             }
             if (this.sortColumn === column.name) {
                 headerProps.className = (this.sortAscending ? "multilineHeader sort-asc" : "multilineHeader sort-des");
@@ -839,7 +851,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 
     render() {
         return (
-            <div data-test="LazyMobXTable">
+            <div className="lazy-mobx-table" data-test="LazyMobXTable">
                 <Observer>
                     {this.getTopToolbar}
                 </Observer>

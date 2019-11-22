@@ -6,7 +6,8 @@ import {
     ClinicalDataIntervalFilterValue,
     DataBin,
     SampleIdentifier,
-    StudyViewFilter
+    StudyViewFilter,
+    ClinicalDataBinFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {CancerStudy, ClinicalAttribute, Gene, PatientIdentifier, Sample, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
@@ -1616,6 +1617,7 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
     chartDimensionSet: { [uniqueId: string]: ChartDimension },
     chartTypeSet: { [uniqueId: string]: ChartType },
     customChartSet: { [uniqueId: string]: CustomChart },
+    clinicalDataBinFilter: { [uniqueId: string]: ClinicalDataBinFilter },
     filterMutatedGenesTableByCancerGenes: boolean = true,
     filterFusionGenesTableByCancerGenes: boolean = true,
     filterCNAGenesTableByCancerGenes: boolean = true,
@@ -1645,6 +1647,14 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
         if (customChart) { // if its custom chart add groups and name
             chartSettingsMap[id].groups = customChart.groups;
             chartSettingsMap[id].name = attribute.displayName;
+        }
+        if (clinicalDataBinFilter[id]) {
+            if (clinicalDataBinFilter[id].disableLogScale) {
+                chartSettingsMap[id].disableLogScale = true;
+            }
+            if (!_.isEmpty(clinicalDataBinFilter[id].customBins)) {
+                chartSettingsMap[id].customBins = clinicalDataBinFilter[id].customBins;
+            }
         }
     });
     // add layout for each chart

@@ -110,13 +110,9 @@ export type ClinicalDataIntervalFilterValue = {
 
 };
 export type CoExpression = {
-    'cytoband': string
+    'geneticEntityId': string
 
-        'geneticEntityId': string
-
-        'geneticEntityName': string
-
-        'geneticEntityType': "GENE" | "GENESET"
+        'geneticEntityType': "GENE" | "GENESET" | "PHOSPHOPROTEIN" | "TREATMENT" | "GENERIC_ASSAY"
 
         'pValue': number
 
