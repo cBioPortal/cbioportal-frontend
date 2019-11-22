@@ -47,6 +47,8 @@ interface IPoint {
     mutationStatus:MutationStatus
 }
 
+export const SHOW_ONLY_SELECTED_LABEL = "Show only selected mutations";
+
 const LINE_COLOR = "#000000";
 const HIGHLIGHT_LINE_STROKE_WIDTH = 6;
 const HIGHLIGHT_COLOR = "#318ec4";
@@ -178,7 +180,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                     // click on line
                                     datum = props.data[0];
                                 }
-                                this.props.dataStore.toggleHighlightedMutation(datum.mutation);
+                                this.props.dataStore.toggleSelectedMutation(datum.mutation);
                             })
                         }
                     ];
@@ -188,8 +190,8 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     }
 
     @computed get mutations() {
-        if (this.props.dataStore.onlyShowHighlightedInVAFChart) {
-            return this.props.dataStore.allData.filter(m=>this.props.dataStore.isMutationHighlighted(m[0]));
+        if (this.props.dataStore.onlyShowSelectedInVAFChart) {
+            return this.props.dataStore.allData.filter(m=>this.props.dataStore.isMutationSelected(m[0]));
         } else {
             return this.props.dataStore.allData;
         }
@@ -216,7 +218,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     p.y >= rectBoundsDataSpace.y[0] && p.y <= rectBoundsDataSpace.y[1];
             });
 
-            this.props.dataStore.setHighlightedMutations(selectedPoints.map(p=>p.mutation));
+            this.props.dataStore.setSelectedMutations(selectedPoints.map(p=>p.mutation));
         }
     }
 
@@ -474,9 +476,9 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         // we have to do it this way because victory rerendering is inefficient
 
         const highlightedMutations = [];
-        if (!this.props.dataStore.onlyShowHighlightedInVAFChart) {
+        if (!this.props.dataStore.onlyShowSelectedInVAFChart) {
             // dont bold highlighted mutations if we're only showing highlighted mutations
-            highlightedMutations.push(...this.props.dataStore.highlightedMutations);
+            highlightedMutations.push(...this.props.dataStore.selectedMutations);
         }
         const mouseOverMutation = this.props.dataStore.getMouseOverMutation();
         if (mouseOverMutation) {
@@ -763,7 +765,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                     height:this.svgHeight,
                     width:"100%"
                 }}>
-                    No VAF data to show.
+                    No VAF data to show. Select mutations below or un-check the "{SHOW_ONLY_SELECTED_LABEL}" filter above.
                 </div>
             );
         }
