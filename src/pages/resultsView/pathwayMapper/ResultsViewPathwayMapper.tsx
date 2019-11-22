@@ -77,7 +77,7 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
 
     render() {
 
-        // Alteration data of query genes are loaded.
+        // Alteration data of query genes are loaded
         this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach( (alterationData, trackIndex) => {
 
             getAlterationData(this.props.store.samples.result,
