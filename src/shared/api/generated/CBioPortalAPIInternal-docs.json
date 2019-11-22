@@ -2060,28 +2060,23 @@
     "CoExpression": {
       "type": "object",
       "required": [
-        "cytoband",
         "geneticEntityId",
-        "geneticEntityName",
         "geneticEntityType",
         "pValue",
         "spearmansCorrelation"
       ],
       "properties": {
-        "cytoband": {
-          "type": "string"
-        },
         "geneticEntityId": {
-          "type": "string"
-        },
-        "geneticEntityName": {
           "type": "string"
         },
         "geneticEntityType": {
           "type": "string",
           "enum": [
             "GENE",
-            "GENESET"
+            "GENESET",
+            "PHOSPHOPROTEIN",
+            "TREATMENT",
+            "GENERIC_ASSAY"
           ]
         },
         "pValue": {

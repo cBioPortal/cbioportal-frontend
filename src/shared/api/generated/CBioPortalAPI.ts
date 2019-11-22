@@ -277,6 +277,56 @@ export type GenePanelToGene = {
         'hugoGeneSymbol': string
 
 };
+export type GenericAssayData = {
+    'genericAssayStableId': string
+
+        'molecularProfileId': string
+
+        'patientId': string
+
+        'sampleId': string
+
+        'stableId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
+        'value': string
+
+};
+export type GenericAssayDataFilter = {
+    'genericAssayStableIds': Array < string >
+
+        'sampleIds': Array < string >
+
+        'sampleListId': string
+
+};
+export type GenericAssayDataMultipleStudyFilter = {
+    'genericAssayStableIds': Array < string >
+
+        'molecularProfileIds': Array < string >
+
+        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
+
+};
+export type GenericAssayMeta = {
+    'entityType': string
+
+        'genericEntityMetaProperties': {}
+
+        'stableId': string
+
+};
+export type GenericAssayMetaFilter = {
+    'genericAssayStableIds': Array < string >
+
+        'molecularProfileIds': Array < string >
+
+};
 export type MolecularDataFilter = {
     'entrezGeneIds': Array < number >
 
@@ -298,7 +348,9 @@ export type MolecularProfile = {
 
         'description': string
 
-        'molecularAlterationType': "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE" | "GENERIC_ASSAY"
+        'genericAssayType': string
+
+        'molecularAlterationType': "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE" | "TREATMENT" | "GENERIC_ASSAY"
 
         'molecularProfileId': string
 
@@ -1791,6 +1843,290 @@ export default class CBioPortalAPI {
             return response.body;
         });
     };
+    fetchGenericAssayDataInMultipleMolecularProfilesUsingPOSTURL(parameters: {
+        'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/generic_assay_data/fetch';
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch generic_assay_data
+     * @method
+     * @name CBioPortalAPI#fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST
+     * @param {} genericAssayDataMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Generic Assay IDs
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchGenericAssayDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
+        'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/generic_assay_data/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['genericAssayDataMultipleStudyFilter'] !== undefined) {
+                body = parameters['genericAssayDataMultipleStudyFilter'];
+            }
+
+            if (parameters['genericAssayDataMultipleStudyFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genericAssayDataMultipleStudyFilter'));
+                return;
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch generic_assay_data
+     * @method
+     * @name CBioPortalAPI#fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST
+     * @param {} genericAssayDataMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Generic Assay IDs
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(parameters: {
+            'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenericAssayData >
+        > {
+            return this.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchGenericAssayDataInMolecularProfileUsingPOSTURL(parameters: {
+        'molecularProfileId': string,
+        'genericAssayDataFilter': GenericAssayDataFilter,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/generic_assay_data/{molecularProfileId}/fetch';
+
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * fetch generic_assay_data in a molecular profile
+     * @method
+     * @name CBioPortalAPI#fetchGenericAssayDataInMolecularProfileUsingPOST
+     * @param {string} molecularProfileId - Molecular Profile ID
+     * @param {} genericAssayDataFilter - List of Sample IDs/Sample List ID and Generic Assay IDs
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchGenericAssayDataInMolecularProfileUsingPOSTWithHttpInfo(parameters: {
+        'molecularProfileId': string,
+        'genericAssayDataFilter': GenericAssayDataFilter,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/generic_assay_data/{molecularProfileId}/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
+
+            if (parameters['molecularProfileId'] === undefined) {
+                reject(new Error('Missing required  parameter: molecularProfileId'));
+                return;
+            }
+
+            if (parameters['genericAssayDataFilter'] !== undefined) {
+                body = parameters['genericAssayDataFilter'];
+            }
+
+            if (parameters['genericAssayDataFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genericAssayDataFilter'));
+                return;
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * fetch generic_assay_data in a molecular profile
+     * @method
+     * @name CBioPortalAPI#fetchGenericAssayDataInMolecularProfileUsingPOST
+     * @param {string} molecularProfileId - Molecular Profile ID
+     * @param {} genericAssayDataFilter - List of Sample IDs/Sample List ID and Generic Assay IDs
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchGenericAssayDataInMolecularProfileUsingPOST(parameters: {
+            'molecularProfileId': string,
+            'genericAssayDataFilter': GenericAssayDataFilter,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenericAssayData >
+        > {
+            return this.fetchGenericAssayDataInMolecularProfileUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchGenericAssayMetaDataUsingPOSTURL(parameters: {
+        'genericAssayMetaFilter': GenericAssayMetaFilter,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/generic_assay_meta/fetch';
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch meta data for generic-assay by ID
+     * @method
+     * @name CBioPortalAPI#fetchGenericAssayMetaDataUsingPOST
+     * @param {} genericAssayMetaFilter - List of Molecular Profile ID or List of Stable ID
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchGenericAssayMetaDataUsingPOSTWithHttpInfo(parameters: {
+        'genericAssayMetaFilter': GenericAssayMetaFilter,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/generic_assay_meta/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['genericAssayMetaFilter'] !== undefined) {
+                body = parameters['genericAssayMetaFilter'];
+            }
+
+            if (parameters['genericAssayMetaFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genericAssayMetaFilter'));
+                return;
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch meta data for generic-assay by ID
+     * @method
+     * @name CBioPortalAPI#fetchGenericAssayMetaDataUsingPOST
+     * @param {} genericAssayMetaFilter - List of Molecular Profile ID or List of Stable ID
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchGenericAssayMetaDataUsingPOST(parameters: {
+            'genericAssayMetaFilter': GenericAssayMetaFilter,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenericAssayMeta >
+        > {
+            return this.fetchGenericAssayMetaDataUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     getAllGenesUsingGETURL(parameters: {
         'keyword' ? : string,
         'alias' ? : string,
@@ -4613,7 +4949,7 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
-    getAllSamplesUsingGETURL(parameters: {
+    getSamplesByKeywordUsingGETURL(parameters: {
         'keyword' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -4659,9 +4995,9 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all samples
+     * Get all samples matching keyword
      * @method
-     * @name CBioPortalAPI#getAllSamplesUsingGET
+     * @name CBioPortalAPI#getSamplesByKeywordUsingGET
      * @param {string} keyword - Search keyword that applies to the study ID
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
@@ -4669,7 +5005,7 @@ export default class CBioPortalAPI {
      * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
-    getAllSamplesUsingGETWithHttpInfo(parameters: {
+    getSamplesByKeywordUsingGETWithHttpInfo(parameters: {
         'keyword' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -4727,9 +5063,9 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all samples
+     * Get all samples matching keyword
      * @method
-     * @name CBioPortalAPI#getAllSamplesUsingGET
+     * @name CBioPortalAPI#getSamplesByKeywordUsingGET
      * @param {string} keyword - Search keyword that applies to the study ID
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
@@ -4737,7 +5073,7 @@ export default class CBioPortalAPI {
      * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
-    getAllSamplesUsingGET(parameters: {
+    getSamplesByKeywordUsingGET(parameters: {
             'keyword' ? : string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
@@ -4748,7 +5084,7 @@ export default class CBioPortalAPI {
                 $domain ? : string
         }): Promise < Array < Sample >
         > {
-            return this.getAllSamplesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.getSamplesByKeywordUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
