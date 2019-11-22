@@ -506,7 +506,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         axisLabelY={this.yAxisLabel}
                         data={this.boxPlotData.result}
                         chartBase={550}
-                        tooltip={this.tooltip}
+                        scatterPlotTooltip={this.tooltip}
                         horizontal={false}
                         logScale={this.axisLogScaleFunction}
                         size={4}

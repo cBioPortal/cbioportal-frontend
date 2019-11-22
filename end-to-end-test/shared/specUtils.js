@@ -15,7 +15,13 @@ function waitForPlotsTab(timeout) {
 }
 
 function waitForCoExpressionTab(timeout) {
-    $('//*[@id="coexpressionTabGeneTabs"]').waitForExist(timeout || 20000);
+    $('#coexpressionTabGeneTabs').waitForExist(timeout || 20000);
+}
+
+function waitForPatientView(timeout) {
+    $('#patientViewPageTabs').waitForExist(timeout || 20000);
+    $('[data-test=patientview-copynumber-table]').waitForVisible(timeout || 20000);
+    $('[data-test=patientview-mutation-table]').waitForVisible(timeout || 20000);
 }
 
 function waitForOncoprint(timeout) {
@@ -242,6 +248,20 @@ function clickModifyStudySelectionButton (){
     browser.click('[data-test="modifyStudySelectionButton"]');
 }
 
+function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
+    //trackGroupIndex is 0-indexed
+
+    const button_selector = "#oncoprintDiv .oncoprintjs__header__toggle_btn_img.track-group-"+trackGroupIndex;
+    const dropdown_selector = "#oncoprintDiv .oncoprintjs__header__dropdown.track-group-"+trackGroupIndex;
+
+    return {
+        button: $(button_selector),
+        button_selector,
+        dropdown: $(dropdown_selector),
+        dropdown_selector
+    };
+}
+
 module.exports = {
     checkElementWithElementHidden: checkElementWithElementHidden,
     waitForPlotsTab: waitForPlotsTab,
@@ -249,6 +269,7 @@ module.exports = {
     waitForGeneQueryPage: waitForGeneQueryPage,
     waitForOncoprint: waitForOncoprint,
     waitForCoExpressionTab: waitForCoExpressionTab,
+    waitForPatientView: waitForPatientView,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     useExternalFrontend: useExternalFrontend,
     sessionServiceIsEnabled: sessionServiceIsEnabled,
@@ -276,5 +297,6 @@ module.exports = {
     getReactSelectOptions: getReactSelectOptions,
     COEXPRESSION_TIMEOUT: 120000,
     getSelectCheckedOptions: getSelectCheckedOptions,
-    selectCheckedOption: selectCheckedOption
+    selectCheckedOption: selectCheckedOption,
+    getOncoprintGroupHeaderOptionsElements:getOncoprintGroupHeaderOptionsElements
 };
