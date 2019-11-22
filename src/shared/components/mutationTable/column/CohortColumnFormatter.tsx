@@ -8,7 +8,7 @@ import {IMutSigData as MutSigData} from "shared/model/MutSig";
 import {VariantCount} from "shared/api/generated/CBioPortalAPIInternal";
 import {CacheData} from "shared/lib/LazyMobXCache";
 import {getPercentage} from "shared/lib/FormatUtils";
-import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
+import {TableCellStatusIndicator, TableCellStatus} from "cbioportal-frontend-commons";
 
 type AugVariantCountOutput = (CacheData<VariantCount> & {hugoGeneSymbol:string});
 
