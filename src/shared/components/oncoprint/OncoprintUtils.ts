@@ -145,7 +145,7 @@ export function getHeatmapTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):RuleS
     let value_stop_points:number[];
 
     switch (trackSpec.molecularAlterationType) {
-        case AlterationTypeConstants.GENERIC_ASSAY:
+        case AlterationTypeConstants.TREATMENT_RESPONSE:
             return getTreatmentTrackRuleSetParams(trackSpec);
             break;
         case AlterationTypeConstants.METHYLATION:
@@ -668,7 +668,7 @@ export function makeHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
             const molecularProfileIdToMolecularProfile = oncoprint.props.store.molecularProfileIdToMolecularProfile.result!;
             const molecularProfileIdToHeatmapTracks = oncoprint.molecularProfileIdToHeatmapTracks;
 
-            const geneProfiles = _.filter(molecularProfileIdToHeatmapTracks.values(), d => d.molecularAlterationType !== AlterationTypeConstants.GENERIC_ASSAY);
+            const geneProfiles = _.filter(molecularProfileIdToHeatmapTracks.values(), d => d.molecularAlterationType !== AlterationTypeConstants.TREATMENT_RESPONSE);
             const neededGenes = _.flatten(geneProfiles.map(v=>v.entities.keys()));
             await oncoprint.props.store.geneCache.getPromise(neededGenes.map(g=>({hugoGeneSymbol:g})), true);
 
@@ -739,7 +739,7 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(oncoprint:ResultsVi
             const molecularProfileIdToHeatmapTracks = oncoprint.molecularProfileIdToHeatmapTracks;
             const treatmentLinkMap = oncoprint.props.store.treatmentLinkMap.result!;
 
-            const treatmentProfiles = _.filter(molecularProfileIdToHeatmapTracks.values(), d => d.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY);
+            const treatmentProfiles = _.filter(molecularProfileIdToHeatmapTracks.values(), d => d.molecularAlterationType === AlterationTypeConstants.TREATMENT_RESPONSE);
             const neededTreatments = _.flatten(treatmentProfiles.map(v=>v.entities.keys()));
             await oncoprint.props.store.treatmentCache.getPromise(neededTreatments.map(g=>({treatmentId:g})), true);
             

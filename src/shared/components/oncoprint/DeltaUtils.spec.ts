@@ -604,7 +604,7 @@ describe("Oncoprint DeltaUtils", ()=>{
 
     describe('transitionHeatmapTrack() for treatment response profile', () => {
 
-        const molecularAlterationType = "GENERIC_ASSAY";
+        const molecularAlterationType = "TREATMENT";
 
         const makeMinimalOncoprintProps = (): IOncoprintProps => ({
             caseLinkOutInTooltips:false,
