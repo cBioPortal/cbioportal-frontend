@@ -31,7 +31,7 @@ import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import {DataType, DownloadControlsButton} from "../../../public-lib/components/downloadControls/DownloadControls";
+import {DataType, DownloadControlsButton} from "cbioportal-frontend-commons";
 import {MAX_GROUPS_IN_SESSION} from "../../groupComparison/GroupComparisonUtils";
 import {Modal} from "react-bootstrap";
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
+import {getBrowserWindow} from "cbioportal-frontend-commons";
 import {observer} from "mobx-react";
 import './errorScreen.scss';
 import AppConfig from "appConfig";

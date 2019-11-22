@@ -1,4 +1,4 @@
-import GenomeNexusAPI, {Version} from "../../public-lib/api/generated/GenomeNexusAPI";
+import {GenomeNexusAPI} from "cbioportal-frontend-commons";
 
 async function checkVersion(client:GenomeNexusAPI) {
     const versionResp = await client.fetchVersionGET({});

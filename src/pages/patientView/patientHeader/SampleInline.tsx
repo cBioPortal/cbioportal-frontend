@@ -1,7 +1,6 @@
 import * as React from "react";
 import {If, Else, Then} from 'react-if';
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
-import {placeArrowBottomLeft} from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip, placeArrowBottomLeft} from "cbioportal-frontend-commons";
 import { ClinicalDataBySampleId } from "shared/api/api-types-extended";
 import ClinicalInformationPatientTable from "../clinicalInformation/ClinicalInformationPatientTable";
 import './styles.scss';

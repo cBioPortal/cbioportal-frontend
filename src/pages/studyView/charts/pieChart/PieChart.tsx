@@ -10,10 +10,8 @@ import ifndef from "shared/lib/ifndef";
 import autobind from 'autobind-decorator';
 import {ClinicalDataCountSummary} from "pages/studyView/StudyViewUtils";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
-import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/DefaultTooltip";
-import {getTextWidth} from "../../../../public-lib/lib/TextTruncationUtils";
+import {DefaultTooltip, getTextWidth} from "cbioportal-frontend-commons";
 import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 
 export interface IPieChartProps {

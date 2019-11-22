@@ -15,7 +15,10 @@ import {
     OncoprinterGeneticInputLine, OncoprinterGeneticInputLineType2,
     parseGeneticInput
 } from "./OncoprinterGeneticUtils";
-import {remoteData} from "../../../../public-lib/api/remoteData";
+import {
+    CancerGene,
+    remoteData
+} from "cbioportal-frontend-commons";
 import {IOncoKbData} from "../../../../shared/model/OncoKB";
 import {fetchOncoKbCancerGenes, ONCOKB_DEFAULT} from "../../../../shared/lib/StoreUtils";
 import client from "../../../../shared/api/cbioportalClientInstance";
@@ -23,7 +26,6 @@ import _ from "lodash";
 import {countMutations, mutationCountByPositionKey} from "../../../resultsView/mutationCountHelpers";
 import {Mutation, MutationCountByPosition} from "../../../../shared/api/generated/CBioPortalAPI";
 import {SampleAlteredMap} from "../../../resultsView/ResultsViewPageStoreUtils";
-import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import { AlteredStatus } from "pages/resultsView/mutualExclusivity/MutualExclusivityUtil";
 import {getClinicalTracks, parseClinicalInput} from "./OncoprinterClinicalUtils";
 

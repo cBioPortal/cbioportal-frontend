@@ -5,7 +5,7 @@ import {ICosmicData} from "shared/model/Cosmic";
 import {IMyCancerGenome, IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {normalizeMutation} from "../components/mutationMapper/MutationMapperUtils";
-import {Hotspot} from "../../public-lib/api/generated/GenomeNexusAPI";
+import {Hotspot} from "cbioportal-frontend-commons";
 
 /**
  * Utility functions related to annotation data.

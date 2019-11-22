@@ -1,14 +1,11 @@
-import {Modal} from "react-bootstrap";
 import * as React from "react";
 import {observer} from "mobx-react";
-import request from 'superagent';
-import {remoteData} from "public-lib/api/remoteData";
+import {remoteData, isWebdriver} from "cbioportal-frontend-commons";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import * as _ from 'lodash';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
-import {isWebdriver} from "public-lib/lib/webdriverUtils";
 
 export interface IUserMessage {
     dateStart?:number;
