@@ -1,9 +1,11 @@
 import * as React from "react";
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./../styles/annotation.module.scss";
 import classNames from 'classnames';
 import tooltipStyles from "./styles/mutationAssessorTooltip.module.scss";
-import {MutationAssessor as MutationAssessorData} from 'public-lib/api/generated/GenomeNexusAPIInternal';
+import {
+    DefaultTooltip,
+    MutationAssessor as MutationAssessorData
+} from 'cbioportal-frontend-commons';
 import mutationAssessorColumn from "./styles/mutationAssessorColumn.module.scss";
 
 export interface IMutationAssessorProps {

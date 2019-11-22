@@ -1,4 +1,4 @@
-import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
+import {DefaultTooltip, getBrowserWindow} from "cbioportal-frontend-commons";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
 import {observer} from "mobx-react";
 import * as React from "react";
@@ -7,7 +7,6 @@ import styles from './shareUI.module.scss';
 import autobind from "autobind-decorator";
 import {BookmarkModal} from "../bookmark/BookmarkModal";
 import {action, observable} from "mobx";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 
 interface IShareUI {

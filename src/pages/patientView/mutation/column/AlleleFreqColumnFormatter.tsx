@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip} from "cbioportal-frontend-commons";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../SampleManager";

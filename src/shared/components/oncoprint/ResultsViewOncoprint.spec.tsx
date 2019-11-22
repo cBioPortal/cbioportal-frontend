@@ -2,7 +2,7 @@ import {assert} from "chai";
 import ResultsViewOncoprint from "./ResultsViewOncoprint";
 import { ResultsViewPageStore } from "pages/resultsView/ResultsViewPageStore";
 import { Sample, Patient } from "shared/api/generated/CBioPortalAPI";
-import getBrowserWindow from "public-lib/lib/getBrowserWindow";
+import {getBrowserWindow} from "cbioportal-frontend-commons";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import sinon from "sinon";
 import { SortByUrlParamValue } from 'shared/components/oncoprint/ResultsViewOncoprint';

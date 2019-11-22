@@ -45,7 +45,7 @@ import AppConfig from 'appConfig';
 import { getBasePath } from 'shared/api/urls';
 import $ from 'jquery';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
-import getBrowserWindow from 'public-lib/lib/getBrowserWindow';
+import {getBrowserWindow} from 'cbioportal-frontend-commons';
 import { seekUrlHash } from 'shared/lib/seekUrlHash';
 import queryString from 'query-string';
 import { PagePath } from 'shared/enums/PagePaths';

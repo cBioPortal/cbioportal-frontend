@@ -10,7 +10,12 @@ import {
 
 import AppConfig from "appConfig";
 
-import {remoteData} from "public-lib/api/remoteData";
+import {
+    CancerGene,
+    EnsemblTranscript,
+    remoteData,
+    VariantAnnotation
+} from "cbioportal-frontend-commons";
 import {ClinicalData, Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {
     fetchGenes, fetchMyCancerGenomeData, fetchOncoKbData,
@@ -31,8 +36,6 @@ import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import {normalizeMutations} from "../../../../shared/components/mutationMapper/MutationMapperUtils";
-import { VariantAnnotation, EnsemblTranscript } from "public-lib/api/generated/GenomeNexusAPI";
-import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 
 export default class MutationMapperToolStore
 {

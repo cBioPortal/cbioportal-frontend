@@ -7,7 +7,7 @@ import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import styles from './style/sampleTable.module.scss';
 import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
 import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
-import { isUrl } from "public-lib";
+import { isUrl } from "cbioportal-frontend-commons";
 
 interface IClinicalInformationSamplesTableProps {
     samples?: ClinicalDataBySampleId[];

@@ -54,7 +54,7 @@ cd $PORTAL_SOURCE_DIR
 
 if $BUILD_JS; then
     yarn
-    yarn build
+    yarn buildAll
 fi
 
 docker network create $DOCKER_NETWORK_NAME 2> /dev/null || true
@@ -77,6 +77,7 @@ yarn install --frozen-lockfile
 echo START SERVE_DIST
 cd $PORTAL_SOURCE_DIR
 yarn
+yarn buildModules
 yarn serveDistLocalDb &
 
 cd $TEST_HOME

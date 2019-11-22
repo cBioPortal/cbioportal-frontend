@@ -13,7 +13,11 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - run:
         name: "Install yarn at specific version"
         command:
-          sudo npm install --global yarn@1.13.0
+          sudo npm install --global yarn@1.21.1
+    - run:
+        name: "Install lerna at specific version"
+        command:
+          sudo npm install --global lerna@3.19.0
     - attach_workspace:
         at: /tmp/
     - run:
@@ -71,12 +75,17 @@ jobs:
       - run:
           name: "Install yarn at specific version"
           command:
-            sudo npm install --global yarn@1.13.0
+            sudo npm install --global yarn@1.21.1
       - run:
-          name: "Show yarn and node versions"
+          name: "Install lerna at specific version"
+          command:
+            sudo npm install --global lerna@3.19.0
+      - run:
+          name: "Show yarn, node, and lerna versions"
           command: |
             node --version
             yarn --version
+            lerna --version
       - checkout
       # cache build artifacts. Use concatenation of all source files as cache
       # key. If there are no changes to src/ and yarn.lock, no need to rebuild
@@ -89,6 +98,7 @@ jobs:
           - v2-dependencies-{{ checksum "yarn.lock" }}
       # Download and cache dependencies
       - run: yarn
+      - run: yarn buildModules
       - run:
           name: "Make sure lock file is still the same"
           command: 'git diff --exit-code yarn.lock > /dev/null || (echo -e "New package lock file at $(cat yarn.lock | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)"; git diff --exit-code yarn.lock; exit 1)'
@@ -98,7 +108,7 @@ jobs:
           key: v2-dependencies-{{ checksum "yarn.lock" }}
       - run:
           name: "Run build if no dist folder"
-          command: 'ls dist || yarn run build'
+          command: 'ls dist || yarn run buildAll'
           environment:
             DISABLE_SOURCEMAP: true
             NO_PARALLEL: true
@@ -127,12 +137,16 @@ jobs:
       - run:
           name: "Install yarn at specific version"
           command:
-            sudo npm install --global yarn@1.13.0
+            sudo npm install --global yarn@1.21.1
+      - run:
+          name: "Install lerna at specific version"
+          command:
+            sudo npm install --global lerna@3.19.0
       - attach_workspace:
           at: /tmp/
       # run tests!
       - run:
-          command: "yarn run test"
+          command: "yarn run testAll"
           environment:
             JUNIT_REPORT_PATH: ./junit/
             JUNIT_REPORT_NAME: test-results.xml
@@ -152,23 +166,6 @@ jobs:
       # check that no `.only` statements are still in the tests
       # Ignore doTest.only in oql parser
       - run: "! grep '\\.only' $(find ./src ./end-to-end-test -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult"
-
-  public_lib:
-    <<: *defaults
-    steps:
-      - run:
-          name: "Install yarn at specific version"
-          command:
-            sudo npm install --global yarn@1.13.0
-      - attach_workspace:
-          at: /tmp/
-      # build public lib
-      - run:
-          command: "yarn run buildPublicLib"
-          environment:
-            DISABLE_SOURCEMAP: true
-            NO_PARALLEL: true
-          when: always
 
   end_to_end_tests:
     <<: *defaults
@@ -262,9 +259,6 @@ workflows:
     install_and_test:
         jobs:
             - install
-            - public_lib:
-                requires:
-                    - install
             - unit_tests:
                 requires:
                     - install
@@ -291,9 +285,6 @@ workflows:
                            - rc
        jobs:
            - install
-           - public_lib:
-               requires:
-                   - install
            - api_sync:
                requires:
                    - install

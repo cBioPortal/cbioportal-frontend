@@ -1,6 +1,6 @@
 import {assert} from "chai";
 import ProteinChangeColumnFormatter from "./ProteinChangeColumnFormatter";
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip} from "cbioportal-frontend-commons";
 import styles from './proteinChange.module.scss';
 import {initMutation} from "test/MutationMockUtils";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";

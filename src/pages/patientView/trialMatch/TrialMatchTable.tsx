@@ -9,7 +9,7 @@ import styles from './style/trialMatch.module.scss';
 import { action, computed, observable } from "mobx";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import SampleManager from "../SampleManager";
-import DefaultTooltip, { placeArrowBottomLeft } from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip, placeArrowBottomLeft } from "cbioportal-frontend-commons";
 import { getAgeRangeDisplay } from "./TrialMatchTableUtils";
 import TrialMatchFeedback from "./TrialMatchFeedback";
 import AppConfig from 'appConfig';

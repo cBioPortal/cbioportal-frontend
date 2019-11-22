@@ -12,7 +12,12 @@ import {
 } from "pages/studyView/StudyViewPageStore";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { ClinicalDataTab } from "./tabs/ClinicalDataTab";
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
+import {
+    DefaultTooltip,
+    getBrowserWindow,
+    isWebdriver,
+    remoteData
+} from "cbioportal-frontend-commons";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { PageLayout } from "../../shared/components/PageLayout/PageLayout";
@@ -25,9 +30,7 @@ import styles from "./styles.module.scss";
 import AddChartButton from "./addChartButton/AddChartButton";
 import { CSSTransition } from "react-transition-group";
 import { sleep } from "../../shared/lib/TimeUtils";
-import { remoteData } from "../../public-lib/api/remoteData";
 import { Else, If, Then } from "react-if";
-import DefaultTooltip from "../../public-lib/components/defaultTooltip/DefaultTooltip";
 import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
 import { AppStore } from "../../AppStore";
 import ActionButtons from "./studyPageHeader/ActionButtons";
@@ -39,10 +42,7 @@ import AppConfig from "appConfig";
 import SocialAuthButton from "../../shared/components/SocialAuthButton";
 import { ServerConfigHelpers } from "../../config/config";
 import { getStudyViewTabId, getButtonNameWithDownPointer } from "./StudyViewUtils";
-import InfoBeacon from "shared/components/infoBeacon/InfoBeacon";
-import { WrappedTour } from "shared/components/wrappedTour/WrappedTour";
 import { Alert, Modal } from "react-bootstrap";
-import {isWebdriver} from "../../public-lib/lib/webdriverUtils";
 
 export interface IStudyViewPageProps {
     routing: any;

@@ -9,17 +9,18 @@ import _ from 'lodash';
 import {SortMode} from '../ResultsViewOncoprint';
 import {Gene, MolecularProfile} from 'shared/api/generated/CBioPortalAPI';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
+import {
+    DefaultTooltip,
+    EditableSpan,
+    CheckedSelect
+} from 'cbioportal-frontend-commons';
 import Slider from 'react-rangeslider';
 import 'react-rangeslider/lib/index.css';
-import EditableSpan from 'public-lib/components/editableSpan/EditableSpan';
 import './styles.scss';
-import ErrorIcon from '../../ErrorIcon';
 import classNames from 'classnames';
 import {SpecialAttribute} from '../../../cache/ClinicalDataCache';
 import {AlterationTypeConstants, ResultsViewPageStore,} from '../../../../pages/resultsView/ResultsViewPageStore';
 import {OncoprintAnalysisCaseType, ExtendedClinicalAttribute} from '../../../../pages/resultsView/ResultsViewPageStoreUtils';
-import {getNCBIlink} from 'public-lib/lib/urls';
 import OQLTextArea, {GeneBoxType} from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
 import {SingleGeneQuery} from '../../../lib/oql/oql-parser';
@@ -27,7 +28,6 @@ import AddClinicalTracks from '../../../../pages/resultsView/oncoprint/AddClinic
 import {Treatment} from 'shared/api/generated/CBioPortalAPIInternal';
 import TextIconArea, {ITextIconAreaItemProps,} from 'shared/components/textIconArea/TextIconArea';
 import {extractTreatmentSelections} from '../OncoprintUtils';
-import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
 import DriverAnnotationControls, {IDriverAnnotationControlsHandlers} from "../../../../pages/resultsView/settings/DriverAnnotationControls";
 import OncoprintDropdownCount from 'pages/resultsView/oncoprint/OncoprintDropdownCount';
 
