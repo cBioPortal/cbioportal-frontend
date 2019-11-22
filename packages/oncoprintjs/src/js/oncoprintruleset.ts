@@ -39,6 +39,7 @@ interface IGeneralRuleSetParams {
     exclude_from_legend?: boolean;
     na_z?:number; // z index of na shapes (defaults to 1)
     na_legend_label?:string; // legend label associated to NA (defaults to 'No data')
+    na_shapes?:ShapeParams[]; // defaults to single strikethrough line
 }
 
 interface ILinearInterpRuleSetParams extends IGeneralRuleSetParams {
@@ -509,7 +510,7 @@ class ConditionRuleSet extends RuleSet {
                     return d[NA_STRING] === true;
                 },
                 {
-                    shapes: makeNAShapes(params.na_z || 1000),
+                    shapes: params.na_shapes || makeNAShapes(params.na_z || 1000),
                     legend_label: params.na_legend_label || NA_LABEL,
                     exclude_from_legend: false,
                     legend_config: {'type': 'rule', 'target': {'na': true}},
@@ -551,7 +552,7 @@ class CategoricalRuleSet extends LookupRuleSet {
         super(params);
         if (!omitNArule) {
             this.addRule(NA_STRING, true, {
-                shapes: makeNAShapes(params.na_z || 1000),
+                shapes: params.na_shapes || makeNAShapes(params.na_z || 1000),
                 legend_label: params.na_legend_label || NA_LABEL,
                 exclude_from_legend: false,
                 legend_config: {'type': 'rule', 'target': {'na': true}},
@@ -996,7 +997,7 @@ class GeneticAlterationRuleSet extends LookupRuleSet {
             }
         })(this);
         this.addRule(NA_STRING, true, {
-            shapes: makeNAShapes(params.na_z || 1),
+            shapes: params.na_shapes || makeNAShapes(params.na_z || 1),
             legend_label: params.na_legend_label || NA_LABEL,
             exclude_from_legend: false,
             legend_config: {'type': 'rule', 'target': {'na': true}},
