@@ -134,6 +134,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             this.props.store.urlWrapper.query.oncoprint_sort_by_drivers === "true";
     }
 
+    @computed get selectedTreatmentsFromUrl(){
+        return this.props.store.treatmentList
+    }
+
     @observable distinguishGermlineMutations:boolean = true;
     @observable distinguishMutationType:boolean = true;
     @observable showUnalteredColumns:boolean = true;
@@ -142,7 +146,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable _onlyShowClinicalLegendForAlteredCases = false;
     @observable showOqlInLabels = false;
 
-    private selectedTreatmentsFromUrl:string[] = [];
+    //private selectedTreatmentsFromUrl:string[] = [];
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
