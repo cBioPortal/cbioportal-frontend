@@ -21,7 +21,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     });
     it("pvge one mutation selected with line chart", function() {
         browser.click('div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)');
-        const res = browser.checkElement('div[data-test="GenomicEvolutionTab"]', { hide: ['.qtip'] });
+        const res = checkElementWithMouseDisabled('div[data-test="GenomicEvolutionTab"]', 0, { hide: ['.qtip'] });
         assertScreenShotMatch(res);
     });
     it("pvge hover a mutation with line chart", function() {
