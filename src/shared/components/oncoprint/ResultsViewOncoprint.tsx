@@ -661,7 +661,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     // treatments selected iin heatmap are added to the `treatment_list` url param
     @computed get treatmentsUrlParam():string {
-        return _.filter(this.molecularProfileIdToHeatmapTracks.values(), (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
+        return _.filter(this.molecularProfileIdToHeatmapTracks.values(), (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.TREATMENT_RESPONSE)
         .map((x:HeatmapTrackGroupRecord)=>`${x.entities.keys().join(";")}`)
         .join(";");
     }

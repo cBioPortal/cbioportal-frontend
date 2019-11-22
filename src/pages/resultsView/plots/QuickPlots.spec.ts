@@ -417,11 +417,11 @@ describe("Quick Plot Links in the Plots Tab", () => {
 
         it("should make sample order vs treatment IC50 quickplot", () => {
             const dataTypes: PlotsTabOption[] = [
-                {value: "GENERIC_ASSAY", label: "Treatments"},
+                {value: "TREATMENT", label: "Treatments"},
             ];
             const dataSources: PlotsTabDataSource = {};
             const horizontal: TypeSourcePair = {type: "none", source: undefined};
-            const vertical: TypeSourcePair = {type: "GENERIC_ASSAY", source: undefined};
+            const vertical: TypeSourcePair = {type: "TREATMENT", source: undefined};
 
             const actual = generateQuickPlots(dataTypes, dataSources, [], 0, horizontal, vertical);
             const expected: ButtonInfo[] = [
@@ -431,7 +431,7 @@ describe("Quick Plot Links in the Plots Tab", () => {
                     plotModel: {
                         vertical: {
                             dataType: {
-                                value: "GENERIC_ASSAY",
+                                value: "TREATMENT",
                                 label: "Treatments"
                             },
                             dataSource: undefined,

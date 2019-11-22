@@ -436,7 +436,7 @@ function transitionTracks(
                 heatmap01 = trackSpecKeyToTrackId[spec.key];
             } else if (heatmap === undefined 
                         && spec.molecularAlterationType !==  AlterationTypeConstants.METHYLATION 
-                        && spec.molecularAlterationType !==  AlterationTypeConstants.GENERIC_ASSAY) {
+                        && spec.molecularAlterationType !==  AlterationTypeConstants.TREATMENT_RESPONSE) {
                 heatmap = trackSpecKeyToTrackId[spec.key];
             }
             if (heatmap01 !== undefined && heatmap !== undefined) {
@@ -460,14 +460,14 @@ function transitionTracks(
     // Note: the resolution of `trackIds for ruleset sharing` is different from
     // the section above because different formatting is applied to each treatment profile (molecularProfileId)
     trackIdForRuleSetSharing.treatment = _.chain(prevProps.heatmapTracks)
-                                    .filter((s:IHeatmapTrackSpec) => s.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
+                                    .filter((s:IHeatmapTrackSpec) => s.molecularAlterationType === AlterationTypeConstants.TREATMENT_RESPONSE)
                                     .groupBy((track:IHeatmapTrackSpec) => track.molecularProfileId)
                                     .mapValues( (o:IHeatmapTrackSpec[]) => _.last(o) )
                                     .mapValues( (o:IHeatmapTrackSpec) => trackSpecKeyToTrackId[o.key] )
                                     .value();
 
     const treatmentProfilesMap = _.chain(nextProps.heatmapTracks)
-                                    .filter((s:IHeatmapTrackSpec) => s.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
+                                    .filter((s:IHeatmapTrackSpec) => s.molecularAlterationType === AlterationTypeConstants.TREATMENT_RESPONSE)
                                     .groupBy((track:IHeatmapTrackSpec) => track.molecularProfileId)
                                     .mapValues( (o:IHeatmapTrackSpec[]) => _(o).flatMap((d)=>d.data).filter((d:IBaseHeatmapTrackDatum) => ! d.category).map((d)=>d.profile_data).value() )
                                     .value();
@@ -959,7 +959,7 @@ export function transitionHeatmapTrack(
         // store relation between React heatmap track specs and OncoprintJS trackIds
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
 
-        if (nextSpec.molecularAlterationType !== AlterationTypeConstants.GENERIC_ASSAY) {
+        if (nextSpec.molecularAlterationType !== AlterationTypeConstants.TREATMENT_RESPONSE) {
             let trackIdForRuleSetSharingKey:"heatmap"|"heatmap01" = "heatmap";
             if (nextSpec.molecularAlterationType === "METHYLATION") {
                 trackIdForRuleSetSharingKey = "heatmap01";
@@ -987,7 +987,7 @@ export function transitionHeatmapTrack(
             oncoprint.setTrackInfo(trackId, nextSpec.info);
         }
         // treatment profile tracks always are associated with the last added added track id
-        if (nextSpec.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY
+        if (nextSpec.molecularAlterationType === AlterationTypeConstants.TREATMENT_RESPONSE
              && trackIdForRuleSetSharing.treatment![nextSpec.molecularProfileId] !== undefined) {
                  const rulesetTrackId = trackIdForRuleSetSharing.treatment![nextSpec.molecularProfileId];
                  oncoprint.shareRuleSet(rulesetTrackId!, trackId);

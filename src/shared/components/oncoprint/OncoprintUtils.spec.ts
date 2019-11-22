@@ -408,13 +408,13 @@ describe('OncoprintUtils', () => {
                 key: 'TREATMENTTRACK_1',
                 label: '',
                 molecularProfileId: "profile1",
-                molecularAlterationType: "GENERIC_ASSAY",
+                molecularAlterationType: "TREATMENT",
                 data: [
                     {profile_data: 1, study: "study1", uid: "uid"}, 
                     {profile_data: 2, study: "study1", uid: "uid"}, 
                     {profile_data: 3, study: "study1", uid: "uid"}
                 ],
-                datatype: "GENERIC_ASSAY",
+                datatype: "TREATMENT",
                 trackGroupIndex: 1,
                 onRemove: () => {}
             };
@@ -466,13 +466,13 @@ describe('getTreatmentTrackRuleSetParams', () => {
         key: 'TREATMENTTRACK_1',
         label: '',
         molecularProfileId: "profile_1",
-        molecularAlterationType: "GENERIC_ASSAY",
+        molecularAlterationType: "TREATMENT",
         data: [
             {profile_data: 1, study: "study1", uid: "uid"},
             {profile_data: 2, study: "study1", uid: "uid"},
             {profile_data: 3, study: "study1", uid: "uid"}
         ] as any as IBaseHeatmapTrackDatum[],
-        datatype: "GENERIC_ASSAY",
+        datatype: "TREATMENT",
         trackGroupIndex: 1,
         maxProfileValue: 100,
         minProfileValue: -100,
