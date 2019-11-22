@@ -8,7 +8,7 @@ import $ from "jquery";
 import {
     getDownloadData, getMutationLabel,
     IMutationOncoprintTrackDatum, IMutationOncoprintTrackSpec,
-    makeMutationHeatmapData
+    makeMutationHeatmapData, MUTATION_ONCOPRINT_NA_SHAPES
 } from "./MutationOncoprintUtils";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../../../shared/components/ErrorMessage";
@@ -350,7 +350,8 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     },
                     sortDirectionChangeable: false,
                     initSortDirection:-1 as -1,
-                    movable: false
+                    movable: false,
+                    customNaShapes:MUTATION_ONCOPRINT_NA_SHAPES
                 });
             });
             return Promise.resolve(tracks);
@@ -411,7 +412,8 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     },
                     sortDirectionChangeable: false,
                     initSortDirection:-1 as -1,
-                    movable: false
+                    movable: false,
+                    customNaShapes:MUTATION_ONCOPRINT_NA_SHAPES
                 });
             });
             return Promise.resolve(tracks);

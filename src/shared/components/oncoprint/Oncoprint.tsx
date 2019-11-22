@@ -10,6 +10,7 @@ import {
     ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import "./styles.scss";
+import {ShapeParams} from "oncoprintjs/dist/js/oncoprintshape";
 
 export type ClinicalTrackDatum = {
     attr_id: string;
@@ -135,6 +136,7 @@ export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     sortOrder?: string;
     maxProfileValue?: number;
     minProfileValue?: number;
+    customNaShapes?:ShapeParams[];
 }
 export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGenesetHeatmapTrackDatum[];

@@ -180,7 +180,8 @@ export function getHeatmapTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):RuleS
         value_stop_points,
         null_color: 'rgba(224,224,224,1)',
         null_legend_label,
-        na_legend_label
+        na_legend_label,
+        na_shapes:trackSpec.customNaShapes
     };
 }
 

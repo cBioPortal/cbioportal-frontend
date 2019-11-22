@@ -7,12 +7,30 @@ import {isSampleProfiled} from "../../../../shared/lib/isSampleProfiled";
 import {MutationStatus} from "../PatientViewMutationsTabUtils";
 import {getVariantAlleleFrequency} from "../../../../shared/lib/MutationUtils";
 import {MutationOncoprintMode} from "./MutationOncoprint";
+import {ShapeParams} from "oncoprintjs/dist/js/oncoprintshape";
 
 export interface IMutationOncoprintTrackDatum extends IGeneHeatmapTrackDatum {
     mutation:Mutation;
     mutationStatus:MutationStatus;
     mutationId:string;
 }
+
+export const MUTATION_ONCOPRINT_NA_SHAPES:ShapeParams[] = [
+    {
+        'type': 'rectangle',
+        'fill': 'rgba(255,255,255,1)',
+        'z':1000
+    }, {
+        'type': 'line',
+        'stroke': 'rgba(190,190,190,1)',
+        'stroke-width': '1',
+        'x1': '20%',
+        'x2': '80%',
+        'y1':'50%',
+        'y2':'50%',
+        'z':1000
+    }
+];
 
 export interface IMutationOncoprintTrackSpec extends IHeatmapTrackSpec {
     data:IMutationOncoprintTrackDatum[];
