@@ -487,11 +487,11 @@ const quickPlots: QuickPlot[] = [
     {
         isApplicableToQuery: (dataTypes: PlotsTabOption[]): boolean => {
             return (
-                dataTypes.find((dataType) => dataType.value === "GENERIC_ASSAY") !== undefined
+                dataTypes.find((dataType) => dataType.value === "TREATMENT") !== undefined
             );
         }, toButtonInfo: (vertical: TypeSourcePair, horizontal: TypeSourcePair, dataTypes: PlotsTabOption[]): ButtonInfo => {
             const selected = (
-                vertical.type === "GENERIC_ASSAY" &&
+                vertical.type === "TREATMENT" &&
                 horizontal.type === NONE_SELECTED_OPTION_STRING_VALUE
             )
 
@@ -508,7 +508,7 @@ const quickPlots: QuickPlot[] = [
                     },
                     vertical: {
                         dataType: dataTypes.find(
-                            dataType => dataType.value === 'GENERIC_ASSAY'
+                            dataType => dataType.value === 'TREATMENT'
                         ),
                         dataSource: undefined,
                     },
