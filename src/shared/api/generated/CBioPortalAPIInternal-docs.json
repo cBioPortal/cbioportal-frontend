@@ -2060,21 +2060,13 @@
     "CoExpression": {
       "type": "object",
       "required": [
-        "cytoband",
         "geneticEntityId",
-        "geneticEntityName",
         "geneticEntityType",
         "pValue",
         "spearmansCorrelation"
       ],
       "properties": {
-        "cytoband": {
-          "type": "string"
-        },
         "geneticEntityId": {
-          "type": "string"
-        },
-        "geneticEntityName": {
           "type": "string"
         },
         "geneticEntityType": {
