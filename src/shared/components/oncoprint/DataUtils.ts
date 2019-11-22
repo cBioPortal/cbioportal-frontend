@@ -22,9 +22,7 @@ import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {CoverageInformation, ExtendedClinicalAttribute} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
-import {stringListToIndexSet} from "../../../public-lib/lib/StringUtils";
-import {isNotGermlineMutation} from "../../lib/MutationUtils";
-import { alphabeticalDefault } from "./SortUtils";
+import {stringListToIndexSet} from "cbioportal-frontend-commons";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "-2": "homdel",

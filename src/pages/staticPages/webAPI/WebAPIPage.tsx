@@ -2,7 +2,6 @@ import * as React from 'react';
 import {observer} from 'mobx-react';
 import {observable} from "mobx";
 import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
-import StaticContent from "../../../shared/components/staticContent/StaticContent";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import './styles.scss';
 import Helmet from "react-helmet";
@@ -10,9 +9,7 @@ import { Link } from 'react-router';
 import AppConfig from "appConfig";
 import {isNullOrUndefined} from "util";
 import fileDownload from 'react-file-download';
-import {AppStore} from "../../../AppStore";
-import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
+import {getBrowserWindow} from "cbioportal-frontend-commons";
 
 export class UserDataAccessToken {
     @observable token : string;

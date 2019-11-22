@@ -1,6 +1,5 @@
 import * as React from 'react';
-import autobind from "autobind-decorator";
-import DownloadControls from "public-lib/components/downloadControls/DownloadControls";
+import {DownloadControls} from "cbioportal-frontend-commons";
 
 interface IChartContainer {
     getSVGElement?:()=>SVGElement|null;

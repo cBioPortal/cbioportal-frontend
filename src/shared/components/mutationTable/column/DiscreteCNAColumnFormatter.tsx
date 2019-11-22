@@ -1,12 +1,15 @@
 import * as React from 'react';
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
+import {
+    DefaultTooltip,
+    TableCellStatusIndicator,
+    TableCellStatus
+} from "cbioportal-frontend-commons";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {
     DiscreteCNACacheDataType,
     default as DiscreteCNACache
 } from "shared/cache/DiscreteCNACache";
 import {MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 
 export default class DiscreteCNAColumnFormatter {
 

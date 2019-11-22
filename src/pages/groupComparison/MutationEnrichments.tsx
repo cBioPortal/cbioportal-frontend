@@ -9,7 +9,7 @@ import AlterationEnrichmentContainer from "../resultsView/enrichments/Alteration
 import autobind from "autobind-decorator";
 import { MakeMobxView } from "../../shared/components/MobxView";
 import { MakeEnrichmentsTabUI } from "./GroupComparisonUtils";
-import { remoteData } from "public-lib/api/remoteData";
+import { remoteData } from "cbioportal-frontend-commons";
 import _ from "lodash";
 import { AlterationContainerType } from "pages/resultsView/enrichments/EnrichmentsUtil";
 
