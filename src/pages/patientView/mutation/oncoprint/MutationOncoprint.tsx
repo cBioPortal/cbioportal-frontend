@@ -98,7 +98,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             if (this.mode === MutationOncoprintMode.SAMPLE_TRACKS && uid!== null) {
                 const mutation = this.mutationKeyToMutation[uid];
                 if (mutation) {
-                    this.props.dataStore.toggleHighlightedMutation(mutation);
+                    this.props.dataStore.toggleSelectedMutation(mutation);
                 }
             } else if (this.mode === MutationOncoprintMode.MUTATION_TRACKS && track_id !== undefined) {
                 if (this.oncoprintComponent) {
@@ -106,11 +106,11 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     const key = this.oncoprintComponent.getTrackSpecKey(track_id);
                     const mutation = key && this.mutationKeyToMutation[key];
                     if (mutation) {
-                        this.props.dataStore.toggleHighlightedMutation(mutation);
+                        this.props.dataStore.toggleSelectedMutation(mutation);
                     }
                 }
             } else {
-                this.props.dataStore.setHighlightedMutations([]);
+                this.props.dataStore.setSelectedMutations([]);
             }
         });
     }
@@ -139,7 +139,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     // TODO: be able to highlight a track in mutation track mode
     @computed get highlightedMutationIds() {
         const mutation = this.props.dataStore.getMouseOverMutation();
-        const highlighted = this.props.dataStore.highlightedMutations.slice();
+        const highlighted = this.props.dataStore.selectedMutations.slice();
         if (mutation) {
             highlighted.push(mutation);
         }

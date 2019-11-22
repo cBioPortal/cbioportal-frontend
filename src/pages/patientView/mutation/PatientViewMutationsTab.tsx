@@ -8,7 +8,7 @@ import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
 import SampleManager from "../SampleManager";
 import {IColumnVisibilityDef} from "../../../shared/components/columnVisibilityControls/ColumnVisibilityControls";
-import VAFLineChart from "./VAFLineChart";
+import VAFLineChart, {SHOW_ONLY_SELECTED_LABEL} from "./VAFLineChart";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
@@ -118,12 +118,12 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
             <div>
                 <div style={{display:"flex", alignItems:"center", marginBottom:5}}>
                     <LabeledCheckbox
-                        checked={this.dataStore.onlyShowHighlightedInVAFChart}
-                        onChange={()=>this.dataStore.setOnlyShowHighlightedInVAFChart(!this.dataStore.onlyShowHighlightedInVAFChart)}
+                        checked={this.dataStore.onlyShowSelectedInVAFChart}
+                        onChange={()=>this.dataStore.setOnlyShowSelectedInVAFChart(!this.dataStore.onlyShowSelectedInVAFChart)}
                         labelProps={{style:{ marginRight:10}}}
                         inputProps={{"data-test":"VAFOnlyHighlighted"}}
                     >
-                        <span style={{marginTop:-3}}>Show only highlighted mutations</span>
+                        <span style={{marginTop:-3}}>{SHOW_ONLY_SELECTED_LABEL}</span>
                     </LabeledCheckbox>
                     <LabeledCheckbox
                         checked={this.vafLineChartLogScale}
@@ -167,7 +167,7 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
     @autobind
     private onTableRowClick(d:Mutation[]) {
         if (d.length) {
-            this.dataStore.toggleHighlightedMutation(d[0]);
+            this.dataStore.toggleSelectedMutation(d[0]);
         }
     }
     @autobind
@@ -200,12 +200,12 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
             <div data-test="GenomicEvolutionMutationTable">
                 <div style={{ float: "left", marginRight: 15, marginTop: 4 }} >
                     <LabeledCheckbox
-                        checked={this.dataStore.onlyShowHighlightedInTable}
-                        onChange={()=>this.dataStore.setOnlyShowHighlightedInTable(!this.dataStore.onlyShowHighlightedInTable)}
+                        checked={this.dataStore.onlyShowSelectedInTable}
+                        onChange={()=>this.dataStore.setOnlyShowSelectedInTable(!this.dataStore.onlyShowSelectedInTable)}
                         labelProps={{style:{ marginRight:10}}}
                         inputProps={{"data-test":"TableShowOnlyHighlighted"}}
                     >
-                        <span style={{marginTop:-3}}>Show only highlighted mutations</span>
+                        <span style={{marginTop:-3}}>Show only selected mutations</span>
                     </LabeledCheckbox>
                 </div>
                 <PatientViewMutationTable

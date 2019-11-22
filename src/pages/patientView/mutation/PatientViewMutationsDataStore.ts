@@ -15,60 +15,60 @@ function mutationIdKey(m:Mutation) {
 
 export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<Mutation[]> {
     @observable.ref private mouseOverMutation:Readonly<Mutation>|null = null;
-    private highlightedMutationsMap = observable.map<Mutation>();
-    @observable private _onlyShowHighlightedInTable = false;
-    @observable private _onlyShowHighlightedInVAFChart = false;
+    private selectedMutationsMap = observable.map<Mutation>();
+    @observable private _onlyShowSelectedInTable = false;
+    @observable private _onlyShowSelectedInVAFChart = false;
 
     public getMouseOverMutation() {
         return this.mouseOverMutation;
     }
 
-    public get onlyShowHighlightedInTable() {
-        return this._onlyShowHighlightedInTable;
+    public get onlyShowSelectedInTable() {
+        return this._onlyShowSelectedInTable;
     }
 
-    public get onlyShowHighlightedInVAFChart() {
-        return this._onlyShowHighlightedInVAFChart;
+    public get onlyShowSelectedInVAFChart() {
+        return this._onlyShowSelectedInVAFChart;
     }
 
     public setMouseOverMutation(m:Readonly<Mutation>|null) {
         this.mouseOverMutation = m;
     }
 
-    public setOnlyShowHighlightedInTable(o:boolean) {
-        this._onlyShowHighlightedInTable = o;
+    public setOnlyShowSelectedInTable(o:boolean) {
+        this._onlyShowSelectedInTable = o;
     }
 
-    public setOnlyShowHighlightedInVAFChart(o:boolean) {
-        this._onlyShowHighlightedInVAFChart = o;
+    public setOnlyShowSelectedInVAFChart(o:boolean) {
+        this._onlyShowSelectedInVAFChart = o;
     }
 
     @action
-    public toggleHighlightedMutation(m:Readonly<Mutation>) {
+    public toggleSelectedMutation(m:Readonly<Mutation>) {
         const key = mutationIdKey(m);
-        if (this.highlightedMutationsMap.has(key)) {
-            this.highlightedMutationsMap.delete(key);
+        if (this.selectedMutationsMap.has(key)) {
+            this.selectedMutationsMap.delete(key);
         } else {
-            this.highlightedMutationsMap.set(key, m);
+            this.selectedMutationsMap.set(key, m);
         }
     }
 
     @action
-    public setHighlightedMutations(muts:Readonly<Mutation[]>) {
-        this.highlightedMutationsMap.clear();
+    public setSelectedMutations(muts:Readonly<Mutation[]>) {
+        this.selectedMutationsMap.clear();
         let count = 0;
         for (const m of muts) {
-            this.toggleHighlightedMutation(m);
+            this.toggleSelectedMutation(m);
             count += 1;
         }
     }
 
-    @computed public get highlightedMutations():Readonly<Mutation[]> {
-        return this.highlightedMutationsMap.entries().map(x=>x[1]);
+    @computed public get selectedMutations():Readonly<Mutation[]> {
+        return this.selectedMutationsMap.entries().map(x=>x[1]);
     }
 
-    public isMutationHighlighted(m:Mutation) {
-        return this.highlightedMutationsMap.has(mutationIdKey(m));
+    public isMutationSelected(m:Mutation) {
+        return this.selectedMutationsMap.has(mutationIdKey(m));
     }
 
     @computed get sortedFilteredData() {
@@ -77,10 +77,10 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         return this.sortedData.filter((d:Mutation[])=>{
             const stringFilter = this.dataFilter(d, this.filterString, filterStringUpper, filterStringLower);
 
-            // filter out non-highlighted mutations if onlyShowHighlighted is true, or if there are no highlighted mutations
-            const highlightFilter = !this._onlyShowHighlightedInTable || this.highlightedMutations.length === 0 || _.some(this.highlightedMutations, m=>mutationMatch(d, m));
+            // filter out non-selected mutations
+            const selectedFilter = !this._onlyShowSelectedInTable || this.selectedMutations.length === 0 || _.some(this.selectedMutations, m=>mutationMatch(d, m));
 
-            return stringFilter && highlightFilter;
+            return stringFilter && selectedFilter;
         });
     }
 
@@ -89,9 +89,9 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
 
         this.dataHighlighter = (d:Mutation[])=>{
             const highlightedMutations = [];
-            if (!this.onlyShowHighlightedInTable) {
-                // dont put highlight on highlighted mutations if those are all we're showing
-                highlightedMutations.push(...this.highlightedMutations);
+            if (!this.onlyShowSelectedInTable) {
+                // dont put highlight on selected mutations if those are all we're showing
+                highlightedMutations.push(...this.selectedMutations);
             }
             if (this.mouseOverMutation) {
                 highlightedMutations.push(this.mouseOverMutation);
