@@ -84,11 +84,7 @@ import GenesetCorrelatedGeneCache from '../../shared/cache/GenesetCorrelatedGene
 import TreatmentMolecularDataCache from '../../shared/cache/TreatmentMolecularDataCache';
 import GeneCache from '../../shared/cache/GeneCache';
 import GenesetCache from '../../shared/cache/GenesetCache';
-import { IOncoKbData } from '../../shared/model/OncoKB';
-import { generateQueryVariantId } from '../../public-lib/lib/OncoKbUtils';
-import TreatmentCache from '../../shared/cache/TreatmentCache';
 import {IOncoKbData} from '../../shared/model/OncoKB';
-import {generateQueryVariantId} from '../../public-lib/lib/OncoKbUtils';
 import {
     AlterationEnrichment,
     CosmicMutation,
@@ -125,9 +121,7 @@ import {
     initializeCustomDriverAnnotationSettings,
     isRNASeqProfile,
     makeEnrichmentDataPromise,
-    fetchPatients,
-    FilteredAndAnnotatedMutationsReport,
-    compileMutations, getMolecularProfiles,
+    getMolecularProfiles,
 } from './ResultsViewPageStoreUtils';
 import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
 import {isSampleProfiledInMultiple} from '../../shared/lib/isSampleProfiled';
@@ -185,15 +179,10 @@ import {
     UniqueKey,
 } from 'pages/studyView/StudyViewUtils';
 import {FRACTION_GENOME_ALTERED, MUTATION_COUNT,} from 'pages/studyView/StudyViewPageStore';
-import {IVirtualStudyProps} from 'pages/studyView/virtualStudy/VirtualStudy';
-import {decideMolecularProfileSortingOrder} from './download/DownloadUtils';
-import {
-    MUTATION_COUNT,
-    FRACTION_GENOME_ALTERED,
-} from 'pages/studyView/StudyViewPageStore';
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
+import {generateQueryVariantId} from "public-lib";
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -572,15 +561,11 @@ export class ResultsViewPageStore {
         return getMolecularProfiles(this.urlWrapper.query);
     }
 
-    //@observable tabId: ResultsViewTab|undefined = undefined;
-
     @computed get tabId() {
         return this.urlWrapper.tabId || ResultsViewTab.ONCOPRINT;
     }
 
     @observable public resultsPageSettingsVisible = false;
-
-    @observable tabId: ResultsViewTab | undefined = undefined;
 
     @observable public checkingVirtualStudies = false;
 
