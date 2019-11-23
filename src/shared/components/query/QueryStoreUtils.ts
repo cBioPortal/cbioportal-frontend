@@ -12,7 +12,7 @@ export type MolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'genetic_profile_ids_PROFILE_MUTATION_EXTENDED' | 'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION' |
     'genetic_profile_ids_PROFILE_MRNA_EXPRESSION' | 'genetic_profile_ids_PROFILE_METHYLATION' |
     'genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION' | 'genetic_profile_ids_PROFILE_GENESET_SCORE' |
-    'genetic_profile_ids_PROFILE_GENERIC_ASSAY' |  'genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT'>;
+    'genetic_profile_ids_PROFILE_GENERIC_ASSAY' >;
 
 
 export function currentQueryParams(store:QueryStore) {
@@ -66,8 +66,7 @@ export function molecularProfileParams(store:QueryStore, molecularProfileIds?:Re
         genetic_profile_ids_PROFILE_METHYLATION: store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION", molecularProfileIds) || store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION_BINARY", molecularProfileIds),
         genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("PROTEIN_LEVEL", molecularProfileIds),
         genetic_profile_ids_PROFILE_GENESET_SCORE: store.getSelectedProfileIdFromMolecularAlterationType("GENESET_SCORE", molecularProfileIds),
-        genetic_profile_ids_PROFILE_GENERIC_ASSAY: store.getSelectedProfileIdFromMolecularAlterationType("GENERIC_ASSAY", molecularProfileIds),
-        genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT: store.getSelectedProfileIdFromMolecularAlterationType("STRUCTURAL_VARIANT", molecularProfileIds)
+        genetic_profile_ids_PROFILE_GENERIC_ASSAY: store.getSelectedProfileIdFromMolecularAlterationType("GENERIC_ASSAY", molecularProfileIds)
     };
 }
 

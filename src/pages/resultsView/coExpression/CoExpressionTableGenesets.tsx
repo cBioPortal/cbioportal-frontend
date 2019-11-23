@@ -26,8 +26,8 @@ const Q_VALUE_COLUMN_NAME = "q-Value";
 const COLUMNS = [
     {
         name: "Correlated Gene Set",
-        render: (d:CoExpressionWithQ)=>(<span style={{fontWeight:"bold"}}>{d.geneticEntityName.length > 28 ? 
-            d.geneticEntityName.substring(0, 25) + "..." : 
+        render: (d:CoExpressionWithQ)=>(<span style={{fontWeight:"bold"}}>{d.geneticEntityName.length > 28 ?
+            d.geneticEntityName.substring(0, 25) + "..." :
             d.geneticEntityName}</span>),
         filter:(d:CoExpressionWithQ, f:string, filterStringUpper:string)=>(d.geneticEntityName.indexOf(filterStringUpper) > -1),
         download:(d:CoExpressionWithQ)=>d.geneticEntityName,

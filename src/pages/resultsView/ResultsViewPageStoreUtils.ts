@@ -1,7 +1,7 @@
 import {
     Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation, Patient, Sample, CancerStudy, ClinicalAttribute, PatientIdentifier,
-    PatientFilter, SampleMolecularIdentifier, StructuralVariantFilter, ReferenceGenomeGene
+    PatientFilter, ReferenceGenomeGene, StructuralVariantFilter
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action, computed} from "mobx";
 import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";

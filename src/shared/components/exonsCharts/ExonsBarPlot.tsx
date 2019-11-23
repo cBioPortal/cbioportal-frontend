@@ -37,10 +37,11 @@ export default class ExonBarPlot extends React.Component<IExonBarPlotProps, {}> 
     renderExonToolTipContent = (exonRange: ExonRangeExt) => {
         return (
             <ul style={{listStyleType: 'none', padding: 0}}>
-                <li style={{color: exonRange.fillColor}}><strong>{exonRange.exonId}</strong></li>
-                <li>exon: <strong>{exonRange.rank}</strong></li>
-                <li>{`${exonRange.exonStart} - ${exonRange.exonEnd}`}</li>
+                <li style={{color: exonRange!.fillColor}}><strong>{exonRange!.exonId}</strong></li>
+                <li>exon: <strong>{exonRange!.rank}</strong></li>
+                <li>{`${exonRange!.exonStart} - ${exonRange!.exonEnd}`}</li>
             </ul>
+
         );
     };
 
