@@ -47,9 +47,10 @@ if [[ "$CIRCLECI" = true ]]; then
         python3 $TEST_HOME/shared/get_pullrequest_info.py $GITHUB_PR_API_PATH
         eval $(python3 $TEST_HOME/shared/get_pullrequest_info.py $GITHUB_PR_API_PATH)
         
-        # Check whether the pull request is of 'draft' state when BACKEND is specified in custom.sh 
-        # This requirement ensures that only pull requests against a accepted backend are merged
-        if [[ -n $BACKEND ]] && [[ $PULL_REQUEST_STATE != "draft" ]]; then
+        # Only allow committing a BACKEND variable in custom.sh if the PR is in
+        # draft state. We do allow setting custom.sh programmatically on CI (as
+        # is done in the backend repo), which is why we use `git show`.
+        if git show HEAD:env/custom.sh | grep -q BACKEND && [[ $PULL_REQUEST_STATE != "draft" ]]; then
             echo "Error: BACKEND variable defined in custom.sh, but pull request state is not 'draft'"
             echo "Remove BACKEND variable from custom.sh or change the pull request into a draft pull request."
             exit 1
