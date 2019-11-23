@@ -65,7 +65,7 @@ export class ExonsChartStore {
         let exons: Array<ExonRangeExt> = [];
         if (siteId === 1 || siteId === 2) {
             const {result} = this.transcriptsById;
-            if (result) {
+            if (result !== undefined && result[transcriptId] !== undefined) {
                 const sortedExons = <ExonRangeExt[]> result[transcriptId][0].exons.sort(
                     // sort exons by rank
                     (exon1: ExonRangeExt, exon2: ExonRangeExt) => exon1.rank - exon2.rank
