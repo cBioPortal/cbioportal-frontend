@@ -4,6 +4,7 @@ import { PatientSurvival } from "../../../shared/model/PatientSurvival";
 import {action, computed, observable, runInAction} from "mobx";
 import { Popover, Table } from 'react-bootstrap';
 import styles from "./styles.module.scss";
+import "./styles.scss";
 import { sleep } from "../../../shared/lib/TimeUtils";
 import * as _ from 'lodash';
 import {
@@ -27,6 +28,8 @@ import classnames from "classnames";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
+import Slider from 'react-rangeslider'
+import { EditableSpan, pluralize } from 'cbioportal-frontend-commons';
 
 export enum LegendLocation {
     TOOLTIP = "tooltip",
@@ -57,7 +60,7 @@ export interface ISurvivalChartProps {
     showNaPatientsHiddenToggle?:boolean;
     showLogRankPVal?:boolean;
     showDownloadButtons?: boolean;
-    disableZoom?: boolean;
+    showSlider?: boolean;
     styleOpts?: any; // see victory styles, and styleOptsDefaultProps for examples
     className?: string;
     showCurveInTooltip?:boolean;
@@ -73,6 +76,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     @observable.ref tooltipModel: any;
     @observable scatterFilter: SurvivalPlotFilters;
     @observable highlightedCurve = "";
+    @observable public sliderValue = this.maximumDataMonthValue;
     // The denominator should be determined based on the plot width and height.
     private isTooltipHovered: boolean = false;
     private tooltipCounter: number = 0;
@@ -221,7 +225,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     public static defaultProps: Partial<ISurvivalChartProps> = {
         showTable: true,
-        disableZoom: false,
+        showSlider: true,
         legendLocation: LegendLocation.CHART,
         showLogRankPVal: true,
         showNaPatientsHiddenToggle: false,
@@ -410,6 +414,26 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         return this.victoryLegendData.length > 0;
     }
 
+    @computed get maximumDataMonthValue() {
+        return _.chain(this.sortedGroupedSurvivals)
+                .map((survivals) => survivals[survivals.length - 1].months)
+                .max()
+                .ceil()
+                .value();
+    }
+
+    @autobind
+    @action
+    onSliderChange(value: number) {
+        this.sliderValue = value;
+    }
+
+    @autobind
+    @action
+    onSliderTextChange(text: string) {
+        this.sliderValue = Number.parseFloat(text);
+    }
+
     @computed
     get chart() {
         return (
@@ -427,8 +451,41 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 />
                 }
 
+                {
+                    (this.props.showSlider) && (
+                        <div className="small" style={{display: "flex", alignItems: "center", marginLeft: 60}}>
+                            <span>X-Axis Max:</span>
+                            <div
+                                className={"RangeSliderContainer"}
+                                style={{
+                                    width: 300,
+                                    marginLeft: 10,
+                                    marginRight: 10
+                                }}
+                            >
+                                <Slider
+                                    min={0}
+                                    max={this.maximumDataMonthValue}
+                                    value={this.sliderValue}
+                                    onChange={this.onSliderChange}
+                                    tooltip={false}
+                                    step={1}
+                                />
+                            </div>
+                            <EditableSpan
+                                className={styles["XmaxNumberInput"]}
+                                value={this.sliderValue.toString()}
+                                setValue={this.onSliderTextChange}
+                                numericOnly={true}
+                            />
+                            <span>{pluralize("Month", this.sliderValue)} Survival</span>
+                        </div>
+                    )
+                }
+
                 <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
-                                                                        disable={this.props.disableZoom}
+                                                                        disable={true}
+                                                                        zoomDomain={{x: [0, this.sliderValue]}}
                                                                         onZoomDomainChange={_.debounce((domain: any) => {
                                                                             this.scatterFilter = domain as SurvivalPlotFilters;
                                                                         }, 1000)}
