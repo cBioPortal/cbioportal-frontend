@@ -2,6 +2,22 @@
 
 set -e
 
+DRAFT_PR_REQUIRED=false
+
+usage() {
+    echo "-d: git PR must be in draft state in order for tests to run" 
+    exit 1
+}
+
+while getopts "d" opt; do
+    case "${opt}" in
+        d) DRAFT_PR_REQUIRED=true
+           ;;
+        \?) usage
+            ;;
+    esac
+done
+
 # -+-+-+-+-+-+-+ ENVIRONMENTAL VARIABLES +-+-+-+-+-+-+-
 
 echo export E2E_CBIOPORTAL_HOST_NAME=cbioportal
@@ -50,7 +66,7 @@ if [[ "$CIRCLECI" = true ]]; then
         # Only allow committing a BACKEND variable in custom.sh if the PR is in
         # draft state. We do allow setting custom.sh programmatically on CI (as
         # is done in the backend repo), which is why we use `git show`.
-        if git show HEAD:env/custom.sh | grep -q BACKEND && [[ $PULL_REQUEST_STATE != "draft" ]]; then
+        if git show HEAD:env/custom.sh | grep -q BACKEND && [ "$DRAFT_PR_REQUIRED" = true ] && [[ $PULL_REQUEST_STATE != "draft" ]]; then
             echo "Error: BACKEND variable defined in custom.sh, but pull request state is not 'draft'"
             echo "Remove BACKEND variable from custom.sh or change the pull request into a draft pull request."
             exit 1
