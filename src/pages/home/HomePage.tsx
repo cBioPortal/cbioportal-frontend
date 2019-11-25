@@ -16,6 +16,7 @@ import "./homePage.scss";
 import autobind from "autobind-decorator";
 import {ResultsViewTab} from "pages/resultsView/ResultsViewPageHelpers";
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
+import {createQueryStore} from "shared/lib/createQueryStore";
 
 (Chart as any).plugins.register({
     beforeDraw: function (chartInstance: any) {
@@ -31,32 +32,6 @@ export interface IResultsViewPageProps {
     routing: any;
 }
 
-export function createQueryStore(currentQuery?:any) {
-
-    const win:any = window;
-
-    const queryStore = new QueryStore(currentQuery);
-
-    queryStore.singlePageAppSubmitRoutine = function(query:CancerStudyQueryUrlParams) {
-
-        // normalize this
-        query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
-        delete query.cancer_study_id;
-
-        const tab = (queryStore.physicalStudyIdsInSelection.length > 1 && queryStore.geneIds.length === 1) ?
-             ResultsViewTab.CANCER_TYPES_SUMMARY : ResultsViewTab.ONCOPRINT;
-
-        const wrapper = new ResultsViewURLWrapper(win.routingStore);
-
-        wrapper.updateURL(query,`results/${tab}`, true, false);
-
-        wrapper.destroy();
-
-    };
-
-    return queryStore;
-
-}
 
 @inject('routing')
 @observer

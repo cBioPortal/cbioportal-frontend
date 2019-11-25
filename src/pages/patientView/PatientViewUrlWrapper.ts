@@ -18,6 +18,6 @@ export default class PatientViewUrlWrapper extends URLWrapper<PatientViewUrlQuer
     }
 
     public setTab(tab: string): void {
-        this.routing.updateRoute({}, `${PagePath.Patient}/${tab}`);
-    } 
+        this.updateURL({}, `${PagePath.Patient}/${tab}`);
+    }
 }

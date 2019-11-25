@@ -193,7 +193,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         }
 
-        console.log("computing selectedClinicalAttributeIds");
         return list.reduce((acc, key)=>{
             acc.set(key, true);
             return acc;
@@ -260,28 +259,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
-        // The heatmap tracks can only be added when detailed information on
-        // molecular profiles has been retrieved from the server.
-        // onMobxPromise(props.store.molecularProfileIdToMolecularProfile, (result:any)=>{
-        //     this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
-        // });
-
-        // onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
-        //     if (studyIds.length > 1) {
-        //         this.selectedClinicalAttributeIds.set(SpecialAttribute.StudyOfOrigin, true);
-        //     }
-        // });
-        // onMobxPromise([props.store.samples, props.store.patients], (samples:any[], patients:any[])=>{
-        //     if (samples.length !== patients.length) {
-        //         this.selectedClinicalAttributeIds.set(SpecialAttribute.NumSamplesPerPatient, true);
-        //     }
-        // });
-        //
-        // onMobxPromise(props.store.clinicalAttributes_profiledIn, (result:any[])=>{
-        //     for (const attr of result) {
-        //         this.selectedClinicalAttributeIds.set(attr.clinicalAttributeId, true);
-        //     }
-        // });
         const self = this;
 
         this.onChangeSelectedClinicalTracks = this.onChangeSelectedClinicalTracks.bind(this);
@@ -306,29 +283,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         this.onMouseEnter = this.onMouseEnter.bind(this);
         this.onMouseLeave = this.onMouseLeave.bind(this);
-
-        // update URL parameters according to UI events
-        // and trigger a page refresh
-        // this.urlParamsReaction = reaction(
-        //     ()=>[
-        //         this.treatmentsUrlParam
-        //     ],
-        //     ()=>{
-        //         const newParams = Object.assign({}, getBrowserWindow().globalStores.routing.location.query);
-        //         // if (!this.heatmapTrackGroupsUrlParam) {
-        //         //     delete newParams[HEATMAP_TRACKS_URL_PARAM];
-        //         // } else {
-        //         //     newParams[HEATMAP_TRACKS_URL_PARAM] = this.heatmapTrackGroupsUrlParam;
-        //         // }
-        //
-        //         // if (!this.treatmentsUrlParam) {
-        //         //     delete newParams[TREATMENT_LIST_URL_PARAM];
-        //         // } else {
-        //         //     newParams[TREATMENT_LIST_URL_PARAM] = this.treatmentsUrlParam;
-        //         // }
-        //         getBrowserWindow().globalStores.routing.updateRoute(newParams, undefined, true, true);
-        //     }
-        // );
 
         this.controlsHandlers = this.buildControlsHandlers();
 
