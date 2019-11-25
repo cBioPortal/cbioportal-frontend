@@ -46,6 +46,7 @@ import setWindowVariable from 'shared/lib/setWindowVariable';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import {createQueryStore} from "shared/lib/createQueryStore";
+import {handleLegacySubmission} from "shared/lib/redirectHelpers";
 
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     const resultsViewPageStore = new ResultsViewPageStore(
@@ -100,6 +101,8 @@ export default class ResultsViewPage extends React.Component<
         super(props);
 
         this.urlWrapper = new ResultsViewURLWrapper(props.routing);
+
+        handleLegacySubmission(this.urlWrapper);
 
         setWindowVariable('urlWrapper', this.urlWrapper);
 
@@ -491,7 +494,7 @@ export default class ResultsViewPage extends React.Component<
                         showDownloadTab={false}
                         showAlerts={true}
                         getQueryStore={() =>
-                            createQueryStore(this.urlWrapper.query)
+                            createQueryStore(this.urlWrapper.query, this.urlWrapper)
                         }
                     />
                 </div>
