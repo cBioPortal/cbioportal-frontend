@@ -421,7 +421,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        xLabelWithEventTooltip="Time of death"
                                        xLabelWithoutEventTooltip="Time of last observation"
                                        showDownloadButtons={false}
-                                       disableZoom={true}
+                                       showSlider={false}
                                        showTable={false}
                                        styleOpts={{
                                            width: getWidthByDimension(this.props.dimension, this.borderWidth),
