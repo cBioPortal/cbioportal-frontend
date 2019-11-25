@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import $ from 'jquery';
-import {If, Then, Else} from 'react-if';
 import URL from 'url';
 import { inject, observer } from 'mobx-react';
 import { computed, observable, reaction, runInAction } from 'mobx';
@@ -71,88 +70,6 @@ function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
             }
         }
     );
-
-    // whenever study list changes, reinit driver annotation settings
-    // const driverAnnotationsReactionDisposer = reaction(
-    //     ()=>urlWrapper.query.cancer_study_list,
-    //     ()=>{
-    //         resultsViewPageStore.initDriverAnnotationSettings();
-    //     },
-    //     { fireImmediately:true }
-    // );
-
-    // let lastQuery:any;
-    // let lastPathname:string;
-    //
-    // const queryReactionDisposer = reaction(
-    //     () => {
-    //         return [getBrowserWindow().globalStores.routing.query, getBrowserWindow().globalStores.routing.location.pathname];
-    //     },
-    //     (x:any) => {
-    //
-    //         const query = x[0] as CancerStudyQueryUrlParams;
-    //         const pathname = x[1];
-    //
-    //         // escape from this if queryies are deeply equal
-    //         // TODO: see if we can figure out why query is getting changed and
-    //         // if there's any way to do shallow equality check to avoid this expensive operation
-    //         const queryChanged = !_.isEqual(lastQuery, query);
-    //         const pathnameChanged = (pathname !== lastPathname);
-    //         if (!queryChanged && !pathnameChanged) {
-    //             return;
-    //         } else {
-    //
-    //             if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/results")) {
-    //                return;
-    //             }
-    //             runInAction(()=>{
-    //                 // set query and pathname separately according to which changed, to avoid unnecessary
-    //                 //  recomputation by updating the query if only the pathname changed
-    //                 if (queryChanged) {
-    //                     // update query
-    //                     // normalize cancer_study_list this handles legacy sessions/urls where queries with single study had different param name
-    //                     // const cancer_study_list = query.cancer_study_list || query.cancer_study_id;
-    //                     //
-    //                     // const cancerStudyIds: string[] = cancer_study_list.split(",");
-    //                     //
-    //                     // const oql = decodeURIComponent(query.gene_list);
-    //
-    //                     //let samplesSpecification = parseSamplesSpecifications(query, cancerStudyIds);
-    //
-    //                     //const changes = updateResultsViewQuery(resultsViewPageStore.rvQuery, query, [], cancerStudyIds, oql);
-    //
-    //                     console.log("MUST RESTORE INIT DRIVER ANNOTATION SETTINGS");
-    //
-    //                     // if (changes.cohortIdsList) {
-    //                     //     resultsViewPageStore.initDriverAnnotationSettings();
-    //                     // }
-    //
-    //                     // onMobxPromise(resultsViewPageStore.studyIds, ()=>{
-    //                     //     try {
-    //                     //         trackQuery(resultsViewPageStore.studyIds.result!, oql, resultsViewPageStore.hugoGeneSymbols, resultsViewPageStore.queriedVirtualStudies.result!.length > 0);
-    //                     //     } catch {};
-    //                     // });
-    //
-    //                     //lastQuery = query;
-    //                 }
-    //                 // if (pathnameChanged) {
-    //                 //     // need to set tab like this instead of with injected via params.tab because we need to set the tab
-    //                 //     //  at the same time as we set the query parameters, otherwise we get race conditions where the tab
-    //                 //     //  we're on at the time we update the query doesnt get unmounted because we change the query, causing
-    //                 //     //  MSKTabs unmounting, THEN change the tab.
-    //                 //     const tabId = getTabId(pathname);
-    //                 //     if (resultsViewPageStore.tabId !== tabId) {
-    //                 //         resultsViewPageStore.tabId = tabId;
-    //                 //     }
-    //                 //     lastPathname = pathname;
-    //                 // }
-    //             });
-    //         }
-    //     },
-    //     {fireImmediately: true}
-    // );
-    //
-    // //resultsViewPageStore.queryReactionDisposer = queryReactionDisposer;
 
     return resultsViewPageStore;
 }

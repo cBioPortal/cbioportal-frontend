@@ -27,11 +27,7 @@ describe('ExtendedRouterStore', () => {
 
     beforeEach(()=>{
         routingStore = new ExtendedRouterStore();
-        routingStore.urlLengthThresholdForSession = 1000;
         history = syncHistoryWithStore(createMemoryHistory(), routingStore);
-        saveRemoteSessionStub = sinon.stub(routingStore,'saveRemoteSession').callsFake(function(){
-            return Promise.resolve({ id:'somekey'});
-        });
         setServerConfig({ sessionServiceEnabled: true });
         routingStore.location.pathname = '/results';
         routingStore.location.query = {param1: 1, param2: 2, param3: 3};

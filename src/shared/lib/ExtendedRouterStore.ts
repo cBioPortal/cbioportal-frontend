@@ -49,100 +49,26 @@ export function normalizeLegacySession(sessionData:any){
     return sessionData;
 }
 
-export enum QueryParameter {
-    GENE_LIST="gene_list",
-    Z_SCORE_THRESHOLD="Z_SCORE_THRESHOLD",
-    RPPA_SCORE_THRESHOLD="RPPA_SCORE_THRESHOLD",
-    CANCER_STUDY_LIST="cancer_study_list",
-    CASE_IDS="case_ids",
-    CASE_SET_ID="case_set_id",
-    GENE_SET_CHOICE="gene_set_choice",
-    GENETIC_PROFILE_IDS="genetic_profile_ids",
-    CANCER_STUDY_ID="cancer_study_id",
-    DATA_PRIORITY="data_priority",
-    GENESET_LIST="geneset_list",
-    TREATMENT_LIST="treatment_list",
-    TAB_INDEX="tab_index",
-    TRANSPOSE_MATRIX="transpose_matrix",
-    ACTION="Action"
-}
+// export enum QueryParameter {
+//     GENE_LIST="gene_list",
+//     Z_SCORE_THRESHOLD="Z_SCORE_THRESHOLD",
+//     RPPA_SCORE_THRESHOLD="RPPA_SCORE_THRESHOLD",
+//     CANCER_STUDY_LIST="cancer_study_list",
+//     CASE_IDS="case_ids",
+//     CASE_SET_ID="case_set_id",
+//     GENE_SET_CHOICE="gene_set_choice",
+//     GENETIC_PROFILE_IDS="genetic_profile_ids",
+//     CANCER_STUDY_ID="cancer_study_id",
+//     DATA_PRIORITY="data_priority",
+//     GENESET_LIST="geneset_list",
+//     TREATMENT_LIST="treatment_list",
+//     TAB_INDEX="tab_index",
+//     TRANSPOSE_MATRIX="transpose_matrix",
+//     ACTION="Action"
+// }
 
 export default class ExtendedRouterStore extends RouterStore {
 
-
-    _urlLengthThresholdForSession:number;
-
-    public saveRemoteSession = saveRemoteSession;
-
-    public getRemoteSession = getRemoteSession;
-
-    public sessionVersion = 2;
-
-    // this has to be computed to avoid annoying problem where
-    // remoteSessionData fires every time new route is pushed, even
-    // if sessionId has stayed the same
-    @computed get session_id(){
-        return this.location.query.session_id;
-    }
-
-    public get urlLengthThresholdForSession():number {
-        return this._urlLengthThresholdForSession || parseInt(AppConfig.serverConfig.session_url_length_threshold,10);
-    }
-
-    public set urlLengthThresholdForSession(val:number) {
-        this._urlLengthThresholdForSession = val;
-    }
-
-    @computed get needsRemoteSessionLookup(){
-        return false;
-        // if (!ServerConfigHelpers.sessionServiceIsEnabled()) {
-        //     return false;
-        // }
-        // const needsRemoteSessionLookup = this.session_id !== undefined && this.session_id !== "pending"
-        //     && (this._session === undefined || (this._session.id !== this.session_id));
-        // return needsRemoteSessionLookup;
-    }
-
-    // remoteSessionData = remoteData({
-    //     invoke: async () => {
-    //         if (this.session_id && this.session_id !== "pending") {
-    //             let sessionData = await this.getRemoteSession(this.session_id);
-    //
-    //             // if it has no version, it's a legacy session and needs to be normalized
-    //             if (sessionData.version === undefined) {
-    //                 sessionData = normalizeLegacySession(sessionData);
-    //             }
-    //
-    //             return sessionData;
-    //         } else {
-    //             return undefined;
-    //         }
-    //
-    //     },
-    //     onResult:()=> {
-    //         if (this.remoteSessionData.result) {
-    //             // we have to do this because session service attaches
-    //             // other data to response
-    //             this._session = {
-    //                 id: this.remoteSessionData.result!.id,
-    //                 query: this.remoteSessionData.result!.data,
-    //                 path: this.location.pathname,
-    //                 version:this.remoteSessionData.result!.version
-    //             };
-    //         } else {
-    //             if (this._session && this._session.id !== "pending") delete this._session;
-    //         }
-    //     }
-    // });
-
-    sessionEnabledForPath(path:string){
-        return false;
-        // const tests = [
-        //   /^\/results/,
-        // // ];
-        // const tests = [];
-        // return _.some(tests,(test)=>test.test(path));
-    }
 
     @action updateRoute(newParams: QueryParams, path:string | undefined = undefined, clear = false, replace = false) {
         // default to current path
@@ -167,29 +93,8 @@ export default class ExtendedRouterStore extends RouterStore {
         // put a leading slash if there isn't one
         path = URL.resolve('/', path);
 
-
-        delete this._session;
         this[replace ? "replace" : "push"]( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
 
     }
-
-    @observable public _session:PortalSession | undefined;
-
-    // @computed
-    // public get query(){
-    //     return this.location.query;
-    //     // this allows url based query to override a session (if sessionId has been cleared in url)
-    //     // if (this._session && this.location.query.session_id) {
-    //     //     return this._session.query;
-    //     // } else {
-    //     //     return this.location.query;
-    //     // }
-    // }
-
-    // @computed
-    // public get queryHash():string {
-    //     // hash representation of current query
-    //     return hashString(JSON.stringify(this.query)).toString();
-    // }
 
 }
