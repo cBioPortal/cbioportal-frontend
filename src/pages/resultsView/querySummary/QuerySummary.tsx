@@ -18,13 +18,13 @@ import {ShareUI} from "./ShareUI";
 import {ServerConfigHelpers} from "../../../config/config";
 import AppConfig from "appConfig";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
-import {createQueryStore} from "../../home/HomePage";
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {getAlterationSummary, getGeneSummary, getPatientSampleSummary, getStudyViewFilterHash} from "./QuerySummaryUtils";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
 import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
 import ResultsPageSettings from "../settings/ResultsPageSettings";
+import {createQueryStore} from "shared/lib/createQueryStore";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore, onToggleQueryFormVisiblity:(visible:boolean)=>void }, {}> {
@@ -165,7 +165,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                                   showDownloadTab={false}
                                   showAlerts={true}
                                   modifyQueryParams={this.props.store.modifyQueryParams}
-                                  getQueryStore={()=>createQueryStore(this.props.store.urlWrapper.query)}
+                                  getQueryStore={()=>createQueryStore(this.props.store.urlWrapper.query, false)}
             />
         </div>
     }
@@ -221,7 +221,8 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
                             <ShareUI sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
                                      bitlyAccessToken={AppConfig.serverConfig.bitly_access_token}
-                                     routingStore={this.props.routingStore}/>
+
+                                     urlWrapper={this.props.store.urlWrapper}/>
                         </div>
 
                     </div>
