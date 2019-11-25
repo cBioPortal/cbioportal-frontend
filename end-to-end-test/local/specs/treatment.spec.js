@@ -26,19 +26,19 @@ describe('treatment feature', function() {
             });
 
             it('shows treatment data type option in heatmap menu', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 assert( reactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'EC50 values of compounds on cellular phenotype readout') );
                 assert( reactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout') );
             });
 
             it('shows treatment text area box in heatmap menu when treatment data type is selected', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 assert( $('.oncoprint__controls__heatmap_menu.text-icon-area') );
             });
 
             it('does not show genes of gene text area in treatment text area,and vice versa', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 var geneText =  $('.oncoprint__controls__heatmap_menu textarea').getText();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 var treatmentText =  $('.oncoprint__controls__heatmap_menu textarea').getText();
@@ -48,13 +48,13 @@ describe('treatment feature', function() {
             });
 
             it('shows treatment selection box in heatmap menu when treatment data type is selected', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 assert(  $('.oncoprint__controls__heatmap_menu.treatment-selector') );
             });
 
             it('adds icon when entering a valid treatment in treatment text area', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
                 $('div.icon*=17-AAG').waitForExist();
@@ -62,7 +62,7 @@ describe('treatment feature', function() {
             });
 
             it('click of icon remove button removes icon', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
                 $('div.icon-area div.icon').waitForExist();
@@ -73,7 +73,7 @@ describe('treatment feature', function() {
             });
 
             it('removes valid treatment from treatment text area when recognized', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
                 $('div.icon-area div.icon').waitForExist();
@@ -81,14 +81,14 @@ describe('treatment feature', function() {
             });
 
             it('shows all treatments in the treatment select box', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 var treatments = getSelectCheckedOptions( $('.oncoprint__controls__heatmap_menu .treatment-selector') );
                 assert.equal(treatments.length, 10);
             });
 
             it('adds treatment to icons when selected in treatment select box', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 var treatments = getSelectCheckedOptions( $('.oncoprint__controls__heatmap_menu .treatment-selector') );
                 var treatment = treatments[0];
@@ -100,7 +100,7 @@ describe('treatment feature', function() {
             });
 
             it('filters treatment select options when using search of treatment select box', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 var searchBox = $('.oncoprint__controls__heatmap_menu .treatment-selector .default-checked-select').$('input');
                 searchBox.setValue('17-AAG');
@@ -118,7 +118,7 @@ describe('treatment feature', function() {
             });
             
             it('keeps the filtered treatments list open after selecting an option', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                
                 var searchBox = $('.oncoprint__controls__heatmap_menu .treatment-selector .default-checked-select').$('input');
@@ -138,7 +138,7 @@ describe('treatment feature', function() {
             it('initializes from `treatment_list` URL parameter', () => {
                 goToUrlAndSetLocalStorage(oncoprintTabUrl.concat('&treatment_list=17-AAG'));
                 waitForOncoprint();
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 assert($('div.icon*=17-AAG').isExisting());
                 var selectMenuEntry = selectCheckedOption($('.oncoprint__controls__heatmap_menu .treatment-selector'), 'Name of 17-AAG', true);
@@ -146,7 +146,7 @@ describe('treatment feature', function() {
             });
 
             it('sets `treatment_list` URL parameter', () => {
-                openHeatmapMenu();
+                toggleHeatmapMenu();
                 selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
                 $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
                 $('div.icon-area div.icon').waitForExist();
@@ -330,7 +330,8 @@ describe('treatment feature', function() {
 
 });
 
-var openHeatmapMenu = () => {
+var toggleHeatmapMenu = () => {
+    browser.$('button[id=heatmapDropdown]').waitForExist();
     var heatmapButton = browser.$('button[id=heatmapDropdown]');
     heatmapButton.click();
 };
@@ -367,7 +368,7 @@ var selectTreamentsBothAxes = () => {
 
 module.exports = {
     oncoprintTabUrl: oncoprintTabUrl,
-    openHeatmapMenu: openHeatmapMenu,
+    toggleHeatmapMenu: toggleHeatmapMenu,
     queryPageUrl: CBIOPORTAL_URL,
     plotsTabUrl: plotsTabUrl,
     selectTreamentsBothAxes: selectTreamentsBothAxes,

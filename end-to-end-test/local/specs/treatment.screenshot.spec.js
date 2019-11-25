@@ -7,7 +7,7 @@ var selectReactSelectOption =  require('../../shared/specUtils').selectReactSele
 var oncoprintTabUrl = require('./treatment.spec').oncoprintTabUrl;
 var plotsTabUrl = require('./treatment.spec').plotsTabUrl;
 var selectReactSelectOption =  require('../../shared/specUtils').selectReactSelectOption;
-var openHeatmapMenu = require('./treatment.spec').openHeatmapMenu;
+var toggleHeatmapMenu = require('./treatment.spec').toggleHeatmapMenu;
 var selectTreamentsBothAxes = require('./treatment.spec').selectTreamentsBothAxes;
 
 describe('treatment feature', () => {
@@ -20,19 +20,20 @@ describe('treatment feature', () => {
         });
 
         it('shows treatment profile heatmap track for treatment', () => {
-            openHeatmapMenu();
+            toggleHeatmapMenu();
             selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
             $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
             $('div.icon-area div.icon').waitForExist();
             $('button=Add Treatment Response to Heatmap').click();
-            openHeatmapMenu();
+            toggleHeatmapMenu();
             waitForOncoprint();
+            toggleHeatmapMenu();
             var res = browser.checkElement('[id=oncoprintDiv]');
             assertScreenShotMatch(res);
         });
                     
         it('selects treatment in treatment select box when icon present', () => {
-            openHeatmapMenu();
+            toggleHeatmapMenu();
             selectReactSelectOption( $('.oncoprint__controls__heatmap_menu'), 'IC50 values of compounds on cellular phenotype readout');
             $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
             $('div.icon-area div.icon').waitForExist();
