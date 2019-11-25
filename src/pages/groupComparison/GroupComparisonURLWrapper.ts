@@ -30,6 +30,6 @@ export default class GroupComparisonURLWrapper extends URLWrapper<GroupCompariso
 
     @autobind
     public setTabId(tabId:GroupComparisonTab, replace?:boolean) {
-        this.routing.updateRoute({}, `comparison/${tabId}`, false, replace);
+        this.updateURL({}, `comparison/${tabId}`, false, replace);
     }
 }
