@@ -152,7 +152,7 @@ export default class ExtendedRouterStore extends RouterStore {
         // but if we're clearing, we want to use newParams ONLY and wipe out existing query;
         let newQuery:any;
         if (!clear) {
-            newQuery = _.clone(this.query);
+            newQuery = _.clone(this.location.query);
             _.each(newParams, (v, k: string) => {
                 if (v === undefined) {
                     delete newQuery[k];
@@ -167,64 +167,29 @@ export default class ExtendedRouterStore extends RouterStore {
         // put a leading slash if there isn't one
         path = URL.resolve('/', path);
 
-        // we don't use session
-        // SESSION IS NOW BEING HANDLED BY URLWRAPPER
-        if (true){
-            // if there happens to be session, kill it because we're going URL, baby
-            delete this._session;
-            this[replace ? "replace" : "push"]( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
-        } else {
-            // we are using session: do we need to make a new session?
 
-            // we need to filter out sessionprops of new query
-
-            // if (!this._session || !_.isEqual(this._session.query,newQuery) || _.size(newParams) > 0) {
-            //     const pendingSession = {
-            //         id:'pending',
-            //         query:newQuery,
-            //         path:path,
-            //         version:this.sessionVersion
-            //     };
-            //     // add session version
-            //     this._session = pendingSession;
-            //
-            //     this[replace ? "replace" : "push"]( URL.format({pathname: path, query: { session_id:'pending'}, hash:this.location.hash}) );
-            //     this.saveRemoteSession(pendingSession.query).then((sessionResponse)=>{
-            //         this._session!.id = sessionResponse.id;
-            //         // we use replace because we don't want the pending state ("?session_id=pending") in the history
-            //         // we need to use `this.location.pathname` instead of `path` as the "pathname" parameter because
-            //         //  in the meantime the user (more likely, the E2E test runner) could have navigated to a different
-            //         //  tab and thus changed the path. If we used `path`, we'd be bringing them back to the
-            //         //  tab they were at when the session saving was initiated. We don't care about the
-            //         //  fact that this overwrites their history of that original tab, because this would likely go
-            //         //  so quickly that they wouldn't miss that in their history anyway.
-            //         this.replace( URL.format({pathname: this.location.pathname, query: {session_id:sessionResponse.id}, hash:this.location.hash}) );
-            //     });
-            // } else { // we already have a session but we only need to update path or hash
-            //
-            //     this[replace ? "replace" : "push"]( URL.format({pathname: path, query: this.location.query, hash:this.location.hash}) );
-            // }
-        }
+        delete this._session;
+        this[replace ? "replace" : "push"]( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
 
     }
 
     @observable public _session:PortalSession | undefined;
 
-    @computed
-    public get query(){
-        return this.location.query;
-        // this allows url based query to override a session (if sessionId has been cleared in url)
-        // if (this._session && this.location.query.session_id) {
-        //     return this._session.query;
-        // } else {
-        //     return this.location.query;
-        // }
-    }
+    // @computed
+    // public get query(){
+    //     return this.location.query;
+    //     // this allows url based query to override a session (if sessionId has been cleared in url)
+    //     // if (this._session && this.location.query.session_id) {
+    //     //     return this._session.query;
+    //     // } else {
+    //     //     return this.location.query;
+    //     // }
+    // }
 
-    @computed
-    public get queryHash():string {
-        // hash representation of current query
-        return hashString(JSON.stringify(this.query)).toString();
-    }
+    // @computed
+    // public get queryHash():string {
+    //     // hash representation of current query
+    //     return hashString(JSON.stringify(this.query)).toString();
+    // }
 
 }

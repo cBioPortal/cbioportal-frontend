@@ -79,6 +79,6 @@ export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuer
 
     @autobind
     public setTabId(tabId:ResultsViewTab, replace?:boolean) {
-        this.routing.updateRoute({}, `comparison/${tabId}`, false, replace);
+        this.updateURL({}, `comparison/${tabId}`, false, replace);
     }
 }

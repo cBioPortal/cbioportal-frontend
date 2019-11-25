@@ -66,10 +66,10 @@ export default class URLWrapper<
         this.query = observable<QueryParamsType>(initValues as QueryParamsType);
 
 
-        // if we have a session id, set it so that fetching will begin
-        if (sessionEnabled && routing.query.session_id) {
-            this.setSessionId(routing.query.session_id);
-        }
+        // // if we have a session id, set it so that fetching will begin
+        // if (sessionEnabled && this.sessionId) {
+        //     this.setSessionId(this.sessionId);
+        // }
 
         //per reaction below, any update to URL will result in all properties being reset.
         //to avoid update signal when properties haven't actually changed (set to existing value)
@@ -116,7 +116,7 @@ export default class URLWrapper<
 
                 runInAction(() => {
                     log("setting session", routeQuery.session_id);
-                    this.setSessionId(routeQuery.session_id);
+
                     for (const property of properties) {
                         // if property is not a session prop
                         // it will always be represented in URL
@@ -249,13 +249,6 @@ export default class URLWrapper<
 
     @computed public get isPendingSession() {
         return this.sessionId === 'pending';
-    }
-
-    public setSessionId(val:string|undefined){
-        // val = val === "" ? undefined : val; // empty string is invalid
-        // if (val !== this._sessionId) {
-        //     this._sessionId = val;
-        // }
     }
 
     @computed public get sessionId(){

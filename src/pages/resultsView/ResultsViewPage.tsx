@@ -40,13 +40,13 @@ import {
 import { AppStore } from '../../AppStore';
 import { trackQuery } from '../../shared/lib/tracking';
 import QueryAndDownloadTabs from 'shared/components/query/QueryAndDownloadTabs';
-import { createQueryStore } from 'pages/home/HomePage';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidationError';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import setWindowVariable from 'shared/lib/setWindowVariable';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
+import {createQueryStore} from "shared/lib/createQueryStore";
 
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     const resultsViewPageStore = new ResultsViewPageStore(
