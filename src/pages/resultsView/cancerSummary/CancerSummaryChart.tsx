@@ -17,10 +17,10 @@ import {pluralize} from "../../../public-lib/lib/StringUtils";
 import { HORIZONTAL_OFFSET, VERTICAL_OFFSET } from "pages/studyView/charts/barChart/BarChartToolTip";
 import { sleepUntil } from "shared/lib/TimeUtils";
 import { If, Then, Else } from "react-if";
-import { QueryParameter } from "shared/lib/ExtendedRouterStore";
 import { PagePath } from "shared/enums/PagePaths";
-import URL, {QueryParams} from 'url';
+import URL from 'url';
 import { CANCER_SUMMARY_ALL_GENES } from "./CancerSummaryContainer";
+import {ResultsViewURLQueryEnum} from "pages/resultsView/ResultsViewURLWrapper";
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -105,10 +105,10 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     private tooltipMouseEnter(): void {
         this.isBarPlotTooltipHovered = true;
     }
-    
+
     @autobind
     @action
-    private tooltipMouseLeave(): void {       
+    private tooltipMouseLeave(): void {
         this.isBarPlotTooltipHovered = false;
         this.barPlotTooltipModel = null;
     }
@@ -247,11 +247,11 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
             return studyWindow.closed ||
                 (studyWindow.globalStores && studyWindow.globalStores.appStore.appReady);
         });
-        
+
         if (!studyWindow.closed) {
-            const params: any = {[QueryParameter.CANCER_STUDY_LIST]: studyId};
+            const params: any = {[ResultsViewURLQueryEnum.cancer_study_list]: studyId};
             if (this.props.gene != CANCER_SUMMARY_ALL_GENES) {
-                params[QueryParameter.GENE_LIST] = this.props.gene;
+                params[ResultsViewURLQueryEnum.gene_list] = this.props.gene;
             }
             studyWindow.routingStore.updateRoute(params)
         }
@@ -350,8 +350,8 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: (props:any) => {
-                                self.shouldUpdatePosition = true;                                
-                                if (props.datum.xKey in self.props.countsByGroup) {                                    
+                                self.shouldUpdatePosition = true;
+                                if (props.datum.xKey in self.props.countsByGroup) {
                                     self.barPlotTooltipModel = {
                                         ...props,
                                         groupName:props.datum.x,
@@ -373,7 +373,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                             mutation: () => {
                                 // Freeze tool tip position and give user a moment to mouse over it
                                 self.shouldUpdatePosition = false;
-                                
+
                                 setTimeout(() => {
                                     // If they don't, get rid of it
                                     if (!self.isBarPlotTooltipHovered && self.barToolTipCounter === 1) {

@@ -4,34 +4,37 @@ import {computed} from "mobx";
 import autobind from "autobind-decorator";
 import {ResultsViewTab} from "pages/resultsView/ResultsViewPageHelpers";
 
-export type ResultsViewURLQuery = {
-    clinicallist:string;
-    gene_list:string;
-    cancer_study_list:string;
-    case_ids:string;
-    sample_list_ids:string;
-    case_set_id:string;
-    profileFilter:string;
-    RPPA_SCORE_THRESHOLD:NumberString;
-    Z_SCORE_THRESHOLD:NumberString;
-    geneset_list:string;
-    treatment_list: string;
-    show_samples:BooleanString;
-    heatmap_track_groups:string;
-    oncoprint_sortby:"case_id"|"case_list"|"cluster"|"";
-    oncoprint_cluster_profile:string;
-    oncoprint_sort_by_mutation_type:BooleanString;
-    oncoprint_sort_by_drivers:BooleanString;
+export enum ResultsViewURLQueryEnum {
+    clinicallist = "clinicallist",
+    gene_list = "gene_list",
+    cancer_study_list = "cancer_study_list",
+    case_ids = "case_ids",
+    sample_list_ids = "sample_list_ids",
+    case_set_id = "case_set_id",
+    profileFilter =  "profileFilter",
+    RPPA_SCORE_THRESHOLD = "RPPA_SCORE_THRESHOLD",
+    Z_SCORE_THRESHOLD = "Z_SCORE_THRESHOLD",
+    geneset_list = "geneset_list",
+    treatment_list = "treatment_list",
+    show_samples = "show_samples",
+    heatmap_track_groups = "heatmap_track_groups",
+    oncoprint_sortby = "oncoprint_sortby",
+    oncoprint_cluster_profile = "oncoprint_cluster_profile",
+    oncoprint_sort_by_mutation_type = "oncoprint_sort_by_mutation_type",
+    oncoprint_sort_by_drivers = "oncoprint_sort_by_drivers",
 
-    genetic_profile_ids_PROFILE_MUTATION_EXTENDED:string;
-    genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION:string;
-    genetic_profile_ids_PROFILE_MRNA_EXPRESSION:string;
-    genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION:string;
-    genetic_profile_ids_PROFILE_GENESET_SCORE:string;
-    genetic_profile_ids_GENERIC_ASSAY:string;
-    genetic_profile_ids:string;
+    genetic_profile_ids_PROFILE_MUTATION_EXTENDED = "genetic_profile_ids_PROFILE_MUTATION_EXTENDED",
+    genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION = "genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION",
+    genetic_profile_ids_PROFILE_MRNA_EXPRESSION = "genetic_profile_ids_PROFILE_MRNA_EXPRESSION",
+    genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION = "genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION",
+    genetic_profile_ids_PROFILE_GENESET_SCORE = "genetic_profile_ids_PROFILE_GENESET_SCORE",
+    genetic_profile_ids_GENERIC_ASSAY = "genetic_profile_ids_GENERIC_ASSAY",
+    genetic_profile_ids = "genetic_profile_ids"
 
 };
+
+export type ResultsViewURLQuery = { [key in keyof typeof ResultsViewURLQueryEnum] : string }
+
 
 export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuery> {
     constructor(routing:ExtendedRouterStore) {
