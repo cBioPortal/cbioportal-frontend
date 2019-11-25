@@ -5,6 +5,7 @@ import {PatientViewUrlParams} from "../../pages/patientView/PatientViewPage";
 import {Patient} from "../api/generated/CBioPortalAPI";
 import {StudyViewURLQuery} from "../../pages/studyView/StudyViewPageStore";
 import AppConfig from "appConfig";
+import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 
 export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStore }){
 
@@ -28,13 +29,13 @@ export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStor
 }
 
 
-export function handleLegacySubmission(){
+export function handleLegacySubmission(urlWrapper:ResultsViewURLWrapper){
     const legacySubmission = localStorage.getItem("legacyStudySubmission");
     localStorage.removeItem("legacyStudySubmission");
     if (legacySubmission) {
         const parsedSubmission:any = JSON.parse(legacySubmission);
         if (parsedSubmission.Action) {
-            (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(parsedSubmission, "results");
+           urlWrapper.updateURL(parsedSubmission, "results");
         }
     }
 }
