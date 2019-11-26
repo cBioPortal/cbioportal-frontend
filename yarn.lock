@@ -12623,10 +12623,10 @@ react-motion@^0.5.2:
     prop-types "^15.5.8"
     raf "^3.1.0"
 
-react-mutation-mapper@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/react-mutation-mapper/-/react-mutation-mapper-0.3.1.tgz#a7cb97b5babd2f8001f74b927c3b986ff5f1085e"
-  integrity sha512-4eNNt7IPJTsbIzJrPiL471wIvGiG8xGG2lWqwld+TYOK8C7cqcit4BOjz7mkngPLix/CcanflPQQnnH/cCtDsg==
+react-mutation-mapper@^0.3.2:
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/react-mutation-mapper/-/react-mutation-mapper-0.3.2.tgz#cbe693bf9406eeb1d027436a987c9e3cb056beee"
+  integrity sha512-PaGGiPmDk9ikm9UCAVl6keNUPgqp6nesEMOxyRnCxnunxcOzPZM2R4au0saOA+aoOZnHzGQjlx5ddKU7l/Tm0w==
   dependencies:
     autobind-decorator "^2.4.0"
     cbioportal-frontend-commons "^0.0.23"
