@@ -2,6 +2,7 @@ import * as React from 'react';
 import { observer } from "mobx-react";
 import { PatientSurvival } from "../../../shared/model/PatientSurvival";
 import {action, computed, observable, runInAction} from "mobx";
+import Slider from 'react-rangeslider';
 import { Popover, Table } from 'react-bootstrap';
 import styles from "./styles.module.scss";
 import "./styles.scss";
@@ -28,7 +29,6 @@ import classnames from "classnames";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
-import Slider from 'react-rangeslider'
 import { EditableSpan, pluralize } from 'cbioportal-frontend-commons';
 
 export enum LegendLocation {
@@ -185,7 +185,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     map[group] = map[group] || [];
                     map[group].push(nextSurv);
                 })
-                
+
             }
             return map;
         }, {} as {[groupValue:string]:PatientSurvival[]});
