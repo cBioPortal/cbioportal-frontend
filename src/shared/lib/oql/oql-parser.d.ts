@@ -96,7 +96,7 @@ export declare type CNACommand = {alteration_type:'cna', constr_rel?:ComparisonO
 // 	/ "MUT" { return {"alteration_type":"mut"}; }
 // 	/ mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
 export declare type MUTCommand<M extends Mutation> = (
-	{alteration_type:'mut', info:{}, modifiers:M['modifiers']} |
+	{alteration_type:'mut', constr_rel:undefined, constr_type:undefined, constr_val:undefined, info:{}, modifiers:M['modifiers']} |
 	{alteration_type:'mut', constr_rel:'='|'!=', constr_type:M['type'], constr_val:M['value'], info:M['info'], modifiers:M['modifiers']}
 );
 //

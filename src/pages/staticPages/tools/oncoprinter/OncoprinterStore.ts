@@ -53,6 +53,7 @@ export default class OncoprinterStore {
     @observable.ref _geneticDataInput:string|undefined = undefined;
     @observable.ref _clinicalDataInput:string|undefined = undefined;
     @observable public showUnalteredColumns:boolean = true;
+    @observable hideGermlineMutations = false;
 
     @computed get didOncoKbFail() {
         return this.oncoKbData.peekStatus === "complete" && (this.oncoKbData.result instanceof Error);
@@ -375,7 +376,7 @@ export default class OncoprinterStore {
         await:()=>[this.hugoGeneSymbolToGene],
         invoke: async()=>{
             if (this.parsedGeneticInputLines.result) {
-                return getSampleGeneticTrackData(this.parsedGeneticInputLines.result, this.hugoGeneSymbolToGene.result!)
+                return getSampleGeneticTrackData(this.parsedGeneticInputLines.result, this.hugoGeneSymbolToGene.result!, this.hideGermlineMutations)
             } else {
                 return {};
             }

@@ -44,7 +44,7 @@ export interface IOncoprintControlsHandlers {
     onSelectShowMinimap: (showMinimap: boolean) => void;
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
     onSelectDistinguishDrivers: (distinguish: boolean) => void;
-    onSelectDistinguishGermlineMutations?: (distinguish: boolean) => void;
+    onSelectDistinguishGermlineMutations: (distinguish: boolean) => void;
 
     onSelectAnnotateOncoKb: (annotate: boolean) => void;
     onSelectAnnotateHotspots?: (annotate: boolean) => void;
@@ -52,7 +52,7 @@ export interface IOncoprintControlsHandlers {
     onSelectAnnotateCOSMIC?: (annotate: boolean) => void;
     onSelectHidePutativePassengers: (hide: boolean) => void;
     onChangeAnnotateCBioPortalInputValue: (value: string) => void;
-    onSelectHideGermlineMutations?: (hide: boolean) => void;
+    onSelectHideGermlineMutations: (hide: boolean) => void;
     onChangeAnnotateCOSMICInputValue?: (value: string) => void;
     onSelectCustomDriverAnnotationBinary?: (s: boolean) => void;
     onSelectCustomDriverAnnotationTier?: (value: string, s: boolean) => void;
@@ -85,7 +85,7 @@ export interface IOncoprintControlsState {
     showMinimap: boolean;
     distinguishMutationType: boolean;
     distinguishDrivers: boolean;
-    distinguishGermlineMutations?: boolean;
+    distinguishGermlineMutations: boolean;
     sortByMutationType: boolean;
     sortByDrivers: boolean;
     sortByCaseListDisabled: boolean;
@@ -99,7 +99,7 @@ export interface IOncoprintControlsState {
     annotateDriversCOSMIC?: boolean;
     hidePutativePassengers: boolean;
     annotateCBioPortalInputValue: string;
-    hideGermlineMutations?: boolean;
+    hideGermlineMutations: boolean;
     annotateCOSMICInputValue?: string;
 
     sortMode?: SortMode;
@@ -341,10 +341,9 @@ export default class OncoprintControls extends React.Component<
                     );
                 break;
             case EVENT_KEY.distinguishGermlineMutations:
-                this.props.handlers.onSelectDistinguishGermlineMutations &&
-                    this.props.handlers.onSelectDistinguishGermlineMutations(
-                        !this.props.state.distinguishGermlineMutations
-                    );
+                this.props.handlers.onSelectDistinguishGermlineMutations(
+                    !this.props.state.distinguishGermlineMutations
+                );
                 break;
             case EVENT_KEY.annotateOncoKb:
                 this.props.handlers.onSelectAnnotateOncoKb &&
@@ -377,10 +376,9 @@ export default class OncoprintControls extends React.Component<
                     );
                 break;
             case EVENT_KEY.hideGermlineMutations:
-                this.props.handlers.onSelectHideGermlineMutations &&
-                    this.props.handlers.onSelectHideGermlineMutations(
-                        !this.props.state.hideGermlineMutations
-                    );
+                this.props.handlers.onSelectHideGermlineMutations(
+                    !this.props.state.hideGermlineMutations
+                );
                 break;
             case EVENT_KEY.customDriverBinaryAnnotation:
                 this.props.handlers.onSelectCustomDriverAnnotationBinary &&
@@ -931,6 +929,23 @@ export default class OncoprintControls extends React.Component<
                                 unknown significance
                             </label>
                         </div>
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="HideGermline"
+                                    type="checkbox"
+                                    value={EVENT_KEY.hideGermlineMutations}
+                                    checked={
+                                        this.props.state.hideGermlineMutations
+                                    }
+                                    onClick={this.onInputClick}
+                                    disabled={
+                                        !this.props.state.distinguishGermlineMutations
+                                    }
+                                />{' '}
+                                Hide germline mutations
+                            </label>
+                        </div>
                     </div>
                 </>
             );
@@ -985,25 +1000,23 @@ export default class OncoprintControls extends React.Component<
                                 Type
                             </label>
                         </div>
-                        { !this.props.oncoprinterMode && (
-                            <div className="checkbox">
-                                <label>
-                                    <input
-                                        data-test="ColorByGermline"
-                                        type="checkbox"
-                                        value={
-                                            EVENT_KEY.distinguishGermlineMutations
-                                        }
-                                        checked={
-                                            this.props.state
-                                                .distinguishGermlineMutations
-                                        }
-                                        onClick={this.onInputClick}
-                                    />{' '}
-                                    Somatic vs Germline
-                                </label>
-                            </div>
-                        )}
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="ColorByGermline"
+                                    type="checkbox"
+                                    value={
+                                        EVENT_KEY.distinguishGermlineMutations
+                                    }
+                                    checked={
+                                        this.props.state
+                                            .distinguishGermlineMutations
+                                    }
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Somatic vs Germline
+                            </label>
+                        </div>
                     </div>
                     {this.driverAnnotationSection}
                 </div>

@@ -32,6 +32,7 @@ interface IOncoprinterProps {
 export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> {
 
     @observable distinguishMutationType:boolean = true;
+    @observable distinguishGermlineMutations = true;
     @observable sortByMutationType:boolean = true;
     @observable sortByDrivers:boolean = true;
 
@@ -82,6 +83,9 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             get distinguishMutationType() {
                 return self.distinguishMutationType;
             },
+            get distinguishGermlineMutations() {
+                return self.distinguishGermlineMutations;
+            },
             get distinguishDrivers() {
                 return self.distinguishDrivers;
             },
@@ -99,6 +103,9 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             },
             get hidePutativePassengers() {
                 return self.props.store.driverAnnotationSettings.excludeVUS;
+            },
+            get hideGermlineMutations() {
+                return self.props.store.hideGermlineMutations;
             },
             get annotateCBioPortalInputValue() {
                 return self.props.store.driverAnnotationSettings.cbioportalCountThreshold + "";
@@ -148,6 +155,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show;},
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
+            onSelectDistinguishGermlineMutations:(s:boolean)=>{this.distinguishGermlineMutations = s;},
             onSelectDistinguishDrivers:action((s:boolean)=>{
                 if (!s) {
                     this.props.store.driverAnnotationSettings.oncoKb = false;
@@ -175,6 +183,9 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             }),
             onSelectHidePutativePassengers:(s:boolean)=>{
                 this.props.store.driverAnnotationSettings.excludeVUS = s;
+            },
+            onSelectHideGermlineMutations:(s:boolean)=>{
+                this.props.store.hideGermlineMutations = s;
             },
             onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
             onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
@@ -353,6 +364,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
 
                                 horzZoomToFitIds={this.props.store.alteredSampleIds.result}
                                 distinguishMutationType={this.distinguishMutationType}
+                                distinguishGermlineMutations={this.distinguishGermlineMutations}
                                 distinguishDrivers={this.distinguishDrivers}
                                 sortConfig={this.sortConfig}
                                 showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
