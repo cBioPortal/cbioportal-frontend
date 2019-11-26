@@ -116,7 +116,7 @@ export function getProteinStartPositionsByRange(data: Mutation[][], start: numbe
     return _.uniq(positions);
 }
 
-const GERMLINE_REGEXP = new RegExp(MUTATION_STATUS_GERMLINE, "i");
+export const GERMLINE_REGEXP = new RegExp(MUTATION_STATUS_GERMLINE, "i");
 /**
  * Percentage of cases/samples with a germline mutation in given gene.
  * Assumes all given sample ids in the study had germline screening for all
