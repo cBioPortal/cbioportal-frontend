@@ -4,19 +4,16 @@ import {Helmet} from "react-helmet";
 import {PageLayout} from "../../../../shared/components/PageLayout/PageLayout";
 import OncoprinterStore from "./OncoprinterStore";
 import Oncoprinter from "./Oncoprinter";
-import {action, computed, observable} from "mobx";
-import {Button,FormGroup, ControlLabel, FormControl} from "react-bootstrap";
+import {action, observable} from "mobx";
+import {Button, ControlLabel, FormControl, FormGroup} from "react-bootstrap";
 import {Collapse} from "react-collapse";
 import autobind from "autobind-decorator";
 import {exampleClinicalData, exampleGeneticData} from "./OncoprinterConstants";
-import $ from "jquery";
-import {SyntheticEvent} from "react";
-import onMobxPromise from "../../../../shared/lib/onMobxPromise";
-import {WindowWidthBox} from "../../../../shared/components/WindowWidthBox/WindowWidthBox";
 import {MSKTab, MSKTabs} from "../../../../shared/components/MSKTabs/MSKTabs";
 import MutualExclusivityTab from "../../../resultsView/mutualExclusivity/MutualExclusivityTab";
 import {getDataForSubmission} from "./OncoprinterToolUtils";
 import {ONCOPRINTER_CLINICAL_VAL_NA} from "./OncoprinterClinicalUtils";
+import styles from "./styles.module.scss";
 
 export interface IOncoprinterToolProps {
 }
@@ -27,9 +24,9 @@ export enum OncoprinterTab {
 }
 
 const helpSection = (
-    <div style={{backgroundColor:"#eee", padding:13, borderRadius: 11, marginTop:10, display:"flex", justifyContent:"space-between"}}>
-        <div>
-            <h4>Genetic data format</h4>
+    <div className={styles.dataFormatHelp}>
+        <div className={styles.dataFormatHelpSection}>
+            <h4>Genomic data format</h4>
             Each row of the data can take one of two formats, with tab- or space-delimited columns:<br/>
             <strong>(1)</strong> <code>Sample</code> only (e.g. so that percent altered in your data can be properly calculated by including unaltered samples).<br/>
             <strong>(2)</strong> <code>Sample</code>&#9;<code>Gene</code>&#9;<code>Alteration (defined below)</code>&#9;<code>Type (defined below)</code><br/>
@@ -76,6 +73,12 @@ const helpSection = (
                                 <li><code>PROMOTER</code>: a promoter mutation</li>
                                 <li><code>OTHER</code>: any other kind of mutation</li>
                             </ul>
+                            <br/>
+                            In addition, mutation types can be augmented with the modifiers <span style={{whiteSpace:"nowrap"}}><code>_GERMLINE</code> and <code>_DRIVER</code></span>
+                            to indicate that they are, respectively, germline and driver mutations.
+                            <br/>
+                            For example: <code>INFRAME_GERMLINE</code> or <code>MISSENSE_GERMLINE_DRIVER</code> or <code>TRUNC_DRIVER</code>.
+                            <br/>
                         </li>
                         <li><code>FUSION</code>: a fusion event
                         </li>
@@ -89,8 +92,8 @@ const helpSection = (
                 </li>
             </ol>
         </div>
-        <div style={{borderLeft:"1px solid black", marginLeft:15, marginRight:15}}/>
-        <div>
+        <div className={styles.dataFormatHelpBorder}/>
+        <div className={styles.dataFormatHelpSection}>
             <h4>Clinical data format</h4>
             All rows are tab- or space-delimited.<br/>
             The first (header) row gives the names of the clinical attributes, as well as their data type (number, lognumber, or string, default is string). An example first row is:<br/>
