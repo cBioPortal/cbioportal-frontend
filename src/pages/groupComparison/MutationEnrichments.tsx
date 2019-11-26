@@ -8,9 +8,8 @@ import EnrichmentsDataSetDropdown from "../resultsView/enrichments/EnrichmentsDa
 import AlterationEnrichmentContainer from "../resultsView/enrichments/AlterationEnrichmentsContainer";
 import autobind from "autobind-decorator";
 import { MakeMobxView } from "../../shared/components/MobxView";
-import { MakeEnrichmentsTabUI, getNumSamples } from "./GroupComparisonUtils";
+import { MakeEnrichmentsTabUI } from "./GroupComparisonUtils";
 import { remoteData } from "public-lib/api/remoteData";
-import { ResultsViewPageStore } from "../resultsView/ResultsViewPageStore";
 import _ from "lodash";
 import { AlterationContainerType } from "pages/resultsView/enrichments/EnrichmentsUtil";
 
@@ -28,18 +27,15 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
 
     readonly tabUI = MakeEnrichmentsTabUI(()=>this.props.store, ()=>this.enrichmentsUI, "mutation", true, true, true);
 
-    private readonly enrichmentAnalysisGroups = remoteData({
-        await:()=>[this.props.store.activeGroups],
-        invoke:()=>{
-            const groups = _.map(this.props.store.activeGroups.result, group => {
+    private readonly mutationEnrichmentAnalysisGroups = remoteData({
+        await: () => [this.props.store.enrichmentAnalysisGroups],
+        invoke: () => {
+            return Promise.resolve(_.map(this.props.store.enrichmentAnalysisGroups.result, group => {
                 return {
-                    name:group.nameWithOrdinal,
-                    description:`Number (percentage) of ${this.props.store.usePatientLevelEnrichments ? "patients" : "samples"} in ${group.nameWithOrdinal} that have a mutation in the listed gene.`,
-                    count: getNumSamples(group),
-                    color: group.color
+                    ...group,
+                    description: `Number (percentage) of ${this.props.store.usePatientLevelEnrichments ? "patients" : "samples"} in ${group.name} that have a mutation in the listed gene.`
                 }
-            })
-            return Promise.resolve(groups);
+            }));
         }
     });
 
@@ -47,7 +43,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
         await:()=>[
             this.props.store.mutationEnrichmentData,
             this.props.store.selectedStudyMutationEnrichmentProfileMap,
-            this.enrichmentAnalysisGroups,
+            this.mutationEnrichmentAnalysisGroups,
             this.props.store.studies
         ],
         render:()=>{
@@ -65,7 +61,7 @@ export default class MutationEnrichments extends React.Component<IMutationEnrich
                         studies={this.props.store.studies.result!}
                     />
                     <AlterationEnrichmentContainer data={this.props.store.mutationEnrichmentData.result!}
-                        groups={this.enrichmentAnalysisGroups.result}
+                        groups={this.mutationEnrichmentAnalysisGroups.result}
                         alteredVsUnalteredMode={false}
                         headerName={headerName}
                         containerType={AlterationContainerType.MUTATION}
