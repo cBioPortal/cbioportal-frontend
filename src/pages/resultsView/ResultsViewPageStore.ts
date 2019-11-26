@@ -20,19 +20,17 @@ import {
     MutationMultipleStudyFilter,
     NumericGeneMolecularData,
     Patient,
-    PatientFilter,
-    PatientIdentifier,
+    ReferenceGenomeGene,
     Sample,
     SampleFilter,
     SampleIdentifier,
     SampleList,
     SampleMolecularIdentifier,
-    ReferenceGenomeGene,
 } from 'shared/api/generated/CBioPortalAPI';
 import client from 'shared/api/cbioportalClientInstance';
-import { action, computed, observable, ObservableMap } from 'mobx';
-import { remoteData } from 'public-lib/api/remoteData';
-import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
+import {action, computed, observable, ObservableMap} from 'mobx';
+import {remoteData} from 'public-lib/api/remoteData';
+import {cached, labelMobxPromises, MobxPromise} from 'mobxpromise';
 import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
@@ -43,6 +41,7 @@ import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import {
     cancerTypeForOncoKb,
+    fetchAllReferenceGenomeGenes,
     fetchCnaOncoKbDataWithNumericGeneMolecularData,
     fetchCopyNumberSegmentsForSamples,
     fetchGenes,
@@ -51,38 +50,33 @@ import {
     fetchOncoKbCancerGenes,
     fetchOncoKbData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    fetchVariantAnnotationsIndexedByGenomicLocation,
     generateDataQueryFilter,
     generateUniqueSampleKeyToTumorTypeMap,
     groupBy,
     IDataQueryFilter,
     isMutationProfile,
-    fetchVariantAnnotationsIndexedByGenomicLocation,
     ONCOKB_DEFAULT,
-    fetchAllReferenceGenomeGenes,
-    fetchReferenceGenomeGenes,
 } from 'shared/lib/StoreUtils';
-import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
-import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
+import {IHotspotIndex, indexHotspotsData} from 'react-mutation-mapper';
+import {fetchHotspotsData} from 'shared/lib/CancerHotspotsUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import AppConfig from 'appConfig';
 import * as _ from 'lodash';
-import { stringListToSet } from '../../public-lib/lib/StringUtils';
-import { toSampleUuid } from '../../shared/lib/UuidUtils';
+import {stringListToSet} from '../../public-lib/lib/StringUtils';
+import {toSampleUuid} from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
-import AccessorsForOqlFilter, {
-    SimplifiedMutationType,
-} from '../../shared/lib/oql/AccessorsForOqlFilter';
-import { AugmentedData, CacheData } from '../../shared/lib/LazyMobXCache';
-import { PatientSurvival } from '../../shared/model/PatientSurvival';
+import AccessorsForOqlFilter, {SimplifiedMutationType,} from '../../shared/lib/oql/AccessorsForOqlFilter';
+import {PatientSurvival} from '../../shared/model/PatientSurvival';
 import {
     doesQueryContainMutationOQL,
     doesQueryContainOQL,
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
-    uniqueGenesInOQLQuery,
     OQLLineFilterOutput,
     UnflattenedOQLLineFilterOutput,
+    uniqueGenesInOQLQuery,
 } from '../../shared/lib/oql/oqlfilter';
 import GeneMolecularDataCache from '../../shared/cache/GeneMolecularDataCache';
 import GenesetMolecularDataCache from '../../shared/cache/GenesetMolecularDataCache';
@@ -91,120 +85,104 @@ import TreatmentMolecularDataCache from '../../shared/cache/TreatmentMolecularDa
 import GeneCache from '../../shared/cache/GeneCache';
 import GenesetCache from '../../shared/cache/GenesetCache';
 import TreatmentCache from '../../shared/cache/TreatmentCache';
-import { IOncoKbData } from '../../shared/model/OncoKB';
-import { generateQueryVariantId } from '../../public-lib/lib/OncoKbUtils';
+import {IOncoKbData} from '../../shared/model/OncoKB';
+import {generateQueryVariantId} from '../../public-lib/lib/OncoKbUtils';
 import {
     AlterationEnrichment,
     CosmicMutation,
     Geneset,
     GenesetDataFilterCriteria,
     GenesetMolecularData,
+    MolecularProfileCasesGroupFilter,
     Treatment,
     TreatmentFilter,
-    MolecularProfileCasesGroupFilter,
 } from '../../shared/api/generated/CBioPortalAPIInternal';
 import internalClient from '../../shared/api/cbioportalInternalClientInstance';
-import {
-    CancerGene,
-    IndicatorQueryResp,
-} from '../../public-lib/api/generated/OncoKbAPI';
-import { getAlterationString } from '../../shared/lib/CopyNumberUtils';
+import {CancerGene, IndicatorQueryResp,} from '../../public-lib/api/generated/OncoKbAPI';
+import {getAlterationString} from '../../shared/lib/CopyNumberUtils';
 import memoize from 'memoize-weak-decorator';
 import request from 'superagent';
+import {countMutations, mutationCountByPositionKey,} from './mutationCountHelpers';
+import {getPatientSurvivals} from './SurvivalStoreHelper';
+import {CancerStudyQueryUrlParams, QueryStore,} from 'shared/components/query/QueryStore';
 import {
-    countMutations,
-    mutationCountByPositionKey,
-} from './mutationCountHelpers';
-import { getPatientSurvivals } from './SurvivalStoreHelper';
-import {
-    CancerStudyQueryUrlParams,
-    QueryStore,
-} from 'shared/components/query/QueryStore';
-import {
+    OncoprintAnalysisCaseType,
     annotateMolecularDatum,
+    compileMutations,
     computeCustomDriverAnnotationReport,
     computeGenePanelInformation,
-    filterAndAnnotateMutations,
     CoverageInformation,
+    fetchPatients,
     fetchQueriedStudies,
+    filterAndAnnotateMutations,
+    FilteredAndAnnotatedMutationsReport,
     filterSubQueryData,
     getOncoKbOncogenic,
+    getSampleAlteredMap,
     groupDataByCase,
     initializeCustomDriverAnnotationSettings,
     isRNASeqProfile,
-    getSampleAlteredMap,
     makeEnrichmentDataPromise,
-    fetchPatients,
-    FilteredAndAnnotatedMutationsReport,
-    compileMutations,
 } from './ResultsViewPageStoreUtils';
 import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
-import { isSampleProfiledInMultiple } from '../../shared/lib/isSampleProfiled';
-import { BookmarkLinks } from '../../shared/model/BookmarkLinks';
-import { getBitlyServiceUrl } from '../../shared/api/urls';
+import {isSampleProfiledInMultiple} from '../../shared/lib/isSampleProfiled';
+import {BookmarkLinks} from '../../shared/model/BookmarkLinks';
+import {getBitlyServiceUrl} from '../../shared/api/urls';
 import url from 'url';
 import ClinicalDataCache, {
     clinicalAttributeIsINCOMPARISONGROUP,
     SpecialAttribute,
 } from '../../shared/cache/ClinicalDataCache';
-import { getDefaultMolecularProfiles } from '../../shared/lib/getDefaultMolecularProfiles';
-import { getProteinPositionFromProteinChange } from 'public-lib/lib/ProteinChangeUtils';
-import { isMutation } from '../../shared/lib/CBioPortalAPIUtils';
-import { VariantAnnotation } from 'public-lib/api/generated/GenomeNexusAPI';
-import { ServerConfigHelpers } from '../../config/config';
+import {getDefaultMolecularProfiles} from '../../shared/lib/getDefaultMolecularProfiles';
+import {getProteinPositionFromProteinChange} from 'public-lib/lib/ProteinChangeUtils';
+import {VariantAnnotation} from 'public-lib/api/generated/GenomeNexusAPI';
+import {ServerConfigHelpers} from '../../config/config';
 import {
     populateSampleSpecificationsFromVirtualStudies,
     ResultsViewTab,
     substitutePhysicalStudiesForVirtualStudies,
 } from './ResultsViewPageHelpers';
-import {
-    filterAndSortProfiles,
-    getGenesetProfiles,
-    sortRnaSeqProfilesToTop,
-} from './coExpression/CoExpressionTabUtils';
-import { isRecurrentHotspot } from '../../shared/lib/AnnotationUtils';
-import { generateDownloadFilenamePrefixByStudies } from 'shared/lib/FilenameUtils';
+import {filterAndSortProfiles, getGenesetProfiles, sortRnaSeqProfilesToTop,} from './coExpression/CoExpressionTabUtils';
+import {isRecurrentHotspot} from '../../shared/lib/AnnotationUtils';
+import {generateDownloadFilenamePrefixByStudies} from 'shared/lib/FilenameUtils';
 import {
     convertComparisonGroupClinicalAttribute,
     makeComparisonGroupClinicalAttributes,
     makeProfiledInClinicalAttributes,
 } from '../../shared/components/oncoprint/ResultsViewOncoprintUtils';
-import { ResultsViewQuery } from './ResultsViewQuery';
-import { annotateAlterationTypes } from '../../shared/lib/oql/annotateAlterationTypes';
-import { ErrorMessages } from '../../shared/enums/ErrorEnums';
+import {ResultsViewQuery} from './ResultsViewQuery';
+import {annotateAlterationTypes} from '../../shared/lib/oql/annotateAlterationTypes';
+import {ErrorMessages} from '../../shared/enums/ErrorEnums';
 import {
     pickCopyNumberEnrichmentProfiles,
     pickMRNAEnrichmentProfiles,
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles,
 } from './enrichments/EnrichmentsUtil';
-import { SURVIVAL_CHART_ATTRIBUTES } from './survival/SurvivalChart';
+import {SURVIVAL_CHART_ATTRIBUTES} from './survival/SurvivalChart';
 import sessionServiceClient from '../../shared/api/sessionServiceInstance';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
-import { ISurvivalDescription } from './survival/SurvivalDescriptionTable';
+import {VirtualStudy} from 'shared/model/VirtualStudy';
+import {ISurvivalDescription} from './survival/SurvivalDescriptionTable';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
-import { Group } from '../../shared/api/ComparisonGroupClient';
-import { AppStore } from '../../AppStore';
-import { CLINICAL_TRACKS_URL_PARAM } from '../../shared/components/oncoprint/ResultsViewOncoprint';
-import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
+import {Group} from '../../shared/api/ComparisonGroupClient';
+import {AppStore} from '../../AppStore';
+import {CLINICAL_TRACKS_URL_PARAM} from '../../shared/components/oncoprint/ResultsViewOncoprint';
+import {getNumSamples} from '../groupComparison/GroupComparisonUtils';
 import autobind from 'autobind-decorator';
-import { DEFAULT_GENOME } from 'pages/resultsView/ResultsViewPageStoreUtils';
+import {DEFAULT_GENOME} from 'pages/resultsView/ResultsViewPageStoreUtils';
 import {
-    StudyWithSamples,
-    getFilteredStudiesWithSamples,
     ChartMeta,
-    getClinicalAttributeUniqueKey,
     getChartMetaDataType,
-    getPriorityByClinicalAttribute,
-    UniqueKey,
+    getClinicalAttributeUniqueKey,
     getDefaultPriorityByUniqueKey,
+    getFilteredStudiesWithSamples,
+    getPriorityByClinicalAttribute,
+    StudyWithSamples,
+    UniqueKey,
 } from 'pages/studyView/StudyViewUtils';
-import {
-    MUTATION_COUNT,
-    FRACTION_GENOME_ALTERED,
-} from 'pages/studyView/StudyViewPageStore';
-import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
-import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
+import {FRACTION_GENOME_ALTERED, MUTATION_COUNT,} from 'pages/studyView/StudyViewPageStore';
+import {IVirtualStudyProps} from 'pages/studyView/virtualStudy/VirtualStudy';
+import {decideMolecularProfileSortingOrder} from './download/DownloadUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -522,6 +500,8 @@ export class ResultsViewPageStore {
 
     public rvQuery: ResultsViewQuery = new ResultsViewQuery();
 
+    @observable public resultsPageSettingsVisible = false;
+
     @observable tabId: ResultsViewTab | undefined = undefined;
 
     @observable public checkingVirtualStudies = false;
@@ -553,7 +533,6 @@ export class ResultsViewPageStore {
         | undefined = undefined;
 
     public driverAnnotationSettings: DriverAnnotationSettings;
-    @observable public excludeGermlineMutations = false;
 
     @observable.ref private _mutationEnrichmentProfileMap: {
         [id: string]: MolecularProfile;
@@ -676,6 +655,7 @@ export class ResultsViewPageStore {
         this._proteinEnrichmentProfileMap = profiles;
     }
 
+    @computed
     public get usePatientLevelEnrichments() {
         return (
             (this.routing.location.query as CancerStudyQueryUrlParams)
@@ -688,6 +668,38 @@ export class ResultsViewPageStore {
     public setUsePatientLevelEnrichments(e: boolean) {
         this.routing.updateRoute({
             patient_enrichments: e.toString(),
+        } as Partial<CancerStudyQueryUrlParams>);
+    }
+
+    @computed
+    public get oncoprintAnalysisCaseType() {
+        return (
+            (this.routing.location.query as CancerStudyQueryUrlParams)
+                .show_samples === 'true'
+        ) ? OncoprintAnalysisCaseType.SAMPLE : OncoprintAnalysisCaseType.PATIENT;
+    }
+
+    @autobind
+    @action
+    public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {
+        this.routing.updateRoute({
+            show_samples: (e === OncoprintAnalysisCaseType.SAMPLE).toString(),
+        } as Partial<CancerStudyQueryUrlParams>);
+    }
+
+    @computed
+    public get excludeGermlineMutations() {
+        return (
+            (this.routing.location.query as CancerStudyQueryUrlParams)
+                .exclude_germline_mutations === 'true'
+        );
+    }
+
+    @autobind
+    @action
+    public setExcludeGermlineMutations(e: boolean) {
+        this.routing.updateRoute({
+            exclude_germline_mutations: e.toString()
         } as Partial<CancerStudyQueryUrlParams>);
     }
 

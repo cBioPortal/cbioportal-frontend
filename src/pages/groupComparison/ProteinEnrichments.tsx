@@ -8,8 +8,9 @@ import ExpressionEnrichmentContainer from "../resultsView/enrichments/Expression
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupComparisonStore from "./GroupComparisonStore";
-import {MakeEnrichmentsTabUI, getNumSamples} from "./GroupComparisonUtils";
+import {MakeEnrichmentsTabUI} from "./GroupComparisonUtils";
 import { remoteData } from "cbioportal-frontend-commons";
+import * as _ from "lodash";
 
 export interface IProteinEnrichmentsProps {
     store: GroupComparisonStore
@@ -22,16 +23,15 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
         this.props.store.setProteinEnrichmentProfileMap(profileMap);
     }
 
-    private readonly enrichmentAnalysisGroups = remoteData({
-        await: () => [this.props.store.activeGroups],
+    private readonly proteinEnrichmentAnalysisGroups = remoteData({
+        await: () => [this.props.store.enrichmentAnalysisGroups],
         invoke: () => {
-            const groups = this.props.store.activeGroups.result!.map(group => ({
-                name: group.nameWithOrdinal,
-                description: `samples in ${group.nameWithOrdinal}`,
-                count: getNumSamples(group),
-                color: group.color
+            return Promise.resolve(_.map(this.props.store.enrichmentAnalysisGroups.result, group => {
+                return {
+                    ...group,
+                    description: `samples in ${group.name}`
+                }
             }));
-            return Promise.resolve(groups);
         }
     });
 
@@ -41,7 +41,7 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
         await:()=>[
             this.props.store.proteinEnrichmentData,
             this.props.store.selectedProteinEnrichmentProfileMap,
-            this.enrichmentAnalysisGroups,
+            this.proteinEnrichmentAnalysisGroups,
             this.props.store.studies
         ],
         render:()=>{
@@ -60,9 +60,10 @@ export default class ProteinEnrichments extends React.Component<IProteinEnrichme
                     />
                     <ExpressionEnrichmentContainer
                         data={this.props.store.proteinEnrichmentData.result!}
-                        groups={this.enrichmentAnalysisGroups.result}
+                        groups={this.proteinEnrichmentAnalysisGroups.result}
                         selectedProfile={selectedProfile}
                         alteredVsUnalteredMode={false}
+                        sampleKeyToSample={this.props.store.sampleKeyToSample.result!}
                     />
                 </div>
             );

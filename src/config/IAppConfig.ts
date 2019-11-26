@@ -99,6 +99,7 @@ export interface IServerConfig {
     default_cross_cancer_study_session_id: string | null;
     study_view: StudyView;
     uniprot_id_url: string | null;
+    ensembl_transcript_url: string | null;
     studiesWithGermlineConsentedSamples: string[] | undefined;
     mdacc_heatmap_study_meta_url: string | null;
     mdacc_heatmap_study_url: string | null;
@@ -114,4 +115,5 @@ export interface IServerConfig {
     query_product_limit: number;
     dat_uuid_revoke_other_tokens: boolean;
     dat_method: string;
+    skin_show_gsva:boolean;
 }

@@ -5,7 +5,8 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 import {MyVariantInfoAnnotation} from 'public-lib/api/generated/GenomeNexusAPI';
 import GenomeNexusMyVariantInfoCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusMyVariantInfoCache";
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
+import {ClinVarId, clinVarSortValue, getClinVarId} from "react-mutation-mapper";
+import generalStyles from "./styles.module.scss";
 
 export default class ClinVarColumnFormatter {
     
@@ -13,7 +14,7 @@ export default class ClinVarColumnFormatter {
                                 genomeNexusMyVariantInfoCache: GenomeNexusMyVariantInfoCache | undefined) {
         const genomeNexusCacheData = ClinVarColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusMyVariantInfoCache);
         return (
-            <div data-test="clinvar-data">
+            <div data-test="clinvar-data" className={generalStyles["integer-data"]}>
                 {ClinVarColumnFormatter.getClinVarDataViz(genomeNexusCacheData)}
             </div>
         );
@@ -36,30 +37,12 @@ export default class ClinVarColumnFormatter {
         } else if (genomeNexusCacheData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            let clinVarId = ClinVarColumnFormatter.getData(genomeNexusCacheData.data.my_variant_info);
-            if (clinVarId == null) {
-                return (
-                    <DefaultTooltip
-                        placement="topRight"
-                        overlay={(<span>Variant has no ClinVar data.</span>)}
-                    >
-                        <span style={{height: '100%', width: '100%', display: 'block', overflow: 'hidden'}}>&nbsp;</span>
-                    </DefaultTooltip>
-                );
-            }
-            else {
-                let clinVarLink = "https://www.ncbi.nlm.nih.gov/clinvar/variation/" + clinVarId + "/";
-                return (
-                    <DefaultTooltip
-                        placement="top"
-                        overlay={(<span>Click to see variant on ClinVar website.</span>)}
-                    >
-                        <span style={{textAlign:"right", float:"right"}}>
-                            <a href={clinVarLink} target="_blank">{clinVarId}</a>
-                        </span>
-                    </DefaultTooltip>
-                );
-            }
+            return (
+                <ClinVarId
+                    myVariantInfo={genomeNexusCacheData.data.my_variant_info ?
+                        genomeNexusCacheData.data.my_variant_info.annotation: undefined}
+                />
+            );
         }
 
         if (status !== null) {
@@ -74,9 +57,8 @@ export default class ClinVarColumnFormatter {
     }
 
     public static getData(genomeNexusData:  MyVariantInfoAnnotation | null): string | null {
-        if (genomeNexusData && genomeNexusData.annotation && genomeNexusData.annotation.clinVar && genomeNexusData.annotation.clinVar.variantId)
-        {
-            return genomeNexusData.annotation.clinVar.variantId.toString();
+        if (genomeNexusData) {
+            return getClinVarId(genomeNexusData.annotation);
         }
         else {
             return null;
@@ -97,10 +79,7 @@ export default class ClinVarColumnFormatter {
     public static getSortValue(data:Mutation[], genomeNexusCache:GenomeNexusMyVariantInfoCache): number | null {
         const genomeNexusCacheData = ClinVarColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
         if (genomeNexusCacheData && genomeNexusCacheData.data && genomeNexusCacheData.data.my_variant_info) {
-            let clinVarId = ClinVarColumnFormatter.getData(genomeNexusCacheData.data.my_variant_info);
-            if (clinVarId !== null) {
-                return parseInt(clinVarId);
-            }
+            return clinVarSortValue(genomeNexusCacheData.data.my_variant_info.annotation);
         }
         return null; 
     }

@@ -39,6 +39,8 @@ export {
     Query
 } from "./api/generated/OncoKbAPI";
 
+export * from './api/model/oncokb';
+
 export {remoteData} from "./api/remoteData";
 
 export * from './lib/ColumnVisibilityResolver';
