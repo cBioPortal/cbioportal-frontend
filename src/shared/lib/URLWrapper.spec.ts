@@ -1,11 +1,12 @@
 import {assert} from "chai";
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 import {autorun, observable, reaction} from "mobx";
-import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
+import ExtendedRouterStore, {PortalSession} from "shared/lib/ExtendedRouterStore";
 import sinon from "sinon";
 import {createMemoryHistory} from "react-router";
 import {syncHistoryWithStore} from "mobx-react-router";
 import memoize from "memoize-weak-decorator";
+import {needToLoadSession} from "shared/lib/URLWrapper";
 
 describe("URLWrapper", () => {
 
@@ -268,10 +269,86 @@ describe("URLWrapper", () => {
 
             done();
 
-        }, 1000);
+        }, 100);
 
     });
 
+    it("handles back/forward of routingstore", (done) => {
+
+        const getRemoteSessionStub = sinon.stub(wrapper, "getRemoteSession");
+        let saveSessionStub = sinon.stub(wrapper, "saveRemoteSession");
+
+
+        getRemoteSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    return resolve({
+                                       "id": "5dcae586e4b04a9c23e27e5f",
+                                       "data": {
+                                           "gene_list": "CDKN2A%20MDM2%20MDM4%20TP53",
+
+
+                                       }
+                                   });
+                }, 5);
+            });
+        });
+
+        saveSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    return resolve({id: "someSessionId"});
+                }, 5);
+            });
+        });
+
+        wrapper.sessionEnabled = true;
+
+        wrapper.urlCharThresholdForSession = 0;
+
+        // // must establish an observer in order for remoteData to invoke
+        const disposer = autorun(() => {
+            wrapper.isLoadingSession;
+        });
+
+        routingStore.updateRoute({session_id: "5dcae586e4b04a9c23e27e5f"});
+
+        assert.isTrue(wrapper.isLoadingSession, "it is loading session");
+        assert.isFalse(wrapper.isPendingSession, "it is NOT pending session");
+
+        setTimeout(() => {
+            assert.isTrue(getRemoteSessionStub.calledOnce);
+            assert.equal(wrapper.query.gene_list, "CDKN2A MDM2 MDM4 TP53", "sets session props on query after session load");
+            assert.equal(routingStore.location.query.session_id, "5dcae586e4b04a9c23e27e5f")
+
+            wrapper.updateURL({ gene_list: "CDKN2%20MDM2%20MDM4" });
+
+            setTimeout(()=>{
+                assert.isTrue(saveSessionStub.calledOnce);
+                assert.isTrue(getRemoteSessionStub.calledOnce);
+                assert.equal(wrapper.sessionId,"someSessionId", "session id updated");
+                assert.equal(wrapper.query.gene_list, "CDKN2 MDM2 MDM4", "has correct gene list");
+
+                routingStore.goBack();
+
+                assert.equal(wrapper.sessionId, "5dcae586e4b04a9c23e27e5f");
+
+                assert.isTrue(wrapper.isLoadingSession);
+                assert.isTrue(getRemoteSessionStub.calledTwice);
+
+                setTimeout(()=>{
+                    assert.isFalse(wrapper.isLoadingSession);
+                    assert.equal(wrapper.query.gene_list, "CDKN2A MDM2 MDM4 TP53");
+                    done();
+                },20);
+
+            },10);
+
+
+
+        }, 100);
+
+    });
 
 
     it("creates new session when session param is changed", (done) => {
@@ -335,10 +412,8 @@ describe("URLWrapper", () => {
             assert.equal(wrapper.query.gene_list,"EGFR TP53", "sets query params for new session immediately");
 
             assert.isTrue(wrapper.isPendingSession);
-            assert.isTrue(wrapper.isLoadingSession);
 
             setTimeout(()=>{
-
                 assert.isTrue(getSessionStub.calledOnce, "did not call get session again");
                 assert.equal(wrapper.sessionId, "someSessionId", "sets session id appropriatly");
                 done();
@@ -430,11 +505,35 @@ describe("URLWrapper", () => {
             done();
         },20);
 
-
-
-
     });
 
+    it('#needToLoadSession obeys rules', ()=>{
+
+        assert.isFalse(needToLoadSession({
+
+                                         }));
+
+        assert.isFalse(needToLoadSession({
+            sessionId:"pending"
+                                         }));
+
+        assert.isFalse(needToLoadSession({
+                                            sessionId:"123",
+                                            _sessionData: ({ id:"123" } as PortalSession)
+                                        }), "sessionId is same, so we already have data");
+
+
+        assert.isTrue(needToLoadSession({
+            sessionId:"123",
+            _sessionData:{ id:"321" } as PortalSession
+        }), "sessionId from url is different from internal store");
+
+        // export function needToLoadSession(obj:Partial<ResultsViewURLWrapper>){
+        //     return obj.sessionId && obj.sessionId !== 'pending' &&
+        //         (obj._sessionData === undefined || obj._sessionData.id !== obj.sessionId);
+        // }
+
+    });
 
 
 });
