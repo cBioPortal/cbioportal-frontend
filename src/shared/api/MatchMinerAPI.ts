@@ -1,5 +1,4 @@
 import * as request from 'superagent';
-import * as _ from 'lodash';
 import { ITrial, ITrialMatch } from "shared/model/MatchMiner.ts";
 import { buildCBioPortalAPIUrl } from "./urls";
 

@@ -42,13 +42,15 @@ export function getStudiesAttr(
 export function getGroupParameters(
     name: string,
     selectedSamples: SampleIdentifier[],
-    origin: string[]
+    origin: string[],
+    color?:string
 ): SessionGroupData {
     return {
         name,
         description: "",
         studies: getStudiesAttr(selectedSamples),
-        origin
+        origin,
+        color
     };
 }
 

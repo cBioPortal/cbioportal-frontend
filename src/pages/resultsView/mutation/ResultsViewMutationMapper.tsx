@@ -1,6 +1,8 @@
+import autobind from "autobind-decorator";
 import * as React from 'react';
+import {DataFilterType, onFilterOptionSelect} from "react-mutation-mapper";
 import {observer} from "mobx-react";
-import {computed} from "mobx";
+import {action, computed} from "mobx";
 
 import {EnsemblTranscript} from "public-lib/api/generated/GenomeNexusAPI";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
@@ -11,11 +13,14 @@ import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfo
 import {
     IMutationMapperProps, default as MutationMapper
 } from "shared/components/mutationMapper/MutationMapper";
+import {
+    MUTATION_STATUS_FILTER_ID
+} from "shared/components/mutationMapper/MutationMapperDataStore";
 
 import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary";
 import ResultsViewMutationMapperStore from "pages/resultsView/mutation/ResultsViewMutationMapperStore";
 import ResultsViewMutationTable from "pages/resultsView/mutation/ResultsViewMutationTable";
-import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
+import {getMobxPromiseGroupStatus} from "shared/lib/getMobxPromiseGroupStatus";
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps
 {
@@ -34,6 +39,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
         super(props);
     }
 
+    @computed get mutationStatusFilter() {
+        return this.store.dataStore.dataFilters.find(f => f.id === MUTATION_STATUS_FILTER_ID);
+    }
+
     @computed get mutationRateSummary():JSX.Element|null {
         // TODO we should not be even calculating mskImpactGermlineConsentedPatientIds for studies other than msk impact
         if (this.props.store.germlineConsentedSamples &&
@@ -47,6 +56,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                     mutations={this.props.store.mutationData.result}
                     samples={this.props.store.samples.result!}
                     germlineConsentedSamples={this.props.store.germlineConsentedSamples}
+                    onMutationStatusSelect={this.onMutationStatusSelect}
+                    mutationStatusFilter={this.mutationStatusFilter}
                 />
             );
         } else {
@@ -94,11 +105,11 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 civicGenes={this.props.store.civicGenes}
                 civicVariants={this.props.store.civicVariants}
                 userEmailAddress={this.props.userEmailAddress}
-                enableOncoKb={this.props.config.show_oncokb}
-                enableFunctionalImpact={this.props.config.show_genomenexus}
-                enableHotspot={this.props.config.show_hotspot}
-                enableMyCancerGenome={this.props.config.mycancergenome_show}
-                enableCivic={this.props.config.show_civic}
+                enableOncoKb={this.props.enableOncoKb}
+                enableFunctionalImpact={this.props.enableGenomeNexus}
+                enableHotspot={this.props.enableHotspot}
+                enableMyCancerGenome={this.props.enableMyCancerGenome}
+                enableCivic={this.props.enableCivic}
                 totalNumberOfExons={this.totalExonNumber}
             />
         );
@@ -111,5 +122,16 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 {!this.isMutationTableDataLoading && this.mutationTableComponent}
             </span>
         );
+    }
+
+    @autobind
+    @action
+    protected onMutationStatusSelect(selectedMutationStatusIds: string[], allValuesSelected: boolean)
+    {
+        onFilterOptionSelect(selectedMutationStatusIds,
+            allValuesSelected,
+            this.store.dataStore,
+            DataFilterType.MUTATION_STATUS,
+            MUTATION_STATUS_FILTER_ID);
     }
 }

@@ -1417,11 +1417,6 @@ export function logScalePossible(
 
 }
 
-export function dataContainsNegativeNumbers():boolean {
-
-    return false;
-}
-
 export function makeBoxScatterPlotData(
     horzData: IStringAxisData,
     vertData: INumberAxisData,

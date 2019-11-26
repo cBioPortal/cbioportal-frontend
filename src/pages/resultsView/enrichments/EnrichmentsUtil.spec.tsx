@@ -1,8 +1,8 @@
 import { assert } from 'chai';
 import { calculateExpressionTendency,
     formatPercentage, getAlterationScatterData, getExpressionScatterData,
-    getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData,
-    getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels, getAlterationEnrichmentColumns, getEnrichmentBarPlotData, getGeneListOptions
+    getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent,
+    getAlterationsTooltipContent, getAlterationEnrichmentColumns, getEnrichmentBarPlotData, getGeneListOptions
 } from "./EnrichmentsUtil";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
@@ -595,108 +595,9 @@ describe("EnrichmentsUtil", () => {
         });
     });
 
-    describe("#getDownloadContent()", () => {
-        it("returns correct download content", () => {
-            assert.equal(getDownloadContent(exampleBoxPlotScatterData, "EGFR", "acc_tcga_rna_seq_v2_mrna"), "Sample ID\tEGFR, " +
-            "acc_tcga_rna_seq_v2_mrna\tAlteration\nTCGA-OR-A5J1-01\t9.940678152790728\t\nTCGA-OR-A5J2-01\t8.34481740339671\t\n" +
-            "TCGA-OR-A5J3-01\t9.660310790006957\t");
-        });
-    });
-
     describe("#getAlterationsTooltipContent()", () => {
         it("returns correct tooltip content", () => {
             assert.equal(getAlterationsTooltipContent(exampleAlterations), "EGFR: MUT; AMP; ");
-        });
-    });
-
-    describe("#shortenGenesLabel()", () => {
-        it("returns EGFR KRAS for EGFR,KRAS and 2", () => {
-            assert.equal(shortenGenesLabel(["EGFR", "KRAS"], 2), "EGFR KRAS");
-        });
-
-        it("returns EGFR KRAS… for EGFR,KRAS,TP53 and 2", () => {
-            assert.equal(shortenGenesLabel(["EGFR", "KRAS", "TP53"], 2), "EGFR KRAS…");
-        });
-    });
-
-    describe("#getBoxPlotModels()", () => {
-        it("returns correct boxplot model", () => {
-            assert.deepEqual(getBoxPlotModels(exampleBoxPlotScatterData.concat([
-                {
-                    x: 1,
-                    y: 5,
-                    sampleId: "TCGA-OR-A5F1-01",
-                    studyId: "acc_tcga",
-                    alterations: ""
-                },
-                {
-                    x: 1,
-                    y: 4,
-                    sampleId: "TCGA-OR-A5O1-01",
-                    studyId: "acc_tcga",
-                    alterations: ""
-                },
-                {
-                    x: 1,
-                    y: 7,
-                    sampleId: "TCGA-OR-A5Q1-01",
-                    studyId: "acc_tcga",
-                    alterations: ""
-                }
-            ])), [
-                {
-                    q1: 4,
-                    q2: 5,
-                    q3: 5,
-                    IQR: 1,
-                    median: 5,
-                    whiskerUpper: 6.5,
-                    whiskerLower: 4,
-                    max: 6.5,
-                    min: 4,
-                    outliersUpper: {
-                        outliers: [],
-                        suspectedOutliers: [7]
-                    },
-                    outliersLower: {
-                        outliers: [],
-                        suspectedOutliers: []
-                    },
-                    x: 1
-                },
-                {
-                    q1: 8.34481740339671,
-                    q2: 9.660310790006957,
-                    q3: 9.660310790006957,
-                    IQR: 1.315493386610246,
-                    median: 9.660310790006957,
-                    whiskerUpper: 9.940678152790728,
-                    whiskerLower: 8.34481740339671,
-                    max: 9.940678152790728,
-                    min: 8.34481740339671,
-                    outliersUpper: {
-                        outliers: [],
-                        suspectedOutliers: []
-                    },
-                    outliersLower: {
-                        outliers: [],
-                        suspectedOutliers: []
-                    },
-                    x: 2
-                }
-            ]);
-        });
-    });
-
-    describe("#getBoxPlotScatterData()", () => {
-        it("returns correct box plot scatter data", () => {
-            const sampleAlterations = {
-                "VENHQS1PUi1BNUoxLTAxOmFjY190Y2dh": [],
-                "VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh": [],
-                "VENHQS1PUi1BNUozLTAxOmFjY190Y2dh": []
-            }
-            assert.deepEqual(getBoxPlotScatterData(exampleMolecularData, "acc_tcga_rna_seq_v2_mrna", sampleAlterations, []),
-                exampleBoxPlotScatterData);
         });
     });
 
