@@ -21,6 +21,7 @@ import * as _ from 'lodash';
 import { log } from 'shared/lib/consoleLog';
 import { remoteData } from 'public-lib';
 import {QueryParams} from "url";
+import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 
 export type BooleanString = string;
 export type NumberString = string;
@@ -30,6 +31,11 @@ export type Property<T> = {
     isSessionProp: boolean;
     aliases?: string[];
 };
+
+export function needToLoadSession(obj:Partial<ResultsViewURLWrapper>): boolean {
+    return obj.sessionId !== undefined && obj.sessionId !== 'pending' &&
+        (obj._sessionData === undefined || obj._sessionData.id !== obj.sessionId);
+}
 
 export default class URLWrapper<
     QueryParamsType extends { [key: string]: string | undefined }
@@ -64,12 +70,6 @@ export default class URLWrapper<
 
         // consumers of wrapper read from this query
         this.query = observable<QueryParamsType>(initValues as QueryParamsType);
-
-
-        // // if we have a session id, set it so that fetching will begin
-        // if (sessionEnabled && this.sessionId) {
-        //     this.setSessionId(this.sessionId);
-        // }
 
         //per reaction below, any update to URL will result in all properties being reset.
         //to avoid update signal when properties haven't actually changed (set to existing value)
@@ -174,6 +174,8 @@ export default class URLWrapper<
             return agg;
         }, []).join("&");
 
+        log("url length", url.length);
+
         // determine which of the MODIFIED params are session props
         const sessionParametersChanged = _.some(_.keys(updatedParams), (key)=>key in sessionProps);
 
@@ -218,6 +220,7 @@ export default class URLWrapper<
                     // make sure that we have sessionData and that timestamp on the session hasn't
                     // been changed since it started
                     if (this._sessionData && timeStamp === this._sessionData.timeStamp) {
+                        this._sessionData.id = data.id;
                         this.routing.updateRoute(
                             {session_id: data.id},
                             path,
@@ -270,10 +273,23 @@ export default class URLWrapper<
         return getRemoteSession(this.sessionId);
     }
 
+    @computed get needToLoadSession(){
+        // if we have a session id
+        // it's NOT equal to pending
+        // we either have NO session data or the existing session data is
+        // not in sync with sessionId from url
+        return needToLoadSession(this);
+        // return this.sessionId && this.sessionId !== 'pending' &&
+        //     (this._sessionData === undefined || this._sessionData.id !== this.sessionId);
+    }
+
     public remoteSessionData = remoteData({
         invoke: async () => {
-            log("fetching remote session", this.sessionId);
-            if (this.sessionId && this.sessionId !== 'pending' && this._sessionData === undefined) {
+            if (
+                this.needToLoadSession
+            ) {
+                log("fetching remote session", this.sessionId);
+
                 let sessionData = await this.getRemoteSession(this.sessionId);
 
                 // if it has no version, it's a legacy session and needs to be normalized
