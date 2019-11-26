@@ -46,8 +46,9 @@ export type OncoprinterGeneticInputLineType1 = {
 export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 & {
     hugoGeneSymbol:string;
     alteration:OncoprintMutationType | "amp" | "homdel" | "gain" | "hetloss" | "mrnaHigh" | "mrnaLow" | "protHigh" | "protLow";
-    isGermline:boolean;
-    proteinChange?:string; // optional parameter: protein change
+    isGermline?:boolean;
+    isCustomDriver?:boolean;
+    proteinChange?:string;
 };
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 export type OncoprinterInputLineType3_Incomplete = OncoprinterInputLineType1 & {
@@ -221,8 +222,6 @@ function makeGeneticTrackDatum_Data_Type3(oncoprinterInputLine:OncoprinterInputL
 export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:OncoprinterGeneticInputLineType2, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
     let ret:Partial<OncoprinterGeneticTrackDatum_Data> = {
         // we'll never set these values - theyre not needed for oncoprinter
-        driverFilter:"",
-        driverFilterAnnotation:"",
         driverTiersFilter:"",
         driverTiersFilterAnnotation:"",
 
@@ -235,6 +234,8 @@ export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:Oncoprinte
         hugoGeneSymbol:oncoprinterInputLine.hugoGeneSymbol,
         proteinChange:oncoprinterInputLine.proteinChange,
         mutationStatus: oncoprinterInputLine.isGermline ? "germline": "",
+        driverFilter:oncoprinterInputLine.isCustomDriver ? "Putative_Driver" : "",
+        driverFilterAnnotation:oncoprinterInputLine.isCustomDriver ? "You indicated that this mutation is a driver." : "",
 
         // we'll update these later in this function
         molecularProfileAlterationType: undefined, // the profile type in AlterationTypeConstants
@@ -520,7 +521,12 @@ export function annotateGeneticTrackData(
                 }
                 if (d.molecularProfileAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
                     // tag mutations as putative driver, and filter them
-                    d.putativeDriver = !!(d.oncoKbOncogenic || (params.useHotspots && d.isHotspot) || getCBioAnnotation(d));
+                    d.putativeDriver = !!(
+                        d.oncoKbOncogenic ||
+                        (params.useHotspots && d.isHotspot) ||
+                        getCBioAnnotation(d) ||
+                        d.driverFilter === "Putative_Driver"
+                    );
                     return (!excludeVUS || d.putativeDriver);
                 } else {
                     return true;
@@ -602,6 +608,7 @@ export function parseGeneticInput(input:string):{status:"complete", result:Oncop
                                     ret.isGermline = true;
                                     break;
                                 case "DRIVER":
+                                    ret.isCustomDriver = true;
                                     break;
                                 default:
                                     throw new Error(`${errorPrefix}Only allowed mutation modifiers are GERMLINE and DRIVER`);
