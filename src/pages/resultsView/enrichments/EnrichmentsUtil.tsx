@@ -271,20 +271,6 @@ export function getBarChartTooltipContent(tooltipModel: any, selectedGene: strin
     return tooltipContent;
 }
 
-export function getDownloadContent(scatterData: any[], hugoGeneSymbol: string, profileName: string): string {
-
-    const downloadData: any[] = [];
-    scatterData.map((datum, index) => {
-        const profileTitle = hugoGeneSymbol + ", " + profileName;
-        downloadData.push({
-            "Sample ID": datum.sampleId,
-            [profileTitle]: datum.y,
-            "Alteration": datum.alterations
-        });
-    });
-    return tsvFormat(downloadData);
-}
-
 export function getAlterationsTooltipContent(alterations: any[]): string {
 
     let result: string = "";
@@ -306,50 +292,6 @@ export function getAlterationsTooltipContent(alterations: any[]): string {
     });
 
     return result;
-}
-
-export function shortenGenesLabel(genes: string[], limit: number): string {
-
-    if (genes.length > limit) {
-        return genes.slice(0, limit).join(" ") + "…";
-    } else {
-        return genes.join(" ");
-    }
-}
-
-export function getBoxPlotModels(scatterData: any[]): BoxPlotModel[] {
-
-    const alteredBoxPlotData = calculateBoxPlotModel(scatterData.filter(s => s.x < 1.5).map(s => s.y));
-    alteredBoxPlotData.x = 1;
-    alteredBoxPlotData.min = alteredBoxPlotData.whiskerLower;
-    alteredBoxPlotData.max = alteredBoxPlotData.whiskerUpper;
-    const unalteredBoxPlotData = calculateBoxPlotModel(scatterData.filter(s => s.x > 1.5).map(s => s.y));
-    unalteredBoxPlotData.x = 2;
-    unalteredBoxPlotData.min = unalteredBoxPlotData.whiskerLower;
-    unalteredBoxPlotData.max = unalteredBoxPlotData.whiskerUpper;
-    return [alteredBoxPlotData, unalteredBoxPlotData];
-}
-
-export function getBoxPlotScatterData(molecularData: NumericGeneMolecularData[], molecularProfileId: string,
-    sampleAlterations: any, alteredSampleKeys: string[]): any[] {
-
-    const scatterData: any[] = [];
-    for (let uniqueSampleKey in sampleAlterations) {
-        const alterations = sampleAlterations[uniqueSampleKey];
-        const data: NumericGeneMolecularData | undefined = molecularData.find(m => m.uniqueSampleKey === uniqueSampleKey);
-        if (data) {
-            const y = molecularProfileId.includes("rna_seq") ? Math.log(data.value + 1) / Math.log(2) : data.value;
-            const random = (seedrandom(y.toString())() - 0.5) * 0.5;
-            scatterData.push({
-                x: alteredSampleKeys.includes(uniqueSampleKey) ? 1 + random : 2 + random,
-                y: y,
-                sampleId: data.sampleId,
-                studyId: data.studyId,
-                alterations: getAlterationsTooltipContent(alterations)
-            });
-        }
-    }
-    return scatterData;
 }
 
 export function pickMutationEnrichmentProfiles(profiles:MolecularProfile[]) {

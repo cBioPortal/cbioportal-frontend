@@ -7,7 +7,7 @@ var GeneratePackageJsonPlugin =require('generate-package-json-webpack-plugin');
 var TerserPlugin = require('terser-webpack-plugin');
 
 var commit = 'unknown';
-var version = '0.0.23';
+var version = '0.0.24';
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
@@ -117,7 +117,7 @@ var config = {
 
     plugins: [
         new webpack.DefinePlugin({
-            'VERSION': version, 
+            'VERSION': version,
             'COMMIT': commit,
             // 'ENV_CBIOPORTAL_URL': isDev && process.env.CBIOPORTAL_URL? JSON.stringify(cleanAndValidateUrl(process.env.CBIOPORTAL_URL)) : '"replace_me_env_cbioportal_url"',
             // 'ENV_GENOME_NEXUS_URL': isDev && process.env.GENOME_NEXUS_URL? JSON.stringify(cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)) : '"replace_me_env_genome_nexus_url"'

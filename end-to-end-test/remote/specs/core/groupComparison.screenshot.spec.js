@@ -187,6 +187,28 @@ describe("group comparison page screenshot tests", function () {
             assertScreenShotMatch(res);
         });
 
+        it("group comparison page mrna enrichments tab several groups", function () {
+            browser.click('.tabAnchor_mrna');
+            browser.waitForVisible('div[data-test="GroupComparisonMRNAEnrichments"]', 10000);
+            browser.waitForVisible('b=BTN3A3', 10000);
+            browser.click('b=BTN3A3');
+            browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
+            browser.moveToObject("body", 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+            assertScreenShotMatch(res);
+        });
+
+        it("group comparison page protein enrichments tab several groups", function () {
+            browser.click('.tabAnchor_protein');
+            browser.waitForVisible('div[data-test="GroupComparisonProteinEnrichments"]', 10000);
+            browser.waitForVisible('b=TUBA1B', 10000);
+            browser.click('b=TUBA1B');
+            browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
+            browser.moveToObject("body", 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
+            assertScreenShotMatch(res);
+        });
+
         it("group comparison page mutation enrichments tab two groups", function() {
             // deselect two groups
             browser.click('button[data-test="groupSelectorButtonA"]');
@@ -220,6 +242,8 @@ describe("group comparison page screenshot tests", function () {
         it("group comparison page mrna enrichments tab two groups", function() {
             browser.click('.tabAnchor_mrna');
             browser.waitForVisible('div[data-test="GroupComparisonMRNAEnrichments"]', 10000);
+            browser.waitForVisible('b=RBMX2', 10000);
+            browser.click('b=RBMX2');
             browser.moveToObject("body", 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
             assertScreenShotMatch(res);
@@ -228,6 +252,8 @@ describe("group comparison page screenshot tests", function () {
         it("group comparison page protein enrichments tab two groups", function() {
             browser.click('.tabAnchor_protein');
             browser.waitForVisible('div[data-test="GroupComparisonProteinEnrichments"]', 10000);
+            browser.waitForVisible('b=ETS1', 10000);
+            browser.click('b=ETS1');
             browser.moveToObject("body", 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', { hide: ['.qtip'] });
             assertScreenShotMatch(res);

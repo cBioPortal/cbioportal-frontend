@@ -327,7 +327,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                 <div>
                     <div>
                         <h3>{this.props.headerName}</h3>
-                        {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
+                        {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes}/>}
                     </div>
                     <div className={styles.Checkboxes}>
                         <div style={{ width: 250, marginRight: 7 }} >
