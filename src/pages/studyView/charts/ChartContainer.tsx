@@ -203,11 +203,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get comparisonPagePossible() {
-        const validChart = (!!this.props.chartMeta.clinicalAttribute ||
-            this.props.chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES);
-
-        return validChart &&
-            this.props.promise.isComplete &&
+        return this.props.promise.isComplete &&
             this.props.promise.result!.length > 1 &&
             (COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1);
     }
@@ -425,7 +421,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        xLabelWithEventTooltip="Time of death"
                                        xLabelWithoutEventTooltip="Time of last observation"
                                        showDownloadButtons={false}
-                                       disableZoom={true}
+                                       showSlider={false}
                                        showTable={false}
                                        styleOpts={{
                                            width: getWidthByDimension(this.props.dimension, this.borderWidth),
@@ -482,11 +478,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             default:
                 return null;
         }
-    }
-
-    @computed get loadingPromises() {
-        const ret = [this.props.promise];
-        return ret;
     }
 
     @computed

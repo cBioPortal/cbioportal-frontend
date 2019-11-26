@@ -5,6 +5,7 @@ var setInputText = require('../../../shared/specUtils').setInputText;
 var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils').waitForNumberOfStudyCheckboxes;
 var checkOncoprintElement = require('../../../shared/specUtils').checkOncoprintElement;
 var getGroupHeaderOptionsElements = require('../../../shared/specUtils').getOncoprintGroupHeaderOptionsElements;
+var setDropdownOpen = require('../../../shared/specUtils').setDropdownOpen;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -213,7 +214,7 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint should sort patients correctly in gbm_tcga_pub", function(){
+    it("oncoprint should sort patients correctly in gbm_tcga_pub", function(){
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         var inputSelector = '.autosuggest input[type="text"]';
@@ -247,7 +248,7 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint should sort samples correctly in gbm_tcga_pub", function(){
+    it("oncoprint should sort samples correctly in gbm_tcga_pub", function(){
 
         $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
         $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
@@ -259,7 +260,7 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - initial patient order", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - initial patient order", function(){
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%20MDM2%20MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4');
         $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
@@ -275,7 +276,7 @@ describe("sorting", function(){
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - initial sample order", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - initial sample order", function(){
 
         $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
         $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
@@ -286,7 +287,7 @@ describe("sorting", function(){
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 1", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 1", function(){
 
         $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForVisible(10000);
         $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
@@ -304,8 +305,9 @@ describe("sorting", function(){
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 2", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 2", function(){
         var overallSurvivalElements = getNthTrackOptionsElements(4);
+        setDropdownOpen(true, overallSurvivalElements.button_selector, overallSurvivalElements.dropdown_selector, "couldnt show overall survival dropdown");
         overallSurvivalElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
@@ -313,7 +315,7 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 3", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 3", function(){
         var karnofskyPerformanceElements = getNthTrackOptionsElements(3);
         karnofskyPerformanceElements.button.click(); // open Karnofsky Performance clinical track menu
         browser.waitForVisible(karnofskyPerformanceElements.dropdown_selector, 1000);// wait for menu to appear
@@ -324,8 +326,9 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 4", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 4", function(){
         var karnofskyPerformanceElements = getNthTrackOptionsElements(3);
+        setDropdownOpen(true, karnofskyPerformanceElements.button_selector, karnofskyPerformanceElements.dropdown_selector, "couldnt show karnofsky performance dropdown");
         karnofskyPerformanceElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
         browser.pause(100); // give time to sort
 
@@ -333,7 +336,7 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 1", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 1", function(){
         while (!browser.isVisible('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]')) {
             // behavior varies whether this menu is still visible, so we have to go into this loop to make sure its visible before clicking to sample mode
             browser.click('.oncoprintContainer .oncoprint__controls #viewDropdownButton')// open view menu
@@ -347,7 +350,7 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 2", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 2", function(){
         var diseaseFreeElements = getNthTrackOptionsElements(2);
         diseaseFreeElements.button.click(); // open Disease Free (months) clinical track menu
         browser.waitForVisible(diseaseFreeElements.dropdown_selector, 1000);// wait for menu to appear
@@ -358,8 +361,9 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 3", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 3", function(){
         var diseaseFreeElements = getNthTrackOptionsElements(2);
+        setDropdownOpen(true, diseaseFreeElements.button_selector, diseaseFreeElements.dropdown_selector, "couldnt show disease free dropdown");
         diseaseFreeElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
@@ -367,7 +371,7 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 4", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 4", function(){
         var fractionGenomeAlteredElements = getNthTrackOptionsElements(1);
         fractionGenomeAlteredElements.button.click(); // open Fraction Genome Altered clinical track menu
         browser.waitForVisible(fractionGenomeAlteredElements.dropdown_selector, 1000);// wait for menu to appear
@@ -378,8 +382,9 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 5", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 5", function(){
         var fractionGenomeAlteredElements = getNthTrackOptionsElements(1);
+        setDropdownOpen(true, fractionGenomeAlteredElements.button_selector, fractionGenomeAlteredElements.dropdown_selector, "couldnt show fraction genome altered dropdown");
         fractionGenomeAlteredElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
         browser.pause(100); // give time to sort
 
@@ -387,7 +392,7 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 6", function(){
+    it("oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 6", function(){
         // Sort TP53 heatmap track
         var TP53HeatmapElements = getNthTrackOptionsElements(8);
         TP53HeatmapElements.button.click(); // open Fraction Genome Altered clinical track menu
@@ -399,7 +404,7 @@ describe("sorting", function(){
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it.skip("oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 1", function(){
+    it("oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 1", function(){
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true');
         $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
@@ -425,8 +430,9 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 2", function(){
+    it("oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 2", function(){
         var TP53HeatmapElements = getNthTrackOptionsElements(8);
+        setDropdownOpen(true, TP53HeatmapElements.button_selector, TP53HeatmapElements.dropdown_selector, "couldnt show TP53 heatmap dropdown");
         TP53HeatmapElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
         browser.pause(100); // give time to sort
 
@@ -434,10 +440,9 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 3", function(){
+    it("oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 3", function(){
         var TP53HeatmapElements = getNthTrackOptionsElements(8);
-        TP53HeatmapElements.button.click(); // close track menu
-        browser.waitForVisible(TP53HeatmapElements.dropdown_selector, 1000, true); // wait until menu disappears, exposing button
+        setDropdownOpen(false, TP53HeatmapElements.button_selector, TP53HeatmapElements.dropdown_selector, "couldnt hide TP53 heatmap dropdown");
 
         var MDM4HeatmapElements = getNthTrackOptionsElements(13);
         MDM4HeatmapElements.button.click(); // open track menu
@@ -449,8 +454,9 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 4", function(){
+    it("oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 4", function(){
         var MDM4HeatmapElements = getNthTrackOptionsElements(13);
+        setDropdownOpen(true, MDM4HeatmapElements.button_selector, MDM4HeatmapElements.dropdown_selector, "couldnt show MDM4 heatmap dropdown");
         MDM4HeatmapElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
@@ -458,9 +464,8 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 5", function(){
+    it("oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 5", function(){
         var TP53HeatmapElements = getNthTrackOptionsElements(8);
-        TP53HeatmapElements = getNthTrackOptionsElements(8);
         TP53HeatmapElements.button.click(); // open track menu
         browser.waitForVisible(TP53HeatmapElements.dropdown_selector, 1000);// wait for menu to appear
         TP53HeatmapElements.dropdown.$('li:nth-child(7)').click(); // Click Don't sort
@@ -470,7 +475,7 @@ describe("sorting", function(){
         assertScreenShotMatch(res);
     });
 
-    it.skip("oncoprint sorts through a flow with heatmap tracks sorted - sorted patient order 1", function(){
+    it("oncoprint sorts through a flow with heatmap tracks sorted - sorted patient order 1", function(){
         $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
         $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForExist(10000);
         $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode

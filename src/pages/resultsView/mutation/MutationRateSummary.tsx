@@ -1,9 +1,12 @@
 import * as React from 'react';
+import {DataFilter} from "react-mutation-mapper";
 import {MolecularProfile, Mutation, SampleIdentifier} from "shared/api/generated/CBioPortalAPI";
 import {germlineMutationRate, somaticMutationRate} from "shared/lib/MutationUtils";
+import {computed} from "mobx";
 import {MobxPromise} from "mobxpromise";
 import {observer} from "mobx-react";
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+
+import MutationStatusSelector from "./MutationStatusSelector";
 
 export interface IMutationRateSummaryProps {
     mutations: Mutation[];
@@ -11,35 +14,15 @@ export interface IMutationRateSummaryProps {
     samples: SampleIdentifier[];
     germlineConsentedSamples: MobxPromise<SampleIdentifier[]>;
     molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>;
+    mutationStatusFilter?: DataFilter<string>;
+    onMutationStatusSelect?: (selectedOptionIds: string[], allValuesSelected?: boolean) => void;
 }
 
 @observer
 export default class MutationRateSummary extends React.Component<IMutationRateSummaryProps, {}>
 {
-    public somaticMutationFrequency(): JSX.Element
-    {
-        let rate = 0;
-
-        if (this.props.samples.length > 0) {
-            rate = somaticMutationRate(this.props.hugoGeneSymbol, this.props.mutations, this.props.molecularProfileIdToMolecularProfile.result!, this.props.samples);
-        }
-
-        return (
-            <div data-test="somaticMutationRate">
-                <label>Somatic Mutation Frequency:</label>
-                {rate.toFixed(1)}%
-
-                <DefaultTooltip
-                    placement="right"
-                    overlay={(<span>{'Percentage of samples with a somatic mutation in ' + this.props.hugoGeneSymbol}</span>)}
-                >
-                    <i className="fa fa-info-circle" style={{'marginLeft':5}}></i>
-                </DefaultTooltip>
-            </div>
-        );
-    }
-
-    public germlineMutationFrequency(): JSX.Element
+    @computed
+    public get germlineMutationRate()
     {
         let samples: SampleIdentifier[]|undefined;
 
@@ -56,28 +39,42 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
             ) ? this.props.germlineConsentedSamples.result : this.props.samples;
         }
 
-        const gmr = samples ? germlineMutationRate(this.props.hugoGeneSymbol, this.props.mutations, this.props.molecularProfileIdToMolecularProfile.result!, samples) : 0;
-
-        return (
-            <div data-test='germlineMutationRate' className={(gmr > 0) ? '' : 'invisible' }>
-                <label>Germline Mutation Frequency:</label>
-                {(gmr > 0) ? `${gmr.toFixed(1)}%` : '--'}
-                <DefaultTooltip
-                    placement="right"
-                    overlay={(<span>{'Percentage of samples with a germline mutation in ' + this.props.hugoGeneSymbol}</span>)}
-                >
-                    <i className="fa fa-info-circle" style={{'marginLeft':5}}></i>
-                </DefaultTooltip>
-            </div>
-        );
+        return samples ? germlineMutationRate(this.props.hugoGeneSymbol,
+            this.props.mutations,
+            this.props.molecularProfileIdToMolecularProfile.result!,
+            samples): 0;
     }
 
-    render() {
+    @computed
+    public get somaticMutationRate()
+    {
+        return this.props.samples.length > 0 ? somaticMutationRate(this.props.hugoGeneSymbol,
+            this.props.mutations,
+            this.props.molecularProfileIdToMolecularProfile.result!,
+            this.props.samples): 0;
+    }
+
+    render()
+    {
         return (
-            <div>
-                {this.somaticMutationFrequency()}
-                {this.germlineMutationFrequency()}
-            </div>
+            <span data-test="mutation-rate-summary">
+                <MutationStatusSelector
+                    filter={this.props.mutationStatusFilter}
+                    onSelect={this.props.onMutationStatusSelect}
+                    rates={{
+                        "Germline": this.germlineMutationRate,
+                        "Somatic": this.somaticMutationRate
+                    }}
+                    somaticContent={{
+                        title: "Somatic Mutation Frequency",
+                        description: `Percentage of samples with a somatic mutation in ${this.props.hugoGeneSymbol}`
+                    }}
+                    germlineContent={this.germlineMutationRate > 0 ? {
+                        title: "Germline Mutation Frequency",
+                        description: `Percentage of samples with a germline mutation in ${this.props.hugoGeneSymbol}`
+                    }: undefined}
+                />
+            </span>
         );
     }
 }

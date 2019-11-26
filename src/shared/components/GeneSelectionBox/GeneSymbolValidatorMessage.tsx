@@ -6,6 +6,7 @@ import { OQL } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
 import ReactSelect from 'react-select1';
 import classNames from 'classnames';
+import * as _ from 'lodash';
 
 export type GeneSymbolValidatorMessageProps = {
     errorMessageOnly?: boolean;
@@ -141,6 +142,42 @@ const GeneSymbolValidatorMessageChild = (
             </div>
         );
     }
+
+    // TDOD: remove this condition once multiple entrez gene ids is supported
+    const hugoGeneSymbolSet = _.groupBy(props.genes.found, gene => gene.hugoGeneSymbol);
+    const genesWithMultipleEntrezGeneIds = _.reduce(hugoGeneSymbolSet, (acc, genes, hugoGeneSymbol) => {
+        if (genes.length > 1) {
+            acc.push(hugoGeneSymbol);
+        }
+        return acc;
+    }, [] as string[]);
+
+    if (genesWithMultipleEntrezGeneIds.length > 0) {
+        return (
+            <div className={styles.GeneSymbolValidator}>
+                <div
+                    className={styles.invalidBubble}
+                    title="Please edit the gene symbols."
+                >
+                    <FontAwesome
+                        className={styles.icon}
+                        name="exclamation-circle"
+                    />
+                    <span>The portal does not currently support the following gene(s):</span>
+                </div>
+
+                {genesWithMultipleEntrezGeneIds.map((gene, index) => (
+                    <RenderSuggestion
+                        key={index}
+                        genes={[]}
+                        alias={gene}
+                        replaceGene={props.replaceGene}
+                    />
+                ))}
+            </div>
+        );
+    }
+
     if (props.errorMessageOnly) {
         return null;
     }

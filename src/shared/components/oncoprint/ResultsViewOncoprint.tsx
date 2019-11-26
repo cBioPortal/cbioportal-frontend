@@ -9,7 +9,7 @@ import OncoprintControls, {
     ISelectOption
 } from "shared/components/oncoprint/controls/OncoprintControls";
 import {Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
-import {ResultsViewPageStore, AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {
     getAlteredUids,
     getUnalteredUids,
@@ -38,10 +38,9 @@ import autobind from "autobind-decorator";
 import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
-import { selectDisplayValue } from "./DataUtils";
-import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import WindowStore from "../window/WindowStore";
-import {isWebdriver} from "../../../public-lib/lib/webdriverUtils";
+import {OncoprintAnalysisCaseType} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
+import {capitalize} from "../../../public-lib";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -93,7 +92,6 @@ type HeatmapTrackGroupRecord = {
 /* tslint:disable: member-ordering */
 @observer
 export default class ResultsViewOncoprint extends React.Component<IResultsViewOncoprintProps, {}> {
-    @observable columnMode:"sample"|"patient" = "patient";
     @observable sortMode:SortMode = {type:"data"};
 
     @observable distinguishGermlineMutations:boolean = true;
@@ -197,14 +195,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         // and trigger a page refresh
         this.urlParamsReaction = reaction(
             ()=>[
-                this.columnMode,
                 this.heatmapTrackGroupsUrlParam,
                 this.clinicalTracksUrlParam,
                 this.treatmentsUrlParam
             ],
             ()=>{
                 const newParams = Object.assign({}, getBrowserWindow().globalStores.routing.location.query);
-                newParams[SAMPLE_MODE_URL_PARAM] = (this.columnMode === "sample") + "";
                 if (!this.clinicalTracksUrlParam) {
                     delete newParams[CLINICAL_TRACKS_URL_PARAM];
                 } else {
@@ -231,7 +227,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.selectedClinicalAttributeIds.keys();
             },
             get selectedColumnType() {
-                return self.columnMode;
+                return self.props.store.oncoprintAnalysisCaseType;
             },
             get showUnalteredColumns() {
                 return self.showUnalteredColumns;
@@ -362,7 +358,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.driverAnnotationSettings.driverTiers;
             },
             get columnMode() {
-                return self.columnMode;
+                return self.props.store.oncoprintAnalysisCaseType;
             },
             get horzZoom() {
                 if (isNaN(self.horzZoom)) {
@@ -416,7 +412,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     private buildControlsHandlers() {
         return {
-            onSelectColumnType:(type:"sample"|"patient")=>{this.setColumnMode(type);},
+            onSelectColumnType:(type:OncoprintAnalysisCaseType)=>{this.props.store.setOncoprintAnalysisCaseType(type);},
             onSelectShowUnalteredColumns:(show:boolean)=>{this.showUnalteredColumns = show;},
             onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show; },
@@ -481,7 +477,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.props.store.driverAnnotationSettings.excludeVUS = s;
             },
             onSelectHideGermlineMutations:(s:boolean)=>{
-                this.props.store.excludeGermlineMutations = s;
+                this.props.store.setExcludeGermlineMutations(s);
             },
             onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
             onClickSortAlphabetical:()=>{
@@ -535,15 +531,15 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         );
                         break;
                     case "order":
-                        const capitalizedColumnMode = this.columnMode[0].toUpperCase() + this.columnMode.slice(1);
+                        const capitalizedColumnMode = capitalize(this.props.store.oncoprintAnalysisCaseType);
                         onMobxPromise(
                             [this.props.store.sampleKeyToSample,
                                 this.props.store.patientKeyToPatient],
                             (sampleKeyToSample:{[sampleKey:string]:Sample}, patientKeyToPatient: any)=>{
                                 let file = `${capitalizedColumnMode} order in the Oncoprint is:\n`;
-                                const keyToCase = (this.columnMode === "sample" ? sampleKeyToSample : patientKeyToPatient);
+                                const keyToCase = (this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ? sampleKeyToSample : patientKeyToPatient);
                                 const caseIds = this.oncoprint.getIdOrder().map(
-                                    this.columnMode === "sample" ?
+                                    this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ?
                                         ((id:string)=>(sampleKeyToSample[id].sampleId)) :
                                         ((id:string)=>(patientKeyToPatient[id].patientId))
                                 );
@@ -569,10 +565,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                     this.treatmentHeatmapTracks.result,
                                     this.genesetHeatmapTracks.result,
                                     this.oncoprint.getIdOrder(),
-                                    (this.columnMode === "sample" ?
+                                    (this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ?
                                         ((key:string)=>(sampleKeyToSample[key].sampleId)) :
                                         ((key:string)=>(patientKeyToPatient[key].patientId))),
-                                    this.columnMode,
+                                    this.props.store.oncoprintAnalysisCaseType,
                                     this.distinguishDrivers
                                 )
                             }
@@ -607,9 +603,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @action private initFromUrlParams(paramsMap:any) {
-        if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
-            this.columnMode = (paramsMap[SAMPLE_MODE_URL_PARAM] && paramsMap[SAMPLE_MODE_URL_PARAM]==="true") ? "sample" : "patient";
-        }
         if (paramsMap[TREATMENT_LIST_URL_PARAM]) {
             this.selectedTreatmentsFromUrl = paramsMap[TREATMENT_LIST_URL_PARAM].split(";");
         }
@@ -706,10 +699,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     private toggleColumnMode() {
-        if (this.columnMode === "sample") {
-            this.controlsHandlers.onSelectColumnType && this.controlsHandlers.onSelectColumnType("patient");
-        } else {
-            this.controlsHandlers.onSelectColumnType && this.controlsHandlers.onSelectColumnType("sample");
+        switch (this.props.store.oncoprintAnalysisCaseType) {
+            case OncoprintAnalysisCaseType.SAMPLE:
+                this.controlsHandlers.onSelectColumnType && this.controlsHandlers.onSelectColumnType(OncoprintAnalysisCaseType.PATIENT);
+                break;
+            case OncoprintAnalysisCaseType.PATIENT:
+                this.controlsHandlers.onSelectColumnType && this.controlsHandlers.onSelectColumnType(OncoprintAnalysisCaseType.SAMPLE);
+                break;
         }
     }
 
@@ -730,10 +726,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     }
 
-    private setColumnMode(type:"sample"|"patient") {
-        if (this.columnMode !== type) {
-            this.columnMode = type;
-        }
+    private setColumnMode(type:OncoprintAnalysisCaseType) {
+        this.props.store.setOncoprintAnalysisCaseType(type);
     }
 
     readonly alteredKeys = remoteData({
@@ -794,11 +788,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @computed get sortOrder() {
         if (this.sortMode.type === "alphabetical") {
-            return this.columnMode === "sample" ? this.alphabeticalSampleOrder : this.alphabeticalPatientOrder;
+            return this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ? this.alphabeticalSampleOrder : this.alphabeticalPatientOrder;
         } else if (this.sortMode.type === "caseList") {
-            if (this.columnMode === "sample" && this.props.store.givenSampleOrder.isComplete) {
+            if (this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE && this.props.store.givenSampleOrder.isComplete) {
                 return this.props.store.givenSampleOrder.result.map(x=>x.uniqueSampleKey);
-            } else if (this.columnMode === "patient" && this.props.store.givenSampleOrder.isComplete) {
+            } else if (this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.PATIENT && this.props.store.givenSampleOrder.isComplete) {
                 return _.uniq(this.props.store.givenSampleOrder.result.map(x=>x.uniquePatientKey));
             } else {
                 return undefined;
@@ -827,25 +821,25 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     readonly sampleGeneticTracks = makeGeneticTracksMobxPromise(this, true);
     readonly patientGeneticTracks = makeGeneticTracksMobxPromise(this, false);
     @computed get geneticTracks() {
-        return (this.columnMode === "sample" ? this.sampleGeneticTracks : this.patientGeneticTracks);
+        return (this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ? this.sampleGeneticTracks : this.patientGeneticTracks);
     }
 
     readonly sampleClinicalTracks = makeClinicalTracksMobxPromise(this, true);
     readonly patientClinicalTracks = makeClinicalTracksMobxPromise(this, false);
     @computed get clinicalTracks() {
-        return (this.columnMode === "sample" ? this.sampleClinicalTracks : this.patientClinicalTracks);
+        return (this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ? this.sampleClinicalTracks : this.patientClinicalTracks);
     }
 
     readonly sampleHeatmapTracks = makeHeatmapTracksMobxPromise(this, true);
     readonly patientHeatmapTracks = makeHeatmapTracksMobxPromise(this, false);
     @computed get heatmapTracks() {
-        return (this.columnMode === "sample" ? this.sampleHeatmapTracks : this.patientHeatmapTracks);
+        return (this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ? this.sampleHeatmapTracks : this.patientHeatmapTracks);
     }
 
     readonly sampleTreatmentHeatmapTracks = makeTreatmentProfileHeatmapTracksMobxPromise(this, true);
     readonly patientTreatmentHeatmapTracks = makeTreatmentProfileHeatmapTracksMobxPromise(this, false);
     @computed get treatmentHeatmapTracks() {
-        return (this.columnMode === "sample" ? this.sampleTreatmentHeatmapTracks : this.patientTreatmentHeatmapTracks);
+        return (this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ? this.sampleTreatmentHeatmapTracks : this.patientTreatmentHeatmapTracks);
     }
 
     @computed get genesetHeatmapTrackGroup(): number {
@@ -866,7 +860,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             makeGenesetHeatmapExpansionsMobxPromise(this, false)
     );
     @computed get genesetHeatmapTracks() {
-        return (this.columnMode === "sample" ? this.sampleGenesetHeatmapTracks : this.patientGenesetHeatmapTracks);
+        return (this.props.store.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ? this.sampleGenesetHeatmapTracks : this.patientGenesetHeatmapTracks);
     }
 
     @computed get clusteredHeatmapTrackGroupIndex() {

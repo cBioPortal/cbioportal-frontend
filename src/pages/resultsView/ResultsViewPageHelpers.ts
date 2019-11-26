@@ -1,16 +1,6 @@
 import * as _ from "lodash";
-import {getMolecularProfiles} from "./ResultsViewPageStoreUtils";
-import {runInAction} from "mobx";
-import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
-import client from "../../shared/api/cbioportalClientInstance";
-import sessionServiceClient from "../../shared/api/sessionServiceInstance";
-import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
+import {SamplesSpecificationElement} from "./ResultsViewPageStore";
 import {VirtualStudy} from "../../shared/model/VirtualStudy";
-import hashString from "../../shared/lib/hashString";
-import {
-    CLINICAL_TRACKS_URL_PARAM, HEATMAP_TRACKS_URL_PARAM,
-    SAMPLE_MODE_URL_PARAM
-} from "../../shared/components/oncoprint/ResultsViewOncoprint";
 
 export enum ResultsViewTab {
     ONCOPRINT="oncoprint",
