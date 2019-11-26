@@ -13,7 +13,7 @@ import {getDeterministicRandomNumber, separateScatterDataByAppearance} from "./P
 import {logicalAnd} from "../../lib/LogicUtils";
 import {tickFormatNumeral, wrapTick} from "./TickUtils";
 import {makeScatterPlotSizeFunction} from "./PlotUtils";
-import {getTextWidth} from "../../../public-lib/lib/TextTruncationUtils";
+import {getTextWidth, truncateWithEllipsis} from "../../../public-lib/lib/TextTruncationUtils";
 import autobind from "autobind-decorator";
 import { dataPointIsLimited } from 'shared/components/plots/PlotUtils';
 import _ from "lodash";
@@ -62,6 +62,8 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     boxWidth?:number;
     legendLocationWidthThreshold?:number; // chart width after which we start putting the legend at the bottom of the plot
     boxCalculationFilter?:(d:D)=>boolean; // determines which points are used for calculating the box
+    containerRef?:(svgContainer:SVGElement|null)=>void;
+    compressXAxis?:boolean
 }
 
 type BoxModel = {
@@ -418,7 +420,12 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get labels() {
-        return this.props.data.map(d=>d.label);
+        return this.props.data.map(d => {
+            if (!!this.props.compressXAxis) {
+                return truncateWithEllipsis(d.label, 50, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize + 'px');
+            }
+            return d.label;
+        });
     }
 
     @bind
@@ -448,11 +455,11 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 tickValues={this.props.horizontal ? undefined: this.categoryTickValues}
                 tickCount={this.props.horizontal ? NUM_AXIS_TICKS: undefined }
                 tickFormat={this.props.horizontal ? this.formatNumericalTick : this.formatCategoryTick}
-                tickLabelComponent={<VictoryLabel angle={this.props.horizontal ? undefined : CATEGORY_LABEL_HORZ_ANGLE}
-                                                  verticalAnchor={this.props.horizontal ? undefined : "start"}
-                                                  textAnchor={this.props.horizontal ? undefined : "start"}
+                tickLabelComponent={<VictoryLabel angle={!!this.props.compressXAxis || this.props.horizontal ? undefined : CATEGORY_LABEL_HORZ_ANGLE}
+                                                  verticalAnchor={!!this.props.compressXAxis || this.props.horizontal ? undefined : "start"}
+                                                  textAnchor={!!this.props.compressXAxis ||this.props.horizontal ? undefined : "start"}
                                   />}
-                axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? 35 : this.biggestCategoryLabelSize + 24}/>}
+                axisLabelComponent={<VictoryLabel dy={!!this.props.compressXAxis || this.props.horizontal ? 35 : this.biggestCategoryLabelSize + 24}/>}
             />
         );
     }
@@ -547,7 +554,8 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
 
         if (!this.props.horizontal) {
             // more padding if vertical, because category labels extend to bottom
-            paddingForLabels = this.biggestCategoryLabelSize;
+            // more padding if axis is not compressed
+            paddingForLabels = !!this.props.compressXAxis ? 20 : this.biggestCategoryLabelSize;
         }
         if (this.legendLocation === "bottom") {
             // more padding if legend location is "bottom", to make room for legend
@@ -561,8 +569,8 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         const maxSize = Math.max(
             ...this.labels.map(x=>getTextWidth(x, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize+"px"))
         );
-        if (this.props.horizontal) {
-            // if horizontal mode, its label width
+        if (!!this.props.compressXAxis || this.props.horizontal) {
+            // if horizontal mode or if axis is compressed( i.e, tick labels are horizontal), its label width
             return maxSize;
         } else {
             // if vertical mode, its label height when rotated
@@ -655,6 +663,11 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                     role="img"
                     viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                     onMouseMove={this.onMouseMove}
+                    ref={(ref) => {
+                        if (this.props.containerRef) {
+                            this.props.containerRef(ref);
+                        }
+                    }}
                 >
                     <g
                         transform={`translate(${this.leftPadding}, ${this.topPadding})`}

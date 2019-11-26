@@ -9,6 +9,7 @@ import { FlexRow } from "../flexbox/FlexBox";
 import {QueryStoreComponent} from "./QueryStore";
 import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
+import AppConfig from "appConfig";
 
 const styles = styles_any as {
 	MolecularProfileSelector: string,
@@ -26,11 +27,15 @@ const styles = styles_any as {
 @observer
 export default class MolecularProfileSelector extends QueryStoreComponent<{}, {}>
 {
+	private get showGSVA() {
+		return AppConfig.serverConfig.skin_show_gsva;
+	}
+	
 	render()
 	{
 		if (this.store.selectableSelectedStudyIds.length !== 1)
 			return null;
-
+		
 		return (
 			<FlexRow padded className={styles.MolecularProfileSelector}>
 				<SectionHeader className="sectionLabel" promises={[this.store.molecularProfiles]}>
@@ -39,7 +44,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<{}, {}
 				<div className={styles.group} data-test="molecularProfileSelector">
 					{this.renderGroup("MUTATION_EXTENDED", "Mutation")}
 					{this.renderGroup("COPY_NUMBER_ALTERATION", "Copy Number")}
-					{this.renderGroup("GENESET_SCORE", "GSVA scores")}
+					{this.showGSVA && this.renderGroup("GENESET_SCORE", "GSVA scores")}
 					{this.renderGroup("MRNA_EXPRESSION", "mRNA Expression")}
 					{this.renderGroup("METHYLATION", "DNA Methylation")}
 					{this.renderGroup("METHYLATION_BINARY", "DNA Methylation")}

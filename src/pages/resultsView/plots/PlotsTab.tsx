@@ -1627,9 +1627,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         };
     }
 
-    private fDatumHasMutation = (d:any, mutation:string) => {
-        const mutationFound = !!mutation && !!d.mutations.find((m:any)=>!!(m.proteinChange && (m.proteinChange.indexOf(mutation) > -1)));
-        return mutationFound;
+    private fDatumHasMutation = (d: IPlotSampleData, word: string) => {
+        const searchWordRegex = new RegExp(word, 'i');
+        return !!word && !!d.mutations.find((m) => !!(m.proteinChange && searchWordRegex.test(m.proteinChange)));
     }
 
     @computed get showMutationNotFoundMessage():boolean {
@@ -2463,7 +2463,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             </div>
                         </div>
                         {this.mutationDataCanBeShown && (
-                            <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                            <div style={{marginTop:5}}>* Driver annotation settings are located in the settings menu <i className="fa fa-sliders fa-sm"/> at the top of the page.</div>
                         )}
                         {this.limitValuesCanBeShown && this.plotType.result === PlotType.ScatterPlot && (
                             <div style={{marginTop:5}}>
