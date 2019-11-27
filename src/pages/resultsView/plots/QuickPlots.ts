@@ -12,6 +12,7 @@ export type ButtonInfo = {
         vertical: {
             dataSource: PlotsTabOption | undefined;
             dataType: PlotsTabOption | undefined;
+            useSameGene?:boolean;
         };
         horizontal: {
             dataSource: PlotsTabOption | undefined;
@@ -370,6 +371,7 @@ const quickPlots: QuickPlot[] = [
                             dataType => dataType.value === 'MRNA_EXPRESSION'
                         ),
                         dataSource: undefined,
+                        useSameGene:true
                     },
                     horizontal: {
                         dataType: dataTypes.find(
@@ -404,6 +406,7 @@ const quickPlots: QuickPlot[] = [
                 plotModel: {vertical: {
                     dataType: dataTypes.find((dataType) => dataType.value === "MRNA_EXPRESSION"),
                     dataSource: undefined,
+                    useSameGene:true
                 },
                 horizontal: {
                     dataType: dataTypes.find((dataType) => dataType.value === "COPY_NUMBER_ALTERATION"),
@@ -438,6 +441,7 @@ const quickPlots: QuickPlot[] = [
                             dataType => dataType.value === 'MRNA_EXPRESSION'
                         ),
                         dataSource: undefined,
+                        useSameGene:true
                     },
                     horizontal: {
                         dataType: dataTypes.find(
@@ -473,6 +477,7 @@ const quickPlots: QuickPlot[] = [
                             source =>
                                 source.value === 'brca_tcga_protein_quantification'
                         ),
+                        useSameGene:true
                     },
                     horizontal: {
                         dataType: dataTypes.find(
