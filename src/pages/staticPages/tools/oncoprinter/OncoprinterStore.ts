@@ -29,7 +29,7 @@ import {SampleAlteredMap} from "../../../resultsView/ResultsViewPageStoreUtils";
 import { AlteredStatus } from "pages/resultsView/mutualExclusivity/MutualExclusivityUtil";
 import {getClinicalTracks, parseClinicalInput} from "./OncoprinterClinicalUtils";
 
-export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "excludeVUS" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
+export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "excludeVUS" | "customBinary" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
 
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 function genomeNexusKey(l:OncoprinterInputLineType3_Incomplete){
@@ -198,6 +198,11 @@ export default class OncoprinterStore {
         }
     }
 
+    @computed get existCustomDrivers() {
+        return this.parsedGeneticInputLines.result &&
+            this.parsedGeneticInputLines.result.findIndex(x=>!!(isType2(x) && x.isCustomDriver)) > -1;
+    }
+
     readonly hugoGeneSymbolToGene = remoteData({
         invoke:async()=>{
             const geneIds = this.hugoGeneSymbols;
@@ -353,6 +358,7 @@ export default class OncoprinterStore {
         const params:any = {};
         // always
         params.useHotspots = this.driverAnnotationSettings.hotspots;
+        params.useCustomBinary = this.driverAnnotationSettings.customBinary;
         promisesMap.oncoKbCna = this.oncoKbCnaData;
 
         if (this.driverAnnotationSettings.driversAnnotated) {
