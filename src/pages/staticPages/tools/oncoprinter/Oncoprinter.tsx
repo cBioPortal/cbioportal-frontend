@@ -126,6 +126,16 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             get annotateDriversHotspotsDisabled() {
                 return !AppConfig.serverConfig.show_hotspot;
             },
+            get annotateCustomDriverBinary() {
+                return self.props.store.driverAnnotationSettings.customBinary;
+            },
+            get customDriverAnnotationBinaryMenuLabel() {
+                if (self.props.store.existCustomDrivers) {
+                    return "User-specified drivers";
+                } else {
+                    return undefined;
+                }
+            }
         });
     }
 
@@ -160,12 +170,15 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                 if (!s) {
                     this.props.store.driverAnnotationSettings.oncoKb = false;
                     this.props.store.driverAnnotationSettings.cbioportalCount = false;
+                    this.props.store.driverAnnotationSettings.customBinary = false;
                     this.props.store.driverAnnotationSettings.excludeVUS = false;
                 } else {
-                    if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
+                    if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError) {
                         this.props.store.driverAnnotationSettings.oncoKb = true;
+                    }
 
                     this.props.store.driverAnnotationSettings.cbioportalCount = true;
+                    this.props.store.driverAnnotationSettings.customBinary = true;
                 }
             }),
             onSelectAnnotateOncoKb:action((s:boolean)=>{
@@ -180,6 +193,9 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             onChangeAnnotateCBioPortalInputValue:action((s:string)=>{
                 this.props.store.driverAnnotationSettings.cbioportalCountThreshold = parseInt(s, 10);
                 this.controlsHandlers.onSelectAnnotateCBioPortal && this.controlsHandlers.onSelectAnnotateCBioPortal(true);
+            }),
+            onSelectCustomDriverAnnotationBinary:action((s:boolean)=>{
+                this.props.store.driverAnnotationSettings.customBinary = s;
             }),
             onSelectHidePutativePassengers:(s:boolean)=>{
                 this.props.store.driverAnnotationSettings.excludeVUS = s;

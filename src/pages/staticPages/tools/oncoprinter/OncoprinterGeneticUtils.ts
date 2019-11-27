@@ -82,6 +82,7 @@ export function isType3NoGene(inputLine:OncoprinterInputLine):inputLine is Oncop
 
 export function initDriverAnnotationSettings(store:OncoprinterStore) {
     return observable({
+        customBinary:true,
         cbioportalCount: false,
         cbioportalCountThreshold: 0,
         _oncoKb:true,
@@ -101,8 +102,11 @@ export function initDriverAnnotationSettings(store:OncoprinterStore) {
             return this._excludeVUS && this.driversAnnotated;
         },
         get driversAnnotated() {
-            const anySelected = this.oncoKb ||
-                this.cbioportalCount || this.hotspots;
+            const anySelected =
+                this.oncoKb ||
+                this.cbioportalCount ||
+                this.hotspots ||
+                (store.existCustomDrivers && this.customBinary);
 
             return anySelected;
         }
@@ -447,6 +451,7 @@ export function annotateGeneticTrackData(
     params:{
         cbioportalCountThreshold?:number;
         useHotspots:boolean;
+        useCustomBinary:boolean;
     },
     excludeVUS:boolean
 ) {
@@ -525,7 +530,7 @@ export function annotateGeneticTrackData(
                         d.oncoKbOncogenic ||
                         (params.useHotspots && d.isHotspot) ||
                         getCBioAnnotation(d) ||
-                        d.driverFilter === "Putative_Driver"
+                        (params.useCustomBinary && d.driverFilter === "Putative_Driver")
                     );
                     return (!excludeVUS || d.putativeDriver);
                 } else {
