@@ -884,7 +884,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get horzDatatypeOptions() {
         let noneDatatypeOption = undefined;
         // listen to updates of `dataTypeOptions` and on the selected data type for the vertical axis
-        if (this.dataTypeOptions && this.vertSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE) {
+        if (this.dataTypeOptions && this.vertSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
             noneDatatypeOption = [{ value: NONE_SELECTED_OPTION_STRING_VALUE, label: NONE_SELECTED_OPTION_LABEL}];
         }
         const options = (noneDatatypeOption || []).concat((this.dataTypeOptions.result || []) as any[]);
@@ -894,7 +894,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get vertDatatypeOptions() {
         let noneDatatypeOption = undefined;
         // listen to updates of `dataTypeOptions` and on the selected data type for the horzontal axis
-        if (this.dataTypeOptions && this.horzSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE) {
+        if (this.dataTypeOptions && this.horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
             noneDatatypeOption = [{ value: NONE_SELECTED_OPTION_STRING_VALUE, label: NONE_SELECTED_OPTION_LABEL}];
         }
         return (noneDatatypeOption || []).concat((this.dataTypeOptions.result || []) as any[]);
@@ -964,7 +964,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         let sameTreatmentOption = undefined;
         // listen to updates of `horzTreatmentOptions` or the selected data type for the horzontal axis
         if (this.horzTreatmentOptions || this.horzSelection.dataType) {
-            if (this.horzSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE) {
+            if (this.horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
                 // when the data type on the horizontal axis is a treatment profile
                 // add an option to select the same treatment
                 if (this.horzSelection.dataType && this.showTreatmentSelectBox(this.horzSelection.dataType)
@@ -980,7 +980,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return dataType !== NONE_SELECTED_OPTION_STRING_VALUE
                 && dataType !== GENESET_DATA_TYPE
                 && dataType !== CLIN_ATTR_DATA_TYPE
-                && dataType !== AlterationTypeConstants.TREATMENT_RESPONSE;
+                && dataType !== AlterationTypeConstants.GENERIC_ASSAY;
     }
 
     private showGenesetSelectBox(dataType:string):boolean {
@@ -990,7 +990,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     private showTreatmentSelectBox(dataType:string):boolean {
         return dataType !== NONE_SELECTED_OPTION_STRING_VALUE
-                && dataType === AlterationTypeConstants.TREATMENT_RESPONSE;
+                && dataType === AlterationTypeConstants.GENERIC_ASSAY;
     }
 
     private showDatasourceBox(dataType:string):boolean {
@@ -1241,13 +1241,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get bothAxesMolecularProfile() {
-        return (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.horzSelection.dataType !== AlterationTypeConstants.TREATMENT_RESPONSE) &&
-             (this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.vertSelection.dataType !== AlterationTypeConstants.TREATMENT_RESPONSE);
+        return (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.horzSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY) &&
+             (this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.vertSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY);
     }
 
     @computed get oneAxisMolecularProfile() {
-        return !this.bothAxesMolecularProfile && ((this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.horzSelection.dataType !== AlterationTypeConstants.TREATMENT_RESPONSE) ||
-             (this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.vertSelection.dataType !== AlterationTypeConstants.TREATMENT_RESPONSE));
+        return !this.bothAxesMolecularProfile && ((this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.horzSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY) ||
+             (this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.vertSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY));
     }
 
     @computed get sameGeneInBothAxes() {
@@ -1271,7 +1271,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get horzLimitValueTypes():string[] {
-        if (this.horzAxisDataPromise.result && this.horzSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE) {
+        if (this.horzAxisDataPromise.result && this.horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
             return getLimitValues(this.horzAxisDataPromise.result.data);
         }
         return [] as string[];
@@ -1282,7 +1282,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get vertLimitValueTypes():string[] {
-        if (this.vertAxisDataPromise.result && this.vertSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE) {
+        if (this.vertAxisDataPromise.result && this.vertSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
             return getLimitValues(this.vertAxisDataPromise.result.data);
         }
         return [] as string[];
@@ -1859,7 +1859,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 options={this.vertTreatmentOptions && this.horzTreatmentOptions? (vertical ? this.vertTreatmentOptions : this.horzTreatmentOptions.result): []}
                                 clearable={false}
                                 searchable={false}
-                                disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE || axisSelection.dataType !== AlterationTypeConstants.TREATMENT_RESPONSE}
+                                disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE || axisSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY}
                             />
                         </div>
                     </div>)}
@@ -2223,7 +2223,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get showNoTreamentsSelectedWarning() {
-        return ( (this.vertSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE || this.horzSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE)
+        return ( (this.vertSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY || this.horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY)
                   && this.vertTreatmentOptions.length === 0);
     }
 

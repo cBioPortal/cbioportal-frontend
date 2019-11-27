@@ -145,7 +145,7 @@ export function getHeatmapTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):RuleS
     let value_stop_points:number[];
 
     switch (trackSpec.molecularAlterationType) {
-        case AlterationTypeConstants.TREATMENT_RESPONSE:
+        case AlterationTypeConstants.GENERIC_ASSAY:
             return getTreatmentTrackRuleSetParams(trackSpec);
             break;
         case AlterationTypeConstants.METHYLATION:
@@ -668,7 +668,7 @@ export function makeHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
             const molecularProfileIdToMolecularProfile = oncoprint.props.store.molecularProfileIdToMolecularProfile.result!;
             const molecularProfileIdToHeatmapTracks = oncoprint.molecularProfileIdToHeatmapTracks;
 
-            const geneProfiles = _.filter(_.values(molecularProfileIdToHeatmapTracks), d => d.molecularAlterationType !== AlterationTypeConstants.TREATMENT_RESPONSE);
+            const geneProfiles = _.filter(_.values(molecularProfileIdToHeatmapTracks), d => d.molecularAlterationType !== AlterationTypeConstants.GENERIC_ASSAY);
             const neededGenes = _.flatten(geneProfiles.map(v=>_.keys(v.entities)));
             await oncoprint.props.store.geneCache.getPromise(neededGenes.map(g=>({hugoGeneSymbol:g})), true);
 
@@ -744,7 +744,7 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(oncoprint:ResultsVi
             const treatmentLinkMap = oncoprint.props.store.treatmentLinkMap.result!;
 
             const treatmentsById = _.keyBy(oncoprint.props.store.treatmentsInStudies.result!, t=>t.treatmentId);
-            const treatmentProfiles = _.filter(molecularProfileIdToHeatmapTracks, d => d.molecularAlterationType === AlterationTypeConstants.TREATMENT_RESPONSE);
+            const treatmentProfiles = _.filter(molecularProfileIdToHeatmapTracks, d => d.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY);
 
             const cacheQueries = _.flatten(treatmentProfiles.map(entry=>(
                 _.keys(entry.entities).map(treatmentId=>({

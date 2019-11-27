@@ -46,7 +46,7 @@ export const dataTypeToDisplayType:{[s:string]:string} = {
     [AlterationTypeConstants.METHYLATION]: "DNA Methylation",
     [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute",
     [GENESET_DATA_TYPE]:"Gene Sets",
-    [AlterationTypeConstants.TREATMENT_RESPONSE]: "Treatment Response"
+    [AlterationTypeConstants.GENERIC_ASSAY]: "Treatment Response"
 };
 
 export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} = {
@@ -61,7 +61,7 @@ export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} =
 export const dataTypeDisplayOrder = [
     CLIN_ATTR_DATA_TYPE, AlterationTypeConstants.MUTATION_EXTENDED, AlterationTypeConstants.COPY_NUMBER_ALTERATION,
     AlterationTypeConstants.MRNA_EXPRESSION, GENESET_DATA_TYPE, AlterationTypeConstants.PROTEIN_LEVEL,
-    AlterationTypeConstants.METHYLATION, AlterationTypeConstants.TREATMENT_RESPONSE
+    AlterationTypeConstants.METHYLATION, AlterationTypeConstants.GENERIC_ASSAY
 ];
 export function sortMolecularProfilesForDisplay(profiles:MolecularProfile[]) {
     if (!profiles.length) {
@@ -799,7 +799,7 @@ export function makeAxisDataPromise(
                     molecularProfileIdToMolecularProfile);
             }
             break;
-        case AlterationTypeConstants.TREATMENT_RESPONSE:
+        case AlterationTypeConstants.GENERIC_ASSAY:
             if (selection.treatmentId !== undefined && selection.dataSourceId !== undefined) {
                 ret = makeAxisDataPromise_Treatment(
                     selection.treatmentId, selection.dataSourceId, treatmentMolecularDataCachePromise,
@@ -857,7 +857,7 @@ export function getAxisLabel(
                 label = `${selection.genesetId}: ${profile.name}`;
             }
             break;
-        case AlterationTypeConstants.TREATMENT_RESPONSE:
+        case AlterationTypeConstants.GENERIC_ASSAY:
             if (!!(profile && selection.selectedTreatmentOption && selection.selectedTreatmentOption.label)) {
                 const treatmentName = selection.selectedTreatmentOption.label;
                 label = `${treatmentName}: ${profile.name}`;
@@ -1402,7 +1402,7 @@ export function logScalePossible(
     axisSelection: AxisMenuSelection
 ) {
     if (axisSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
-        if (axisSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE) {
+        if (axisSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
             return true;
         }
         // molecular profile
@@ -1783,17 +1783,17 @@ export function getCnaQueries(
 ) {
     const queries:{entrezGeneId:number}[] = [];
     if (horzSelection.dataType !== CLIN_ATTR_DATA_TYPE
-        && horzSelection.dataType !== AlterationTypeConstants.TREATMENT_RESPONSE
+        && horzSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY
         && horzSelection.entrezGeneId !== undefined) {
         queries.push({entrezGeneId: horzSelection.entrezGeneId});
     }
     if (vertSelection.dataType !== CLIN_ATTR_DATA_TYPE
-        && horzSelection.dataType !== AlterationTypeConstants.TREATMENT_RESPONSE
+        && horzSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY
         && vertSelection.entrezGeneId !== undefined) {
         queries.push({entrezGeneId: vertSelection.entrezGeneId});
     }
     if (vertSelection.dataType === AlterationTypeConstants.COPY_NUMBER_ALTERATION
-        && horzSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE
+        && horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY
         && vertSelection.entrezGeneId !== undefined) {
         queries.push({entrezGeneId: vertSelection.entrezGeneId});
     }
@@ -1829,8 +1829,8 @@ export function getMutationQueries(
 }
 
 export function showWaterfallPlot(horzSelection:AxisMenuSelection, vertSelection:AxisMenuSelection):boolean {
-    return (vertSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE && horzSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE)
-    || (horzSelection.dataType === AlterationTypeConstants.TREATMENT_RESPONSE && vertSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE);
+    return (vertSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY && horzSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE)
+    || (horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY && vertSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE);
 }
 
 export function getScatterPlotDownloadData(
@@ -2028,7 +2028,7 @@ export function makeAxisLogScaleFunction(axisSelection:AxisMenuSelection):IAxisL
     let fLogScale;     // function for (log-)transforming a value
     let fInvLogScale;  // function for back-transforming a value transformed with fLogScale
 
-    if(axisSelection.dataType !== AlterationTypeConstants.TREATMENT_RESPONSE) {
+    if(axisSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY) {
         // log-transformation parameters for non-treatment reponse 
         // profile data. Note: log2-transformation is used by default
         label = "log2";
