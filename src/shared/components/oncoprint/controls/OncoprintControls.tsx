@@ -612,11 +612,11 @@ export default class OncoprintControls extends React.Component<
         const showGenesTextArea =
             showItemSelectionElements &&
             this.props.state.selectedHeatmapProfileAlterationType !==
-                AlterationTypeConstants.TREATMENT_RESPONSE;
+                AlterationTypeConstants.GENERIC_ASSAY;
         const showTreatmentsTextArea =
             showItemSelectionElements &&
             this.props.state.selectedHeatmapProfileAlterationType ===
-                AlterationTypeConstants.TREATMENT_RESPONSE;
+                AlterationTypeConstants.GENERIC_ASSAY;
 
         if (
             this.props.oncoprinterMode ||

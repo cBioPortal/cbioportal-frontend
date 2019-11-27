@@ -1052,7 +1052,7 @@ describe("Oncoprint TooltipUtils", () => {
             assert.isTrue(tooltipResult.html().indexOf("<b>8.00</b>") > -1, "molecular track - category is ignored when available");
         });
 
-        const fTreamentTooltip = makeHeatmapTrackTooltip("TREATMENT", false);
+        const fTreamentTooltip = makeHeatmapTrackTooltip("GENERIC_ASSAY", false);
 
         it('Should handle categories for treatment genetic alterations', () => {
             const tooltipResult = fTreamentTooltip([{ profile_data: 8, sample: "sampleID", category: ">8.00" }]);
