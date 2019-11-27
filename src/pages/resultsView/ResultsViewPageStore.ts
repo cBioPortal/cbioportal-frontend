@@ -195,7 +195,7 @@ export const AlterationTypeConstants = {
     FUSION: 'FUSION',
     GENESET_SCORE: 'GENESET_SCORE',
     METHYLATION: 'METHYLATION',
-    TREATMENT_RESPONSE: 'TREATMENT',
+    GENERIC_ASSAY: 'GENERIC_ASSAY',
 };
 
 export enum GenericAssayTypeConstants {
@@ -1386,7 +1386,7 @@ export class ResultsViewPageStore {
                     profile.molecularAlterationType ===
                         AlterationTypeConstants.GENESET_SCORE ||
                     profile.molecularAlterationType ===
-                        AlterationTypeConstants.TREATMENT_RESPONSE
+                        AlterationTypeConstants.GENERIC_ASSAY
                 ) {
                     // geneset profile, we dont have the META projection for geneset data, so just add it
                     /*promises.push(internalClient.fetchGeneticDataItemsUsingPOST({
@@ -3412,7 +3412,7 @@ export class ResultsViewPageStore {
             const MRNA_EXPRESSION = AlterationTypeConstants.MRNA_EXPRESSION;
             const PROTEIN_LEVEL = AlterationTypeConstants.PROTEIN_LEVEL;
             const METHYLATION = AlterationTypeConstants.METHYLATION;
-            const TREATMENT_RESPONSE = AlterationTypeConstants.TREATMENT_RESPONSE;
+            const GENERIC_ASSAY = AlterationTypeConstants.GENERIC_ASSAY;
             const selectedMolecularProfileIds = stringListToSet(
                 this.selectedMolecularProfiles.result!.map(
                     profile => profile.molecularProfileId
@@ -3425,7 +3425,7 @@ export class ResultsViewPageStore {
                         ((profile.molecularAlterationType === MRNA_EXPRESSION ||
                             profile.molecularAlterationType === PROTEIN_LEVEL ||
                             profile.molecularAlterationType ===
-                                TREATMENT_RESPONSE) &&
+                                GENERIC_ASSAY) &&
                             profile.showProfileInAnalysisTab) ||
                         profile.molecularAlterationType === METHYLATION
                     );
@@ -3443,7 +3443,7 @@ export class ResultsViewPageStore {
                                 return 1;
                             case METHYLATION:
                                 return 2;
-                            case TREATMENT_RESPONSE:
+                            case GENERIC_ASSAY:
                                 return 3;
                         }
                     } else {
@@ -3454,7 +3454,7 @@ export class ResultsViewPageStore {
                                 return 5;
                             case METHYLATION:
                                 return 6;
-                            case TREATMENT_RESPONSE:
+                            case GENERIC_ASSAY:
                                 return 7;
                         }
                     }

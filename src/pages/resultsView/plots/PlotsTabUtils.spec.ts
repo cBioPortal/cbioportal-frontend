@@ -444,7 +444,7 @@ describe("PlotsTabUtils", ()=>{
         
         it('should return log10-transformation function for non treatment data', () => {
             const axisMenuSelection = { 
-                dataType: AlterationTypeConstants.TREATMENT_RESPONSE,
+                dataType: AlterationTypeConstants.GENERIC_ASSAY,
                 logScale: true
             } as any as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
@@ -456,7 +456,7 @@ describe("PlotsTabUtils", ()=>{
         
         it('should apply offset before log10-transformation for treatment data', () => {
             const axisMenuSelection = { 
-                dataType: AlterationTypeConstants.TREATMENT_RESPONSE,
+                dataType: AlterationTypeConstants.GENERIC_ASSAY,
                 logScale: true
             } as any as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
