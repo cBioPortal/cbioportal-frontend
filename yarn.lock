@@ -3794,10 +3794,10 @@ cli@0.6.x:
     exit "0.1.2"
     glob "~ 3.2.1"
 
-clinical-timeline@0.0.18:
-  version "0.0.18"
-  resolved "https://registry.yarnpkg.com/clinical-timeline/-/clinical-timeline-0.0.18.tgz#70b4601b8e7d0cd0b0aa2c0c6f665bbb76ffe865"
-  integrity sha1-cLRgG459DNCwqiwMb2Zbu3b/6GU=
+clinical-timeline@0.0.19:
+  version "0.0.19"
+  resolved "https://registry.yarnpkg.com/clinical-timeline/-/clinical-timeline-0.0.19.tgz#7f3222fd72d05c43a3967785a555a6fb666fd58c"
+  integrity sha512-Omuh7c9Lfy/7sy6BXd7vQXctDzrcLKQ902hy/AUYkByO03wN8HPIBVvM8fy62gA9RT/5Tu9QbLkAG1BREaHcTw==
   dependencies:
     d3 "^3.5.17"
 
