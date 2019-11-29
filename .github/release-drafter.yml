@@ -35,10 +35,13 @@ categories:
   - title: '👷‍♀️ Testing, Configuration & Deployment'
     labels:
       - 'devops'
+      - 'test'
   - title: '🧰 Maintenance'
     labels:
       - 'chore'
       - 'dependencies'
+exclude-labels:
+  - 'skip-changelog'      
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 template: |
   ## Changes
