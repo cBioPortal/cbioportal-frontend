@@ -379,6 +379,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                             trackVisibility={this.userSelectionStore.trackVisibility}
                             downloadDataFetcher={this.store.downloadDataFetcher}
                             genomeNexusCache={this.store.genomeNexusCache}
+                            genomeNexusMyVariantInfoCache={this.store.genomeNexusMyVariantInfoCache}
                             oncoKbEvidenceCache={this.store.oncoKbEvidenceCache}
                             pubMedCache={this.store.pubMedCache}
                             pdbHeaderCache={this.store.pdbHeaderCache}
