@@ -80,6 +80,10 @@
       "description": " "
     },
     {
+      "name": "Timestamps",
+      "description": " "
+    },
+    {
       "name": "Treatment response values",
       "description": " "
     },
@@ -920,6 +924,26 @@
         }
       }
     },
+    "/genesets/version": {
+      "get": {
+        "tags": [
+          "Gene Sets"
+        ],
+        "summary": "Get the geneset version",
+        "operationId": "getGenesetVersionUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/genesets/{genesetId}": {
       "get": {
         "tags": [
@@ -1648,6 +1672,29 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/MutSig"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/timestamps": {
+      "get": {
+        "tags": [
+          "Timestamps"
+        ],
+        "summary": "Get the last time each static resource was updated",
+        "operationId": "getAllTimestampsUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
               }
             }
           }
@@ -3042,14 +3089,6 @@
       "properties": {
         "description": {
           "type": "string"
-        },
-        "geneticEntityId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "internalId": {
-          "type": "integer",
-          "format": "int32"
         },
         "name": {
           "type": "string"
