@@ -20,6 +20,7 @@ import siftStyles from 'shared/components/annotation/genomeNexus/styles/siftTool
 import polyPhen2Styles from 'shared/components/annotation/genomeNexus/styles/polyPhen2Tooltip.module.scss';
 import mutationAssessorStyles from 'shared/components/annotation/genomeNexus/styles/mutationAssessorColumn.module.scss';
 import annotationStyles from 'shared/components/annotation/styles/annotation.module.scss';
+import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusCache, {
     GenomeNexusCacheDataType,
 } from 'shared/cache/GenomeNexusCache';
@@ -32,12 +33,18 @@ interface IFunctionalImpactColumnTooltipState {
     active: 'mutationAssessor' | 'sift' | 'polyPhen2';
 }
 
-interface IFunctionalImpactData {
-    mutationAssessor: MutationAssessorData;
-    siftScore: number;
-    siftPrediction: string;
-    polyPhenScore: number;
-    polyPhenPrediction: string;
+enum FunctionalImpactColumnsName {
+    MUTATION_ASSESSOR,
+    SIFT,
+    POLYPHEN2,
+}
+
+interface FunctionalImpactData {
+    mutationAssessor: MutationAssessorData | undefined;
+    siftScore: number | undefined;
+    siftPrediction: string | undefined;
+    polyPhenScore: number | undefined;
+    polyPhenPrediction: string | undefined;
 }
 
 class FunctionalImpactColumnTooltip extends React.Component<
@@ -374,45 +381,110 @@ export default class FunctionalImpactColumnFormatter {
     }
 
     public static getData(
-        genomeNexusData: VariantAnnotation | null
-    ): IFunctionalImpactData | null {
-        if (!genomeNexusData) {
-            return null;
-        }
+        data: Mutation[],
+        siftPolyphenCache: GenomeNexusCache,
+        mutationAssessorCache: GenomeNexusMutationAssessorCache
+    ): FunctionalImpactData {
+        const siftPolyphenCacheData = FunctionalImpactColumnFormatter.getDataFromCache(
+            data,
+            siftPolyphenCache
+        );
+        const mutationAssessorCacheData = FunctionalImpactColumnFormatter.getDataFromCache(
+            data,
+            mutationAssessorCache
+        );
 
-        // TODO: handle multiple transcripts instead of just picking the first one
-        const mutationAssessor =
-            genomeNexusData.mutation_assessor &&
-            genomeNexusData.mutation_assessor.annotation;
-        const siftScore = genomeNexusData.transcript_consequences[0].sift_score;
-        const siftPrediction =
-            genomeNexusData.transcript_consequences[0].sift_prediction;
-        const polyPhenScore =
-            genomeNexusData.transcript_consequences[0].polyphen_score;
+        const siftData = siftPolyphenCacheData
+            ? this.getSiftData(siftPolyphenCacheData.data)
+            : undefined;
+        const polyphenData = siftPolyphenCacheData
+            ? this.getPolyphenData(siftPolyphenCacheData.data)
+            : undefined;
+        const mutationAssessor = mutationAssessorCacheData
+            ? this.getMutationAssessorData(mutationAssessorCacheData.data)
+            : undefined;
+
+        const siftScore = siftData && siftData.siftScore;
+        const siftPrediction = siftData && siftData.siftPrediction;
+        const polyPhenScore = polyphenData && polyphenData.polyPhenScore;
         const polyPhenPrediction =
-            genomeNexusData.transcript_consequences[0].polyphen_prediction;
+            polyphenData && polyphenData.polyPhenPrediction;
 
-        return {
+        const functionalImpactData: FunctionalImpactData = {
             mutationAssessor,
             siftScore,
             siftPrediction,
             polyPhenScore,
             polyPhenPrediction,
         };
+        return functionalImpactData;
+    }
+
+    public static getSiftData(siftDataCache: VariantAnnotation | null) {
+        const siftScore =
+            siftDataCache && siftDataCache.transcript_consequences[0]
+                ? siftDataCache.transcript_consequences[0].sift_score
+                : undefined;
+        const siftPrediction = siftDataCache
+            ? siftDataCache.transcript_consequences[0].sift_prediction
+            : undefined;
+        return {
+            siftScore,
+            siftPrediction,
+        };
+    }
+
+    public static getPolyphenData(polyphenDataCache: VariantAnnotation | null) {
+        const polyPhenScore = polyphenDataCache
+            ? polyphenDataCache.transcript_consequences[0].polyphen_score
+            : undefined;
+        const polyPhenPrediction = polyphenDataCache
+            ? polyphenDataCache.transcript_consequences[0].polyphen_prediction
+            : undefined;
+        return {
+            polyPhenScore,
+            polyPhenPrediction,
+        };
+    }
+
+    public static getMutationAssessorData(
+        mutationAssessorDataCache: VariantAnnotation | null
+    ): MutationAssessorData | undefined {
+        if (!mutationAssessorDataCache) {
+            return undefined;
+        } else {
+            return mutationAssessorDataCache.mutation_assessor
+                ? mutationAssessorDataCache.mutation_assessor.annotation
+                : undefined;
+        }
     }
 
     public static renderFunction(
         data: Mutation[],
-        genomeNexusCache: GenomeNexusCache | undefined
+        siftPolyphenCache: GenomeNexusCache | undefined,
+        mutationAssessorCache: GenomeNexusMutationAssessorCache | undefined
     ) {
-        const genomeNexusCacheData = FunctionalImpactColumnFormatter.getGenomeNexusDataFromCache(
+        const siftPolyphenCacheData = FunctionalImpactColumnFormatter.getDataFromCache(
             data,
-            genomeNexusCache
+            siftPolyphenCache
+        );
+        const mutationAssessorCacheData = FunctionalImpactColumnFormatter.getDataFromCache(
+            data,
+            mutationAssessorCache
         );
         return (
             <div>
                 {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
-                    genomeNexusCacheData
+                    mutationAssessorCacheData,
+                    FunctionalImpactColumnsName.MUTATION_ASSESSOR
+                )}
+                {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
+                    siftPolyphenCacheData,
+                    FunctionalImpactColumnsName.SIFT
+                )}
+                {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
+                    siftPolyphenCacheData,
+                    FunctionalImpactColumnsName.POLYPHEN2
                 )}
             </div>
         );
@@ -420,38 +492,37 @@ export default class FunctionalImpactColumnFormatter {
 
     public static download(
         data: Mutation[],
-        genomeNexusCache: GenomeNexusCache
+        siftPolyphenCache: GenomeNexusCache,
+        mutationAssessorCache: GenomeNexusMutationAssessorCache
     ): string {
-        const genomeNexusData = FunctionalImpactColumnFormatter.getGenomeNexusDataFromCache(
-            data,
-            genomeNexusCache
-        );
-        const functionalImpactData =
-            genomeNexusData &&
-            FunctionalImpactColumnFormatter.getData(genomeNexusData.data);
-
-        if (!functionalImpactData) {
-            return '';
+        if (siftPolyphenCache || mutationAssessorCache) {
+            const functionalImpactData = FunctionalImpactColumnFormatter.getData(
+                data,
+                siftPolyphenCache,
+                mutationAssessorCache
+            );
+            if (functionalImpactData) {
+                return [
+                    `MutationAssessor: ${MutationAssessor.download(
+                        functionalImpactData.mutationAssessor
+                    )}`,
+                    `SIFT: ${Sift.download(
+                        functionalImpactData.siftScore,
+                        functionalImpactData.siftPrediction
+                    )}`,
+                    `Polyphen-2: ${PolyPhen2.download(
+                        functionalImpactData.polyPhenScore,
+                        functionalImpactData.polyPhenPrediction
+                    )}`,
+                ].join(';');
+            }
         }
-
-        return [
-            `MutationAssessor: ${MutationAssessor.download(
-                functionalImpactData.mutationAssessor
-            )}`,
-            `SIFT: ${Sift.download(
-                functionalImpactData.siftScore,
-                functionalImpactData.siftPrediction
-            )}`,
-            `Polyphen-2: ${PolyPhen2.download(
-                functionalImpactData.polyPhenScore,
-                functionalImpactData.polyPhenPrediction
-            )}`,
-        ].join(';');
+        return '';
     }
 
-    private static getGenomeNexusDataFromCache(
+    private static getDataFromCache(
         data: Mutation[],
-        cache: GenomeNexusCache | undefined
+        cache: GenomeNexusCache | GenomeNexusMutationAssessorCache | undefined
     ): GenomeNexusCacheDataType | null {
         if (data.length === 0 || !cache) {
             return null;
@@ -460,42 +531,52 @@ export default class FunctionalImpactColumnFormatter {
     }
 
     private static makeFunctionalImpactViz(
-        genomeNexusCacheData: GenomeNexusCacheDataType | null
+        cacheData: GenomeNexusCacheDataType | null,
+        column: FunctionalImpactColumnsName
     ) {
         let status: TableCellStatus | null = null;
 
-        if (genomeNexusCacheData === null) {
+        if (cacheData === null) {
             status = TableCellStatus.LOADING;
-        } else if (genomeNexusCacheData.status === 'error') {
+        } else if (cacheData.status === 'error') {
             status = TableCellStatus.ERROR;
-        } else if (genomeNexusCacheData.data === null) {
+        } else if (cacheData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            const functionalImpactData = FunctionalImpactColumnFormatter.getData(
-                genomeNexusCacheData.data
-            );
-
-            return (
-                functionalImpactData && (
-                    <div>
+            let functionalImpactData;
+            switch (column) {
+                case FunctionalImpactColumnsName.MUTATION_ASSESSOR:
+                    functionalImpactData = FunctionalImpactColumnFormatter.getMutationAssessorData(
+                        cacheData.data
+                    );
+                    return (
                         <MutationAssessor
-                            mutationAssessor={
-                                functionalImpactData.mutationAssessor
-                            }
+                            mutationAssessor={functionalImpactData}
                         />
+                    );
+                case FunctionalImpactColumnsName.SIFT:
+                    functionalImpactData = FunctionalImpactColumnFormatter.getSiftData(
+                        cacheData.data
+                    );
+                    return (
                         <Sift
                             siftScore={functionalImpactData.siftScore}
                             siftPrediction={functionalImpactData.siftPrediction}
                         />
+                    );
+                case FunctionalImpactColumnsName.POLYPHEN2:
+                    functionalImpactData = FunctionalImpactColumnFormatter.getPolyphenData(
+                        cacheData.data
+                    );
+                    return (
                         <PolyPhen2
                             polyPhenScore={functionalImpactData.polyPhenScore}
                             polyPhenPrediction={
                                 functionalImpactData.polyPhenPrediction
                             }
                         />
-                    </div>
-                )
-            );
+                    );
+            }
         }
 
         if (status !== null) {
@@ -503,7 +584,7 @@ export default class FunctionalImpactColumnFormatter {
             if (status === TableCellStatus.LOADING) {
                 return (
                     <Circle
-                        size={18}
+                        size={22}
                         scaleEnd={0.5}
                         scaleStart={0.2}
                         color="#aaa"
