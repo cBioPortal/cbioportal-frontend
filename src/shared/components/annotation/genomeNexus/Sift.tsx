@@ -5,8 +5,8 @@ import classNames from 'classnames';
 import tooltipStyles from './styles/siftTooltip.module.scss';
 
 export interface ISiftProps {
-    siftPrediction: string; // deleterious, deleterious_low_confidence, tolerated, tolerated_low_confidence
-    siftScore: number;
+    siftPrediction: string | undefined; // deleterious, deleterious_low_confidence, tolerated, tolerated_low_confidence
+    siftScore: number | undefined;
 }
 
 export function hideArrow(tooltipEl: any) {
@@ -22,8 +22,15 @@ export default class Sift extends React.Component<ISiftProps, {}> {
         this.tooltipContent = this.tooltipContent.bind(this);
     }
 
-    public static download(siftScore: number, siftPrediction: string): string {
-        return `impact: ${siftPrediction}, score: ${siftScore}`;
+    public static download(
+        siftScore: number | undefined,
+        siftPrediction: string | undefined
+    ): string {
+        if (siftScore || siftPrediction) {
+            return `impact: ${siftPrediction}, score: ${siftScore}`;
+        } else {
+            return 'NA';
+        }
     }
 
     public render() {

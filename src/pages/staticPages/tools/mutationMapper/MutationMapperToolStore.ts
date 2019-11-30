@@ -42,6 +42,7 @@ import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
+import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import MutationMapperStore from 'shared/components/mutationMapper/MutationMapperStore';
@@ -380,6 +381,10 @@ export default class MutationMapperToolStore {
         return new GenomeNexusCache();
     }
 
+    @cached get genomeNexusMutationAssessorCache() {
+        return new GenomeNexusMutationAssessorCache();
+    }
+
     @cached get genomeNexusMyVariantInfoCache() {
         return new GenomeNexusMyVariantInfoCache();
     }
@@ -397,6 +402,7 @@ export default class MutationMapperToolStore {
             this.mutations,
             undefined,
             () => this.genomeNexusCache,
+            () => this.genomeNexusMutationAssessorCache,
             () => this.genomeNexusMyVariantInfoCache
         );
     }

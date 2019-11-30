@@ -53,6 +53,7 @@ import VariantCountCache from 'shared/cache/VariantCountCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
+import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from 'shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
@@ -88,6 +89,7 @@ export interface IMutationTableProps {
     pubMedCache?: PubMedCache;
     mutationCountCache?: MutationCountCache;
     genomeNexusCache?: GenomeNexusCache;
+    genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;
     genomeNexusMyVariantInfoCache?: GenomeNexusMyVariantInfoCache;
     mutSigData?: IMutSigData;
     enableOncoKb?: boolean;
@@ -664,18 +666,27 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
             name: 'Functional Impact',
-            render: (d: Mutation[]) =>
-                this.props.genomeNexusCache ? (
-                    FunctionalImpactColumnFormatter.renderFunction(
+            render: (d: Mutation[]) => {
+                if (
+                    this.props.genomeNexusCache ||
+                    this.props.genomeNexusMutationAssessorCache
+                ) {
+                    return FunctionalImpactColumnFormatter.renderFunction(
                         d,
-                        this.props.genomeNexusCache
-                    )
-                ) : (
-                    <span></span>
-                ),
+                        this.props.genomeNexusCache,
+                        this.props.genomeNexusMutationAssessorCache
+                    );
+                } else {
+                    return <span></span>;
+                }
+            },
             download: (d: Mutation[]) =>
-                FunctionalImpactColumnFormatter.download(d, this.props
-                    .genomeNexusCache as GenomeNexusCache),
+                FunctionalImpactColumnFormatter.download(
+                    d,
+                    this.props.genomeNexusCache as GenomeNexusCache,
+                    this.props
+                        .genomeNexusMutationAssessorCache as GenomeNexusMutationAssessorCache
+                ),
             headerRender: FunctionalImpactColumnFormatter.headerRender,
             visible: false,
             shouldExclude: () => !this.props.enableFunctionalImpact,
