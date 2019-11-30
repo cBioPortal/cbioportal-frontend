@@ -25,6 +25,7 @@ import StructureViewerPanel from 'shared/components/structureViewer/StructureVie
 import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
+import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import { IMyCancerGenomeData } from 'shared/model/MyCancerGenome';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
@@ -60,6 +61,7 @@ export interface IMutationMapperProps {
     pdbHeaderCache?: PdbHeaderCache;
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
     genomeNexusCache?: GenomeNexusCache;
+    genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;
     genomeNexusMyVariantInfoCache?: GenomeNexusMyVariantInfoCache;
     // server config properties
     genomeNexusUrl?: string;

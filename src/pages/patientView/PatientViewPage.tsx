@@ -958,6 +958,11 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .genomeNexusCache
                                                     }
+                                                    genomeNexusMutationAssessorCache={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .genomeNexusMutationAssessorCache
+                                                    }
                                                     genomeNexusMyVariantInfoCache={
                                                         this
                                                             .patientViewPageStore
