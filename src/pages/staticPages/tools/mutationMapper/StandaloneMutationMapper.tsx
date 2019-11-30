@@ -30,6 +30,9 @@ export default class StandaloneMutationMapper extends MutationMapper<
                     this.props.store.indexedVariantAnnotations
                 }
                 genomeNexusCache={this.props.genomeNexusCache}
+                genomeNexusMutationAssessorCache={
+                    this.props.genomeNexusMutationAssessorCache
+                }
                 genomeNexusMyVariantInfoCache={
                     this.props.genomeNexusMyVariantInfoCache
                 }

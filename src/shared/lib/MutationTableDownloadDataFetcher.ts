@@ -16,6 +16,10 @@ import {
 import { Mutation, MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import _ from 'lodash';
 import {
+    default as GenomeNexusMutationAssessorCache,
+    fetch as fetchGenomeNexusMutationAssessorData,
+} from 'shared/cache/GenomeNexusMutationAssessorCache';
+import {
     default as GenomeNexusMyVariantInfoCache,
     fetch as fetchGenomeNexusMyVariantInfoData,
 } from 'shared/cache/GenomeNexusMyVariantInfoCache';
@@ -30,6 +34,7 @@ export class MutationTableDownloadDataFetcher
             [studyId: string]: MolecularProfile;
         },
         private genomeNexusCache?: () => GenomeNexusCache,
+        private genomeNexusMutationAssessorCache?: () => GenomeNexusMutationAssessorCache,
         private genomeNexusMyVariantInfoCache?: () => GenomeNexusMyVariantInfoCache,
         private mutationCountCache?: () => MutationCountCache,
         private discreteCNACache?: () => DiscreteCNACache
@@ -68,13 +73,30 @@ export class MutationTableDownloadDataFetcher
         const caches: LazyMobXCache<any, any>[] = [];
 
         if (this.genomeNexusCache) {
-            promises.push(this.fetchAllGenomeNexusData());
-            caches.push(this.genomeNexusCache());
+            if (this.mutationData.result) {
+                promises.push(fetchGenomeNexusData(this.mutationData.result));
+                caches.push(this.genomeNexusCache());
+            }
+        }
+
+        if (this.genomeNexusMutationAssessorCache) {
+            if (this.mutationData.result) {
+                promises.push(
+                    fetchGenomeNexusMutationAssessorData(
+                        this.mutationData.result
+                    )
+                );
+                caches.push(this.genomeNexusMutationAssessorCache());
+            }
         }
 
         if (this.genomeNexusMyVariantInfoCache) {
-            promises.push(this.fetchAllGenomeNexusMyVariantInfoData());
-            caches.push(this.genomeNexusMyVariantInfoCache());
+            if (this.mutationData.result) {
+                promises.push(
+                    fetchGenomeNexusMyVariantInfoData(this.mutationData.result)
+                );
+                caches.push(this.genomeNexusMyVariantInfoCache());
+            }
         }
 
         if (this.mutationCountCache) {
@@ -88,24 +110,6 @@ export class MutationTableDownloadDataFetcher
         }
 
         return { promises, caches };
-    }
-
-    private async fetchAllGenomeNexusData() {
-        if (this.mutationData.result) {
-            return await fetchGenomeNexusData(this.mutationData.result);
-        } else {
-            return undefined;
-        }
-    }
-
-    private async fetchAllGenomeNexusMyVariantInfoData() {
-        if (this.mutationData.result) {
-            return await fetchGenomeNexusMyVariantInfoData(
-                this.mutationData.result
-            );
-        } else {
-            return undefined;
-        }
     }
 
     private async fetchAllMutationCountData() {
