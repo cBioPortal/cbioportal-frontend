@@ -1,18 +1,21 @@
-import {fetchVariantAnnotationsByMutation} from "shared/lib/StoreUtils";
-import {extractGenomicLocation, genomicLocationString} from "shared/lib/MutationUtils";
-import {VariantAnnotation} from "cbioportal-frontend-commons";
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import LazyMobXCache, {CacheData} from "shared/lib/LazyMobXCache";
-import AppConfig from "appConfig";
+import * as _ from 'lodash';
+import { fetchVariantAnnotationsByMutation } from 'shared/lib/StoreUtils';
+import {
+    extractGenomicLocation,
+    genomicLocationString,
+} from 'shared/lib/MutationUtils';
+import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import LazyMobXCache, { CacheData } from 'shared/lib/LazyMobXCache';
+import AppConfig from 'appConfig';
+import { VariantAnnotation } from 'cbioportal-frontend-commons';
 
 export type GenomeNexusCacheDataType = CacheData<VariantAnnotation>;
 
-
-export function fetch(queries: Mutation[]):Promise<VariantAnnotation[]> {
+export function fetch(queries: Mutation[]): Promise<VariantAnnotation[]> {
     if (queries.length > 0) {
         return fetchVariantAnnotationsByMutation(
             queries,
-            ['annotation_summary'],
+            ['annotation_summary', 'mutation_assessor'],
             AppConfig.serverConfig.isoformOverrideSource
         );
     } else {
@@ -31,7 +34,7 @@ export function queryToKey(m: Mutation) {
     }
 }
 
-export default class GenomeNexusCache extends LazyMobXCache<
+export default class GenomeNexusMutationAssessorCache extends LazyMobXCache<
     VariantAnnotation,
     Mutation
 > {

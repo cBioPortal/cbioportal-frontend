@@ -113,6 +113,9 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 pubMedCache={this.props.pubMedCache}
                 mutationCountCache={this.props.mutationCountCache}
                 genomeNexusCache={this.props.genomeNexusCache}
+                genomeNexusMutationAssessorCache={
+                    this.props.genomeNexusMutationAssessorCache
+                }
                 genomeNexusMyVariantInfoCache={
                     this.props.genomeNexusMyVariantInfoCache
                 }
