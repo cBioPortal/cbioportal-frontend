@@ -93,6 +93,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 pubMedCache={this.props.pubMedCache}
                 mutationCountCache={this.props.mutationCountCache}
                 genomeNexusCache={this.props.genomeNexusCache}
+                genomeNexusMutationAssessorCache={this.props.genomeNexusMutationAssessorCache}
                 genomeNexusMyVariantInfoCache={this.props.genomeNexusMyVariantInfoCache}
                 dataStore={this.props.store.dataStore}
                 itemsLabelPlural={this.itemsLabelPlural}

@@ -5,8 +5,8 @@ import classNames from 'classnames';
 import tooltipStyles from "./styles/polyPhen2Tooltip.module.scss";
 
 export interface IPolyPhen2Props {
-    polyPhenPrediction: string; // benign, possibly_damaging, probably_damging
-    polyPhenScore: number;
+    polyPhenPrediction: string | undefined; // benign, possibly_damaging, probably_damging
+    polyPhenScore: number | undefined;
 }
 
 export function hideArrow(tooltipEl: any) {
@@ -22,9 +22,14 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
         this.tooltipContent = this.tooltipContent.bind(this);
     }
 
-    public static download(polyPhenScore: number, polyPhenPrediction: string): string
+    public static download(polyPhenScore: number | undefined, polyPhenPrediction: string | undefined): string
     {
-        return `impact: ${polyPhenPrediction}, score: ${polyPhenScore}`;
+        if (polyPhenScore || polyPhenPrediction) {
+            return `impact: ${polyPhenPrediction}, score: ${polyPhenScore}`;
+        }
+        else {
+            return "NA";
+        }
     }
 
     public render() {

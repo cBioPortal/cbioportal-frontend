@@ -17,7 +17,8 @@ import siftStyles from "shared/components/annotation/genomeNexus/styles/siftTool
 import polyPhen2Styles from "shared/components/annotation/genomeNexus/styles/polyPhen2Tooltip.module.scss";
 import mutationAssessorStyles from "shared/components/annotation/genomeNexus/styles/mutationAssessorColumn.module.scss";
 import annotationStyles from "shared/components/annotation/styles/annotation.module.scss";
-import GenomeNexusCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusCache";
+import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
+import GenomeNexusCache, { GenomeNexusCacheDataType } from 'shared/cache/GenomeNexusCache';
 
 
 type FunctionalImpactColumnTooltipProps = {
@@ -28,12 +29,16 @@ interface IFunctionalImpactColumnTooltipState {
     active: 'mutationAssessor' | 'sift' | 'polyPhen2';
 }
 
-interface IFunctionalImpactData {
-    mutationAssessor: MutationAssessorData;
-    siftScore: number;
-    siftPrediction: string;
-    polyPhenScore: number;
-    polyPhenPrediction: string;
+enum FunctionalImpactColumnsName {
+    MUTATION_ASSESSOR, SIFT, POLYPHEN2
+}
+
+interface FunctionalImpactData {
+    mutationAssessor: MutationAssessorData | undefined;
+    siftScore: number | undefined;
+    siftPrediction: string | undefined;
+    polyPhenScore: number | undefined;
+    polyPhenPrediction: string | undefined;
 }
 
 class FunctionalImpactColumnTooltip extends React.Component<FunctionalImpactColumnTooltipProps, IFunctionalImpactColumnTooltipState> {
@@ -264,95 +269,136 @@ export default class FunctionalImpactColumnFormatter {
         );
     }
 
-    public static getData(genomeNexusData: VariantAnnotation | null): IFunctionalImpactData | null
+    public static getData(data:Mutation[], siftPolyphenCache:GenomeNexusCache, mutationAssessorCache:GenomeNexusMutationAssessorCache): FunctionalImpactData
     {
-        if (!genomeNexusData)
-        {
-            return null;
-        }
+        const siftPolyphenCacheData = FunctionalImpactColumnFormatter.getDataFromCache(data, siftPolyphenCache);
+        const mutationAssessorCacheData = FunctionalImpactColumnFormatter.getDataFromCache(data, mutationAssessorCache);
+        
+        const siftData = siftPolyphenCacheData ? this.getSiftData(siftPolyphenCacheData.data) : undefined;
+        const polyphenData = siftPolyphenCacheData ? this.getPolyphenData(siftPolyphenCacheData.data) : undefined;
+        const mutationAssessor = mutationAssessorCacheData ? this.getMutationAssessorData(mutationAssessorCacheData.data) : undefined;
 
-        // TODO: handle multiple transcripts instead of just picking the first one
-        const mutationAssessor = genomeNexusData.mutation_assessor && genomeNexusData.mutation_assessor.annotation;
-        const siftScore = genomeNexusData.transcript_consequences[0].sift_score;
-        const siftPrediction = genomeNexusData.transcript_consequences[0].sift_prediction;
-        const polyPhenScore = genomeNexusData.transcript_consequences[0].polyphen_score;
-        const polyPhenPrediction = genomeNexusData.transcript_consequences[0].polyphen_prediction;
+        const siftScore = siftData && siftData.siftScore;
+        const siftPrediction = siftData && siftData.siftPrediction;
+        const polyPhenScore = polyphenData && polyphenData.polyPhenScore;
+        const polyPhenPrediction = polyphenData && polyphenData.polyPhenPrediction;
 
-        return {
+        const functionalImpactData:FunctionalImpactData = {
             mutationAssessor,
             siftScore,
             siftPrediction,
             polyPhenScore,
             polyPhenPrediction
         };
+        return functionalImpactData;
+
+    }
+
+    public static getSiftData(siftDataCache: VariantAnnotation | null) {
+
+        const siftScore = siftDataCache && siftDataCache.transcript_consequences[0]
+                          ? siftDataCache.transcript_consequences[0].sift_score : undefined;
+        const siftPrediction = siftDataCache ? siftDataCache.transcript_consequences[0].sift_prediction : undefined;
+        return {
+            siftScore,
+            siftPrediction
+        }
+    }
+
+    public static getPolyphenData(polyphenDataCache: VariantAnnotation | null) {
+
+        const polyPhenScore = polyphenDataCache ? polyphenDataCache.transcript_consequences[0].polyphen_score : undefined;
+        const polyPhenPrediction = polyphenDataCache ? polyphenDataCache.transcript_consequences[0].polyphen_prediction : undefined;
+        return {
+            polyPhenScore,
+            polyPhenPrediction
+        };
+    }
+
+    public static getMutationAssessorData(mutationAssessorDataCache: VariantAnnotation | null): MutationAssessorData | undefined{
+        if (!mutationAssessorDataCache) {
+            return undefined;
+        }
+        else {
+            return mutationAssessorDataCache.mutation_assessor? mutationAssessorDataCache.mutation_assessor.annotation : undefined;
+        }
     }
 
     public static renderFunction(data:Mutation[],
-                                 genomeNexusCache:GenomeNexusCache|undefined) {
-        const genomeNexusCacheData = FunctionalImpactColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
+                                 siftPolyphenCache:GenomeNexusCache|undefined,
+                                 mutationAssessorCache: GenomeNexusMutationAssessorCache|undefined
+                                 ) {
+        const siftPolyphenCacheData = FunctionalImpactColumnFormatter.getDataFromCache(data, siftPolyphenCache);
+        const mutationAssessorCacheData = FunctionalImpactColumnFormatter.getDataFromCache(data, mutationAssessorCache);
         return (
                 <div>
-                    {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(genomeNexusCacheData)}
+                    {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(mutationAssessorCacheData, FunctionalImpactColumnsName.MUTATION_ASSESSOR)}
+                    {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(siftPolyphenCacheData, FunctionalImpactColumnsName.SIFT)}
+                    {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(siftPolyphenCacheData, FunctionalImpactColumnsName.POLYPHEN2)}
                 </div>
         );
     }
 
-    public static download(data:Mutation[], genomeNexusCache:GenomeNexusCache): string
+    public static download(data:Mutation[], siftPolyphenCache:GenomeNexusCache, mutationAssessorCache:GenomeNexusMutationAssessorCache): string
     {
-        const genomeNexusData = FunctionalImpactColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
-        const functionalImpactData = genomeNexusData && FunctionalImpactColumnFormatter.getData(genomeNexusData.data);
-
-        if (!functionalImpactData) {
-            return "";
+        if (siftPolyphenCache || mutationAssessorCache) {
+            const functionalImpactData = FunctionalImpactColumnFormatter.getData(data, siftPolyphenCache, mutationAssessorCache);
+            if (functionalImpactData) {
+                return [
+                    `MutationAssessor: ${MutationAssessor.download(functionalImpactData.mutationAssessor)}`,
+                    `SIFT: ${Sift.download(functionalImpactData.siftScore, functionalImpactData.siftPrediction)}`,
+                    `Polyphen-2: ${PolyPhen2.download(functionalImpactData.polyPhenScore, functionalImpactData.polyPhenPrediction)}`
+                ].join(";");
+            }
         }
-
-        return [
-            `MutationAssessor: ${MutationAssessor.download(functionalImpactData.mutationAssessor)}`,
-            `SIFT: ${Sift.download(functionalImpactData.siftScore, functionalImpactData.siftPrediction)}`,
-            `Polyphen-2: ${PolyPhen2.download(functionalImpactData.polyPhenScore, functionalImpactData.polyPhenPrediction)}`
-        ].join(";");
+        return "";
     }
 
-    private static getGenomeNexusDataFromCache(data:Mutation[], cache:GenomeNexusCache|undefined):GenomeNexusCacheDataType | null {
+    private static getDataFromCache(data:Mutation[], cache:GenomeNexusCache|GenomeNexusMutationAssessorCache|undefined):GenomeNexusCacheDataType | null {
         if (data.length === 0 || !cache) {
             return null;
         }
         return cache.get(data[0]);
     }
 
-    private static makeFunctionalImpactViz(genomeNexusCacheData:GenomeNexusCacheDataType|null) {
+    private static makeFunctionalImpactViz(cacheData:GenomeNexusCacheDataType|null, column:FunctionalImpactColumnsName) {
         let status:TableCellStatus | null = null;
 
-        if (genomeNexusCacheData === null) {
+        if (cacheData === null) {
             status = TableCellStatus.LOADING;
-        } else if (genomeNexusCacheData.status === "error") {
+        } else if (cacheData.status === "error") {
             status = TableCellStatus.ERROR;
-        } else if (genomeNexusCacheData.data === null) {
+        } else if (cacheData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            const functionalImpactData = FunctionalImpactColumnFormatter.getData(genomeNexusCacheData.data);
-
-            return functionalImpactData && (
-                <div>
-                    <MutationAssessor
-                        mutationAssessor={functionalImpactData.mutationAssessor}
-                    />
-                    <Sift
-                        siftScore={functionalImpactData.siftScore}
-                        siftPrediction={functionalImpactData.siftPrediction}
-                    />
-                    <PolyPhen2
-                        polyPhenScore={functionalImpactData.polyPhenScore}
-                        polyPhenPrediction={functionalImpactData.polyPhenPrediction}
-                    />
-                </div>
-            );
+            let functionalImpactData;
+            switch (column) {
+                case FunctionalImpactColumnsName.MUTATION_ASSESSOR:
+                    functionalImpactData = FunctionalImpactColumnFormatter.getMutationAssessorData(cacheData.data);
+                    return  (
+                        <MutationAssessor
+                            mutationAssessor={functionalImpactData} />);
+                case FunctionalImpactColumnsName.SIFT:
+                    functionalImpactData = FunctionalImpactColumnFormatter.getSiftData(cacheData.data);
+                    return (
+                        <Sift
+                            siftScore={functionalImpactData.siftScore}
+                            siftPrediction={functionalImpactData.siftPrediction}
+                        />);
+                case FunctionalImpactColumnsName.POLYPHEN2:
+                    functionalImpactData = FunctionalImpactColumnFormatter.getPolyphenData(cacheData.data);
+                    return (
+                        <PolyPhen2
+                            polyPhenScore={functionalImpactData.polyPhenScore}
+                            polyPhenPrediction={functionalImpactData.polyPhenPrediction}
+                        />);
+            }
         }
 
         if (status !== null) {
             // show loading circle
             if (status === TableCellStatus.LOADING) {
-                return <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>;
+                return <Circle size={22} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>;
             } else {
                 return (<TableCellStatusIndicator
                     status={status}

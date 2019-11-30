@@ -23,6 +23,7 @@ import {
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotIndex, indexHotspotsData} from "react-mutation-mapper";
@@ -1048,6 +1049,10 @@ export class PatientViewPageStore {
 
     @cached get genomeNexusMyVariantInfoCache() {
         return new GenomeNexusMyVariantInfoCache();
+    }
+
+    @cached get genomeNexusMutationAssessorCache() {
+        return new GenomeNexusMutationAssessorCache();
     }
 
     @cached get pubMedCache() {

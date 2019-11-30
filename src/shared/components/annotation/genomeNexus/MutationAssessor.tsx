@@ -9,7 +9,7 @@ import {
 import mutationAssessorColumn from "./styles/mutationAssessorColumn.module.scss";
 
 export interface IMutationAssessorProps {
-    mutationAssessor: MutationAssessorData;
+    mutationAssessor: MutationAssessorData | undefined;
 }
 
 export function hideArrow(tooltipEl: any) {
@@ -32,7 +32,7 @@ export default class MutationAssessor extends React.Component<IMutationAssessorP
             return `impact: ${mutationAssessorData.functionalImpact}, score: ${mutationAssessorData.functionalImpactScore}`;
         }
         else {
-            return "Error";
+            return "NA";
         }
     }
 
@@ -68,64 +68,66 @@ export default class MutationAssessor extends React.Component<IMutationAssessorP
     }
 
     private tooltipContent() {
-        const maData = this.props.mutationAssessor;
-        const xVarLink = MutationAssessor.maLink(`http://mutationassessor.org/r3/?cm=var&p=${maData.uniprotId}&var=${maData.variant}`);
-        const msaLink = MutationAssessor.maLink(maData.msaLink);
-        const pdbLink = MutationAssessor.maLink(maData.pdbLink);
-
-        const impact = maData.functionalImpact? (
-            <div>
-                <table className={tooltipStyles['ma-tooltip-table']}>
-                    <tr><td>Source</td><td><a href="http://mutationassessor.org/r3">MutationAssessor</a></td></tr>
-                    <tr><td>Impact</td><td><span className={mutationAssessorColumn[`ma-${maData.functionalImpact}`]}>{maData.functionalImpact}</span></td></tr>
-                    {(maData.functionalImpactScore || maData.functionalImpactScore === 0) && (<tr><td>Score</td><td><b>{maData.functionalImpactScore.toFixed(2)}</b></td></tr>)}
-                </table>
-            </div>
-        ) : null;
-
-        const xVar = xVarLink? (
-            <div className={tooltipStyles['mutation-assessor-link']}>
-                <a href={xVarLink} target='_blank'>
-                    <img
-                        height='15'
-                        width='19'
-                        src={require("./../../mutationTable/column/mutationAssessor.png")}
-                        className={tooltipStyles['mutation-assessor-main-img']}
-                        alt='Mutation Assessor'
-                    />
-                    Go to Mutation Assessor
-                </a>
-            </div>
-        ) : null;
-
-        const msa = msaLink? (
-            <div className={tooltipStyles['mutation-assessor-link']}>
-                <a href={msaLink} target='_blank'>
-                    <span className={`${tooltipStyles['ma-icon']} ${tooltipStyles['ma-msa-icon']}`}>msa</span>
-                    Multiple Sequence Alignment
-                </a>
-            </div>
-        ) : null;
-
-        const pdb = pdbLink? (
-            <div className={tooltipStyles['mutation-assessor-link']}>
-                <a href={pdbLink} target='_blank'>
-                    <span className={`${tooltipStyles['ma-icon']} ${tooltipStyles['ma-3d-icon']}`}>3D</span>
-                    Mutation Assessor 3D View
-                </a>
-            </div>
-        ) : null;
-
-        return (
-            <span>
-                {impact}
-                {msa}
-                {pdb}
-                {xVar}
-            </span>
-        );
+        if (this.props.mutationAssessor) {
+            const maData = this.props.mutationAssessor;
+            const xVarLink = MutationAssessor.maLink(`http://mutationassessor.org/r3/?cm=var&p=${maData.uniprotId}&var=${maData.variant}`);
+            const msaLink = MutationAssessor.maLink(maData.msaLink);
+            const pdbLink = MutationAssessor.maLink(maData.pdbLink);
+    
+            const impact = maData.functionalImpact? (
+                <div>
+                    <table className={tooltipStyles['ma-tooltip-table']}>
+                        <tr><td>Source</td><td><a href="http://mutationassessor.org/r3">MutationAssessor</a></td></tr>
+                        <tr><td>Impact</td><td><span className={mutationAssessorColumn[`ma-${maData.functionalImpact}`]}>{maData.functionalImpact}</span></td></tr>
+                        {(maData.functionalImpactScore || maData.functionalImpactScore === 0) && (<tr><td>Score</td><td><b>{maData.functionalImpactScore.toFixed(2)}</b></td></tr>)}
+                    </table>
+                </div>
+            ) : null;
+    
+            const xVar = xVarLink? (
+                <div className={tooltipStyles['mutation-assessor-link']}>
+                    <a href={xVarLink} target='_blank'>
+                        <img
+                            height='15'
+                            width='19'
+                            src={require("./../../mutationTable/column/mutationAssessor.png")}
+                            className={tooltipStyles['mutation-assessor-main-img']}
+                            alt='Mutation Assessor'
+                        />
+                        Go to Mutation Assessor
+                    </a>
+                </div>
+            ) : null;
+    
+            const msa = msaLink? (
+                <div className={tooltipStyles['mutation-assessor-link']}>
+                    <a href={msaLink} target='_blank'>
+                        <span className={`${tooltipStyles['ma-icon']} ${tooltipStyles['ma-msa-icon']}`}>msa</span>
+                        Multiple Sequence Alignment
+                    </a>
+                </div>
+            ) : null;
+    
+            const pdb = pdbLink? (
+                <div className={tooltipStyles['mutation-assessor-link']}>
+                    <a href={pdbLink} target='_blank'>
+                        <span className={`${tooltipStyles['ma-icon']} ${tooltipStyles['ma-3d-icon']}`}>3D</span>
+                        Mutation Assessor 3D View
+                    </a>
+                </div>
+            ) : null;
+    
+            return (
+                <span>
+                    {impact}
+                    {msa}
+                    {pdb}
+                    {xVar}
+                </span>
+            );
+        }
+        
     }
-
     // This is mostly to make the legacy MA links work
     public static maLink(link:string|undefined)
     {
