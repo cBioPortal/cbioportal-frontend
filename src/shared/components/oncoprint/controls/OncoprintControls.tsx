@@ -31,7 +31,7 @@ import TextIconArea, {
 } from 'shared/components/textIconArea/TextIconArea';
 import { extractTreatmentSelections } from '../OncoprintUtils';
 import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
-import { Treatment } from 'shared/lib/GenericAssayUtils';
+import { Treatment } from 'shared/lib/GenericAssayUtils/TreatmentUtils';
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;

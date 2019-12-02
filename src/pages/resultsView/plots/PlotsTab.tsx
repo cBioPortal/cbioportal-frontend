@@ -77,7 +77,7 @@ import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 import LastPlotsTabSelectionForDatatype from "./LastPlotsTabSelectionForDatatype";
 import { generateQuickPlots } from "./QuickPlots";
-import { Treatment } from "shared/lib/GenericAssayUtils";
+import { Treatment } from "shared/lib/GenericAssayUtils/TreatmentUtils";
 
 enum EventKey {
     horz_logScale,

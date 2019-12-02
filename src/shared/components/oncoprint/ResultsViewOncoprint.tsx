@@ -48,7 +48,6 @@ import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
 import { selectDisplayValue } from "./DataUtils";
-import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import WindowStore from "../window/WindowStore";
 import {OncoprintAnalysisCaseType} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import {capitalize} from "../../../public-lib";
@@ -738,7 +737,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         // derive treaments from heatmap tracks since the only way to add treatments right now
         // is to use heatmap UI in oncoprint
-        const treatment_list = _.filter(tracksMap, (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.TREATMENT_RESPONSE)
+        const treatment_list = _.filter(tracksMap, (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
             .map((x:HeatmapTrackGroupRecord)=>`${_.keys(x.entities).join(";")}`)
             .join(";");
 
