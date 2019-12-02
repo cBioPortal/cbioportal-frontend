@@ -4,7 +4,7 @@ import client from "shared/api/cbioportalClientInstance";
 import _ from "lodash";
 import {IDataQueryFilter} from "../lib/StoreUtils";
 import { SampleMolecularIdentifier, GenericAssayDataMultipleStudyFilter, GenericAssayData, GenericAssayDataFilter } from "shared/api/generated/CBioPortalAPI";
-import { fetchTreatmentData, TreatmentMolecularData } from "shared/lib/GenericAssayUtils";
+import { fetchTreatmentData, TreatmentMolecularData } from "shared/lib/GenericAssayUtils/TreatmentUtils";
 
 export type TreatmentMolecularDataEnhanced = TreatmentMolecularData & {
     thresholdType?: ">"|"<";

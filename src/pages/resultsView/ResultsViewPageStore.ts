@@ -181,7 +181,7 @@ import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 import {generateQueryVariantId} from "public-lib";
-import { fetchTreatmentByMolecularProfileIds, Treatment } from 'shared/lib/GenericAssayUtils';
+import { Treatment, fetchTreatmentByMolecularProfileIds } from 'shared/lib/GenericAssayUtils/TreatmentUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3842,7 +3842,7 @@ export class ResultsViewPageStore {
     readonly treatmentLinkMap = remoteData<{ [treatmentId: string]: string }>({
         await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
-            if (this.rvQuery.treatmentIds && this.rvQuery.treatmentIds.length) {
+            if (this.molecularProfilesInStudies.result && this.molecularProfilesInStudies.result.length > 0) {
                 const treatments = await fetchTreatmentByMolecularProfileIds(this.molecularProfilesInStudies.result);
                 const linkMap: { [treatmentId: string]: string } = {};
                 treatments.forEach(({ treatmentId, refLink }) => {
