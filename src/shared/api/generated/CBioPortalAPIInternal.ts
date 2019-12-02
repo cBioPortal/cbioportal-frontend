@@ -540,6 +540,10 @@ export type StudyViewFilter = {
 export type Treatment = {
     'description': string
 
+        'geneticEntityId': number
+
+        'internalId': number
+
         'name': string
 
         'refLink': string
