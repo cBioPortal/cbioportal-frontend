@@ -130,6 +130,8 @@ export default class OncoprinterStore {
         this.setDataInput(geneticData, clinicalData);
         this.setGeneOrder(genes);
         this.setSampleIdOrder(samples);
+
+        this.driverAnnotationSettings = initDriverAnnotationSettings(this);
     }
 
     @computed get parsedGeneticInputLines() {
