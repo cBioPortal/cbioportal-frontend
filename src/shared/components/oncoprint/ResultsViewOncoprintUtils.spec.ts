@@ -3,7 +3,7 @@ import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI
 import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 import {alterationTypeToProfiledForText, makeProfiledInClinicalAttributes, treatmentsToSelectOptions} from "./ResultsViewOncoprintUtils";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
-import { Treatment } from "shared/lib/GenericAssayUtils";
+import { Treatment } from "shared/lib/GenericAssayUtils/TreatmentUtils";
 
 describe("ResultsViewOncoprintUtils",()=>{
     describe("makeProfiledInClinicalAttributes", ()=>{
