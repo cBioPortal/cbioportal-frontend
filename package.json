@@ -105,7 +105,7 @@
     "bundle-loader": "^0.5.4",
     "chart.js": "^2.6.0",
     "classnames": "^2.2.5",
-    "clinical-timeline": "0.0.18",
+    "clinical-timeline": "0.0.19",
     "contrast": "^1.0.1",
     "convert-css-color-name-to-hex": "^0.1.1",
     "copy-webpack-plugin": "^5.0.3",
