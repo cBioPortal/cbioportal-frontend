@@ -29,47 +29,53 @@ export async function fetchTreatmentByMolecularProfileIds(molecularProfiles: Mol
     const treatmentResponseProfiles = molecularProfiles.filter((profile) => {
         return profile.genericAssayType === GenericAssayTypeConstants.TREATMENT_RESPONSE;
     })
-    const treatmentResponseProfileIds = treatmentResponseProfiles.map(profile => profile.molecularProfileId);
-    const treatmentsMeta = await client.fetchGenericAssayMetaDataUsingPOST(
-        {
-            genericAssayMetaFilter: {
-                molecularProfileIds: treatmentResponseProfileIds
-                // the Swagger-generated type expected by the client method below
-                // incorrectly requires both molecularProfileIds and genericAssayStableIds;
-                // use 'as' to tell TypeScript that this object really does fit.
-            } as GenericAssayMetaFilter
-        }
-    )
-    const treatments: Treatment[] = _.map(treatmentsMeta, (meta) => {
-        return {
-            treatmentId: meta.stableId,
-            name: "NAME" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["NAME"] : "NA",
-            description: "DESCRIPTION" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["DESCRIPTION"] : "NA",
-            refLink: "URL" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["URL"] : "NA",
-        }
-    })
+    let treatments: Treatment[] = [];
+    if (treatmentResponseProfiles.length > 0) {
+        const treatmentResponseProfileIds = treatmentResponseProfiles.map(profile => profile.molecularProfileId);
+        const treatmentsMeta = await client.fetchGenericAssayMetaDataUsingPOST(
+            {
+                genericAssayMetaFilter: {
+                    molecularProfileIds: treatmentResponseProfileIds
+                    // the Swagger-generated type expected by the client method below
+                    // incorrectly requires both molecularProfileIds and genericAssayStableIds;
+                    // use 'as' to tell TypeScript that this object really does fit.
+                } as GenericAssayMetaFilter
+            }
+        )
+        treatments = _.map(treatmentsMeta, (meta) => {
+            return {
+                treatmentId: meta.stableId,
+                name: "NAME" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["NAME"] : "NA",
+                description: "DESCRIPTION" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["DESCRIPTION"] : "NA",
+                refLink: "URL" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["URL"] : "NA",
+            }
+        })
+    }
     return treatments;
 }
 
 export async function fetchTreatmentByTreatmentIds(treatmentIds: string[]) {
-    const treatmentsMeta = await client.fetchGenericAssayMetaDataUsingPOST(
-        {
-            genericAssayMetaFilter: {
-                genericAssayStableIds: treatmentIds
-                // the Swagger-generated type expected by the client method below
-                // incorrectly requires both molecularProfileIds and genericAssayStableIds;
-                // use 'as' to tell TypeScript that this object really does fit.
-            } as GenericAssayMetaFilter
-        }
-    )
-    const treatments: Treatment[] = _.map(treatmentsMeta, (meta) => {
-        return {
-            treatmentId: meta.stableId,
-            name: "NAME" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["NAME"] : "NA",
-            description: "DESCRIPTION" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["DESCRIPTION"] : "NA",
-            refLink: "URL" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["URL"] : "NA",
-        }
-    })
+    let treatments: Treatment[] = [];
+    if (treatmentIds.length > 0) {
+        const treatmentsMeta = await client.fetchGenericAssayMetaDataUsingPOST(
+            {
+                genericAssayMetaFilter: {
+                    genericAssayStableIds: treatmentIds
+                    // the Swagger-generated type expected by the client method below
+                    // incorrectly requires both molecularProfileIds and genericAssayStableIds;
+                    // use 'as' to tell TypeScript that this object really does fit.
+                } as GenericAssayMetaFilter
+            }
+        )
+        treatments = _.map(treatmentsMeta, (meta) => {
+            return {
+                treatmentId: meta.stableId,
+                name: "NAME" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["NAME"] : "NA",
+                description: "DESCRIPTION" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["DESCRIPTION"] : "NA",
+                refLink: "URL" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["URL"] : "NA",
+            }
+        })
+    }
     return treatments;
 }
 
