@@ -3093,6 +3093,14 @@
         "description": {
           "type": "string"
         },
+        "geneticEntityId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "internalId": {
+          "type": "integer",
+          "format": "int32"
+        },
         "name": {
           "type": "string"
         },
