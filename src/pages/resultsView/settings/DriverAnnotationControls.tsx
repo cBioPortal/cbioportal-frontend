@@ -325,6 +325,7 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                                         EVENT_KEY.customDriverBinaryAnnotation
                                     }
                                     onClick={this.onInputClick}
+                                    data-test="annotateCustomBinary"
                                 />{' '}
                                 {
                                     this.props.state
