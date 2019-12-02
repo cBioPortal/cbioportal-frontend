@@ -81,11 +81,22 @@ export function isType3NoGene(inputLine:OncoprinterInputLine):inputLine is Oncop
 }*/
 
 export function initDriverAnnotationSettings(store:OncoprinterStore) {
+    let _oncoKb:boolean, cbioportalCount:boolean, customBinary:boolean;
+    if (store.existCustomDrivers) {
+        _oncoKb = false;
+        cbioportalCount = false;
+        customBinary = true;
+    } else {
+        _oncoKb = true;
+        cbioportalCount = false;
+        customBinary = false;
+    }
+
     return observable({
-        customBinary:true,
-        cbioportalCount: false,
+        customBinary,
+        cbioportalCount,
         cbioportalCountThreshold: 0,
-        _oncoKb:true,
+        _oncoKb,
         _excludeVUS: false,
         hotspots: false, // for now
 
