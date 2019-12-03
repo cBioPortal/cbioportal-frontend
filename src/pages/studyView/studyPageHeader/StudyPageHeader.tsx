@@ -46,7 +46,6 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
                         removeMutatedGeneFilter={this.props.store.removeMutatedGeneFilter}
                         removeFusionGeneFilter={this.props.store.removeFusionGeneFilter}
                         removeCNAGeneFilter={this.props.store.removeCNAGeneFilters}
-                        resetMutationCountVsCNAFilter={this.props.store.resetMutationCountVsCNAFilter}
                         clearCNAGeneFilter={this.props.store.clearCNAGeneFilter}
                         clearGeneFilter={this.props.store.clearMutatedGeneFilter}
                         removeCustomSelectionFilter={this.props.store.removeCustomSelectFilter}

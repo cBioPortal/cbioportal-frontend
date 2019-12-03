@@ -1,11 +1,9 @@
 import {observer} from "mobx-react";
 import * as React from "react";
 import {
-    Rect,
     VictoryAxis,
     VictoryChart,
     VictoryLabel,
-    VictoryLegend,
     VictoryScatter,
     VictorySelectionContainer
 } from "victory";
@@ -19,8 +17,8 @@ import ScatterPlotTooltip from "../../../../shared/components/plots/ScatterPlotT
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {AbstractChart} from "../ChartContainer";
 import {interpolatePlasma} from "d3-scale-chromatic";
-import {DensityPlotBin, RectangleBounds} from "../../../../shared/api/generated/CBioPortalAPIInternal";
-import invertIncreasingFunction from "../../../../shared/lib/invertIncreasingFunction";
+import {DensityPlotBin} from "../../../../shared/api/generated/CBioPortalAPIInternal";
+import { RectangleBounds } from "pages/studyView/StudyViewUtils";
 
 export type IStudyViewDensityScatterPlotDatum = DensityPlotBin & {x:number, y:number};
 
@@ -196,6 +194,11 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                 
                 xEnd += 1;
             }
+
+            xStart = + (xStart.toFixed(2));
+            xEnd = + (xEnd.toFixed(2));
+            yStart = + (yStart.toFixed(2));
+            yEnd = + (yEnd.toFixed(2));
             this.props.onSelection({ xStart, xEnd, yStart, yEnd });
         }
     }
@@ -209,8 +212,26 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             return true;
         } else {
             const bounds = this.props.selectionBounds;
-            return d.binX >= bounds.xStart && d.binX < bounds.xEnd &&
-                    d.binY >= bounds.yStart && d.binY < bounds.yEnd;
+            let xFiltered = true;
+            let yFiltered = true
+
+            if (bounds.xStart !== undefined && bounds.xEnd !== undefined) {
+                xFiltered = d.binX >= bounds.xStart && d.binX < bounds.xEnd;
+            } else if (bounds.xEnd !== undefined) {
+                xFiltered = d.binX < bounds.xEnd;
+            } else if (bounds.xStart !== undefined) {
+                xFiltered = d.binX >= bounds.xStart;
+            }
+
+            if (bounds.yStart !== undefined && bounds.yEnd !== undefined) {
+                yFiltered = d.binY >= bounds.yStart && d.binY < bounds.yEnd;
+            } else if (bounds.yEnd !== undefined) {
+                yFiltered = d.binY < bounds.yEnd;
+            } else if (bounds.yStart !== undefined) {
+                yFiltered = d.binY >= bounds.yStart;
+            }
+
+            return xFiltered && yFiltered;
         }
     }
 

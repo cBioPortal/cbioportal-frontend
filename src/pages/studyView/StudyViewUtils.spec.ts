@@ -53,6 +53,7 @@ import {
     formatRange,
     getBinName,
     getGroupedClinicalDataByBins,
+    getFilteredAndCompressedDataIntervalFilters,
 } from 'pages/studyView/StudyViewUtils';
 import {
     DataBin,
