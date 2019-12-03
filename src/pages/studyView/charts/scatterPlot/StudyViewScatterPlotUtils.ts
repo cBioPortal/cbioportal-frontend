@@ -1,6 +1,37 @@
-import {IStudyViewScatterPlotData, IStudyViewScatterPlotProps} from "./StudyViewScatterPlot";
 import {downsampleByGrouping, DSData} from "../../../../shared/components/plots/downsampleByGrouping";
 import _ from "lodash";
+import { SampleIdentifier } from "shared/api/generated/CBioPortalAPIInternal";
+import { AnalysisGroup } from "pages/studyView/StudyViewUtils";
+import { ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
+
+
+export interface IStudyViewScatterPlotData {
+    x:number;
+    y:number;
+    uniqueSampleKey:string;
+    studyId:string;
+    sampleId:string;
+    patientId:string;
+}
+
+export interface IStudyViewScatterPlotProps {
+    width:number;
+    height:number;
+    data:IStudyViewScatterPlotData[]
+    onSelection:(sampleIdentifiers:SampleIdentifier[], keepCurrent:boolean)=>void;
+
+    isLoading?:boolean;
+    svgRef?:(svg:SVGElement|null)=>void;
+    tooltip?:(d:DSData<IStudyViewScatterPlotData>)=>JSX.Element;
+    axisLabelX?: string;
+    axisLabelY?: string;
+    title?:string;
+
+    sampleToAnalysisGroup:{[uniqueSampleKey:string]:string};
+    analysisGroups:ReadonlyArray<AnalysisGroup>; // identified by `value`
+    analysisClinicalAttribute?:ClinicalAttribute;
+}
+
 
 export const DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD = 4;
 export const MAX_DOT_SIZE = 5;

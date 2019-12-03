@@ -2879,24 +2879,6 @@
       },
       "title": "MutationSpectrumFilter"
     },
-    "RectangleBounds": {
-      "type": "object",
-      "properties": {
-        "xEnd": {
-          "type": "number"
-        },
-        "xStart": {
-          "type": "number"
-        },
-        "yEnd": {
-          "type": "number"
-        },
-        "yStart": {
-          "type": "number"
-        }
-      },
-      "title": "RectangleBounds"
-    },
     "Sample": {
       "type": "object",
       "required": [
@@ -2979,9 +2961,6 @@
           "items": {
             "$ref": "#/definitions/MutationGeneFilter"
           }
-        },
-        "mutationCountVsCNASelection": {
-          "$ref": "#/definitions/RectangleBounds"
         },
         "sampleIdentifiers": {
           "type": "array",

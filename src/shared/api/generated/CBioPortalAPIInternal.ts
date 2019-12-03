@@ -461,16 +461,6 @@ export type MutationSpectrumFilter = {
         'sampleListId': string
 
 };
-export type RectangleBounds = {
-    'xEnd': number
-
-        'xStart': number
-
-        'yEnd': number
-
-        'yStart': number
-
-};
 export type Sample = {
     'copyNumberSegmentPresent': boolean
 
@@ -503,8 +493,6 @@ export type StudyViewFilter = {
         'fusionGenes': Array < FusionGeneFilter >
 
         'mutatedGenes': Array < MutationGeneFilter >
-
-        'mutationCountVsCNASelection': RectangleBounds
 
         'sampleIdentifiers': Array < SampleIdentifier >
 
