@@ -165,7 +165,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                                   showDownloadTab={false}
                                   showAlerts={true}
                                   modifyQueryParams={this.props.store.modifyQueryParams}
-                                  getQueryStore={()=>createQueryStore(this.props.store.urlWrapper.query, this.props.store.urlWrapper,true)}
+                                  getQueryStore={()=>createQueryStore(this.props.store.urlWrapper.query, this.props.store.urlWrapper,false)}
             />
         </div>
     }
