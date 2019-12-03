@@ -10,13 +10,16 @@ import {
     GenomicLocation,
     OncoKbAPI,
     Query,
-    EvidenceQueries
+    EvidenceQueries,
+    VariantAnnotation,
+    MyVariantInfo
 } from "cbioportal-frontend-commons";
 
 import {AggregatedHotspots, Hotspot} from "../model/CancerHotspot";
 import {EnsemblTranscript} from "../model/EnsemblTranscript";
 import {Mutation} from "../model/Mutation";
 import {CancerGene, IOncoKbData} from "../model/OncoKb";
+import {PfamDomain} from "../model/Pfam";
 import {PostTranslationalModification} from "../model/PostTranslationalModification";
 import {
     DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
@@ -63,7 +66,7 @@ export class DefaultMutationMapperDataFetcher
             initOncoKbClient(config.oncoKbUrl, config.cachePostMethodsOnClients, config.apiCacheLimit);
     }
 
-    public async fetchSwissProtAccession(entrezGeneId: number)
+    public async fetchSwissProtAccession(entrezGeneId: number): Promise<any>
     {
         const myGeneData:Response = await request.get(
             getUrl(this.config.myGeneUrlTemplate || DEFAULT_MY_GENE_URL_TEMPLATE,
@@ -71,7 +74,7 @@ export class DefaultMutationMapperDataFetcher
         return JSON.parse(myGeneData.text).uniprot["Swiss-Prot"];
     }
 
-    public async fetchUniprotId(swissProtAccession: string)
+    public async fetchUniprotId(swissProtAccession: string): Promise<string>
     {
         const uniprotData:Response = await request.get(
             getUrl(this.config.uniprotIdUrlTemplate || DEFAULT_UNIPROT_ID_URL_TEMPLATE,
@@ -79,7 +82,7 @@ export class DefaultMutationMapperDataFetcher
         return uniprotData.text.split("\n")[1];
     }
 
-    public fetchMutationAlignerLink(pfamDomainId: string)
+    public fetchMutationAlignerLink(pfamDomainId: string): request.SuperAgentRequest
     {
         return request.get(getUrl(
             this.config.mutationAlignerUrlTemplate || DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
@@ -87,7 +90,7 @@ export class DefaultMutationMapperDataFetcher
     }
 
     public async fetchPfamDomainData(pfamAccessions: string[],
-                                     client:GenomeNexusAPI = this.genomeNexusClient)
+                                     client:GenomeNexusAPI = this.genomeNexusClient): Promise<PfamDomain[]>
     {
         return await client.fetchPfamDomainsByPfamAccessionPOST({
             pfamAccessions: pfamAccessions
@@ -97,14 +100,14 @@ export class DefaultMutationMapperDataFetcher
     public async fetchVariantAnnotationsIndexedByGenomicLocation(mutations: Partial<Mutation>[],
                                                                  fields: string[] = ["annotation_summary"],
                                                                  isoformOverrideSource: string = "uniprot",
-                                                                 client: GenomeNexusAPI = this.genomeNexusClient)
+                                                                 client: GenomeNexusAPI = this.genomeNexusClient): Promise<{[genomicLocation: string]: VariantAnnotation}>
     {
         return await fetchVariantAnnotationsIndexedByGenomicLocation(mutations, fields, isoformOverrideSource, client);
     }
 
     public async fetchMyVariantInfoAnnotationsIndexedByGenomicLocation(mutations: Partial<Mutation>[],
                                                                        isoformOverrideSource: string = "uniprot",
-                                                                       client: GenomeNexusAPI = this.genomeNexusClient)
+                                                                       client: GenomeNexusAPI = this.genomeNexusClient): Promise<{[genomicLocation: string]: MyVariantInfo}>
     {
         const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
             mutations, ["my_variant_info"], isoformOverrideSource, client);
@@ -118,7 +121,7 @@ export class DefaultMutationMapperDataFetcher
     public async fetchCanonicalTranscriptWithFallback(hugoSymbol:string,
                                                       isoformOverrideSource: string,
                                                       allTranscripts: EnsemblTranscript[] | undefined,
-                                                      client: GenomeNexusAPI = this.genomeNexusClient)
+                                                      client: GenomeNexusAPI = this.genomeNexusClient): Promise<EnsemblTranscript | undefined>
     {
         return this.fetchCanonicalTranscript(hugoSymbol, isoformOverrideSource, client).catch(() => {
             // get transcript with max protein length in given list of all transcripts
@@ -129,7 +132,7 @@ export class DefaultMutationMapperDataFetcher
 
     public async fetchCanonicalTranscript(hugoSymbol: string,
                                           isoformOverrideSource: string,
-                                          client: GenomeNexusAPI = this.genomeNexusClient)
+                                          client: GenomeNexusAPI = this.genomeNexusClient): Promise<EnsemblTranscript>
     {
         return await client.fetchCanonicalEnsemblTranscriptByHugoSymbolGET({
             hugoSymbol, isoformOverrideSource
@@ -137,7 +140,7 @@ export class DefaultMutationMapperDataFetcher
     }
 
     public async fetchEnsemblTranscriptsByEnsemblFilter(ensemblFilter: Partial<EnsemblFilter>,
-                                                        client: GenomeNexusAPI = this.genomeNexusClient)
+                                                        client: GenomeNexusAPI = this.genomeNexusClient): Promise<EnsemblTranscript[] | undefined>
     {
 
         return await client.fetchEnsemblTranscriptsByEnsemblFilterPOST({ensemblFilter: Object.assign(
