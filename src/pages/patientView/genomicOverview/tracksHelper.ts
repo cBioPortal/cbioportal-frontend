@@ -184,7 +184,7 @@ function addCommas(x: any)
     return strX;
 }
 
-export function plotCnSegs(p: any, config: any, chmInfo: any,row: any, segs: Array<any>, chrCol: any, startCol: any, endCol: any, segCol: any, caseId: any, genePanelIconData: IIconData) {
+export function plotCnSegs(p: any, config: any, chmInfo: any,row: any, segs: Array<any>, chrCol: any, startCol: any, endCol: any, segCol: any, caseId: any, genePanelIconData: IIconData, setGenePanelInTooltip:(genePanelId:string)=>void) {
     var yRow = config.yRow(row);
     var genomeMeasured = 0;
     var genomeAltered = 0;
@@ -247,12 +247,20 @@ export function plotCnSegs(p: any, config: any, chmInfo: any,row: any, segs: Arr
         .attr({'text-anchor': 'center', 'fill':'white'});
         t.node.setAttribute("data-test", "cna-track-genepanel-icon-"+row);
         var message = genePanelIconData.genePanelId? "Gene panel: " + genePanelIconData.genePanelId : noGenePanelMessage;
-        addToolTip(t.node,message,null,{my:'top right',at:'bottom left'});
+        addToolTip(
+            t.node,
+            message,
+            null,
+            {my:'top right',at:'bottom left'},
+            genePanelIconData.genePanelId,
+            $('.tooltip-content').find('span'),
+            setGenePanelInTooltip
+        );
     }
     
 }
 
-export function plotMuts(p: any, config: any,chmInfo: any,row: any, mutations: Array<Mutation>, caseId: any, genePanelIconData: IIconData) {
+export function plotMuts(p: any, config: any,chmInfo: any,row: any, mutations: Array<Mutation>, caseId: any, genePanelIconData: IIconData, setGenePanelInTooltip:(genePanelId:string)=>void) {
     var numMut = 0;
     var mutObjs = _.filter(mutations, function(_mutObj: Mutation){ return _mutObj.sampleId === caseId; } );
     
@@ -310,15 +318,26 @@ export function plotMuts(p: any, config: any,chmInfo: any,row: any, mutations: A
         var t = p.text(config.xGenePanelIconText(), yRow-config.heigthGenePanelIcon/2-1, genePanelIconData.label)
         .attr({'text-anchor': 'center', 'fill':'white'});
         t.node.setAttribute("data-test", "mut-track-genepanel-icon-"+row);
-        var message = "Gene panel: " + (genePanelIconData.genePanelId || 'N/A');
-        addToolTip(t.node,message,null,{my:'top right',at:'bottom left'});
+        addToolTip(
+            t.node,
+            '',
+            null,
+            {my:'top right',at:'bottom left'},
+            genePanelIconData.genePanelId,
+            $('.tooltip-content').find('span'),
+            setGenePanelInTooltip
+        );
     }
     
 }
 
-function addToolTip(node: any, tip: any,showDelay: any, position: any) {
+function addToolTip(node: any, tip: any,showDelay: any, position: any, genePanel?:string, tooltipContentEl?:any, setGenePanelInTooltip?:(genePanelId:string)=>void) {
     var param = {
-        content: {text:tip},
+        content: {
+            text: () => {
+                return tooltipContentEl || tip
+            }
+        },
         show: {event: "mouseover"},
         hide: {fixed: true, delay: 100, event:"mouseout"},
         style: { classes: 'qtip-light qtip-rounded' },
@@ -326,6 +345,18 @@ function addToolTip(node: any, tip: any,showDelay: any, position: any) {
             my: "bottom right",
             at: "top left",
             viewport: $("body")
+        },
+        events: {
+            show: () => {
+                if (setGenePanelInTooltip && genePanel) {
+                    setGenePanelInTooltip(genePanel);
+                }
+            },
+            hide: () => {
+                if (setGenePanelInTooltip) {
+                    setGenePanelInTooltip('');
+                }
+            }
         }
     };
     // if (showDelay)

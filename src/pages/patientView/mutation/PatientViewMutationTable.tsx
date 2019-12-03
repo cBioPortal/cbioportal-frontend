@@ -24,6 +24,8 @@ export interface IPatientViewMutationTableProps extends IMutationTableProps {
     showGeneFilterMenu?:boolean;
     currentGeneFilter:GeneFilterOption;
     onFilterGenes?:(option:GeneFilterOption)=>void;
+    onSelectGenePanel?:(name:string)=>void;
+    disableTooltip?:boolean;
 }
 
 @observer
@@ -96,7 +98,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
 
         this._columns[MutationTableColumnType.SAMPLES] = {
             name: "Samples",
-            render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager, this.props.sampleToGenePanelId, this.props.genePanelIdToEntrezGeneIds),
+            render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager, this.props.sampleToGenePanelId, this.props.genePanelIdToEntrezGeneIds, this.props.onSelectGenePanel, this.props.disableTooltip),
             sortBy:(d:Mutation[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
             download: (d:Mutation[])=>TumorColumnFormatter.getSample(d),
             resizable: true,
@@ -106,7 +108,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             data: d,
             sampleToGenePanelId: this.props.sampleToGenePanelId,
             sampleManager: this.props.sampleManager,
-            genePanelIdToGene: this.props.genePanelIdToEntrezGeneIds
+            genePanelIdToGene: this.props.genePanelIdToEntrezGeneIds,
+            onSelectGenePanel: this.props.onSelectGenePanel
         });
         
         this._columns[MutationTableColumnType.GENE_PANEL] = {
