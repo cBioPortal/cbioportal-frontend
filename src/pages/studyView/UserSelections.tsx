@@ -35,7 +35,6 @@ export interface IUserSelectionsProps {
     removeMutatedGeneFilter: (hugoGeneSymbol: string) => void;
     removeFusionGeneFilter: (hugoGeneSymbol: string) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
-    resetMutationCountVsCNAFilter: () => void;
     removeWithMutationDataFilter: () => void;
     removeWithCNADataFilter: () => void;
     removeCustomSelectionFilter: () => void,
@@ -229,24 +228,6 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                         group={filter.alterations.length > 1}
                     />
                 })} operation={"and"} group={false}/></div>);
-        }
-
-        // Mutation count vs FGA
-        if (this.props.filter.mutationCountVsCNASelection) {
-            const region = this.props.filter.mutationCountVsCNASelection;
-            components.push(
-                <div className={styles.parentGroupLogic}><GroupLogic
-                    components={[
-                        <span className={styles.filterClinicalAttrName}>Mutation Count vs FGA</span>,
-                        <PillTag
-                            content={`${Math.floor(region.yStart)} ≤ Mutation Count < ${Math.ceil(region.yEnd)} and ${region.xStart.toFixed(2)} ≤ FGA < ${region.xEnd.toFixed(2)}`}
-                            backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
-                            onDelete={this.props.resetMutationCountVsCNAFilter}
-                        />
-                    ]}
-                    operation={':'}
-                    group={false}/></div>
-            );
         }
 
         return components;

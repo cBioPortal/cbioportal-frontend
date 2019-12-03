@@ -8,7 +8,6 @@ import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import {
     CopyNumberGeneFilterElement,
     DataBin,
-    RectangleBounds,
     ClinicalDataFilterValue
 } from "shared/api/generated/CBioPortalAPIInternal";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
@@ -21,7 +20,7 @@ import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/compone
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {DownloadDataType} from "public-lib/components/downloadControls/DownloadControls";
-import {ChartMeta, ChartType} from "../StudyViewUtils";
+import {ChartMeta, ChartType, RectangleBounds} from "../StudyViewUtils";
 
 
 export interface IStudySummaryTabProps {
@@ -58,9 +57,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             },
             onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => {
                 this.store.changeChartType(chartMeta, newChartType);
-            },
-            updateMutationCountVsCNAFilter:(bounds:RectangleBounds)=>{
-                this.store.setMutationCountVsCNAFilter(bounds);
             },
             isNewlyAdded:(uniqueKey: string) => {
                 return this.store.isNewlyAdded(uniqueKey);
@@ -195,15 +191,13 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case SCATTER: {
-                if (this.store.getMutationCountVsCNAFilter()) {
-                    props.filters = [this.store.getMutationCountVsCNAFilter()];
-                }
+                props.filters = this.store.getScatterPlotFiltersByUniqueKey(props.chartMeta!.uniqueKey)
                 props.promise = this.store.mutationCountVsCNADensityData;
                 props.onValueSelection = (bounds:RectangleBounds)=>{
-                    this.handlers.updateMutationCountVsCNAFilter(bounds);
+                    this.store.updateScatterPlotFilterByValues(props.chartMeta!,bounds)
                 }
                 props.onResetSelection = ()=>{
-                    this.handlers.resetMutationCountVsCNAFilter();
+                    this.store.updateScatterPlotFilterByValues(props.chartMeta!)
                 }
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 props.getData = () => this.store.getScatterDownloadData();

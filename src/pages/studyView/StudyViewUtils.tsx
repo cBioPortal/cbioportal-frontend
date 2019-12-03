@@ -12,7 +12,6 @@ import {
 import {CancerStudy, ClinicalAttribute, Gene, PatientIdentifier, Sample, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
-import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import {BarDatum} from "./charts/barChart/BarChart";
 import {
     StudyViewPageTabKeyEnum, ChartUserSetting, CustomChart
@@ -31,6 +30,7 @@ import styles from './styles.module.scss';
 import { getGroupParameters, getStudiesAttr } from "pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import { SessionGroupData } from "shared/api/ComparisonGroupClient";
 import { stringListToIndexSet } from "public-lib";
+import { IStudyViewScatterPlotData } from "./charts/scatterPlot/StudyViewScatterPlotUtils";
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -112,6 +112,13 @@ export enum Datalabel {
     YES = 'YES',
     NO = 'NO',
     NA = "NA"
+}
+
+export type RectangleBounds = {
+    xEnd?: number,
+    xStart?: number,
+    yEnd?: number,
+    yStart?: number
 }
 
 export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [{
@@ -466,8 +473,7 @@ export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFi
             _.isEmpty(filter.mutatedGenes) &&
             _.isEmpty(filter.fusionGenes) &&
             filter.withMutationData === undefined &&
-            filter.withCNAData === undefined &&
-            !filter.mutationCountVsCNASelection)
+            filter.withCNAData === undefined)
     );
 
     if (filter.sampleIdentifiersSet) {
@@ -608,9 +614,8 @@ export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
 
             // in case the previous data bin is a single value data bin (i.e start === end),
             // no need to add 1 (no interval needed for the previous value)
-            if (index - 1 > 0 &&
-                numericalBins[index -1].start !== numericalBins[index -1].end)
-            {
+            if (index - 1 > -1 &&
+                numericalBins[index - 1].start !== numericalBins[index - 1].end) {
                 x++;
             }
         }
@@ -817,6 +822,7 @@ export function closestIntegerPowerOfTen(value: number, dataBinPosition: DataBin
 }
 
 export function intervalFiltersDisplayValue(values: ClinicalDataFilterValue[]) {
+
     const categories = values
         .filter(value => value.start === undefined && value.end === undefined)
         .map(value => value.value);
@@ -1766,4 +1772,13 @@ export function getGroupsFromQuartiles(samples: Sample[], patientAttribute: bool
 
 export function getButtonNameWithDownPointer(buttonName: string) {
     return buttonName + " " + String.fromCharCode(9662);/*small solid down triangle*/
+}
+
+export function getFilteredAndCompressedDataIntervalFilters(values: ClinicalDataFilterValue[]): ClinicalDataFilterValue {
+    const numericals = values.filter(value => value.start !== undefined || value.end !== undefined);
+
+    // merge numericals into one interval
+    const start = numericals.length > 0 ? numericals[0].start : undefined;
+    const end = numericals.length > 0 ? numericals[numericals.length - 1].end : undefined;
+    return { start, end } as any
 }

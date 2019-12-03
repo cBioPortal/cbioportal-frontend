@@ -21,7 +21,6 @@ import {
     MutationCountByGene,
     MutationGeneFilter,
     FusionGeneFilter,
-    RectangleBounds,
     Sample,
     SampleIdentifier,
     StudyViewFilter,
@@ -83,6 +82,8 @@ import {
     NumericalGroupComparisonType,
     getGroupsFromQuartiles,
     DataType,
+    RectangleBounds,
+    getFilteredAndCompressedDataIntervalFilters,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -91,7 +92,6 @@ import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
 import {stringListToSet} from 'public-lib/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
-import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import {VirtualStudy} from 'shared/model/VirtualStudy';
 import windowStore from 'shared/components/window/WindowStore';
@@ -129,6 +129,7 @@ import {
 } from "pages/studyView/TableUtils";
 import { GeneTableRow } from './table/GeneTable';
 import { getSelectedGroups, getGroupParameters } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 
 export type ChartUserSetting = {
     id: string,
@@ -641,12 +642,13 @@ export class StudyViewPageStore {
 
     private _clinicalDataFilterSet = observable.shallowMap<ClinicalDataFilter>();
 
+    private _customBinsFromScatterPlotSelectionSet = observable.shallowMap<number[]>();
+
     @observable private _clinicalDataBinFilterSet = observable.map<ClinicalDataBinFilter>();
 
     @observable.ref private _mutatedGeneFilter: MutationGeneFilter[] = [];
     @observable.ref private _fusionGeneFilter: FusionGeneFilter[] = [];
     @observable.ref private _cnaGeneFilter: CopyNumberGeneFilter[] = [];
-    @observable private _mutationCountVsCNAFilter:RectangleBounds|undefined;
 
     @observable private _withMutationDataFilter: boolean | undefined;
     @observable private _withCNADataFilter: boolean | undefined;
@@ -726,10 +728,6 @@ export class StudyViewPageStore {
         if (_.isArray(filters.sampleIdentifiers) && filters.sampleIdentifiers.length > 0) {
             this.numberOfSelectedSamplesInCustomSelection = filters.sampleIdentifiers.length;
             this.updateChartSampleIdentifierFilter(UniqueKey.CUSTOM_SELECT, filters.sampleIdentifiers, false);
-        }
-
-        if (filters.mutationCountVsCNASelection) {
-            this._mutationCountVsCNAFilter = filters.mutationCountVsCNASelection;
         }
 
         if (filters.withCNAData !== undefined) {
@@ -987,13 +985,13 @@ export class StudyViewPageStore {
         this.clearMutatedGeneFilter();
         this.clearFusionGeneFilter();
         this.clearCNAGeneFilter();
-        this.resetMutationCountVsCNAFilter();
         this._chartSampleIdentifiersFilterSet.clear();
         this.customChartFilterSet.clear();
         this._withMutationDataFilter = undefined;
         this._withCNADataFilter = undefined;
         this.numberOfSelectedSamplesInCustomSelection = 0;
         this.removeComparisonGroupSelectionFilter();
+        this._customBinsFromScatterPlotSelectionSet.clear();
     }
 
     @autobind
@@ -1094,6 +1092,13 @@ export class StudyViewPageStore {
     @action
     updateClinicalDataIntervalFilters(chartMeta: ChartMeta, dataBins: DataBin[]) {
 
+        if(chartMeta.uniqueKey === FRACTION_GENOME_ALTERED) {
+            this._customBinsFromScatterPlotSelectionSet.delete(FRACTION_GENOME_ALTERED);
+        }
+        if(chartMeta.uniqueKey === MUTATION_COUNT) {
+            this._customBinsFromScatterPlotSelectionSet.delete(MUTATION_COUNT);
+        }
+        
         trackStudyViewFilterEvent("clinicalDataInterval", this);
 
         const values: ClinicalDataFilterValue[] = getClinicalDataIntervalFilterValues(dataBins);
@@ -1113,6 +1118,43 @@ export class StudyViewPageStore {
 
         } else {
             this._clinicalDataFilterSet.delete(chartMeta.uniqueKey);
+        }
+    }
+
+    @autobind
+    @action
+    updateScatterPlotFilterByValues(chartMeta: ChartMeta, bounds?: RectangleBounds) {
+        if (chartMeta.uniqueKey === UniqueKey.MUTATION_COUNT_CNA_FRACTION) {
+            if (bounds === undefined) {
+                this._clinicalDataFilterSet.delete(FRACTION_GENOME_ALTERED);
+                this._clinicalDataFilterSet.delete(MUTATION_COUNT);
+                this._customBinsFromScatterPlotSelectionSet.delete(FRACTION_GENOME_ALTERED);
+                this._customBinsFromScatterPlotSelectionSet.delete(MUTATION_COUNT);
+            } else {
+                const mutationCountFilter: ClinicalDataFilterValue = {
+                    start: bounds.yStart,
+                    end: bounds.yEnd,
+                } as any;
+                const mutationCountIntervalFilter = {
+                    attributeId: MUTATION_COUNT,
+                    values: [mutationCountFilter]
+                };
+                this._customBinsFromScatterPlotSelectionSet.set(MUTATION_COUNT,[mutationCountFilter.start, mutationCountFilter.end])
+                //this.updateCustomBins(MUTATION_COUNT, [mutationCountFilter.start, mutationCountFilter.end]);
+                this._clinicalDataFilterSet.set(MUTATION_COUNT, mutationCountIntervalFilter);
+
+                const fgaFilter: ClinicalDataFilterValue = {
+                    start: bounds.xStart,
+                    end: bounds.xEnd,
+                } as any;
+                const fgaIntervalFilter = {
+                    attributeId: FRACTION_GENOME_ALTERED,
+                    values: [fgaFilter]
+                };
+                //this.updateCustomBins(FRACTION_GENOME_ALTERED, [fgaFilter.start, fgaFilter.end]);
+                this._customBinsFromScatterPlotSelectionSet.set(FRACTION_GENOME_ALTERED,[fgaFilter.start, fgaFilter.end])
+                this._clinicalDataFilterSet.set(FRACTION_GENOME_ALTERED, fgaIntervalFilter);
+            }
         }
     }
 
@@ -1257,29 +1299,6 @@ export class StudyViewPageStore {
         }
     }
 
-    public getMutationCountVsCNAFilter() {
-        if (this._mutationCountVsCNAFilter) {
-            return Object.assign({}, this._mutationCountVsCNAFilter);
-        } else {
-            return undefined;
-        }
-    }
-
-    @autobind
-    @action
-    setMutationCountVsCNAFilter(bounds:RectangleBounds) {
-
-        trackStudyViewFilterEvent("mutationCountVsCNA", this);
-
-        this._mutationCountVsCNAFilter = bounds;
-    }
-
-    @autobind
-    @action
-    resetMutationCountVsCNAFilter() {
-        this._mutationCountVsCNAFilter = undefined;
-    }
-
     @action
     changeChartVisibility(uniqueKey:string, visible: boolean) {
         if(visible){
@@ -1316,7 +1335,8 @@ export class StudyViewPageStore {
                 case ChartTypeEnum.SCATTER:
                     this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
                     if (chartMeta.uniqueKey === UniqueKey.MUTATION_COUNT_CNA_FRACTION) {
-                        this.resetMutationCountVsCNAFilter();
+                        this._clinicalDataFilterSet.delete(MUTATION_COUNT);
+                        this._clinicalDataFilterSet.delete(FRACTION_GENOME_ALTERED);
                     }
                     break;
                 case ChartTypeEnum.SURVIVAL:
@@ -1378,7 +1398,11 @@ export class StudyViewPageStore {
     @action
     public updateCustomBins(uniqueKey: string, bins: number[]) {
         let newFilter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey))!;
-        newFilter.customBins = bins;
+        if (bins.length > 0) {
+            newFilter.customBins = bins;
+        } else {
+            delete newFilter.customBins
+        }
         this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
     }
 
@@ -1444,10 +1468,6 @@ export class StudyViewPageStore {
             filters.cnaGenes = this._cnaGeneFilter;
         }
 
-        if (this._mutationCountVsCNAFilter) {
-            filters.mutationCountVsCNASelection = this._mutationCountVsCNAFilter;
-        }
-
         let sampleIdentifiersFilterSets = this._chartSampleIdentifiersFilterSet.values()
 
         // nested array need to be spread for _.intersectionWith
@@ -1509,6 +1529,31 @@ export class StudyViewPageStore {
     public getClinicalDataFiltersByUniqueKey(uniqueKey: string) {
         const filter = this._clinicalDataFilterSet.get(uniqueKey);
         return filter ? filter.values : [];
+    }
+
+    public getScatterPlotFiltersByUniqueKey(uniqueKey: string) {
+
+        if (uniqueKey === UniqueKey.MUTATION_COUNT_CNA_FRACTION) {
+
+            const xAxisFilter = this._clinicalDataFilterSet.get(FRACTION_GENOME_ALTERED);
+            const yAxisFilter = this._clinicalDataFilterSet.get(MUTATION_COUNT);
+            const scatterPlotFilter: RectangleBounds = {};
+
+            if (xAxisFilter) {
+                let temp = getFilteredAndCompressedDataIntervalFilters(xAxisFilter.values);
+                scatterPlotFilter.xStart = temp.start;
+                scatterPlotFilter.xEnd = temp.end
+            }
+            if (yAxisFilter) {
+                let temp = getFilteredAndCompressedDataIntervalFilters(yAxisFilter.values);
+                scatterPlotFilter.yStart = temp.start;
+                scatterPlotFilter.yEnd = temp.end
+            }
+            if (xAxisFilter || yAxisFilter) {
+                return [scatterPlotFilter];
+            }
+        }
+        return [];
     }
 
     @computed
@@ -1731,9 +1776,15 @@ export class StudyViewPageStore {
                     // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
                     const dataBinMethod = DataBinMethodConstants.STATIC;
                     let result = [];
+
                     const initDataBinFilter = _.find(this.initialVisibleAttributesClinicalDataBinAttributes.result,
                         item => item.attributeId === getUniqueKey(chartMeta.clinicalAttribute!));
-                    const attribute = this._clinicalDataBinFilterSet.get(getUniqueKey(chartMeta.clinicalAttribute!))!;
+                    let attribute = _.clone(this._clinicalDataBinFilterSet.get(getUniqueKey(chartMeta.clinicalAttribute!))!);
+
+                    if(this._customBinsFromScatterPlotSelectionSet.has(chartMeta.uniqueKey)) {
+                        const additioncustomBins = this._customBinsFromScatterPlotSelectionSet.get(chartMeta.uniqueKey) || [];
+                        attribute.customBins = _.sortBy([...attribute.customBins || [], ...additioncustomBins])
+                    }
                     const attributeChanged = isDefaultAttr && !_.isEqual(toJS(attribute), initDataBinFilter);
                     if (this.isInitialFilterState &&
                         isDefaultAttr &&
@@ -3411,16 +3462,7 @@ export class StudyViewPageStore {
         invoke:async()=>{
             if (!!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === MUTATION_COUNT) &&
                 !!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === FRACTION_GENOME_ALTERED)) {
-                let yAxisBinCount = MutationCountVsCnaYBinsMin;
-                // dont have more bins than there are integers in the plot area
-                const filter = this.getMutationCountVsCNAFilter();
-                if (filter) {
-                    yAxisBinCount = Math.min(yAxisBinCount, Math.floor(filter.yEnd));
-                }
-                // remove selection area filter because we want to show even unselected dots
-                const studyViewFilter = Object.assign({}, this.filters);
-                delete studyViewFilter.mutationCountVsCNASelection;
-
+                const yAxisBinCount = MutationCountVsCnaYBinsMin;
                 const xAxisBinCount = 50;
                 const bins = (await internalClient.fetchClinicalDataDensityPlotUsingPOST({
                     xAxisAttributeId: FRACTION_GENOME_ALTERED,
@@ -3429,7 +3471,7 @@ export class StudyViewPageStore {
                     yAxisStart:0, // mutation always starts at 0
                     xAxisBinCount,
                     yAxisBinCount,
-                    studyViewFilter
+                    studyViewFilter:this.filters
                 })).filter(bin=>(bin.count > 0));// only show points for bins with stuff in them
                 const xBinSize = 1/xAxisBinCount;
                 const yBinSize = Math.max(...bins.map(bin=>bin.binY)) / (yAxisBinCount - 1);

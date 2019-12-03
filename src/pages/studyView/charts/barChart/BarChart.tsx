@@ -20,7 +20,6 @@ import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import {getTextDiagonal, getTextHeight, getTextWidth} from "public-lib/lib/TextTruncationUtils";
 import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 import BarChartToolTip, { ToolTipModel } from "./BarChartToolTip";
-import { IAlterationData } from "pages/resultsView/cancerSummary/CancerSummaryContent";
 import WindowStore from "shared/components/window/WindowStore";
 import ReactDOM from "react-dom";
 
@@ -73,10 +72,19 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
     }
 
     private isDataBinSelected(dataBin: DataBin, filters: ClinicalDataFilterValue[]) {
-        return filters.find(filter =>
-            (filter.start === dataBin.start && filter.end === dataBin.end) ||
-            (filter.value !== undefined && filter.value === dataBin.specialValue)
-        ) !== undefined;
+        return _.some(filters, filter => {
+            let isFiltered = false;
+            if (filter.start !== undefined && filter.end !== undefined) {
+                isFiltered = filter.start <= dataBin.start && filter.end >= dataBin.end;
+            } else if (filter.start !== undefined && filter.end === undefined) {
+                isFiltered = dataBin.start >= filter.start;
+            } else if (filter.start === undefined && filter.end !== undefined) {
+                isFiltered = dataBin.end <= filter.end;
+            } else {
+                isFiltered = filter.value !== undefined && filter.value === dataBin.specialValue;
+            }
+            return isFiltered;
+        });
     }
 
     public toSVGDOMNode(): Element {
