@@ -3,6 +3,7 @@ import ExtendedRouterStore from "../../shared/lib/ExtendedRouterStore";
 import {computed} from "mobx";
 import autobind from "autobind-decorator";
 import {ResultsViewTab} from "pages/resultsView/ResultsViewPageHelpers";
+import AppConfig from "appConfig";
 
 export enum ResultsViewURLQueryEnum {
     clinicallist = "clinicallist",
@@ -69,7 +70,8 @@ export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuer
             { name: "genetic_profile_ids_GENERIC_ASSAY", isSessionProp:true },
             { name: "genetic_profile_ids", isSessionProp:true },
             ],
-              true
+              true,
+              AppConfig.serverConfig.session_url_length_threshold ? parseInt(AppConfig.serverConfig.session_url_length_threshold) : undefined
         );
     }
 
