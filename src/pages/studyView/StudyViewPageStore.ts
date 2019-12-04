@@ -692,6 +692,7 @@ export class StudyViewPageStore {
 
     @observable private _withMutationDataFilter: boolean | undefined;
     @observable private _withCNADataFilter: boolean | undefined;
+    @observable private _withFusionDataFilter: boolean | undefined;
 
     // TODO: make it computed
     // Currently the study view store does not have the full control of the promise.
@@ -800,6 +801,12 @@ export class StudyViewPageStore {
             this._withMutationDataFilter = filters.withMutationData;
             const value = filters.withMutationData ? Datalabel.YES : Datalabel.NO;
             this.customChartFilterSet.set(UniqueKey.WITH_MUTATION_DATA, [value]);
+        }
+
+        if (filters.withFusionData !== undefined) {
+            this._withFusionDataFilter = filters.withFusionData;
+            const value = filters.withFusionData ? Datalabel.YES : Datalabel.NO;
+            this.customChartFilterSet.set(UniqueKey.WITH_FUSION_DATA, [value]);
         }
 
         if(!_.isEqual(toJS(this.initialFiltersQuery), filters)) {
@@ -1058,6 +1065,7 @@ export class StudyViewPageStore {
         this.customChartFilterSet.clear();
         this._withMutationDataFilter = undefined;
         this._withCNADataFilter = undefined;
+        this._withFusionDataFilter = undefined;
         this.numberOfSelectedSamplesInCustomSelection = 0;
         this.removeComparisonGroupSelectionFilter();
     }
@@ -1090,6 +1098,19 @@ export class StudyViewPageStore {
 
     @autobind
     @action
+    toggleWithFusionDataFilter() {
+        let isSelected = !this._withFusionDataFilter;
+        this._withFusionDataFilter = isSelected;
+        if (isSelected) {
+            trackStudyViewFilterEvent("withFusionQuickFilter", this);
+            this.customChartFilterSet.set(UniqueKey.WITH_FUSION_DATA, [Datalabel.YES]);
+        } else {
+            this.customChartFilterSet.delete(UniqueKey.WITH_FUSION_DATA);
+        }
+    }
+
+    @autobind
+    @action
     removeWithMutationDataFilter() {
         this._withMutationDataFilter = undefined;
     }
@@ -1098,6 +1119,12 @@ export class StudyViewPageStore {
     @action
     removeWithCNADataFilter() {
         this._withCNADataFilter = undefined;
+    }
+
+    @autobind
+    @action
+    removeWithFusionDataFilter() {
+        this._withFusionDataFilter = undefined;
     }
 
     @computed
@@ -1425,6 +1452,9 @@ export class StudyViewPageStore {
                     if(chartMeta.uniqueKey === UniqueKey.WITH_CNA_DATA) {
                         this._withCNADataFilter = undefined;
                     }
+                    if(chartMeta.uniqueKey === UniqueKey.WITH_FUSION_DATA) {
+                        this._withFusionDataFilter = undefined;
+                    }
                     this._clinicalDataEqualityFilterSet.delete(chartMeta.uniqueKey);
                     this._clinicalDataIntervalFilterSet.delete(chartMeta.uniqueKey);
                     this.clearChartSampleIdentifierFilter(chartMeta);
@@ -1587,6 +1617,13 @@ export class StudyViewPageStore {
             if(customChartFilterSet !== undefined && customChartFilterSet.length === 1) {
                 filters.withCNAData = this._withCNADataFilter;
             }
+        }
+        if(this._withFusionDataFilter !== undefined) {
+            let customChartFilterSet = this.customChartFilterSet.get(UniqueKey.WITH_FUSION_DATA)
+            if(customChartFilterSet !== undefined && customChartFilterSet.length === 1) {
+                filters.withFusionData = this._withFusionDataFilter;
+            }
+
         }
 
         return filters as StudyViewFilter;
@@ -2202,7 +2239,6 @@ export class StudyViewPageStore {
         default: []
     });
 
-
     readonly cnaProfiles = remoteData({
         await: ()=>[this.molecularProfiles],
         invoke: async ()=>{
@@ -2210,6 +2246,15 @@ export class StudyViewPageStore {
             .result
             .filter(profile => profile.molecularAlterationType === "COPY_NUMBER_ALTERATION" && profile.datatype === "DISCRETE")
 
+        },
+        onError: (error => {}),
+        default: []
+    });
+
+    readonly fusionProfiles = remoteData({
+        await: ()=>[this.molecularProfiles],
+        invoke: async ()=>{
+            return this.molecularProfiles.result.filter(profile => profile.molecularAlterationType === "FUSION")
         },
         onError: (error => {}),
         default: []
@@ -2458,8 +2503,7 @@ export class StudyViewPageStore {
             };
         }
 
-        if ((!_.isEmpty(this.molecularProfileSampleCounts.result)) &&
-            (this.molecularProfileSampleCounts.result!.numberOfFusionProfiledSamples > 0)) {
+        if (!_.isEmpty(this.fusionProfiles.result)) {
                 _chartMetaSet[UniqueKey.FUSION_GENES_TABLE] = {
                     uniqueKey: UniqueKey.FUSION_GENES_TABLE,
                     dataType: getChartMetaDataType(UniqueKey.FUSION_GENES_TABLE),
@@ -2538,7 +2582,9 @@ export class StudyViewPageStore {
             this.initialVisibleAttributesClinicalDataBinCountData.isPending ||
             this.initialVisibleAttributesClinicalDataCountData.isPending ||
             this.mutationProfiles.isPending ||
-            this.cnaProfiles.isPending;
+            this.cnaProfiles.isPending ||
+            this.fusionProfiles.isPending
+        ;
 
         if (this._loadUserSettingsInitially) {
             pending = pending || this.fetchUserSettings.isPending
@@ -2723,7 +2769,7 @@ export class StudyViewPageStore {
                 this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
             }
         }
-        if (!_.isEmpty(this.mutationProfiles.result)) {
+        if (!_.isEmpty(this.fusionProfiles.result)) {
             const fusionGeneMeta = _.find(this.chartMetaSet, chartMeta => chartMeta.uniqueKey === UniqueKey.FUSION_GENES_TABLE);
             if (fusionGeneMeta && fusionGeneMeta.priority !== 0) {
                 this.changeChartVisibility(UniqueKey.FUSION_GENES_TABLE, true);
@@ -3132,10 +3178,10 @@ export class StudyViewPageStore {
 
     readonly fusionGeneTableRowData = remoteData<GeneTableRow[]>({
         await: () => this.oncokbCancerGeneFilterEnabled ?
-            [this.mutationProfiles, this.oncokbAnnotatedGeneEntrezGeneIds, this.oncokbOncogeneEntrezGeneIds, this.oncokbTumorSuppressorGeneEntrezGeneIds, this.oncokbCancerGeneEntrezGeneIds] :
+            [this.fusionProfiles, this.oncokbAnnotatedGeneEntrezGeneIds, this.oncokbOncogeneEntrezGeneIds, this.oncokbTumorSuppressorGeneEntrezGeneIds, this.oncokbCancerGeneEntrezGeneIds] :
             [this.mutationProfiles],
         invoke: async () => {
-            if (!_.isEmpty(this.mutationProfiles.result)) {
+            if (!_.isEmpty(this.fusionProfiles.result)) {
                 const fusionGenes = await internalClient.fetchFusionGenesUsingPOST({
                     studyViewFilter: this.filters
                 });
@@ -3946,6 +3992,19 @@ export class StudyViewPageStore {
                     }
                     break;
                 }
+                case UniqueKey.WITH_FUSION_DATA: {
+                    switch (values.length) {
+                        case 1: {
+                            this._withFusionDataFilter = values[0] === Datalabel.YES ? true : false;
+                            break;
+                        }
+                        case 2: {
+                            this._withFusionDataFilter = undefined;
+                            break;
+                        }
+                    }
+                    break;
+                }
                 default: {
                     let filteredSampleIdentifiers = _.reduce(this._customChartsSelectedCases.get(chartMeta.uniqueKey), (acc, next) => {
                         if(values.includes(next.value)) {
@@ -3967,6 +4026,9 @@ export class StudyViewPageStore {
             }
             if(UniqueKey.WITH_CNA_DATA === chartMeta.uniqueKey) {
                 this._withCNADataFilter = undefined;
+            }
+            if(UniqueKey.WITH_FUSION_DATA === chartMeta.uniqueKey) {
+                this._withFusionDataFilter = undefined;
             }
             this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
             this.customChartFilterSet.delete(chartMeta.uniqueKey)
@@ -4034,7 +4096,7 @@ export class StudyViewPageStore {
                 default:
                     this.customChartsPromises[uniqueKey] = remoteData<ClinicalDataCountSummary[]>({
                         await: () => {
-                            return _.includes([UniqueKey.WITH_MUTATION_DATA, UniqueKey.WITH_CNA_DATA], uniqueKey) ? [this.molecularProfileSampleCounts, this.selectedSamples] : [this.selectedSamples];
+                            return _.includes([UniqueKey.WITH_MUTATION_DATA, UniqueKey.WITH_CNA_DATA, UniqueKey.WITH_FUSION_DATA], uniqueKey) ? [this.molecularProfileSampleCounts, this.selectedSamples] : [this.selectedSamples];
                         },
                         invoke: async () => {
                             let dataCountSet: { [id: string]: ClinicalDataCount } = {};
