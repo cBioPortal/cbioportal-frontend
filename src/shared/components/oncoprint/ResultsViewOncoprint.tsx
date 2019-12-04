@@ -882,13 +882,17 @@ export default class ResultsViewOncoprint extends React.Component<
                 }
             },
             onSetHorzZoom: (z: number) => {
-                this.oncoprint.setHorzZoom(z);
+                this.oncoprint.setHorzZoomCentered(z);
             },
             onClickZoomIn: () => {
-                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() / 0.7);
+                this.oncoprint.setHorzZoomCentered(
+                    this.oncoprint.getHorzZoom() / 0.7
+                );
             },
             onClickZoomOut: () => {
-                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() * 0.7);
+                this.oncoprint.setHorzZoomCentered(
+                    this.oncoprint.getHorzZoom() * 0.7
+                );
             },
         };
     }
