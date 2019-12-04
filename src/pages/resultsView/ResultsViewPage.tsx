@@ -51,7 +51,6 @@ import {handleLegacySubmission} from "shared/lib/redirectHelpers";
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     const resultsViewPageStore = new ResultsViewPageStore(
         appStore,
-        getBrowserWindow().globalStores.routing,
         urlWrapper
     );
 
@@ -157,6 +156,7 @@ export default class ResultsViewPage extends React.Component<
                             <ResultsViewOncoprint
                                 divId={'oncoprintDiv'}
                                 store={store}
+                                urlWrapper={store.urlWrapper}
                                 key={store.hugoGeneSymbols.join(',')}
                                 addOnBecomeVisibleListener={
                                     addOnBecomeVisibleListener
