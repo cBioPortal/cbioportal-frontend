@@ -23,6 +23,8 @@ export enum ResultsViewURLQueryEnum {
     oncoprint_cluster_profile = "oncoprint_cluster_profile",
     oncoprint_sort_by_mutation_type = "oncoprint_sort_by_mutation_type",
     oncoprint_sort_by_drivers = "oncoprint_sort_by_drivers",
+    exclude_germline_mutations = "exclude_germline_mutations",
+    patient_enrichments = "patient_enrichments",
 
     genetic_profile_ids_PROFILE_MUTATION_EXTENDED = "genetic_profile_ids_PROFILE_MUTATION_EXTENDED",
     genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION = "genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION",
@@ -51,6 +53,10 @@ export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuer
             { name: "oncoprint_sort_by_mutation_type", isSessionProp:false },
             { name: "oncoprint_sort_by_drivers", isSessionProp:false},
             { name: "treatment_list", isSessionProp:false },
+            { name: "exclude_germline_mutations", isSessionProp:false },
+            { name: "patient_enrichments", isSessionProp:false },
+
+
 
             // session props here
             { name: "gene_list", isSessionProp:true },
