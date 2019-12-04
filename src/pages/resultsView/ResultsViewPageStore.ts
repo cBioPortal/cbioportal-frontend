@@ -415,7 +415,6 @@ export type ModifyQueryParams = {
 export class ResultsViewPageStore {
     constructor(
         private appStore: AppStore,
-        private routing: any,
         urlWrapper: ResultsViewURLWrapper
     ) {
         labelMobxPromises(this);
@@ -725,49 +724,37 @@ export class ResultsViewPageStore {
     @computed
     public get usePatientLevelEnrichments() {
         return (
-            (this.routing.location.query as CancerStudyQueryUrlParams)
-                .patient_enrichments === 'true'
+            this.urlWrapper.query.patient_enrichments === 'true'
         );
     }
 
     @autobind
     @action
     public setUsePatientLevelEnrichments(e: boolean) {
-        this.routing.updateRoute({
+        this.urlWrapper.updateURL({
             patient_enrichments: e.toString(),
-        } as Partial<CancerStudyQueryUrlParams>);
-    }
-
-    @computed
-    public get oncoprintAnalysisCaseType() {
-        return (
-            (this.routing.location.query as CancerStudyQueryUrlParams)
-                .show_samples === 'true'
-        ) ? OncoprintAnalysisCaseType.SAMPLE : OncoprintAnalysisCaseType.PATIENT;
+        });
     }
 
     @autobind
     @action
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {
-        this.routing.updateRoute({
+        this.urlWrapper.updateURL({
             show_samples: (e === OncoprintAnalysisCaseType.SAMPLE).toString(),
         } as Partial<CancerStudyQueryUrlParams>);
     }
 
     @computed
     public get excludeGermlineMutations() {
-        return (
-            (this.routing.location.query as CancerStudyQueryUrlParams)
-                .exclude_germline_mutations === 'true'
-        );
+        return this.urlWrapper.query.exclude_germline_mutations === "true";
     }
 
     @autobind
     @action
     public setExcludeGermlineMutations(e: boolean) {
-        this.routing.updateRoute({
+        this.urlWrapper.updateURL({
             exclude_germline_mutations: e.toString()
-        } as Partial<CancerStudyQueryUrlParams>);
+        });
     }
 
     @computed get hugoGeneSymbols() {

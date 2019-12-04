@@ -183,22 +183,6 @@ describe("URLWrapper", () => {
             done();
         },50)
 
-
-        // assert.equal(wrapper.query.clinicallist, "one,two,three", "non session is present in query");
-        //
-        // assert.equal(routingStore.location.query.clinicallist, "one,two,three", "non session params present in url");
-        //
-        // assert.isNotTrue("clinicallist" in wrapper._sessionData!.query, "non session params NOT present in internal session store");
-        //
-        // assert.isUndefined(routingStore.location.query.case_ids, "session params NOT in url");
-        //
-        // assert.equal(wrapper.query.case_ids, "1231", "we have access to session prop on query");
-        //
-        // setTimeout(() => {
-        //     assert.equal(wrapper._sessionId, "someSessionId");
-        //     done();
-        // }, 10);
-
     });
 
     it("respects sessionEnabled flag and thresholds", () => {
@@ -527,11 +511,6 @@ describe("URLWrapper", () => {
             sessionId:"123",
             _sessionData:{ id:"321" } as PortalSession
         }), "sessionId from url is different from internal store");
-
-        // export function needToLoadSession(obj:Partial<ResultsViewURLWrapper>){
-        //     return obj.sessionId && obj.sessionId !== 'pending' &&
-        //         (obj._sessionData === undefined || obj._sessionData.id !== obj.sessionId);
-        // }
 
     });
 
