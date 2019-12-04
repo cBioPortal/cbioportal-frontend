@@ -1077,7 +1077,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }*/
 
     @computed get isLoading() {
-        return this.oncoprintComponent.isPending;
+        return this.clinicalTracks.isPending ||
+            this.geneticTracks.isPending ||
+            this.genesetHeatmapTracks.isPending ||
+            this.treatmentHeatmapTracks.isPending ||
+            this.heatmapTracks.isPending;
+        //return this.oncoprintComponent.isPending;
     }
 
     @computed get isHidden() {
@@ -1197,11 +1202,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     readonly oncoprintComponent = MakeMobxView({
         await:()=>[
-            this.clinicalTracks,
-            this.geneticTracks,
-            this.genesetHeatmapTracks,
-            this.treatmentHeatmapTracks,
-            this.heatmapTracks,
             this.props.store.molecularProfileIdToMolecularProfile,
             this.alterationTypesInQuery,
             this.alteredKeys,
