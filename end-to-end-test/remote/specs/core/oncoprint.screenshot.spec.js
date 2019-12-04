@@ -139,6 +139,36 @@ describe('oncoprint screenshot tests', function() {
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
+    it('coadread_tcga_pub with column gaps inserted based on clinical track', function() {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&clinicallist=CANCER_TYPE_DETAILED&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`
+        );
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
+
+        const cancerTypeDetailedElements = getNthTrackOptionsElements(1);
+        setDropdownOpen(
+            true,
+            cancerTypeDetailedElements.button_selector,
+            cancerTypeDetailedElements.dropdown_selector,
+            'Failed to open cancer type detailed track menu'
+        );
+        browser.click(
+            `${cancerTypeDetailedElements.dropdown_selector} li:nth-child(9)`
+        ); // Click "show gaps"
+        browser.pause(100); // give time to sort and insert gaps
+
+        // open minimap
+        browser.waitForExist('[data-test="ShowMinimapButton"]');
+        browser.click('[data-test="ShowMinimapButton"]');
+
+        // zoom to fit
+        browser.waitForVisible('.oncoprint-zoomtofit-btn');
+        browser.click('.oncoprint-zoomtofit-btn');
+        browser.pause(100); // give time to rezoom
+
+        const res = checkOncoprintElement('.oncoprintContainer');
+        assertScreenShotMatch(res);
+    });
 });
 
 describe('track group headers', function() {
