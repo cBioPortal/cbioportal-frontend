@@ -38,6 +38,10 @@ export default class MutationMapperDataStore
     @observable public highlightFilters: DataFilter[] = [];
     @observable public groupFilters: {group: string, filter: DataFilter}[];
 
+    private lazyMobXTableFilter:
+        ((d:Mutation[], filterString?:string, filterStringUpper?:string, filterStringLower?:string)=>boolean) |
+        undefined;
+
     // this custom filter applier allows us to interpret selection and highlight filters in a customized way,
     // by default only position filters are taken into account
     protected customFilterApplier: FilterApplier | undefined;
@@ -108,6 +112,9 @@ export default class MutationMapperDataStore
             (!fn || fn(d, filterString, filterStringUpper, filterStringLower)) &&
             (this.dataFilters.length === 0 || this.dataMainFilter(d))
         );
+
+        // we also need to keep a reference to the original function to be able to apply it individually when necessary
+        this.lazyMobXTableFilter = fn;
     }
 
     // override the parent method to always keep the default main filter
@@ -115,6 +122,7 @@ export default class MutationMapperDataStore
     public resetFilter() {
         super.resetFilter();
         this.dataFilter = (d:Mutation[]) => (this.dataFilters.length === 0 || this.dataMainFilter(d));
+        this.lazyMobXTableFilter = undefined;
     }
 
     @action
@@ -196,7 +204,7 @@ export default class MutationMapperDataStore
     @autobind
     public applyLazyMobXTableFilter(d: Mutation | Mutation[]): boolean
     {
-        return !this.filterString || this.dataFilter(
+        return !this.filterString || !this.lazyMobXTableFilter || this.lazyMobXTableFilter(
             [_.flatten([d])[0]], this.filterString.toLowerCase(), this.filterString.toUpperCase());
     }
 }
