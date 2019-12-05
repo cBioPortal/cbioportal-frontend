@@ -32,6 +32,7 @@ function waitForOncoprint(timeout) {
             && (browser.getCssProperty(".oncoprintContainer", "opacity").value === 1) // oncoprint has faded in
             && $('.oncoprint__controls').isExisting(); // oncoprint controls are showing
     }, timeout);
+    browser.pause(2000);
 }
 
 function getTextInOncoprintLegend() {
