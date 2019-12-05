@@ -1082,7 +1082,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             this.genesetHeatmapTracks.isPending ||
             this.treatmentHeatmapTracks.isPending ||
             this.heatmapTracks.isPending;
-        //return this.oncoprintComponent.isPending;
     }
 
     @computed get isHidden() {
