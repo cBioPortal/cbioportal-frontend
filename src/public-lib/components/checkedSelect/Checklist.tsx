@@ -15,6 +15,7 @@ type ChecklistProps = {
                       checkBoxType?: CheckBoxType) => JSX.Element;
     checkBoxType?: CheckBoxType;
     isDisabled?: boolean;
+    unselectOthersWhenAllSelected?: boolean;
     numberOfColumnsPerRow?: number;
 };
 
@@ -84,8 +85,12 @@ export default class Checklist extends React.Component<ChecklistProps, {}>
             return;
         }
 
+        // only select current value if all selected already
+        if (this.props.unselectOthersWhenAllSelected && this.props.value.length === this.props.options.length) {
+            this.props.onChange([{value}]);
+        }
         // unselect if selected
-        if (this.selectedValues[value]) {
+        else if (this.selectedValues[value]) {
             this.props.onChange(this.props.value.filter(v => v.value !== value));
         }
         // select if not selected
