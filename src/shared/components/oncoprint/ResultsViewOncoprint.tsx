@@ -55,6 +55,7 @@ import {capitalize} from "../../../public-lib";
 import {isWebdriver} from "../../../public-lib/lib/webdriverUtils";
 import {MakeMobxView} from "../MobxView";
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
+import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1076,12 +1077,17 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }*/
 
     @computed get isLoading() {
-        return this.clinicalTracks.isPending ||
-            this.geneticTracks.isPending ||
-            this.genesetHeatmapTracks.isPending ||
-            this.treatmentHeatmapTracks.isPending ||
-            this.heatmapTracks.isPending;
-        //return this.oncoprintComponent.isPending;
+        return getMobxPromiseGroupStatus(
+            this.clinicalTracks,
+            this.geneticTracks,
+            this.genesetHeatmapTracks,
+            this.treatmentHeatmapTracks,
+            this.heatmapTracks,
+            this.props.store.molecularProfileIdToMolecularProfile,
+            this.alterationTypesInQuery,
+            this.alteredKeys,
+            this.heatmapTrackHeaders
+        ) === "pending";
     }
 
     @computed get isHidden() {
