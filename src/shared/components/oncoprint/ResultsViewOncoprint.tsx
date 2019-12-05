@@ -711,7 +711,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public addHeatmapTracks(molecularProfileId:string, entities:string[]) {
 
-        const tracksMap = this.molecularProfileIdToHeatmapTracks;
+        const tracksMap = _.cloneDeep(this.molecularProfileIdToHeatmapTracks) as {[molecularProfileId:string]:Pick<HeatmapTrackGroupRecord, "entities"|"molecularProfileId"|"molecularAlterationType">};
 
         const entitiesMap = _.chain(entities).keyBy(entity=>entity).mapValues(()=>true).value();
 
@@ -725,9 +725,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             tracksMap[molecularProfileId] = {
                 entities: entitiesMap,
                 molecularAlterationType,
-                molecularProfileId,
-                trackGroupIndex:0,
-            } as HeatmapTrackGroupRecord
+                molecularProfileId
+            };
         } else {
             delete tracksMap[molecularProfileId];
         }
