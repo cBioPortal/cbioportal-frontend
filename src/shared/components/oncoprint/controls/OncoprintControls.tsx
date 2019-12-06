@@ -29,6 +29,7 @@ import TextIconArea, {ITextIconAreaItemProps,} from 'shared/components/textIconA
 import {extractTreatmentSelections} from '../OncoprintUtils';
 import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
 import DriverAnnotationControls, {IDriverAnnotationControlsHandlers} from "../../../../pages/resultsView/settings/DriverAnnotationControls";
+import OncoprintDropdownCount from 'pages/resultsView/oncoprint/OncoprintDropdownCount';
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;
@@ -703,9 +704,16 @@ export default class OncoprintControls extends React.Component<
         return (
             <CustomDropdown
                 bsStyle="default"
-                title="Heatmap"
+                title="Add Heatmap Tracks"
                 id="heatmapDropdown"
                 className="heatmap"
+                titleElement={<OncoprintDropdownCount
+                    count={
+                        this.props.state.heatmapProfilesPromise.isComplete && this.props.state.heatmapProfilesPromise!.result ?
+                            this.props.state.heatmapProfilesPromise!.result!.length :
+                            undefined
+                    }
+                />}
             >
                 {menu}
             </CustomDropdown>
