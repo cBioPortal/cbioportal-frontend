@@ -29,9 +29,10 @@ categories:
   - title: '📘 Documentation'
     labels:
       - 'documentation'
-  - title: '🧹 Cleanup'
+  - title: '🧹 Cleanup & Refactoring 🔧'
     labels:
       - 'cleanup'
+      - 'refactoring'
   - title: '👷‍♀️ Testing, Configuration & Deployment'
     labels:
       - 'devops'
