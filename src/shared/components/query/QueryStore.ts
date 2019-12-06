@@ -8,9 +8,6 @@ import {
     reaction,
     action,
     computed,
-    whyRun,
-    expr,
-    isObservableMap,
 } from 'mobx';
 import {
     TypeOfCancer as CancerType,
@@ -19,7 +16,6 @@ import {
     SampleList,
     Gene,
     Sample,
-    SampleIdentifier,
     SampleFilter,
 } from '../../api/generated/CBioPortalAPI';
 import { Geneset } from '../../api/generated/CBioPortalAPIInternal';
@@ -45,16 +41,12 @@ import {
 } from '../../../public-lib/lib/StringUtils';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
 import {
-    MolecularProfileQueryParams,
     NonMolecularProfileQueryParams,
-    nonMolecularProfileParams,
     currentQueryParams,
-    molecularProfileParams,
-    queryParams,
     profileAvailability,
     categorizedSamplesCount,
 } from './QueryStoreUtils';
-import onMobxPromise from 'shared/lib/onMobxPromise';
+
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
 import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyCache';
 import { CacheData } from '../../lib/LazyMobXCache';
@@ -70,8 +62,8 @@ import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from '../../lib/formSubmit';
 import { ServerConfigHelpers } from '../../../config/config';
 import getBrowserWindow from '../../../public-lib/lib/getBrowserWindow';
-import { QueryParameter } from '../../lib/ExtendedRouterStore';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
+import {ResultsViewURLQuery, ResultsViewURLQueryEnum} from "pages/resultsView/ResultsViewURLWrapper";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -2027,7 +2019,7 @@ export class QueryStore {
             decodeURIComponent(params.gene_list || '')
         );
         this.genesetQuery = normalizeQuery(
-            decodeURIComponent(params[QueryParameter.GENESET_LIST] || '')
+            decodeURIComponent(params[ResultsViewURLQueryEnum.geneset_list] || '')
         );
         this.forDownloadTab = params.tab_index === 'tab_download';
         this.initiallySelected.profileIds = true;
@@ -2036,7 +2028,7 @@ export class QueryStore {
 
     // TODO: we should be able to merge this with the above since it accepts same interface
     @action setParamsFromLocalStorage(
-        legacySubmission: Partial<CancerStudyQueryUrlParams>
+        legacySubmission: Partial<ResultsViewURLQuery>
     ) {
         const caseIds = legacySubmission.case_ids;
         if (caseIds) {
