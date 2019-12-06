@@ -3472,10 +3472,10 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-cbioportal-frontend-commons@^0.0.23:
-  version "0.0.23"
-  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.23.tgz#1bd3f2d2a59f5b9b718eb66e862e9ca374a22cf8"
-  integrity sha512-6jdSgduNDCiJuXW05Of/eC6V3JVrEUcOWtao/tex0PdG6nAV0F5H+QeVIkiQ6GVF21LSrB9Loc+vrVklXOmWXQ==
+cbioportal-frontend-commons@^0.0.25:
+  version "0.0.25"
+  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.25.tgz#26c5fe878f2f8e50331c891127219649aecc313a"
+  integrity sha512-ec20lCKBBc6ncQyxm868/phfzSOOlOFmaXZxhLh8mmlTb5OnhvUGeEpEbIGgl03uvOvaRQtoWTYflWq0nAHLBA==
   dependencies:
     autobind-decorator "^2.1.0"
     babel-polyfill "^6.22.0"
@@ -12623,13 +12623,13 @@ react-motion@^0.5.2:
     prop-types "^15.5.8"
     raf "^3.1.0"
 
-react-mutation-mapper@^0.3.2:
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/react-mutation-mapper/-/react-mutation-mapper-0.3.2.tgz#cbe693bf9406eeb1d027436a987c9e3cb056beee"
-  integrity sha512-PaGGiPmDk9ikm9UCAVl6keNUPgqp6nesEMOxyRnCxnunxcOzPZM2R4au0saOA+aoOZnHzGQjlx5ddKU7l/Tm0w==
+react-mutation-mapper@^0.3.3:
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/react-mutation-mapper/-/react-mutation-mapper-0.3.3.tgz#468e612dad1fcd127eb53a7c94c3304b66fcae13"
+  integrity sha512-IK+KbMLDOukrOnKdFgKFzczznT19G6vmX00ELrdr7SAmoJOFdbQpU3OLDyzR88s+57Qgr4xB7k/D7u3d9fhvsQ==
   dependencies:
     autobind-decorator "^2.4.0"
-    cbioportal-frontend-commons "^0.0.23"
+    cbioportal-frontend-commons "^0.0.25"
     classnames "^2.2.6"
     jquery "^3.3.1"
     lodash "^4.17.11"
