@@ -47,6 +47,7 @@ export class ProteinImpactTypeBadgeSelector extends React.Component<ProteinImpac
 {
     public static defaultProps: Partial<ProteinImpactTypeBadgeSelectorProps> = {
         colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
+        unselectOthersWhenAllSelected: true,
         numberOfColumnsPerRow: 2
     };
 

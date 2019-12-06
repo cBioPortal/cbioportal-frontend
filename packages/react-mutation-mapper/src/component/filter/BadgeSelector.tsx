@@ -21,6 +21,7 @@ export type BadgeSelectorProps = {
     name?: string;
     placeholder?: string;
     isDisabled?: boolean;
+    unselectOthersWhenAllSelected?: boolean;
     numberOfColumnsPerRow?: number;
     onSelect?: (selectedOptionIds: string[], allValuesSelected?: boolean) => void;
     selectedValues?: {value: string}[];
@@ -106,6 +107,7 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}>
                 value={this.selectedValues}
                 isDisabled={this.props.isDisabled}
                 numberOfColumnsPerRow={this.props.numberOfColumnsPerRow}
+                unselectOthersWhenAllSelected={this.props.unselectOthersWhenAllSelected}
             />
         );
     }
