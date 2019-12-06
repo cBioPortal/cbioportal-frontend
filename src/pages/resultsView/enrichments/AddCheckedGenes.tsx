@@ -1,12 +1,10 @@
 import * as React from 'react';
 import { observer } from "mobx-react";
-import { observable } from 'mobx';
 import { Button } from 'react-bootstrap';
-import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
 import autobind from 'autobind-decorator';
-import {QueryParameter} from "../../../shared/lib/ExtendedRouterStore";
 import {ResultsViewTab} from "../ResultsViewPageHelpers";
 import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {ResultsViewURLQueryEnum} from "pages/resultsView/ResultsViewURLWrapper";
 
 export interface IAddCheckedGenesProps {
     checkedGenes:  string[];
@@ -19,7 +17,7 @@ export default class AddCheckedGenes extends React.Component<IAddCheckedGenesPro
     private onAddGenes() {
         // add genes and go back to oncoprint tab
         (window as any).routingStore.updateRoute({
-            [QueryParameter.GENE_LIST]: `${(window as any).routingStore.query[QueryParameter.GENE_LIST]}\n${this.props.checkedGenes.join(" ")}`
+            [ResultsViewURLQueryEnum.gene_list]: `${(window as any).routingStore.query[ResultsViewURLQueryEnum.gene_list]}\n${this.props.checkedGenes.join(" ")}`
         }, `results/${ResultsViewTab.ONCOPRINT}`);
     }
 
