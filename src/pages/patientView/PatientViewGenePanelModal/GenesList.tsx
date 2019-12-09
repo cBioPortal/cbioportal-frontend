@@ -71,7 +71,7 @@ export default class GenesList extends React.Component<
     };
 
     getDownloadData = () => {
-        const downloadData = [['Genes'], ...this.genesDividedToRows(this.props.genePanel.genes)];
+        const downloadData = [['Genes'], ...this.props.genePanel.genes.map(gene => [gene.hugoGeneSymbol])];
         return serializeData(downloadData);
     };
 
