@@ -34,7 +34,7 @@ export type Query = {
 
         'proteinStart': number
 
-        'svType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION"
+        'svType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN"
 
         'tumorType': string
 
@@ -112,31 +112,21 @@ export type Implication = {
 
         'description': string
 
-        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
         'tumorType': TumorType
 
 };
 export type TumorType = {
-    'NCI': Array < string >
+    'children': {}
 
-        'UMLS': Array < string >
-
-        'children': {}
-
-        'code': string
+    'code': string
 
         'color': string
-
-        'deprecated': boolean
-
-        'history': Array < string >
 
         'id': number
 
         'level': number
-
-        'links': Array < Link >
 
         'mainType': MainType
 
@@ -145,6 +135,8 @@ export type TumorType = {
         'parent': string
 
         'tissue': string
+
+        'tumorForm': "SOLID" | "LIQUID"
 
 };
 export type Gene = {
@@ -155,6 +147,8 @@ export type Gene = {
         'entrezGeneId': number
 
         'geneAliases': Array < string >
+
+        'genesets': Array < Geneset >
 
         'hugoSymbol': string
 
@@ -216,15 +210,21 @@ export type Evidence = {
 
         'lastEdit': string
 
-        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'lastReview': string
+
+        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+
+        'liquidPropagationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
         'oncoTreeType': TumorType
 
-        'propagation': string
+        'solidPropagationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
         'subtype': string
 
         'treatments': Array < Treatment >
+
+        'uuid': string
 
 };
 export type AnnotateStructuralVariantQuery = {
@@ -236,7 +236,7 @@ export type AnnotateStructuralVariantQuery = {
 
         'id': string
 
-        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION"
+        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN"
 
         'tumorType': string
 
@@ -254,13 +254,13 @@ export type IndicatorQueryResp = {
 
         'geneSummary': string
 
-        'highestDiagnosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'highestDiagnosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
-        'highestPrognosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'highestPrognosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
-        'highestResistanceLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'highestResistanceLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
-        'highestSensitiveLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'highestSensitiveLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
         'hotspot': boolean
 
@@ -270,9 +270,9 @@ export type IndicatorQueryResp = {
 
         'oncogenic': string
 
-        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
+        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
 
-        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
+        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
 
         'prognosticImplications': Array < Implication >
 
@@ -328,7 +328,7 @@ export type InfoLevel = {
 
         'htmlDescription': string
 
-        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
 };
 export type Drug = {
@@ -374,7 +374,7 @@ export type EvidenceQueryRes = {
 
         'id': string
 
-        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
+        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
 
         'oncoTreeTypes': Array < TumorType >
 
@@ -417,6 +417,8 @@ export type MainType = {
     'id': number
 
         'name': string
+
+        'tumorForm': "SOLID" | "LIQUID"
 
 };
 export type OncoKBInfo = {
@@ -462,7 +464,7 @@ export type IndicatorQueryTreatment = {
 
         'fdaApproved': boolean
 
-        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
         'pmids': Array < string >
 
@@ -486,7 +488,7 @@ export type EvidenceQueries = {
 
         'highestLevelOnly': boolean
 
-        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
+        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
 
         'queries': Array < Query >
 
@@ -537,18 +539,20 @@ export type AnnotateMutationByHGVSgQuery = {
         'tumorType': string
 
 };
+export type Geneset = {
+    'genes': Array < Gene >
+
+        'id': number
+
+        'name': string
+
+        'uuid': string
+
+};
 export type Citations = {
     'abstracts': Array < ArticleAbstract >
 
         'pmids': Array < string >
-
-};
-export type Link = {
-    'href': string
-
-        'method': string
-
-        'rel': string
 
 };
 
@@ -1373,7 +1377,7 @@ export default class OncoKbAPI {
         'entrezGeneIdA' ? : number,
         'hugoSymbolB' ? : string,
         'entrezGeneIdB' ? : number,
-        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
+        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN",
         'isFunctionalFusion': boolean,
         'tumorType' ? : string,
         $queryParameters ? : any
@@ -1435,7 +1439,7 @@ export default class OncoKbAPI {
         'entrezGeneIdA' ? : number,
         'hugoSymbolB' ? : string,
         'entrezGeneIdB' ? : number,
-        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
+        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN",
         'isFunctionalFusion': boolean,
         'tumorType' ? : string,
         $queryParameters ? : any,
@@ -1520,7 +1524,7 @@ export default class OncoKbAPI {
         'entrezGeneIdA' ? : number,
         'hugoSymbolB' ? : string,
         'entrezGeneIdB' ? : number,
-        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
+        'structuralVariantType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN",
         'isFunctionalFusion': boolean,
         'tumorType' ? : string,
         $queryParameters ? : any,
@@ -2792,6 +2796,145 @@ export default class OncoKbAPI {
                 return response.body;
             });
         };
+    genesetsGetUsingGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genesets';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get list of currently curated genesets.
+     * @method
+     * @name OncoKbAPI#genesetsGetUsingGET
+     */
+    genesetsGetUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/genesets';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get list of currently curated genesets.
+     * @method
+     * @name OncoKbAPI#genesetsGetUsingGET
+     */
+    genesetsGetUsingGET(parameters: {
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < Geneset >
+        > {
+            return this.genesetsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    genesetsUuidGetUsingGETURL(parameters: {
+        'uuid': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genesets/{uuid}';
+
+        path = path.replace('{uuid}', parameters['uuid'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Find geneset by uuid
+     * @method
+     * @name OncoKbAPI#genesetsUuidGetUsingGET
+     * @param {string} uuid - Geneset UUID
+     */
+    genesetsUuidGetUsingGETWithHttpInfo(parameters: {
+        'uuid': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/genesets/{uuid}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{uuid}', parameters['uuid'] + '');
+
+            if (parameters['uuid'] === undefined) {
+                reject(new Error('Missing required  parameter: uuid'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Find geneset by uuid
+     * @method
+     * @name OncoKbAPI#genesetsUuidGetUsingGET
+     * @param {string} uuid - Geneset UUID
+     */
+    genesetsUuidGetUsingGET(parameters: {
+        'uuid': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < Geneset > {
+        return this.genesetsUuidGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     infoGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -3046,7 +3189,7 @@ export default class OncoKbAPI {
         'entrezGeneId' ? : number,
         'variant' ? : string,
         'variantType' ? : string,
-        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
+        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN",
         'consequence' ? : string,
         'proteinStart' ? : number,
         'proteinEnd' ? : number,
@@ -3168,7 +3311,7 @@ export default class OncoKbAPI {
         'entrezGeneId' ? : number,
         'variant' ? : string,
         'variantType' ? : string,
-        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
+        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN",
         'consequence' ? : string,
         'proteinStart' ? : number,
         'proteinEnd' ? : number,
@@ -3303,7 +3446,7 @@ export default class OncoKbAPI {
         'entrezGeneId' ? : number,
         'variant' ? : string,
         'variantType' ? : string,
-        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
+        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN",
         'consequence' ? : string,
         'proteinStart' ? : number,
         'proteinEnd' ? : number,
@@ -3413,10 +3556,14 @@ export default class OncoKbAPI {
             });
         };
     utilsAllActionableVariantsGetUsingGETURL(parameters: {
+        'version' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/utils/allActionableVariants';
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3432,8 +3579,10 @@ export default class OncoKbAPI {
      * Get All Actionable Variants.
      * @method
      * @name OncoKbAPI#utilsAllActionableVariantsGetUsingGET
+     * @param {string} version - version
      */
     utilsAllActionableVariantsGetUsingGETWithHttpInfo(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3448,6 +3597,10 @@ export default class OncoKbAPI {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
 
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3465,8 +3618,10 @@ export default class OncoKbAPI {
      * Get All Actionable Variants.
      * @method
      * @name OncoKbAPI#utilsAllActionableVariantsGetUsingGET
+     * @param {string} version - version
      */
     utilsAllActionableVariantsGetUsingGET(parameters: {
+            'version' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < ActionableGene >
@@ -3476,10 +3631,14 @@ export default class OncoKbAPI {
             });
         };
     utilsAllActionableVariantsTxtGetUsingGETURL(parameters: {
+        'version' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/utils/allActionableVariants.txt';
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3495,8 +3654,10 @@ export default class OncoKbAPI {
      * Get All Actionable Variants in text file.
      * @method
      * @name OncoKbAPI#utilsAllActionableVariantsTxtGetUsingGET
+     * @param {string} version - version
      */
     utilsAllActionableVariantsTxtGetUsingGETWithHttpInfo(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3509,8 +3670,12 @@ export default class OncoKbAPI {
         let headers: any = {};
         let form: any = {};
         return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
+            headers['Accept'] = 'text/plain';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
 
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3528,8 +3693,10 @@ export default class OncoKbAPI {
      * Get All Actionable Variants in text file.
      * @method
      * @name OncoKbAPI#utilsAllActionableVariantsTxtGetUsingGET
+     * @param {string} version - version
      */
     utilsAllActionableVariantsTxtGetUsingGET(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < string > {
@@ -3538,10 +3705,14 @@ export default class OncoKbAPI {
         });
     };
     utilsAllAnnotatedVariantsGetUsingGETURL(parameters: {
+        'version' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/utils/allAnnotatedVariants';
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3557,8 +3728,10 @@ export default class OncoKbAPI {
      * Get All Annotated Variants.
      * @method
      * @name OncoKbAPI#utilsAllAnnotatedVariantsGetUsingGET
+     * @param {string} version - version
      */
     utilsAllAnnotatedVariantsGetUsingGETWithHttpInfo(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3574,6 +3747,10 @@ export default class OncoKbAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -3590,8 +3767,10 @@ export default class OncoKbAPI {
      * Get All Annotated Variants.
      * @method
      * @name OncoKbAPI#utilsAllAnnotatedVariantsGetUsingGET
+     * @param {string} version - version
      */
     utilsAllAnnotatedVariantsGetUsingGET(parameters: {
+            'version' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < AnnotatedVariant >
@@ -3601,10 +3780,14 @@ export default class OncoKbAPI {
             });
         };
     utilsAllAnnotatedVariantsTxtGetUsingGETURL(parameters: {
+        'version' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/utils/allAnnotatedVariants.txt';
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3620,8 +3803,10 @@ export default class OncoKbAPI {
      * Get All Annotated Variants in text file.
      * @method
      * @name OncoKbAPI#utilsAllAnnotatedVariantsTxtGetUsingGET
+     * @param {string} version - version
      */
     utilsAllAnnotatedVariantsTxtGetUsingGETWithHttpInfo(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3634,8 +3819,12 @@ export default class OncoKbAPI {
         let headers: any = {};
         let form: any = {};
         return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
+            headers['Accept'] = 'text/plain';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
 
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3653,8 +3842,10 @@ export default class OncoKbAPI {
      * Get All Annotated Variants in text file.
      * @method
      * @name OncoKbAPI#utilsAllAnnotatedVariantsTxtGetUsingGET
+     * @param {string} version - version
      */
     utilsAllAnnotatedVariantsTxtGetUsingGET(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < string > {
@@ -3663,10 +3854,14 @@ export default class OncoKbAPI {
         });
     };
     utilsAllCuratedGenesGetUsingGETURL(parameters: {
+        'version' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/utils/allCuratedGenes';
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3682,8 +3877,10 @@ export default class OncoKbAPI {
      * Get list of genes OncoKB curated
      * @method
      * @name OncoKbAPI#utilsAllCuratedGenesGetUsingGET
+     * @param {string} version - version
      */
     utilsAllCuratedGenesGetUsingGETWithHttpInfo(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3699,6 +3896,10 @@ export default class OncoKbAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -3715,8 +3916,10 @@ export default class OncoKbAPI {
      * Get list of genes OncoKB curated
      * @method
      * @name OncoKbAPI#utilsAllCuratedGenesGetUsingGET
+     * @param {string} version - version
      */
     utilsAllCuratedGenesGetUsingGET(parameters: {
+            'version' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < CuratedGene >
@@ -3726,10 +3929,14 @@ export default class OncoKbAPI {
             });
         };
     utilsAllCuratedGenesTxtGetUsingGETURL(parameters: {
+        'version' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/utils/allCuratedGenes.txt';
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3745,8 +3952,10 @@ export default class OncoKbAPI {
      * Get list of genes OncoKB curated in text file.
      * @method
      * @name OncoKbAPI#utilsAllCuratedGenesTxtGetUsingGET
+     * @param {string} version - version
      */
     utilsAllCuratedGenesTxtGetUsingGETWithHttpInfo(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3759,8 +3968,12 @@ export default class OncoKbAPI {
         let headers: any = {};
         let form: any = {};
         return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
+            headers['Accept'] = 'text/plain';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
 
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3778,8 +3991,10 @@ export default class OncoKbAPI {
      * Get list of genes OncoKB curated in text file.
      * @method
      * @name OncoKbAPI#utilsAllCuratedGenesTxtGetUsingGET
+     * @param {string} version - version
      */
     utilsAllCuratedGenesTxtGetUsingGET(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < string > {
@@ -3788,10 +4003,14 @@ export default class OncoKbAPI {
         });
     };
     utilsCancerGeneListGetUsingGETURL(parameters: {
+        'version' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/utils/cancerGeneList';
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3807,8 +4026,10 @@ export default class OncoKbAPI {
      * Get cancer gene list
      * @method
      * @name OncoKbAPI#utilsCancerGeneListGetUsingGET
+     * @param {string} version - version
      */
     utilsCancerGeneListGetUsingGETWithHttpInfo(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3824,6 +4045,10 @@ export default class OncoKbAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -3840,8 +4065,10 @@ export default class OncoKbAPI {
      * Get cancer gene list
      * @method
      * @name OncoKbAPI#utilsCancerGeneListGetUsingGET
+     * @param {string} version - version
      */
     utilsCancerGeneListGetUsingGET(parameters: {
+            'version' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < CancerGene >
@@ -3851,10 +4078,14 @@ export default class OncoKbAPI {
             });
         };
     utilsCancerGeneListTxtGetUsingGETURL(parameters: {
+        'version' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/utils/cancerGeneList.txt';
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3870,8 +4101,10 @@ export default class OncoKbAPI {
      * Get cancer gene list in text file.
      * @method
      * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET
+     * @param {string} version - version
      */
     utilsCancerGeneListTxtGetUsingGETWithHttpInfo(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3884,8 +4117,12 @@ export default class OncoKbAPI {
         let headers: any = {};
         let form: any = {};
         return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
+            headers['Accept'] = 'text/plain';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
 
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3903,8 +4140,10 @@ export default class OncoKbAPI {
      * Get cancer gene list in text file.
      * @method
      * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET
+     * @param {string} version - version
      */
     utilsCancerGeneListTxtGetUsingGET(parameters: {
+        'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < string > {
