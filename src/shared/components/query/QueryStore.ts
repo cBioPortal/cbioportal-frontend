@@ -79,6 +79,7 @@ export type CancerStudyQueryUrlParams = {
     Z_SCORE_THRESHOLD: string;
     RPPA_SCORE_THRESHOLD: string;
     data_priority: '0' | '1' | '2';
+    profileFilter: '0' | '1' | '2';
     case_set_id: string;
     case_ids: string;
     gene_list: string;
@@ -2009,7 +2010,7 @@ export class QueryStore {
             : (profileIds.filter(_.identity) as string[]);
         this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
         this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
-        this.dataTypePriorityCode = params.data_priority || '0';
+        this.dataTypePriorityCode = params.data_priority || params.profileFilter ||  '0';
         this.selectedSampleListId = params.case_set_id
             ? params.case_set_id.toString()
             : ''; // must be a string even though it's integer
