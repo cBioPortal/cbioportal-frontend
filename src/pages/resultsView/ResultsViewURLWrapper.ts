@@ -41,41 +41,40 @@ export type ResultsViewURLQuery = { [key in keyof typeof ResultsViewURLQueryEnum
 
 export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuery> {
     constructor(routing:ExtendedRouterStore) {
-        super(routing, [
-
-            // NON session props here
-            // oncoprint props
-            { name: "clinicallist", isSessionProp:false },
-            { name: "show_samples", isSessionProp:false },
-            { name: "heatmap_track_groups", isSessionProp:false },
-            { name: "oncoprint_sortby", isSessionProp:false },
-            { name: "oncoprint_cluster_profile", isSessionProp:false},
-            { name: "oncoprint_sort_by_mutation_type", isSessionProp:false },
-            { name: "oncoprint_sort_by_drivers", isSessionProp:false},
-            { name: "treatment_list", isSessionProp:false },
-            { name: "exclude_germline_mutations", isSessionProp:false },
-            { name: "patient_enrichments", isSessionProp:false },
-
+        super(routing, {
+                // NON session props here
+                // oncoprint props
+                clinicallist: { isSessionProp:false },
+                show_samples: { isSessionProp:false },
+                heatmap_track_groups: { isSessionProp:false },
+                oncoprint_sortby: { isSessionProp:false },
+                oncoprint_cluster_profile: { isSessionProp:false},
+                oncoprint_sort_by_mutation_type: { isSessionProp:false },
+                oncoprint_sort_by_drivers: { isSessionProp:false},
+                treatment_list: { isSessionProp:false },
+                exclude_germline_mutations: { isSessionProp:false },
+                patient_enrichments: { isSessionProp:false },
 
 
-            // session props here
-            { name: "gene_list", isSessionProp:true },
-            { name: "cancer_study_list", isSessionProp:true, aliases:["cancer_study_id"] },
-            { name: "case_ids", isSessionProp:true },
-            { name: "sample_list_ids", isSessionProp:true },
-            { name: "case_set_id", isSessionProp:true },
-            { name: "profileFilter", isSessionProp:true, aliases:["data_priority"] },
-            { name: "RPPA_SCORE_THRESHOLD", isSessionProp:true },
-            { name: "Z_SCORE_THRESHOLD", isSessionProp:true },
-            { name: "geneset_list", isSessionProp:true },
-            { name: "genetic_profile_ids_PROFILE_MUTATION_EXTENDED", isSessionProp:true },
-            { name: "genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION", isSessionProp:true },
-            { name: "genetic_profile_ids_PROFILE_MRNA_EXPRESSION", isSessionProp:true },
-            { name: "genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION", isSessionProp:true },
-            { name: "genetic_profile_ids_PROFILE_GENESET_SCORE", isSessionProp:true },
-            { name: "genetic_profile_ids_GENERIC_ASSAY", isSessionProp:true },
-            { name: "genetic_profile_ids", isSessionProp:true },
-            ],
+
+                // session props here
+                gene_list: { isSessionProp:true },
+                cancer_study_list: { isSessionProp:true, aliases:["cancer_study_id"] },
+                case_ids: { isSessionProp:true },
+                sample_list_ids: { isSessionProp:true },
+                case_set_id: { isSessionProp:true },
+                profileFilter: { isSessionProp:true, aliases:["data_priority"] },
+                RPPA_SCORE_THRESHOLD: { isSessionProp:true },
+                Z_SCORE_THRESHOLD: { isSessionProp:true },
+                geneset_list: { isSessionProp:true },
+                genetic_profile_ids_PROFILE_MUTATION_EXTENDED: { isSessionProp:true },
+                genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: { isSessionProp:true },
+                genetic_profile_ids_PROFILE_MRNA_EXPRESSION: { isSessionProp:true },
+                genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: { isSessionProp:true },
+                genetic_profile_ids_PROFILE_GENESET_SCORE: { isSessionProp:true },
+                genetic_profile_ids_GENERIC_ASSAY: { isSessionProp:true },
+                genetic_profile_ids: { isSessionProp:true },
+            },
               true,
               AppConfig.serverConfig.session_url_length_threshold ? parseInt(AppConfig.serverConfig.session_url_length_threshold) : undefined
         );
