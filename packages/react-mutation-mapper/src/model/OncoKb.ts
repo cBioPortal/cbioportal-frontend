@@ -1,7 +1,7 @@
-export type Level = "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3";
+import {LevelOfEvidenceType} from "cbioportal-frontend-commons";
 
 export type IndicatorQueryTreatment = {
-    level: Level;
+    level: LevelOfEvidenceType;
 };
 
 export type ArticleAbstract = {
@@ -28,8 +28,8 @@ export type Query = {
 };
 
 export type IndicatorQueryResp = {
-    highestSensitiveLevel: Level;
-    highestResistanceLevel: Level;
+    highestSensitiveLevel: LevelOfEvidenceType;
+    highestResistanceLevel: LevelOfEvidenceType;
     vus: boolean;
     geneExist: boolean;
     geneSummary: string;
