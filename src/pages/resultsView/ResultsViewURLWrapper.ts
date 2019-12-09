@@ -64,7 +64,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuer
             { name: "case_ids", isSessionProp:true },
             { name: "sample_list_ids", isSessionProp:true },
             { name: "case_set_id", isSessionProp:true },
-            { name: "profileFilter", isSessionProp:true },
+            { name: "profileFilter", isSessionProp:true, aliases:["data_priority"] },
             { name: "RPPA_SCORE_THRESHOLD", isSessionProp:true },
             { name: "Z_SCORE_THRESHOLD", isSessionProp:true },
             { name: "geneset_list", isSessionProp:true },
