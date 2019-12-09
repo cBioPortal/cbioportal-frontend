@@ -6,7 +6,7 @@ import { VirtualStudy } from "shared/model/VirtualStudy";
 
 export type NonMolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'cancer_study_id' | 'cancer_study_list' | 'Z_SCORE_THRESHOLD' | 'RPPA_SCORE_THRESHOLD' | 'data_priority' |
-    'case_set_id' | 'case_ids' | 'gene_list' | 'geneset_list' | 'tab_index' | 'transpose_matrix' | 'Action'>;
+    'case_set_id' | 'case_ids' | 'gene_list' | 'geneset_list' | 'tab_index' | 'transpose_matrix' | 'Action' | 'profileFilter'>;
 
 export type MolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'genetic_profile_ids_PROFILE_MUTATION_EXTENDED' | 'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION' |
@@ -49,6 +49,7 @@ export function nonMolecularProfileParams(store:QueryStore, whitespace_separated
         Z_SCORE_THRESHOLD: store.zScoreThreshold,
         RPPA_SCORE_THRESHOLD: store.rppaScoreThreshold,
         data_priority: store.dataTypePriorityCode,
+        profileFilter: store.dataTypePriorityCode,
         case_set_id: store.selectedSampleListId || '-1', // empty string won't work
         case_ids,
         gene_list: encodeURIComponent(normalizeQuery(store.geneQuery) || ' '), // empty string won't work
