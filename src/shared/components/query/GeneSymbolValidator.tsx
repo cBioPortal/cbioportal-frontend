@@ -51,9 +51,7 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}> {
                             name="exclamation-circle"
                         />
                         <GeneSymbolValidationError
-                            sampleCount={
-                                this.store.profiledSamplesCount.result.all
-                            }
+                            sampleCount={this.store.approxSampleCount}
                             queryProductLimit={
                                 AppConfig.serverConfig.query_product_limit
                             }

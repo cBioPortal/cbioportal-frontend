@@ -64,6 +64,7 @@ import { ServerConfigHelpers } from '../../../config/config';
 import getBrowserWindow from '../../../public-lib/lib/getBrowserWindow';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import {ResultsViewURLQuery, ResultsViewURLQueryEnum} from "pages/resultsView/ResultsViewURLWrapper";
+import { getFilteredCustomCaseSets } from './CaseSetSelectorUtils';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -1784,18 +1785,46 @@ export class QueryStore {
         });
     }
 
+    /**
+     * Sample count can come from the following areas:
+     * 1. The sum of the samples in the selected study(s)
+     * 2. The number of cases (patients or samples) in caseIds
+     *     This is _approximate_. Patients can have multiple samples
+     * 3. The number of samples in the selected sample list
+     * 4. The number of samples in the selected profiled samples result
+     */
+    @computed get approxSampleCount(): number {
+        const sampleListId = this.selectedSampleListId;
+
+        if (!sampleListId) {
+            return this.profiledSamplesCount.result.all;
+        }
+
+        if (sampleListId === CUSTOM_CASE_LIST_ID) {
+            return this.caseIds ? Math.max(this.caseIds.trim().split(/\s+/g).length, 1) : 1;
+        }
+
+        const sampleList = this.sampleLists.result.find((l) => l.sampleListId === sampleListId);
+        if (sampleList) {
+            return sampleList.sampleCount;
+        }
+
+        if (sampleListId in this.profiledSamplesCount.result) {
+            return (this.profiledSamplesCount.result as any)[sampleListId];
+        }
+
+        return this.profiledSamplesCount.result.all;
+    }
+
     @computed get isQueryLimitReached(): boolean {
         return (
-            this.oql.query.length * this.profiledSamplesCount.result.all >
+            this.oql.query.length * this.approxSampleCount >
             AppConfig.serverConfig.query_product_limit
         );
     }
 
     @computed get geneLimit(): number {
-        return Math.floor(
-            AppConfig.serverConfig.query_product_limit /
-                this.profiledSamplesCount.result.all
-        );
+        return Math.floor(AppConfig.serverConfig.query_product_limit / this.approxSampleCount);
     }
 
     @computed get submitError() {
