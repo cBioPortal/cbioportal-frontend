@@ -50,6 +50,33 @@ describe('ExtendedRouterStore', () => {
 
     });
 
+
+    it('Properties that are undefined will be removed from URL', () => {
+
+        routingStore.updateRoute({
+                                     param1: 'something1',
+                                     param2: 'something2',
+                                     param3: 'something3'
+                                 }, undefined, false);
+
+
+        assert.deepEqual(routingStore.location.query, {  param1: 'something1', param2: 'something2', param3: 'something3'},'sets params');
+
+        routingStore.updateRoute({
+                                     param3: undefined
+                                 }, undefined, false);
+
+        assert.deepEqual(routingStore.location.query, { param1: 'something1', param2: 'something2'},'removes undefined param');
+
+        routingStore.updateRoute({
+                                     param2: ''
+                                 }, undefined, false);
+
+        assert.deepEqual(routingStore.location.query, { param1: 'something1'},'removes empty string prop');
+
+
+    });
+
 });
 
 
