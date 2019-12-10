@@ -18,21 +18,12 @@ export type MolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
 export function currentQueryParams(store:QueryStore) {
     let nonProfileParams = nonMolecularProfileParams(store);
     let profileParams = molecularProfileParams(store);
-    debugger;
     return queryParams(nonProfileParams, profileParams);
 }
 
 export function queryParams(nonMolecularProfileParams:NonMolecularProfileQueryParams,
                             molecularProfileParams:MolecularProfileQueryParams) {
     let params:CancerStudyQueryUrlParams = Object.assign({}, nonMolecularProfileParams, molecularProfileParams);
-
-    // Remove params with no value, because they may cause problems.
-    // For example, the server will always transpose if transpose_matrix is present, no matter the value.
-    // for (let key in params) {
-    //     if (!(params as any)[key]) {
-    //         delete (params as any)[key];
-    //     }
-    // }
 
     return {query:params};
 }
