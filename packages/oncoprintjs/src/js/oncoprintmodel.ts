@@ -644,22 +644,22 @@ export default class OncoprintModel {
         return this.getIdOrder().slice(leftIdIndex, rightIdIndex);
     }
 
-    public getHorzZoomToFitCols(width:number, left_col:ColumnIndex, right_col:ColumnIndex) {
+    public getHorzZoomToFitCols(width:number, left_col_incl:ColumnIndex, right_col_excl:ColumnIndex) {
         // in the end, the zoomed width is:
-        //  W = z*(right_col - left_col)*baseColumnWidth + #gaps*gapSize
-        //  -> z = (width - #gaps*gapSize)/(right_col - left_col)*baseColumnWidth
+        //  W = z*(right_col_excl - left_col_incl)*baseColumnWidth + #gaps*gapSize
+        //  -> z = (width - #gaps*gapSize)/(right_col_excl - left_col_incl)*baseColumnWidth
 
         // numerator calculations
         const allGaps = this.getColumnIndexesAfterAGap();
-        const gapsBetween = allGaps.filter(g=>(g >= left_col && g < right_col));
+        const gapsBetween = allGaps.filter(g=>(g >= left_col_incl && g < right_col_excl));
         const numerator = width - (gapsBetween.length*this.getGapSize());
 
         // denominator calculations
         const columnWidthWithPadding = this.getCellWidth(true) + this.getCellPadding(true);
         const columnWidthNoPadding = this.getCellWidth(true);
 
-        const denominatorWithPadding = (right_col - left_col)*columnWidthWithPadding;
-        const denominatorNoPadding = (right_col - left_col)*columnWidthNoPadding;
+        const denominatorWithPadding = (right_col_excl - left_col_incl)*columnWidthWithPadding;
+        const denominatorNoPadding = (right_col_excl - left_col_incl)*columnWidthNoPadding;
 
         // put them together
         const zoom_if_cell_padding_on = clamp(numerator/denominatorWithPadding, 0, 1);
@@ -702,7 +702,7 @@ export default class OncoprintModel {
             max = Math.max(indexes[i], max);
             min = Math.min(indexes[i], min);
         }
-        return this.getHorzZoomToFitCols(width, min, max);
+        return this.getHorzZoomToFitCols(width, min, max+1);
     }
 
     public getMinHorzZoom() {
