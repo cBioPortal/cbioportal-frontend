@@ -714,7 +714,7 @@ export function makeHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                         data
                     ),
                     trackGroupIndex: molecularProfileIdToHeatmapTracks[molecularProfileId].trackGroupIndex,
-                    onRemove:action(()=>{
+                    onClickRemoveInTrackMenu:action(()=>{
                         const trackGroup = oncoprint.molecularProfileIdToHeatmapTracks[molecularProfileId];
                         if (trackGroup) {
                             const newEntities = _.keys(trackGroup.entities).filter((entity)=>entity!==gene);
@@ -799,8 +799,7 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(oncoprint:ResultsVi
                     sortOrder: sortOrder,
                     trackLinkUrl: treatmentLinkMap[treatmentId],
                     trackGroupIndex: molecularProfileIdToHeatmapTracks[molecularProfileId]!.trackGroupIndex,
-                    onRemove:action(()=>{
-
+                    onClickRemoveInTrackMenu:action(()=>{
                         const trackGroup = oncoprint.molecularProfileIdToHeatmapTracks[molecularProfileId]!;
                         if (trackGroup){
                             const newEntities = _.keys(trackGroup.entities).filter((entity)=>entity!==treatmentId);
