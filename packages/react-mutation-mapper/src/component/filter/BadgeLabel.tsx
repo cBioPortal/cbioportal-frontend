@@ -23,33 +23,21 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}>
         badgeFirst: false
     };
 
-    protected get badgeStyle()
-    {
-        if (this.props.badgeFirst) {
-            return {
-                ...DEFAULT_BADGE_STYLE,
-                marginRight: 5,
-            };
-        }
-        else {
-            return {
-                ...DEFAULT_BADGE_STYLE,
-                marginLeft: 5,
-            };
-        }
-    }
-
     protected get badge(): JSX.Element
     {
         return (
             <span
-                className={this.props.badgeClassName}
-                style={{
-                    ...this.badgeStyle,
-                    ...this.props.badgeStyleOverride
-                }}
+                style={this.props.badgeFirst ? {marginRight: 5}: {marginLeft: 5}}
             >
-                {this.props.badgeContent}
+                <span
+                    className={this.props.badgeClassName}
+                    style={{
+                        ...DEFAULT_BADGE_STYLE,
+                        ...this.props.badgeStyleOverride
+                    }}
+                >
+                    {this.props.badgeContent}
+                </span>
             </span>
         );
     }
