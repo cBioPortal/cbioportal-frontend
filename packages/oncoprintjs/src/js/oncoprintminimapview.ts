@@ -2,23 +2,75 @@ import gl_matrix from 'gl-matrix';
 import OncoprintZoomSlider from './oncoprintzoomslider';
 import $ from 'jquery';
 import zoomToFitIcon from '../img/zoomtofit.svg';
-import OncoprintModel, {TrackId} from "./oncoprintmodel";
+import OncoprintModel, {ColumnIndex, TrackId} from "./oncoprintmodel";
 import OncoprintWebGLCellView, {
     OncoprintShaderProgram,
     OncoprintTrackBuffer,
     OncoprintWebGLContext
 } from "./oncoprintwebglcellview";
 import MouseMoveEvent = JQuery.MouseMoveEvent;
-import {clamp} from "./utils";
+import {clamp, cloneShallow} from "./utils";
 
 export type MinimapViewportSpec = {
-    col:number; // x
+    left_col:ColumnIndex; // leftmost col included in viewport
+    right_col:ColumnIndex; // col at the boundary of viewport, first col to the right of viewport
     scroll_y_proportion:number; // between 0 and 1
-    num_cols:number; // number of columns included in viewport
     zoom_y:number; // between 0 and 1
 };
 
-type OverlayRectSpec = { top:number, left:number, width:number, height:number, col:number, num_cols:number };
+type OverlayRectParams = {
+    top:number;
+    left_col:ColumnIndex;
+    right_col:ColumnIndex;
+    height:number;
+};
+
+class OverlayRectSpec {
+    constructor(
+        private params:OverlayRectParams,
+        private getCellWidth:()=>number
+    ) {}
+
+    public setParams(p:OverlayRectParams) {
+        this.params = p;
+    }
+
+    public clone() {
+        return new OverlayRectSpec(cloneShallow(this.params), this.getCellWidth);
+    }
+
+    public get left_col() {
+        return this.params.left_col;
+    }
+
+    public get right_col() {
+        return this.params.right_col;
+    }
+
+    public get top() {
+        return this.params.top;
+    }
+
+    public get height() {
+        return this.params.height;
+    }
+
+    public get num_cols() {
+        return this.right_col - this.left_col;
+    }
+
+    public get left() {
+        return this.left_col * this.getCellWidth();
+    }
+
+    public get right() {
+        return this.right_col * this.getCellWidth();
+    }
+
+    public get width() {
+        return this.right - this.left;
+    }
+}
 
 export default class OncoprintMinimapView {
     private handleContextLost:()=>void;
@@ -32,7 +84,7 @@ export default class OncoprintMinimapView {
         canvas_left:-1,
         canvas_top:-1
     };
-    private current_rect:OverlayRectSpec = { top:0, left: 0, width: 0, height: 0, col: 0, num_cols: 0 };
+    private current_rect:OverlayRectSpec;
 
     private $window_bar:JQuery;
     private $close_btn:JQuery;
@@ -67,6 +119,8 @@ export default class OncoprintMinimapView {
         this.$div = $div;
         this.$canvas = $canvas;
         this.$overlay_canvas = $overlay_canvas;
+
+        this.current_rect = new OverlayRectSpec({ top:0, left_col: 0, right_col:0, height:0}, ()=>model.getCellWidth(true)*this.getZoom(model).x)
 
         const self = this;
         const padding = 4;
@@ -340,10 +394,10 @@ export default class OncoprintMinimapView {
                     dragging = true;
                     drag_start_x = mouse_x;
                     drag_start_y = mouse_y;
-                    drag_start_col = Math.floor(model.getHorzScroll() / (model.getCellWidth() + model.getCellPadding()));
+                    drag_start_col = model.getClosestColumnIndexToLeft(model.getHorzScroll(), true);
                     drag_start_vert_scroll = model.getVertScroll();
                     drag_start_vert_zoom = model.getVertZoom();
-                    drag_start_rect = self.current_rect;
+                    drag_start_rect = self.current_rect.clone();
                 }
             }
         });
@@ -362,15 +416,15 @@ export default class OncoprintMinimapView {
                 let delta_y = mouse_y - drag_start_y;
                 if (drag_type === "move") {
                     const delta_y_scroll = delta_y * y_ratio;
-                    drag_callback((drag_start_col + delta_col)*(model.getCellWidth() + model.getCellPadding()), drag_start_vert_scroll + delta_y_scroll);
+                    drag_callback(self.colToLeft(model, clamp(drag_start_col + delta_col, 0, model.getIdOrder().length-1)), drag_start_vert_scroll + delta_y_scroll);
                 } else {
-                    let render_rect:Partial<OverlayRectSpec>;
+                    let render_rect:OverlayRectParams;
                     zoom = self.getZoom(model);
                     const max_num_cols = model.getIdOrder().length;
                     const min_num_cols = Math.ceil(cell_view.getVisibleAreaWidth() / (model.getCellWidth(true) + model.getCellPadding(true, true)));
                     const max_height = model.getOncoprintHeight(true) * zoom.y;
                     const min_height = cell_view.getVisibleAreaHeight(model) * zoom.y;
-                    const drag_start_right_col = drag_start_rect.col + drag_start_rect.num_cols;
+                    const drag_start_right_col = drag_start_rect.right_col;
                     const drag_start_bottom = drag_start_rect.top + drag_start_rect.height;
                     if (drag_type === "resize_r") {
                         // Width must be valid
@@ -381,8 +435,8 @@ export default class OncoprintMinimapView {
                         delta_col = Math.min(delta_col, max_num_cols - drag_start_right_col);
                         render_rect = {
                             'top': drag_start_rect.top,
-                            'col': drag_start_rect.col,
-                            'num_cols': drag_start_rect.num_cols + delta_col,
+                            'left_col': drag_start_rect.left_col,
+                            'right_col': drag_start_rect.right_col + delta_col,
                             'height': drag_start_rect.height
                         };
                     } else if (drag_type === "resize_l") {
@@ -391,11 +445,11 @@ export default class OncoprintMinimapView {
                             drag_start_rect.num_cols - max_num_cols,
                             drag_start_rect.num_cols - min_num_cols);
                         // Left must be valid
-                        delta_col = Math.max(delta_col, -drag_start_rect.col);
+                        delta_col = Math.max(delta_col, -drag_start_rect.left_col);
                         render_rect = {
                             'top': drag_start_rect.top,
-                            'col': drag_start_rect.col + delta_col,
-                            'num_cols': drag_start_rect.num_cols - delta_col,
+                            'left_col': drag_start_rect.left_col + delta_col,
+                            'right_col': drag_start_rect.right_col,
                             'height': drag_start_rect.height
                         };
                     } else if (drag_type === "resize_t") {
@@ -407,8 +461,8 @@ export default class OncoprintMinimapView {
                         delta_y = Math.max(delta_y, -drag_start_rect.top);
                         render_rect = {
                             'top': drag_start_rect.top + delta_y,
-                            'col': drag_start_rect.col,
-                            'num_cols': drag_start_rect.num_cols,
+                            'left_col': drag_start_rect.left_col,
+                            'right_col': drag_start_rect.right_col,
                             'height': drag_start_rect.height - delta_y
                         };
                     } else if (drag_type === "resize_b") {
@@ -420,8 +474,8 @@ export default class OncoprintMinimapView {
                         delta_y = Math.min(delta_y, max_height - drag_start_bottom);
                         render_rect = {
                             'top': drag_start_rect.top,
-                            'col': drag_start_rect.col,
-                            'num_cols': drag_start_rect.num_cols,
+                            'left_col': drag_start_rect.left_col,
+                            'right_col': drag_start_rect.right_col,
                             'height': drag_start_rect.height + delta_y
                         };
                     } else if (drag_type === "resize_tr") {
@@ -439,8 +493,8 @@ export default class OncoprintMinimapView {
                         delta_y = Math.max(delta_y, -drag_start_rect.top);
                         render_rect = {
                             'top': drag_start_rect.top + delta_y,
-                            'col': drag_start_rect.col,
-                            'num_cols': drag_start_rect.num_cols + delta_col,
+                            'left_col': drag_start_rect.left_col,
+                            'right_col': drag_start_rect.right_col + delta_col,
                             'height': drag_start_rect.height - delta_y
                         };
                     } else if (drag_type === "resize_tl") {
@@ -449,7 +503,7 @@ export default class OncoprintMinimapView {
                             drag_start_rect.num_cols - max_num_cols,
                             drag_start_rect.num_cols - min_num_cols);
                         // Left must be valid
-                        delta_col = Math.max(delta_col, -drag_start_rect.col);
+                        delta_col = Math.max(delta_col, -drag_start_rect.left_col);
                         // Height must be valid
                         delta_y = clamp(delta_y,
                             drag_start_rect.height - max_height,
@@ -458,8 +512,8 @@ export default class OncoprintMinimapView {
                         delta_y = Math.max(delta_y, -drag_start_rect.top);
                         render_rect = {
                             'top': drag_start_rect.top + delta_y,
-                            'col': drag_start_rect.col + delta_col,
-                            'num_cols': drag_start_rect.num_cols - delta_col,
+                            'left_col': drag_start_rect.left_col + delta_col,
+                            'right_col': drag_start_rect.right_col,
                             'height': drag_start_rect.height - delta_y
                         };
                     } else if (drag_type === "resize_br") {
@@ -477,8 +531,8 @@ export default class OncoprintMinimapView {
                         delta_col = Math.min(delta_col, max_num_cols - drag_start_right_col);
                         render_rect = {
                             'top': drag_start_rect.top,
-                            'col': drag_start_rect.col,
-                            'num_cols': drag_start_rect.num_cols + delta_col,
+                            'left_col': drag_start_rect.left_col,
+                            'right_col': drag_start_rect.right_col + delta_col,
                             'height': drag_start_rect.height + delta_y
                         };
                     } else if (drag_type === "resize_bl") {
@@ -493,19 +547,16 @@ export default class OncoprintMinimapView {
                             drag_start_rect.num_cols - max_num_cols,
                             drag_start_rect.num_cols - min_num_cols);
                         // Left must be valid
-                        delta_col = Math.max(delta_col, -drag_start_rect.col);
+                        delta_col = Math.max(delta_col, -drag_start_rect.left_col);
                         render_rect = {
                             'top': drag_start_rect.top,
-                            'col': drag_start_rect.col + delta_col,
-                            'num_cols': drag_start_rect.num_cols - delta_col,
+                            'left_col': drag_start_rect.left_col + delta_col,
+                            'right_col': drag_start_rect.right_col,
                             'height': drag_start_rect.height + delta_y,
                         };
                     }
-                    cell_width = model.getCellWidth(true)*zoom.x;
-                    // Compute render left and width
-                    render_rect.left = render_rect.col * cell_width;
-                    render_rect.width = render_rect.num_cols * cell_width;
-                    self.drawOverlayRect(null, null, render_rect as OverlayRectSpec);
+                    self.current_rect.setParams(render_rect);
+                    self.drawOverlayRect(null, null, self.current_rect);
                 }
             } else {
                 if (mouse.outside) {
@@ -524,10 +575,10 @@ export default class OncoprintMinimapView {
                 if (["resize_t", "resize_b", "resize_l", "resize_r",
                     "resize_tl", "resize_tr", "resize_bl", "resize_br"].indexOf(drag_type as any) > -1) {
                     viewport_callback({
-                        'col': self.current_rect.col,
-                        'scroll_y_proportion': (self.current_rect.top / parseInt(self.$canvas[0].height as any, 10)),
-                        'num_cols': self.current_rect.num_cols,
-                        'zoom_y': (drag_start_rect.height / self.current_rect.height) * drag_start_vert_zoom
+                        left_col: self.current_rect.left_col,
+                        scroll_y_proportion: (self.current_rect.top / parseInt(self.$canvas[0].height as any, 10)),
+                        right_col: self.current_rect.right_col,
+                        zoom_y: (drag_start_rect.height / self.current_rect.height) * drag_start_vert_zoom
                     });
                 }
                 dragging = false;
@@ -583,6 +634,9 @@ export default class OncoprintMinimapView {
         })();
     }
 
+    private colToLeft(model:OncoprintModel, colIndex:number) {
+        return model.getZoomedColumnLeft(model.getIdOrder()[colIndex]);
+    }
 
     private getNewCanvas() {
         const old_canvas = this.$canvas[0];
@@ -831,7 +885,7 @@ export default class OncoprintMinimapView {
     }
 
     private getZoom(model:OncoprintModel) {
-        let zoom_x = parseInt(this.$canvas[0].width as any, 10) / model.getOncoprintWidthNoColumnPadding(true);
+        let zoom_x = parseInt(this.$canvas[0].width as any, 10) / model.getOncoprintWidthNoColumnPaddingNoGaps();
         let zoom_y = parseInt(this.$canvas[0].height as any, 10) / model.getOncoprintHeight(true);
         zoom_x = Math.max(0, Math.min(1, zoom_x));
         zoom_y = Math.max(0, Math.min(1, zoom_y));
@@ -846,25 +900,24 @@ export default class OncoprintMinimapView {
             return;
         }
 
-        let left, width, top, height, col, num_cols;
+        let left, width, top, height, left_col, right_col;
         if (opt_rect) {
             left = opt_rect.left;
             width = opt_rect.width;
             top = opt_rect.top;
             height = opt_rect.height;
-            col = opt_rect.col;
-            num_cols = opt_rect.num_cols;
+            left_col = opt_rect.left_col;
+            right_col = opt_rect.right_col;
         } else {
             const cell_width = model.getCellWidth(true);
             const cell_padding = model.getCellPadding(true);
             const viewport = cell_view.getViewportOncoprintSpace(model);
 
             const zoom = this.getZoom(model);
-            col = Math.floor(viewport.left / (cell_width + cell_padding));
-            num_cols = Math.min(model.getIdOrder().length - col,
-                Math.floor(viewport.right / (cell_width + cell_padding)) - Math.floor(viewport.left / (cell_width + cell_padding)));
-            left = col * cell_width * zoom.x;
-            width = num_cols * cell_width * zoom.x;
+            left_col = model.getClosestColumnIndexToLeft(viewport.left, false);
+            right_col = model.getClosestColumnIndexToLeft(viewport.right, false, true);
+            left = left_col * cell_width * zoom.x;
+            width = (right_col-left_col) * cell_width * zoom.x;
             top = viewport.top * zoom.y;
             height = (viewport.bottom - viewport.top) * zoom.y;
         }
@@ -918,14 +971,12 @@ export default class OncoprintMinimapView {
         ctx.lineTo(left, top);
         ctx.stroke();
 
-        this.current_rect = {
+        this.current_rect.setParams({
             'top':top,
-            'left':left,
-            'width':width,
+            'left_col':left_col,
+            'right_col':right_col,
             'height':height,
-            'col': col,
-            'num_cols': num_cols
-        };
+        });
     }
 
     private drawOncoprintAndOverlayRect(model:OncoprintModel, cell_view:OncoprintWebGLCellView) {
@@ -935,6 +986,9 @@ export default class OncoprintMinimapView {
         this.drawOncoprint(model, cell_view);
         this.drawOverlayRect(model, cell_view);
     }
+
+
+    // API BEGINS HERE
 
     public moveTrack(model:OncoprintModel, cell_view:OncoprintWebGLCellView) {
         this.drawOncoprintAndOverlayRect(model, cell_view);

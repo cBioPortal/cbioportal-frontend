@@ -5,9 +5,9 @@ export default class CachedProperty<T> {
     }
 
     public update(...args:any[]) {
-        this.value = this.updateFn.apply(null, arguments);
+        this.value = this.updateFn.apply(null, args);
         for (let i=0; i<this.bound_properties.length; i++) {
-            this.bound_properties[i].update();
+            this.bound_properties[i].update(...args);
         }
     }
 

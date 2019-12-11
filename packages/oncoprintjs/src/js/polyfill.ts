@@ -29,4 +29,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-(Math as any).log2 = (Math as any).log2 || function(x:number) { return Math.log(x) / Math.LN2; };
+
+export type OMath = Math & { log2:(x:number)=>number };
+export const OMath:OMath = (Math as any);
+
+OMath.log2 = OMath.log2 || function(x:number) { return Math.log(x) / Math.LN2; };

@@ -18,6 +18,7 @@ import {arrayFindIndex, ifndef, sgndiff} from "./utils";
 import MouseUpEvent = JQuery.MouseUpEvent;
 import MouseMoveEvent = JQuery.MouseMoveEvent;
 import {CellClickCallback, CellMouseOverCallback} from "./oncoprint";
+import {OMath} from "./polyfill";
 
 type ColorBankIndex = number; // index into vertex bank (e.g. 0, 4, 8, ...)
 type ColorBank = number[]; // flat list of color: [c0,c0,c0,c0,v1,v1,v1,c1,c1,c1,c1,...]
@@ -34,6 +35,10 @@ export type OncoprintShaderProgram = WebGLProgram & {
     vertexPositionAttribute:any;
     vertexColorAttribute:any;
     vertexOncoprintColumnAttribute:any;
+
+    gapSizeUniform:WebGLUniformLocation;
+    columnsRightAfterGapsUniform:WebGLUniformLocation;
+
     samplerUniform:WebGLUniformLocation;
     pMatrixUniform:WebGLUniformLocation;
     mvMatrixUniform:WebGLUniformLocation;
@@ -105,7 +110,7 @@ export default class OncoprintWebGLCellView {
 
 
         this.getWebGLContextAndSetUpMatrices();
-        this.setUpShaders();
+        this.setUpShaders(model);
         this.getOverlayContextAndClear();
         this.visible_area_width = $canvas[0].width;
 
@@ -387,51 +392,119 @@ export default class OncoprintWebGLCellView {
         })(this);
     }
 
-    private setUpShaders() {
-        const vertex_shader_source = ['precision highp float;',
-            'attribute float aPosVertex;',
-            'attribute float aColVertex;',
-            'attribute float aVertexOncoprintColumn;',
-            'uniform float columnWidth;',
-            'uniform float scrollX;',
-            'uniform float zoomX;',
-            'uniform float scrollY;',
-            'uniform float zoomY;',
-            'uniform mat4 uMVMatrix;',
-            'uniform mat4 uPMatrix;',
-            'uniform float offsetY;',
-            'uniform float supersamplingRatio;',
-            'uniform float positionBitPackBase;',
-            'uniform float texSize;',
-            'varying float texCoord;',
+    private getColumnIndexesAfterAGap(model:OncoprintModel) {
+        // uniform length is minimum 1
+        return model.getColumnIndexesAfterAGap().concat([Number.POSITIVE_INFINITY]);
+    }
 
-            'vec3 unpackVec3(float packedVec3, float base) {',
-            '	float pos0 = floor(packedVec3 / (base*base));',
-            '	float pos0Contr = pos0*base*base;',
-            '	float pos1 = floor((packedVec3 - pos0Contr)/base);',
-            '	float pos1Contr = pos1*base;',
-            '	float pos2 = packedVec3 - pos0Contr - pos1Contr;',
-            '	return vec3(pos0, pos1, pos2);',
-            '}',
+    private setUpShaders(model:OncoprintModel) {
+        const columnsRightAfterGapsSize = this.getColumnIndexesAfterAGap(model).length;
+        const maxBinarySearchSteps = Math.ceil(OMath.log2(columnsRightAfterGapsSize));
+        const vertex_shader_source = `
+            precision highp float;
+            attribute float aPosVertex;
+            attribute float aColVertex;
+            attribute float aVertexOncoprintColumn;
 
-            'void main(void) {',
-            '	gl_Position = vec4(unpackVec3(aPosVertex, positionBitPackBase), 1.0);',
-            '	gl_Position[0] += aVertexOncoprintColumn*columnWidth;',
-            '	gl_Position *= vec4(zoomX, zoomY, 1.0, 1.0);',
-            '	gl_Position[1] += offsetY;', // offset is given zoomed
-            '	gl_Position -= vec4(scrollX, scrollY, 0.0, 0.0);',
-            '	gl_Position[0] *= supersamplingRatio;',
-            '	gl_Position[1] *= supersamplingRatio;',
-            '	gl_Position = uPMatrix * uMVMatrix * gl_Position;',
+            uniform float gapSize;
 
-            '	texCoord = (aColVertex + 0.5) / texSize;',
-            '}'].join('\n');
-        const fragment_shader_source = ['precision mediump float;',
-            'varying float texCoord;',
-            'uniform sampler2D uSampler;',
-            'void main(void) {',
-            '   gl_FragColor = texture2D(uSampler, vec2(texCoord, 0.5));',
-            '}'].join('\n');
+            //              array length cant be 0
+            uniform float columnsRightAfterGaps[${columnsRightAfterGapsSize}];
+
+            uniform float columnWidth;
+            uniform float scrollX;
+            uniform float zoomX;
+            uniform float scrollY;
+            uniform float zoomY;
+            uniform mat4 uMVMatrix;
+            uniform mat4 uPMatrix;
+            uniform float offsetY;
+            uniform float supersamplingRatio;
+            uniform float positionBitPackBase;
+            uniform float texSize;
+            varying float texCoord;
+
+            vec3 getUnpackedPositionVec3() {
+            	float pos0 = floor(aPosVertex / (positionBitPackBase * positionBitPackBase));
+            	float pos0Contr = pos0 * positionBitPackBase * positionBitPackBase;
+            	float pos1 = floor((aPosVertex - pos0Contr)/positionBitPackBase);
+            	float pos1Contr = pos1 * positionBitPackBase;
+            	float pos2 = aPosVertex - pos0Contr - pos1Contr;
+            	return vec3(pos0, pos1, pos2);
+            }
+
+            float computeGapOffset(float column) {
+                // first do binary search to compute the number of gaps before this column, G(c)
+                // Let I(c) = the index in columnsRightAfterGaps of the first entry thats greater than or equal to c
+                // Then:
+                // G(c) = {
+                //          I(c), c is not in columnsRightAfterGaps
+                //          I(c) + 1, c is in columnsRightAfterGaps (i.e. columnsRightAfterGaps[I(c)] = c)
+                //        }     
+                 
+                int lower_incl = 0;
+                int upper_excl = ${columnsRightAfterGapsSize};
+                int numGaps = 0;
+                
+                for (int loopDummyVar = 0; loopDummyVar < ${maxBinarySearchSteps}; loopDummyVar++) {
+                    if (lower_incl > upper_excl) {
+                        break;
+                    }
+                
+                    int middle = (lower_incl + upper_excl)/2;
+                    if (columnsRightAfterGaps[middle] < column) {
+                        // continue binary search
+                        lower_incl = middle + 1;
+                    } else if (columnsRightAfterGaps[middle] == column) {
+                        // see formula in comments at top of function
+                        numGaps = middle + 1;
+                        break;
+                    } else {
+                        // columnsRightAfterGaps[middle] > column
+                        if (middle == 0) {
+                            // see formula in comments at top of function
+                            numGaps = 0;
+                            break;
+                        } else if (columnsRightAfterGaps[middle-1] < column) {
+                            // see formula in comments at top of function - this case means column is not in columnsRightAfterGaps
+                            numGaps = middle;
+                            break;
+                        } else {
+                            // continue binary search
+                            upper_excl = middle;
+                        }
+                    }
+                }
+ 
+                // multiply it by the gap size to get the total offset
+                return float(numGaps)*gapSize;
+            }
+
+            void main(void) {
+            	gl_Position = vec4(getUnpackedPositionVec3(), 1.0);
+            	gl_Position[0] += aVertexOncoprintColumn*columnWidth;
+            	gl_Position *= vec4(zoomX, zoomY, 1.0, 1.0);
+
+            // gaps should not be affected by zoom:
+                gl_Position[0] += computeGapOffset(aVertexOncoprintColumn);
+
+            // offsetY is given zoomed:
+            	gl_Position[1] += offsetY;
+
+            	gl_Position -= vec4(scrollX, scrollY, 0.0, 0.0);
+            	gl_Position[0] *= supersamplingRatio;
+            	gl_Position[1] *= supersamplingRatio;
+            	gl_Position = uPMatrix * uMVMatrix * gl_Position;
+
+            	texCoord = (aColVertex + 0.5) / texSize;
+            }`;
+        const fragment_shader_source = `
+            precision mediump float;
+            varying float texCoord;
+            uniform sampler2D uSampler;
+            void main(void) {
+                gl_FragColor = texture2D(uSampler, vec2(texCoord, 0.5));
+            }`;
         const vertex_shader = this.createShader(vertex_shader_source, 'VERTEX_SHADER');
         const fragment_shader = this.createShader(fragment_shader_source, 'FRAGMENT_SHADER');
 
@@ -443,6 +516,8 @@ export default class OncoprintWebGLCellView {
         shader_program.vertexOncoprintColumnAttribute = this.ctx.getAttribLocation(shader_program, 'aVertexOncoprintColumn');
         this.ctx.enableVertexAttribArray(shader_program.vertexOncoprintColumnAttribute);
 
+        shader_program.gapSizeUniform = this.ctx.getUniformLocation(shader_program, 'gapSize');
+        shader_program.columnsRightAfterGapsUniform = this.ctx.getUniformLocation(shader_program, 'columnsRightAfterGaps');
         shader_program.samplerUniform = this.ctx.getUniformLocation(shader_program, 'uSampler');
         shader_program.pMatrixUniform = this.ctx.getUniformLocation(shader_program, 'uPMatrix');
         shader_program.mvMatrixUniform = this.ctx.getUniformLocation(shader_program, 'uMVMatrix');
@@ -482,7 +557,7 @@ export default class OncoprintWebGLCellView {
         this.$container.css('height', height);
         this.$container.css('width', visible_area_width);
         this.getWebGLContextAndSetUpMatrices();
-        this.setUpShaders();
+        this.setUpShaders(model);
         this.getOverlayContextAndClear();
         this.getColumnLabelsContext();
     }
@@ -502,13 +577,17 @@ export default class OncoprintWebGLCellView {
         const window_right = viewport.right;
         const window_top = viewport.top;
         const window_bottom = viewport.bottom;
-        const id_to_left = model.getColumnLeft();
         const id_order = model.getIdOrder();
-        let horz_first_id_in_window_index = arrayFindIndex(id_order, function(id) { return id_to_left[id] >= window_left; });
-        const horz_first_id_after_window_index = arrayFindIndex(id_order, function(id) { return id_to_left[id] > window_right; }, horz_first_id_in_window_index+1);
+        let horz_first_id_in_window_index = model.getClosestColumnIndexToLeft(window_left);
+        const horz_first_id_after_window_index = model.getClosestColumnIndexToLeft(window_right, false, true);
         horz_first_id_in_window_index = (horz_first_id_in_window_index < 1 ? 0 : horz_first_id_in_window_index - 1);
+
         const horz_first_id_in_window = id_order[horz_first_id_in_window_index];
-        const horz_first_id_after_window = (horz_first_id_after_window_index === -1 ? null : id_order[horz_first_id_after_window_index]);
+        const horz_first_id_after_window = (
+            horz_first_id_after_window_index === -1 || horz_first_id_after_window_index === id_order.length ?
+                null :
+                id_order[horz_first_id_after_window_index]
+        );
 
         if (!dont_resize) {
             this.resizeAndClear(model);
@@ -545,6 +624,9 @@ export default class OncoprintWebGLCellView {
             this.ctx.bindTexture(this.ctx.TEXTURE_2D, buffers.color_tex.texture);
             this.ctx.uniform1i(this.shader_program.samplerUniform, 0);
             this.ctx.uniform1f(this.shader_program.texSizeUniform, buffers.color_tex.size);
+
+            this.ctx.uniform1fv(this.shader_program.columnsRightAfterGapsUniform, this.getColumnIndexesAfterAGap(model)); // need min size of 1
+            this.ctx.uniform1f(this.shader_program.gapSizeUniform, model.getGapSize());
 
             this.ctx.uniformMatrix4fv(this.shader_program.pMatrixUniform, false, this.pMatrix);
             this.ctx.uniformMatrix4fv(this.shader_program.mvMatrixUniform, false, this.mvMatrix);
@@ -859,7 +941,7 @@ export default class OncoprintWebGLCellView {
         this.clearTrackColumnBuffers(model);
         this.getNewCanvas();
         this.getWebGLContextAndSetUpMatrices();
-        this.setUpShaders();
+        this.setUpShaders(model);
     }
 
     private highlightCell(model:OncoprintModel, track_id:TrackId, uid:ColumnId) {
@@ -915,21 +997,27 @@ export default class OncoprintWebGLCellView {
     }
 
     public getViewportOncoprintSpace(model:OncoprintModel) {
-        const scroll_x = this.scroll_x;
         const scroll_y = this.scroll_y;
-        const zoom_x = model.getHorzZoom();
         const zoom_y = model.getVertZoom();
 
-        const window_left = Math.round(scroll_x / zoom_x);
-        const window_right = Math.round((scroll_x + this.visible_area_width) / zoom_x);
-        const window_top = Math.round(scroll_y / zoom_y);
-        const window_bottom = Math.round((scroll_y + this.getVisibleAreaHeight(model)) / zoom_y);
+        const id_order = model.getIdOrder();
+        const left_index = model.getClosestColumnIndexToLeft(this.scroll_x, true);
+        const left_id = id_order[left_index];
+        const right_index = model.getClosestColumnIndexToLeft(this.scroll_x + this.visible_area_width, true, true);
+
+        let right;
+        if (right_index < id_order.length) {
+            right = model.getColumnLeft(id_order[right_index]);
+        } else {
+            right = model.getColumnLeft(id_order[id_order.length-1]) + model.getCellWidth(true);
+        }
 
         return {
-            'top': window_top,
-            'bottom': window_bottom,
-            'left': window_left,
-            'right': window_right
+            top: Math.round(scroll_y / zoom_y),
+            bottom: Math.round((scroll_y + this.getVisibleAreaHeight(model)) / zoom_y),
+            left: model.getColumnLeft(left_id),
+            right,
+            center_col_index: Math.floor((right_index + left_index) / 2)
         };
     }
 
@@ -959,6 +1047,14 @@ export default class OncoprintWebGLCellView {
 
     public setTrackGroupOrder(model:OncoprintModel) {
         if (!this.rendering_suppressed) {
+            this.renderAllTracks(model);
+        }
+    }
+
+    public setTrackShowGaps(model:OncoprintModel) {
+        if (!this.rendering_suppressed) {
+            // shader depends on gaps
+            this.setUpShaders(model);
             this.renderAllTracks(model);
         }
     }
@@ -1019,6 +1115,7 @@ export default class OncoprintWebGLCellView {
             this.computeVertexPositionsAndVertexColors(model, track_ids[i]);
             this.computeVertexColumns(model, track_ids[i]);
         }
+        this.setUpShaders(model); // due to possible changes in gaps
         this.renderAllTracks(model);
     }
     public hideIds(model:OncoprintModel) {
@@ -1141,7 +1238,7 @@ export default class OncoprintWebGLCellView {
     }
 
     public getTotalWidth(model:OncoprintModel, base?:boolean) {
-        let width = (model.getCellWidth(base) + model.getCellPadding(base))*model.getIdOrder().length;
+        let width = model.getOncoprintWidth(base);
 
         if (this.maximum_column_label_width > 0) {
             width += this.maximum_column_label_width;

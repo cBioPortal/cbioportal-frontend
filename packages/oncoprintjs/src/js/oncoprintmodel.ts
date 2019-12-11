@@ -16,6 +16,7 @@ import PrecomputedComparator from "./precomputedcomparator";
 import {calculateHeaderTops, calculateTrackTops} from "./modelutils";
 
 export type ColumnId = string;
+export type ColumnIndex = number;
 export type TrackId = number;
 export type Datum = any;
 export type RuleSetId = number;
@@ -84,6 +85,7 @@ export type UserTrackSpec<D> = {
     important_ids?:string[];
     custom_track_options?:CustomTrackOption[];
     $track_info_tooltip_elt?:JQuery;
+    track_can_show_gaps?:boolean;
 };
 export type LibraryTrackSpec<D> = UserTrackSpec<D> & { rule_set:RuleSet, track_id:TrackId};
 export type TrackOverlappingCells = {
@@ -198,6 +200,7 @@ const MIN_CELL_HEIGHT_PIXELS = 3;
 export type TrackProp<T> = {[trackId:number]:T};
 export type TrackGroupProp<T> = {[trackGroupIndex:number]:T};
 export type ColumnProp<T> = {[columnId:string]:T};
+export type ColumnIdSet = {[columnId:string]:any};
 
 export default class OncoprintModel {
 
@@ -261,6 +264,8 @@ export default class OncoprintModel {
     public track_expansion_tracks:TrackProp<TrackId[]>;
     private track_expansion_parent:TrackProp<TrackId>;
     private track_custom_options:TrackProp<CustomTrackOption[]>;
+    private track_can_show_gaps:TrackProp<boolean>;
+    private track_show_gaps:TrackProp<boolean>;
 
     // Rule set properties
     private rule_sets:{[ruleSetId:number]:RuleSet};
@@ -281,9 +286,12 @@ export default class OncoprintModel {
     private cell_tops_zoomed:CachedProperty<TrackProp<number>>;
     private label_tops_zoomed:CachedProperty<TrackProp<number>>;
     private column_left:CachedProperty<ColumnProp<number>>;
+    private column_left_always_with_padding:CachedProperty<ColumnProp<number>>;
     private zoomed_column_left:CachedProperty<ColumnProp<number>>;
     private column_left_no_padding:CachedProperty<ColumnProp<number>>;
     private precomputed_comparator:CachedProperty<TrackProp<PrecomputedComparator<Datum>>>;
+    private ids_after_a_gap:CachedProperty<ColumnIdSet>;
+    private column_indexes_after_a_gap:CachedProperty<number[]>;
 
     private track_groups:TrackGroup[];
     private track_group_sort_priority:TrackGroupIndex[];
@@ -350,13 +358,15 @@ export default class OncoprintModel {
         this.track_expansion_tracks = {}; // track id -> array of track ids if applicable
         this.track_expansion_parent = {}; // track id -> track id if applicable
         this.track_custom_options = {}; // track id -> { label, onClick, weight, disabled }[] ( see index.d.ts :: CustomTrackOption )
+        this.track_can_show_gaps = {};
+        this.track_show_gaps = {};
 
         // Rule Set Properties
         this.rule_sets = {}; // map from rule set id to rule set
         this.rule_set_active_rules = {}; // map from rule set id to map from rule id to use count
 
         // Cached and Recomputed Properties
-        this.visible_id_order = new CachedProperty([], function () {
+        this.visible_id_order = new CachedProperty([], function (model:OncoprintModel) {
             const hidden_ids = model.hidden_ids;
             return model.id_order.filter(function (id) {
                 return !hidden_ids[id];
@@ -465,38 +475,6 @@ export default class OncoprintModel {
         this.track_tops_zoomed.addBoundProperty(this.header_tops_zoomed);
         this.cell_tops_zoomed.addBoundProperty(this.label_tops_zoomed);
 
-        this.column_left = new CachedProperty({}, function() {
-            const cell_width = model.getCellWidth(true);
-            const cell_padding = model.getCellPadding(true);
-            const left:ColumnProp<number> = {};
-            const ids = model.getIdOrder();
-            for (let i = 0; i < ids.length; i++) {
-                left[ids[i]] = i * (cell_width + cell_padding);
-            }
-            return left;
-        });
-
-        this.zoomed_column_left = new CachedProperty({}, function() {
-            const cell_width = model.getCellWidth();
-            const cell_padding = model.getCellPadding();
-            const left:ColumnProp<number> = {};
-            const ids = model.getIdOrder();
-            for (let i = 0; i < ids.length; i++) {
-                left[ids[i]] = i * (cell_width + cell_padding);
-            }
-            return left;
-        });
-        this.column_left_no_padding = new CachedProperty({}, function() {
-            const cell_width = model.getCellWidth(true);
-            const left:ColumnProp<number> = {};
-            const ids = model.getIdOrder();
-            for (let i = 0; i < ids.length; i++) {
-                left[ids[i]] = i * cell_width;
-            }
-            return left;
-        });
-        this.column_left.addBoundProperty(this.zoomed_column_left);
-        this.column_left.addBoundProperty(this.column_left_no_padding);
 
         this.precomputed_comparator = new CachedProperty({}, function(model:OncoprintModel, track_id:TrackId) {
             const curr_precomputed_comparator = model.precomputed_comparator.get();
@@ -506,6 +484,128 @@ export default class OncoprintModel {
                 model.getTrackDataIdKey(track_id));
             return curr_precomputed_comparator;
         });// track_id -> PrecomputedComparator
+
+        this.ids_after_a_gap = new CachedProperty({}, function(model:OncoprintModel) {
+            const gapIds:{[columnId:string]:boolean} = {};
+            const precomputedComparator = model.precomputed_comparator.get();
+            const trackIdsWithGaps = model.getTracks().filter(trackId=>model.getTrackShowGaps(trackId));
+            const ids = model.visible_id_order.get();
+
+            for (let i=1; i<ids.length; i++) {
+                for (const trackId of trackIdsWithGaps) {
+                    const comparator = precomputedComparator[trackId];
+                    if (comparator.getSortValue(ids[i-1]).mandatory !== comparator.getSortValue(ids[i]).mandatory) {
+                        gapIds[ids[i]] = true;
+                    }
+                }
+            }
+
+            return gapIds;
+        });
+        this.visible_id_order.addBoundProperty(this.ids_after_a_gap);
+        this.precomputed_comparator.addBoundProperty(this.ids_after_a_gap);
+
+        this.column_indexes_after_a_gap = new CachedProperty([], function(model:OncoprintModel) {
+            const ids_after_a_gap = model.ids_after_a_gap.get();
+            const id_to_index = model.getVisibleIdToIndexMap();
+            return Object.keys(ids_after_a_gap).map(id=>id_to_index[id]);
+        });
+        this.ids_after_a_gap.addBoundProperty(this.column_indexes_after_a_gap);
+
+        this.column_left = new CachedProperty({}, function() {
+            const cell_width = model.getCellWidth(true);
+            const gap_size = model.getGapSize();
+            const ids_after_a_gap = model.ids_after_a_gap.get();
+            const cell_padding = model.getCellPadding(true);
+            const left:ColumnProp<number> = {};
+            const ids = model.getIdOrder();
+            let current_left = 0;
+            for (let i = 0; i < ids.length; i++) {
+                if (ids_after_a_gap[ids[i]]) {
+                    current_left += gap_size;
+                }
+                left[ids[i]] = current_left;
+                current_left += cell_width + cell_padding;
+            }
+            return left;
+        });
+        this.ids_after_a_gap.addBoundProperty(this.column_left);
+
+        this.column_left_always_with_padding = new CachedProperty({}, function() {
+            const cell_width = model.getCellWidth(true);
+            const gap_size = model.getGapSize();
+            const ids_after_a_gap = model.ids_after_a_gap.get();
+            const cell_padding = model.getCellPadding(true, true);
+            const left:ColumnProp<number> = {};
+            const ids = model.getIdOrder();
+            let current_left = 0;
+            for (let i = 0; i < ids.length; i++) {
+                if (ids_after_a_gap[ids[i]]) {
+                    current_left += gap_size;
+                }
+                left[ids[i]] = current_left;
+                current_left += cell_width + cell_padding;
+            }
+            return left;
+        });
+        this.column_left.addBoundProperty(this.column_left_always_with_padding);
+
+        this.zoomed_column_left = new CachedProperty({}, function() {
+            const cell_width = model.getCellWidth();
+            const gap_size = model.getGapSize();
+            const ids_after_a_gap = model.ids_after_a_gap.get();
+            const cell_padding = model.getCellPadding();
+            const left:ColumnProp<number> = {};
+            const ids = model.getIdOrder();
+            let current_left = 0;
+            for (let i = 0; i < ids.length; i++) {
+                if (ids_after_a_gap[ids[i]]) {
+                    current_left += gap_size;
+                }
+                left[ids[i]] = current_left;
+                current_left += cell_width + cell_padding;
+            }
+            return left;
+        });
+        this.ids_after_a_gap.addBoundProperty(this.zoomed_column_left);
+        this.column_left.addBoundProperty(this.zoomed_column_left);
+
+        this.column_left_no_padding = new CachedProperty({}, function() {
+            const cell_width = model.getCellWidth(true);
+            const gap_size = model.getGapSize();
+            const ids_after_a_gap = model.ids_after_a_gap.get();
+            const left:ColumnProp<number> = {};
+            const ids = model.getIdOrder();
+            let current_left = 0;
+            for (let i = 0; i < ids.length; i++) {
+                if (ids_after_a_gap[ids[i]]) {
+                    current_left += gap_size;
+                }
+                left[ids[i]] = current_left;
+                current_left += cell_width;
+            }
+            return left;
+        });
+        this.ids_after_a_gap.addBoundProperty(this.column_left_no_padding);
+        this.column_left.addBoundProperty(this.column_left_no_padding);
+    }
+
+    public setTrackShowGaps(trackId:TrackId, show:boolean) {
+        this.track_show_gaps[trackId] = show;
+
+        this.ids_after_a_gap.update(this);
+    }
+
+    public getTrackShowGaps(trackId:TrackId) {
+        return this.track_show_gaps[trackId];
+    }
+
+    public getTrackCanShowGaps(trackId:TrackId) {
+        return this.track_can_show_gaps[trackId];
+    }
+
+    public getColumnIndexesAfterAGap() {
+        return this.column_indexes_after_a_gap.get();
     }
 
     public setTrackGroupHeader(index:TrackGroupIndex, header?:TrackGroupHeader) {
@@ -538,30 +638,47 @@ export default class OncoprintModel {
         return this.horz_zoom;
     }
 
-    public getHorzZoomToFitNumCols(width:number, num_cols:number) {
-        const cell_width = this.getCellWidth(true);
-        const zoom_if_cell_padding_on = clamp(width / (num_cols*(cell_width + this.cell_padding)),
-            0,1);
-        const zoom_if_cell_padding_off = clamp(width / (num_cols*cell_width),
-            0,1);
+    public getIdsInZoomedLeftInterval(left:number, right:number) {
+        const leftIdIndex = this.getClosestColumnIndexToLeft(left, true);
+        const rightIdIndex = this.getClosestColumnIndexToLeft(right, true, true);
+        return this.getIdOrder().slice(leftIdIndex, rightIdIndex);
+    }
+
+    public getHorzZoomToFitCols(width:number, left_col:ColumnIndex, right_col:ColumnIndex) {
+        // in the end, the zoomed width is:
+        //  W = z*(right_col - left_col)*baseColumnWidth + #gaps*gapSize
+        //  -> z = (width - #gaps*gapSize)/(right_col - left_col)*baseColumnWidth
+
+        // numerator calculations
+        const allGaps = this.getColumnIndexesAfterAGap();
+        const gapsBetween = allGaps.filter(g=>(g >= left_col && g < right_col));
+        const numerator = width - (gapsBetween.length*this.getGapSize());
+
+        // denominator calculations
+        const columnWidthWithPadding = this.getCellWidth(true) + this.getCellPadding(true);
+        const columnWidthNoPadding = this.getCellWidth(true);
+
+        const denominatorWithPadding = (right_col - left_col)*columnWidthWithPadding;
+        const denominatorNoPadding = (right_col - left_col)*columnWidthNoPadding;
+
+        // put them together
+        const zoom_if_cell_padding_on = clamp(numerator/denominatorWithPadding, 0, 1);
+        const zoom_if_cell_padding_off = clamp(numerator/denominatorNoPadding, 0, 1);
+
         let zoom;
         if (!this.cell_padding_on) {
             zoom = zoom_if_cell_padding_off;
         } else {
+            const cell_width = this.getCellWidth(true);
             if (cell_width * zoom_if_cell_padding_on < this.cell_padding_off_cell_width_threshold) {
                 if (cell_width * zoom_if_cell_padding_off >= this.cell_padding_off_cell_width_threshold) {
                     // Because of cell padding toggling there's no way to get exactly the desired number of columns.
                     // We can see this by contradiction: if we assume that cell padding is on, and try to fit exactly
                     // our number of columns, we end up turning cell padding off (outer if statement). If we assume that
                     // cell padding is off and try to fit our number of columns, we find that cell padding is on (inner if statement).
-                    // Thus, it's impossible to show this exact number of columns - we either under or overshoot it. We
-                    // thus should overshoot it by as little as possible, show as few columns as possible while still fitting
-                    // this amount. It must be exactly at the threshold for switching.
-                    //
-                    const unrounded_zoom = this.cell_padding_off_cell_width_threshold / cell_width;
-                    const unrounded_num_cols = width / (unrounded_zoom * cell_width);
-                    const rounded_num_cols = Math.ceil(unrounded_num_cols);
-                    zoom = width / (rounded_num_cols * cell_width);
+
+                    // So instead lets just make sure to show all the columns by using the smaller zoom coefficient:
+                    zoom = zoom_if_cell_padding_on;
                 } else {
                     zoom = zoom_if_cell_padding_off;
                 }
@@ -585,12 +702,11 @@ export default class OncoprintModel {
             max = Math.max(indexes[i], max);
             min = Math.min(indexes[i], min);
         }
-        const num_cols = max - min + 1;
-        return this.getHorzZoomToFitNumCols(width, num_cols);
+        return this.getHorzZoomToFitCols(width, min, max);
     }
 
     public getMinHorzZoom() {
-        return Math.min(MIN_ZOOM_PIXELS / (this.getIdOrder().length*this.getCellWidth(true) + (this.getIdOrder().length-1)*this.getCellPadding(true)), 1);
+        return Math.min(MIN_ZOOM_PIXELS / this.getOncoprintWidth(true), 1);
     }
 
     public getMinVertZoom() {
@@ -798,6 +914,10 @@ export default class OncoprintModel {
         return !!(this.track_has_column_spacing[track_id]);
     }
 
+    public getGapSize() {
+        return this.getCellWidth(true);
+    }
+
     public getCellWidth(base?:boolean) {
         return this.cell_width * (base ? 1 : this.horz_zoom);
     }
@@ -855,6 +975,31 @@ export default class OncoprintModel {
             return this.visible_id_order.get();
         }
     }
+    public getClosestColumnIndexToLeft(left:number, zoomed?:boolean, roundUp?:boolean) {
+        const idToLeft = zoomed ? this.getZoomedColumnLeft() : this.getColumnLeft();
+        const ids = this.getIdOrder();
+        const lastId = ids[ids.length-1];
+        if (left > idToLeft[lastId] + this.getCellWidth()) {
+            return ids.length;
+        } else if (left < idToLeft[ids[0]]) {
+            return 0;
+        } else {
+            const index = binarysearch(
+                ids,
+                left,
+                id=>idToLeft[id],
+                true
+            );
+            const id = ids[index];
+            const columnLeft = idToLeft[id];
+            if (roundUp && left !== columnLeft) {
+                return index + 1;
+            } else {
+                return index;
+            }
+        }
+    }
+
     public getIdToIndexMap() {
         return this.id_to_index.get();
     }
@@ -888,7 +1033,7 @@ export default class OncoprintModel {
         this.id_order = ids.slice();
         Object.freeze(this.id_order);
         this.id_to_index.update();
-        this.visible_id_order.update();
+        this.visible_id_order.update(this);
         this.column_left.update();
     }
 
@@ -899,7 +1044,7 @@ export default class OncoprintModel {
         for (let j = 0, len = to_hide.length; j < len; j++) {
             this.hidden_ids[to_hide[j]] = true;
         }
-        this.visible_id_order.update();
+        this.visible_id_order.update(this);
         this.column_left.update();
     }
 
@@ -982,6 +1127,9 @@ export default class OncoprintModel {
         if (typeof params.expandButtonTextGetter !== 'undefined') {
             this.track_expand_button_getter[track_id] = params.expandButtonTextGetter;
         }
+
+        this.track_can_show_gaps[track_id] = ifndef(params.track_can_show_gaps, false);
+        this.track_show_gaps[track_id] = false;
 
         this.track_sort_cmp_fn[track_id] = params.sortCmpFn;
 
@@ -1144,6 +1292,7 @@ export default class OncoprintModel {
         this.track_tops.update();
         this.track_present_ids.update(this, track_id);
         this.track_id_to_datum.update(this, track_id);
+        this.ids_after_a_gap.update(this);
         this.setIdOrder(Object.keys(this.present_ids.get()));
 
         // delete rule set if its now unused
@@ -1280,21 +1429,6 @@ export default class OncoprintModel {
         return ret;
     }
 
-    public getIdsInLeftInterval(left:number, right:number) {
-        const cell_width = this.getCellWidth();
-        const cell_padding = this.getCellPadding();
-        const id_order = this.getIdOrder();
-
-        // left_id_index and right_id_index are inclusive
-        let left_id_index = Math.floor(left/(cell_width + cell_padding));
-        const left_remainder = left - left_id_index*(cell_width + cell_padding);
-        if (left_remainder > cell_width) {
-            left_id_index += 1;
-        }
-        const right_id_index = Math.floor(right/(cell_width + cell_padding));
-        return id_order.slice(left_id_index, right_id_index+1);
-    }
-
     public getColumnLeft():ColumnProp<number>;
     public getColumnLeft(id:ColumnId):number;
     public getColumnLeft(id?:ColumnId) {
@@ -1334,11 +1468,14 @@ export default class OncoprintModel {
     }
 
     public getOncoprintWidth(base?:boolean) {
-        return this.getIdOrder().length*(this.getCellWidth(base) + this.getCellPadding(base));
+        const idOrder = this.getIdOrder();
+        const lastId = idOrder[idOrder.length-1];
+        const lastIdLeft = base ? this.getColumnLeft(lastId) : this.getZoomedColumnLeft(lastId);
+        return lastIdLeft + this.getCellWidth(base) + 1;// this fixes some edge case issues with scrolling
     }
 
-    public getOncoprintWidthNoColumnPadding(base?:boolean) {
-        return this.getIdOrder().length*this.getCellWidth(base);
+    public getOncoprintWidthNoColumnPaddingNoGaps() {
+        return this.getIdOrder().length*this.getCellWidth(true);
     }
 
     public getColumnLabels() {
