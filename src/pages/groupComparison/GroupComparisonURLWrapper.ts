@@ -15,13 +15,13 @@ export type GroupComparisonURLQuery = {
 
 export default class GroupComparisonURLWrapper extends URLWrapper<GroupComparisonURLQuery> {
     constructor(routing:ExtendedRouterStore) {
-        super(routing, [
-            { name:"sessionId", isSessionProp: false },
-            { name:"groupOrder", isSessionProp: false },
-            { name:"unselectedGroups", isSessionProp: false },
-            { name:"overlapStrategy", isSessionProp: false },
-            { name:"patientEnrichments", isSessionProp: false }
-        ]);
+        super(routing, {
+            sessionId: { isSessionProp: false },
+            groupOrder: { isSessionProp: false },
+            unselectedGroups: { isSessionProp: false },
+            overlapStrategy: { isSessionProp: false },
+            patientEnrichments: { isSessionProp: false }
+        });
     }
 
     @computed public get tabId() {
