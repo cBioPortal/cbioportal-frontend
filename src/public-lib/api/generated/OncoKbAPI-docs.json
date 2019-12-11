@@ -2312,6 +2312,7 @@
           "enum": [
             "LEVEL_0",
             "LEVEL_1",
+            "LEVEL_2",
             "LEVEL_2A",
             "LEVEL_2B",
             "LEVEL_3A",
@@ -2564,6 +2565,7 @@
           "enum": [
             "LEVEL_0",
             "LEVEL_1",
+            "LEVEL_2",
             "LEVEL_2A",
             "LEVEL_2B",
             "LEVEL_3A",
@@ -2586,6 +2588,7 @@
           "enum": [
             "LEVEL_0",
             "LEVEL_1",
+            "LEVEL_2",
             "LEVEL_2A",
             "LEVEL_2B",
             "LEVEL_3A",
@@ -2611,6 +2614,7 @@
           "enum": [
             "LEVEL_0",
             "LEVEL_1",
+            "LEVEL_2",
             "LEVEL_2A",
             "LEVEL_2B",
             "LEVEL_3A",
@@ -2703,6 +2707,7 @@
           "enum": [
             "LEVEL_0",
             "LEVEL_1",
+            "LEVEL_2",
             "LEVEL_2A",
             "LEVEL_2B",
             "LEVEL_3A",
@@ -2725,6 +2730,7 @@
           "enum": [
             "LEVEL_0",
             "LEVEL_1",
+            "LEVEL_2",
             "LEVEL_2A",
             "LEVEL_2B",
             "LEVEL_3A",
@@ -2747,6 +2753,7 @@
           "enum": [
             "LEVEL_0",
             "LEVEL_1",
+            "LEVEL_2",
             "LEVEL_2A",
             "LEVEL_2B",
             "LEVEL_3A",
@@ -2769,6 +2776,7 @@
           "enum": [
             "LEVEL_0",
             "LEVEL_1",
+            "LEVEL_2",
             "LEVEL_2A",
             "LEVEL_2B",
             "LEVEL_3A",
@@ -2805,6 +2813,7 @@
             "enum": [
               "LEVEL_0",
               "LEVEL_1",
+              "LEVEL_2",
               "LEVEL_2A",
               "LEVEL_2B",
               "LEVEL_3A",
@@ -2830,6 +2839,7 @@
             "enum": [
               "LEVEL_0",
               "LEVEL_1",
+              "LEVEL_2",
               "LEVEL_2A",
               "LEVEL_2B",
               "LEVEL_3A",
@@ -2947,6 +2957,7 @@
           "enum": [
             "LEVEL_0",
             "LEVEL_1",
+            "LEVEL_2",
             "LEVEL_2A",
             "LEVEL_2B",
             "LEVEL_3A",
@@ -3056,6 +3067,7 @@
             "enum": [
               "LEVEL_0",
               "LEVEL_1",
+              "LEVEL_2",
               "LEVEL_2A",
               "LEVEL_2B",
               "LEVEL_3A",
@@ -3251,6 +3263,7 @@
           "enum": [
             "LEVEL_0",
             "LEVEL_1",
+            "LEVEL_2",
             "LEVEL_2A",
             "LEVEL_2B",
             "LEVEL_3A",
@@ -3392,6 +3405,7 @@
             "enum": [
               "LEVEL_0",
               "LEVEL_1",
+              "LEVEL_2",
               "LEVEL_2A",
               "LEVEL_2B",
               "LEVEL_3A",
