@@ -10,11 +10,11 @@ export type PatientViewUrlQuery = {
 
 export default class PatientViewUrlWrapper extends URLWrapper<PatientViewUrlQuery> {
     constructor(routing: ExtendedRouterStore) {
-        super(routing, [
-            { name:"studyId", isSessionProp: false },
-            { name:"caseId", isSessionProp: false },
-            { name:"sampleId", isSessionProp: false },
-        ]);
+        super(routing, {
+            studyId: { isSessionProp: false },
+            caseId: { isSessionProp: false },
+            sampleId: { isSessionProp: false },
+        });
     }
 
     public setTab(tab: string): void {

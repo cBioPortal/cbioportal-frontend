@@ -22,6 +22,7 @@ import { log } from 'shared/lib/consoleLog';
 import { remoteData } from 'public-lib';
 import {QueryParams} from "url";
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
+import {Omit} from "./TypeScriptUtils";
 
 export type BooleanString = string;
 export type NumberString = string;
@@ -43,22 +44,31 @@ export default class URLWrapper<
     public query: QueryParamsType;
     public reactionDisposer: IReactionDisposer;
     protected pathContext: string;
+    protected readonly properties:Property<QueryParamsType>[];
 
     @observable sessionProps = {};
 
     constructor(
         protected routing: ExtendedRouterStore,
-        protected properties: Property<QueryParamsType>[],
+        // pass it in in a map so that typescript can ensure that every property is accounted for
+        protected propertiesMap: {[property in keyof QueryParamsType]:Omit<Property<QueryParamsType>, "name">},
         public sessionEnabled = false,
         public urlCharThresholdForSession = 1500
     ) {
+
+        this.properties = _.entries(this.propertiesMap).map(
+            entry=>({
+                name: entry[0],
+                ...entry[1]
+            })
+        );
 
         const initValues: Partial<QueryParamsType> = {};
 
         // init values MUST include all properties in type
         // even if they are not represented in browser url at the moment
         // they need to be there so that they will observable in the future upon assignment
-        for (const property of properties) {
+        for (const property of this.properties) {
             let value = (routing.location
                 .query as QueryParamsType)[property.name];
             if (_.isString(value)) {
@@ -117,7 +127,7 @@ export default class URLWrapper<
                 runInAction(() => {
                     log("setting session", routeQuery.session_id);
 
-                    for (const property of properties) {
+                    for (const property of this.properties) {
                         // if property is not a session prop
                         // it will always be represented in URL
                         if (this.hasSessionId && property.isSessionProp) {
