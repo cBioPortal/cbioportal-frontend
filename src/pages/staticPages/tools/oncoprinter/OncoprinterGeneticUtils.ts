@@ -81,27 +81,44 @@ export function isType3NoGene(inputLine:OncoprinterInputLine):inputLine is Oncop
 }*/
 
 export function initDriverAnnotationSettings(store:OncoprinterStore) {
-    let _oncoKb:boolean, cbioportalCount:boolean, customBinary:boolean;
+    let _oncoKb:boolean, _cbioportalCount:boolean, _customBinary:boolean;
     if (store.existCustomDrivers) {
+        // if custom drivers, start with only custom drivers annotated
         _oncoKb = false;
-        cbioportalCount = false;
-        customBinary = true;
+        _cbioportalCount = false;
+        _customBinary = true;
     } else {
         _oncoKb = true;
-        cbioportalCount = false;
-        customBinary = false;
+        _cbioportalCount = false;
+        _customBinary = false;
     }
 
     return observable({
-        customBinary,
-        cbioportalCount,
         cbioportalCountThreshold: 0,
         _oncoKb,
+        _cbioportalCount,
+        _customBinary,
         _excludeVUS: false,
         hotspots: false, // for now
 
+
+        get customBinary() {
+            return this._customBinary;
+        },
+        set customBinary(val:boolean) {
+            this._customBinary = val;
+            store.customDriverWarningHidden = true;
+        },
+        get cbioportalCount() {
+            return this._cbioportalCount;
+        },
+        set cbioportalCount(val:boolean) {
+            this._cbioportalCount = val;
+            store.customDriverWarningHidden = true;
+        },
         set oncoKb(val:boolean) {
             this._oncoKb = val;
+            store.customDriverWarningHidden = true;
         },
         get oncoKb() {
             return AppConfig.serverConfig.show_oncokb && this._oncoKb && !store.didOncoKbFail;

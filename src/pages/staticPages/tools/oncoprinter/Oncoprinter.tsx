@@ -22,6 +22,8 @@ import autobind from "autobind-decorator";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
 import WindowStore from "../../../../shared/components/window/WindowStore";
 import {getGeneticTrackKey} from "./OncoprinterGeneticUtils";
+import SuccessBanner from "../../../studyView/infoBanner/SuccessBanner";
+import InfoBanner from "../../../../shared/components/banners/InfoBanner";
 
 interface IOncoprinterProps {
     divId: string;
@@ -354,6 +356,18 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                      onMouseEnter={this.onMouseEnter}
                      onMouseLeave={this.onMouseLeave}
                 >
+                    { this.props.store.existCustomDrivers && !this.props.store.customDriverWarningHidden &&
+                        this.props.store.driverAnnotationSettings.customBinary && (
+                            <InfoBanner
+                                message={
+                                    `Driver annotations reflect only user-provided data. Use the Mutations menu to modify annotation settings.`
+                                }
+                                style={{marginBottom:10}}
+                                hidden={this.props.store.customDriverWarningHidden}
+                                hide={()=>{ this.props.store.customDriverWarningHidden = true; }}
+                            />
+                        )
+                    }
                     <Observer>
                         {this.getControls}
                     </Observer>
