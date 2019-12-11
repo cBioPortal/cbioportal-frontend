@@ -3170,10 +3170,10 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-cbioportal-frontend-commons@^0.0.26:
-  version "0.0.26"
-  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.26.tgz#a31ddd8b307cc5b484be2afb19f2ea7b247bd702"
-  integrity sha512-CzGhN3BOulN3ZfvsJZ8i4qqGYizUoYA2Meskg+kPnp+ncT+/PxNUewK5EN/EUINRnHYcapitKc4KjchKQlbBZA==
+cbioportal-frontend-commons@^0.0.27:
+  version "0.0.27"
+  resolved "https://registry.yarnpkg.com/cbioportal-frontend-commons/-/cbioportal-frontend-commons-0.0.27.tgz#cc7e52abe955250ef1b85ce625be532ef8d6d6d5"
+  integrity sha512-apTjf0HFChMBKHm0uJc7M5Xya2ZdonRPMj5Om6vkKISK8wTEPP89AgKUD1QSIV+ZLaEp0IBI+ixlCCoD2e8S2g==
   dependencies:
     autobind-decorator "^2.1.0"
     babel-polyfill "^6.22.0"
@@ -8493,10 +8493,10 @@ once@^1.3.0, once@^1.3.1, once@^1.4.0:
   dependencies:
     wrappy "1"
 
-oncokb-styles@~0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-0.1.0.tgz#3a67a03dbdf6ebdde497c77451fef167afe00c4f"
-  integrity sha512-4vhF2Q5hAbOyKWlstA/AItd33cnXbp/Z1Zluxnlc7u0Dz6GnqnrZFK/upUleT4CTES6k5+QWT4Zv95+l5FL0hg==
+oncokb-styles@~0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-0.1.2.tgz#8b26c0a0829787cdc1b595d3a021b3266607102b"
+  integrity sha512-tuy5s3qFxgf1ogMATQSRPNgLlAMrvOOTCAN1dm/wJ+VZoStbJ7g36/qHwc99UPfh3vrB05broLodF+k58p5tUw==
 
 onetime@^2.0.0:
   version "2.0.1"

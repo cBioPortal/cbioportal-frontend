@@ -6,6 +6,7 @@ import _ from 'lodash';
 import {IndicatorQueryResp} from "../../model/OncoKb";
 import OncoKB, {sortValue as oncoKbAnnotationSortValue} from "./OncoKB";
 import {defaultArraySortMethod} from "../../util/ReactTableUtils";
+import {LevelOfEvidence} from "cbioportal-frontend-commons";
 
 function emptyQueryIndicator(): IndicatorQueryResp
 {
@@ -158,11 +159,11 @@ describe('OncoKB', () => {
 
         queryA = initQueryIndicator({
             oncogenic: 'Oncogenic',
-            highestSensitiveLevel: 'LEVEL_1'
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_1
         });
         queryB = initQueryIndicator({
             oncogenic: 'Oncogenic',
-            highestSensitiveLevel: 'LEVEL_2A'
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
@@ -172,11 +173,11 @@ describe('OncoKB', () => {
 
         queryA = initQueryIndicator({
             oncogenic: 'Oncogenic',
-            highestResistanceLevel: 'LEVEL_R1'
+            highestResistanceLevel: LevelOfEvidence.LEVEL_R1
         });
         queryB = initQueryIndicator({
             oncogenic: 'Oncogenic',
-            highestResistanceLevel: 'LEVEL_R2'
+            highestResistanceLevel: LevelOfEvidence.LEVEL_R2
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
@@ -186,13 +187,13 @@ describe('OncoKB', () => {
 
         queryA = initQueryIndicator({
             oncogenic: 'Oncogenic',
-            highestSensitiveLevel: 'LEVEL_2A',
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A,
             highestResistanceLevel: ''
         });
         queryB = initQueryIndicator({
             oncogenic: 'Oncogenic',
             highestSensitiveLevel: '',
-            highestResistanceLevel: 'LEVEL_R1'
+            highestResistanceLevel: LevelOfEvidence.LEVEL_R1
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
@@ -205,7 +206,7 @@ describe('OncoKB', () => {
         });
         queryB = initQueryIndicator({
             oncogenic: 'Unknown',
-            highestSensitiveLevel: 'LEVEL_2A'
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
@@ -246,7 +247,7 @@ describe('OncoKB', () => {
         });
         queryB = initQueryIndicator({
             variantExist: true,
-            highestSensitiveLevel: 'LEVEL_2A'
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
@@ -259,7 +260,7 @@ describe('OncoKB', () => {
         });
         queryB = initQueryIndicator({
             variantExist: false,
-            highestSensitiveLevel: 'LEVEL_2A'
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
@@ -275,7 +276,7 @@ describe('OncoKB', () => {
         queryB = initQueryIndicator({
             oncogenic: 'Oncogenic',
             hotspot: true,
-            highestSensitiveLevel: 'LEVEL_2A'
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
@@ -290,7 +291,7 @@ describe('OncoKB', () => {
         queryB = initQueryIndicator({
             oncogenic: 'Oncogenic',
             hotspot: false,
-            highestSensitiveLevel: 'LEVEL_2A'
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);

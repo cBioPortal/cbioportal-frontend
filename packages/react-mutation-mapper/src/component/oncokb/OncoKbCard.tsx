@@ -61,10 +61,6 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
         return link;
     }
 
-    public static get LEVELS(): string[] {
-        return ['1', '2A', '2B', '3A', '3B', '4', 'R1', 'R2'];
-    }
-
     constructor(props:OncoKbCardProps)
     {
         super(props);
