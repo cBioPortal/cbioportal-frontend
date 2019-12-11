@@ -243,11 +243,11 @@ export default class Oncoprint {
 
         this.header_view = new OncoprintHeaderView(this.$header_div);
 
-        this.cell_view = new OncoprintWebGLCellView($cell_div, $cell_canvas, $cell_overlay_canvas, $column_label_canvas, $dummy_scroll_div_contents, this.model, new OncoprintToolTip($tooltip_ctr), function(left, right) {
-                const enclosed_ids = self.model.getIdsInLeftInterval(left, right);
-                self.setHorzZoom(self.model.getHorzZoomToFit(self.cell_view.visible_area_width, enclosed_ids));
+        this.cell_view = new OncoprintWebGLCellView($cell_div, $cell_canvas, $cell_overlay_canvas, $column_label_canvas, $dummy_scroll_div_contents, this.model, new OncoprintToolTip($tooltip_ctr),
+            function(left, right) {
+                const enclosed_ids = self.model.getIdsInZoomedLeftInterval(left, right);
+                self.setHorzZoom(self.model.getHorzZoomToFit(self.cell_view.getVisibleAreaWidth(), enclosed_ids));
                 self.$dummy_scroll_div.scrollLeft(self.model.getZoomedColumnLeft(enclosed_ids[0]));
-                self.id_clipboard = enclosed_ids;
             },
             function(uid, track_id) {
                 self.doCellMouseOver(uid, track_id);
@@ -257,27 +257,25 @@ export default class Oncoprint {
             }
         );
 
-        this.minimap_view = new OncoprintMinimapView($minimap_div, $minimap_canvas, $minimap_overlay_canvas, this.model, this.cell_view, 150, 150, function(x,y) {
+        this.minimap_view = new OncoprintMinimapView($minimap_div, $minimap_canvas, $minimap_overlay_canvas, this.model, this.cell_view, 150, 150,
+            function(x,y) {
                 self.setScroll(x,y);
             },
             function(vp:MinimapViewportSpec) {
-                self.setViewport(vp.col,vp.scroll_y_proportion,vp.num_cols, vp.zoom_y);
+                self.setViewport(vp);
             },
             function(val:number) {
-                const prev_viewport = self.cell_view.getViewportOncoprintSpace(self.model);
-                const prev_center_onc_space = (prev_viewport.left + prev_viewport.right) / 2;
-                const center_column = Math.floor(prev_center_onc_space / (self.model.getCellWidth(true) + self.model.getCellPadding(true)));
-                self.setHorzZoom(val);
-                const viewport = self.cell_view.getViewportOncoprintSpace(self.model);
-                const center_column_x_zoomed = center_column * (self.model.getCellWidth() + self.model.getCellPadding());
-                const half_viewport_width_zoomed = self.model.getHorzZoom() * (viewport.right - viewport.left) / 2;
-
-                self.setHorzScroll(center_column_x_zoomed - half_viewport_width_zoomed);
+                self.setHorzZoomCentered(val);
             },
             function(val:number) {
+                // Save unzoomed vertical center pre-zoom
                 const prev_viewport = self.cell_view.getViewportOncoprintSpace(self.model);
                 const center_onc_space = (prev_viewport.top + prev_viewport.bottom) / 2;
+
+                // Execute zoom
                 self.setVertZoom(val);
+
+                // Set scroll to recenter the vertical center
                 const viewport = self.cell_view.getViewportOncoprintSpace(self.model);
                 const half_viewport_height_zoomed = self.model.getVertZoom() * (viewport.bottom - viewport.top) / 2;
 
@@ -315,7 +313,9 @@ export default class Oncoprint {
             },
             function (track_id:TrackId) { self.removeTrack(track_id); },
             function (track_id, dir) { self.setTrackSortDirection(track_id, dir); },
-            function (track_id:TrackId) { self.removeExpansionTracksFor(track_id); });
+            function (track_id:TrackId) { self.removeExpansionTracksFor(track_id); },
+            self.setTrackShowGaps.bind(self)
+        );
         this.track_info_view = new OncoprintTrackInfoView($track_info_div, new OncoprintToolTip($tooltip_ctr));
 
         //this.track_info_view = new OncoprintTrackInfoView($track_info_div);
@@ -334,8 +334,6 @@ export default class Oncoprint {
 
         // We need to handle scrolling this way because for some reason huge
         //  canvas elements have terrible resolution.
-        const cell_view = this.cell_view;
-        const model = this.model;
 
         this.target_dummy_scroll_left = 0;
         this.target_dummy_scroll_top = 0;
@@ -685,7 +683,7 @@ export default class Oncoprint {
     }
     private getHorzZoomToFit(ids:ColumnId[]) {
         ids = ids || [];
-        return this.model.getHorzZoomToFit(this.cell_view.visible_area_width, ids);
+        return this.model.getHorzZoomToFit(this.cell_view.getVisibleAreaWidth(), ids);
     }
     private executeHorzZoomCallbacks() {
         for (let i=0; i<this.horz_zoom_callbacks.length; i++) {
@@ -723,6 +721,17 @@ export default class Oncoprint {
         return this.model.getHorzZoom();
     }
 
+    public setHorzZoomCentered(z:number) {
+        // Save id thats at center pre-zoom
+        const centerColIndex = this.cell_view.getViewportOncoprintSpace(this.model).center_col_index;
+        const centerId = this.model.getIdOrder()[centerColIndex];
+
+        // Execute zoom
+        this.setHorzZoom(z);
+
+        // Set scroll to recenter the saved id
+        this.setHorzScroll(this.model.getZoomedColumnLeft(centerId) - this.cell_view.visible_area_width/2);
+    }
 
     public setHorzZoom(z:number, still_keep_horz_zoomed_to_fit?:boolean) {
         if(this.webgl_unavailable || this.destroyed) {
@@ -862,16 +871,16 @@ export default class Oncoprint {
 
         return this.model.getVertScroll();
     }
-    public setViewport(col:number, scroll_y_proportion:number, num_cols:number, zoom_y:number) {
+    public setViewport(vp:MinimapViewportSpec) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
         // Zoom
-        const zoom_x = this.model.getHorzZoomToFitNumCols(this.cell_view.getVisibleAreaWidth(), num_cols);
-        this.setZoom(zoom_x, zoom_y);
+        const zoom_x = this.model.getHorzZoomToFitCols(this.cell_view.getVisibleAreaWidth(), vp.left_col, vp.right_col);
+        this.setZoom(zoom_x, vp.zoom_y);
         // Scroll
-        const scroll_left = Math.min(col * (this.model.getCellWidth() + this.model.getCellPadding()), this.maxOncoprintScrollLeft());
-        const scroll_top = Math.min(scroll_y_proportion*this.model.getOncoprintHeight(), this.maxOncoprintScrollTop());
+        const scroll_left = Math.min(this.model.getZoomedColumnLeft(this.model.getIdOrder()[vp.left_col]), this.maxOncoprintScrollLeft());
+        const scroll_top = Math.min(vp.scroll_y_proportion*this.model.getOncoprintHeight(), this.maxOncoprintScrollTop());
         this.setScroll(scroll_left, scroll_top);
 
         this.executeHorzZoomCallbacks();
@@ -959,6 +968,12 @@ export default class Oncoprint {
             if (this.keep_sorted && this.model.isSortAffected(track_id, "track")) {
                 this.sort();
             }
+
+            if (this.model.getTrackSortDirection(track_id) === 0) {
+                if (this.model.getTrackShowGaps(track_id)) {
+                    this.setTrackShowGaps(track_id, false);
+                }
+            }
         }
         return this.model.getTrackSortDirection(track_id);
     }
@@ -1000,6 +1015,15 @@ export default class Oncoprint {
         this.label_view.setShowTrackSublabels(this.model, this.getCellViewHeight);
 
         this.resizeAndOrganizeAfterTimeout();
+    }
+
+    public setTrackShowGaps(track_id:TrackId, showGaps:boolean) {
+        this.model.setTrackShowGaps(track_id, showGaps);
+        if (this.model.getTrackSortDirection(track_id) === 0 && showGaps) {
+            this.setTrackSortDirection(track_id, 1);
+        }
+        this.track_options_view.setTrackShowGaps(this.model, this.getCellViewHeight);
+        this.cell_view.setTrackShowGaps(this.model);
     }
 
     public sort() {

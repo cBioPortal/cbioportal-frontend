@@ -151,38 +151,4 @@ export default class PrecomputedComparator<T> {
             preferred: preferred
         };
     }
-
-    public compare(idA:ColumnId, idB:ColumnId) {
-        let indA = this.id_to_index[idA];
-        let indB = this.id_to_index[idB];
-        if (typeof indA === 'undefined' && typeof indB === 'undefined') {
-            return 0;
-        } else if (typeof indA === 'undefined') {
-            return 1;
-        } else if (typeof indB === 'undefined') {
-            return -1;
-        }
-
-        let should_negate_result = false;
-        if (indA === indB) {
-            return 0;
-        } else if (indA > indB) {
-            // switch if necessary to make process WLOG
-            const tmp = indA;
-            indA = indB;
-            indB = tmp;
-            should_negate_result = true;
-        }
-        // See if any changepoints in [indA, indB)
-        let res = 0;
-        if (hasElementsInInterval(this.mandatory_change_points, function(x:number) { return x; }, indA, indB)) {
-            res = -1;
-        } else if (hasElementsInInterval(this.preferred_change_points, function(x:number) { return x; }, indA, indB)) {
-            res = -0.5;
-        }
-        if (should_negate_result) {
-            res = res * -1;
-        }
-        return res;
-    }
 }
