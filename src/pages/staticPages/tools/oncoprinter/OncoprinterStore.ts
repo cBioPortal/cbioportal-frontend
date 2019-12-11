@@ -49,11 +49,21 @@ export default class OncoprinterStore {
 
     @observable.ref _inputSampleIdOrder:string | undefined = undefined;
     @observable.ref _geneOrder:string | undefined = undefined;
-    @observable driverAnnotationSettings:OncoprinterDriverAnnotationSettings = initDriverAnnotationSettings(this);
+    @observable driverAnnotationSettings:OncoprinterDriverAnnotationSettings;
     @observable.ref _geneticDataInput:string|undefined = undefined;
     @observable.ref _clinicalDataInput:string|undefined = undefined;
     @observable public showUnalteredColumns:boolean = true;
     @observable hideGermlineMutations = false;
+    @observable customDriverWarningHidden:boolean;
+
+    constructor() {
+        this.initialize();
+    }
+
+    private initialize() {
+        this.driverAnnotationSettings = initDriverAnnotationSettings(this);
+        this.customDriverWarningHidden = false;
+    }
 
     @computed get didOncoKbFail() {
         return this.oncoKbData.peekStatus === "complete" && (this.oncoKbData.result instanceof Error);
@@ -131,7 +141,7 @@ export default class OncoprinterStore {
         this.setGeneOrder(genes);
         this.setSampleIdOrder(samples);
 
-        this.driverAnnotationSettings = initDriverAnnotationSettings(this);
+        this.initialize();
     }
 
     @computed get parsedGeneticInputLines() {
