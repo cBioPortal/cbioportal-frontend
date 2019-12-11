@@ -2,6 +2,7 @@ import {Option, ProteinImpactType} from "cbioportal-frontend-commons";
 import {computed} from "mobx";
 import {observer} from "mobx-react";
 import * as React from 'react';
+import {CSSProperties} from "react";
 
 import {IProteinImpactTypeColors} from "../../model/ProteinImpact";
 import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS} from "../../util/MutationUtils";
@@ -29,13 +30,14 @@ export function getProteinImpactTypeOptionLabel(option: Option): JSX.Element
 
 export function getProteinImpactTypeBadgeLabel(option: BadgeSelectorOption,
                                                selectedValues: {[optionValue: string]: any},
-                                               badgeClassName?: string): JSX.Element
+                                               badgeClassName?: string,
+                                               badgeAlignmentStyle?: CSSProperties): JSX.Element
 {
     return (
         <BadgeLabel
             label={option.label || option.value}
             badgeContent={option.badgeContent}
-            badgeStyleOverride={getBadgeStyleOverride(option, selectedValues)}
+            badgeStyleOverride={getBadgeStyleOverride(option, selectedValues, badgeAlignmentStyle)}
             badgeClassName={badgeClassName}
             badgeFirst={true}
         />
@@ -47,6 +49,7 @@ export class ProteinImpactTypeBadgeSelector extends React.Component<ProteinImpac
 {
     public static defaultProps: Partial<ProteinImpactTypeBadgeSelectorProps> = {
         colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
+        alignColumns: true,
         unselectOthersWhenAllSelected: true,
         numberOfColumnsPerRow: 2
     };
