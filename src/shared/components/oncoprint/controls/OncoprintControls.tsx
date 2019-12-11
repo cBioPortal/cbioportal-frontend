@@ -600,7 +600,7 @@ export default class OncoprintControls extends React.Component<
                 />
             );
         } else {
-            return <span />;
+            return null;
         }
     }
 
@@ -626,7 +626,7 @@ export default class OncoprintControls extends React.Component<
         let menu = <LoadingIndicator isLoading={true} />;
         if (this.props.state.heatmapProfilesPromise.isComplete) {
             if (!this.props.state.heatmapProfilesPromise.result!.length) {
-                return <span />;
+                return null;
             } else {
                 menu = (
                     <div className="oncoprint__controls__heatmap_menu">
