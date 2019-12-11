@@ -120,7 +120,6 @@ export interface IBaseHeatmapTrackSpec {
 export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IBaseHeatmapTrackDatum[]; // can be IGeneHeatmapTrackDatum or ITreatmentHeatmapTrackDatum
     naLegendLabel?:string;
-    onRemove?: () => void;
     info?: string;
     labelColor?: string;
     labelCircleColor?: string;
@@ -131,6 +130,8 @@ export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     movable?:boolean;
     sortDirectionChangeable?:boolean; // never updated
     trackLinkUrl?: string | undefined;
+    onRemove?:()=>void;
+    onClickRemoveInTrackMenu?: ()=>void;
     molecularProfileName?: string;
     pivotThreshold?: number;
     sortOrder?: string;
