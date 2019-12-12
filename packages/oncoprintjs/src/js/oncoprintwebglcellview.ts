@@ -399,7 +399,6 @@ export default class OncoprintWebGLCellView {
 
     private setUpShaders(model:OncoprintModel) {
         const columnsRightAfterGapsSize = this.getColumnIndexesAfterAGap(model).length;
-        const maxBinarySearchSteps = Math.ceil(OMath.log2(columnsRightAfterGapsSize));
         const vertex_shader_source = `
             precision highp float;
             attribute float aPosVertex;
@@ -408,8 +407,7 @@ export default class OncoprintWebGLCellView {
 
             uniform float gapSize;
 
-            //              array length cant be 0
-            uniform float columnsRightAfterGaps[${columnsRightAfterGapsSize}];
+            uniform float columnsRightAfterGaps[${columnsRightAfterGapsSize}]; // sorted in ascending order
 
             uniform float columnWidth;
             uniform float scrollX;
@@ -433,44 +431,39 @@ export default class OncoprintWebGLCellView {
             	return vec3(pos0, pos1, pos2);
             }
 
-            float computeGapOffset(float column) {
+            float getGapOffset() {
                 // first do binary search to compute the number of gaps before this column, G(c)
-                // Let I(c) = the index in columnsRightAfterGaps of the first entry thats greater than or equal to c
-                // Then:
-                // G(c) = {
-                //          I(c), c is not in columnsRightAfterGaps
-                //          I(c) + 1, c is in columnsRightAfterGaps (i.e. columnsRightAfterGaps[I(c)] = c)
-                //        }     
+                // G(c) = the index in columnsRightAfterGaps of the first entry thats greater than c
                  
                 int lower_incl = 0;
                 int upper_excl = ${columnsRightAfterGapsSize};
                 int numGaps = 0;
                 
-                for (int loopDummyVar = 0; loopDummyVar < ${maxBinarySearchSteps}; loopDummyVar++) {
-                    if (lower_incl > upper_excl) {
+                for (int loopDummyVar = 0; loopDummyVar < 1/0; loopDummyVar++) {
+                    if (lower_incl >= upper_excl) {
                         break;
                     }
                 
                     int middle = (lower_incl + upper_excl)/2;
-                    if (columnsRightAfterGaps[middle] < column) {
-                        // continue binary search
+                    if (columnsRightAfterGaps[middle] < aVertexOncoprintColumn) {
+                        // G(c) > middle
                         lower_incl = middle + 1;
-                    } else if (columnsRightAfterGaps[middle] == column) {
-                        // see formula in comments at top of function
+                    } else if (columnsRightAfterGaps[middle] == aVertexOncoprintColumn) {
+                        // G(c) = middle + 1
                         numGaps = middle + 1;
                         break;
                     } else {
-                        // columnsRightAfterGaps[middle] > column
+                        // columnsRightAfterGaps[middle] > column, so G(c) <= middle
                         if (middle == 0) {
-                            // see formula in comments at top of function
+                            // 0 <= G(c) <= 0 -> G(c) = 0
                             numGaps = 0;
                             break;
-                        } else if (columnsRightAfterGaps[middle-1] < column) {
-                            // see formula in comments at top of function - this case means column is not in columnsRightAfterGaps
+                        } else if (columnsRightAfterGaps[middle-1] < aVertexOncoprintColumn) {
+                            // G(c) = middle
                             numGaps = middle;
                             break;
                         } else {
-                            // continue binary search
+                            // columnsRightAfterGaps[middle-1] >= column, so G(c) <= middle-1
                             upper_excl = middle;
                         }
                     }
@@ -486,7 +479,7 @@ export default class OncoprintWebGLCellView {
             	gl_Position *= vec4(zoomX, zoomY, 1.0, 1.0);
 
             // gaps should not be affected by zoom:
-                gl_Position[0] += computeGapOffset(aVertexOncoprintColumn);
+                gl_Position[0] += getGapOffset();
 
             // offsetY is given zoomed:
             	gl_Position[1] += offsetY;
