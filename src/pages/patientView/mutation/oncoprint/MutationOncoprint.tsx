@@ -479,32 +479,34 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
 
     @computed get header() {
         return (
-            <div style={{display:"inline-flex", alignItems:"center", marginBottom:5}}>
-                <LabeledCheckbox
-                    checked={this.clustered}
-                    onChange={()=>{ this.clustered = !this.clustered; }}
-                    labelProps={{style:{ marginRight:10}}}
-                    inputProps={{"data-test":"HeatmapCluster"}}
-                >
-                    <span style={{marginTop:-3}}>Cluster</span>
-                </LabeledCheckbox>
-                <LabeledCheckbox
-                    checked={this.mode === MutationOncoprintMode.MUTATION_TRACKS}
-                    onChange={()=>{ this.mode = (this.mode === MutationOncoprintMode.MUTATION_TRACKS ? MutationOncoprintMode.SAMPLE_TRACKS : MutationOncoprintMode.MUTATION_TRACKS); }}
-                    labelProps={{style:{ marginRight:10}}}
-                    inputProps={{"data-test":"HeatmapTranspose"}}
-                >
-                    <span style={{marginTop:-3}}>Transpose</span>
-                </LabeledCheckbox>
-                <LabeledCheckbox
-                    checked={this.showMutationLabels}
-                    onChange={()=>{ this.showMutationLabels = !this.showMutationLabels; }}
-                    labelProps={{style:{ marginRight:10}}}
-                    inputProps={{"data-test":"HeatmapMutationLabels"}}
-                >
-                    <span style={{marginTop:-3}}>Show mutation labels</span>
-                </LabeledCheckbox>
-                {this.zoomControls}
+            <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:5}}>
+                <div style={{display:"inline-flex", alignItems:"center"}}>
+                    <LabeledCheckbox
+                        checked={this.clustered}
+                        onChange={()=>{ this.clustered = !this.clustered; }}
+                        labelProps={{style:{ marginRight:10}}}
+                        inputProps={{"data-test":"HeatmapCluster"}}
+                    >
+                        <span style={{marginTop:-3}}>Cluster</span>
+                    </LabeledCheckbox>
+                    <LabeledCheckbox
+                        checked={this.mode === MutationOncoprintMode.MUTATION_TRACKS}
+                        onChange={()=>{ this.mode = (this.mode === MutationOncoprintMode.MUTATION_TRACKS ? MutationOncoprintMode.SAMPLE_TRACKS : MutationOncoprintMode.MUTATION_TRACKS); }}
+                        labelProps={{style:{ marginRight:10}}}
+                        inputProps={{"data-test":"HeatmapTranspose"}}
+                    >
+                        <span style={{marginTop:-3}}>Transpose</span>
+                    </LabeledCheckbox>
+                    <LabeledCheckbox
+                        checked={this.showMutationLabels}
+                        onChange={()=>{ this.showMutationLabels = !this.showMutationLabels; }}
+                        labelProps={{style:{ marginRight:10}}}
+                        inputProps={{"data-test":"HeatmapMutationLabels"}}
+                    >
+                        <span style={{marginTop:-3}}>Show mutation labels</span>
+                    </LabeledCheckbox>
+                    {this.zoomControls}
+                </div>
                 <DownloadControls
                     filename="vafHeatmap"
                     getSvg={()=>(this.oncoprint ? this.oncoprint.toSVG(true) : null)}
@@ -535,7 +537,10 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                 return null;
             } else {
                 return (
-                    <div>
+                    <div
+                        className="borderedChart"
+                        style={{display:"inline-block"}}
+                    >
                         {this.header}
                         <Oncoprint
                             key="MutationOncoprint"
