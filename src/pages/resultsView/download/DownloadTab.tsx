@@ -85,7 +85,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             this.props.store.molecularProfileIdToMolecularProfile,
         ],
         invoke: ()=>Promise.resolve(generateCaseAlterationData(
-            this.props.store.rvQuery.oqlQuery,
+            this.props.store.oqlText,
             this.props.store.selectedMolecularProfiles.result!,
             this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.result!,
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!,
@@ -225,7 +225,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach((data, index) => {
                 // mergedTrackOqlList is undefined means the data is for single track / oql
                 if (data.mergedTrackOqlList === undefined) {
-                    labels.push(getSingleGeneResultKey(index, this.props.store.rvQuery.oqlQuery, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>));
+                    labels.push(getSingleGeneResultKey(index, this.props.store.oqlText, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>));
                 }
                 // or data is for merged track (group: list of oqls)
                 else {
@@ -244,7 +244,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                 // mergedTrackOqlList is undefined means the data is for single track / oql
                 if (data.mergedTrackOqlList === undefined) {
                     const singleTrackOql = data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
-                    const label = getSingleGeneResultKey(index, this.props.store.rvQuery.oqlQuery, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>);
+                    const label = getSingleGeneResultKey(index, this.props.store.oqlText, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>);
                     // put types for single track into the map, key is track label
                     if (singleTrackOql.parsed_oql_line.alterations) {
                         trackAlterationTypesMap[label] = _.uniq(_.map(singleTrackOql.parsed_oql_line.alterations, (alteration) => alteration.alteration_type.toUpperCase()));
@@ -306,7 +306,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     });
 
     public render() {
-        const status = getMobxPromiseGroupStatus(this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationMap, this.cnaData, this.mutationData, 
+        const status = getMobxPromiseGroupStatus(this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationMap, this.cnaData, this.mutationData,
             this.mrnaData, this.proteinData, this.unalteredCaseAlterationData, this.alteredCaseAlterationData, this.props.store.virtualStudyParams, this.sampleMatrixText, this.props.store.nonSelectedMolecularProfilesGroupByName,
             this.props.store.studies, this.props.store.selectedMolecularProfiles);
 
@@ -433,8 +433,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             }
             return {"name": profileName}
         });
-        
-        return _.map(allProfileOptions, (option) => 
+
+        return _.map(allProfileOptions, (option) =>
             (
                 <tr>
                     <td style={{width: 500}}>

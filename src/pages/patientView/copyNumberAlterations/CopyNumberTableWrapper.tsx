@@ -21,6 +21,7 @@ import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
 import {ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import HeaderIconMenu from '../mutation/HeaderIconMenu';
 import GeneFilterMenu, { GeneFilterOption } from '../mutation/GeneFilterMenu';
+import PanelColumnFormatter from "shared/components/mutationTable/column/PanelColumnFormatter";
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
@@ -55,6 +56,9 @@ type ICopyNumberTableWrapperProps = {
     showGeneFilterMenu?:boolean;
     currentGeneFilter:GeneFilterOption;
     onFilterGenes?:(option:GeneFilterOption)=>void;
+    sampleToMutationGenePanelId?: {[sampleId:string]:string};
+    onSelectGenePanel?:(name:string)=>void;
+    disableTooltip?:boolean;
 };
 
 @observer
@@ -87,7 +91,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
         if (numSamples >= 2) {
             columns.push({
                 name: "Samples",
-                render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager, this.props.sampleToGenePanelId, this.props.genePanelIdToEntrezGeneIds),
+                render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager, this.props.sampleToGenePanelId, this.props.genePanelIdToEntrezGeneIds, this.props.onSelectGenePanel, this.props.disableTooltip),
                 sortBy:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
                 download: (d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSample(d),
                 order: 20,
@@ -112,6 +116,23 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             },
             visible: true,
             order: 30
+        });
+        
+        const GenePanelProps = (d:DiscreteCopyNumberData[]) => ({
+            data: d,
+            sampleToGenePanelId: this.props.sampleToGenePanelId,
+            sampleManager: this.props.sampleManager,
+            genePanelIdToGene: this.props.genePanelIdToEntrezGeneIds,
+            onSelectGenePanel: this.props.onSelectGenePanel
+        });
+        
+        columns.push({
+            name: "Gene panel",
+            render: (d:DiscreteCopyNumberData[]) => PanelColumnFormatter.renderFunction(GenePanelProps(d)),
+            download: (d:DiscreteCopyNumberData[]) => PanelColumnFormatter.download(GenePanelProps(d)),
+            sortBy: (d:DiscreteCopyNumberData[]) => PanelColumnFormatter.getGenePanelIds(GenePanelProps(d)),
+            visible: false,
+            order: 35
         });
 
         columns.push({

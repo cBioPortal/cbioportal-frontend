@@ -5,7 +5,6 @@ import Container from 'appShell/App/Container';
 import {
     handleIndexDO,
     handleCaseDO,
-    handleLegacySubmission,
     restoreRouteAfterRedirect,
     handleStudyDO,
     handleLinkOut,
@@ -123,14 +122,7 @@ export const makeRoutes = routing => {
                 component={GroupComparisonLoading}
             />
             <Route
-                path="/results/legacy_submission"
-                onEnter={handleLegacySubmission}
-                component={getBlankPage()}
-            />
-
-            <Route
                 path="/results(/:tab)"
-                onEnter={() => {}}
                 getComponent={lazyLoadComponent(ResultsViewPage)}
             />
             <Route
