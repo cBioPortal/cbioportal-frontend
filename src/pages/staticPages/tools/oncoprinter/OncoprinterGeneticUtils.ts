@@ -121,7 +121,7 @@ export function initDriverAnnotationSettings(store:OncoprinterStore) {
             store.customDriverWarningHidden = true;
         },
         get oncoKb() {
-            return AppConfig.serverConfig.show_oncokb && this._oncoKb && !store.didOncoKbFail;
+            return !!(AppConfig.serverConfig.show_oncokb && this._oncoKb && !store.didOncoKbFail);
         },
         set excludeVUS(val:boolean) {
             this._excludeVUS = val;
