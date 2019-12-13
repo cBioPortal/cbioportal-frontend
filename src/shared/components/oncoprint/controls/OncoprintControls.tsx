@@ -29,6 +29,7 @@ import TextIconArea, {ITextIconAreaItemProps,} from 'shared/components/textIconA
 import {extractTreatmentSelections} from '../OncoprintUtils';
 import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
 import DriverAnnotationControls, {IDriverAnnotationControlsHandlers} from "../../../../pages/resultsView/settings/DriverAnnotationControls";
+import OncoprintDropdownCount from 'pages/resultsView/oncoprint/OncoprintDropdownCount';
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;
@@ -599,7 +600,7 @@ export default class OncoprintControls extends React.Component<
                 />
             );
         } else {
-            return <span />;
+            return null;
         }
     }
 
@@ -625,7 +626,7 @@ export default class OncoprintControls extends React.Component<
         let menu = <LoadingIndicator isLoading={true} />;
         if (this.props.state.heatmapProfilesPromise.isComplete) {
             if (!this.props.state.heatmapProfilesPromise.result!.length) {
-                return <span />;
+                return null;
             } else {
                 menu = (
                     <div className="oncoprint__controls__heatmap_menu">
@@ -703,9 +704,16 @@ export default class OncoprintControls extends React.Component<
         return (
             <CustomDropdown
                 bsStyle="default"
-                title="Heatmap"
+                title="Add Heatmap Tracks"
                 id="heatmapDropdown"
                 className="heatmap"
+                titleElement={<OncoprintDropdownCount
+                    count={
+                        this.props.state.heatmapProfilesPromise.isComplete && this.props.state.heatmapProfilesPromise!.result ?
+                            this.props.state.heatmapProfilesPromise!.result!.length :
+                            undefined
+                    }
+                />}
             >
                 {menu}
             </CustomDropdown>

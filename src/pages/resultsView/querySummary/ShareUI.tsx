@@ -8,10 +8,12 @@ import autobind from "autobind-decorator";
 import {BookmarkModal} from "../bookmark/BookmarkModal";
 import {action, observable} from "mobx";
 import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 
 interface IShareUI {
     sessionEnabled: boolean;
-    routingStore: ExtendedRouterStore;
+    //routingStore: ExtendedRouterStore;
+    urlWrapper:ResultsViewURLWrapper;
     bitlyAccessToken?: string | null;
 }
 
@@ -35,10 +37,10 @@ export class ShareUI extends React.Component<IShareUI, {}> {
         let bitlyResponse;
 
         if (this.props.sessionEnabled) {
-            if (this.props.routingStore._session) {
+            if (this.props.urlWrapper.hasSessionId) {
                 sessionUrl = getBrowserWindow().location.href;
             } else {
-                const resp = await this.props.routingStore.saveRemoteSession(this.props.routingStore.query);
+                const resp = await this.props.urlWrapper.saveRemoteSession(this.props.urlWrapper.query);
                 // for testing purposes we don't have links to localhost
                 sessionUrl = URL.format({
                     hostname: (win.location.hostname.includes("localhost") ? "www.cbioportal.org" : win.location.hostname),

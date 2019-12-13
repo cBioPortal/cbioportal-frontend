@@ -947,11 +947,11 @@ describe("Oncoprint TooltipUtils", () => {
             });
             it("should show the correct output for a single value", () => {
                 const tooltipResult = tooltip([{ attr_val_counts: { "a": 1 }, attr_val: "a", sample: "sampleID" }]);
-                assert.isTrue(tooltipResult.html().indexOf(`label1234: <span style="white-space:nowrap"><b>a</b></span>`) > -1);
+                assert.isTrue(tooltipResult.html().indexOf(`label1234: <span style="white-space:nowrap; display:inline-block;"><b>a</b></span>`) > -1);
             });
             it("should show the correct output for multiple values", () => {
                 const tooltipResult = tooltip([{ attr_val_counts: { "a": 1, "b": 3 }, attr_val: "a", sample: "sampleID" }]);
-                assert.isTrue(tooltipResult.html().indexOf(`label1234:<br><span style="white-space:nowrap"><b>a</b>: 1 sample</span><br><span style="white-space:nowrap"><b>b</b>: 3 samples</span>`) > -1);
+                assert.isTrue(tooltipResult.html().indexOf(`label1234:<br><span style="white-space:nowrap; display:inline-block;"><b>a</b>: 1 sample</span><br><span style="white-space:nowrap; display:inline-block;"><b>b</b>: 3 samples</span>`) > -1);
             });
             it("should show the correct output for multiple data, single value", () => {
                 const tooltipResult = tooltip([
@@ -959,7 +959,7 @@ describe("Oncoprint TooltipUtils", () => {
                     { attr_val_counts: { "a": 1 }, attr_val: "a", patient: "patientID" },
                     { attr_val_counts: { "a": 2 }, attr_val: "a", patient: "patientID" }
                 ]);
-                assert.isTrue(tooltipResult.html().indexOf(`label1234: <span style="white-space:nowrap"><b>a</b> (4 samples)</span><br>`) > -1);
+                assert.isTrue(tooltipResult.html().indexOf(`label1234: <span style="white-space:nowrap; display:inline-block;"><b>a</b> (4 samples)</span><br>`) > -1);
             });
             it("should show the correct output for multiple data, multiple values", () => {
                 const tooltip = makeClinicalTrackTooltip(trackSpec, false);
@@ -969,7 +969,7 @@ describe("Oncoprint TooltipUtils", () => {
                     { attr_val_counts: { "a": 2, "b": 1, "c": 1 }, attr_val: "a", patient: "patientID" }
                 ]);
                 assert.isTrue(tooltipResult.html().indexOf(
-                    `label1234:<br><span style="white-space:nowrap"><b>a</b>: 4 samples</span><br><span style="white-space:nowrap"><b>b</b>: 6 samples</span><br><span style="white-space:nowrap"><b>c</b>: 1 sample</span>`
+                    `label1234:<br><span style="white-space:nowrap; display:inline-block;"><b>a</b>: 4 samples</span><br><span style="white-space:nowrap; display:inline-block;"><b>b</b>: 6 samples</span><br><span style="white-space:nowrap; display:inline-block;"><b>c</b>: 1 sample</span>`
                 ) > -1);
             });
         });

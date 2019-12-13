@@ -136,7 +136,8 @@ export enum MutationTableColumnType {
     GNOMAD,
     CLINVAR,
     SELECTED,
-    DBSNP
+    DBSNP,
+    GENE_PANEL
 }
 
 type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=>boolean};

@@ -4,6 +4,8 @@ categories:
   - title: '🧬 Features'
     labels:
       - 'feature'
+  - title: '✨ Enhancements'
+    labels:
       - 'enhancement'
   - title: '🐛 Bug Fixes'
     labels:
@@ -29,16 +31,20 @@ categories:
   - title: '📘 Documentation'
     labels:
       - 'documentation'
-  - title: '🧹 Cleanup'
+  - title: '🧹 Cleanup & Refactoring 🔧'
     labels:
       - 'cleanup'
+      - 'refactoring'
   - title: '👷‍♀️ Testing, Configuration & Deployment'
     labels:
       - 'devops'
+      - 'test'
   - title: '🧰 Maintenance'
     labels:
       - 'chore'
       - 'dependencies'
+exclude-labels:
+  - 'skip-changelog'      
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 template: |
   ## Changes
