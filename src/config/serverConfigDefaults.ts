@@ -6,7 +6,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     dat_uuid_revoke_other_tokens: true,
     dat_method: 'none',
     disabled_tabs: '',
-    genomenexus_url: 'https://www.genomenexus.org',
+    genomenexus_url: 'https://v1.genomenexus.org',
     g2s_url: 'https://g2s.genomenexus.org',
     mycancergenome_show: false,
 
@@ -105,7 +105,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     enable_darwin: false,
 
-    session_url_length_threshold: '1990',
+    session_url_length_threshold: '1500',
 
     study_view: {
         tableAttrs: ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'],
@@ -156,7 +156,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>',
 
     query_product_limit: 1000000,
-    
+
     skin_show_gsva: false,
 };
 

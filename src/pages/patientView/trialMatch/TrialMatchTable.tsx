@@ -92,9 +92,6 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                 {trial.matches.map((armMatch: IArmMatch, index: number) => (
                     <div>
                         <div className={styles.matchInfoContainer}>
-                            <div className={styles.sampleIdsContainer}>
-                                {this.getSampleIdIcons(armMatch.sampleIds)}
-                            </div>
                             <div className={styles.genomicInfoContainer}>
                                 <div>
                                     {armMatch.matches.map((clinicalGroupMatch: IClinicalGroupMatch, cgIndex:number) => (
@@ -113,6 +110,9 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                                         <span>Arm: {armMatch.armDescription}</span>
                                     </div>
                                 </If>
+                                <div>
+                                    <span>Matched Samples: {this.getSampleIdIcons(armMatch.sampleIds)}</span>
+                                </div>
                                 <If condition={armMatch.drugs.length > 0}>
                                     <div>
                                         <span>
@@ -151,13 +151,13 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
             sortedSampleIds = sampleOrder.filter( ( sampleId: string ) => sampleIds.includes( sampleId ) );
         }
         return (
-            <div>
+            <React.Fragment>
                 {sortedSampleIds.map((sampleId: string) => (
                     <span className={styles.genomicSpan}>
                         {this.props.sampleManager!.getComponentForSample(sampleId, 1, '')}
                     </span>
                 ))}
-            </div>
+            </React.Fragment>
         );
     }
 
@@ -209,7 +209,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                             overlay={this.tooltipGenomicContent(genomicGroupMatch.genomicAlteration)}
                             destroyTooltipOnHide={false}
                             onPopupAlign={placeArrowBottomLeft}>
-                            <i className={'fa fa-info ' + styles.icon}></i>
+                            <i className={'fa fa-info-circle ' + styles.icon}></i>
                         </DefaultTooltip>
                     </div>
                 ))}
@@ -249,7 +249,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                         overlay={this.tooltipGenomicContent(mutationAndCnagenemicAlterations)}
                         destroyTooltipOnHide={false}
                         onPopupAlign={placeArrowBottomLeft}>
-                        <i className={'fa fa-info ' + styles.icon}></i>
+                        <i className={'fa fa-info-circle ' + styles.icon}></i>
                     </DefaultTooltip>
                 </div>
                 }
@@ -265,7 +265,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                         overlay={this.tooltipGenomicContent(notMatches.WILDTYPE[0].genomicAlteration)}
                         destroyTooltipOnHide={false}
                         onPopupAlign={placeArrowBottomLeft}>
-                        <i className={'fa fa-info ' + styles.icon}></i>
+                        <i className={'fa fa-info-circle ' + styles.icon}></i>
                     </DefaultTooltip>
                 </div>
                 }
@@ -274,10 +274,11 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
     }
 
     public getGenomicAlteration(data: string[]) {
+        const filteredData = data.map((e: string) => e.split(' '));
         return (
             <div>
-                {data.map((e: string) => (
-                    <div>{e}</div>
+                {filteredData.map((e: string[]) => (
+                    <div><b>{e[0]}</b> {e[1]}</div>
                 ))}
             </div>
         );
@@ -286,7 +287,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
     public tooltipGenomicContent(data: string[]) {
         return (
             <div className={styles.tooltip}>
-                <div>Matched genomic criteria of the trial:</div>
+                <div>Genomic selection {data.length > 1 ? 'criteria': 'criterion'} specified in the trial:</div>
                 {data.map((e: string) => (
                     <div className={styles.genomicSpan}>
                         <If condition={e.includes('!')}>
@@ -354,7 +355,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                     showCopyDownload={false}
                 />
                 <div className={styles.powered}>
-                    Powered by <a href="https://oncokb.org/" target="_blank">OncoKB</a> && <a href="https://matchminer.org/" target="_blank">MatchMiner</a>
+                    Powered by <a href="https://oncokb.org/" target="_blank">OncoKB</a> & <a href="https://matchminer.org/" target="_blank">MatchMiner</a>
                 </div>
             </div>
         )

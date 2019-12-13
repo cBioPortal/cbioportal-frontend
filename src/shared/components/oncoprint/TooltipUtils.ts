@@ -34,7 +34,7 @@ function patientViewAnchorTag(study_id:string, patient_id:string) {
 };
 
 function makeGenePanelPopupLink(gene_panel_id:string, profiled:boolean, numSamples?:number) {
-    let anchor = $(`<span style="white-space:nowrap"><a href="#" ${!profiled ? 'style="color:red;"': ""} oncontextmenu="return false;">${gene_panel_id}</a>${numSamples ? ` (${numSamples})` : ""}</span>`);
+    let anchor = $(`<span style="white-space:nowrap; display:inline-block;"><a href="#" ${!profiled ? 'style="color:red;"': ""} oncontextmenu="return false;">${gene_panel_id}</a>${numSamples ? ` (${numSamples})` : ""}</span>`);
     anchor.ready(()=>{
         anchor.click(function() {
             client.getGenePanelUsingGET({ genePanelId: gene_panel_id }).then((panel:GenePanel)=>{
@@ -98,17 +98,17 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
                 if (displayVal.substring(displayVal.length-3) === ".00") {
                     displayVal = displayVal.substring(0, displayVal.length-3);
                 }
-                ret += track.label+': <span style="white-space:nowrap"><b>' + displayVal + `${count > 1 ? ` (average of ${count} values)`:""}</b></span><br>`;
+                ret += track.label+': <span style="white-space:nowrap; display:inline-block;"><b>' + displayVal + `${count > 1 ? ` (average of ${count} values)`:""}</b></span><br>`;
             } else {
                 if (attr_vals.length > 1) {
                     ret += track.label+':<br>';
                     for (let i = 0; i < attr_vals.length; i++) {
                         const val = attr_vals[i];
-                        ret += '<span style="white-space:nowrap"><b>' + val + '</b>: ' + attr_val_counts[val] + ` sample${attr_val_counts[val] === 1 ? "" : "s"}</span><br>`;
+                        ret += '<span style="white-space:nowrap; display:inline-block;"><b>' + val + '</b>: ' + attr_val_counts[val] + ` sample${attr_val_counts[val] === 1 ? "" : "s"}</span><br>`;
                     }
                 } else if (attr_vals.length === 1) {
                     let displayVal = attr_vals[0];
-                    ret += track.label+': <span style="white-space:nowrap"><b>' + displayVal + `</b>${dataUnderMouse.length > 1 ? ` (${attr_val_counts[attr_vals[0]]} samples)` : ""}</span><br>`;
+                    ret += track.label+': <span style="white-space:nowrap; display:inline-block;"><b>' + displayVal + `</b>${dataUnderMouse.length > 1 ? ` (${attr_val_counts[attr_vals[0]]} samples)` : ""}</span><br>`;
                 }
             }
         }
@@ -304,7 +304,10 @@ export function makeGeneticTrackTooltip(
             oncokb_oncogenic, driver_filter, driver_filter_annotation,
                 driver_tiers_filter, driver_tiers_filter_annotation, germline],
             value:count})=>{
-            var ret = $('<span>').css("white-space", "nowrap");
+            var ret = $('<span>').css({
+                "white-space":"nowrap",
+                "display":"inline-block"
+            });
             ret.append(`<b>${hugo_gene_symbol} ${amino_acid_change}</b>`);
             if (cancer_hotspots_hotspot) {
                 ret.append(`<img src="${hotspotsImg}" title="Hotspot" style="height:11px; width:11px; margin-left:3px"/>`);

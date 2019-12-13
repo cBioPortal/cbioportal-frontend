@@ -25,6 +25,7 @@ import StructureViewerPanel from "shared/components/structureViewer/StructureVie
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS, getColorForProteinImpactType} from "shared/lib/MutationUtils";
@@ -53,6 +54,7 @@ export interface IMutationMapperProps {
     pdbHeaderCache?: PdbHeaderCache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     genomeNexusCache?:GenomeNexusCache;
+    genomeNexusMyVariantInfoCache?:GenomeNexusMyVariantInfoCache;
     // server config properties
     genomeNexusUrl?: string;
     oncoKbPublicApiUrl?: string;

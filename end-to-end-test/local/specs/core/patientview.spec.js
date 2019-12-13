@@ -9,9 +9,9 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 const patienViewUrl = CBIOPORTAL_URL+'/patient?studyId=teststudy_genepanels&caseId=patientA';
 
 describe('patient view page', function() {
-
+    
     if (useExternalFrontend) {
-
+        
         describe('gene panel information', () => {
 
             before(()=>{
@@ -216,7 +216,6 @@ describe('patient view page', function() {
         });
 
         describe('VAF plot', () => {
-
             before(()=>{
                 goToUrlAndSetLocalStorage(patienViewUrl);
                 waitForPatientView();
@@ -228,9 +227,103 @@ describe('patient view page', function() {
                 var genePanelIcon = $('svg[data-test=vaf-plot] rect.genepanel-icon');
                 assert(genePanelIcon.isExisting());
             });
-
         });
 
+        
+        describe('gene panel modal', () => {
+            function closeModal() {
+                $('.modal-footer button').click();
+            }
+
+            function clickOnGenePanelLinks() {
+                const genePanelLinks = $$('.rc-tooltip table td a');
+                genePanelLinks[genePanelLinks.length - 1].click();
+            }
+
+            beforeEach(() => {
+                goToUrlAndSetLocalStorage(patienViewUrl);
+                waitForPatientView();
+            })
+            
+            it('toggles gene panel modal from patient header', () => {
+                browser
+                    .moveToObject('.patientSamples .clinical-spans svg')
+                    .pause(500);
+                clickOnGenePanelLinks();
+                assert($('#patient-view-gene-panel').isExisting());
+            });
+
+            it('toggles gene panel modal from genomic tracks', () => {
+                // mouse over sample icon
+                browser
+                    .moveToObject(
+                        '.genomicOverviewTracksContainer svg[data-test=sample-icon]'
+                    )
+                    .pause(500);
+                clickOnGenePanelLinks();
+                assert($('#patient-view-gene-panel').isExisting());
+
+                closeModal();
+                assert(!$('#patient-view-gene-panel').isExisting());
+
+                // mouse over gene panel icon
+                browser
+                    .moveToObject(
+                        '.genomicOverviewTracksContainer [data-test=cna-track-genepanel-icon-0]'
+                    )
+                    .pause(500);
+                $('.qtip-content a').click();
+                assert($('#patient-view-gene-panel').isExisting());
+            });
+
+            it('toggles gene panel modal from mutations table', () => {
+                const mutationsTable = '[data-test=patientview-mutation-table]';
+
+                // mouse over sample icon in "Samples" column
+                browser
+                    .moveToObject(
+                        `${mutationsTable} table td [data-test=not-profiled-icon]`
+                    )
+                    .pause(500);
+                clickOnGenePanelLinks();
+                assert($('#patient-view-gene-panel').isExisting());
+
+                closeModal();
+                assert(!$('#patient-view-gene-panel').isExisting());
+
+                // click on gene panel id in "Gene panel" column
+                $(`${mutationsTable} button#dropdown-custom-1`).click();
+                $(`${mutationsTable} ul.dropdown-menu`)
+                    .$$('li')[2]
+                    .click();
+                $(`${mutationsTable} table a`).click();
+                assert($('#patient-view-gene-panel').isExisting());
+            });
+
+            it('toggles gene panel modal from copy number table', () => {
+                const copyNumberTable = '[data-test=patientview-copynumber-table]';
+
+                // mouse over sample icon in "Samples" column
+                browser
+                    .moveToObject(
+                        `${copyNumberTable} table td [data-test=not-profiled-icon]`
+                    )
+                    .pause(500);
+                clickOnGenePanelLinks();
+                assert($('#patient-view-gene-panel').isExisting());
+
+                closeModal();
+                assert(!$('#patient-view-gene-panel').isExisting());
+
+                // click on gene panel id in "Gene panel" column
+                $(`${copyNumberTable} button#dropdown-custom-1`).click();
+                $(`${copyNumberTable} ul.dropdown-menu`)
+                    .$$('li')[2]
+                    .click();
+                $(`${copyNumberTable} table a`).click();
+                assert($('#patient-view-gene-panel').isExisting());
+            });
+        })
     }
 });
 

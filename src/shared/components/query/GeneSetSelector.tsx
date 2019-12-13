@@ -100,7 +100,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                         />
                         <GeneSymbolValidationError
                             sampleCount={
-                                this.store.profiledSamplesCount.result.all
+                                this.store.approxSampleCount
                             }
                             queryProductLimit={
                                 AppConfig.serverConfig.query_product_limit
