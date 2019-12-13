@@ -49,24 +49,6 @@ export function normalizeLegacySession(sessionData:any){
     return sessionData;
 }
 
-// export enum QueryParameter {
-//     GENE_LIST="gene_list",
-//     Z_SCORE_THRESHOLD="Z_SCORE_THRESHOLD",
-//     RPPA_SCORE_THRESHOLD="RPPA_SCORE_THRESHOLD",
-//     CANCER_STUDY_LIST="cancer_study_list",
-//     CASE_IDS="case_ids",
-//     CASE_SET_ID="case_set_id",
-//     GENE_SET_CHOICE="gene_set_choice",
-//     GENETIC_PROFILE_IDS="genetic_profile_ids",
-//     CANCER_STUDY_ID="cancer_study_id",
-//     DATA_PRIORITY="data_priority",
-//     GENESET_LIST="geneset_list",
-//     TREATMENT_LIST="treatment_list",
-//     TAB_INDEX="tab_index",
-//     TRANSPOSE_MATRIX="transpose_matrix",
-//     ACTION="Action"
-// }
-
 export default class ExtendedRouterStore extends RouterStore {
 
 
@@ -89,6 +71,13 @@ export default class ExtendedRouterStore extends RouterStore {
         } else {
             newQuery = newParams;
         }
+
+        // clear out any undefined props
+        _.each(newQuery, (v, k: string) => {
+            if (v === undefined || v === "") {
+                delete newQuery[k];
+            }
+        });
 
         // put a leading slash if there isn't one
         path = URL.resolve('/', path);
