@@ -12,7 +12,7 @@ import {
 } from "./MutationOncoprintUtils";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../../../shared/components/ErrorMessage";
-import {computed, observable} from "mobx";
+import {computed, IReactionDisposer, observable, reaction} from "mobx";
 import ReactSelect from "react-select";
 import OncoprintJS, {InitParams, ColumnLabel, TrackId, ColumnId} from "oncoprintjs";
 import autobind from "autobind-decorator";
@@ -58,11 +58,26 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     @observable private horzZoomSliderState = 100;
     @observable clustered = true;
     @observable private mode:MutationOncoprintMode = MutationOncoprintMode.SAMPLE_TRACKS;
+    @observable minZoom = 0;
+
+    private minZoomUpdater:IReactionDisposer;
 
     constructor(props:IMutationOncoprintProps) {
         super(props);
 
         (window as any).mutationOncoprint = this;
+        this.minZoomUpdater = reaction(
+            ()=>this.heatmapTracks.result, // react to changes in data, which are what would affect the min zoom
+            ()=>setTimeout(()=>{
+                if (this.oncoprint) {
+                    this.minZoom = this.oncoprint.model.getMinHorzZoom();
+                }
+            })
+        );
+    }
+
+    componentWillUnmount() {
+        this.minZoomUpdater();
     }
 
     @autobind
@@ -457,7 +472,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                             onChangeComplete={this.updateOncoprintHorzZoom}
                             step={0.01}
                             max={1}
-                            min={0}
+                            min={this.minZoom}
                             tooltip={false}
                         />
                     </div>
