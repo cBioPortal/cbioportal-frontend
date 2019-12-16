@@ -7,7 +7,6 @@ function findXRange(
     let step = 1;
     while (func(lower) > y) {
         if (lower < Number.MIN_SAFE_INTEGER) {
-            debugger;
             throw new Error("Couldnt find lower bound");
         }
 

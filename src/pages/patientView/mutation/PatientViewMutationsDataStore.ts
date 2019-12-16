@@ -31,14 +31,17 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         return this._onlyShowSelectedInVAFChart;
     }
 
+    @action
     public setMouseOverMutation(m:Readonly<Mutation>|null) {
         this.mouseOverMutation = m;
     }
 
+    @action
     public setOnlyShowSelectedInTable(o:boolean) {
         this._onlyShowSelectedInTable = o;
     }
 
+    @action
     public setOnlyShowSelectedInVAFChart(o:boolean) {
         this._onlyShowSelectedInVAFChart = o;
     }
@@ -99,6 +102,4 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
             return _.some(highlightedMutations, m=>mutationMatch(d,m));
         }
     }
-
-
 }
