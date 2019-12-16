@@ -1,6 +1,6 @@
-function findXRange(
+export function findXRangeOfIncreasingFunction(
     func:(x:number)=>number,
-    y:number
+    y:number // the output range is so that func(range[0]) <= y <= func(range[1])
 ) {
     // find lower
     let lower = 0;
@@ -34,7 +34,7 @@ export default function invertIncreasingFunction(
     xRange?:[number,number],
     iterations:number = 20
 ) {
-    xRange = xRange || findXRange(func, y);
+    xRange = xRange || findXRangeOfIncreasingFunction(func, y);
     // tries to approximate the value x, within xRange, such that func(x) = targetOutput, assuming func is monotonic increasing
     let xMin = xRange[0];
     let xMax = xRange[1];

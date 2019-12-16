@@ -2,7 +2,6 @@ import {SimpleGetterLazyMobXTableApplicationDataStore} from "../../../shared/lib
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import {action, computed, observable} from "mobx";
 import _ from "lodash";
-import ComplexKeySet from "../../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 
 function mutationMatch(d:Mutation[], id:Mutation) {
     return d[0].proteinChange === id.proteinChange &&
