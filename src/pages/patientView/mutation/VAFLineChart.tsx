@@ -467,7 +467,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
 
     @autobind
     private getHighlights() {
-        // we have to do it this way because victory rerendering is inefficient
+        // we have to render the highlights separately because victory rerendering is too inefficient for mouse interactions
 
         const highlightedMutations = [];
         if (!this.props.dataStore.onlyShowSelectedInVAFChart) {
