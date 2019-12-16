@@ -31,6 +31,7 @@ import { getGroupParameters, getStudiesAttr } from "pages/groupComparison/compar
 import { SessionGroupData } from "shared/api/ComparisonGroupClient";
 import { stringListToIndexSet } from "public-lib";
 import { IStudyViewScatterPlotData } from "./charts/scatterPlot/StudyViewScatterPlotUtils";
+import { CNA_TO_ALTERATION } from "pages/resultsView/enrichments/EnrichmentsUtil";
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -386,6 +387,16 @@ export function getUniqueKey(attribute: ClinicalAttribute): string {
     return attribute.clinicalAttributeId;
 }
 
+const UNIQUE_KEY_SEPARATOR = ":";
+
+export function getUniqueKeyFromMolecularProfileIds(molecularProfileIds: string[]) {
+    return _.sortBy(molecularProfileIds).join(UNIQUE_KEY_SEPARATOR);
+}
+
+export function getMolecularProfileIdsFromUniqueKey(uniqueKey: string) {
+    return uniqueKey.split(UNIQUE_KEY_SEPARATOR);
+}
+
 export function getCurrentDate() {
     return new Date().toISOString().slice(0, 10);
 }
@@ -414,27 +425,14 @@ export function getVirtualStudyDescription(
         //add filters
         let filterLines: string[] = [];
         if (!_.isEmpty(filter)) {
-            if (filter.cnaGenes && filter.cnaGenes.length > 0) {
-                filterLines.push('- CNA Genes:')
-                filterLines = filterLines.concat(filter.cnaGenes.map(cnaGene => {
-                    return cnaGene.alterations.map(alteration => {
-                        let geneSymbol = alteration.hugoGeneSymbol
-                        return geneSymbol + "-" + getCNAByAlteration(alteration.alteration)
-                    }).join(', ').trim();
+
+            _.each(filter.geneFilters || [], (geneFilter) => {
+                let name = attributeNamesSet[getUniqueKeyFromMolecularProfileIds(geneFilter.molecularProfileIds)];
+                filterLines.push(`- ${name}:`);
+                filterLines = filterLines.concat(geneFilter.geneQueries.map(geneQuery => {
+                    return geneQuery.join(', ').trim();
                 }).map(line => '  - ' + line));
-            }
-            if (filter.mutatedGenes && filter.mutatedGenes.length > 0) {
-                filterLines.push('- Mutated Genes:')
-                filterLines = filterLines.concat(filter.mutatedGenes.map(mutatedGene => {
-                    return mutatedGene.hugoGeneSymbols.join(', ').trim();
-                }).map(line => '  - ' + line));
-            }
-            if (filter.fusionGenes && filter.fusionGenes.length > 0) {
-                filterLines.push('- Fusion Genes:')
-                filterLines = filterLines.concat(filter.fusionGenes.map(fusionGene => {
-                    return fusionGene.hugoGeneSymbols.join(', ').trim();
-                }).map(line => '  - ' + line));
-            }
+            });
 
             if (filter.withMutationData !== undefined) {
                 filterLines.push(`With Mutation data: ${filter.withMutationData ? 'YES' : 'NO'}`);
@@ -469,9 +467,7 @@ export function getVirtualStudyDescription(
 export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFilters>) {
     const flag = !(_.isEmpty(filter) || (
             _.isEmpty(filter.clinicalDataFilters) &&
-            _.isEmpty(filter.cnaGenes) &&
-            _.isEmpty(filter.mutatedGenes) &&
-            _.isEmpty(filter.fusionGenes) &&
+            _.isEmpty(filter.geneFilters) &&
             filter.withMutationData === undefined &&
             filter.withCNAData === undefined)
     );
@@ -822,7 +818,6 @@ export function closestIntegerPowerOfTen(value: number, dataBinPosition: DataBin
 }
 
 export function intervalFiltersDisplayValue(values: ClinicalDataFilterValue[]) {
-
     const categories = values
         .filter(value => value.start === undefined && value.end === undefined)
         .map(value => value.value);
@@ -977,17 +972,16 @@ export function getExponent(value: number): number
     return Number(Math.log10(Math.abs(value)).toFixed(fractionDigits));
 }
 
-
 export function getCNAByAlteration(alteration: number) {
-    if ([-2, 2].includes(alteration))
-        return alteration === -2 ? 'DEL' : 'AMP';
-    return '';
+    return CNA_TO_ALTERATION[alteration] || '';
 }
 
-export function getCNAColorByAlteration(alteration: number):string|undefined {
-    if ([-2, 2].includes(alteration))
-        return alteration === -2 ? CNA_COLOR_HOMDEL : CNA_COLOR_AMP;
-    return undefined;
+export function getCNAColorByAlteration(alteration: string): string | undefined {
+    switch (alteration) {
+        case "HOMDEL": return CNA_COLOR_HOMDEL;
+        case "AMP": return CNA_COLOR_AMP;
+        default: return undefined;
+    }
 }
 
 export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: ClinicalAttribute): ChartType | undefined {
@@ -1370,8 +1364,7 @@ export function getSamplesByExcludingFiltersOnChart(
     //create filter without study/sample identifiers
     let updatedFilter: StudyViewFilter = {
         clinicalDataFilters: filter.clinicalDataFilters,
-        cnaGenes: filter.cnaGenes,
-        mutatedGenes: filter.mutatedGenes
+        geneFilters: filter.geneFilters
     } as any;
 
     let _sampleIdentifiers = _.reduce(sampleIdentiferFilterSet, (acc, sampleIdentifiers, key) => {
