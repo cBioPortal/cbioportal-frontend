@@ -645,6 +645,7 @@ export class PatientViewPageStore {
             this.molecularProfilesInStudy
         ],
         invoke:async()=>{
+            // gather sample molecular identifiers
             const sampleMolecularIdentifiers:SampleMolecularIdentifier[] = [];
             this.samples.result!.forEach(sample=>{
                 const profiles = this.molecularProfilesInStudy.result!;
@@ -658,6 +659,7 @@ export class PatientViewPageStore {
                     }
                 }
             });
+            // query for gene panel data using sample molecular identifiers
             let genePanelData:GenePanelData[];
             if (sampleMolecularIdentifiers.length && this.mutatedGenes.result!.length) {
                 genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
@@ -667,6 +669,7 @@ export class PatientViewPageStore {
                 genePanelData = [];
             }
 
+            // query for gene panel metadata
             const genePanelIds = _.uniq(genePanelData.map(gpData=>gpData.genePanelId).filter(id=>!!id));
             let genePanels:GenePanel[] = [];
             if (genePanelIds.length) {
@@ -675,6 +678,8 @@ export class PatientViewPageStore {
                     projection:"DETAILED"
                 });
             }
+
+            // plug all data into computeGenePanelInformation to generate coverageInformation object
             return computeGenePanelInformation(genePanelData, genePanels, this.samples.result!, [{ uniquePatientKey:this.samples.result![0].uniquePatientKey }], this.mutatedGenes.result!);
         }
     }, { samples: {}, patients: {} });
