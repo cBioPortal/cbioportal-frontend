@@ -46,7 +46,7 @@ import setWindowVariable from 'shared/lib/setWindowVariable';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import {createQueryStore} from "shared/lib/createQueryStore";
-import {handleLegacySubmission} from "shared/lib/redirectHelpers";
+import {handleLegacySubmission, handlePostedSubmission} from "shared/lib/redirectHelpers";
 
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     const resultsViewPageStore = new ResultsViewPageStore(
@@ -102,6 +102,8 @@ export default class ResultsViewPage extends React.Component<
         this.urlWrapper = new ResultsViewURLWrapper(props.routing);
 
         handleLegacySubmission(this.urlWrapper);
+
+        handlePostedSubmission(this.urlWrapper);
 
         setWindowVariable('urlWrapper', this.urlWrapper);
 
