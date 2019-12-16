@@ -494,7 +494,6 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 studyIdToStudy: this.props.studyIdToStudy
             })),
             filter: (d:Mutation[], filterString:string, filterStringUpper:string)=>{
-                (window as any).data = this.props.oncoKbData;
                 let ret = false;
                 switch (filterStringUpper) {
                     case "HOTSPOT":
