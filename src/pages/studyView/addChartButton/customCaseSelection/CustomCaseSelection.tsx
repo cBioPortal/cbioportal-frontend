@@ -35,6 +35,9 @@ const GroupByOptions: { value: ClinicalDataType, label: string; }[] = [
     {value: ClinicalDataTypeEnum.PATIENT, label: 'By patient ID'}
 ];
 
+enum SelectMode {
+    SELECTED, UNSELECTED
+}
 @observer
 export default class CustomCaseSelection extends React.Component<ICustomCaseSelectionProps, {}> {
     private validateContent: boolean = false;
@@ -76,14 +79,23 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @autobind
     @action
-    onClick() {
-        let cases = this.props.selectedSamples.map(sample => {
+    onClick(selectMode: SelectMode) {
+        let selectedCases;
+        if (selectMode === SelectMode.SELECTED) {
+            selectedCases = this.props.selectedSamples;
+        } else {
+            const _selectedCaseIds = _.keyBy(this.props.selectedSamples, (sample) => sample.uniqueSampleKey);
+            selectedCases = this.props.allSamples.filter(sample => {
+                return !_selectedCaseIds[sample.uniqueSampleKey];
+            });
+        }
+        let cases = selectedCases.map(sample => {
             return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
         });
         if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
             cases = _.uniq(cases);
         }
-        this.content = cases.join("\n")
+        this.content = cases.join("\n");
         this.validateContent = false;
         this.validContent = this.content;
     }
@@ -94,7 +106,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
         this.validContent = newContent;
         this.validateContent = true;
     }
-    
+
     @autobind
     @action
     onChartNameChange(event: any) {
@@ -161,11 +173,22 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
 
                 <span>
-                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', marginTop: 5}}>
                         <span
-                            className={styles.fillIds}
-                            onClick={this.onClick}>
-                            Use currently selected samples/patients
+                            className={styles.selection}
+                            onClick={() => {
+                                this.onClick(SelectMode.SELECTED);
+                            }}>
+                            <i className='fa fa-arrow-down' style={{marginRight: 5}}></i>
+                            <span className={styles.selectionText}>all selected</span>
+                        </span>
+                        <span
+                            className={styles.selection}
+                            onClick={() => {
+                                this.onClick(SelectMode.UNSELECTED);
+                            }}>
+                            <i className='fa fa-arrow-down' style={{marginRight: 5}}></i>
+                            <span className={styles.selectionText}>all unselected</span>
                         </span>
 
                         <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
