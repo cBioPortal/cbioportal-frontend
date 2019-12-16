@@ -2131,31 +2131,6 @@
       },
       "title": "CopyNumberCountByGene"
     },
-    "CopyNumberGeneFilter": {
-      "type": "object",
-      "properties": {
-        "alterations": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/CopyNumberGeneFilterElement"
-          }
-        }
-      },
-      "title": "CopyNumberGeneFilter"
-    },
-    "CopyNumberGeneFilterElement": {
-      "type": "object",
-      "properties": {
-        "alteration": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        }
-      },
-      "title": "CopyNumberGeneFilterElement"
-    },
     "CosmicMutation": {
       "type": "object",
       "required": [
@@ -2303,17 +2278,26 @@
       },
       "title": "ExpressionEnrichment"
     },
-    "FusionGeneFilter": {
+    "GeneFilter": {
       "type": "object",
       "properties": {
-        "hugoGeneSymbols": {
+        "geneQueries": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "molecularProfileIds": {
           "type": "array",
           "items": {
             "type": "string"
           }
         }
       },
-      "title": "FusionGeneFilter"
+      "title": "GeneFilter"
     },
     "Geneset": {
       "type": "object",
@@ -2792,18 +2776,6 @@
       },
       "title": "MutationCountByGene"
     },
-    "MutationGeneFilter": {
-      "type": "object",
-      "properties": {
-        "hugoGeneSymbols": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "MutationGeneFilter"
-    },
     "MutationSpectrum": {
       "type": "object",
       "required": [
@@ -2944,22 +2916,10 @@
             "$ref": "#/definitions/ClinicalDataFilter"
           }
         },
-        "cnaGenes": {
+        "geneFilters": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/CopyNumberGeneFilter"
-          }
-        },
-        "fusionGenes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FusionGeneFilter"
-          }
-        },
-        "mutatedGenes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/MutationGeneFilter"
+            "$ref": "#/definitions/GeneFilter"
           }
         },
         "sampleIdentifiers": {

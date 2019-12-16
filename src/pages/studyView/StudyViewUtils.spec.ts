@@ -81,8 +81,7 @@ import { shallow } from 'enzyme';
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
         clinicalDataFilters: [],
-        cnaGenes: [],
-        mutatedGenes: []
+        geneFilters: []
     } as any;
 
     describe('updateGeneQuery', () => {
@@ -183,9 +182,9 @@ describe('StudyViewUtils', () => {
                         'attribute2': 'attribute2 name',
                         'attribute3': 'attribute3 name'
                     }
-                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n' +
-                '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n' +
-                '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'));
+                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n'+
+                '\nFilters:\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n- attribute2'+
+                ' name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on 2019-12-17'));
         });
         it('when username is not null', () => {
             assert.isTrue(
@@ -1224,7 +1223,7 @@ describe('StudyViewUtils', () => {
 
     describe('getCNAByAlteration', ()=>{
         it('return proper string from proper alteration', ()=>{
-            assert.isTrue(getCNAByAlteration(-2) === 'DEL');
+            assert.isTrue(getCNAByAlteration(-2) === 'HOMDEL');
             assert.isTrue(getCNAByAlteration(2) === 'AMP');
         });
 
