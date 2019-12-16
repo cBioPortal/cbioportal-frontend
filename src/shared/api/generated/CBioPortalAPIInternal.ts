@@ -131,16 +131,6 @@ export type CopyNumberCountByGene = {
         'totalCount': number
 
 };
-export type CopyNumberGeneFilter = {
-    'alterations': Array < CopyNumberGeneFilterElement >
-
-};
-export type CopyNumberGeneFilterElement = {
-    'alteration': number
-
-        'hugoGeneSymbol': string
-
-};
 export type CosmicMutation = {
     'cosmicMutationId': string
 
@@ -209,8 +199,11 @@ export type ExpressionEnrichment = {
         'pValue': number
 
 };
-export type FusionGeneFilter = {
-    'hugoGeneSymbols': Array < string >
+export type GeneFilter = {
+    'geneQueries': Array < Array < string >
+        >
+
+        'molecularProfileIds': Array < string >
 
 };
 export type Geneset = {
@@ -425,10 +418,6 @@ export type MutationCountByGene = {
         'totalCount': number
 
 };
-export type MutationGeneFilter = {
-    'hugoGeneSymbols': Array < string >
-
-};
 export type MutationSpectrum = {
     'CtoA': number
 
@@ -488,11 +477,7 @@ export type SampleIdentifier = {
 export type StudyViewFilter = {
     'clinicalDataFilters': Array < ClinicalDataFilter >
 
-        'cnaGenes': Array < CopyNumberGeneFilter >
-
-        'fusionGenes': Array < FusionGeneFilter >
-
-        'mutatedGenes': Array < MutationGeneFilter >
+        'geneFilters': Array < GeneFilter >
 
         'sampleIdentifiers': Array < SampleIdentifier >
 

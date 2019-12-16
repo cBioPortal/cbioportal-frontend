@@ -39,10 +39,7 @@ import AppConfig from "appConfig";
 import SocialAuthButton from "../../shared/components/SocialAuthButton";
 import { ServerConfigHelpers } from "../../config/config";
 import { getStudyViewTabId, getButtonNameWithDownPointer } from "./StudyViewUtils";
-import InfoBeacon from "shared/components/infoBeacon/InfoBeacon";
-import { WrappedTour } from "shared/components/wrappedTour/WrappedTour";
 import { Alert, Modal } from "react-bootstrap";
-import {isWebdriver} from "../../public-lib/lib/webdriverUtils";
 
 export interface IStudyViewPageProps {
     routing: any;
