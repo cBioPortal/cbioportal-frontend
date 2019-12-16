@@ -241,7 +241,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     angle_in_degrees: 0,
                     text_color: "#ffffff",
                     circle_color: this.props.sampleManager!.getColorForSample(sampleId),
-                    left_padding_percent: (labelNumber < 10 ? -10 : -30), // label padding depending on how many digits in number
+                    left_padding_percent: (labelNumber < 10 ? -15 : -34), // label padding depending on how many digits in number
                 };
                 return labels;
             }, {} as {[sampleId:string]:ColumnLabel}));
@@ -345,7 +345,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     labelColor: circleColor ? "white" : "black",
                     labelCircleColor: circleColor,
                     labelFontWeight: "normal",
-                    labelLeftPadding:(labelNumber < 10 ? 20 : 17), // label padding depending on how many digits in number
+                    labelLeftPadding:(labelNumber < 10 ? 21 : 17), // label padding depending on how many digits in number
                     hasColumnSpacing:true,
                     tooltip:(data:IMutationOncoprintTrackDatum[])=>{
                         const d = data[0];
