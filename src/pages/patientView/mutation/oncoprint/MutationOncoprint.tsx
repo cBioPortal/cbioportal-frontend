@@ -191,7 +191,7 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     readonly mutationWithIdOrder = remoteData({
         invoke:()=>{
             // TODO: any specific order?
-            const mutations = [];
+            const mutations:{mutation:Mutation, id:string}[] = [];
             for (const d of this.mutations) {
                 mutations.push({
                     mutation: d,
@@ -200,8 +200,8 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
             }
             return Promise.resolve(
                 _.chain(mutations)
-                    .uniqBy((m:any)=>m.id)
-                    .sortBy((m:any)=>getMutationLabel(m.mutation)).value()
+                    .uniqBy(m=>m.id)
+                    .sortBy(m=>getMutationLabel(m.mutation)).value()
             );
         }
     });
