@@ -28,6 +28,15 @@ export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStor
 
 }
 
+// harvest query data written to the page by JSP to support queries originating
+// from external posts
+export function handlePostedSubmission(urlWrapper:ResultsViewURLWrapper){
+    if (getBrowserWindow().postData) {
+        urlWrapper.updateURL(getBrowserWindow().postData, "results", true, true);
+        // we don't want this data to be around anymore once we've tranferred it to URL
+        getBrowserWindow().postData = null;
+    }
+}
 
 export function handleLegacySubmission(urlWrapper:ResultsViewURLWrapper){
     const legacySubmission = localStorage.getItem("legacyStudySubmission");
