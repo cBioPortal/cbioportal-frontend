@@ -111,17 +111,11 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
     private mouseEvents = this.makeMouseEvents();
     @observable.ref mouseEvent:React.MouseEvent<any>|null = null;
     @observable.ref private scale:VictoryScale | null = null;
-    @observable.ref private highlightContainer:any | null = null;
 
     @observable dragRect = {
         startX:0, startY:0, currentX:0, currentY:0
     };
     @observable dragging = false;
-
-    @autobind
-    private highlightContainerRef(highlightContainer:any|null) {
-        this.highlightContainer = highlightContainer;
-    }
 
     @autobind
     private scaleCallback(scale:VictoryScale) {
@@ -484,7 +478,7 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
         if (mouseOverMutation) {
             highlightedMutations.push(mouseOverMutation);
         }
-        if (highlightedMutations.length > 0 && this.scale !== null && this.highlightContainer !== null) {
+        if (highlightedMutations.length > 0 && this.scale !== null) {
             return highlightedMutations.map(highlightedMutation=>{
                 const points = this.mutationToDataPoints.get({
                     proteinChange: highlightedMutation.proteinChange,
@@ -533,10 +527,10 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                 ));
 
                 return (
-                    <Portal isOpened={true} node={this.highlightContainer}>
+                    <g>
                         {linePath}
                         {pointPaths}
-                    </Portal>
+                    </g>
                 );
             });
         } else {
@@ -742,7 +736,6 @@ export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}
                                     y={this.y}
                                 />
                             )}
-                            <g ref={this.highlightContainerRef}/> {/*We put this container here so that the highlight layers properly with other elements*/}
                         </VictoryChart>
                         <Observer>
                             {this.getHighlights}
