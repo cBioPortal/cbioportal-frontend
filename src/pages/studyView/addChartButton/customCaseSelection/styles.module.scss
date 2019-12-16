@@ -17,11 +17,16 @@
         border-color: green;
         outline-color: green;
     }
+}
 
-    .fillIds {
-        text-decoration: underline;
-        cursor: pointer;
-    }
+.selection {
+    display: flex;
+    align-items: center;
+}
+
+.selectionText {
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 .operations {
