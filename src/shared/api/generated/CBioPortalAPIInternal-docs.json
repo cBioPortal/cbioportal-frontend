@@ -68,10 +68,6 @@
       "description": " "
     },
     {
-      "name": "Server running status",
-      "description": "This end point does not require authentication"
-    },
-    {
       "name": "Significant Copy Number Regions",
       "description": " "
     },
@@ -1134,26 +1130,6 @@
               "items": {
                 "$ref": "#/definitions/TreatmentMolecularData"
               }
-            }
-          }
-        }
-      }
-    },
-    "/health": {
-      "get": {
-        "tags": [
-          "Server running status"
-        ],
-        "summary": "Get the running status of the server",
-        "operationId": "getServerStatusUsingGET",
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/ServerStatusMessage"
             }
           }
         }
@@ -3054,15 +3030,6 @@
       },
       "title": "SampleIdentifier"
     },
-    "ServerStatusMessage": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "type": "string"
-        }
-      },
-      "title": "ServerStatusMessage"
-    },
     "StudyViewFilter": {
       "type": "object",
       "properties": {
@@ -3125,14 +3092,6 @@
       "properties": {
         "description": {
           "type": "string"
-        },
-        "geneticEntityId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "internalId": {
-          "type": "integer",
-          "format": "int32"
         },
         "name": {
           "type": "string"
