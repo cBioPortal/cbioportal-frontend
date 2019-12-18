@@ -19,6 +19,7 @@ import * as _ from "lodash";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {toggleIncluded} from "../../../shared/lib/ArrayUtils";
+import OncoprintDropdownCount from "./OncoprintDropdownCount";
 
 export interface IAddClinicalTrackProps {
     store:ResultsViewPageStore;
@@ -222,7 +223,9 @@ export default class AddClinicalTracks extends React.Component<IAddClinicalTrack
                         data-event={serializeEvent({ category:"resultsView", action:"addClinicalTrackMenuOpen", label:this.props.store.studyIds.result!.join(",")})}
                         data-test="add-clinical-track-button"
                 >
-                    Add Clinical Tracks <span className="caret"/>&nbsp;
+                    Add Clinical Tracks{" "}
+                    <OncoprintDropdownCount count={this.options.isComplete ? this.options.result!.clinical.length : undefined}/>
+                    &nbsp;<span className="caret"/>&nbsp;
                 </button>
             </DefaultTooltip>
         );

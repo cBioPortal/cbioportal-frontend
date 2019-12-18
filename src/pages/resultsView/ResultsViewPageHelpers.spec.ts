@@ -21,7 +21,7 @@ describe("ResultsViewPageHelpers", () => {
 
             let cancerStudyIds = ["msk_impact_2017","luad_broad","luad_tcga_pub","lung_msk_2017","luad_mskcc_2015"];
 
-            const ret = parseSamplesSpecifications(query, cancerStudyIds);
+            const ret = parseSamplesSpecifications(query.case_ids, undefined, query.case_set_id, cancerStudyIds);
 
             // @ts-ignore
             const expectedResult = [{"studyId":"msk_impact_2017","sampleId":"P-0000036-T01-IM3"} as SamplesSpecificationElement,{"studyId":"msk_impact_2017","sampleId":"P-0010863-T01-IM5"}];
@@ -37,7 +37,7 @@ describe("ResultsViewPageHelpers", () => {
             // @ts-ignore
             let cancerStudyIds = ["msk_impact_2017","luad_broad","luad_tcga_pub","lung_msk_2017","luad_mskcc_2015"];
 
-            const ret = parseSamplesSpecifications(query, cancerStudyIds);
+            const ret = parseSamplesSpecifications(query.case_ids, undefined, query.case_set_id , cancerStudyIds);
 
             // @ts-ignore
             const expectedResult = [{"studyId":"msk_impact_2017","sampleId":"P-0000036-T01-IM3"},{"studyId":"msk_impact_2017","sampleId":"P-0010863-T01-IM5"}];

@@ -41,12 +41,6 @@ export default class Container extends React.Component<IContainerProps, {}> {
             c => React.cloneElement(c as React.ReactElement<any>, childProps));
     }
 
-    @computed get isSessionLoaded(){
-
-        return !this.routingStore.needsRemoteSessionLookup || this.routingStore.remoteSessionData.isComplete;
-
-    }
-
     render() {
         if (!isWebdriver() && !ServerConfigHelpers.sessionServiceIsEnabled()) {
             return (
@@ -61,44 +55,37 @@ export default class Container extends React.Component<IContainerProps, {}> {
         }
 
         return (
-            <If condition={this.isSessionLoaded}>
-                <div>
-                    <Helmet>
-                        <meta charSet="utf-8" />
-                        <title>{AppConfig.serverConfig.skin_title}</title>
-                        <meta name="description" content={AppConfig.serverConfig.skin_description} />
-                    </Helmet>
+            <div>
+                <Helmet>
+                    <meta charSet="utf-8" />
+                    <title>{AppConfig.serverConfig.skin_title}</title>
+                    <meta name="description" content={AppConfig.serverConfig.skin_description} />
+                </Helmet>
 
-                    <div className="pageTopContainer">
-                        <UserMessager />
-                        <div className="contentWidth">
-                            <PortalHeader appStore={this.appStore}/>
-                        </div>
+                <div className="pageTopContainer">
+                    <UserMessager />
+                    <div className="contentWidth">
+                        <PortalHeader appStore={this.appStore}/>
                     </div>
-                    <If condition={this.appStore.isErrorCondition}>
-                        <Then>
-                            <div className="contentWrapper">
-                                <ErrorScreen
-                                    title={formatErrorTitle(this.appStore.undismissedSiteErrors) || "Oops. There was an error retrieving data."}
-                                    body={<a href={buildCBioPortalPageUrl("/")}>Return to homepage</a>}
-                                    errorLog={formatErrorLog(this.appStore.undismissedSiteErrors)}
-                                    errorMessages={formatErrorMessages(this.appStore.undismissedSiteErrors)}
-                                />
-                            </div>
-                        </Then>
-                        <Else>
-                            <div className="contentWrapper">
-                                {(this.isSessionLoaded) && this.props.children}
-                            </div>
-                        </Else>
-                    </If>
-
-
                 </div>
-                <Else>
-                    <LoadingIndicator isLoading={!this.isSessionLoaded} center={true} size={"big"}/>
-                </Else>
-            </If>
+                <If condition={this.appStore.isErrorCondition}>
+                    <Then>
+                        <div className="contentWrapper">
+                            <ErrorScreen
+                                title={formatErrorTitle(this.appStore.undismissedSiteErrors) || "Oops. There was an error retrieving data."}
+                                body={<a href={buildCBioPortalPageUrl("/")}>Return to homepage</a>}
+                                errorLog={formatErrorLog(this.appStore.undismissedSiteErrors)}
+                                errorMessages={formatErrorMessages(this.appStore.undismissedSiteErrors)}
+                            />
+                        </div>
+                    </Then>
+                    <Else>
+                        <div className="contentWrapper">
+                            {this.props.children}
+                        </div>
+                    </Else>
+                </If>
+            </div>
         );
     }
 }
