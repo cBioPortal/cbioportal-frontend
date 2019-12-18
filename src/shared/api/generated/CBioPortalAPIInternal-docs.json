@@ -3014,11 +3014,11 @@
         "copyNumberSegmentPresent": {
           "type": "boolean"
         },
-        "fusionPresent": {
-          "type": "boolean"
-        },
         "patientId": {
           "type": "string"
+        },
+        "profiledForFusions": {
+          "type": "boolean"
         },
         "sampleId": {
           "type": "string"
@@ -3120,6 +3120,9 @@
           }
         },
         "withCNAData": {
+          "type": "boolean"
+        },
+        "withFusionData": {
           "type": "boolean"
         },
         "withMutationData": {
