@@ -5,7 +5,7 @@ import FixedHeaderTable from "./FixedHeaderTable";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import {Column, SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
-import {GenePanelModal} from "./GenePanelModal";
+import {StudyViewGenePanelModal} from "./StudyViewGenePanelModal";
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";
 import {GenePanel} from "shared/api/generated/CBioPortalAPI";
 import {
@@ -509,11 +509,11 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                     />
                 )}
                 {this.props.genePanelCache ? (
-                    <GenePanelModal
+                    <StudyViewGenePanelModal
                         show={this.modalSettings.modalOpen}
                         genePanelCache={this.props.genePanelCache}
                         panelName={this.modalSettings.modalPanelName}
-                        hide={this.closeModal}
+                        onHide={this.closeModal}
                     />
                 ) : null}
             </div>
