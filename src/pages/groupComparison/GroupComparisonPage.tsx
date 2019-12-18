@@ -80,6 +80,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     componentWillUnmount() {
         this.queryReaction && this.queryReaction();
         this.store && this.store.destroy();
+        this.urlWrapper.destroy();
     }
 
     readonly tabs = MakeMobxView({

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import $ from 'jquery';
-import {If, Then, Else} from 'react-if';
 import URL from 'url';
 import { inject, observer } from 'mobx-react';
 import { computed, observable, reaction, runInAction } from 'mobx';
@@ -38,117 +37,39 @@ import {
     doesQueryHaveCNSegmentData,
 } from './ResultsViewPageStoreUtils';
 import { AppStore } from '../../AppStore';
-import { updateResultsViewQuery } from './ResultsViewQuery';
 import { trackQuery } from '../../shared/lib/tracking';
-import { onMobxPromise } from '../../shared/lib/onMobxPromise';
 import QueryAndDownloadTabs from 'shared/components/query/QueryAndDownloadTabs';
-import { createQueryStore } from 'pages/home/HomePage';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
-import { CancerStudyQueryUrlParams } from '../../shared/components/query/QueryStore';
 import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidationError';
+import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
+import setWindowVariable from 'shared/lib/setWindowVariable';
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import onMobxPromise from "shared/lib/onMobxPromise";
+import {createQueryStore} from "shared/lib/createQueryStore";
+import {handleLegacySubmission, handlePostedSubmission} from "shared/lib/redirectHelpers";
 
-function initStore(appStore: AppStore) {
+function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     const resultsViewPageStore = new ResultsViewPageStore(
         appStore,
-        getBrowserWindow().globalStores.routing
+        urlWrapper
     );
 
-    resultsViewPageStore.tabId = getTabId(
-        getBrowserWindow().globalStores.routing.location.pathname
-    );
+    setWindowVariable('resultsViewPageStore', resultsViewPageStore);
 
-    let lastQuery: any;
-    let lastPathname: string;
-
-    const queryReactionDisposer = reaction(
+    reaction(
+        () => [resultsViewPageStore.studyIds, resultsViewPageStore.oqlText],
         () => {
-            return [
-                getBrowserWindow().globalStores.routing.query,
-                getBrowserWindow().globalStores.routing.location.pathname,
-            ];
-        },
-        (x: any) => {
-            const query = x[0] as CancerStudyQueryUrlParams;
-            const pathname = x[1];
-
-            // escape from this if queryies are deeply equal
-            // TODO: see if we can figure out why query is getting changed and
-            // if there's any way to do shallow equality check to avoid this expensive operation
-            const queryChanged = !_.isEqual(lastQuery, query);
-            const pathnameChanged = pathname !== lastPathname;
-            if (!queryChanged && !pathnameChanged) {
-                return;
-            } else {
-                if (
-                    !getBrowserWindow().globalStores.routing.location.pathname.includes(
-                        '/results'
-                    )
-                ) {
-                    return;
-                }
-                runInAction(() => {
-                    // set query and pathname separately according to which changed, to avoid unnecessary
-                    //  recomputation by updating the query if only the pathname changed
-                    if (queryChanged) {
-                        // update query
-                        // normalize cancer_study_list this handles legacy sessions/urls where queries with single study had different param name
-                        const cancer_study_list =
-                            query.cancer_study_list || query.cancer_study_id;
-
-                        const cancerStudyIds: string[] = cancer_study_list.split(
-                            ','
-                        );
-
-                        const oql = decodeURIComponent(query.gene_list);
-
-                        let samplesSpecification = parseSamplesSpecifications(
-                            query,
-                            cancerStudyIds
-                        );
-
-                        const changes = updateResultsViewQuery(
-                            resultsViewPageStore.rvQuery,
-                            query,
-                            samplesSpecification,
-                            cancerStudyIds,
-                            oql
-                        );
-                        if (changes.cohortIdsList) {
-                            resultsViewPageStore.initDriverAnnotationSettings();
-                        }
-
-                        onMobxPromise(resultsViewPageStore.studyIds, () => {
-                            try {
-                                trackQuery(
-                                    resultsViewPageStore.studyIds.result!,
-                                    oql,
-                                    resultsViewPageStore.hugoGeneSymbols,
-                                    resultsViewPageStore.queriedVirtualStudies
-                                        .result!.length > 0
-                                );
-                            } catch {}
-                        });
-
-                        lastQuery = query;
-                    }
-                    if (pathnameChanged) {
-                        // need to set tab like this instead of with injected via params.tab because we need to set the tab
-                        //  at the same time as we set the query parameters, otherwise we get race conditions where the tab
-                        //  we're on at the time we update the query doesnt get unmounted because we change the query, causing
-                        //  MSKTabs unmounting, THEN change the tab.
-                        const tabId = getTabId(pathname);
-                        if (resultsViewPageStore.tabId !== tabId) {
-                            resultsViewPageStore.tabId = tabId;
-                        }
-                        lastPathname = pathname;
-                    }
-                });
+            if (resultsViewPageStore.studyIds.isComplete && resultsViewPageStore.oqlText) {
+                trackQuery(
+                    resultsViewPageStore.studyIds.result!,
+                    resultsViewPageStore.oqlText,
+                    resultsViewPageStore.hugoGeneSymbols,
+                    resultsViewPageStore.queriedVirtualStudies.result!.length >
+                        0
+                );
             }
-        },
-        { fireImmediately: true }
+        }
     );
-
-    resultsViewPageStore.queryReactionDisposer = queryReactionDisposer;
 
     return resultsViewPageStore;
 }
@@ -171,18 +92,33 @@ export default class ResultsViewPage extends React.Component<
 > {
     private resultsViewPageStore: ResultsViewPageStore;
 
+    private urlWrapper: ResultsViewURLWrapper;
+
     @observable showTabs = true;
 
     constructor(props: IResultsViewPageProps) {
         super(props);
 
-        this.resultsViewPageStore = initStore(props.appStore);
+        this.urlWrapper = new ResultsViewURLWrapper(props.routing);
 
-        getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
+        handleLegacySubmission(this.urlWrapper);
+
+        handlePostedSubmission(this.urlWrapper);
+
+        setWindowVariable('urlWrapper', this.urlWrapper);
+
+        if (this.urlWrapper.hasSessionId) {
+            onMobxPromise(this.urlWrapper.remoteSessionData, () => {
+                this.resultsViewPageStore = initStore(props.appStore, this.urlWrapper);
+            });
+        } else {
+            this.resultsViewPageStore = initStore(props.appStore, this.urlWrapper);
+        }
+
     }
 
     private handleTabChange(id: string, replace?: boolean) {
-        this.props.routing.updateRoute({}, `results/${id}`, false, replace);
+        this.urlWrapper.updateURL({}, `results/${id}`, false, replace);
     }
 
     @autobind
@@ -201,7 +137,8 @@ export default class ResultsViewPage extends React.Component<
     }
 
     componentWillUnmount() {
-        this.resultsViewPageStore.queryReactionDisposer();
+        this.resultsViewPageStore.destroy();
+        this.urlWrapper.destroy();
     }
 
     @computed
@@ -221,8 +158,8 @@ export default class ResultsViewPage extends React.Component<
                             <ResultsViewOncoprint
                                 divId={'oncoprintDiv'}
                                 store={store}
+                                urlWrapper={store.urlWrapper}
                                 key={store.hugoGeneSymbols.join(',')}
-                                routing={this.props.routing}
                                 addOnBecomeVisibleListener={
                                     addOnBecomeVisibleListener
                                 }
@@ -539,25 +476,6 @@ export default class ResultsViewPage extends React.Component<
         return isRoutedTo || (!isExcludedInList && !isExcluded);
     }
 
-    public currentTab(tabId: string | undefined): string {
-        // if we have no tab defined (query submission, no tab click)
-        // we need to evaluate which should be the default tab
-        // this can only be determined by know the count of physical studies in the query
-        // (for virtual studies we need to fetch data determine constituent physical studies)
-        if (tabId === undefined) {
-            if (
-                this.resultsViewPageStore.studies.result!.length > 1 &&
-                this.resultsViewPageStore.hugoGeneSymbols.length === 1
-            ) {
-                return ResultsViewTab.CANCER_TYPES_SUMMARY; // cancer type study
-            } else {
-                return ResultsViewTab.ONCOPRINT; // this will resolve to first tab
-            }
-        } else {
-            return tabId;
-        }
-    }
-
     @autobind
     private getTabHref(tabId: string) {
         return URL.format({
@@ -578,7 +496,7 @@ export default class ResultsViewPage extends React.Component<
                         showDownloadTab={false}
                         showAlerts={true}
                         getQueryStore={() =>
-                            createQueryStore(this.props.routing.query)
+                            createQueryStore(this.urlWrapper.query, this.urlWrapper)
                         }
                     />
                 </div>
@@ -635,12 +553,11 @@ export default class ResultsViewPage extends React.Component<
                                 !this.resultsViewPageStore.isQueryInvalid && (
                                     <MSKTabs
                                         key={
-                                            this.resultsViewPageStore.rvQuery
-                                                .hash
+                                            this.urlWrapper.hash
                                         }
-                                        activeTabId={this.currentTab(
+                                        activeTabId={
                                             this.resultsViewPageStore.tabId
-                                        )}
+                                        }
                                         unmountOnHide={false}
                                         onTabClick={(id: string) =>
                                             this.handleTabChange(id)
@@ -659,13 +576,18 @@ export default class ResultsViewPage extends React.Component<
     }
 
     public render() {
+
+        if (this.urlWrapper.isPendingSession || this.urlWrapper.isLoadingSession) {
+            return <LoadingIndicator isLoading={true} center={true} size={"big"}/>
+        }
+
         if (
             this.resultsViewPageStore.studies.isComplete &&
             !this.resultsViewPageStore.tabId
         ) {
             setTimeout(() => {
                 this.handleTabChange(
-                    this.currentTab(this.resultsViewPageStore.tabId),
+                    this.resultsViewPageStore.tabId,
                     true
                 );
             });

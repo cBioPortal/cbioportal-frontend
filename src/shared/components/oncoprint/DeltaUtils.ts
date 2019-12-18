@@ -455,7 +455,7 @@ function transitionTracks(
             }
         }
     }
-    
+
     // collect trackId of last assigned track for each treatment profile
     // Note: the resolution of `trackIds for ruleset sharing` is different from
     // the section above because different formatting is applied to each treatment profile (molecularProfileId)
@@ -531,7 +531,7 @@ function transitionTracks(
         track.minProfileValue = treatmentProfileMinValues[track.molecularProfileId];
 
         transitionHeatmapTrack(track, prevHeatmapTracks[track.key], getTrackSpecKeyToTrackId,
-            () => undefined, oncoprint, nextProps, {}, trackIdForRuleSetSharing, 
+            () => undefined, oncoprint, nextProps, {}, trackIdForRuleSetSharing,
             undefined);
         delete prevHeatmapTracks[track.key];
     }
