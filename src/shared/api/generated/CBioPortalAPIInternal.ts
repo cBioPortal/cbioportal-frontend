@@ -498,9 +498,9 @@ export type RectangleBounds = {
 export type Sample = {
     'copyNumberSegmentPresent': boolean
 
-        'fusionPresent': boolean
-
         'patientId': string
+
+        'profiledForFusions': boolean
 
         'sampleId': string
 
@@ -539,6 +539,8 @@ export type StudyViewFilter = {
         'studyIds': Array < string >
 
         'withCNAData': boolean
+
+        'withFusionData': boolean
 
         'withMutationData': boolean
 

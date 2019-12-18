@@ -2233,7 +2233,16 @@ export class StudyViewPageStore {
     readonly mutationProfiles = remoteData({
         await: ()=>[this.molecularProfiles],
         invoke: async ()=>{
-            return this.molecularProfiles.result.filter(profile => profile.molecularAlterationType === "MUTATION_EXTENDED")
+            return Promise.resolve(this.getMolecularProfilesByAlterationType("MUTATION_EXTENDED"))
+        },
+        onError: (error => {}),
+        default: []
+    });
+
+    readonly structuralVariantProfiles = remoteData({
+        await: ()=>[this.molecularProfiles],
+        invoke: async ()=>{
+            return Promise.resolve(this.getMolecularProfilesByAlterationType("STRUCTURAL_VARIANT"))
         },
         onError: (error => {}),
         default: []
@@ -2242,23 +2251,25 @@ export class StudyViewPageStore {
     readonly cnaProfiles = remoteData({
         await: ()=>[this.molecularProfiles],
         invoke: async ()=>{
-            return  this.molecularProfiles
-            .result
-            .filter(profile => profile.molecularAlterationType === "COPY_NUMBER_ALTERATION" && profile.datatype === "DISCRETE")
-
+            return Promise.resolve(
+                this.getMolecularProfilesByAlterationType("COPY_NUMBER_ALTERATION","DISCRETE"))
         },
         onError: (error => {}),
         default: []
     });
 
-    readonly fusionProfiles = remoteData({
-        await: ()=>[this.molecularProfiles],
-        invoke: async ()=>{
-            return this.molecularProfiles.result.filter(profile => profile.molecularAlterationType === "FUSION")
-        },
-        onError: (error => {}),
-        default: []
-    });
+    private getMolecularProfilesByAlterationType(alterationType:string, dataType?:string) {
+        if (_.isEmpty(dataType)) {
+            return this.molecularProfiles
+                .result
+                .filter(profile => profile.molecularAlterationType === alterationType)
+        } else {
+            return this.molecularProfiles
+                .result
+                .filter(profile => profile.molecularAlterationType === alterationType && profile.datatype === dataType)
+        }
+
+    }
 
     private getDefaultClinicalDataBinFilter(attribute: ClinicalAttribute) {
         return {
@@ -2503,15 +2514,15 @@ export class StudyViewPageStore {
             };
         }
 
-        if (!_.isEmpty(this.fusionProfiles.result)) {
-                _chartMetaSet[UniqueKey.FUSION_GENES_TABLE] = {
-                    uniqueKey: UniqueKey.FUSION_GENES_TABLE,
-                    dataType: getChartMetaDataType(UniqueKey.FUSION_GENES_TABLE),
-                    patientAttribute: false,
-                    displayName: 'Fusion Genes',
-                    priority: getDefaultPriorityByUniqueKey(UniqueKey.FUSION_GENES_TABLE),
-                    renderWhenDataChange: true,
-                    description: ''
+        if (!_.isEmpty(this.structuralVariantProfiles.result)) {
+            _chartMetaSet[UniqueKey.FUSION_GENES_TABLE] = {
+                uniqueKey: UniqueKey.FUSION_GENES_TABLE,
+                dataType: getChartMetaDataType(UniqueKey.FUSION_GENES_TABLE),
+                patientAttribute: false,
+                displayName: 'Fusion Genes',
+                priority: getDefaultPriorityByUniqueKey(UniqueKey.FUSION_GENES_TABLE),
+                renderWhenDataChange: true,
+                description: ''
             };
         }
 
@@ -2583,7 +2594,7 @@ export class StudyViewPageStore {
             this.initialVisibleAttributesClinicalDataCountData.isPending ||
             this.mutationProfiles.isPending ||
             this.cnaProfiles.isPending ||
-            this.fusionProfiles.isPending
+            this.structuralVariantProfiles.isPending
         ;
 
         if (this._loadUserSettingsInitially) {
@@ -2769,7 +2780,7 @@ export class StudyViewPageStore {
                 this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
             }
         }
-        if (!_.isEmpty(this.fusionProfiles.result)) {
+        if (!_.isEmpty(this.structuralVariantProfiles.result)) {
             const fusionGeneMeta = _.find(this.chartMetaSet, chartMeta => chartMeta.uniqueKey === UniqueKey.FUSION_GENES_TABLE);
             if (fusionGeneMeta && fusionGeneMeta.priority !== 0) {
                 this.changeChartVisibility(UniqueKey.FUSION_GENES_TABLE, true);
@@ -3178,10 +3189,10 @@ export class StudyViewPageStore {
 
     readonly fusionGeneTableRowData = remoteData<GeneTableRow[]>({
         await: () => this.oncokbCancerGeneFilterEnabled ?
-            [this.fusionProfiles, this.oncokbAnnotatedGeneEntrezGeneIds, this.oncokbOncogeneEntrezGeneIds, this.oncokbTumorSuppressorGeneEntrezGeneIds, this.oncokbCancerGeneEntrezGeneIds] :
+            [this.structuralVariantProfiles, this.oncokbAnnotatedGeneEntrezGeneIds, this.oncokbOncogeneEntrezGeneIds, this.oncokbTumorSuppressorGeneEntrezGeneIds, this.oncokbCancerGeneEntrezGeneIds] :
             [this.mutationProfiles],
         invoke: async () => {
-            if (!_.isEmpty(this.fusionProfiles.result)) {
+            if (!_.isEmpty(this.structuralVariantProfiles.result)) {
                 const fusionGenes = await internalClient.fetchFusionGenesUsingPOST({
                     studyViewFilter: this.filters
                 });
