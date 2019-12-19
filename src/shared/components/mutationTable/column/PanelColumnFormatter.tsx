@@ -1,14 +1,45 @@
 import * as React from 'react';
 import {map} from 'lodash';
+import {computed} from 'mobx';
 import SampleManager from 'pages/patientView/SampleManager';
 import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
 import TumorColumnFormatter from 'pages/patientView/mutation/column/TumorColumnFormatter';
+import autobind from 'autobind-decorator';
 
 interface PanelColumnFormatterProps {
 	data: {sampleId:string, entrezGeneId:number}[];
 	sampleToGenePanelId: {[sampleId: string]: string|undefined};
 	sampleManager: SampleManager|null;
-	genePanelIdToGene: {[genePanelId: string]: number[]}
+	genePanelIdToGene: {[genePanelId: string]: number[]};
+	onSelectGenePanel?: (name:string)=>void;
+}
+
+export class GenePanelLinks extends React.Component<PanelColumnFormatterProps> {
+	@autobind handleClick(genePanelId:string|undefined) {
+		if (this.props.onSelectGenePanel && genePanelId) {
+				this.props.onSelectGenePanel(genePanelId);
+			}
+	}
+	
+	@computed get renderGenePanelLinks() {
+		const genePanelIds = getGenePanelIds(this.props);
+		const links: (string|JSX.Element)[] = [];
+		genePanelIds.forEach((genePanel, index) => {
+			if (genePanel && genePanel !== "N/A") {
+				links.push(<a onClick={() => this.handleClick(genePanel)}>{genePanel}</a>)
+			} else {
+				links.push(genePanel);
+			}
+			if (index < genePanelIds.length - 1) {
+				links.push(', ');
+			}
+		});
+		return links;
+	}
+	
+	render() {
+		return <React.Fragment>{this.renderGenePanelLinks}</React.Fragment>;
+	}
 }
 
 class PanelColumn extends React.Component<PanelColumnFormatterProps, {}> {
@@ -24,12 +55,10 @@ class PanelColumn extends React.Component<PanelColumnFormatterProps, {}> {
 			return <i className='fa fa-spinner fa-pulse' />;
 		}
 
-		const genePanelIds: string[] = getGenePanelIds(this.props);
-
 		return (
 			<div style={{ position: 'relative' }}>
 				<ul style={{ marginBottom: 0 }} className='list-inline list-unstyled'>
-					{genePanelIds.join(', ')}
+					<GenePanelLinks {...this.props} />
 				</ul>
 			</div>
 		);
@@ -66,6 +95,7 @@ export default {
 			sampleToGenePanelId={props.sampleToGenePanelId}
 			sampleManager={props.sampleManager}
 			genePanelIdToGene={props.genePanelIdToGene}
+			onSelectGenePanel={props.onSelectGenePanel}
 		/>
 	),
 	download: (

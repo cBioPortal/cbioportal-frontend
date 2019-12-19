@@ -105,7 +105,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     enable_darwin: false,
 
-    session_url_length_threshold: '1990',
+    session_url_length_threshold: '1500',
 
     study_view: {
         tableAttrs: ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'],
@@ -156,7 +156,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>',
 
     query_product_limit: 1000000,
-    
+
     skin_show_gsva: false,
 };
 
