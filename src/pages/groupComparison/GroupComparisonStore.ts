@@ -8,12 +8,12 @@ import {
     getOverlapComputations,
     getSampleIdentifiers,
     getStudyIds,
-    GroupComparisonTab,
     IOverlapComputations,
     isGroupEmpty,
     partitionCasesByGroupMembership,
-    getNumSamples
+    getNumSamples,
 } from "./GroupComparisonUtils";
+import { GroupComparisonTab } from "./GroupComparisonTabs"
 import {remoteData} from "../../public-lib/api/remoteData";
 import {
     CancerStudy,
