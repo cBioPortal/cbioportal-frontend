@@ -40,11 +40,6 @@ export function getMutationLabel(mutation:Mutation) {
     return `${mutation.gene.hugoGeneSymbol} ${mutation.proteinChange}`;
 }
 
-function transposeMutationData(mutationDataBySample:{[sampleId:string]:IMutationOncoprintTrackDatum[]}):{[mutationId:string]:IMutationOncoprintTrackDatum[]} {
-    const allData = _.flatMap(mutationDataBySample);
-    return _.groupBy<IMutationOncoprintTrackDatum>(allData, d=>d.mutationId);
-}
-
 export function makeMutationHeatmapData(
     samples:Sample[],
     mutations:Mutation[],
