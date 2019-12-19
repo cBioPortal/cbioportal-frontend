@@ -18,13 +18,13 @@ import {ShareUI} from "./ShareUI";
 import {ServerConfigHelpers} from "../../../config/config";
 import AppConfig from "appConfig";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
-import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
-import {getAlterationSummary, getGeneSummary, getPatientSampleSummary, getStudyViewFilterHash} from "./QuerySummaryUtils";
+import {getAlterationSummary, getGeneSummary, getPatientSampleSummary, submitToStudyViewPage} from "./QuerySummaryUtils";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
 import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
 import ResultsPageSettings from "../settings/ResultsPageSettings";
 import {createQueryStore} from "shared/lib/createQueryStore";
+import _ from "lodash";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore, onToggleQueryFormVisiblity:(visible:boolean)=>void }, {}> {
@@ -44,12 +44,18 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         return this.props.store.queryFormVisible || this.isQueryOrGeneInvalid;
     }
 
-    @computed get studyViewFilterHash() {
-        return getStudyViewFilterHash(
-            this.props.store.samples.result,
-            this.props.store.queriedVirtualStudies.result.length > 0,
-            this.props.store.sampleLists.result);
+    @computed get studyPageFilteredCasesLink() {
+        return <a onClick={() => {
+            submitToStudyViewPage(
+                this.props.store.queriedStudies.result,
+                this.props.store.samples.result,
+                this.props.store.queriedVirtualStudies.result.length > 0,
+                this.props.store.sampleLists.result)
+        }}>
+            {getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)}
+        </a>
     }
+
 
     readonly singleStudyUI = MakeMobxView({
         await:()=>[
@@ -67,13 +73,14 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                 <div>
                     <h3>
                         <a
-                            href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}, this.studyViewFilterHash)}
+                            href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')})}
                             target="_blank"
                         >
                             {this.props.store.queriedStudies.result[0].name}
                         </a>
                     </h3>
-                    {sampleListName}&nbsp;({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
+                    {sampleListName}&nbsp;({this.studyPageFilteredCasesLink})
+                    
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
                 </div>
@@ -98,14 +105,16 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
             <div>
                 <h3>
                     <a
-                        href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}, this.studyViewFilterHash)}
+                        href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')})}
                         target="_blank"
                     >
-                        Combined Study ({this.props.store.samples.result.length} samples)
+                        Combined Study ({_.sumBy(this.props.store.queriedStudies.result,study=>study.allSampleCount)} samples)
                     </a>
                 </h3>
                 <span>
-                    Querying {getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)} in {this.props.store.queriedStudies.result.length} studies
+                    Querying {this.studyPageFilteredCasesLink} in {this.props.store.queriedStudies.result.length} studies
+                        
+                    
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
                     &nbsp;
