@@ -3904,7 +3904,7 @@ export class StudyViewPageStore {
         if (!_.isEmpty(this.geneQueries)) {
             formOps.Action = 'Submit';
             formOps.gene_list = this.geneQueries.map(query => unparseOQLQueryLine(query)).join('\n');
-            url = '/results/legacy_submission';
+            url = '/results';
         }
         submitToPage(url, formOps, '_blank');
     }

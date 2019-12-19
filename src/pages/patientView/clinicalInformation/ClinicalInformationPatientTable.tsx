@@ -6,6 +6,7 @@ import styles from './style/patientTable.module.scss';
 import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
 import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
 import { isUrl } from "public-lib";
+import autobind from 'autobind-decorator';
 
 export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
@@ -13,6 +14,7 @@ export interface IClinicalInformationPatientTableProps {
     cssClass?:string;
     showFilter?:boolean;
     showCopyDownload?:boolean;
+    onSelectGenePanel?:(name:string)=>void;
 }
 
 class PatientTable extends LazyMobXTable<IPatientRow> {}
@@ -36,6 +38,36 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
         }
         return ret;
     }
+    
+    @autobind handleClick(name:string) {
+        if (this.props.onSelectGenePanel) {
+            this.props.onSelectGenePanel(name);
+        }
+    }
+    
+    renderGenePanelLinks = (genePanels:string) => {
+        const links: (string|JSX.Element)[] = [];
+        const genePanelsArray = genePanels.split(",");
+        genePanelsArray.forEach((panelName, index) => {
+            panelName = panelName.trim();
+            if (panelName.includes("N/A")) {
+                links.push(panelName);
+            } else {
+                // split gene panel name from "TESTPANEL2 (mut)" to ["TESTPANEL2", "(mut)"]
+                const splitGenePanelName = panelName.split(" ");
+                links.push(
+                    <a
+                        onClick={() => this.handleClick(splitGenePanelName[0])}>
+                        {panelName}
+                    </a>
+                );
+            }
+            if (index < genePanelsArray.length - 1) {
+                links.push(", ");
+            }
+        })
+        return <span>{links}</span>;
+    }
 
     public render() {
 
@@ -43,7 +75,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
             attribute: el.clinicalAttribute.displayName || '',
             value: el.value
         }));
-
+        
         return (
             <PatientTable
                   data={tableData}
@@ -60,6 +92,8 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                           render: (data)=>{
                               if(isUrl(data.value)){
                                 return <a href={data.value} target="_blank">{data.value}</a>
+                              } else if (data.attribute === "Gene Panel") {
+                                return this.renderGenePanelLinks(data.value);
                               }
                               return <span>{this.getDisplayValue(data)}</span>
                           },
