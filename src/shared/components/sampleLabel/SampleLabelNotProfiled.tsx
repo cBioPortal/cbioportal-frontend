@@ -7,6 +7,8 @@ const fillOpacity = 1;
 
 export interface ISampleLabelNotProfiledProps {
     sample: ClinicalDataBySampleId;
+    onSelectGenePanel?:(name:string)=>void;
+    disableTooltip?:boolean;
 }
 
 export default class SampleLabelNotProfiled extends React.Component<ISampleLabelNotProfiledProps, {}>{
@@ -15,7 +17,9 @@ export default class SampleLabelNotProfiled extends React.Component<ISampleLabel
         return (
             <SampleInline
                 sample={this.props.sample}
-                extraTooltipText={'This gene was not profiled for this sample (absent from gene panel). It is unknown whether it is mutated.'} >
+                extraTooltipText={'This gene was not profiled for this sample (absent from gene panel). It is unknown whether it is mutated.'}
+                onSelectGenePanel={this.props.onSelectGenePanel}
+                disableTooltip={this.props.disableTooltip} >
                 <svg width="12" height="12" data-test="not-profiled-icon">
                     <g transform='translate(0,5)'>
                         <rect width="12" height="2.5" rx="1.25" ry="1.25" fill={color} fillOpacity={fillOpacity} />
