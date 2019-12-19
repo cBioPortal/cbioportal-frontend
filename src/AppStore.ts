@@ -80,7 +80,7 @@ export class AppStore {
             const portalVersionResult = await internalClient.getInfoUsingGET({});
             if (portalVersionResult && portalVersionResult.portalVersion) {
                 let version = portalVersionResult.portalVersion.split('-')[0];
-                if (!version.startsWith("v") {
+                if (!version.startsWith("v")) {
                     version = `v${version}`;
                 }
                 return Promise.resolve(version);
