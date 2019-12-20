@@ -141,7 +141,7 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
             case AlterationTypeConstants.METHYLATION:
                 data_header = 'METHYLATION: ';
                 break;
-            case AlterationTypeConstants.TREATMENT_RESPONSE:
+            case AlterationTypeConstants.GENERIC_ASSAY:
                 data_header = 'TREATMENT: ';
                 break;
         }
@@ -152,7 +152,7 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
         let categoryCount = 0;
         for (const d of dataUnderMouse) {
             if ((d.profile_data !== null) && (typeof d.profile_data !== "undefined")) {
-                if (genetic_alteration_type === AlterationTypeConstants.TREATMENT_RESPONSE && d.category) {
+                if (genetic_alteration_type === AlterationTypeConstants.GENERIC_ASSAY && d.category) {
                     profileCategories.push(d.category);
                     categoryCount += 1;
                 } else {
