@@ -79,7 +79,11 @@ export class AppStore {
         invoke:async()=>{
             const portalVersionResult = await internalClient.getInfoUsingGET({});
             if (portalVersionResult && portalVersionResult.portalVersion) {
-                return Promise.resolve("v" + portalVersionResult.portalVersion.split('-')[0]);
+                let version = portalVersionResult.portalVersion.split('-')[0];
+                if (!version.startsWith("v")) {
+                    version = `v${version}`;
+                }
+                return Promise.resolve(version);
             }
             return undefined;
         }
