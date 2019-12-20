@@ -25,6 +25,7 @@ import {getAlterationString} from "../../../../shared/lib/CopyNumberUtils";
 import {GERMLINE_REGEXP} from "../../../../shared/lib/MutationUtils";
 import {parseOQLQuery} from "../../../../shared/lib/oql/oqlfilter";
 import {Alteration, MUTCommand} from "../../../../shared/lib/oql/oql-parser";
+import {MUTATION_STATUS_GERMLINE, PUTATIVE_DRIVER} from "../../../../shared/constants";
 
 export type OncoprinterGeneticTrackDatum =
     Pick<GeneticTrackDatum, "trackLabel" | "study_id" | "uid" |
@@ -265,8 +266,8 @@ export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:Oncoprinte
         // these are the same always or almost always
         hugoGeneSymbol:oncoprinterInputLine.hugoGeneSymbol,
         proteinChange:oncoprinterInputLine.proteinChange,
-        mutationStatus: oncoprinterInputLine.isGermline ? "germline": "",
-        driverFilter:oncoprinterInputLine.isCustomDriver ? "Putative_Driver" : "",
+        mutationStatus: oncoprinterInputLine.isGermline ? MUTATION_STATUS_GERMLINE : "",
+        driverFilter:oncoprinterInputLine.isCustomDriver ? PUTATIVE_DRIVER : "",
         driverFilterAnnotation:oncoprinterInputLine.isCustomDriver ? "You indicated that this mutation is a driver." : "",
 
         // we'll update these later in this function
