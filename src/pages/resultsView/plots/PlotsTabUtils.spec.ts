@@ -18,7 +18,7 @@ import {
     getLimitValues
 } from "./PlotsTabUtils";
 import { Mutation, Sample, Gene} from "../../../shared/api/generated/CBioPortalAPI";
-import {AlterationTypeConstants, AnnotatedNumericGeneMolecularData, AnnotatedMutation} from "../ResultsViewPageStore";
+import {AlterationTypeConstants, AnnotatedNumericGeneMolecularData, AnnotatedMutation, GenericAssayTypeConstants} from "../ResultsViewPageStore";
 import {MutationCountBy, AxisMenuSelection} from "./PlotsTab";
 import {CoverageInformation, CoverageInformationForCase} from "../ResultsViewPageStoreUtils";
 import { makeAxisLogScaleFunction, IAxisData, axisHasNegativeNumbers } from 'pages/resultsView/plots/PlotsTabUtils';
@@ -444,7 +444,7 @@ describe("PlotsTabUtils", ()=>{
         
         it('should return log10-transformation function for non treatment data', () => {
             const axisMenuSelection = { 
-                dataType: AlterationTypeConstants.TREATMENT_RESPONSE,
+                dataType: GenericAssayTypeConstants.TREATMENT_RESPONSE,
                 logScale: true
             } as any as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
@@ -456,7 +456,7 @@ describe("PlotsTabUtils", ()=>{
         
         it('should apply offset before log10-transformation for treatment data', () => {
             const axisMenuSelection = { 
-                dataType: AlterationTypeConstants.TREATMENT_RESPONSE,
+                dataType: GenericAssayTypeConstants.TREATMENT_RESPONSE,
                 logScale: true
             } as any as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);

@@ -25,7 +25,7 @@ import {
     SampleFilter,
     SampleIdentifier,
     SampleList,
-    SampleMolecularIdentifier,
+    SampleMolecularIdentifier
 } from 'shared/api/generated/CBioPortalAPI';
 import client from 'shared/api/cbioportalClientInstance';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
@@ -92,8 +92,6 @@ import {
     GenesetDataFilterCriteria,
     GenesetMolecularData,
     MolecularProfileCasesGroupFilter,
-    Treatment,
-    TreatmentFilter,
 } from '../../shared/api/generated/CBioPortalAPIInternal';
 import internalClient from '../../shared/api/cbioportalInternalClientInstance';
 import {CancerGene, IndicatorQueryResp,} from '../../public-lib/api/generated/OncoKbAPI';
@@ -183,6 +181,7 @@ import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 import {generateQueryVariantId} from "public-lib";
+import { Treatment, fetchTreatmentByMolecularProfileIds } from 'shared/lib/GenericAssayUtils/TreatmentUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -199,8 +198,14 @@ export const AlterationTypeConstants = {
     FUSION: 'FUSION',
     GENESET_SCORE: 'GENESET_SCORE',
     METHYLATION: 'METHYLATION',
-    TREATMENT_RESPONSE: 'TREATMENT',
+    GENERIC_ASSAY: 'GENERIC_ASSAY',
 };
+
+// only show TREATMENT_RESPONSE in the plots tab for now
+// TODO: apply to all generic assay profiles when front-end implementation finish 
+export const GenericAssayTypeConstants = {
+    TREATMENT_RESPONSE: 'TREATMENT_RESPONSE'
+}
 
 export const AlterationTypeDisplayConstants = {
     COPY_NUMBER_ALTERATION: 'CNA',
@@ -1450,7 +1455,7 @@ export class ResultsViewPageStore {
                     profile.molecularAlterationType ===
                         AlterationTypeConstants.GENESET_SCORE ||
                     profile.molecularAlterationType ===
-                        AlterationTypeConstants.TREATMENT_RESPONSE
+                        AlterationTypeConstants.GENERIC_ASSAY
                 ) {
                     // geneset profile, we dont have the META projection for geneset data, so just add it
                     /*promises.push(internalClient.fetchGeneticDataItemsUsingPOST({
@@ -3486,7 +3491,7 @@ export class ResultsViewPageStore {
             const MRNA_EXPRESSION = AlterationTypeConstants.MRNA_EXPRESSION;
             const PROTEIN_LEVEL = AlterationTypeConstants.PROTEIN_LEVEL;
             const METHYLATION = AlterationTypeConstants.METHYLATION;
-            const TREATMENT_RESPONSE = AlterationTypeConstants.TREATMENT_RESPONSE;
+            const GENERIC_ASSAY = AlterationTypeConstants.GENERIC_ASSAY;
             const selectedMolecularProfileIds = stringListToSet(
                 this.selectedMolecularProfiles.result!.map(
                     profile => profile.molecularProfileId
@@ -3499,7 +3504,7 @@ export class ResultsViewPageStore {
                         ((profile.molecularAlterationType === MRNA_EXPRESSION ||
                             profile.molecularAlterationType === PROTEIN_LEVEL ||
                             profile.molecularAlterationType ===
-                                TREATMENT_RESPONSE) &&
+                                GENERIC_ASSAY) &&
                             profile.showProfileInAnalysisTab) ||
                         profile.molecularAlterationType === METHYLATION
                     );
@@ -3517,7 +3522,7 @@ export class ResultsViewPageStore {
                                 return 1;
                             case METHYLATION:
                                 return 2;
-                            case TREATMENT_RESPONSE:
+                            case GENERIC_ASSAY:
                                 return 3;
                         }
                     } else {
@@ -3528,7 +3533,7 @@ export class ResultsViewPageStore {
                                 return 5;
                             case METHYLATION:
                                 return 6;
-                            case TREATMENT_RESPONSE:
+                            case GENERIC_ASSAY:
                                 return 7;
                         }
                     }
@@ -3793,13 +3798,9 @@ export class ResultsViewPageStore {
     });
 
     readonly treatmentsInStudies = remoteData<Treatment[]>({
-        await: () => [this.studyIds],
+        await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
-            return internalClient.fetchTreatmentsUsingPOST({
-                treatmentFilter: {
-                    studyIds: this.studyIds.result!,
-                } as TreatmentFilter,
-            });
+            return await fetchTreatmentByMolecularProfileIds(this.molecularProfilesInStudies.result);
         }
     });
 
@@ -3841,15 +3842,10 @@ export class ResultsViewPageStore {
     });
 
     readonly treatmentLinkMap = remoteData<{ [treatmentId: string]: string }>({
+        await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
-            if (this.treatmentList && this.treatmentList.length) {
-                const treatments = await internalClient.fetchTreatmentsUsingPOST(
-                    {
-                        treatmentFilter: {
-                            studyIds: this.studyIds.result!,
-                        } as TreatmentFilter,
-                    }
-                );
+            if (this.molecularProfilesInStudies.result && this.molecularProfilesInStudies.result.length > 0) {
+                const treatments = await fetchTreatmentByMolecularProfileIds(this.molecularProfilesInStudies.result);
                 const linkMap: { [treatmentId: string]: string } = {};
                 treatments.forEach(({ treatmentId, refLink }) => {
                     linkMap[treatmentId] = refLink;
