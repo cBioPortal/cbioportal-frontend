@@ -201,9 +201,11 @@ export const AlterationTypeConstants = {
     GENERIC_ASSAY: 'GENERIC_ASSAY',
 };
 
-export enum GenericAssayTypeConstants {
-    'TREATMENT_RESPONSE' = 'TREATMENT_RESPONSE'
-};
+// only show TREATMENT_RESPONSE in the plots tab for now
+// TODO: apply to all generic assay profiles when front-end implementation finish 
+export const GenericAssayTypeConstants = {
+    TREATMENT_RESPONSE: 'TREATMENT_RESPONSE'
+}
 
 export const AlterationTypeDisplayConstants = {
     COPY_NUMBER_ALTERATION: 'CNA',
