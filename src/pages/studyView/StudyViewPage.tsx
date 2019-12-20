@@ -7,9 +7,9 @@ import {
     CustomChart,
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
-    StudyViewPageTabKeyEnum,
     StudyViewURLQuery,
 } from "pages/studyView/StudyViewPageStore";
+import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { ClinicalDataTab } from "./tabs/ClinicalDataTab";
 import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";

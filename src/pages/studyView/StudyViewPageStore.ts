@@ -134,6 +134,7 @@ import {
 } from "pages/studyView/TableUtils";
 import { GeneTableRow } from './table/GeneTable';
 import { getSelectedGroups, getGroupParameters } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
 
 export type ChartUserSetting = {
     id: string,
@@ -155,13 +156,6 @@ export type ChartUserSetting = {
 export type StudyPageSettings = {
     chartSettings:ChartUserSetting[],
     origin:string[]
-}
-
-export enum StudyViewPageTabKeyEnum {
-    SUMMARY = 'summary',
-    CLINICAL_DATA = 'clinicalData',
-    HEATMAPS = 'heatmaps',
-    CN_SEGMENTS = 'cnSegments'
 }
 
 export type StudyViewPageTabKey =
@@ -2256,11 +2250,13 @@ export class StudyViewPageStore {
         await: () => [this.queriedPhysicalStudyIds],
         onError: (error => {}),
         invoke: async () => {
-            let isSinglePhysicalStudy = this.queriedPhysicalStudyIds.result.length === 1;
-            if (isSinglePhysicalStudy) {
-                return await getHeatmapMeta(getMDAndersonHeatmapStudyMetaUrl(this.queriedPhysicalStudyIds.result[0]));
+            if (AppConfig.serverConfig.show_mdacc_heatmap) {
+                let isSinglePhysicalStudy = this.queriedPhysicalStudyIds.result.length === 1;
+                if (isSinglePhysicalStudy) {
+                    return await getHeatmapMeta(getMDAndersonHeatmapStudyMetaUrl(this.queriedPhysicalStudyIds.result[0]));
+                }
             }
-            return [];
+            return [];  // if not enabled or conditions not met, just return default answer
         }
     }, []);
 
