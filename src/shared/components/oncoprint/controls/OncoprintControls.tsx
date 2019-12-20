@@ -17,7 +17,7 @@ import './styles.scss';
 import ErrorIcon from '../../ErrorIcon';
 import classNames from 'classnames';
 import {SpecialAttribute} from '../../../cache/ClinicalDataCache';
-import {AlterationTypeConstants, ResultsViewPageStore,} from '../../../../pages/resultsView/ResultsViewPageStore';
+import {AlterationTypeConstants, ResultsViewPageStore, GenericAssayTypeConstants,} from '../../../../pages/resultsView/ResultsViewPageStore';
 import {OncoprintAnalysisCaseType, ExtendedClinicalAttribute} from '../../../../pages/resultsView/ResultsViewPageStoreUtils';
 import {getNCBIlink} from 'public-lib/lib/urls';
 import OQLTextArea, {GeneBoxType} from '../../GeneSelectionBox/OQLTextArea';
@@ -496,13 +496,21 @@ export default class OncoprintControls extends React.Component<
         _.remove(this._selectedTreatmentIds, v => v === treatmentId);
     }
 
+    private filterHeatmapProfilesByGenericAssayType(profiles: MolecularProfile[]) {
+        return _.filter(profiles, (profile) => profile.molecularAlterationType !== AlterationTypeConstants.GENERIC_ASSAY || 
+                                                                              profile.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY && profile.genericAssayType === GenericAssayTypeConstants.TREATMENT_RESPONSE)
+    }
+
     @computed get heatmapProfileOptions() {
         if (
             this.props.state.heatmapProfilesPromise &&
             this.props.state.heatmapProfilesPromise.result
         ) {
+            // only add GENERIC_ASSAY when generic_assay_type is TREATMENT_RESPONSE
+            // TODO: apply to all generic assay profiles when front-end implementation finish 
+            const filteredHeatmapProfiles = this.filterHeatmapProfilesByGenericAssayType(this.props.state.heatmapProfilesPromise.result);
             return _.map(
-                this.props.state.heatmapProfilesPromise.result,
+                filteredHeatmapProfiles,
                 profile => ({
                     label: profile.name,
                     value: profile.molecularProfileId,
@@ -710,9 +718,11 @@ export default class OncoprintControls extends React.Component<
                 id="heatmapDropdown"
                 className="heatmap"
                 titleElement={<OncoprintDropdownCount
+                    // only add GENERIC_ASSAY when generic_assay_type is TREATMENT_RESPONSE
+                    // TODO: apply to all generic assay profiles when front-end implementation finish 
                     count={
                         this.props.state.heatmapProfilesPromise.isComplete && this.props.state.heatmapProfilesPromise!.result ?
-                            this.props.state.heatmapProfilesPromise!.result!.length :
+                            this.filterHeatmapProfilesByGenericAssayType(this.props.state.heatmapProfilesPromise!.result!).length :
                             undefined
                     }
                 />}
