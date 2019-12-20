@@ -21,6 +21,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'https://bioinformatics.mdanderson.org/study2url?studyid=',
     mdacc_heatmap_study_url:
         'https:// bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?',
+    show_mdacc_heatmap: false,
 
     mygene_info_url:
         'https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot',
