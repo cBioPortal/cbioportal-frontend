@@ -167,6 +167,7 @@ export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, cas
     window.pvTimeline =
         window.pvTimeline
             .splitByClinicalAttributes("Treatment", ["TREATMENT_TYPE","SUBTYPE", "AGENT"])
+            .splitByClinicalAttributes("Diagnosis", ["SUBTYPE"])
             .collapseAll()
             .toggleTrackCollapse("Specimen")
             .enableTrackTooltips(false)
