@@ -554,6 +554,8 @@ export type Sample = {
 
         'patientId': string
 
+        'profiledForFusions': boolean
+
         'sampleId': string
 
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
@@ -1849,7 +1851,7 @@ export default class CBioPortalAPI {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/generic_assay_data/fetch';
+        let path = '/generic-assay-data/fetch';
 
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
@@ -1866,7 +1868,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch generic_assay_data
+     * Fetch generic assay data
      * @method
      * @name CBioPortalAPI#fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST
      * @param {} genericAssayDataMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Generic Assay IDs
@@ -1881,7 +1883,7 @@ export default class CBioPortalAPI {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/generic_assay_data/fetch';
+        let path = '/generic-assay-data/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -1916,7 +1918,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch generic_assay_data
+     * Fetch generic assay data
      * @method
      * @name CBioPortalAPI#fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST
      * @param {} genericAssayDataMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Generic Assay IDs
@@ -1940,7 +1942,7 @@ export default class CBioPortalAPI {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/generic_assay_data/{molecularProfileId}/fetch';
+        let path = '/generic-assay-data/{molecularProfileId}/fetch';
 
         path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
@@ -1959,7 +1961,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * fetch generic_assay_data in a molecular profile
+     * fetch generic assay data in a molecular profile
      * @method
      * @name CBioPortalAPI#fetchGenericAssayDataInMolecularProfileUsingPOST
      * @param {string} molecularProfileId - Molecular Profile ID
@@ -1976,7 +1978,7 @@ export default class CBioPortalAPI {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/generic_assay_data/{molecularProfileId}/fetch';
+        let path = '/generic-assay-data/{molecularProfileId}/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -2018,7 +2020,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * fetch generic_assay_data in a molecular profile
+     * fetch generic assay data in a molecular profile
      * @method
      * @name CBioPortalAPI#fetchGenericAssayDataInMolecularProfileUsingPOST
      * @param {string} molecularProfileId - Molecular Profile ID
@@ -2043,7 +2045,7 @@ export default class CBioPortalAPI {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/generic_assay_meta/fetch';
+        let path = '/generic-assay-meta/fetch';
 
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
@@ -2075,7 +2077,7 @@ export default class CBioPortalAPI {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/generic_assay_meta/fetch';
+        let path = '/generic-assay-meta/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};

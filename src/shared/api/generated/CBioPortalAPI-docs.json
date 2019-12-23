@@ -723,12 +723,12 @@
         }
       }
     },
-    "/generic_assay_data/fetch": {
+    "/generic-assay-data/fetch": {
       "post": {
         "tags": [
           "P. Generic Assay"
         ],
-        "summary": "Fetch generic_assay_data",
+        "summary": "Fetch generic assay data",
         "operationId": "fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST",
         "consumes": [
           "application/json"
@@ -774,12 +774,12 @@
         }
       }
     },
-    "/generic_assay_data/{molecularProfileId}/fetch": {
+    "/generic-assay-data/{molecularProfileId}/fetch": {
       "post": {
         "tags": [
           "P. Generic Assay"
         ],
-        "summary": "fetch generic_assay_data in a molecular profile",
+        "summary": "fetch generic assay data in a molecular profile",
         "operationId": "fetchGenericAssayDataInMolecularProfileUsingPOST",
         "consumes": [
           "application/json"
@@ -832,7 +832,7 @@
         }
       }
     },
-    "/generic_assay_meta/fetch": {
+    "/generic-assay-meta/fetch": {
       "post": {
         "tags": [
           "P. Generic Assay"
@@ -5672,6 +5672,9 @@
         },
         "patientId": {
           "type": "string"
+        },
+        "profiledForFusions": {
+          "type": "boolean"
         },
         "sampleId": {
           "type": "string"
