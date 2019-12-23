@@ -672,8 +672,6 @@ export class StudyViewPageStore {
 
     @observable studyIds: string[] = [];
 
-    @observable private sampleIdentifiers: SampleIdentifier[] = [];
-
     private _clinicalDataEqualityFilterSet = observable.shallowMap<ClinicalDataEqualityFilter>();
     private _clinicalDataIntervalFilterSet = observable.shallowMap<ClinicalDataIntervalFilter>();
 
@@ -874,11 +872,17 @@ export class StudyViewPageStore {
             initialFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result;
         }
 
-        return Object.assign({}, this.initialFiltersQuery, initialFilter);
+        const studyViewFilter: StudyViewFilter = Object.assign({}, toJS(this.initialFiltersQuery), initialFilter);
+        //studyViewFilter can only have studyIds or sampleIdentifiers
+        if (!_.isEmpty(studyViewFilter.sampleIdentifiers)) {
+            delete studyViewFilter.studyIds;
+        }
+
+        return studyViewFilter;
     }
 
     @computed
-    get isInitialFilterState(): boolean {
+    private get isInitialFilterState(): boolean {
         return _.isEqual(toJS(this.initialFilters), toJS(this.filters));
     }
 
@@ -2057,27 +2061,11 @@ export class StudyViewPageStore {
                 return acc;
             }, {} as { [id: string]: string[] });
 
-            if (!_.isEmpty(result) || this.sampleIdentifiers.length > 0) {
-
+            if (!_.isEmpty(result)) {
                 result = _.reduce(this.filteredPhysicalStudies.result, (acc, next) => {
                     acc[next.studyId] = [];
                     return acc;
                 }, result);
-
-                _.chain(this.sampleIdentifiers)
-                    .groupBy(sampleIdentifier => sampleIdentifier.studyId)
-                    .each((sampleIdentifiers, studyId) => {
-                        if (result[studyId] !== undefined) {
-                            if (result[studyId].length > 0) {
-                                const sampleIds = result[studyId];
-                                const filteredSampleIds = sampleIdentifiers.map(sampleIdentifier => sampleIdentifier.sampleId);
-                                result[studyId] = _.intersection(sampleIds, filteredSampleIds);
-                            } else {
-                                result[studyId] = sampleIdentifiers.map(sampleIdentifier => sampleIdentifier.sampleId);
-                            }
-                        }
-                    })
-                    .value();
 
                 let studySamplesToFetch = _.reduce(result, (acc, samples, studyId) => {
                     if (samples.length === 0) {
