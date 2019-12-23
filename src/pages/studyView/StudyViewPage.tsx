@@ -110,8 +110,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     "filterValues",
                 ]);
 
-                if (hash) {
-                    const filters = hash.match(/filterJson=([^&]*)/);
+                const filterJson = hash || getBrowserWindow().studyPageFilter;
+                delete (window as any).studyPageFilter
+
+                if (filterJson) {
+                    const filters = filterJson.match(/filterJson=([^&]*)/);
                     if (filters && filters.length > 1) {
                         newStudyViewFilter.filters = filters[1];
                     }
