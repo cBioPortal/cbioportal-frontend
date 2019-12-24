@@ -388,6 +388,10 @@ export type MolecularProfileSampleCount = {
 
         'numberOfCNSegmentSamples': number
 
+        'numberOfFusionProfiledSamples': number
+
+        'numberOfFusionUnprofiledSamples': number
+
         'numberOfMutationProfiledSamples': number
 
         'numberOfMutationUnprofiledSamples': number
@@ -496,6 +500,8 @@ export type Sample = {
 
         'patientId': string
 
+        'profiledForFusions': boolean
+
         'sampleId': string
 
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
@@ -537,6 +543,8 @@ export type StudyViewFilter = {
         'studyIds': Array < string >
 
         'withCNAData': boolean
+
+        'withFusionData': boolean
 
         'withMutationData': boolean
 
