@@ -388,6 +388,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get heatmapIsDynamicallyQueried () {
                 return self.heatmapIsDynamicallyQueried;
             },
+            get ngchmButtonActive() {
+                return (AppConfig.serverConfig.show_mdacc_heatmap &&
+                        (self.props.store.remoteNgchmUrl.result &&
+                        self.props.store.remoteNgchmUrl.result != '') ? true : false);
+            },
             get heatmapGeneInputValue() {
                 return self.heatmapGeneInputValue;
             },
@@ -581,6 +586,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             onClickAddTreatmentsToHeatmap:(treatmentIds:string[])=>{
                 this.addHeatmapTracks(this.selectedHeatmapProfile, treatmentIds);
+            },
+            onClickNGCHM:()=>{
+            	window.open(this.props.store.remoteNgchmUrl.result, '_blank');
             },
             onClickDownload:(type:string)=>{
                 switch(type) {
