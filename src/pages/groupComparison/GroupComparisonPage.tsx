@@ -13,7 +13,7 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupSelector from "./groupSelector/GroupSelector";
-import {getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
+import { GroupComparisonTab } from "./GroupComparisonTabs"
 import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
 import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
