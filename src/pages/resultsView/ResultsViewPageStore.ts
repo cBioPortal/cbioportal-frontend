@@ -1395,6 +1395,46 @@ export class ResultsViewPageStore {
         },
     });
 
+
+	// remoteNgchmUrl queries mdanderson.org to test if there are NGCHMs for one selected
+	// study.  The result is either the full URL to a portal page, or an empty string.
+    readonly remoteNgchmUrl = remoteData<string>({
+        await:()=>[this.studyIds],
+        invoke:async()=>{
+            var result = '';
+
+            if (this.studyIds.result!.length === 1) {
+
+                const queryData = {
+                    studyid:this.studyIds.result![0],
+                    format:"json"
+                };
+
+				var urlResponse;
+
+				try {
+                    urlResponse = await request.get("https://bioinformatics.mdanderson.org/study2url")
+                                        .timeout(30000)
+                                        .query(queryData) as any;
+                } catch (err) {
+                    // Just eat the exception. Result will be empty string.
+                }
+
+                if (urlResponse && urlResponse.body.fileContent) {
+                    const parsedUrlResponse = JSON.parse(urlResponse.body.fileContent.trimEnd()) as any;
+
+                    if (parsedUrlResponse.length >= 1) {
+                        // This is faked out for now.  study2url needs mods to include site url
+                        result = "https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal?" + parsedUrlResponse[0];
+                    }
+                }
+            }
+
+            return Promise.resolve (result);
+        }
+    });
+
+
     readonly molecularProfilesWithData = remoteData<MolecularProfile[]>({
         await: () => [
             this.molecularProfilesInStudies,
