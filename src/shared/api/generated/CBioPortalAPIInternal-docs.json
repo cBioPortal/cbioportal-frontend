@@ -68,6 +68,10 @@
       "description": " "
     },
     {
+      "name": "Server running status",
+      "description": "This end point does not require authentication"
+    },
+    {
       "name": "Significant Copy Number Regions",
       "description": " "
     },
@@ -1078,6 +1082,26 @@
               "items": {
                 "$ref": "#/definitions/GenesetMolecularData"
               }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Server running status"
+        ],
+        "summary": "Get the running status of the server",
+        "operationId": "getServerStatusUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ServerStatusMessage"
             }
           }
         }
@@ -2545,14 +2569,6 @@
           "type": "integer",
           "format": "int32"
         },
-        "numberOfFusionProfiledSamples": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfFusionUnprofiledSamples": {
-          "type": "integer",
-          "format": "int32"
-        },
         "numberOfMutationProfiledSamples": {
           "type": "integer",
           "format": "int32"
@@ -2800,9 +2816,6 @@
         "patientId": {
           "type": "string"
         },
-        "profiledForFusions": {
-          "type": "boolean"
-        },
         "sampleId": {
           "type": "string"
         },
@@ -2844,6 +2857,15 @@
         }
       },
       "title": "SampleIdentifier"
+    },
+    "ServerStatusMessage": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        }
+      },
+      "title": "ServerStatusMessage"
     },
     "StudyViewFilter": {
       "type": "object",
@@ -2894,9 +2916,6 @@
           }
         },
         "withCNAData": {
-          "type": "boolean"
-        },
-        "withFusionData": {
           "type": "boolean"
         },
         "withMutationData": {
