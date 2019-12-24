@@ -14,9 +14,9 @@ import * as React from "react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import {BarDatum} from "./charts/barChart/BarChart";
-import {
-    StudyViewPageTabKeyEnum, ChartUserSetting, CustomChart
-} from "./StudyViewPageStore";
+import { ChartUserSetting, CustomChart } from "./StudyViewPageStore";
+import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
+
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
