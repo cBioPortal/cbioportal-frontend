@@ -189,9 +189,9 @@ describe('StudyViewUtils', () => {
                         'SAMPLE_attribute3': 'attribute3 name'
                     },
                     genes
-                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n' +
-                '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\nWith Mutation data: NO\nWith CNA data: NO\nWith Fusion data: NO\n- attribute1 name: value1\n' +
-                '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'));
+                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n' +
+                    '- CNA Genes:\n  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\nWith Mutation data: NO\n' +
+                    'With CNA data: NO\n- attribute1 name: value1\n- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on 2019-12-24'));
         });
         it('when username is not null', () => {
             assert.isTrue(
