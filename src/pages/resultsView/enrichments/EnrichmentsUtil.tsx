@@ -576,13 +576,13 @@ export function getGeneListOptions(data: AlterationEnrichmentRow[], includeAlter
     });
 
     let dataSortedBypValue = _.clone(dataWithOptionName).sort(function (kv1, kv2) {
-        if (!kv1.pValue && !kv2.pValue) {
+        if (kv1.pValue !== undefined && kv2.pValue !== undefined) {
             return 0;
         }
-        if (!kv1.pValue) {
+        if (kv1.pValue !== undefined) {
             return 1;
         }
-        if (!kv2.pValue) {
+        if (kv2.pValue !== undefined) {
             return -1;
         }
         return Number(kv1.pValue) - Number(kv2.pValue);
