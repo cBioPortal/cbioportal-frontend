@@ -16,7 +16,7 @@
     "buildAll": "yarn run buildModules && yarn run buildMain",
     "buildMain": "yarn run clean && yarn run compileOqlParser && yarn run buildDLL:prod && cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 webpack",
     "buildModules": "lerna run build --ignore=cbioportal-frontend --stream",
-    "publishModules": "lerna run publish from-package --yes",
+    "publishModules": "lerna publish from-package --yes",
     "buildDLL:prod": "yarn run clean && cross-env NODE_ENV=production webpack --config vendor-bundles.webpack.config.js",
     "buildDLL:dev": "yarn run clean && cross-env NODE_ENV=development webpack --config vendor-bundles.webpack.config.js",
     "build:size": "yarn run clean && yarn run buildDLL:prod && cross-env NODE_ENV=production webpack --json > stats.json",
