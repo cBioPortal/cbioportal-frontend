@@ -1,10 +1,9 @@
 import {action, computed, observable} from "mobx";
-import {addServiceErrorHandler, remoteData} from "public-lib/api/remoteData";
+import {addServiceErrorHandler, getBrowserWindow, remoteData} from "cbioportal-frontend-commons";
 import {initializeAPIClients} from "./config/config";
 import * as _ from 'lodash';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {sendSentryMessage} from "./shared/lib/tracking";
-import getBrowserWindow from "./public-lib/lib/getBrowserWindow";
 
 export type SiteError = {
     errorObj:any;

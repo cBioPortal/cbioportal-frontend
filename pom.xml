@@ -27,7 +27,7 @@
 
                         <configuration>
                             <nodeVersion>v8.12.0</nodeVersion>
-                            <yarnVersion>v1.13.0</yarnVersion>
+                            <yarnVersion>v1.21.1</yarnVersion>
                         </configuration>
 
                         <!-- optional: default phase is "generate-resources" -->
@@ -46,12 +46,12 @@
                     </execution>
 
                     <execution>
-                        <id>yarn run build</id>
+                        <id>yarn run buildAll</id>
                         <goals>
                             <goal>yarn</goal>
                         </goals>
                         <configuration>
-                            <arguments>run build</arguments>
+                            <arguments>run buildAll</arguments>
                         </configuration>
                     </execution>
                 </executions>
