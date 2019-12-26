@@ -20,14 +20,13 @@ import {
 import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import {getPatientViewUrl} from "../../../shared/api/urls";
-import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
+import {DefaultTooltip, DownloadControls} from "cbioportal-frontend-commons";
 import autobind from "autobind-decorator";
 import {AnalysisGroup} from "../../studyView/StudyViewUtils";
 import {AbstractChart} from "../../studyView/charts/ChartContainer";
 import {toSvgDomNodeWithLegend} from "../../studyView/StudyViewUtils";
 import classnames from "classnames";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
 import { EditableSpan, pluralize } from 'cbioportal-frontend-commons';
 

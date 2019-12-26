@@ -5,12 +5,9 @@ import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
 import classNames from 'classnames';
 import './styles.scss';
-import DefaultTooltip, {
-    setArrowLeft
-} from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip, getBrowserWindow, setArrowLeft} from "cbioportal-frontend-commons";
 import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {action, computed, observable} from "mobx";
-import {QueryStore, CUSTOM_CASE_LIST_ID} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
 import autobind from "autobind-decorator";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
@@ -80,7 +77,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                         </a>
                     </h3>
                     {sampleListName}&nbsp;({this.studyPageFilteredCasesLink})
-                    
+
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
                 </div>
@@ -113,8 +110,8 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                 </h3>
                 <span>
                     Querying {this.studyPageFilteredCasesLink} in {this.props.store.queriedStudies.result.length} studies
-                        
-                    
+
+
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
                     &nbsp;

@@ -6,7 +6,7 @@ import {action, computed, observable} from 'mobx';
 import Venn from './OverlapVenn';
 import _ from "lodash";
 import autobind from 'autobind-decorator';
-import DownloadControls from 'public-lib/components/downloadControls/DownloadControls';
+import {DownloadControls, remoteData} from 'cbioportal-frontend-commons';
 import {MakeMobxView} from "../../shared/components/MobxView";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
@@ -15,7 +15,6 @@ import {
     OVERLAP_NOT_ENOUGH_GROUPS_MSG,
     partitionCasesByGroupMembership
 } from "./GroupComparisonUtils";
-import {remoteData} from "../../public-lib/api/remoteData";
 import * as ReactDOM from 'react-dom';
 import WindowStore from 'shared/components/window/WindowStore';
 import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
