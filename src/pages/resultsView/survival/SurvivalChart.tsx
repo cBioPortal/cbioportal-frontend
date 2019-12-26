@@ -484,7 +484,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
                 <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
                                                                         disable={true}
-                                                                        zoomDomain={{x: [0, this.sliderValue]}}
+                                                                        zoomDomain={this.props.showSlider ? {x: [0, this.sliderValue]} : undefined}
                                                                         onZoomDomainChange={_.debounce((domain: any) => {
                                                                             this.scatterFilter = domain as SurvivalPlotFilters;
                                                                         }, 1000)}
