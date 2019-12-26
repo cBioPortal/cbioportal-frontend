@@ -270,16 +270,23 @@ Making e2e-tests follows the current procedure for the e2e-tests:
 * In order to minimize time of local database e2e-tests the size of custom studies should be kept as small as possible.
 * When developing in _Local_ context port 8081 can be used to access the cbioportal instance ('http://localhost:8081/cbioportal').
 
+## Workspaces
+
+We are utilizing `yarn workspaces` to have multiple packages in a single repo (monorepo). The `cbioportal-frontend` is the main web application workspace, and is used to build and deploy the cBioPortal frontend webapp. Workspaces under `packages` directory are separate modules (npm packages) designed to be imported by `cbioportal-frontend` workspace as well as by external repositories. `config` and `typings` directories under the `packages` directory are not workspaces or packages though. They are intended to share common settings among all packages under the `pakcages` directory.
+
+In order to add a new workspace, one should create a new directory under `packages` and add a proper `package.json` file. (See `cbioportal-frontend-commons` workspace for an example configuration).
+
+Suggested way to add a new dependency to an existing workspace is to run `yarn workspace <workspace name> add <package name>` instead of just `yarn add <package name>`. For example, run `yarn workspace cbioportal-frontend add lodash` instead of `yarn add lodash`. Similarly to remove a package run `yarn workspace <workspace name> remove <package name>`.
+
 ## Components
+
+Components under `packages` should only depend on either external node modules or workspaces under `packages`.
+Please make sure to not introduce any dependencies from `cbioportal-frontend` workspace when updating or adding new files under `packages`.
 
 ### cbioportal-frontend-commons
 
-[cbioportal-frontend-commons](https://www.npmjs.com/package/cbioportal-frontend-commons/) is a separate npm library which is internally hosted under the `src/public-lib` directory. 
-This library contains basic utility functions and components, and it is designed as a dependency for external react libraries and applications.
+[cbioportal-frontend-commons](https://www.npmjs.com/package/cbioportal-frontend-commons/) is a separate public npm library which contains basic utility functions and components.
  
-Components/utils added under `src/public-lib` should only depend on either external node modules or components/utils under `src/public-lib`.
-Please make sure to not introduce any internal dependencies (from directories under `src` other than `public-lib`) when updating or adding new files under `src/public-lib`.
-
 ### react-mutation-mapper
 
 Mutation Mapper component has been moved to a separate GitHub repository: [cBioPortal/react-mutation-mapper](https://github.com/cBioPortal/react-mutation-mapper).
