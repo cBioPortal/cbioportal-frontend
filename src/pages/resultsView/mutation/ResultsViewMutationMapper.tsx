@@ -4,7 +4,7 @@ import {DataFilterType, onFilterOptionSelect} from "react-mutation-mapper";
 import {observer} from "mobx-react";
 import {action, computed} from "mobx";
 
-import {EnsemblTranscript} from "public-lib/api/generated/GenomeNexusAPI";
+import {EnsemblTranscript} from "cbioportal-frontend-commons";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";

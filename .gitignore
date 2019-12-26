@@ -1,6 +1,7 @@
 node_modules
 npm-debug.log
 yarn-error.log
+lerna-debug.log
 .env
 .awsDetails
 .idea/**
@@ -11,7 +12,7 @@ stats.json
 tsDist/
 dist/
 common-dist/
-commons-dist/
+packages/cbioportal-frontend-commons/dist
 .sass-cache
 .rpt2_cache
 frontend-cbioportal.iml
@@ -20,6 +21,8 @@ test/
 .project
 .settings
 .vscode
+.yarn
+.yarnrc
 node
 bin
 target

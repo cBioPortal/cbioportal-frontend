@@ -5,12 +5,7 @@ import { If } from 'react-if';
 import './footer.scss';
 import _ from 'lodash';
 import { Link } from 'react-router';
-import {
-    default as CBioPortalAPIInternal
-} from "shared/api/generated/CBioPortalAPIInternal";
-import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {AppStore} from "../../AppStore";
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import {observer} from "mobx-react";
 
 @observer export default class PortalFooter extends React.Component<{appStore:AppStore}, {}> {
