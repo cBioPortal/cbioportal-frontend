@@ -1,4 +1,4 @@
-// anything that needs to be used outside of this package needs to be exported here
+// any module that is intended to be public needs to be exported here
 
 export {default as CheckedSelect} from './components/checkedSelect/CheckedSelect';
 export * from './components/checkedSelect/CheckedSelectUtils';
