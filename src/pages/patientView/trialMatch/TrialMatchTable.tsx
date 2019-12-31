@@ -9,7 +9,7 @@ import styles from './style/trialMatch.module.scss';
 import { action, computed, observable } from "mobx";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import SampleManager from "../SampleManager";
-import DefaultTooltip, { placeArrowBottomLeft } from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip, placeArrowBottomLeft } from "cbioportal-frontend-commons";
 import { getAgeRangeDisplay } from "./TrialMatchTableUtils";
 import TrialMatchFeedback from "./TrialMatchFeedback";
 import AppConfig from 'appConfig';
@@ -92,9 +92,6 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                 {trial.matches.map((armMatch: IArmMatch, index: number) => (
                     <div>
                         <div className={styles.matchInfoContainer}>
-                            <div className={styles.sampleIdsContainer}>
-                                {this.getSampleIdIcons(armMatch.sampleIds)}
-                            </div>
                             <div className={styles.genomicInfoContainer}>
                                 <div>
                                     {armMatch.matches.map((clinicalGroupMatch: IClinicalGroupMatch, cgIndex:number) => (
@@ -108,15 +105,18 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                                         </div>
                                     ))}
                                 </div>
-                                 <If condition={armMatch.armDescription !== ''}>
-                                    <div style={{ marginTop: 7, marginBottom: 3, width: '75%' }}>
+                                <div style={{ marginTop: 5 }}>
+                                    <span>Matched Samples: {this.getSampleIdIcons(armMatch.sampleIds)}</span>
+                                </div>
+                                <If condition={armMatch.armDescription !== ''}>
+                                    <div style={{ width: '75%' }}>
                                         <span>Arm: {armMatch.armDescription}</span>
                                     </div>
                                 </If>
                                 <If condition={armMatch.drugs.length > 0}>
                                     <div>
                                         <span>
-                                            <img src={require("../../../globalStyles/images/drug.png")} style={{ width: 18, marginTop: -5 }} alt="drug icon"/>
+                                            <img src={require("../../../globalStyles/images/drug.png")} style={{ width: 18, marginTop: -5, marginRight: 5 }} alt="drug icon"/>
                                             <b>{armMatch.drugs.map((drugCombination: string[]) => drugCombination.join(' + ')).join(', ')}</b></span>
                                     </div>
                                 </If>
@@ -151,13 +151,13 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
             sortedSampleIds = sampleOrder.filter( ( sampleId: string ) => sampleIds.includes( sampleId ) );
         }
         return (
-            <div>
+            <React.Fragment>
                 {sortedSampleIds.map((sampleId: string) => (
                     <span className={styles.genomicSpan}>
                         {this.props.sampleManager!.getComponentForSample(sampleId, 1, '')}
                     </span>
                 ))}
-            </div>
+            </React.Fragment>
         );
     }
 
@@ -169,7 +169,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                     {clinicalGroupMatch.trialOncotreePrimaryDiagnosis.positive.join(', ')}
                     {clinicalGroupMatch.trialOncotreePrimaryDiagnosis.negative.length > 0 &&
                         <span>
-                            <b> except in </b>
+                            <b> except </b>
                             <If condition={clinicalGroupMatch.trialOncotreePrimaryDiagnosis.negative.length < 4}>
                                 <Then>
                                     <span>{clinicalGroupMatch.trialOncotreePrimaryDiagnosis.negative.join(', ').replace(/,(?!.*,)/gmi, ' and')}</span>
@@ -202,19 +202,21 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
             <React.Fragment>
                 {matches.MUTATION.map((genomicGroupMatch: IGenomicGroupMatch) => (
                     <div>
-                        <span style={{'marginRight': 5}}><b>{genomicGroupMatch.patientGenomic!.trueHugoSymbol}</b> {genomicGroupMatch.patientGenomic!.trueProteinChange}</span>
+                        <span style={{'marginRight': 5}}>
+                            <b>{genomicGroupMatch.patientGenomic!.trueHugoSymbol} </b>{genomicGroupMatch.patientGenomic!.trueProteinChange}
+                        </span>
                         <DefaultTooltip
                             placement='bottomLeft'
                             trigger={['hover', 'focus']}
                             overlay={this.tooltipGenomicContent(genomicGroupMatch.genomicAlteration)}
                             destroyTooltipOnHide={false}
                             onPopupAlign={placeArrowBottomLeft}>
-                            <i className={'fa fa-info ' + styles.icon}></i>
+                            <i className={'fa fa-info-circle ' + styles.icon}></i>
                         </DefaultTooltip>
                     </div>
                 ))}
                 {matches.MSI.length > 0 &&
-                    <div>Tumor is MSI-H</div>
+                    <div>Tumor is <b>MSI-H</b></div>
                 }
                 {matches.CNA.map((genomicGroupMatch: IGenomicGroupMatch) => (
                     <div>
@@ -249,12 +251,12 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                         overlay={this.tooltipGenomicContent(mutationAndCnagenemicAlterations)}
                         destroyTooltipOnHide={false}
                         onPopupAlign={placeArrowBottomLeft}>
-                        <i className={'fa fa-info ' + styles.icon}></i>
+                        <i className={'fa fa-info-circle ' + styles.icon}></i>
                     </DefaultTooltip>
                 </div>
                 }
                 { notMatches.MSI.length > 0 &&
-                <div>Tumor is not MSI-H</div>
+                    <div>Tumor is <b>not MSI-H</b></div>
                 }
                 { notMatches.WILDTYPE.length > 0 &&
                 <div>
@@ -265,7 +267,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                         overlay={this.tooltipGenomicContent(notMatches.WILDTYPE[0].genomicAlteration)}
                         destroyTooltipOnHide={false}
                         onPopupAlign={placeArrowBottomLeft}>
-                        <i className={'fa fa-info ' + styles.icon}></i>
+                        <i className={'fa fa-info-circle ' + styles.icon}></i>
                     </DefaultTooltip>
                 </div>
                 }
@@ -274,10 +276,11 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
     }
 
     public getGenomicAlteration(data: string[]) {
+        const filteredData = data.map((e: string) => e.split(' '));
         return (
             <div>
-                {data.map((e: string) => (
-                    <div>{e}</div>
+                {filteredData.map((e: string[]) => (
+                    <div><b>{e[0]}</b> {e[1]}</div>
                 ))}
             </div>
         );
@@ -286,7 +289,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
     public tooltipGenomicContent(data: string[]) {
         return (
             <div className={styles.tooltip}>
-                <div>Matched genomic criteria of the trial:</div>
+                <div>Genomic selection {data.length > 1 ? 'criteria': 'criterion'} specified in the trial:</div>
                 {data.map((e: string) => (
                     <div className={styles.genomicSpan}>
                         <If condition={e.includes('!')}>
@@ -354,7 +357,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                     showCopyDownload={false}
                 />
                 <div className={styles.powered}>
-                    Powered by <a href="https://oncokb.org/" target="_blank">OncoKB</a> && <a href="https://matchminer.org/" target="_blank">MatchMiner</a>
+                    Powered by <a href="https://oncokb.org/" target="_blank">OncoKB</a> & <a href="https://matchminer.org/" target="_blank">MatchMiner</a>
                 </div>
             </div>
         )

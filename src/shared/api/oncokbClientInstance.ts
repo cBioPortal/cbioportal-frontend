@@ -1,4 +1,4 @@
-import OncoKbAPI from "../../public-lib/api/generated/OncoKbAPI";
+import {OncoKbAPI} from "cbioportal-frontend-commons";
 
 const client = new OncoKbAPI();
 

@@ -20,21 +20,17 @@ import styles from "./styles.module.scss";
 import classNames from 'classnames';
 import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
-import {remoteData} from "../../../public-lib/api/remoteData";
+import {DefaultTooltip, remoteData} from "cbioportal-frontend-commons";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import {MolecularProfile, Sample, CancerStudy} from "shared/api/generated/CBioPortalAPI";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
-import sessionServiceClient from "shared/api//sessionServiceInstance";
-import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import { CUSTOM_CASE_LIST_ID } from 'shared/components/query/QueryStore';
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { Alteration } from 'shared/lib/oql/oql-parser';
-import ReactSelect from "react-select";
 import autobind from 'autobind-decorator';
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import FontAwesome from 'react-fontawesome';
 
 export interface IDownloadTabProps {
@@ -85,7 +81,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             this.props.store.molecularProfileIdToMolecularProfile,
         ],
         invoke: ()=>Promise.resolve(generateCaseAlterationData(
-            this.props.store.rvQuery.oqlQuery,
+            this.props.store.oqlText,
             this.props.store.selectedMolecularProfiles.result!,
             this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.result!,
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!,
@@ -225,7 +221,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach((data, index) => {
                 // mergedTrackOqlList is undefined means the data is for single track / oql
                 if (data.mergedTrackOqlList === undefined) {
-                    labels.push(getSingleGeneResultKey(index, this.props.store.rvQuery.oqlQuery, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>));
+                    labels.push(getSingleGeneResultKey(index, this.props.store.oqlText, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>));
                 }
                 // or data is for merged track (group: list of oqls)
                 else {
@@ -244,7 +240,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                 // mergedTrackOqlList is undefined means the data is for single track / oql
                 if (data.mergedTrackOqlList === undefined) {
                     const singleTrackOql = data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
-                    const label = getSingleGeneResultKey(index, this.props.store.rvQuery.oqlQuery, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>);
+                    const label = getSingleGeneResultKey(index, this.props.store.oqlText, data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>);
                     // put types for single track into the map, key is track label
                     if (singleTrackOql.parsed_oql_line.alterations) {
                         trackAlterationTypesMap[label] = _.uniq(_.map(singleTrackOql.parsed_oql_line.alterations, (alteration) => alteration.alteration_type.toUpperCase()));
@@ -306,7 +302,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     });
 
     public render() {
-        const status = getMobxPromiseGroupStatus(this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationMap, this.cnaData, this.mutationData, 
+        const status = getMobxPromiseGroupStatus(this.geneAlterationData, this.caseAlterationData, this.oqls, this.trackLabels, this.trackAlterationTypesMap, this.geneAlterationMap, this.cnaData, this.mutationData,
             this.mrnaData, this.proteinData, this.unalteredCaseAlterationData, this.alteredCaseAlterationData, this.props.store.virtualStudyParams, this.sampleMatrixText, this.props.store.nonSelectedMolecularProfilesGroupByName,
             this.props.store.studies, this.props.store.selectedMolecularProfiles);
 
@@ -433,8 +429,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             }
             return {"name": profileName}
         });
-        
-        return _.map(allProfileOptions, (option) => 
+
+        return _.map(allProfileOptions, (option) =>
             (
                 <tr>
                     <td style={{width: 500}}>

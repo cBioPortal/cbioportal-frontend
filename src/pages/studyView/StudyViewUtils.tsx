@@ -14,9 +14,9 @@ import * as React from "react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import {BarDatum} from "./charts/barChart/BarChart";
-import {
-    StudyViewPageTabKeyEnum, ChartUserSetting, CustomChart
-} from "./StudyViewPageStore";
+import { ChartUserSetting, CustomChart } from "./StudyViewPageStore";
+import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
+
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
@@ -24,13 +24,12 @@ import defaultClient from "shared/api/cbioportalClientInstance";
 import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
 import MobxPromise from 'mobxpromise';
-import {getTextWidth} from "../../public-lib/lib/TextTruncationUtils";
+import {getTextWidth, stringListToIndexSet} from "cbioportal-frontend-commons";
 import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
 import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
 import styles from './styles.module.scss';
 import { getGroupParameters, getStudiesAttr } from "pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import { SessionGroupData } from "shared/api/ComparisonGroupClient";
-import { stringListToIndexSet } from "public-lib";
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {

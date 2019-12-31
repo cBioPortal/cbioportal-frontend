@@ -13,12 +13,11 @@ import {
 } from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
-import {remoteData} from "public-lib/api/remoteData";
+import {isUrl, remoteData} from "cbioportal-frontend-commons";
 import {Else, If, Then} from 'react-if';
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
-import { isUrl } from "public-lib";
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;

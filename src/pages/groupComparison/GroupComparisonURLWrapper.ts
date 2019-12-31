@@ -1,7 +1,8 @@
 import URLWrapper from "../../shared/lib/URLWrapper";
 import ExtendedRouterStore from "../../shared/lib/ExtendedRouterStore";
 import {computed} from "mobx";
-import {getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
+import {getTabId} from "./GroupComparisonUtils";
+import { GroupComparisonTab } from "./GroupComparisonTabs"
 import autobind from "autobind-decorator";
 import {OverlapStrategy} from "./GroupComparisonStore";
 
@@ -15,13 +16,13 @@ export type GroupComparisonURLQuery = {
 
 export default class GroupComparisonURLWrapper extends URLWrapper<GroupComparisonURLQuery> {
     constructor(routing:ExtendedRouterStore) {
-        super(routing, [
-            { name:"sessionId", isSessionProp: false },
-            { name:"groupOrder", isSessionProp: false },
-            { name:"unselectedGroups", isSessionProp: false },
-            { name:"overlapStrategy", isSessionProp: false },
-            { name:"patientEnrichments", isSessionProp: false }
-        ]);
+        super(routing, {
+            sessionId: { isSessionProp: false },
+            groupOrder: { isSessionProp: false },
+            unselectedGroups: { isSessionProp: false },
+            overlapStrategy: { isSessionProp: false },
+            patientEnrichments: { isSessionProp: false }
+        });
     }
 
     @computed public get tabId() {
@@ -30,6 +31,6 @@ export default class GroupComparisonURLWrapper extends URLWrapper<GroupCompariso
 
     @autobind
     public setTabId(tabId:GroupComparisonTab, replace?:boolean) {
-        this.routing.updateRoute({}, `comparison/${tabId}`, false, replace);
+        this.updateURL({}, `comparison/${tabId}`, false, replace);
     }
 }
