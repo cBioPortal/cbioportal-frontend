@@ -15,10 +15,10 @@ import {CSSProperties} from "react";
 type ButtonSpec = { key:string, content:JSX.Element, onClick:()=>void, disabled?: boolean };
 
 export type DownloadControlsButton = "PDF" | "PNG" | "SVG" | "Data" | "Summary Data" | "Full Data";
-export type DownloadDataType='summary'|'full';
+export type DataType='summary'|'full';
 interface IDownloadControlsProps {
     getSvg?:()=>SVGElement|null|PromiseLike<SVGElement|null>;
-    getData?:(dataType?:DownloadDataType)=>string|null|PromiseLike<string|null>;
+    getData?:(dataType?:DataType)=>string|null|PromiseLike<string|null>;
     filename:string;
     buttons?: DownloadControlsButton[],
     additionalLeftButtons?:ButtonSpec[],
@@ -106,7 +106,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
     }
 
     @autobind
-    private downloadData(dataType?: DownloadDataType) {
+    private downloadData(dataType?: DataType) {
         if (this.props.getData) {
             const result = this.props.getData(dataType);
             if (result !== null) {
