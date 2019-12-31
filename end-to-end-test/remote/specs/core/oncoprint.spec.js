@@ -145,6 +145,9 @@ describe('oncoprint', function() {
             browser.click(mrnaElements.dropdown_selector + ' li:nth-child(1)'); // Click Cluster
             browser.pause(500); // give it time to sort
 
+            // wait for page to refresh
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
+
             // Open menu again, which will have closed
             browser.click(mrnaElements.button_selector);
             browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
