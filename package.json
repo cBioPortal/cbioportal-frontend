@@ -245,7 +245,7 @@
     "styled-components": "^4.2.1",
     "superagent": "^3.8.3",
     "superagent-cache": "^3.0.1",
-    "svg2pdf.js": "^1.3.3",
+    "svg2pdf.js": "github:cbioportal/svg2pdf.js#v1.3.3-cbio",
     "svgsaver": "0.9.0",
     "swagger-client": "^3.8.22",
     "ts-loader": "4.0.0",
