@@ -21,6 +21,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'https://bioinformatics.mdanderson.org/study2url?studyid=',
     mdacc_heatmap_study_url:
         'https:// bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?',
+    show_mdacc_heatmap: false,
 
     mygene_info_url:
         'https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot',
@@ -105,7 +106,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     enable_darwin: false,
 
-    session_url_length_threshold: '1990',
+    session_url_length_threshold: '1500',
 
     study_view: {
         tableAttrs: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
@@ -144,7 +145,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>',
 
     query_product_limit: 1000000,
-    
+
     skin_show_gsva: false,
 };
 

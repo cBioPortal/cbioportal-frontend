@@ -16,7 +16,7 @@ import {
 } from "shared/lib/IGVUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {default as ProgressIndicator, IProgressIndicatorItem} from "shared/components/progressIndicator/ProgressIndicator";
-import {remoteData} from "public-lib";
+import {remoteData} from "cbioportal-frontend-commons";
 
 @observer
 export default class CNSegments extends React.Component<{ store: ResultsViewPageStore}, {}> {

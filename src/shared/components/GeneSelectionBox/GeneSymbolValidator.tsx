@@ -9,7 +9,7 @@ import {
 import { action, computed } from '../../../../node_modules/mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import 'react-select1/dist/react-select.css';
-import { remoteData } from 'public-lib/api/remoteData';
+import { remoteData } from 'cbioportal-frontend-commons';
 import client from 'shared/api/cbioportalClientInstance';
 import memoize from 'memoize-weak-decorator';
 import { OQL } from 'shared/components/GeneSelectionBox/OQLTextArea';

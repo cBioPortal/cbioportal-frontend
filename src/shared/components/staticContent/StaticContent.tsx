@@ -3,7 +3,7 @@ import $ from 'jquery';
 import {observer} from 'mobx-react';
 import ReactMarkdown from 'react-markdown';
 import AppConfig from "appConfig";
-import {remoteData} from "public-lib/api/remoteData";
+import {remoteData} from "cbioportal-frontend-commons";
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 import {getDocsUrl} from "../../api/urls";
 import './gfm.css';

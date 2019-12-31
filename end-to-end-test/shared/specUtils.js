@@ -293,6 +293,38 @@ function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
     };
 }
 
+
+function postDataToUrl(url, data) {
+
+    browser.execute((url, data)=>{
+
+        function formSubmit(url, params) {
+            // method="smart" means submit with GET iff the URL wouldn't be too long
+
+            const form = document.createElement('form');
+            form.setAttribute('method', 'post');
+            form.setAttribute('action', url);
+            form.setAttribute('target', '_self');
+
+            for (const key of Object.keys(params)) {
+                const hiddenField = document.createElement('input');
+                hiddenField.setAttribute('type', 'hidden');
+                hiddenField.setAttribute('name', key);
+                hiddenField.setAttribute('value', params[key]);
+                form.appendChild(hiddenField);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        formSubmit(url, data)
+
+    },url, data)
+
+}
+
+
 module.exports = {
     checkElementWithElementHidden: checkElementWithElementHidden,
     waitForPlotsTab: waitForPlotsTab,
@@ -332,5 +364,8 @@ module.exports = {
     getOncoprintGroupHeaderOptionsElements:getOncoprintGroupHeaderOptionsElements,
     showGsva: showGsva,
     setResultsPageSettingsMenuOpen:setResultsPageSettingsMenuOpen,
-    setDropdownOpen:setDropdownOpen
+    setDropdownOpen:setDropdownOpen,
+    postDataToUrl:postDataToUrl
 };
+
+

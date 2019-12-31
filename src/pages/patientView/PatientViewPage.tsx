@@ -11,7 +11,7 @@ import PatientHeader from "./patientHeader/PatientHeader";
 import SignificantMutationalSignatures from "./patientHeader/SignificantMutationalSignatures";
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import {IColumnVisibilityDef} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
-import {toggleColumnVisibility} from "public-lib/lib/ColumnVisibilityResolver";
+import {toggleColumnVisibility} from "cbioportal-frontend-commons";
 import {parseCohortIds, PatientViewPageStore} from "./clinicalInformation/PatientViewPageStore";
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
@@ -46,18 +46,19 @@ import WindowStore from "shared/components/window/WindowStore";
 import {QueryParams} from "url";
 import {AppStore} from "../../AppStore";
 import request from 'superagent';
-import {remoteData} from "../../public-lib/api/remoteData";
+import {remoteData, getBrowserWindow} from "cbioportal-frontend-commons";
 import TrialMatchTable from "./trialMatch/TrialMatchTable";
 
-import 'cbioportal-frontend-commons/styles.css';
+import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import { trackPatient, trackEvent } from "shared/lib/tracking";
 import PatientViewUrlWrapper from "./PatientViewUrlWrapper";
 import { PagePath } from "shared/enums/PagePaths";
 import { GeneFilterOption } from "./mutation/GeneFilterMenu";
 import { checkNonProfiledGenesExist } from "./PatientViewPageUtils";
+import PatientViewGenePanelModal from "./PatientViewGenePanelModal/PatientViewGenePanelModal";
+import { PatientViewPageTabs } from "./PatientViewPageTabs";
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -84,6 +85,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     @observable private mutationTableColumnVisibility: {[columnId: string]: boolean}|undefined;
     @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
+    @observable genePanelModal = { genePanelId: '', isOpen: false };
 
     // use this wrapper rather than interacting with the url directly
     @observable
@@ -158,7 +160,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
         if (!e.shiftKey && !e.altKey && !e.metaKey) {
             e.preventDefault();
-            this.urlWrapper.updateQuery({ caseId:undefined, sampleId:id })
+            this.urlWrapper.updateURL({ caseId:undefined, sampleId:id })
         }
         // otherwise do nothing, we want default behavior of link
         // namely that href will open in a new window/tab
@@ -168,9 +170,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         let values = id.split(":");
         if(values.length == 2){
-            this.urlWrapper.updateQuery({ studyId: values[0], caseId: values[1], sampleId: undefined });
+            this.urlWrapper.updateURL({ studyId: values[0], caseId: values[1], sampleId: undefined });
         } else {
-            this.urlWrapper.updateQuery({ caseId: id, sampleId: undefined });
+            this.urlWrapper.updateURL({ caseId: id, sampleId: undefined });
         }
 
     }
@@ -252,7 +254,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     mutationTableShowGeneFilterMenu(sampleIds:string[]):boolean {
         const entrezGeneIds:number[] = _.uniq(_.map(this.patientViewPageStore.mergedMutationDataIncludingUncalled, mutations => mutations[0].entrezGeneId));
-        return sampleIds.length > 1 
+        return sampleIds.length > 1
             && checkNonProfiledGenesExist(  sampleIds,
                                             entrezGeneIds,
                                             this.patientViewPageStore.sampleToMutationGenePanelId.result,
@@ -263,9 +265,21 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         const entrezGeneIds:number[] = _.uniq(_.map(this.patientViewPageStore.mergedDiscreteCNAData, alterations => alterations[0].entrezGeneId));
         return sampleIds.length > 1
             && checkNonProfiledGenesExist(  sampleIds,
-                                            entrezGeneIds, 
+                                            entrezGeneIds,
                                             this.patientViewPageStore.sampleToDiscreteGenePanelId.result,
                                             this.patientViewPageStore.genePanelIdToEntrezGeneIds.result);
+    }
+
+    @autobind
+    @action toggleGenePanelModal(genePanelId?:string|undefined) {
+        this.genePanelModal = {
+            isOpen: !this.genePanelModal.isOpen,
+            genePanelId: genePanelId || ''
+        };
+    }
+
+    @computed get modalSelectedGenePanel() {
+        return this.patientViewPageStore.genePanelIdToPanel.result[this.genePanelModal.genePanelId];
     }
 
     public render() {
@@ -318,7 +332,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         {sampleManager &&
                                         sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
                                         getSpanElementsFromCleanData(sampleManager.clinicalDataLegacyCleanAndDerived[sample.id], this.patientViewPageStore.studyId)}
-                                    </span>
+                                    </span>,
+                                    this.toggleGenePanelModal,
+                                    this.genePanelModal.isOpen
                                 )
                             }
                         </span>
@@ -342,7 +358,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 );
             }
         }
-        
+
         if (this.patientViewPageStore.patientIdsInCohort && this.patientViewPageStore.patientIdsInCohort.length > 0) {
             const indexInCohort = this.patientViewPageStore.patientIdsInCohort.indexOf(this.patientViewPageStore.studyId + ':' + this.patientViewPageStore.patientId);
             cohortNav = (
@@ -376,7 +392,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         if (sampleManager) {
             sampleIds = sampleManager.samples.map((sample:ClinicalDataBySampleId) => sample.id );
         }
-
         return (
             <PageLayout noMargin={true} hideFooter={true}>
                 {
@@ -388,7 +403,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     )
                 }
                 <div className="patientViewPage">
-
+                    {this.genePanelModal.isOpen &&
+                        <PatientViewGenePanelModal
+                            genePanel={this.modalSelectedGenePanel}
+                            show={this.genePanelModal.isOpen}
+                            onHide={this.toggleGenePanelModal}
+                            columns={3}
+                        />
+                    }
                     <div className="headBlock">
 
                         {  (this.patientViewPageStore.patientViewData.isComplete) && (
@@ -426,7 +448,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 onTabClick={(id:string)=>this.urlWrapper.setTab(id)}
                                 className="mainTabs"
                             >
-                                <MSKTab key={0} id="summary" linkText="Summary">
+                                <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
 
                                     <LoadingIndicator isLoading={this.patientViewPageStore.clinicalEvents.isPending} />
 
@@ -465,6 +487,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                     containerWidth={WindowStore.size.width-20}
                                                     sampleIdToMutationGenePanelId={this.patientViewPageStore.sampleToMutationGenePanelId.result}
                                                     sampleIdToCopyNumberGenePanelId={this.patientViewPageStore.sampleToDiscreteGenePanelId.result}
+                                                    onSelectGenePanel={this.toggleGenePanelModal}
+                                                    disableTooltip={this.genePanelModal.isOpen}
                                                 />
                                                 <hr />
                                             </div>
@@ -522,7 +546,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                     columnVisibilityProps={{
                                                         onColumnToggled: this.onMutationTableColumnVisibilityToggled
                                                     }}
-                                                    />
+                                                    onSelectGenePanel={this.toggleGenePanelModal}
+                                                    disableTooltip={this.genePanelModal.isOpen}
+                                                />
                                             </div>
                                         )
                                     }
@@ -564,13 +590,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                     columnVisibilityProps={{
                                                         onColumnToggled: this.onCnaTableColumnVisibilityToggled
                                                     }}
-                                                    />
+                                                    sampleToMutationGenePanelId={this.patientViewPageStore.sampleToMutationGenePanelId}
+                                                    onSelectGenePanel={this.toggleGenePanelModal}
+                                                    disableTooltip={this.genePanelModal.isOpen}
+                                                />
                                             </div>
                                         )
                                     }
                                 </MSKTab>
 
-                    <MSKTab key={2} id="clinicalData" linkText="Clinical Data">
+                    <MSKTab key={2} id={PatientViewPageTabs.ClinicalData} linkText="Clinical Data">
 
                         <div className="clearfix">
                             <FeatureTitle title="Patient"
@@ -597,7 +626,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
 
 
-                    <MSKTab key={3} id="pathologyReport" linkText="Pathology Report"
+                    <MSKTab key={3} id={PatientViewPageTabs.PathologyReport} linkText="Pathology Report"
                             hide={!this.shouldShowPathologyReport(this.patientViewPageStore)}
                     >
                         <div>
@@ -605,7 +634,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </div>
                     </MSKTab>
 
-                    <MSKTab key={5} id="tissueImage" linkText="Tissue Image"
+                    <MSKTab key={5} id={PatientViewPageTabs.TissueImage} linkText="Tissue Image"
                             hide={this.hideTissueImageTab()}
                     >
                         <div>
@@ -614,7 +643,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
 
                     {(this.patientViewPageStore.studyId === "mskimpact" && this.wholeSlideViewerUrl.result) && (
-                    <MSKTab key={6} id="MSKTissueImage" linkText="Tissue Image"
+                    <MSKTab key={6} id={PatientViewPageTabs.MSKTissueImage} linkText="Tissue Image"
                             unmountOnHide = {false}
                     >
                         <div>
@@ -625,7 +654,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     {
                         this.shouldShowTrialMatch(this.patientViewPageStore) && (
-                            <MSKTab key={7} id="trialMatchTab" linkText="Matched Trials">
+                            <MSKTab key={7} id={PatientViewPageTabs.TrialMatchTab} linkText="Matched Trials">
                                 <TrialMatchTable
                                     sampleManager={sampleManager}
                                     detailedTrialMatches={this.patientViewPageStore.detailedTrialMatches.result}
@@ -635,7 +664,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         )
                     }
 
-                    {/*<MSKTab key={5} id="mutationalSignatures" linkText="Mutational Signature Data" hide={true}>*/}
+                    {/*<MSKTab key={5} id={{PatientViewPageTabs.MutationalSignatures}} linkText="Mutational Signature Data" hide={true}>*/}
                         {/*<div className="clearfix">*/}
                             {/*<FeatureTitle title="Mutational Signatures" isLoading={ this.patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />*/}
                             {/*<LoadingIndicator isLoading={this.patientViewPageStore.mutationalSignatureData.isPending}/>*/}

@@ -40,7 +40,12 @@ export default class StandaloneMutationTable extends MutationTable<IStandaloneMu
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
-            MutationTableColumnType.NORMAL_ALLELE_FREQ
+            MutationTableColumnType.NORMAL_ALLELE_FREQ,
+            MutationTableColumnType.EXON,
+            MutationTableColumnType.HGVSC,
+            MutationTableColumnType.GNOMAD,
+            MutationTableColumnType.CLINVAR,
+            MutationTableColumnType.DBSNP
         ]
     };
 
@@ -80,5 +85,10 @@ export default class StandaloneMutationTable extends MutationTable<IStandaloneMu
         this._columns[MutationTableColumnType.VAR_READS_N].order = 200;
         this._columns[MutationTableColumnType.REF_READS_N].order = 210;
         //this._columns[MutationTableColumnType.NUM_MUTATIONS].order = 220;
+        this._columns[MutationTableColumnType.EXON].order = 220;
+        this._columns[MutationTableColumnType.HGVSC].order = 230;
+        this._columns[MutationTableColumnType.GNOMAD].order = 240;
+        this._columns[MutationTableColumnType.CLINVAR].order = 250;
+        this._columns[MutationTableColumnType.DBSNP].order = 260;
     }
 }

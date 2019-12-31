@@ -5,13 +5,14 @@ import {ChildButton, MainButton, Menu} from 'react-mfb';
 import 'react-mfb/mfb.css';
 import {
     CustomChart,
-    StudyViewPageStore, StudyViewPageTabKey,
-    StudyViewPageTabKeyEnum
+    StudyViewPageStore,
+    StudyViewPageTabKey,
 } from "../StudyViewPageStore";
+import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
 import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
 import AddChartByType from "./addChartByType/AddChartByType";
-import {remoteData} from "../../../public-lib/api/remoteData";
+import {DefaultTooltip, remoteData} from "cbioportal-frontend-commons";
 import CustomCaseSelection from "./customCaseSelection/CustomCaseSelection";
 import {
     calculateClinicalDataCountFrequency, ChartMetaDataTypeEnum, ChartType,
@@ -19,7 +20,6 @@ import {
     getOptionsByChartMetaDataType
 } from "../StudyViewUtils";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import {ChartTypeEnum, ChartTypeNameEnum} from "../StudyViewConfig";
 import InfoBanner from "../infoBanner/InfoBanner";
 import {GAEvent, serializeEvent, trackEvent} from "../../../shared/lib/tracking";

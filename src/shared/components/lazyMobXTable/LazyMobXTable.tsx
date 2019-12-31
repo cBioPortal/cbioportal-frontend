@@ -14,11 +14,14 @@ import {
     IColumnVisibilityDef
 } from "../columnVisibilityControls/ColumnVisibilityControls";
 import {CopyDownloadControls, ICopyDownloadData} from "../copyDownloadControls/CopyDownloadControls";
-import {resolveColumnVisibility, resolveColumnVisibilityByColumnDefinition} from "public-lib/lib/ColumnVisibilityResolver";
+import {
+    DefaultTooltip,
+    resolveColumnVisibility,
+    resolveColumnVisibilityByColumnDefinition
+} from "cbioportal-frontend-commons";
 import {ICopyDownloadControlsProps} from "../copyDownloadControls/ICopyDownloadControls";
 import {SimpleCopyDownloadControls} from "../copyDownloadControls/SimpleCopyDownloadControls";
 import {serializeData} from "shared/lib/Serializer";
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
 import ColumnResizer from "react-column-resizer";
 import {SortMetric} from "../../lib/ISortMetric";

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {calcProteinChangeSortValue} from "public-lib/lib/ProteinChangeUtils";
+import {calcProteinChangeSortValue} from "cbioportal-frontend-commons";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import TruncatedText from "shared/components/TruncatedText";
 import MutationStatusColumnFormatter from "./MutationStatusColumnFormatter";

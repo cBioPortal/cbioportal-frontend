@@ -1,6 +1,5 @@
 import * as _ from 'lodash';
 import AppConfig from "appConfig";
-import {remoteData} from "../../public-lib/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import oncoKBClient from "shared/api/oncokbClientInstance";
@@ -89,7 +88,6 @@ import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
 import autobind from "autobind-decorator";
 import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
-import {stringListToSet} from 'public-lib/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
@@ -119,8 +117,13 @@ import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";
-import {CancerGene, Gene as OncokbGene} from "../../public-lib/api/generated/OncoKbAPI";
-import {DownloadDataType} from "public-lib/components/downloadControls/DownloadControls";
+import {
+    DataType as DownloadDataType,
+    CancerGene,
+    OncoKbGene,
+    remoteData,
+    stringListToSet
+} from "cbioportal-frontend-commons";
 
 import { AppStore } from 'AppStore';
 import {
@@ -129,6 +132,7 @@ import {
 } from "pages/studyView/TableUtils";
 import { GeneTableRow } from './table/GeneTable';
 import { getSelectedGroups, getGroupParameters } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
 
 export type ChartUserSetting = {
     id: string,
@@ -150,13 +154,6 @@ export type ChartUserSetting = {
 export type StudyPageSettings = {
     chartSettings:ChartUserSetting[],
     origin:string[]
-}
-
-export enum StudyViewPageTabKeyEnum {
-    SUMMARY = 'summary',
-    CLINICAL_DATA = 'clinicalData',
-    HEATMAPS = 'heatmaps',
-    CN_SEGMENTS = 'cnSegments'
 }
 
 export type StudyViewPageTabKey =
@@ -820,11 +817,17 @@ export class StudyViewPageStore {
             initialFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result;
         }
 
-        return Object.assign({}, this.initialFiltersQuery, initialFilter);
+        const studyViewFilter: StudyViewFilter = Object.assign({}, toJS(this.initialFiltersQuery), initialFilter);
+        //studyViewFilter can only have studyIds or sampleIdentifiers
+        if (!_.isEmpty(studyViewFilter.sampleIdentifiers)) {
+            delete studyViewFilter.studyIds;
+        }
+
+        return studyViewFilter;
     }
 
     @computed
-    get isInitialFilterState(): boolean {
+    private get isInitialFilterState(): boolean {
         return _.isEqual(toJS(this.initialFilters), toJS(this.filters));
     }
 
@@ -1944,27 +1947,11 @@ export class StudyViewPageStore {
                 return acc;
             }, {} as { [id: string]: string[] });
 
-            if (!_.isEmpty(result) || this.sampleIdentifiers.length > 0) {
-
+            if (!_.isEmpty(result)) {
                 result = _.reduce(this.filteredPhysicalStudies.result, (acc, next) => {
                     acc[next.studyId] = [];
                     return acc;
                 }, result);
-
-                _.chain(this.sampleIdentifiers)
-                    .groupBy(sampleIdentifier => sampleIdentifier.studyId)
-                    .each((sampleIdentifiers, studyId) => {
-                        if (result[studyId] !== undefined) {
-                            if (result[studyId].length > 0) {
-                                const sampleIds = result[studyId];
-                                const filteredSampleIds = sampleIdentifiers.map(sampleIdentifier => sampleIdentifier.sampleId);
-                                result[studyId] = _.intersection(sampleIds, filteredSampleIds);
-                            } else {
-                                result[studyId] = sampleIdentifiers.map(sampleIdentifier => sampleIdentifier.sampleId);
-                            }
-                        }
-                    })
-                    .value();
 
                 let studySamplesToFetch = _.reduce(result, (acc, samples, studyId) => {
                     if (samples.length === 0) {
@@ -2150,11 +2137,13 @@ export class StudyViewPageStore {
         await: () => [this.queriedPhysicalStudyIds],
         onError: (error => {}),
         invoke: async () => {
-            let isSinglePhysicalStudy = this.queriedPhysicalStudyIds.result.length === 1;
-            if (isSinglePhysicalStudy) {
-                return await getHeatmapMeta(getMDAndersonHeatmapStudyMetaUrl(this.queriedPhysicalStudyIds.result[0]));
+            if (AppConfig.serverConfig.show_mdacc_heatmap) {
+                let isSinglePhysicalStudy = this.queriedPhysicalStudyIds.result.length === 1;
+                if (isSinglePhysicalStudy) {
+                    return await getHeatmapMeta(getMDAndersonHeatmapStudyMetaUrl(this.queriedPhysicalStudyIds.result[0]));
+                }
             }
-            return [];
+            return [];  // if not enabled or conditions not met, just return default answer
         }
     }, []);
 
@@ -2168,7 +2157,7 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly oncokbGenes = remoteData<OncokbGene[]>({
+    readonly oncokbGenes = remoteData<OncoKbGene[]>({
         await: () => [],
         invoke: async () => {
             return oncoKBClient.genesGetUsingGET({});
@@ -3775,7 +3764,7 @@ export class StudyViewPageStore {
         if (!_.isEmpty(this.geneQueries)) {
             formOps.Action = 'Submit';
             formOps.gene_list = this.geneQueries.map(query => unparseOQLQueryLine(query)).join('\n');
-            url = '/results/legacy_submission';
+            url = '/results';
         }
         submitToPage(url, formOps, '_blank');
     }

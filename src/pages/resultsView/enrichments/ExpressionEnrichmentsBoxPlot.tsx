@@ -11,7 +11,7 @@ import * as _ from "lodash";
 import autobind from 'autobind-decorator';
 import { IBoxScatterPlotPoint, IStringAxisData, INumberAxisData, makeBoxScatterPlotData, getBoxPlotDownloadData } from '../plots/PlotsTabUtils';
 import BoxScatterPlot, { IBoxScatterPlotData } from 'shared/components/plots/BoxScatterPlot';
-import { remoteData, DownloadControls } from 'public-lib';
+import { remoteData, DownloadControls } from 'cbioportal-frontend-commons';
 import client from 'shared/api/cbioportalClientInstance';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';

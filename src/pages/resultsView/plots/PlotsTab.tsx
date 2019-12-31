@@ -59,9 +59,8 @@ import WaterfallPlot from "shared/components/plots/WaterfallPlot";
 import TablePlot from "shared/components/plots/TablePlot";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import InfoIcon from "../../../shared/components/InfoIcon";
-import {remoteData} from "../../../public-lib/api/remoteData";
+import {DownloadControls, remoteData} from "cbioportal-frontend-commons";
 import BoxScatterPlot, {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
-import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
 import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
@@ -329,7 +328,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     {plots.map(pill => (
                         <li
                             className={'plots-tab-pills ' + (pill.selected ? 'active' : '')}
-                            onClick={() => {
+                            onClick={action(() => {
                                 if (pill.plotModel.horizontal.dataType) {
                                     this.onHorizontalAxisDataTypeSelect(
                                         pill.plotModel.horizontal.dataType
@@ -350,7 +349,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                         pill.plotModel.vertical.dataSource
                                     );
                                 }
-                            }}
+                                if (pill.plotModel.vertical.useSameGene) {
+                                    this.selectSameGeneOptionForVerticalAxis();
+                                }
+                            })}
                         >
                             <a>{pill.display}</a>
                         </li>
@@ -426,7 +428,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return observable({
             get entrezGeneId() {
                 if ( self.showGeneSelectBox(this.dataType) && this.selectedGeneOption) {
-                    if (this.selectedGeneOption.value === SAME_SELECTED_OPTION_NUMERICAL_VALUE) {
+                    if (vertical && this.selectedGeneOption.value === SAME_SELECTED_OPTION_NUMERICAL_VALUE) {
                         return self.horzSelection.entrezGeneId;
                     } else {
                         return this.selectedGeneOption.value;
@@ -441,7 +443,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     // select default if _selectedGeneOption is undefined and theres defaults to choose from
                     return geneOptions[0];
                 } else if (vertical && this._selectedGeneOption && this._selectedGeneOption.value === SAME_SELECTED_OPTION_NUMERICAL_VALUE &&
-                            self.horzSelection.dataType === CLIN_ATTR_DATA_TYPE) {
+                            self.horzSelection.dataType && !self.showGeneSelectBox(self.horzSelection.dataType)) {
                     // if vertical gene option is "same as horizontal", and horizontal is clinical, then use the actual
                     //      gene option value instead of "Same gene" option value, because that would be slightly weird UX
                     return self.horzSelection.selectedGeneOption;
@@ -795,6 +797,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @autobind
+    @action
     private onVerticalAxisGeneSelect(option:any) {
         this.vertSelection.selectedGeneOption = option;
         this.viewLimitValues = true;
@@ -802,6 +805,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @autobind
+    @action
     private onHorizontalAxisGeneSelect(option:any) {
         this.horzSelection.selectedGeneOption = option;
         this.viewLimitValues = true;
@@ -809,6 +813,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @autobind
+    @action
+    private selectSameGeneOptionForVerticalAxis() {
+        const option = this.vertGeneOptions.find(o=>o.value === SAME_SELECTED_OPTION_NUMERICAL_VALUE);
+
+        if (option) {
+            this.onVerticalAxisGeneSelect(option);
+        }
+    }
+
+    @autobind
+    @action
     private onVerticalAxisGenesetSelect(option:any) {
         this.vertSelection.selectedGenesetOption = option;
         this.viewLimitValues = true;
@@ -816,6 +831,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @autobind
+    @action
     private onHorizontalAxisGenesetSelect(option:any) {
         this.horzSelection.selectedGenesetOption = option;
         this.viewLimitValues = true;
@@ -823,6 +839,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @autobind
+    @action
     private onVerticalAxisTreatmentSelect(option:any) {
         this.vertSelection.selectedTreatmentOption = option;
         this.viewLimitValues = true;
@@ -830,6 +847,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @autobind
+    @action
     private onHorizontalAxisTreatmentSelect(option:any) {
         this.horzSelection.selectedTreatmentOption = option;
         this.viewLimitValues = true;
@@ -837,6 +855,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @autobind
+    @action
     private onUtilitiesGeneSelect(option:any) {
         this.utilitiesMenuSelection.selectedGeneOption = option;
     }
