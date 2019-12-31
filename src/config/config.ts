@@ -19,14 +19,16 @@ import client from "../shared/api/cbioportalClientInstance";
 import internalClient from "../shared/api/cbioportalInternalClientInstance";
 import $ from "jquery";
 import {AppStore} from "../AppStore";
-import {cachePostMethodsOnClient} from "public-lib/lib/apiClientCache";
+import {cachePostMethodsOnClient} from "cbioportal-frontend-commons";
 import CBioPortalAPI from "../shared/api/generated/CBioPortalAPI";
 import CBioPortalAPIInternal from "../shared/api/generated/CBioPortalAPIInternal";
 import CivicAPI from "../shared/api/CivicAPI";
-import Genome2StructureAPI from "../public-lib/api/generated/Genome2StructureAPI";
-import GenomeNexusAPI from "../public-lib/api/generated/GenomeNexusAPI";
-import GenomeNexusAPIInternal from "../public-lib/api/generated/GenomeNexusAPIInternal";
-import OncoKbAPI from "../public-lib/api/generated/OncoKbAPI";
+import {
+    Genome2StructureAPI,
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+    OncoKbAPI
+} from "cbioportal-frontend-commons";
 import AppConfig from "appConfig";
 import {sendSentryMessage} from "../shared/lib/tracking";
 import {log} from "../shared/lib/consoleLog";

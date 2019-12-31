@@ -1,10 +1,9 @@
 import {action, computed, observable} from "mobx";
-import {addServiceErrorHandler, remoteData} from "public-lib/api/remoteData";
+import {addServiceErrorHandler, getBrowserWindow, remoteData} from "cbioportal-frontend-commons";
 import {initializeAPIClients} from "./config/config";
 import * as _ from 'lodash';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {sendSentryMessage} from "./shared/lib/tracking";
-import getBrowserWindow from "./public-lib/lib/getBrowserWindow";
 
 export type SiteError = {
     errorObj:any;
@@ -79,7 +78,11 @@ export class AppStore {
         invoke:async()=>{
             const portalVersionResult = await internalClient.getInfoUsingGET({});
             if (portalVersionResult && portalVersionResult.portalVersion) {
-                return Promise.resolve("v" + portalVersionResult.portalVersion.split('-')[0]);
+                let version = portalVersionResult.portalVersion.split('-')[0];
+                if (!version.startsWith("v")) {
+                    version = `v${version}`;
+                }
+                return Promise.resolve(version);
             }
             return undefined;
         }

@@ -15,7 +15,7 @@ class CustomButton extends React.Component<any,{}> { // cant type this more spec
         const {bsRole, title, ...props} = this.props;
         return (
             <Button className="btn btn-default" {...props}>
-                {title} <span className="caret"/>
+                {title} {this.props.titleElement} <span className="caret"/>
             </Button>
         );
     }
@@ -34,7 +34,7 @@ class CustomMenu extends React.Component<any,{}> {
 }
 
 @observer
-export default class CustomDropdown extends React.Component<ButtonProps, {}> {
+export default class CustomDropdown extends React.Component<ButtonProps & {titleElement?: JSX.Element}, {}> {
     @observable private open:boolean = false;
 
     private toggle:()=>void;

@@ -11,14 +11,16 @@ import {percentAltered} from "../../../../shared/components/oncoprint/OncoprintU
 import AppConfig from "appConfig";
 import OncoprintJS from "oncoprintjs";
 import fileDownload from "react-file-download";
-import svgToPdfDownload from "public-lib/lib/svgToPdfDownload";
+import {
+    isWebdriver,
+    FadeInteraction,
+    svgToPdfDownload
+} from "cbioportal-frontend-commons";
 import classNames from "classnames";
-import FadeInteraction from "public-lib/components/fadeInteraction/FadeInteraction";
 import OncoprinterStore from "./OncoprinterStore";
 import autobind from "autobind-decorator";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
 import WindowStore from "../../../../shared/components/window/WindowStore";
-import {isWebdriver} from "../../../../public-lib/lib/webdriverUtils";
 import {getGeneticTrackKey} from "./OncoprinterGeneticUtils";
 
 interface IOncoprinterProps {
@@ -227,7 +229,8 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             },
             onClickZoomOut:()=>{
                 this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom()*0.7);
-            }
+            },
+            onClickNGCHM:()=>{}	// do nothing in oncoprinter mode
         };
     }
 
