@@ -2,10 +2,9 @@ import * as React from 'react';
 import {Button, ButtonGroup, FormGroup, FormControl} from 'react-bootstrap';
 import styles from "./paginationControls.module.scss";
 import { If, Then, Else } from 'react-if';
-import {observable, computed} from "mobx";
 import {observer} from "mobx-react";
 import classNames from 'classnames';
-import EditableSpan from "public-lib/components/editableSpan/EditableSpan";
+import {EditableSpan} from "cbioportal-frontend-commons";
 
 export const SHOW_ALL_PAGE_SIZE = -1;
 

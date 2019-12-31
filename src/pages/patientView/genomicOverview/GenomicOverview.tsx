@@ -21,14 +21,15 @@ interface IGenomicOverviewProps {
     containerWidth: number;
     sampleIdToMutationGenePanelId?:{[sampleId:string]:string};
     sampleIdToCopyNumberGenePanelId?:{[sampleId:string]:string};
+    onSelectGenePanel?:(name:string)=>void;
+    disableTooltip?:boolean;
 }
 
 export default class GenomicOverview extends React.Component<IGenomicOverviewProps, { frequencies:MutationFrequenciesBySample }> {
-
     constructor(props:IGenomicOverviewProps) {
         super(props);
     }
-
+    
     @computed get frequencies() {
         return this.computeMutationFrequencyBySample(this.props.mergedMutations);
     }
@@ -69,6 +70,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
                         samples={this.props.samples}
                         mutationGenePanelIconData={this.sampleIdToMutationGenePanelIconData}
                         copyNumberGenePanelIconData={this.sampleIdToCopyNumberGenePanelIconData}
+                        onSelectGenePanel={this.props.onSelectGenePanel}
                 />
                 <If condition={this.shouldShowVAFPlot()}>
                     <ThumbnailExpandVAFPlot

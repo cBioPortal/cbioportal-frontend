@@ -3,9 +3,12 @@ import {observer} from "mobx-react";
 import ErrorIcon from "../../../shared/components/ErrorIcon";
 import {IObservableObject, ObservableMap} from "mobx";
 import autobind from "autobind-decorator";
-import EditableSpan from "../../../public-lib/components/editableSpan/EditableSpan";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
-import {getNCBIlink} from "../../../public-lib";
+import {
+    EditableSpan,
+    DefaultTooltip,
+    getNCBIlink
+} from "cbioportal-frontend-commons";
+
 
 export interface IDriverAnnotationControlsState {
     distinguishDrivers: boolean;

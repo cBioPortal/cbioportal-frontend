@@ -2,7 +2,6 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import classNames from "classnames";
 import styles from "../styles.module.scss";
-import EllipsisTextTooltip from "public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
 import {
     caseCountsInParens,
     ComparisonGroup, getPatientIdentifiers,
@@ -14,7 +13,7 @@ import ComplexKeyMap from "../../../shared/lib/complexKeyDataStructures/ComplexK
 import {Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {SortableElement} from "react-sortable-hoc";
 import {getTextColor, renderGroupNameWithOrdinal} from "../OverlapUtils";
-import DefaultTooltip, {TOOLTIP_MOUSE_ENTER_DELAY_MS} from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {TOOLTIP_MOUSE_ENTER_DELAY_MS} from "cbioportal-frontend-commons";
 import * as ReactDOM from "react-dom";
 import {Popover, Overlay} from "react-bootstrap";
 import classnames from "classnames";

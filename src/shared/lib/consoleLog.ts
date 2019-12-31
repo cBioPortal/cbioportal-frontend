@@ -1,4 +1,4 @@
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
+import {getBrowserWindow} from "cbioportal-frontend-commons";
 
 const win = getBrowserWindow();
 

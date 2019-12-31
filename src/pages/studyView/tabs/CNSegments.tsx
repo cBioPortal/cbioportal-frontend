@@ -12,7 +12,8 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import CNSegmentsDownloader from "shared/components/cnSegments/CNSegmentsDownloader";
 import WindowStore from "shared/components/window/WindowStore";
 
-import {StudyViewPageStore, StudyViewPageTabKeyEnum} from "../StudyViewPageStore";
+import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
+import {StudyViewPageStore} from "../StudyViewPageStore";
 
 @observer
 export default class CNSegments extends React.Component<{ store: StudyViewPageStore }, {}> {
