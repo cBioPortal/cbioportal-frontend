@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
-import {PdbHeader} from "public-lib/api/generated/GenomeNexusAPI";
+import {PdbHeader} from "cbioportal-frontend-commons";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {IPdbChain} from "shared/model/Pdb";
 

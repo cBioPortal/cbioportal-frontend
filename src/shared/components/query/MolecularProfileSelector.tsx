@@ -7,7 +7,7 @@ import {observer} from "mobx-react";
 import classNames from 'classnames';
 import { FlexRow } from "../flexbox/FlexBox";
 import {QueryStoreComponent} from "./QueryStore";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip} from "cbioportal-frontend-commons";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import AppConfig from "appConfig";
 

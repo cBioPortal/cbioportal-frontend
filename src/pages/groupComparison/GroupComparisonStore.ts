@@ -8,13 +8,13 @@ import {
     getOverlapComputations,
     getSampleIdentifiers,
     getStudyIds,
-    GroupComparisonTab,
     IOverlapComputations,
     isGroupEmpty,
     partitionCasesByGroupMembership,
-    getNumSamples
+    getNumSamples,
 } from "./GroupComparisonUtils";
-import {remoteData} from "../../public-lib/api/remoteData";
+import { GroupComparisonTab } from "./GroupComparisonTabs"
+import {remoteData, stringListToIndexSet} from "cbioportal-frontend-commons";
 import {
     CancerStudy,
     ClinicalAttribute,
@@ -53,7 +53,6 @@ import {calculateQValues} from "shared/lib/calculation/BenjaminiHochbergFDRCalcu
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import {AppStore} from "../../AppStore";
-import {stringListToIndexSet} from "../../public-lib/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
@@ -106,7 +105,7 @@ export default class GroupComparisonStore {
     }
 
     @action public updateOverlapStrategy(strategy:OverlapStrategy) {
-        this.urlWrapper.updateQuery({ overlapStrategy: strategy });
+        this.urlWrapper.updateURL({ overlapStrategy: strategy });
     }
 
     @computed get overlapStrategy() {
@@ -120,7 +119,7 @@ export default class GroupComparisonStore {
 
     @autobind
     @action public setUsePatientLevelEnrichments(e:boolean) {
-        this.urlWrapper.updateQuery({ patientEnrichments: e.toString()});
+        this.urlWrapper.updateURL({ patientEnrichments: e.toString()});
     }
 
     @computed get groupOrder() {
@@ -141,11 +140,11 @@ export default class GroupComparisonStore {
         const poppedUid = groupOrder.splice(oldIndex, 1)[0];
         groupOrder.splice(newIndex, 0, poppedUid);
 
-        this.urlWrapper.updateQuery({ groupOrder: JSON.stringify(groupOrder) });
+        this.urlWrapper.updateURL({ groupOrder: JSON.stringify(groupOrder) });
     }
 
     @action private updateUnselectedGroups(names:string[]) {
-        this.urlWrapper.updateQuery({ unselectedGroups: JSON.stringify(names) });
+        this.urlWrapper.updateURL({ unselectedGroups: JSON.stringify(names) });
     }
 
     @computed get unselectedGroups() {
@@ -210,7 +209,7 @@ export default class GroupComparisonStore {
     @action
     private async saveAndGoToSession(newSession:Session) {
         const {id} = await comparisonClient.addComparisonSession(newSession);
-        this.urlWrapper.updateQuery({ sessionId: id});
+        this.urlWrapper.updateURL({ sessionId: id});
     }
 
     readonly _session = remoteData<Session>({

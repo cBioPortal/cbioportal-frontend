@@ -1,6 +1,5 @@
 import * as _ from 'lodash';
-import {PdbHeader} from "public-lib/api/generated/GenomeNexusAPI";
-import {Alignment} from "public-lib/api/generated/Genome2StructureAPI";
+import {Alignment, PdbHeader} from "cbioportal-frontend-commons";
 import {
     IPdbPositionRange, IPdbChain, PdbAlignmentIndex,
     ALIGNMENT_GAP, ALIGNMENT_MINUS, ALIGNMENT_PLUS, ALIGNMENT_SPACE,

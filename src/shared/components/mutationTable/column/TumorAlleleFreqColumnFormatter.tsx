@@ -1,8 +1,10 @@
 import * as React from 'react';
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {
+    DefaultTooltip,
+    TableCellStatus,
+    TableCellStatusIndicator
+} from "cbioportal-frontend-commons";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import TableCellStatusIndicator from "public-lib/components/TableCellStatus";
-import {TableCellStatus} from "public-lib/components/TableCellStatus";
 
 export function getFormattedFrequencyValue(frequency: number) {
     return frequency < 0.01 ? frequency.toFixed(4) : frequency.toFixed(2);

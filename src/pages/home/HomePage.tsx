@@ -1,6 +1,4 @@
 import * as React from 'react';
-import * as _ from 'lodash';
-import {If, Then, Else} from 'react-if';
 import {observer, inject, Observer } from "mobx-react";
 import { observable } from 'mobx';
 import Chart from 'chart.js';
@@ -10,10 +8,12 @@ import {CancerStudyQueryUrlParams, QueryStore} from "../../shared/components/que
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import RightBar from "../../shared/components/rightbar/RightBar";
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 // tslint:disable-next-line:no-import-side-effect
 import "./homePage.scss";
 import autobind from "autobind-decorator";
+import {ResultsViewTab} from "pages/resultsView/ResultsViewPageHelpers";
+import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
+import {createQueryStore} from "shared/lib/createQueryStore";
 
 (Chart as any).plugins.register({
     beforeDraw: function (chartInstance: any) {
@@ -29,25 +29,6 @@ export interface IResultsViewPageProps {
     routing: any;
 }
 
-export function createQueryStore(currentQuery?:any) {
-
-    const win:any = window;
-
-    const queryStore = new QueryStore(currentQuery);
-
-    queryStore.singlePageAppSubmitRoutine = function(query:CancerStudyQueryUrlParams) {
-
-        // normalize this
-        query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
-        delete query.cancer_study_id;
-
-        win.routingStore.updateRoute(query, "results", true);
-
-    };
-
-    return queryStore;
-
-}
 
 @inject('routing')
 @observer

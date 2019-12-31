@@ -17,11 +17,7 @@ import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
 import * as _ from "lodash";
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
-import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
-import { Option } from 'public-lib/components/checkedSelect/CheckedSelectUtils';
-import EllipsisTextTooltip from "public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
-import { IBoxScatterPlotPoint } from '../plots/PlotsTabUtils';
-import BoxScatterPlot from 'shared/components/plots/BoxScatterPlot';
+import { CheckedSelect, EllipsisTextTooltip, Option } from "cbioportal-frontend-commons";
 import { ExtendedAlteration } from '../ResultsViewPageStore';
 import ExpressionEnrichmentsBoxPlot from './ExpressionEnrichmentsBoxPlot';
 
