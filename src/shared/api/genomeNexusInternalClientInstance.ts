@@ -1,4 +1,4 @@
-import GenomeNexusAPIInternal from "../../public-lib/api/generated/GenomeNexusAPIInternal";
+import {GenomeNexusAPIInternal} from "cbioportal-frontend-commons";
 
 const client = new GenomeNexusAPIInternal();
 

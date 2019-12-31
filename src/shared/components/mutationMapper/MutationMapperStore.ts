@@ -19,15 +19,15 @@ import oncoKBClient from "shared/api/oncokbClientInstance";
 import {Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IOncoKbData} from "shared/model/OncoKB";
 import ResidueMappingCache from "shared/cache/ResidueMappingCache";
-import {remoteData} from "public-lib/api/remoteData";
 import {
     fetchPdbAlignmentData, indexPdbAlignmentData
 } from "shared/lib/StoreUtils";
 import {
+    CancerGene,
     EnsemblTranscript,
+    remoteData,
     VariantAnnotation
-} from "public-lib/api/generated/GenomeNexusAPI";
-import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
+} from "cbioportal-frontend-commons";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments, PDB_IGNORELIST} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";

@@ -43,7 +43,7 @@ describe.skip("merged tracks", ()=>{
 
 describe('oncoprint', function() {
 
-    this.retries(1);
+    this.retries(0);
 
     describe("initialization from URL parameters", ()=>{
         it("should start in patient mode if URL parameter show_samples=false or not specified", ()=>{
@@ -341,7 +341,14 @@ describe('oncoprint', function() {
             function doCustomCaseOrderTest() {
                 // now we're on results page
                 waitForOncoprint(ONCOPRINT_TIMEOUT);
-                // open sort menu
+
+                // make sure we are in sample mode
+                $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+                $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForVisible(10000);
+                $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to sample mode
+
+                waitForOncoprint(ONCOPRINT_TIMEOUT);
+
                 browser.click('#sortDropdown');
                 browser.waitForVisible('[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]');
                 browser.click('[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]');
@@ -376,8 +383,8 @@ describe('oncoprint', function() {
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
 
-            setInputText(inputSelector, 'adrenocortical carcinoma tcga provisional');
-            waitForNumberOfStudyCheckboxes(1, "Adrenocortical Carcinoma (TCGA, Provisional)");
+            setInputText(inputSelector, 'adrenocortical carcinoma tcga firehose legacy');
+            waitForNumberOfStudyCheckboxes(1, "Adrenocortical Carcinoma (TCGA, Firehose Legacy)");
 
             var checkBox = $('[data-test="StudySelect"]');
             checkBox.waitForExist(10000);

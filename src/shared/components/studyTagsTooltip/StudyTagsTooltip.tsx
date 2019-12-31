@@ -22,12 +22,11 @@
  **/
 
 import * as React from 'react';
-import DefaultTooltip from '../../../public-lib/components/defaultTooltip/DefaultTooltip';
 import { observer } from 'mobx-react';
 import { observable } from "mobx";
 import { JsonToTable } from 'react-json-to-table';
 import './StudyTagsTooltip.scss';
-import { remoteData } from 'public-lib/api/remoteData';
+import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import client from "shared/api/cbioportalClientInstance";
 import Loader from '../loadingIndicator/LoadingIndicator';
 

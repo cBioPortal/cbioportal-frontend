@@ -13,7 +13,7 @@ import {getDeterministicRandomNumber, separateScatterDataByAppearance} from "./P
 import {logicalAnd} from "../../lib/LogicUtils";
 import {tickFormatNumeral, wrapTick} from "./TickUtils";
 import {makeScatterPlotSizeFunction} from "./PlotUtils";
-import {getTextWidth, truncateWithEllipsis} from "../../../public-lib/lib/TextTruncationUtils";
+import {getTextWidth, truncateWithEllipsis} from "cbioportal-frontend-commons";
 import autobind from "autobind-decorator";
 import { dataPointIsLimited } from 'shared/components/plots/PlotUtils';
 import _ from "lodash";

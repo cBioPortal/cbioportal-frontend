@@ -1,0 +1,27 @@
+# Publish modules under packages directory to npm registry
+name: Module Publish
+
+on:
+  push:
+    # branches to consider in the event; optional, defaults to all
+    branches:
+      - master
+    # only publish modules under packages
+    paths:
+      - "packages/**/*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '8.12.0'
+          registry-url: 'https://registry.npmjs.org'
+      - run: yarn policies set-version 1.21.1
+      - run: yarn
+      - run: yarn buildModules
+      - run: yarn publishModules
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

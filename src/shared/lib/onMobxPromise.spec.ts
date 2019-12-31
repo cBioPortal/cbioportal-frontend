@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import {remoteData} from "public-lib/api/remoteData";
+import {remoteData} from "cbioportal-frontend-commons";
 import onMobxPromise from "./onMobxPromise";
 import {extras, IReactionDisposer, observable} from "mobx";
 

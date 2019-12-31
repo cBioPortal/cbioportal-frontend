@@ -17,7 +17,7 @@ import {bind} from "bind-decorator";
 import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import {IDataQueryFilter} from "shared/lib/StoreUtils";
-import {remoteData} from "public-lib/api/remoteData";
+import {remoteData} from "cbioportal-frontend-commons";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 
 export interface ICoExpressionTabProps {

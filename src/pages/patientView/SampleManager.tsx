@@ -159,7 +159,9 @@ class SampleManager {
     getComponentForSample(sampleId: string,
                           fillOpacity: number = 1,
                           extraTooltipText: string = '',
-                          additionalContent: JSX.Element|null = null)
+                          additionalContent: JSX.Element|null = null,
+                          onSelectGenePanel?:(name:string)=>void,
+                          disableTooltip?:boolean)
     {
         const sample = _.find(this.samples, (s: ClinicalDataBySampleId)=> {
             return s.id === sampleId;
@@ -169,7 +171,9 @@ class SampleManager {
             <SampleInline
                 sample={sample}
                 extraTooltipText={extraTooltipText}
-                additionalContent={additionalContent} >
+                additionalContent={additionalContent}
+                onSelectGenePanel={onSelectGenePanel}
+                disableTooltip={disableTooltip} >
                 <SampleLabelHTML
                     label={(this.sampleIndex[sample.id] + 1).toString()}
                     fillOpacity={fillOpacity}
