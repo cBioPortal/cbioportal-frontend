@@ -1,4 +1,5 @@
 # cbioportal-frontend
+This is the frontend code for cBioPortal using React, MobX and TypeScript. Read more about the architecture of cBioPortal [here](https://docs.cbioportal.org/2.1-deployment/architecture-overview).
 
 ## Live demo
 Master: https://master--cbioportalfrontend.netlify.com/
@@ -10,10 +11,7 @@ Rc: https://rc--cbioportalfrontend.netlify.com/
 | --- | --- | --- |
 | Status | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/master.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/master) | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/rc.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/rc) |
 
-## Deployment
-
-This is the frontend code for cBioPortal using React, MobX and TypeScript. The
-frontend for the new patient view is now completely in this repo. The results view page is currently being replaced one tab at a time by mounting certain React components to the results page (JSP) in [the backend repo](https://github.com/cbioportal/cbioportal)
+## Run
 
 Make sure you have installed the node version specified in [package.json](https://github.com/cBioPortal/cbioportal-frontend/blob/master/package.json). You might want to use NVM to install the particular version.
 
