@@ -174,6 +174,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                             return <GroupLogic
                                 components={geneQuery.map(oql => {
                                     let color = DEFAULT_NA_COLOR;
+                                    let displayGeneSymbol = oql;
                                     switch (chartMeta.chartType) {
                                         case UniqueKey.MUTATED_GENES_TABLE:
                                             color = MUT_COLOR_MISSENSE;
@@ -184,6 +185,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                                         case UniqueKey.CNA_GENES_TABLE: {
                                             const oqlParts = oql.trim().split(":")
                                             if (oqlParts.length === 2) {
+                                                displayGeneSymbol = oqlParts[0];
                                                 let tagColor = getCNAColorByAlteration(oqlParts[1])
                                                 if (tagColor) {
                                                     color = tagColor;
@@ -193,7 +195,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                                         }
                                     }
                                     return <PillTag
-                                        content={oql}
+                                        content={displayGeneSymbol}
                                         backgroundColor={color}
                                         onDelete={() => this.props.removeGeneFilter(chartMeta.uniqueKey, oql)}
                                     />
