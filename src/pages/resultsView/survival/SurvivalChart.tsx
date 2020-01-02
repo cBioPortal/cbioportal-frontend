@@ -2,6 +2,7 @@ import * as React from 'react';
 import { observer } from "mobx-react";
 import { PatientSurvival } from "../../../shared/model/PatientSurvival";
 import {action, computed, observable, runInAction} from "mobx";
+import Slider from 'react-rangeslider';
 import { Popover, Table } from 'react-bootstrap';
 import styles from "./styles.module.scss";
 import "./styles.scss";
@@ -19,16 +20,14 @@ import {
 import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import {getPatientViewUrl} from "../../../shared/api/urls";
-import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
+import {DefaultTooltip, DownloadControls} from "cbioportal-frontend-commons";
 import autobind from "autobind-decorator";
 import {AnalysisGroup} from "../../studyView/StudyViewUtils";
 import {AbstractChart} from "../../studyView/charts/ChartContainer";
 import {toSvgDomNodeWithLegend} from "../../studyView/StudyViewUtils";
 import classnames from "classnames";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
-import Slider from 'react-rangeslider'
 import { EditableSpan, pluralize } from 'cbioportal-frontend-commons';
 
 export enum LegendLocation {
@@ -185,7 +184,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     map[group] = map[group] || [];
                     map[group].push(nextSurv);
                 })
-                
+
             }
             return map;
         }, {} as {[groupValue:string]:PatientSurvival[]});
@@ -485,7 +484,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
                 <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
                                                                         disable={true}
-                                                                        zoomDomain={{x: [0, this.sliderValue]}}
+                                                                        zoomDomain={this.props.showSlider ? {x: [0, this.sliderValue]} : undefined}
                                                                         onZoomDomainChange={_.debounce((domain: any) => {
                                                                             this.scatterFilter = domain as SurvivalPlotFilters;
                                                                         }, 1000)}

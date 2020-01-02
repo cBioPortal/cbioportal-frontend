@@ -7,15 +7,13 @@ import {
     MissingSamplesMessage,
     StudyViewComparisonGroup
 } from "../GroupComparisonUtils";
-import {Group} from "../../../shared/api/ComparisonGroupClient";
 import {StudyViewPageStore} from "../../studyView/StudyViewPageStore";
 import autobind from "autobind-decorator";
 import {computed, observable} from "mobx";
 import ErrorIcon from "../../../shared/components/ErrorIcon";
 import styles from "../styles.module.scss"
 import {SyntheticEvent} from "react";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
-import EllipsisTextTooltip from "../../../public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import {DefaultTooltip, EllipsisTextTooltip} from "cbioportal-frontend-commons";
 
 
 
@@ -98,6 +96,35 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
         );
     }
 
+    @computed get editingNameUI() {
+        return (
+            <DefaultTooltip
+                visible={!!(this.editSubmitError && this.editSubmitError.message)}
+                overlay={
+                    <div>
+                        <i
+                            className="fa fa-md fa-exclamation-triangle"
+                            style={{
+                                color: "#BB1700",
+                                marginRight: 5
+                            }}
+                        />
+                        <span>
+                                    {this.editSubmitError && this.editSubmitError.message}
+                                </span>
+                    </div>
+                }
+            >
+                <input
+                    type="text"
+                    value={this.nameInput}
+                    onChange={this.handleNameInputChange}
+                    style={{width:174}}
+                />
+            </DefaultTooltip>
+        );
+    }
+
     @computed get editSubmitError() {
         if (this.nameInput.length === 0) {
             return { message: "Please enter a name."};
@@ -118,7 +145,7 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
             checkboxAndLabel = <span className={styles.markedForDeletion}>{this.label}</span>;
         } else {
             checkboxAndLabel = (
-                <div className="groupItem checkbox"><label>
+                <div className={styles.groupItem} style={{display:"flex", alignItems:"center"}}>
                     <input
                         type="checkbox"
                         value={group.uid}
@@ -126,33 +153,10 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
                         onClick={this.onCheckboxClick}
                     />
                     { this.editingName ?
-                        <DefaultTooltip
-                            visible={!!(this.editSubmitError && this.editSubmitError.message)}
-                            overlay={
-                                <div>
-                                    <i
-                                        className="fa fa-md fa-exclamation-triangle"
-                                        style={{
-                                            color: "#BB1700",
-                                            marginRight: 5
-                                        }}
-                                    />
-                                    <span>
-                                {this.editSubmitError && this.editSubmitError.message}
-                            </span>
-                                </div>
-                            }
-                        >
-                            <input
-                                type="text"
-                                value={this.nameInput}
-                                onChange={this.handleNameInputChange}
-                                style={{width:174}}
-                            />
-                        </DefaultTooltip>:
+                        this.editingNameUI :
                         this.label
                     }
-                </label></div>
+                </div>
             );
         }
 

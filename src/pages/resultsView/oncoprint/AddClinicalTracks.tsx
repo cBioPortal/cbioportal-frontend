@@ -3,12 +3,11 @@ import {observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import AddChartByType from "../../studyView/addChartButton/addChartByType/AddChartByType";
 import {action, computed, observable} from "mobx";
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip, remoteData} from "cbioportal-frontend-commons";
 import classNames from "classnames";
 import {serializeEvent} from "../../../shared/lib/tracking";
 import autobind from "autobind-decorator";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
-import {remoteData} from "public-lib/api/remoteData";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {
     clinicalAttributeIsINCOMPARISONGROUP,
@@ -19,6 +18,7 @@ import * as _ from "lodash";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {toggleIncluded} from "../../../shared/lib/ArrayUtils";
+import OncoprintDropdownCount from "./OncoprintDropdownCount";
 
 export interface IAddClinicalTrackProps {
     store:ResultsViewPageStore;
@@ -222,7 +222,9 @@ export default class AddClinicalTracks extends React.Component<IAddClinicalTrack
                         data-event={serializeEvent({ category:"resultsView", action:"addClinicalTrackMenuOpen", label:this.props.store.studyIds.result!.join(",")})}
                         data-test="add-clinical-track-button"
                 >
-                    Add Clinical Tracks <span className="caret"/>&nbsp;
+                    Add Clinical Tracks{" "}
+                    <OncoprintDropdownCount count={this.options.isComplete ? this.options.result!.clinical.length : undefined}/>
+                    &nbsp;<span className="caret"/>&nbsp;
                 </button>
             </DefaultTooltip>
         );

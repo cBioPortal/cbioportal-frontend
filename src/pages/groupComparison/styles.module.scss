@@ -30,6 +30,13 @@
         .groupRow:nth-of-type(even) {
             background-color: #f9f9f9;
         }
+
+        .groupItem {
+            input {
+                margin-top:0px;
+                margin-right:5px;
+            }
+        }
     }
 
     .noGroupsMessage {
@@ -74,6 +81,7 @@
 
 
 .groupLineItemActionButtons {
+    min-width:45px;
     > span {
         margin-left:5px;
         i {

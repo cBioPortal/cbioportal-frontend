@@ -474,6 +474,10 @@ export type SampleIdentifier = {
         'studyId': string
 
 };
+export type ServerStatusMessage = {
+    'status': string
+
+};
 export type StudyViewFilter = {
     'clinicalDataFilters': Array < ClinicalDataFilter >
 
@@ -490,10 +494,6 @@ export type StudyViewFilter = {
 };
 export type Treatment = {
     'description': string
-
-        'geneticEntityId': number
-
-        'internalId': number
 
         'name': string
 
@@ -2667,6 +2667,67 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    getServerStatusUsingGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/health';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get the running status of the server
+     * @method
+     * @name CBioPortalAPIInternal#getServerStatusUsingGET
+     */
+    getServerStatusUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/health';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get the running status of the server
+     * @method
+     * @name CBioPortalAPIInternal#getServerStatusUsingGET
+     */
+    getServerStatusUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < ServerStatusMessage > {
+        return this.getServerStatusUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     getInfoUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {

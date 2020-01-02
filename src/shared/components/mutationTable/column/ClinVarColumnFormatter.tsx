@@ -2,8 +2,12 @@ import * as React from 'react';
 import {Circle} from "better-react-spinkit";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
-import {MyVariantInfoAnnotation} from 'public-lib/api/generated/GenomeNexusAPI';
+import {
+    DefaultTooltip,
+    MyVariantInfoAnnotation,
+    TableCellStatusIndicator,
+    TableCellStatus
+} from "cbioportal-frontend-commons";
 import GenomeNexusMyVariantInfoCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {ClinVarId, clinVarSortValue, getClinVarId} from "react-mutation-mapper";
 import generalStyles from "./styles.module.scss";

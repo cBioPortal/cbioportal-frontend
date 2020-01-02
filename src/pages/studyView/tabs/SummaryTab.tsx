@@ -14,9 +14,8 @@ import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
-import {DownloadDataType} from "public-lib/components/downloadControls/DownloadControls";
 import {ChartMeta, ChartType, RectangleBounds} from "../StudyViewUtils";
-
+import {DataType} from "cbioportal-frontend-commons";
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -102,7 +101,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     props.onResetSelection = this.handlers.onValueSelection;
                 }
                 props.onChangeChartType = this.handlers.onChangeChartType;
-                props.getData = (dataType?: DownloadDataType) => this.store.getPieChartDataDownload(chartMeta, dataType);
+                props.getData = (dataType?: DataType) => this.store.getPieChartDataDownload(chartMeta, dataType);
                 props.downloadTypes = ["Summary Data", "Full Data", "SVG", "PDF"];
                 break;
             }

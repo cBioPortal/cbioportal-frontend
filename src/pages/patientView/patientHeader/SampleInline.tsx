@@ -1,7 +1,6 @@
 import * as React from "react";
 import {If, Else, Then} from 'react-if';
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
-import {placeArrowBottomLeft} from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip, placeArrowBottomLeft} from "cbioportal-frontend-commons";
 import { ClinicalDataBySampleId } from "shared/api/api-types-extended";
 import ClinicalInformationPatientTable from "../clinicalInformation/ClinicalInformationPatientTable";
 import './styles.scss';
@@ -12,13 +11,15 @@ interface ISampleInlineProps {
     extraTooltipText?: string;
     additionalContent?: JSX.Element|null;
     hideClinicalTable?:boolean;
+    onSelectGenePanel?:(name:string)=>void;
+    disableTooltip?:boolean;
 }
 
 export default class SampleInline extends React.Component<ISampleInlineProps, {}> {
-
     public static defaultProps = {
         tooltipEnabled: true,
-        hideClinicalInfoTable: false
+        hideClinicalInfoTable: false,
+        disableTooltip: false
     };
 
     public render() {
@@ -52,6 +53,7 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
                     showCopyDownload={false}
                     showTitleBar={false}
                     data={sample.clinicalData}
+                    onSelectGenePanel={this.props.onSelectGenePanel}
                 />}
             </div>
         );
@@ -89,6 +91,7 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
                 arrowContent={<div className="rc-tooltip-arrow-inner" />}
                 destroyTooltipOnHide={false}
                 onPopupAlign={placeArrowBottomLeft}
+                disabled={this.props.disableTooltip}
             >
                 {this.mainContent()}
             </DefaultTooltip>

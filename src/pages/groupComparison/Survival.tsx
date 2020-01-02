@@ -1,19 +1,16 @@
 import * as React from 'react';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
+import 'react-rangeslider/lib/index.css';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {observer} from "mobx-react";
 import GroupComparisonStore, {OverlapStrategy} from './GroupComparisonStore';
-import {remoteData} from 'public-lib/api/remoteData';
+import {DefaultTooltip, remoteData} from 'cbioportal-frontend-commons';
 import {MakeMobxView} from "../../shared/components/MobxView";
 import {SURVIVAL_NOT_ENOUGH_GROUPS_MSG, SURVIVAL_TOO_MANY_GROUPS_MSG} from "./GroupComparisonUtils";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {blendColors} from "./OverlapUtils";
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import {getPatientIdentifiers} from "../studyView/StudyViewUtils";
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
-import classnames from 'classnames';
-import styles from "./styles.module.scss";
-import { ClinicalData, ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import _ from 'lodash';
 import SurvivalDescriptionTable from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {

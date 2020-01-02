@@ -1,5 +1,5 @@
 import {buildCBioPortalPageUrl} from "../api/urls";
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
+import {getBrowserWindow} from "cbioportal-frontend-commons";
 import {fetchServerConfig} from "../../config/config";
 import {AppStore} from "../../AppStore";
 import {IServerConfig} from "../../config/IAppConfig";

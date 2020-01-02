@@ -5,7 +5,7 @@ import {ThreeBounce} from 'better-react-spinkit';
 import request from 'superagent';
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import {getStudyDownloadListUrl} from "../../../shared/api/urls";
-import {getNCBIlink} from "../../../public-lib/lib/urls";
+import {getNCBIlink} from "cbioportal-frontend-commons";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
 import {StudyDataDownloadLink} from "../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
 
