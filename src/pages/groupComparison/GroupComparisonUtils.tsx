@@ -19,7 +19,7 @@ import {MakeMobxView, MobxViewAlwaysComponent} from "../../shared/components/Mob
 import OverlapExclusionIndicator from "./OverlapExclusionIndicator";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import {stringListToIndexSet} from "public-lib/lib/StringUtils";
+import {stringListToIndexSet} from "cbioportal-frontend-commons";
 import { GroupComparisonTab } from "./GroupComparisonTabs"
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;

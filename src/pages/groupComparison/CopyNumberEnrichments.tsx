@@ -9,7 +9,7 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {MakeEnrichmentsTabUI} from "./GroupComparisonUtils";
-import { remoteData } from "public-lib/api/remoteData";
+import { remoteData } from "cbioportal-frontend-commons";
 import _ from "lodash";
 import { AlterationContainerType } from "pages/resultsView/enrichments/EnrichmentsUtil";
 

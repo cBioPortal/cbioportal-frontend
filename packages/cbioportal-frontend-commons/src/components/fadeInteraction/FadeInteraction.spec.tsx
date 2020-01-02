@@ -1,6 +1,6 @@
 import * as React from "react";
 import {assert} from 'chai';
-import { mount, shallow } from 'enzyme';
+import { shallow } from 'enzyme';
 
 import FadeInteraction from './FadeInteraction';
 

@@ -1,8 +1,7 @@
-import {Query} from "public-lib/api/generated/OncoKbAPI";
+import {ICache, Query, SimpleCache} from "cbioportal-frontend-commons";
 import oncokbClient from "shared/api/oncokbClientInstance";
 import {generateEvidenceQuery, processEvidence} from "shared/lib/OncoKbUtils";
 import {IEvidence} from "shared/model/OncoKB";
-import {default as SimpleCache, ICache} from "public-lib/lib/SimpleCache";
 
 export default class OncoKbEvidenceCache extends SimpleCache<IEvidence, Query[]>
 {

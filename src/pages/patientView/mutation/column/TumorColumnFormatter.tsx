@@ -33,6 +33,7 @@ export default class TumorColumnFormatter {
         const entrezGeneId = mutations[0].entrezGeneId;
         const mutatedSamples = TumorColumnFormatter.getPresentSamples(mutations);
         const profiledSamples = TumorColumnFormatter.getProfiledSamplesForGene(entrezGeneId, sampleIds, sampleToGenePanelId, genePanelIdToGene);
+        const notProfiledText = 'This gene was not profiled for this sample (absent from gene panel)';
 
         const tdValue = samples.map((sample:any) => {
                 // hide labels for non-existent mutation data
@@ -40,14 +41,32 @@ export default class TumorColumnFormatter {
                 // show not-profiled icon when gene was not analyzed
                 const isMutated = sample.id in mutatedSamples;
                 const isProfiled = sample.id in profiledSamples && profiledSamples[sample.id];
-                
+
+                let extraTooltipText = '';
+
+                // mutations can be read which are not part of the target of the gene panel
+                // therefore a sample can still have mutations even if the gene was not profiled
+                if (isMutated) {
+                    if(!mutatedSamples[sample.id]) {
+                        extraTooltipText = "Mutation has supporting reads, but wasn't called. ";
+                    }
+                    if (!isProfiled) {
+                        extraTooltipText = `${extraTooltipText}${notProfiledText}`;
+                    }
+                }
+                else {
+                    if (!isProfiled) {
+                        extraTooltipText = `${notProfiledText}. It is unknown whether it is mutated.`
+                    }
+                }
+
                 return (
                     <li className={isProfiled && !isMutated? 'invisible' : ''}>
-                        {isProfiled?
+                        {isMutated?
                             sampleManager.getComponentForSample( 
                                 sample.id,
                                 (mutatedSamples[sample.id]) ? 1 : 0.1,
-                                (mutatedSamples[sample.id]) ? '' : "Mutation has supporting reads, but wasn't called",
+                                extraTooltipText,
                                 null,
                                 onSelectGenePanel,
                                 disableTooltip
@@ -55,7 +74,7 @@ export default class TumorColumnFormatter {
                             :
                             <SampleInline
                                 sample={sample}
-                                extraTooltipText={'This gene was not profiled for this sample (absent from gene panel). It is unknown whether it is mutated.'}
+                                extraTooltipText={extraTooltipText}
                                 onSelectGenePanel={onSelectGenePanel}
                                 disableTooltip={disableTooltip} >
                                 <SampleLabelNotProfiled

@@ -1,6 +1,4 @@
 import * as React from 'react';
-import * as _ from 'lodash';
-import {If, Then, Else} from 'react-if';
 import {observer, inject, Observer } from "mobx-react";
 import { observable } from 'mobx';
 import Chart from 'chart.js';
@@ -10,7 +8,6 @@ import {CancerStudyQueryUrlParams, QueryStore} from "../../shared/components/que
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import RightBar from "../../shared/components/rightbar/RightBar";
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 // tslint:disable-next-line:no-import-side-effect
 import "./homePage.scss";
 import autobind from "autobind-decorator";
