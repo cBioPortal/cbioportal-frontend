@@ -1,15 +1,9 @@
 import * as React from "react";
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
-import {placeArrowBottomLeft} from "public-lib/components/defaultTooltip/DefaultTooltip";
-import SimpleTable from "shared/components/simpleTable/SimpleTable";
+import {DefaultTooltip, placeArrowBottomLeft} from "cbioportal-frontend-commons";
 import {IMutationalSignature, IMutationalSignatureMeta, ISignificantMutationalSignaturesForSample} from "../../../shared/model/MutationalSignature";
-import LazyMobXTable, {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
 import "../../../shared/components/simpleTable/styles.scss"
 import {progressBar, prepareMutationalSignaturesForHeader} from "../../../shared/lib/MutationalSignaturesUtils";
 import _ from 'lodash';
-import {getMutationalSignaturePercentage} from "../../../shared/lib/FormatUtils";
-import FontAwesome from "react-fontawesome";
-import {computed} from "mobx";
 
 interface ISignificantMutationalSignaturesProps {
     data: IMutationalSignature[];

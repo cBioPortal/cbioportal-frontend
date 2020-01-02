@@ -13,18 +13,19 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupSelector from "./groupSelector/GroupSelector";
-import {getTabId, GroupComparisonTab} from "./GroupComparisonUtils";
-import styles from "./styles.module.scss";
+import { GroupComparisonTab } from "./GroupComparisonTabs"
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
 import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
-import _ from "lodash";
 import ClinicalData from "./ClinicalData";
 import ReactSelect from "react-select";
 import {trackEvent} from "shared/lib/tracking";
 import URL from "url";
 import GroupComparisonURLWrapper, {GroupComparisonURLQuery} from "./GroupComparisonURLWrapper";
+
+import styles from "./styles.module.scss";
+import 'cbioportal-frontend-commons/dist/styles.css';
 
 export interface IGroupComparisonPageProps {
     routing:any;
@@ -80,6 +81,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     componentWillUnmount() {
         this.queryReaction && this.queryReaction();
         this.store && this.store.destroy();
+        this.urlWrapper.destroy();
     }
 
     readonly tabs = MakeMobxView({

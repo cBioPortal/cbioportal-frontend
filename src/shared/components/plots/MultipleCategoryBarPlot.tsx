@@ -4,20 +4,17 @@ import {IStringAxisData} from "../../../pages/resultsView/plots/PlotsTabUtils";
 import {computed, observable} from "mobx";
 import {bind} from "bind-decorator";
 import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles, baseLabelStyles} from "../../theme/cBioPoralTheme";
-import {getTextWidth} from "../../../public-lib/lib/TextTruncationUtils";
+import {getTextWidth, stringListToIndexSet} from "cbioportal-frontend-commons";
 import autobind from "autobind-decorator";
 import _ from "lodash";
 import {VictoryAxis, VictoryBar, VictoryChart, VictoryLabel, VictoryStack, VictoryLegend, VictoryGroup} from "victory";
-import Timer = NodeJS.Timer;
 import {tickFormatNumeral} from "./TickUtils";
 import {makeUniqueColorGetter} from "./PlotUtils";
-import {stringListToIndexSet} from "../../../public-lib/lib/StringUtils";
 import { makePlotData, makeBarSpecs, sortDataByCategory } from "./MultipleCategoryBarPlotUtils";
 import * as ReactDOM from "react-dom";
 import { Popover } from "react-bootstrap";
 import classnames from "classnames";
 import WindowStore from "../window/WindowStore";
-import styles from "../../../pages/resultsView/survival/styles.module.scss";
 
 export interface IMultipleCategoryBarPlotProps {
     svgId?:string;

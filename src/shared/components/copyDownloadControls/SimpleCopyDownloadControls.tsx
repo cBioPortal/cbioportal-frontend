@@ -14,6 +14,7 @@ export interface ISimpleCopyDownloadControlsProps extends ICopyDownloadControlsP
     showVirtualStudy?: boolean;
     handleQuery?: () => void;
     virtualStudyParams?: any;
+    containerId?: string|undefined;
 }
 
 @observer
@@ -112,9 +113,14 @@ export class SimpleCopyDownloadControls extends React.Component<ISimpleCopyDownl
     private handleCopyRef(el: HTMLElement|null)
     {
         if (el) {
-            new Clipboard(el, {
-                text: this.props.downloadData
-            });
+            const { downloadData, containerId } = this.props;
+            const options = containerId ? {
+                text: downloadData,
+                container: document.getElementById(containerId) // point to the exact container of copy control if it is inside a modal dialog
+            } : {
+                text: downloadData
+            }
+            new Clipboard(el, options);
         }
     }
 

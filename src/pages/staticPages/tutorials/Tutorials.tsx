@@ -3,7 +3,7 @@ import {observer} from 'mobx-react';
 import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
 import './styles.scss';
 import Helmet from "react-helmet";
-import {getNCBIlink} from "../../../public-lib/lib/urls";
+import {getNCBIlink} from "cbioportal-frontend-commons";
 import AppConfig from 'appConfig';
 
 @observer
