@@ -148,9 +148,16 @@ describe('StudyViewUtils', () => {
                         'value': `10`
                     }]
                 }],
-                mutatedGenes: [{ "hugoGeneSymbols": ["GENE1"] }],
-                fusionGenes: [{ "hugoGeneSymbols": ["GENE1"] }],
-                cnaGenes: [{ "alterations": [{ "hugoGeneSymbol": "GENE2", "alteration": -2 }] }],
+                geneFilters:[{
+                    geneQueries:[["GENE1"]],
+                    molecularProfileIds:["cancer_study_sequenced"]
+                },{
+                    geneQueries:[["GENE1"]],
+                    molecularProfileIds:["cancer_study_fusion"]
+                },{
+                    geneQueries:[["GENE2:HOMDEL"]],
+                    molecularProfileIds:["cancer_study_cna"]
+                }],
                 studyIds: ['study1', 'study2'],
                 sampleIdentifiers: [],
                 sampleIdentifiersSet: {
@@ -178,11 +185,15 @@ describe('StudyViewUtils', () => {
                     {
                         'attribute1': 'attribute1 name',
                         'attribute2': 'attribute2 name',
-                        'attribute3': 'attribute3 name'
+                        'attribute3': 'attribute3 name',
+                        'cancer_study_sequenced': ' Mutated Genes',
+                        'cancer_study_fusion': 'Fusion Genes',
+                        'cancer_study_cna': 'CNA Genes'
                     }
-                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n'+
-                '\nFilters:\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n- attribute2'+
-                ' name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on 2019-12-17'));
+                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)' +
+                    '\n\nFilters:\n-  Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\n- CNA Genes:' +
+                    '\n  - GENE2:HOMDEL\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n' +
+                    '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'));
         });
         it('when username is not null', () => {
             assert.isTrue(
@@ -234,8 +245,7 @@ describe('StudyViewUtils', () => {
                     'value':"value1"
                 }]
             }],
-            mutatedGenes: [],
-            cnaGenes: []
+            geneFilters: []
         } as any;
         it("return true when there is only one sample in the study", () => {
             assert.isTrue(shouldShowChart(emptyStudyViewFilter, 1, 1));
