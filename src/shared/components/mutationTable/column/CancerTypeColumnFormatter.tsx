@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as _ from "lodash";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
+import {TableCellStatusIndicator, TableCellStatus} from "cbioportal-frontend-commons";
 import TruncatedText from "shared/components/TruncatedText";
 
 export default class CancerTypeColumnFormatter {

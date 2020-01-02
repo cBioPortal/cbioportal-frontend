@@ -1,5 +1,5 @@
 import load from 'little-loader';
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
+import {getBrowserWindow} from "cbioportal-frontend-commons";
 import {ICustomTabConfiguration} from "../model/ITabConfiguration";
 import {autorun} from "mobx";
 

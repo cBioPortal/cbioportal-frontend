@@ -17,10 +17,9 @@ import {
     needAdditionShiftForLogScaleBarChart
 } from "../../StudyViewUtils";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import {getTextDiagonal, getTextHeight, getTextWidth} from "public-lib/lib/TextTruncationUtils";
+import {getTextDiagonal, getTextHeight, getTextWidth} from "cbioportal-frontend-commons";
 import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 import BarChartToolTip, { ToolTipModel } from "./BarChartToolTip";
-import { IAlterationData } from "pages/resultsView/cancerSummary/CancerSummaryContent";
 import WindowStore from "shared/components/window/WindowStore";
 import ReactDOM from "react-dom";
 

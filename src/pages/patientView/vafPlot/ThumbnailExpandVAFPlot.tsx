@@ -1,10 +1,9 @@
 import * as React from 'react';
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {VAFPlot, IVAFPlotProps, MutationFrequenciesBySample} from './VAFPlot';
 import Tooltip, {RCTooltip} from "rc-tooltip";
 import { IKeyedIconData } from '../genomicOverview/GenomicOverviewUtils';
-import { isWebdriver } from 'public-lib/lib/webdriverUtils';
+import { DefaultTooltip, isWebdriver } from 'cbioportal-frontend-commons';
 
 export type IThumbnailExpandVAFPlotProps = {
     data: MutationFrequenciesBySample;

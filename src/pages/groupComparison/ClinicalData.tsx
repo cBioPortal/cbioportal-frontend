@@ -7,7 +7,7 @@ import {action, autorun, computed, IReactionDisposer, observable} from "mobx";
 import {SimpleGetterLazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
 import ClinicalDataEnrichmentsTable from "./ClinicalDataEnrichmentsTable";
 import _ from "lodash";
-import {remoteData} from "public-lib/api/remoteData";
+import {DownloadControls, remoteData} from "cbioportal-frontend-commons";
 import client from "shared/api/cbioportalClientInstance";
 import {
     boxPlotTooltip,
@@ -22,7 +22,6 @@ import {
     mutationSummaryToAppearance,
     IAxisLogScaleParams
 } from "pages/resultsView/plots/PlotsTabUtils";
-import DownloadControls from "public-lib/components/downloadControls/DownloadControls";
 import ScrollBar from "shared/components/Scrollbar/ScrollBar";
 import BoxScatterPlot, {IBoxScatterPlotData} from "shared/components/plots/BoxScatterPlot";
 import {getMobxPromiseGroupStatus} from "shared/lib/getMobxPromiseGroupStatus";

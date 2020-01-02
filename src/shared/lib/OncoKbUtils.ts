@@ -1,15 +1,19 @@
 // TODO remove this file and completely rely on react-mutation-mapper implementation?
 
 import * as _ from 'lodash';
-import {Evidence, EvidenceQueries, EvidenceQueryRes, IndicatorQueryResp, Query} from "public-lib/api/generated/OncoKbAPI";
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {IOncoKbData} from "shared/model/OncoKB";
 import {
+    Evidence,
+    EvidenceQueries,
+    EvidenceQueryRes,
+    IndicatorQueryResp,
+    Query,
     generateQueryVariant as generateGenericQueryVariant,
     generatePartialEvidenceQuery,
-    LEVELS,
-} from "public-lib/lib/OncoKbUtils";
-import {LevelOfEvidence} from "public-lib/api/model/oncokb";
+    LevelOfEvidence,
+    LEVELS
+} from "cbioportal-frontend-commons";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {IOncoKbData} from "shared/model/OncoKB";
 
 export function generateIdToIndicatorMap(data:IndicatorQueryResp[]): {[queryId:string]: IndicatorQueryResp}
 {
