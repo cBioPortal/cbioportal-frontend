@@ -46,3 +46,8 @@ for = "/*.eot"
 	[headers.values]
 	Access-Control-Allow-Origin = "*"
 	Content-Type = "application/font-eot"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
