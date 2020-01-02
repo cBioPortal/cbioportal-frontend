@@ -210,7 +210,7 @@ describe('case set selection in modify query form', function(){
         // Select a different study
         var input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
-        input.setValue('adrenocortical carcinoma tcga provisional');
+        input.setValue('adrenocortical carcinoma tcga firehose legacy');
         waitForNumberOfStudyCheckboxes(1);
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
@@ -332,10 +332,10 @@ describe('genetic profile selection in modify query form', function(){
         assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
         assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'), "protein level should be selected");
 
-        // select all TCGA non-provisional
+        // select all TCGA non-firehose studies
         var input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
-        input.setValue('tcga -provisional');
+        input.setValue('tcga -firehose');
         browser.pause(500);
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
 
@@ -346,7 +346,7 @@ describe('genetic profile selection in modify query form', function(){
         assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'), "'Copy number alterations' should be selected");
 
 
-        // Deselect all tcga -provisional studies
+        // Deselect all TCGA non-firehose studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
         browser.pause(100);
 

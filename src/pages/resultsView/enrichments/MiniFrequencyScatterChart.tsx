@@ -4,13 +4,12 @@ import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import {VictoryAxis, VictoryChart, VictoryLabel, VictoryScatter, VictorySelectionContainer, VictoryLine} from "victory";
 import CBIOPORTAL_VICTORY_THEME, {axisLabelStyles} from "../../../shared/theme/cBioPoralTheme";
-import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import {Popover} from "react-bootstrap";
 import {formatLogOddsRatio} from "../../../shared/lib/FormatUtils";
 import {toConditionalPrecision} from "../../../shared/lib/NumberUtils";
 import SelectionComponent from "./SelectionComponent";
 import HoverablePoint from "./HoverablePoint";
-import {getTextWidth, truncateWithEllipsis} from "../../../public-lib/lib/TextTruncationUtils";
+import {DownloadControls, getTextWidth, truncateWithEllipsis} from "cbioportal-frontend-commons";
 
 export interface IMiniFrequencyScatterChartData {
     x:number;

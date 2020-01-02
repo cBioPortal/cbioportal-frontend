@@ -8,9 +8,8 @@ import {IStringAxisData, tableCellTextColor} from "../../../pages/resultsView/pl
 import {StringListIndexedMap} from "../../lib/ListIndexedMap";
 import naturalSort from "javascript-natural-sort";
 import * as d3Scale from "d3-scale";
-import Timer = NodeJS.Timer;
 import measureText from "measure-text";
-import {stringListToIndexSet, stringListToMap} from "../../../public-lib/lib/StringUtils";
+import {stringListToIndexSet, stringListToMap} from "cbioportal-frontend-commons";
 import {wrapTick} from "./TickUtils";
 import {iterateOverEntries} from "./TablePlotUtils";
 
