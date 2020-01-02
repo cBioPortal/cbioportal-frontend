@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {observer, Observer} from 'mobx-react';
-import {Button, ButtonGroup} from 'react-bootstrap';
+import {Button, ButtonGroup, Modal} from 'react-bootstrap';
 import CustomDropdown from './CustomDropdown';
+import ConfirmNgchmModal from './ConfirmNgchmModal';
 import ReactSelect from 'react-select1';
 import {MobxPromise} from 'mobxpromise';
 import {action, computed, IObservableObject, observable, ObservableMap, reaction, toJS,} from 'mobx';
@@ -9,17 +10,18 @@ import _ from 'lodash';
 import {SortMode} from '../ResultsViewOncoprint';
 import {Gene, MolecularProfile} from 'shared/api/generated/CBioPortalAPI';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
+import {
+    DefaultTooltip,
+    EditableSpan,
+    CheckedSelect
+} from 'cbioportal-frontend-commons';
 import Slider from 'react-rangeslider';
 import 'react-rangeslider/lib/index.css';
-import EditableSpan from 'public-lib/components/editableSpan/EditableSpan';
 import './styles.scss';
-import ErrorIcon from '../../ErrorIcon';
 import classNames from 'classnames';
 import {SpecialAttribute} from '../../../cache/ClinicalDataCache';
 import {AlterationTypeConstants, ResultsViewPageStore,} from '../../../../pages/resultsView/ResultsViewPageStore';
 import {OncoprintAnalysisCaseType, ExtendedClinicalAttribute} from '../../../../pages/resultsView/ResultsViewPageStoreUtils';
-import {getNCBIlink} from 'public-lib/lib/urls';
 import OQLTextArea, {GeneBoxType} from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
 import {SingleGeneQuery} from '../../../lib/oql/oql-parser';
@@ -27,8 +29,8 @@ import AddClinicalTracks from '../../../../pages/resultsView/oncoprint/AddClinic
 import {Treatment} from 'shared/api/generated/CBioPortalAPIInternal';
 import TextIconArea, {ITextIconAreaItemProps,} from 'shared/components/textIconArea/TextIconArea';
 import {extractTreatmentSelections} from '../OncoprintUtils';
-import CheckedSelect from 'public-lib/components/checkedSelect/CheckedSelect';
 import DriverAnnotationControls, {IDriverAnnotationControlsHandlers} from "../../../../pages/resultsView/settings/DriverAnnotationControls";
+import OncoprintDropdownCount from 'pages/resultsView/oncoprint/OncoprintDropdownCount';
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;
@@ -64,13 +66,12 @@ export interface IOncoprintControlsHandlers {
     onChangeSelectedClinicalTracks?: (
         attributeIds: (string | SpecialAttribute)[]
     ) => void;
-
     onClickAddGenesToHeatmap?: () => void;
     onClickAddTreatmentsToHeatmap?: (treatments: string[]) => void;
     onSelectHeatmapProfile?: (molecularProfileId: string) => void;
     onChangeHeatmapGeneInputValue?: (value: string) => void;
     onChangeHeatmapTreatmentInputValue?: (value: string) => void;
-
+    onClickNGCHM: () => void;
     onSetHorzZoom: (z: number) => void;
     onClickZoomIn: () => void;
     onClickZoomOut: () => void;
@@ -115,6 +116,7 @@ export interface IOncoprintControlsState {
     heatmapGeneInputValue?: string;
     heatmapTreatmentInputValue?: string;
     hideHeatmapMenu?: boolean;
+    ngchmButtonActive?: boolean;
 
     customDriverAnnotationBinaryMenuLabel?: string;
     customDriverAnnotationTiersMenuLabel?: string;
@@ -175,6 +177,7 @@ const EVENT_KEY = {
     downloadOrder: '28',
     downloadTabular: '29',
     horzZoomSlider: '30',
+    viewNGCHM: '31',
     addTreatmentsToHeatmap: '32',
 };
 
@@ -188,6 +191,7 @@ export default class OncoprintControls extends React.Component<
     @observable private _selectedTreatmentIds: string[] = [];
     private textareaTreatmentText = '';
     @observable treatmentFilter = '';
+    @observable showConfirmNgchmModal:boolean = false;
 
     constructor(props: IOncoprintControlsProps) {
         super(props);
@@ -443,6 +447,11 @@ export default class OncoprintControls extends React.Component<
                 this.props.handlers.onClickDownload &&
                     this.props.handlers.onClickDownload('tabular');
                 break;
+            case EVENT_KEY.viewNGCHM:
+            	if (this.props.state.ngchmButtonActive && this.props.handlers.onClickNGCHM) {
+                    this.showConfirmNgchmModal = true;
+            	}
+                break;
         }
     }
 
@@ -599,7 +608,7 @@ export default class OncoprintControls extends React.Component<
                 />
             );
         } else {
-            return <span />;
+            return null;
         }
     }
 
@@ -625,7 +634,7 @@ export default class OncoprintControls extends React.Component<
         let menu = <LoadingIndicator isLoading={true} />;
         if (this.props.state.heatmapProfilesPromise.isComplete) {
             if (!this.props.state.heatmapProfilesPromise.result!.length) {
-                return <span />;
+                return null;
             } else {
                 menu = (
                     <div className="oncoprint__controls__heatmap_menu">
@@ -694,6 +703,16 @@ export default class OncoprintControls extends React.Component<
                                     Add Treatment Response to Heatmap
                                 </button>,
                             ]}
+
+                        {this.props.state.ngchmButtonActive &&
+                            (<DefaultTooltip overlay={<span>Open a new tab for NG-CHM with this study from MD Anderson Cancer Center compendium.</span>}>
+                             <button
+                                 className={classNames("btn", "btn-sm", "btn-default")}
+                                 name={EVENT_KEY.viewNGCHM}
+                                 onClick={this.onButtonClick}
+                             >View Next-Generation Clustered Heat Map (NG-CHM)</button>
+                             </DefaultTooltip>)
+                        }
                     </div>
                 );
             }
@@ -703,9 +722,16 @@ export default class OncoprintControls extends React.Component<
         return (
             <CustomDropdown
                 bsStyle="default"
-                title="Heatmap"
+                title="Add Heatmap Tracks"
                 id="heatmapDropdown"
                 className="heatmap"
+                titleElement={<OncoprintDropdownCount
+                    count={
+                        this.props.state.heatmapProfilesPromise.isComplete && this.props.state.heatmapProfilesPromise!.result ?
+                            this.props.state.heatmapProfilesPromise!.result!.length :
+                            undefined
+                    }
+                />}
             >
                 {menu}
             </CustomDropdown>
@@ -1301,6 +1327,11 @@ export default class OncoprintControls extends React.Component<
                     <Observer>{this.getDownloadMenu}</Observer>
                     <Observer>{this.getHorzZoomControls}</Observer>
                     {this.minimapButton}
+                    <ConfirmNgchmModal 
+                        show={this.showConfirmNgchmModal}
+                        onHide={()=>this.showConfirmNgchmModal=false}
+                        openNgchmWindow={this.props.handlers.onClickNGCHM}
+                        />
                 </ButtonGroup>
             </div>
         );

@@ -1,5 +1,5 @@
 import SampleColumnFormatter from "./SampleColumnFormatter";
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip} from "cbioportal-frontend-commons";
 import {initMutation} from "test/MutationMockUtils";
 import React from 'react';
 import { assert } from 'chai';

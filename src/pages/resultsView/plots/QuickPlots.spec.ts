@@ -38,6 +38,7 @@ describe("Quick Plot Links in the Plots Tab", () => {
                                 label: "mRNA",
                             },
                             dataSource: undefined,
+                            useSameGene:true
                         },
                         horizontal: {
                             dataType: {
@@ -75,6 +76,7 @@ describe("Quick Plot Links in the Plots Tab", () => {
                                 label: "mRNA",
                             },
                             dataSource: undefined,
+                            useSameGene:true
                         },
                         horizontal: {
                             dataType: {
@@ -314,6 +316,7 @@ describe("Quick Plot Links in the Plots Tab", () => {
                                 label: "mRNA"
                             },
                             dataSource: undefined,
+                            useSameGene:true
                         },
                         horizontal: {
                             dataType: {
@@ -357,6 +360,7 @@ describe("Quick Plot Links in the Plots Tab", () => {
                             value: "brca_tcga_protein_quantification",
                             label: "Protein levels (mass spectrometry by CPTAC)",
                             },
+                            useSameGene:true
                         },
                         horizontal: {
                             dataType: {
@@ -400,6 +404,7 @@ describe("Quick Plot Links in the Plots Tab", () => {
                             value: "brca_tcga_protein_quantification",
                             label: "Protein levels (mass spectrometry by CPTAC)",
                             },
+                            useSameGene:true
                         },
                         horizontal: {
                             dataType: {

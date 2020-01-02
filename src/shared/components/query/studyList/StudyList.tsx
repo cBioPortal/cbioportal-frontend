@@ -9,7 +9,7 @@ import {computed} from "mobx";
 import _ from "lodash";
 import {getPubMedUrl, getStudySummaryUrl, redirectToStudyView} from "../../../api/urls";
 import {QueryStoreComponent} from "../QueryStore";
-import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip} from "cbioportal-frontend-commons";
 import {FilteredCancerTreeView} from "../StudyListLogic";
 import {CancerTreeNode, CancerTypeWithVisibility} from "../CancerStudyTreeData";
 import {StudyLink} from "../../StudyLink/StudyLink";

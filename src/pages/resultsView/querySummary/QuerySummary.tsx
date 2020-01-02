@@ -5,12 +5,9 @@ import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
 import classNames from 'classnames';
 import './styles.scss';
-import DefaultTooltip, {
-    setArrowLeft
-} from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip, getBrowserWindow, setArrowLeft} from "cbioportal-frontend-commons";
 import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {action, computed, observable} from "mobx";
-import {QueryStore, CUSTOM_CASE_LIST_ID} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
 import autobind from "autobind-decorator";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
@@ -18,13 +15,13 @@ import {ShareUI} from "./ShareUI";
 import {ServerConfigHelpers} from "../../../config/config";
 import AppConfig from "appConfig";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
-import {createQueryStore} from "../../home/HomePage";
-import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
-import {getAlterationSummary, getGeneSummary, getPatientSampleSummary, getStudyViewFilterHash} from "./QuerySummaryUtils";
+import {getAlterationSummary, getGeneSummary, getPatientSampleSummary, submitToStudyViewPage} from "./QuerySummaryUtils";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
 import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
 import ResultsPageSettings from "../settings/ResultsPageSettings";
+import {createQueryStore} from "shared/lib/createQueryStore";
+import _ from "lodash";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore, onToggleQueryFormVisiblity:(visible:boolean)=>void }, {}> {
@@ -44,12 +41,18 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         return this.props.store.queryFormVisible || this.isQueryOrGeneInvalid;
     }
 
-    @computed get studyViewFilterHash() {
-        return getStudyViewFilterHash(
-            this.props.store.samples.result,
-            this.props.store.queriedVirtualStudies.result.length > 0,
-            this.props.store.sampleLists.result);
+    @computed get studyPageFilteredCasesLink() {
+        return <a onClick={() => {
+            submitToStudyViewPage(
+                this.props.store.queriedStudies.result,
+                this.props.store.samples.result,
+                this.props.store.queriedVirtualStudies.result.length > 0,
+                this.props.store.sampleLists.result)
+        }}>
+            {getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)}
+        </a>
     }
+
 
     readonly singleStudyUI = MakeMobxView({
         await:()=>[
@@ -67,13 +70,14 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                 <div>
                     <h3>
                         <a
-                            href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}, this.studyViewFilterHash)}
+                            href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')})}
                             target="_blank"
                         >
                             {this.props.store.queriedStudies.result[0].name}
                         </a>
                     </h3>
-                    {sampleListName}&nbsp;({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
+                    {sampleListName}&nbsp;({this.studyPageFilteredCasesLink})
+
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
                 </div>
@@ -98,14 +102,16 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
             <div>
                 <h3>
                     <a
-                        href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}, this.studyViewFilterHash)}
+                        href={buildCBioPortalPageUrl(`study`, {id: this.props.store.queriedStudies.result.map(study => study.studyId).join(',')})}
                         target="_blank"
                     >
-                        Combined Study ({this.props.store.samples.result.length} samples)
+                        Combined Study ({_.sumBy(this.props.store.queriedStudies.result,study=>study.allSampleCount)} samples)
                     </a>
                 </h3>
                 <span>
-                    Querying {getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)} in {this.props.store.queriedStudies.result.length} studies
+                    Querying {this.studyPageFilteredCasesLink} in {this.props.store.queriedStudies.result.length} studies
+
+
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
                     &nbsp;
@@ -165,7 +171,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                                   showDownloadTab={false}
                                   showAlerts={true}
                                   modifyQueryParams={this.props.store.modifyQueryParams}
-                                  getQueryStore={()=>createQueryStore(getBrowserWindow().routingStore.query)}
+                                  getQueryStore={()=>createQueryStore(this.props.store.urlWrapper.query, this.props.store.urlWrapper,false)}
             />
         </div>
     }
@@ -221,7 +227,8 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
                             <ShareUI sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
                                      bitlyAccessToken={AppConfig.serverConfig.bitly_access_token}
-                                     routingStore={this.props.routingStore}/>
+
+                                     urlWrapper={this.props.store.urlWrapper}/>
                         </div>
 
                     </div>

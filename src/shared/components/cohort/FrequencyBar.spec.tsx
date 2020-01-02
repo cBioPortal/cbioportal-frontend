@@ -1,10 +1,9 @@
-import * as ColumnVisibilityControls from './FrequencyBar';
 import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import FrequencyBar from "./FrequencyBar";
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip} from "cbioportal-frontend-commons";
 
 describe('FrequencyBar', () => {
 

@@ -28,9 +28,17 @@ import {
     SampleMolecularIdentifier,
 } from 'shared/api/generated/CBioPortalAPI';
 import client from 'shared/api/cbioportalClientInstance';
-import {action, computed, observable, ObservableMap} from 'mobx';
-import {remoteData} from 'public-lib/api/remoteData';
-import {cached, labelMobxPromises, MobxPromise} from 'mobxpromise';
+import { action, computed, observable, ObservableMap , reaction} from 'mobx';
+import {
+    remoteData,
+    generateQueryVariantId,
+    stringListToSet,
+    CancerGene,
+    getProteinPositionFromProteinChange,
+    IndicatorQueryResp,
+    VariantAnnotation
+} from 'cbioportal-frontend-commons';
+import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
 import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
@@ -63,11 +71,10 @@ import {fetchHotspotsData} from 'shared/lib/CancerHotspotsUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import AppConfig from 'appConfig';
 import * as _ from 'lodash';
-import {stringListToSet} from '../../public-lib/lib/StringUtils';
 import {toSampleUuid} from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
+import { PatientSurvival } from '../../shared/model/PatientSurvival';
 import AccessorsForOqlFilter, {SimplifiedMutationType,} from '../../shared/lib/oql/AccessorsForOqlFilter';
-import {PatientSurvival} from '../../shared/model/PatientSurvival';
 import {
     doesQueryContainMutationOQL,
     doesQueryContainOQL,
@@ -84,9 +91,7 @@ import GenesetCorrelatedGeneCache from '../../shared/cache/GenesetCorrelatedGene
 import TreatmentMolecularDataCache from '../../shared/cache/TreatmentMolecularDataCache';
 import GeneCache from '../../shared/cache/GeneCache';
 import GenesetCache from '../../shared/cache/GenesetCache';
-import TreatmentCache from '../../shared/cache/TreatmentCache';
 import {IOncoKbData} from '../../shared/model/OncoKB';
-import {generateQueryVariantId} from '../../public-lib/lib/OncoKbUtils';
 import {
     AlterationEnrichment,
     CosmicMutation,
@@ -98,7 +103,6 @@ import {
     TreatmentFilter,
 } from '../../shared/api/generated/CBioPortalAPIInternal';
 import internalClient from '../../shared/api/cbioportalInternalClientInstance';
-import {CancerGene, IndicatorQueryResp,} from '../../public-lib/api/generated/OncoKbAPI';
 import {getAlterationString} from '../../shared/lib/CopyNumberUtils';
 import memoize from 'memoize-weak-decorator';
 import request from 'superagent';
@@ -123,6 +127,7 @@ import {
     initializeCustomDriverAnnotationSettings,
     isRNASeqProfile,
     makeEnrichmentDataPromise,
+    getMolecularProfiles,
 } from './ResultsViewPageStoreUtils';
 import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
 import {isSampleProfiledInMultiple} from '../../shared/lib/isSampleProfiled';
@@ -134,10 +139,9 @@ import ClinicalDataCache, {
     SpecialAttribute,
 } from '../../shared/cache/ClinicalDataCache';
 import {getDefaultMolecularProfiles} from '../../shared/lib/getDefaultMolecularProfiles';
-import {getProteinPositionFromProteinChange} from 'public-lib/lib/ProteinChangeUtils';
-import {VariantAnnotation} from 'public-lib/api/generated/GenomeNexusAPI';
 import {ServerConfigHelpers} from '../../config/config';
 import {
+    parseSamplesSpecifications,
     populateSampleSpecificationsFromVirtualStudies,
     ResultsViewTab,
     substitutePhysicalStudiesForVirtualStudies,
@@ -150,9 +154,8 @@ import {
     makeComparisonGroupClinicalAttributes,
     makeProfiledInClinicalAttributes,
 } from '../../shared/components/oncoprint/ResultsViewOncoprintUtils';
-import {ResultsViewQuery} from './ResultsViewQuery';
-import {annotateAlterationTypes} from '../../shared/lib/oql/annotateAlterationTypes';
-import {ErrorMessages} from '../../shared/enums/ErrorEnums';
+import { annotateAlterationTypes } from '../../shared/lib/oql/annotateAlterationTypes';
+import { ErrorMessages } from '../../shared/enums/ErrorEnums';
 import {
     pickCopyNumberEnrichmentProfiles,
     pickMRNAEnrichmentProfiles,
@@ -164,10 +167,9 @@ import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import {VirtualStudy} from 'shared/model/VirtualStudy';
 import {ISurvivalDescription} from './survival/SurvivalDescriptionTable';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
-import {Group} from '../../shared/api/ComparisonGroupClient';
-import {AppStore} from '../../AppStore';
-import {CLINICAL_TRACKS_URL_PARAM} from '../../shared/components/oncoprint/ResultsViewOncoprint';
-import {getNumSamples} from '../groupComparison/GroupComparisonUtils';
+import { Group } from '../../shared/api/ComparisonGroupClient';
+import { AppStore } from '../../AppStore';
+import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
 import autobind from 'autobind-decorator';
 import {DEFAULT_GENOME} from 'pages/resultsView/ResultsViewPageStoreUtils';
 import {
@@ -181,12 +183,16 @@ import {
     getUniqueKey
 } from 'pages/studyView/StudyViewUtils';
 import {FRACTION_GENOME_ALTERED, MUTATION_COUNT,} from 'pages/studyView/StudyViewPageStore';
-import {IVirtualStudyProps} from 'pages/studyView/virtualStudy/VirtualStudy';
-import {decideMolecularProfileSortingOrder} from './download/DownloadUtils';
+import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
+import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
+import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 
 type Optional<T> =
     | { isApplicable: true; value: T }
     | { isApplicable: false; value?: undefined };
+
+const DEFAULT_RPPA_THRESHOLD = 2;
+const DEFAULT_Z_SCORE_THRESHOLD = 2;
 
 export const AlterationTypeConstants = {
     MUTATION_EXTENDED: 'MUTATION_EXTENDED',
@@ -410,8 +416,13 @@ export type ModifyQueryParams = {
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
 export class ResultsViewPageStore {
-    constructor(private appStore: AppStore, private routing: any) {
+    constructor(
+        private appStore: AppStore,
+        urlWrapper: ResultsViewURLWrapper
+    ) {
         labelMobxPromises(this);
+
+        this.urlWrapper = urlWrapper;
 
         // addErrorHandler((error: any) => {
         //     this.ajaxErrors.push(error);
@@ -493,16 +504,70 @@ export class ResultsViewPageStore {
             },
         });
 
-        this.initDriverAnnotationSettings();
+        this.driverAnnotationsReactionDisposer = reaction(
+            () => this.urlWrapper.query.cancer_study_list,
+            () => {
+                this.initDriverAnnotationSettings();
+            },
+            { fireImmediately: true }
+        );
     }
 
-    public queryReactionDisposer: any;
+    destroy() {
+        this.driverAnnotationsReactionDisposer();
+    }
 
-    public rvQuery: ResultsViewQuery = new ResultsViewQuery();
+    public urlWrapper: ResultsViewURLWrapper;
+
+    public driverAnnotationsReactionDisposer: any;
+
+    @computed get oqlText() {
+        return this.urlWrapper.query.gene_list;
+    }
+
+    @computed get genesetIds() {
+        return this.urlWrapper.query.geneset_list &&
+            this.urlWrapper.query.geneset_list.trim().length
+            ? this.urlWrapper.query.geneset_list.trim().split(/\s+/)
+            : [];
+    }
+
+    @computed get treatmentList() {
+        return this.urlWrapper.query.treatment_list &&
+            this.urlWrapper.query.treatment_list.trim().length
+            ? this.urlWrapper.query.treatment_list.trim().split(/;/)
+            : [];
+    }
+
+    @computed
+    get cancerStudyIds() {
+        return this.urlWrapper.query.cancer_study_list.split(',');
+    }
+
+    @computed
+    get rppaScoreThreshold() {
+        return this.urlWrapper.query.RPPA_SCORE_THRESHOLD
+            ? parseFloat(this.urlWrapper.query.RPPA_SCORE_THRESHOLD)
+            : DEFAULT_RPPA_THRESHOLD;
+    }
+
+    @computed
+    get zScoreThreshold() {
+        return this.urlWrapper.query.Z_SCORE_THRESHOLD
+            ? parseFloat(this.urlWrapper.query.Z_SCORE_THRESHOLD)
+            : DEFAULT_Z_SCORE_THRESHOLD;
+    }
+
+    @computed
+    get selectedMolecularProfileIds() {
+        return getMolecularProfiles(this.urlWrapper.query);
+    }
+
+    @computed get tabId() {
+        return this.urlWrapper.tabId || ResultsViewTab.ONCOPRINT;
+    }
 
     @observable public resultsPageSettingsVisible = false;
-
-    @observable tabId: ResultsViewTab | undefined = undefined;
 
     @observable public checkingVirtualStudies = false;
 
@@ -511,7 +576,11 @@ export class ResultsViewPageStore {
     @observable public urlValidationError: string | null = null;
 
     @computed get profileFilter() {
-        return this.rvQuery.profileFilter || 0;
+        if (this.urlWrapper.query.profileFilter) {
+            return parseInt(this.urlWrapper.query.profileFilter, 10);
+        } else {
+            return 0;
+        }
     }
 
     @observable ajaxErrors: Error[] = [];
@@ -658,65 +727,68 @@ export class ResultsViewPageStore {
     @computed
     public get usePatientLevelEnrichments() {
         return (
-            (this.routing.location.query as CancerStudyQueryUrlParams)
-                .patient_enrichments === 'true'
+            this.urlWrapper.query.patient_enrichments === 'true'
         );
     }
 
     @autobind
     @action
     public setUsePatientLevelEnrichments(e: boolean) {
-        this.routing.updateRoute({
+        this.urlWrapper.updateURL({
             patient_enrichments: e.toString(),
-        } as Partial<CancerStudyQueryUrlParams>);
-    }
-
-    @computed
-    public get oncoprintAnalysisCaseType() {
-        return (
-            (this.routing.location.query as CancerStudyQueryUrlParams)
-                .show_samples === 'true'
-        ) ? OncoprintAnalysisCaseType.SAMPLE : OncoprintAnalysisCaseType.PATIENT;
+        });
     }
 
     @autobind
     @action
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {
-        this.routing.updateRoute({
+        this.urlWrapper.updateURL({
             show_samples: (e === OncoprintAnalysisCaseType.SAMPLE).toString(),
         } as Partial<CancerStudyQueryUrlParams>);
     }
 
     @computed
     public get excludeGermlineMutations() {
-        return (
-            (this.routing.location.query as CancerStudyQueryUrlParams)
-                .exclude_germline_mutations === 'true'
-        );
+        return this.urlWrapper.query.exclude_germline_mutations === "true";
     }
 
     @autobind
     @action
     public setExcludeGermlineMutations(e: boolean) {
-        this.routing.updateRoute({
+        this.urlWrapper.updateURL({
             exclude_germline_mutations: e.toString()
-        } as Partial<CancerStudyQueryUrlParams>);
+        });
     }
 
     @computed get hugoGeneSymbols() {
-        if (this.rvQuery.oqlQuery.length > 0) {
-            return uniqueGenesInOQLQuery(this.rvQuery.oqlQuery);
+        if (this.urlWrapper.query.gene_list.length > 0) {
+            return uniqueGenesInOQLQuery(this.urlWrapper.query.gene_list);
         } else {
             return [];
         }
     }
 
     @computed get queryContainsOql() {
-        return doesQueryContainOQL(this.rvQuery.oqlQuery);
+        return doesQueryContainOQL(this.urlWrapper.query.gene_list);
     }
 
     @computed get queryContainsMutationOql() {
-        return doesQueryContainMutationOQL(this.rvQuery.oqlQuery);
+        return doesQueryContainMutationOQL(this.urlWrapper.query.gene_list);
+    }
+
+    @computed get sampleListCategory(): SampleListCategoryType | undefined {
+        if (
+            this.urlWrapper.query.case_set_id &&
+            [
+                SampleListCategoryType.w_mut,
+                SampleListCategoryType.w_cna,
+                SampleListCategoryType.w_mut_cna,
+            ].includes(this.urlWrapper.query.case_set_id as any)
+        ) {
+            return this.urlWrapper.query.case_set_id as SampleListCategoryType;
+        } else {
+            return undefined;
+        }
     }
 
     public initDriverAnnotationSettings() {
@@ -780,7 +852,7 @@ export class ResultsViewPageStore {
             // derive default profiles based on profileFilter (refers to old data priority)
             if (
                 this.studies.result.length > 1 ||
-                this.rvQuery.selectedMolecularProfileIds.length === 0
+                this.selectedMolecularProfileIds.length === 0
             ) {
                 return Promise.resolve(
                     getDefaultMolecularProfiles(
@@ -792,7 +864,7 @@ export class ResultsViewPageStore {
                 // if we have only one study, then consult the selectedMolecularProfileIds because
                 // user can directly select set
                 const idLookupMap = _.keyBy(
-                    this.rvQuery.selectedMolecularProfileIds,
+                    this.selectedMolecularProfileIds,
                     (id: string) => id
                 ); // optimization
                 return Promise.resolve(
@@ -842,9 +914,7 @@ export class ResultsViewPageStore {
                 }
             }
             // add any groups that are referenced in URL
-            const clinicalTracksParam = this.routing.location.query[
-                CLINICAL_TRACKS_URL_PARAM
-            ];
+            const clinicalTracksParam = this.urlWrapper.query.clinicallist;
             if (clinicalTracksParam) {
                 const groupIds = clinicalTracksParam
                     .split(',') // split by comma
@@ -1323,6 +1393,46 @@ export class ResultsViewPageStore {
         },
     });
 
+
+	// remoteNgchmUrl queries mdanderson.org to test if there are NGCHMs for one selected
+	// study.  The result is either the full URL to a portal page, or an empty string.
+    readonly remoteNgchmUrl = remoteData<string>({
+        await:()=>[this.studyIds],
+        invoke:async()=>{
+            var result = '';
+
+            if (this.studyIds.result!.length === 1) {
+
+                const queryData = {
+                    studyid:this.studyIds.result![0],
+                    format:"json"
+                };
+
+				var urlResponse;
+
+				try {
+                    urlResponse = await request.get("https://bioinformatics.mdanderson.org/study2url")
+                                        .timeout(30000)
+                                        .query(queryData) as any;
+                } catch (err) {
+                    // Just eat the exception. Result will be empty string.
+                }
+
+                if (urlResponse && urlResponse.body.fileContent) {
+                    const parsedUrlResponse = JSON.parse(urlResponse.body.fileContent.trimEnd()) as any;
+
+                    if (parsedUrlResponse.length >= 1) {
+                        // This is faked out for now.  study2url needs mods to include site url
+                        result = "https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal?" + parsedUrlResponse[0];
+                    }
+                }
+            }
+
+            return Promise.resolve (result);
+        }
+    });
+
+
     readonly molecularProfilesWithData = remoteData<MolecularProfile[]>({
         await: () => [
             this.molecularProfilesInStudies,
@@ -1478,7 +1588,7 @@ export class ResultsViewPageStore {
                     this._filteredAndAnnotatedMutationsReport.result!,
                     data =>
                         filterCBioPortalWebServiceData(
-                            this.rvQuery.oqlQuery,
+                            this.oqlText,
                             data,
                             new AccessorsForOqlFilter(
                                 this.selectedMolecularProfiles.result!
@@ -1502,7 +1612,7 @@ export class ResultsViewPageStore {
                     this._filteredAndAnnotatedMolecularDataReport.result!,
                     data =>
                         filterCBioPortalWebServiceData(
-                            this.rvQuery.oqlQuery,
+                            this.oqlText,
                             data,
                             new AccessorsForOqlFilter(
                                 this.selectedMolecularProfiles.result!
@@ -1522,7 +1632,7 @@ export class ResultsViewPageStore {
             this.defaultOQLQuery,
         ],
         invoke: () => {
-            if (this.rvQuery.oqlQuery.trim() != '') {
+            if (this.oqlText.trim() != '') {
                 let data: (
                     | AnnotatedMutation
                     | AnnotatedNumericGeneMolecularData)[] = [];
@@ -1532,7 +1642,7 @@ export class ResultsViewPageStore {
                 );
                 return Promise.resolve(
                     filterCBioPortalWebServiceData(
-                        this.rvQuery.oqlQuery,
+                        this.oqlText,
                         data,
                         new AccessorsForOqlFilter(
                             this.selectedMolecularProfiles.result!
@@ -1613,13 +1723,13 @@ export class ResultsViewPageStore {
             const samples = this.samples.result!;
             const patients = this.patients.result!;
 
-            if (this.rvQuery.oqlQuery.trim() === '') {
+            if (this.oqlText.trim() === '') {
                 return Promise.resolve([]);
             } else {
                 const filteredAlterationsByOQLLine: UnflattenedOQLLineFilterOutput<
                     AnnotatedExtendedAlteration
                 >[] = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
-                    this.rvQuery.oqlQuery,
+                    this.oqlText,
                     data,
                     accessorsInstance,
                     defaultOQLQuery
@@ -1655,7 +1765,7 @@ export class ResultsViewPageStore {
             return getSampleAlteredMap(
                 this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!,
                 this.samples.result,
-                this.rvQuery.oqlQuery,
+                this.oqlText,
                 this.coverageInformation.result,
                 this.selectedMolecularProfiles.result!.map(
                     profile => profile.molecularProfileId
@@ -1677,13 +1787,13 @@ export class ResultsViewPageStore {
             this.patients,
         ],
         invoke: () => {
-            if (this.rvQuery.oqlQuery.trim() === '') {
+            if (this.oqlText.trim() === '') {
                 return Promise.resolve([]);
             } else {
                 const filteredAlterationsByOQLLine: OQLLineFilterOutput<
                     AnnotatedExtendedAlteration
                 >[] = filterCBioPortalWebServiceDataByOQLLine(
-                    this.rvQuery.oqlQuery,
+                    this.oqlText,
                     [
                         ...this.filteredAndAnnotatedMutations.result!,
                         ...this.filteredAndAnnotatedMolecularData.result!,
@@ -2037,8 +2147,8 @@ export class ResultsViewPageStore {
             return Promise.resolve(
                 buildDefaultOQLProfile(
                     profileTypes,
-                    this.rvQuery.zScoreThreshold,
-                    this.rvQuery.rppaScoreThreshold
+                    this.zScoreThreshold,
+                    this.rppaScoreThreshold
                 )
             );
         },
@@ -2440,6 +2550,15 @@ export class ResultsViewPageStore {
         },
     });
 
+    @computed get samplesSpecificationParams() {
+        return parseSamplesSpecifications(
+            this.urlWrapper.query.case_ids,
+            this.urlWrapper.query.sample_list_ids,
+            this.urlWrapper.query.case_set_id,
+            this.cancerStudyIds
+        );
+    }
+
     readonly samplesSpecification = remoteData({
         await: () => [this.queriedVirtualStudies],
         invoke: async () => {
@@ -2447,14 +2566,14 @@ export class ResultsViewPageStore {
             // if YES, we need to derive the sample lists by:
             // 1. looking up all sample lists in selected studies
             // 2. using those with matching category
-            if (!this.rvQuery.sampleListCategory) {
+            if (!this.sampleListCategory) {
                 if (this.queriedVirtualStudies.result!.length > 0) {
                     return populateSampleSpecificationsFromVirtualStudies(
-                        this.rvQuery.samplesSpecification,
+                        this.samplesSpecificationParams,
                         this.queriedVirtualStudies.result!
                     );
                 } else {
-                    return this.rvQuery.samplesSpecification;
+                    return this.samplesSpecificationParams;
                 }
             } else {
                 // would be nice to have an endpoint that would return multiple sample lists
@@ -2463,11 +2582,11 @@ export class ResultsViewPageStore {
                 // get sample specifications from physical studies if we are querying virtual study
                 if (this.queriedVirtualStudies.result!.length > 0) {
                     samplesSpecifications = populateSampleSpecificationsFromVirtualStudies(
-                        this.rvQuery.samplesSpecification,
+                        this.samplesSpecificationParams,
                         this.queriedVirtualStudies.result!
                     );
                 } else {
-                    samplesSpecifications = this.rvQuery.samplesSpecification;
+                    samplesSpecifications = this.samplesSpecificationParams;
                 }
                 // get unique study ids to reduce the API requests
                 const uniqueStudyIds = _.chain(samplesSpecifications)
@@ -2485,7 +2604,7 @@ export class ResultsViewPageStore {
 
                 const category =
                     SampleListCategoryTypeToFullId[
-                        this.rvQuery.sampleListCategory!
+                        this.sampleListCategory!
                     ];
                 const specs = allSampleLists.reduce(
                     (
@@ -2546,7 +2665,7 @@ export class ResultsViewPageStore {
             await: () => [this.allStudies],
             invoke: async () => {
                 const allCancerStudies = this.allStudies.result;
-                const cancerStudyIds = this.rvQuery.cohortIdsList;
+                const cancerStudyIds = this.cancerStudyIds;
 
                 const missingFromCancerStudies = _.differenceWith(
                     cancerStudyIds,
@@ -2583,15 +2702,15 @@ export class ResultsViewPageStore {
             if (this.queriedVirtualStudies.result!.length > 0) {
                 // we want to replace virtual studies with their underlying physical studies
                 physicalStudies = substitutePhysicalStudiesForVirtualStudies(
-                    this.rvQuery.cohortIdsList,
+                    this.cancerStudyIds,
                     this.queriedVirtualStudies.result!
                 );
             } else {
-                physicalStudies = this.rvQuery.cohortIdsList.slice();
+                physicalStudies = this.cancerStudyIds.slice();
             }
             return Promise.resolve(physicalStudies);
         },
-    });
+    }, []);
 
     // this is less than desirable way of validating studyIds
     // if studyId does not appear in list of all physical studies
@@ -2603,7 +2722,7 @@ export class ResultsViewPageStore {
             await: () => [this.allStudies, this.queriedVirtualStudies],
             invoke: () => {
                 const allCancerStudies = this.allStudies.result;
-                const cancerStudyIds = this.rvQuery.cohortIdsList;
+                const cancerStudyIds = this.cancerStudyIds;
 
                 const missingFromCancerStudies = _.differenceWith(
                     cancerStudyIds,
@@ -2760,7 +2879,7 @@ export class ResultsViewPageStore {
                                 mutationGroups,
                                 mutations =>
                                     filterCBioPortalWebServiceData(
-                                        this.rvQuery.oqlQuery,
+                                        this.oqlText,
                                         mutations,
                                         new AccessorsForOqlFilter(
                                             this.selectedMolecularProfiles.result!
@@ -3277,10 +3396,10 @@ export class ResultsViewPageStore {
     readonly queriedStudies = remoteData({
         await: () => [this.studyIdToStudy, this.queriedVirtualStudies],
         invoke: async () => {
-            if (!_.isEmpty(this.rvQuery.cohortIdsList)) {
+            if (!_.isEmpty(this.cancerStudyIds)) {
                 return fetchQueriedStudies(
                     this.studyIdToStudy.result,
-                    this.rvQuery.cohortIdsList,
+                    this.cancerStudyIds,
                     this.queriedVirtualStudies.result
                         ? this.queriedVirtualStudies.result
                         : []
@@ -3333,28 +3452,6 @@ export class ResultsViewPageStore {
         []
     );
 
-    // If we have same profile accros multiple studies, they should have the same name, so we can group them by name to get all related molecular profiles in multiple studies.
-    readonly nonSelectedMolecularProfilesGroupByName = remoteData<{
-        [profileName: string]: MolecularProfile[];
-    }>(
-        {
-            await: () => [this.nonSelectedMolecularProfiles],
-            invoke: () => {
-                const sortedProfiles = _.sortBy(
-                    this.nonSelectedMolecularProfiles.result,
-                    profile =>
-                        decideMolecularProfileSortingOrder(
-                            profile.molecularAlterationType
-                        )
-                );
-                return Promise.resolve(
-                    _.groupBy(sortedProfiles, profile => profile.name)
-                );
-            },
-        },
-        {}
-    );
-
     readonly molecularProfileIdToMolecularProfile = remoteData<{
         [molecularProfileId: string]: MolecularProfile;
     }>(
@@ -3374,6 +3471,29 @@ export class ResultsViewPageStore {
                         },
                         {}
                     )
+                );
+            },
+        },
+        {}
+    );
+
+
+    // If we have same profile accros multiple studies, they should have the same name, so we can group them by name to get all related molecular profiles in multiple studies.
+    readonly nonSelectedMolecularProfilesGroupByName = remoteData<{
+        [profileName: string]: MolecularProfile[];
+    }>(
+        {
+            await: () => [this.nonSelectedMolecularProfiles],
+            invoke: () => {
+                const sortedProfiles = _.sortBy(
+                    this.nonSelectedMolecularProfiles.result,
+                    profile =>
+                        decideMolecularProfileSortingOrder(
+                            profile.molecularAlterationType
+                        )
+                );
+                return Promise.resolve(
+                    _.groupBy(sortedProfiles, profile => profile.name)
                 );
             },
         },
@@ -3670,9 +3790,9 @@ export class ResultsViewPageStore {
 
     readonly genesets = remoteData<Geneset[]>({
         invoke: () => {
-            if (this.rvQuery.genesetIds && this.rvQuery.genesetIds.length > 0) {
+            if (this.genesetIds && this.genesetIds.length > 0) {
                 return internalClient.fetchGenesetsUsingPOST({
-                    genesetIds: this.rvQuery.genesetIds.slice(),
+                    genesetIds: this.genesetIds.slice(),
                 });
             } else {
                 return Promise.resolve([]);
@@ -3723,16 +3843,13 @@ export class ResultsViewPageStore {
                     studyIds: this.studyIds.result!,
                 } as TreatmentFilter,
             });
-        },
-        onResult: (treatments: Treatment[]) => {
-            this.treatmentCache.addData(treatments);
-        },
+        }
     });
 
     readonly selectedTreatments = remoteData<Treatment[]>({
         await: () => [this.treatmentsInStudies],
         invoke: () => {
-            const treatmentIdFromUrl = this.rvQuery.treatmentIds;
+            const treatmentIdFromUrl = this.treatmentList;
             return Promise.resolve(
                 _.filter(this.treatmentsInStudies.result!, (d: Treatment) =>
                     treatmentIdFromUrl.includes(d.treatmentId)
@@ -3751,9 +3868,9 @@ export class ResultsViewPageStore {
 
     readonly genesetLinkMap = remoteData<{ [genesetId: string]: string }>({
         invoke: async () => {
-            if (this.rvQuery.genesetIds && this.rvQuery.genesetIds.length) {
+            if (this.genesetIds && this.genesetIds.length) {
                 const genesets = await internalClient.fetchGenesetsUsingPOST({
-                    genesetIds: this.rvQuery.genesetIds.slice(),
+                    genesetIds: this.genesetIds.slice(),
                 });
                 const linkMap: { [genesetId: string]: string } = {};
                 genesets.forEach(({ genesetId, refLink }) => {
@@ -3768,7 +3885,7 @@ export class ResultsViewPageStore {
 
     readonly treatmentLinkMap = remoteData<{ [treatmentId: string]: string }>({
         invoke: async () => {
-            if (this.rvQuery.treatmentIds && this.rvQuery.treatmentIds.length) {
+            if (this.treatmentList && this.treatmentList.length) {
                 const treatments = await internalClient.fetchTreatmentsUsingPOST(
                     {
                         treatmentFilter: {
@@ -4856,7 +4973,6 @@ export class ResultsViewPageStore {
 
     readonly geneCache = new GeneCache();
     readonly genesetCache = new GenesetCache();
-    readonly treatmentCache = new TreatmentCache();
 
     public numericGeneMolecularDataCache = new MobxPromiseCache<
         { entrezGeneId: number; molecularProfileId: string },

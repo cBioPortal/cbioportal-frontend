@@ -1,6 +1,5 @@
 import * as React  from 'react';
-import * as ReactDOM from 'react-dom';
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
+import {DefaultTooltip} from 'cbioportal-frontend-commons';
 import {Button, ButtonGroup, ButtonToolbar, Form, FormGroup, MenuItem} from 'react-bootstrap';
 var ClipboardButton = require('react-clipboard.js');
 var Clipboard = require('clipboard');
