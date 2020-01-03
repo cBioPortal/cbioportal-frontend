@@ -2,8 +2,11 @@ import * as React from 'react';
 import {Circle} from "better-react-spinkit";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
-import { VariantAnnotation } from 'public-lib/api/generated/GenomeNexusAPI';
+import {
+    TableCellStatusIndicator,
+    TableCellStatus,
+    VariantAnnotation
+} from "cbioportal-frontend-commons";
 import GenomeNexusCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusCache";
 
 export default class HgvscColumnFormatter {

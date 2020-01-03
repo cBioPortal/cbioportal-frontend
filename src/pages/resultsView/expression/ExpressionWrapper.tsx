@@ -25,10 +25,9 @@ import {
 } from "../plots/PlotsTabUtils";
 import {AnnotatedMutation, ResultsViewPageStore} from "../ResultsViewPageStore";
 import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
-import {remoteData} from "../../../public-lib/api/remoteData";
+import {remoteData, stringListToSet} from "cbioportal-frontend-commons";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
 import {MobxPromise} from "mobxpromise";
-import {stringListToSet} from "../../../public-lib/lib/StringUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
 import {ViewType, PlotType} from "../plots/PlotsTab";

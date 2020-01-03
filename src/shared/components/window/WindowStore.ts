@@ -1,3 +1,3 @@
-import WindowWrapper from "public-lib/components/WindowWrapper";
+import {WindowWrapper} from "cbioportal-frontend-commons";
 
 export default new WindowWrapper();

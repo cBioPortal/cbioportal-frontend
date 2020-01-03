@@ -14,7 +14,7 @@ import {
     getNumSamples,
 } from "./GroupComparisonUtils";
 import { GroupComparisonTab } from "./GroupComparisonTabs"
-import {remoteData} from "../../public-lib/api/remoteData";
+import {remoteData, stringListToIndexSet} from "cbioportal-frontend-commons";
 import {
     CancerStudy,
     ClinicalAttribute,
@@ -53,7 +53,6 @@ import {calculateQValues} from "shared/lib/calculation/BenjaminiHochbergFDRCalcu
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import {AppStore} from "../../AppStore";
-import {stringListToIndexSet} from "../../public-lib/lib/StringUtils";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
 import ifndef from "../../shared/lib/ifndef";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";

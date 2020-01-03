@@ -1,10 +1,9 @@
 import $ from 'jquery';
 import AppConfig from "appConfig";
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
+import {getBrowserWindow, isWebdriver} from "cbioportal-frontend-commons";
 import * as _ from 'lodash';
 import {log} from "./consoleLog";
 import {StudyViewPageStore} from "../../pages/studyView/StudyViewPageStore";
-import {isWebdriver} from "../../public-lib/lib/webdriverUtils";
 
 export type GAEvent = {
   category:"studyPage"|"resultsView"|"quickSearch"|"download"|"groupComparison"|"homePage"|"patientView";
