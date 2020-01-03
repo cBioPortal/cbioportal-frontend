@@ -331,7 +331,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         height={getTableHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
-                        onUserSelection={this.props.onValueSelection}
+                        onUserSelection={this.handlers.onValueSelection}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -358,7 +358,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         height={getTableHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
-                        onUserSelection={this.props.onValueSelection}
+                        onUserSelection={this.handlers.onValueSelection}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -384,7 +384,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         height={getTableHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
-                        onUserSelection={this.props.onValueSelection}
+                        onUserSelection={this.handlers.onValueSelection}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -392,11 +392,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         filterByCancerGenes={this.props.filterByCancerGenes!}
                         onChangeCancerGeneFilter={this.props.onChangeCancerGeneFilter!}
                         columns={[
-                            {columnKey: GeneTableColumnKey.GENE, columnWidthRatio: 0.25},
-                            {columnKey: GeneTableColumnKey.CYTOBAND, columnWidthRatio: 0.25},
-                            {columnKey: GeneTableColumnKey.CNA, columnWidthRatio: 0.14},
-                            {columnKey: GeneTableColumnKey.NUMBER, columnWidthRatio: 0.18},
-                            {columnKey: GeneTableColumnKey.FREQ, columnWidthRatio: 0.18}
+                            {columnKey: GeneTableColumnKey.GENE, columnWidthRatio: 0.24},
+                            {columnKey: GeneTableColumnKey.CYTOBAND, columnWidthRatio: 0.24},
+                            {columnKey: GeneTableColumnKey.CNA, columnWidthRatio: 0.18},
+                            {columnKey: GeneTableColumnKey.NUMBER, columnWidthRatio: 0.17},
+                            {columnKey: GeneTableColumnKey.FREQ, columnWidthRatio: 0.17}
                         ]}
                         defaultSortBy={GeneTableColumnKey.FREQ}
                     />

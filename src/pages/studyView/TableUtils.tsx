@@ -4,12 +4,11 @@ import styles from "./table/tables.module.scss";
 import classnames from 'classnames';
 import {DefaultTooltip} from "cbioportal-frontend-commons";
 import {ICON_FILTER_OFF, ICON_FILTER_ON} from "shared/lib/Colors";
+import {getFrequencyStr, getCNAByAlteration} from "pages/studyView/StudyViewUtils";
 import {GenePanelList} from "pages/studyView/table/StudyViewGenePanelModal";
-import {getFrequencyStr} from "pages/studyView/StudyViewUtils";
 import {CSSProperties} from "react";
 import * as _ from "lodash";
 import {GeneTableUserSelectionWithIndex} from "pages/studyView/table/GeneTable";
-import { CopyNumberGeneFilterElement } from 'shared/api/generated/CBioPortalAPIInternal';
 
 export type AlteredGenesTableUserSelectionWithIndex = {
     entrezGeneId: number;
@@ -17,19 +16,8 @@ export type AlteredGenesTableUserSelectionWithIndex = {
     rowIndex: number;
 };
 
-const UNIQUE_KEY_SEPARATOR = '*';
-
-export function getCnaUniqueKey(hugoGeneSymbol: string, alteration: number) {
-    return [hugoGeneSymbol, alteration].join(UNIQUE_KEY_SEPARATOR);
-}
-
-export function parseCnaUniqueKey(uniqueKey: string): CopyNumberGeneFilterElement {
-    const parts = uniqueKey.split(UNIQUE_KEY_SEPARATOR);
-
-    return {
-        hugoGeneSymbol: parts[0],
-        alteration: Number(parts[1]),
-    }
+export function getGeneCNAOQL(hugoGeneSymbol: string, alteration: number) {
+    return [hugoGeneSymbol, getCNAByAlteration(alteration)].join(':');
 }
 
 export function getGeneColumnHeaderRender(cellMargin: number, headerName: string, cancerGeneListFilterEnabled: boolean, isFilteredByCancerGeneList: boolean, cancerGeneIconToggle: (event: any) => void) {

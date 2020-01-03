@@ -7,7 +7,7 @@ import autobind from "autobind-decorator";
 import {
     DUPLICATE_GROUP_NAME_MSG,
     getDefaultGroupName,
-    getSampleIdentifiers, MAX_GROUPS_IN_SESSION,
+    MAX_GROUPS_IN_SESSION,
     StudyViewComparisonGroup
 } from "../GroupComparisonUtils";
 import {getComparisonLoadingUrl, redirectToComparisonPage} from "../../../shared/api/urls";
