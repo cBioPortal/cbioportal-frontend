@@ -63,6 +63,7 @@ export type UserTrackSpec<D> = {
     movable?:boolean;
     removable?:boolean;
     removeCallback?:(track_id:TrackId)=>void;
+    onClickRemoveInTrackMenu?:(track_id:TrackId)=>void;
     label?: string;
     sublabel?: string;
     html_label?: string;
@@ -248,6 +249,7 @@ export default class OncoprintModel {
     private track_movable:TrackProp<boolean>;
     private track_removable:TrackProp<boolean>;
     private track_remove_callback:TrackProp<(track_id:TrackId)=>void>;
+    private track_remove_option_callback:TrackProp<(track_id:TrackId)=>void>;
     private track_sort_cmp_fn:TrackProp<TrackSortSpecification<Datum>>;
     private track_sort_direction_changeable:TrackProp<boolean>;
     private track_sort_direction:TrackProp<TrackSortDirection>;
@@ -342,6 +344,7 @@ export default class OncoprintModel {
         this.track_movable = {};
         this.track_removable = {};
         this.track_remove_callback = {};
+        this.track_remove_option_callback = {};
         this.track_sort_cmp_fn = {};
         this.track_sort_direction_changeable = {};
         this.track_sort_direction = {}; // 1: ascending, -1: descending, 0: not
@@ -1119,6 +1122,7 @@ export default class OncoprintModel {
         this.track_movable[track_id] = ifndef(params.movable, true);
         this.track_removable[track_id] = ifndef(params.removable, false);
         this.track_remove_callback[track_id] = ifndef(params.removeCallback, function() {});
+        this.track_remove_option_callback[track_id] = ifndef(params.onClickRemoveInTrackMenu, function() {});
 
         if (typeof params.expandCallback !== 'undefined') {
             this.track_expand_callback[track_id] = params.expandCallback;
@@ -1584,6 +1588,10 @@ export default class OncoprintModel {
 
     public isTrackRemovable(track_id:TrackId) {
         return this.track_removable[track_id];
+    }
+
+    public getTrackRemoveOptionCallback(track_id:TrackId) {
+        return this.track_remove_option_callback[track_id];
     }
 
     public isTrackSortDirectionChangeable(track_id:TrackId) {
