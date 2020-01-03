@@ -68,7 +68,8 @@ export function submitToStudyViewPage(
     queriedStudies: Pick<CancerStudy, "studyId">[],
     samples: Pick<Sample, "sampleId" | "studyId">[],
     hasVirtualStudies: boolean,
-    sampleLists?: Pick<SampleList, "category">[]) {
+    sampleLists?: Pick<SampleList, "category">[]
+) {
     const hasAllCaseLists = _.some(sampleLists, sampleList => sampleList.category === 'all_cases_in_study');
     const sampleIdentifiers: {
         sampleId: string;
@@ -80,7 +81,10 @@ export function submitToStudyViewPage(
             studyId: sample.studyId
         }));
     }
-    const studyPage = window.open(buildCBioPortalPageUrl(`study`, { id: queriedStudies.map(study => study.studyId).join(',') }), "_blank");
+    var foo = buildCBioPortalPageUrl(`study`, { id: queriedStudies.map(study => study.studyId).join(',') });
+    console.log(foo);
+    
+    const studyPage = window.open("http://localhost:3000/study?id=msk_impact_2017", "_blank");
     if (sampleIdentifiers.length > 0) {
         (studyPage as any).studyPageFilter = `filterJson=${JSON.stringify({ sampleIdentifiers })}`;
     }

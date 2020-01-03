@@ -59,6 +59,9 @@ import { GeneFilterOption } from "./mutation/GeneFilterMenu";
 import { checkNonProfiledGenesExist } from "./PatientViewPageUtils";
 import PatientViewGenePanelModal from "./PatientViewGenePanelModal/PatientViewGenePanelModal";
 import { PatientViewPageTabs } from "./PatientViewPageTabs";
+import { ResultsViewPageStore } from "pages/resultsView/ResultsViewPageStore";
+import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
+import PatientMatch from "pages/patientMatch/PatientMatch";
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -90,13 +93,22 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     // use this wrapper rather than interacting with the url directly
     @observable
     public urlWrapper: PatientViewUrlWrapper
+    private urlCrapper: ResultsViewURLWrapper;
     private patientViewPageStore: PatientViewPageStore;
+    private resultsStore: ResultsViewPageStore;
 
     constructor(props: IPatientViewPageProps) {
 
         super(props);
         this.urlWrapper = new PatientViewUrlWrapper(props.routing);
+        this.urlCrapper = new ResultsViewURLWrapper(props.routing);
+        this.urlCrapper.updateURL({gene_list: "BRAF,NRAS,KRAS"})
+        this.urlCrapper.updateURL({cancer_study_list: "acc_tcga"})
         this.patientViewPageStore = new PatientViewPageStore(this.props.appStore);
+        this.resultsStore = new ResultsViewPageStore(this.props.appStore, this.urlCrapper);
+        this.resultsStore.studyIds
+        this.resultsStore.oqlText
+        this.resultsStore.mutations
         getBrowserWindow().patientViewPageStore = this.patientViewPageStore;
 
         reaction(
@@ -440,7 +452,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         )
                         }
                     </div>
-                    <If condition={this.patientViewPageStore.patientViewData.isComplete}>
+                    <If condition={this.patientViewPageStore.patientViewData.isComplete }>
                         <Then>
                             <MSKTabs
                                 id="patientViewPageTabs"
@@ -663,6 +675,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             </MSKTab>
                         )
                     }
+
+                    <MSKTab key={8} id={PatientViewPageTabs.PrototypeTab} linkText="TOP SECRET">
+                        <PatientMatch store={this.resultsStore}>
+
+                        </PatientMatch>
+                    </MSKTab>
 
                     {/*<MSKTab key={5} id={{PatientViewPageTabs.MutationalSignatures}} linkText="Mutational Signature Data" hide={true}>*/}
                         {/*<div className="clearfix">*/}
