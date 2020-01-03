@@ -19,9 +19,9 @@ fi
 if [[ "$CIRCLECI" = true ]] || [[ "$NETLIFY" = true ]]; then
     # on circle ci determine env variables based on branch or in case of PR
     # what branch the PR is pointing to
-    if [[ "$PR_NUMBER" ]] && ! [[ $PR_BRANCH == "release-"* ]] && ! [[ $PR_BRANCH == "master" ]] && ! [[ $PR_BRANCH == "rc" ]]; then
+    if [[ "$PR_NUMBER" ]] && ! [[ $PR_BRANCH == "release-"* ]]; then
         BRANCH=$(curl "https://github.com/cBioPortal/cbioportal-frontend/pull/${PR_NUMBER}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
-    elif [[ "$PR_URL" ]] && ! [[ $PR_BRANCH == "release-"* ]]  && ! [[ $PR_BRANCH == "master" ]] && ! [[ $PR_BRANCH == "rc" ]]; then
+    elif [[ "$PR_URL" ]] && ! [[ $PR_BRANCH == "release-"* ]]; then
         BRANCH=$(curl "${PR_URL}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
     else
         BRANCH=$PR_BRANCH
