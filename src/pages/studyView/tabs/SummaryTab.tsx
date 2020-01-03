@@ -4,13 +4,7 @@ import chartHeaderStyles from "../chartHeader/styles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
 import {observable} from 'mobx';
 import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
-import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
-import {
-    CopyNumberGeneFilterElement,
-    DataBin,
-    RectangleBounds,
-    ClinicalDataFilterValue
-} from "shared/api/generated/CBioPortalAPIInternal";
+import {ClinicalDataFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -20,9 +14,8 @@ import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
+import {ChartMeta, ChartType, RectangleBounds} from "../StudyViewUtils";
 import {DataType} from "cbioportal-frontend-commons";
-import {ChartMeta, ChartType} from "../StudyViewUtils";
-
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -45,13 +38,13 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
 
         this.handlers = {
             onValueSelection: (chartMeta: ChartMeta, values: string[]) => {
-                this.store.updateClinicalDataFilterByValues(chartMeta, values.map(value=>({value} as ClinicalDataFilterValue)));
+                this.store.updateClinicalDataFilterByValues(chartMeta.uniqueKey, values.map(value=>({value} as ClinicalDataFilterValue)));
             },
             onDataBinSelection: (chartMeta: ChartMeta, dataBins: DataBin[]) => {
-                this.store.updateClinicalDataIntervalFilters(chartMeta, dataBins);
+                this.store.updateClinicalDataIntervalFilters(chartMeta.uniqueKey, dataBins);
             },
             onToggleLogScale: (chartMeta: ChartMeta) => {
-                this.store.toggleLogScale(chartMeta);
+                this.store.toggleLogScale(chartMeta.uniqueKey);
             },
             onDeleteChart: (chartMeta: ChartMeta) => {
                 this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
@@ -63,11 +56,14 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 return this.store.isNewlyAdded(uniqueKey);
             },
             setCustomChartFilters: (chartMeta: ChartMeta, values: string[]) => {
-                this.store.setCustomChartFilters(chartMeta, values);
+                this.store.setCustomChartFilters(chartMeta.uniqueKey, values);
             },
             onLayoutChange: (layout: ReactGridLayout.Layout[]) => {
                 this.store.updateCurrentGridLayout(layout);
             },
+            resetGeneFilter:(chartMeta: ChartMeta) => {
+                this.store.resetGeneFilter(chartMeta.uniqueKey)
+            }
         }
     }
 
@@ -140,10 +136,10 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case MUTATED_GENES_TABLE: {
-                props.filters = this.store.getMutatedGenesTableFilters();
+                props.filters = this.store.getGeneFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.promise = this.store.mutatedGeneTableRowData;
                 props.onValueSelection = this.store.addGeneFilters;
-                props.onResetSelection = this.store.resetMutatedGeneFilter;
+                props.onResetSelection = () => this.store.resetGeneFilter(chartMeta.uniqueKey)
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
                 props.title = props.title + ( !this.store.molecularProfileSampleCounts.isComplete || this.store.molecularProfileSampleCounts.result === undefined ? '' : ` (${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} profiled samples)`),
@@ -155,10 +151,10 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case FUSION_GENES_TABLE: {
-                props.filters = this.store.getFusionGenesTableFilters();
+                props.filters = this.store.getGeneFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.promise = this.store.fusionGeneTableRowData;
-                props.onValueSelection = this.store.addFusionGeneFilters;
-                props.onResetSelection = this.store.resetFusionGeneFilter;
+                props.onValueSelection = this.store.addGeneFilters;
+                props.onResetSelection = () => this.store.resetGeneFilter(chartMeta.uniqueKey)
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
                 props.title = props.title + ( !this.store.molecularProfileSampleCounts.isComplete || this.store.molecularProfileSampleCounts.result === undefined ? '' : ` (${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} profiled samples)`),
@@ -170,10 +166,10 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case CNA_GENES_TABLE: {
-                props.filters = this.store.getCNAGenesTableFilters();
+                props.filters = this.store.getGeneFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.promise = this.store.cnaGeneTableRowData;
-                props.onValueSelection = this.store.addCNAGeneFilters;
-                props.onResetSelection = this.handlers.resetCNAGeneFilter;
+                props.onValueSelection = this.store.addGeneFilters;
+                props.onResetSelection = () => this.store.resetGeneFilter(chartMeta.uniqueKey)
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
                 props.title = props.title + ( !this.store.molecularProfileSampleCounts.isComplete || this.store.molecularProfileSampleCounts.result === undefined ? '' : ` (${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples} profiled samples)`),
@@ -192,12 +188,14 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case SCATTER: {
-                if (this.store.getMutationCountVsCNAFilter()) {
-                    props.filters = [this.store.getMutationCountVsCNAFilter()];
-                }
+                props.filters = this.store.getScatterPlotFiltersByUniqueKey(props.chartMeta!.uniqueKey)
                 props.promise = this.store.mutationCountVsCNADensityData;
-                props.onValueSelection = this.props.store.setMutationCountVsCNAFilter;
-                props.onResetSelection = this.props.store.resetMutationCountVsCNAFilter;
+                props.onValueSelection = (bounds:RectangleBounds)=>{
+                    this.store.updateScatterPlotFilterByValues(props.chartMeta!,bounds)
+                }
+                props.onResetSelection = ()=>{
+                    this.store.updateScatterPlotFilterByValues(props.chartMeta!)
+                }
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 props.getData = () => this.store.getScatterDownloadData();
                 props.downloadTypes = ["Data", "SVG", "PDF"];
