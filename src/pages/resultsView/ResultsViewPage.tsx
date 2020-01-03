@@ -47,6 +47,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import onMobxPromise from "shared/lib/onMobxPromise";
 import {createQueryStore} from "shared/lib/createQueryStore";
 import {handleLegacySubmission, handlePostedSubmission} from "shared/lib/redirectHelpers";
+import PatientMatch from 'pages/patientMatch/PatientMatch';
 
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     const resultsViewPageStore = new ResultsViewPageStore(
@@ -163,6 +164,23 @@ export default class ResultsViewPage extends React.Component<
                                 addOnBecomeVisibleListener={
                                     addOnBecomeVisibleListener
                                 }
+                            />
+                        </MSKTab>
+                    );
+                },
+            },
+
+            {
+                id: ResultsViewTab.PROTOTYPE,
+                getTab: () => {
+                    return (
+                        <MSKTab
+                            key={0}
+                            id={ResultsViewTab.PROTOTYPE}
+                            linkText="PROTOTYPE"
+                        >
+                            <PatientMatch
+                                store={store}
                             />
                         </MSKTab>
                     );

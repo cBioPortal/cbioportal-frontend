@@ -4,18 +4,19 @@ import {SamplesSpecificationElement} from "./ResultsViewPageStore";
 import {VirtualStudy} from "../../shared/model/VirtualStudy";
 
 export enum ResultsViewTab {
-    ONCOPRINT="oncoprint",
-    CANCER_TYPES_SUMMARY="cancerTypesSummary",
-    MUTUAL_EXCLUSIVITY="mutualExclusivity",
-    PLOTS="plots",
-    MUTATIONS="mutations",
-    COEXPRESSION="coexpression",
-    ENRICHMENTS="enrichments",
-    SURVIVAL="survival",
-    CN_SEGMENTS="cnSegments",
-    NETWORK="network",
-    EXPRESSION="expression",
-    DOWNLOAD="download"
+    ONCOPRINT = "oncoprint",
+    CANCER_TYPES_SUMMARY = "cancerTypesSummary",
+    MUTUAL_EXCLUSIVITY = "mutualExclusivity",
+    PLOTS = "plots",
+    MUTATIONS = "mutations",
+    COEXPRESSION = "coexpression",
+    ENRICHMENTS = "enrichments",
+    SURVIVAL = "survival",
+    CN_SEGMENTS = "cnSegments",
+    NETWORK = "network",
+    EXPRESSION = "expression",
+    DOWNLOAD = "download",
+    PROTOTYPE = "PROTOTYPE"
 }
 
 export function getTabId(pathname:string) {
