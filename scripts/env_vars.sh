@@ -4,11 +4,11 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 RED='\033[0;31m'
 NC='\033[0m'
 
-if [[ "$CIRCLECI" ]]; then
+if [[ "$CIRCLECI" = true ]]; then
     PR_BRANCH=$CIRCLE_BRANCH
     PR_NUMBER=$CIRCLE_PR_NUMBER
     PR_URL=$CIRCLE_PULL_REQUEST
-elif [[ "$NETLIFY" ]]; then
+elif [[ "$NETLIFY" = true ]]; then
     PR_BRANCH=$BRANCH
     PR_NUMBER=$REVIEW_ID
     if [[ "$PULL_REQUEST" = true ]]; then
@@ -16,7 +16,7 @@ elif [[ "$NETLIFY" ]]; then
     fi
 fi
 
-if [[ "$CIRCLECI" ]] || [[ "$NETLIFY" ]]; then
+if [[ "$CIRCLECI" = true ]] || [[ "$NETLIFY" = true ]]; then
     # on circle ci determine env variables based on branch or in case of PR
     # what branch the PR is pointing to
     if [[ "$PR_NUMBER" ]] && ! [[ $PR_BRANCH == "release-"* ]]; then
