@@ -311,7 +311,14 @@ export default class Oncoprint {
                     self.moveTrack(track_id, tracks[index+1]);
                 }
             },
-            function (track_id:TrackId) { self.removeTrack(track_id); },
+            function (track_id:TrackId) {
+                const callback = self.model.getTrackRemoveOptionCallback(track_id);
+                if (callback) {
+                    callback(track_id);
+                } else {
+                    self.removeTrack(track_id);
+                }
+            },
             function (track_id, dir) { self.setTrackSortDirection(track_id, dir); },
             function (track_id:TrackId) { self.removeExpansionTracksFor(track_id); },
             self.setTrackShowGaps.bind(self)
