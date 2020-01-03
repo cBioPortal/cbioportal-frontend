@@ -265,11 +265,43 @@ Making e2e-tests follows the current procedure for the e2e-tests:
 
 ## Workspaces
 
-We are utilizing `yarn workspaces` to have multiple packages in a single repo (monorepo). The `cbioportal-frontend` is the main web application workspace, and is used to build and deploy the cBioPortal frontend webapp. Workspaces under `packages` directory are separate modules (npm packages) designed to be imported by `cbioportal-frontend` workspace as well as by external repositories. `config` and `typings` directories under the `packages` directory are not workspaces or packages though. They are intended to share common settings among all packages under the `pakcages` directory.
+We are utilizing `yarn workspaces` to maintain multiple packages in a single repo (monorepo). The monorepo approach is an
+ efficient way of working on libraries in the same project as the application that is their primary consumer. 
 
-In order to add a new workspace, one should create a new directory under `packages` and add a proper `package.json` file. (See `cbioportal-frontend-commons` workspace for an example configuration).
+The `cbioportal-frontend` is the main web application workspace. It is used to build and deploy the cBioPortal frontend webapp. 
+Workspaces under `packages` directory are separate modules (npm packages) designed to be imported by `cbioportal-frontend` workspace as well as by external projects.
+ __Please note:__ `config` and `typings` directories under the `packages` directory are NOT workspaces or packages. They are intended to share common settings among all packages under the `packages` directory.
 
-Suggested way to add a new dependency to an existing workspace is to run `yarn workspace <workspace name> add <package name>` instead of just `yarn add <package name>`. For example, run `yarn workspace cbioportal-frontend add lodash` instead of `yarn add lodash`. Similarly to remove a package run `yarn workspace <workspace name> remove <package name>`.
+### Adding a new workspace
+
+To add a new workspace, create a new directory under `packages` and add a `package.json` file. (See `cbioportal-frontend-commons` workspace for example configuration).
+
+The recommended way to add a new dependency to an existing workspace is to run `yarn workspace <workspace name> add <package name>` instead of just `yarn add <package name>`. For example, run `yarn workspace cbioportal-frontend add lodash` instead of `yarn add lodash`. 
+Similarly, to remove a package, run `yarn workspace <workspace name> remove <package name>`.
+
+### Tips for dependency management
+
+Please abide by the following rules for importing dependencies in a monorepo:   
+
+1. If you are working on `cbioportal-frontend` repository, import modules from packages using the package's alias:
+
+```
+// CORRECT, uses alias:
+import {something} from 'cbioportal-frontend-commons'
+
+// INCORRECT, uses relative paths:
+`import {something} from ../../packages/cbioportal-frontend-commons/src/lib/someLib`
+```
+
+2. When working on a package, never import custom code from outside that package unless you really intend for that package to be a dependency.  For example, commons packages should not import from the main cbioportal project.  
+
+3. Avoid circular dependencies at all costs. For example, while it is okay to import a module from `cbioportal-frontend-commons` in `react-mutation-mapper`, there should not be any imports from `react-mutation-mapper` in `cbioportal-frontend-commons`. If you happen to need some component from from `react-mutation-mapper` in `cbioportal-frontend-commons`, consider moving that component into `cbioportal-frontend-commons` package.
+
+### Updating existing packages
+
+Remember that the packages are used by other projects and compatibility needs to be carefully managed. 
+
+Whenever you need to update code under packages, you should also consider updating the version number in the corresponding `package.json` as well as the dependencies of other packages depending on the package you updated. For example if you update the `cbioportal-frontend-commons` version from `0.1.1` to `0.1.2`, corresponding `cbioportal-frontend-commons` dependency in the `package.json` for `react-mutation-mapper` and `cbioportal-frontend` should also be updated to the new version.
 
 ## Components
 
