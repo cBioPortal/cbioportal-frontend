@@ -14,17 +14,18 @@ import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIn
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupSelector from "./groupSelector/GroupSelector";
 import { GroupComparisonTab } from "./GroupComparisonTabs"
-import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
 import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../AppStore";
-import _ from "lodash";
 import ClinicalData from "./ClinicalData";
 import ReactSelect from "react-select";
 import {trackEvent} from "shared/lib/tracking";
 import URL from "url";
 import GroupComparisonURLWrapper, {GroupComparisonURLQuery} from "./GroupComparisonURLWrapper";
+
+import styles from "./styles.module.scss";
+import 'cbioportal-frontend-commons/dist/styles.css';
 
 export interface IGroupComparisonPageProps {
     routing:any;

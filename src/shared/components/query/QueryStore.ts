@@ -20,7 +20,12 @@ import {
 } from '../../api/generated/CBioPortalAPI';
 import { Geneset } from '../../api/generated/CBioPortalAPIInternal';
 import CancerStudyTreeData from './CancerStudyTreeData';
-import { remoteData } from 'public-lib/api/remoteData';
+import {
+    getBrowserWindow,
+    remoteData,
+    stringListToIndexSet,
+    stringListToSet
+} from 'cbioportal-frontend-commons';
 import { labelMobxPromises, cached, debounceAsync } from 'mobxpromise';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import {
@@ -35,10 +40,6 @@ import { ComponentGetsStoreContext } from '../../lib/ContextUtils';
 import URL from 'url';
 import { buildCBioPortalPageUrl, redirectToStudyView } from '../../api/urls';
 import StudyListLogic from './StudyListLogic';
-import {
-    stringListToIndexSet,
-    stringListToSet,
-} from '../../../public-lib/lib/StringUtils';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
 import {
     NonMolecularProfileQueryParams,
@@ -61,7 +62,6 @@ import {
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from '../../lib/formSubmit';
 import { ServerConfigHelpers } from '../../../config/config';
-import getBrowserWindow from '../../../public-lib/lib/getBrowserWindow';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import {ResultsViewURLQuery, ResultsViewURLQueryEnum} from "pages/resultsView/ResultsViewURLWrapper";
 import { getFilteredCustomCaseSets } from './CaseSetSelectorUtils';

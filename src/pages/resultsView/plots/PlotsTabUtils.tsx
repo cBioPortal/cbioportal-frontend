@@ -4,9 +4,8 @@ import {
     ClinicalAttribute, ClinicalData, Gene, MolecularProfile, Mutation, NumericGeneMolecularData,
     Sample
 } from "../../../shared/api/generated/CBioPortalAPI";
-import {remoteData} from "../../../public-lib/api/remoteData";
+import {remoteData, stringListToIndexSet} from "cbioportal-frontend-commons";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
-import {IBaseScatterPlotData} from "../../../shared/components/plots/ScatterPlot";
 import {getSampleViewUrl} from "../../../shared/api/urls";
 import _ from "lodash";
 import * as React from "react";
@@ -14,7 +13,6 @@ import {
     getOncoprintMutationType, OncoprintMutationType,
     selectDisplayValue
 } from "../../../shared/components/oncoprint/DataUtils";
-import {stringListToIndexSet} from "../../../public-lib/lib/StringUtils";
 import {
     CNA_COLOR_AMP,
     CNA_COLOR_HOMDEL,

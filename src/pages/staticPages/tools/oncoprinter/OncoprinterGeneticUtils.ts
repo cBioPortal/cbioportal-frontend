@@ -8,11 +8,14 @@ import {AlterationTypeConstants} from "../../../resultsView/ResultsViewPageStore
 import {cna_profile_data_to_string} from "../../../../shared/lib/oql/AccessorsForOqlFilter";
 import {fillGeneticTrackDatum, OncoprintMutationType} from "../../../../shared/components/oncoprint/DataUtils";
 import {Gene, Mutation, NumericGeneMolecularData} from "../../../../shared/api/generated/CBioPortalAPI";
-import {getProteinPositionFromProteinChange} from "public-lib/lib/ProteinChangeUtils";
-import OncoKbAPI, {Query} from "../../../../public-lib/api/generated/OncoKbAPI";
+import {
+    generateQueryVariantId,
+    getProteinPositionFromProteinChange,
+    OncoKbAPI,
+    Query,
+} from "cbioportal-frontend-commons";
 import {ONCOKB_DEFAULT, queryOncoKbData} from "../../../../shared/lib/StoreUtils";
 import {generateQueryVariant} from "../../../../shared/lib/OncoKbUtils";
-import {generateQueryVariantId} from "public-lib/lib/OncoKbUtils";
 import {default as oncokbClient} from "../../../../shared/api/oncokbClientInstance";
 import {IOncoKbData} from "../../../../shared/model/OncoKB";
 import MobxPromise from "mobxpromise";

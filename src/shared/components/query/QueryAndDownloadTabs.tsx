@@ -1,5 +1,4 @@
 import * as React from 'react';
-import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
 import * as styles_any from './styles/styles.module.scss';
 import {observer} from 'mobx-react';
 import QueryContainer from "./QueryContainer";
@@ -7,13 +6,11 @@ import {QueryStore} from "./QueryStore";
 import {observable, action} from "mobx";
 import {MSKTab, MSKTabs} from "../MSKTabs/MSKTabs";
 import QuickSearch from "./quickSearch/QuickSearch";
-import HomePageSummary from "./quickSearch/HomePageSummary";
-import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
+import {getBrowserWindow} from "cbioportal-frontend-commons";
 import autobind from "autobind-decorator";
 import {trackEvent} from 'shared/lib/tracking';
 import {If} from "react-if";
 import AppConfig from "appConfig";
-import {PageLayout} from "shared/components/PageLayout/PageLayout";
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
 
 const styles = styles_any as {

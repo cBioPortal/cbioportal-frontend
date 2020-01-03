@@ -19,7 +19,7 @@ import {Else, If, Then} from "react-if";
 import autobind from "autobind-decorator";
 import SectionHeader from "shared/components/sectionHeader/SectionHeader";
 import {Fade} from 'react-reveal';
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip} from "cbioportal-frontend-commons";
 import {StudySelectorStats} from "shared/components/query/StudySelectorStats";
 import $ from "jquery";
 import {serializeEvent} from "shared/lib/tracking";

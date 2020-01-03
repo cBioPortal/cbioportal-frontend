@@ -10,7 +10,14 @@ import {
     reaction,
     runInAction
 } from "mobx";
-import {remoteData} from "public-lib/api/remoteData";
+import {
+    capitalize,
+    FadeInteraction,
+    getBrowserWindow,
+    isWebdriver,
+    remoteData,
+    svgToPdfDownload
+} from "cbioportal-frontend-commons";
 import Oncoprint, {GENETIC_TRACK_GROUP_INDEX, IHeatmapTrackSpec} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
@@ -35,23 +42,18 @@ import AppConfig from "appConfig";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import OncoprintJS, {TrackGroupHeader, TrackGroupIndex, TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
-import svgToPdfDownload from "public-lib/lib/svgToPdfDownload";
 import tabularDownload from "./tabularDownload";
 import classNames from 'classnames';
-import FadeInteraction from "public-lib/components/fadeInteraction/FadeInteraction";
 import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import OqlStatusBanner from "../banners/OqlStatusBanner";
 import {getAnnotatingProgressMessage, treatmentsToSelectOptions} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
-import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import AlterationFilterWarning from "../banners/AlterationFilterWarning";
 import { selectDisplayValue } from "./DataUtils";
 import WindowStore from "../window/WindowStore";
 import {OncoprintAnalysisCaseType} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {capitalize} from "../../../public-lib";
-import {isWebdriver} from "../../../public-lib/lib/webdriverUtils";
 import {MakeMobxView} from "../MobxView";
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";

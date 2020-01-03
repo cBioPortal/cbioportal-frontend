@@ -45,7 +45,7 @@ import ErrorPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/Error
 
 
 import $ from 'jquery';
-import getBrowserWindow from 'public-lib/lib/getBrowserWindow';
+import {getBrowserWindow} from 'cbioportal-frontend-commons';
 import { seekUrlHash } from 'shared/lib/seekUrlHash';
 import { PagePath } from 'shared/enums/PagePaths';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers'

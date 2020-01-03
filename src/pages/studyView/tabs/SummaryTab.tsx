@@ -20,7 +20,7 @@ import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
-import {DataType} from "public-lib/components/downloadControls/DownloadControls";
+import {DataType} from "cbioportal-frontend-commons";
 import {ChartMeta, ChartType} from "../StudyViewUtils";
 
 

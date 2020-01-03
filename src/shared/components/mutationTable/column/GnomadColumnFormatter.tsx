@@ -2,10 +2,20 @@ import * as React from 'react';
 import {Circle} from "better-react-spinkit";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {MyVariantInfo, MyVariantInfoAnnotation} from 'public-lib/api/generated/GenomeNexusAPI';
+import {
+    DefaultTooltip,
+    TableCellStatusIndicator,
+    TableCellStatus,
+    MyVariantInfo,
+    MyVariantInfoAnnotation,
+    Gnomad,
+    AlleleCount,
+    AlleleNumber,
+    Homozygotes,
+    AlleleFrequency
+} from 'cbioportal-frontend-commons';
 import GenomeNexusMyVariantInfoCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {calculateGnomadAllelFrequency, GnomadFrequency, gnomadSortValue} from "react-mutation-mapper";
-import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 import generalStyles from "./styles.module.scss";
 
 export default class GnomadColumnFormatter {
