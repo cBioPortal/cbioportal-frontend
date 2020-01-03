@@ -1,9 +1,7 @@
 import ExtendedRouterStore from "./ExtendedRouterStore";
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
+import {getBrowserWindow} from "cbioportal-frontend-commons";
 import {QueryParams} from "url";
 import {PatientViewUrlParams} from "../../pages/patientView/PatientViewPage";
-import {Patient} from "../api/generated/CBioPortalAPI";
-import {StudyViewURLQuery} from "../../pages/studyView/StudyViewPageStore";
 import AppConfig from "appConfig";
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 

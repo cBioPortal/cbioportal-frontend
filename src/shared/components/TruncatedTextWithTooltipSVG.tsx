@@ -5,7 +5,7 @@ import autobind from "autobind-decorator";
 import {Popover} from "react-bootstrap";
 import classnames from "classnames";
 import styles from "../../pages/resultsView/survival/styles.module.scss";
-import {truncateWithEllipsisReport} from "../../public-lib/lib/TextTruncationUtils";
+import {truncateWithEllipsisReport} from "cbioportal-frontend-commons";
 import {Portal} from "react-portal";
 
 export interface ITruncatedTextSVGProps {

@@ -4,11 +4,10 @@ import {OverlayTrigger, Popover} from 'react-bootstrap';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import {getSpanElements} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
-import {placeArrowBottomLeft} from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip, placeArrowBottomLeft} from "cbioportal-frontend-commons";
 import SampleManager from '../SampleManager';
 
 import styles from './styles.module.scss';
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 export type IPatientHeaderProps = {
     patient:any;

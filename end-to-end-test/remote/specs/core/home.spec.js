@@ -271,10 +271,10 @@ describe('case set selection in front page query form', function() {
 
         // select Adrenocortical Carcinoma
         browser.waitForExist(input, 10000);
-        setInputText(input, 'adrenocortical carcinoma tcga provisional');
+        setInputText(input, 'adrenocortical carcinoma tcga firehose legacy');
         waitForNumberOfStudyCheckboxes(
             1,
-            'Adrenocortical Carcinoma (TCGA, Provisional)'
+            'Adrenocortical Carcinoma (TCGA, Firehose Legacy)'
         );
         checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
@@ -372,7 +372,7 @@ describe('case set selection in front page query form', function() {
 
         // select Adrenocortical Carcinoma
         browser.waitForExist(input, 10000);
-        setInputText(input, 'adrenocortical carcinoma tcga provisional');
+        setInputText(input, 'adrenocortical carcinoma tcga firehose legacy');
         waitForNumberOfStudyCheckboxes(1);
         checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
@@ -532,9 +532,9 @@ describe('genetic profile selection in front page query form', () => {
 
         clickModifyStudySelectionButton();
 
-        // select all tcga provisional
+        // select all tcga firehose legacy studies
         browser.waitForExist(input, 10000);
-        setInputText(input, 'tcga provisional');
+        setInputText(input, 'tcga firehose');
         browser.pause(500);
         browser.click(
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
@@ -566,7 +566,7 @@ describe('genetic profile selection in front page query form', () => {
 
         clickModifyStudySelectionButton();
 
-        // Deselect all tcga provisional studies
+        // Deselect all tcga firehose legacy studies
         browser.click(
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
         );

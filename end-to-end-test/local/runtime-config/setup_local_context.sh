@@ -77,6 +77,7 @@ yarn install --frozen-lockfile
 echo START SERVE_DIST
 cd $PORTAL_SOURCE_DIR
 yarn
+yarn buildModules
 yarn serveDistLocalDb &
 
 cd $TEST_HOME
