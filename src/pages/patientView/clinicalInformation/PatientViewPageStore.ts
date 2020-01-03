@@ -10,7 +10,7 @@ import {
     default as CBioPortalAPIInternal
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action, runInAction} from "mobx";
-import {remoteData} from "../../../public-lib/api/remoteData";
+import {remoteData} from "cbioportal-frontend-commons";
 import {IGisticData} from "shared/model/Gistic";
 import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
@@ -74,11 +74,14 @@ import {
     noGenePanelUsed
 } from "shared/lib/StoreUtils";
 import {fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
-import {stringListToSet} from "../../../public-lib/lib/StringUtils";
+import {
+    CancerGene,
+    getBrowserWindow,
+    stringListToSet,
+    VariantAnnotation
+} from "cbioportal-frontend-commons";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
-import { VariantAnnotation } from 'public-lib/api/generated/GenomeNexusAPI';
 import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
-import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import { fetchTrialsById, fetchTrialMatchesUsingPOST } from "../../../shared/api/MatchMinerAPI";
 import { IDetailedTrialMatch, ITrial, ITrialMatch, ITrialQuery } from "../../../shared/model/MatchMiner";
 import { groupTrialMatchesById } from "../trialMatch/TrialMatchTableUtils";

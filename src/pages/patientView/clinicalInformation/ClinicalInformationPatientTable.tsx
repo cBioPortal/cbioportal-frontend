@@ -5,7 +5,7 @@ import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import styles from './style/patientTable.module.scss';
 import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
 import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
-import { isUrl } from "public-lib";
+import { isUrl } from "cbioportal-frontend-commons";
 import autobind from 'autobind-decorator';
 
 export interface IClinicalInformationPatientTableProps {
@@ -38,13 +38,13 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
         }
         return ret;
     }
-    
+
     @autobind handleClick(name:string) {
         if (this.props.onSelectGenePanel) {
             this.props.onSelectGenePanel(name);
         }
     }
-    
+
     renderGenePanelLinks = (genePanels:string) => {
         const links: (string|JSX.Element)[] = [];
         const genePanelsArray = genePanels.split(",");
@@ -75,7 +75,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
             attribute: el.clinicalAttribute.displayName || '',
             value: el.value
         }));
-        
+
         return (
             <PatientTable
                   data={tableData}

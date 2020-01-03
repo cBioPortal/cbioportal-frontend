@@ -2,10 +2,13 @@ import {IHotspotIndex} from "react-mutation-mapper";
 import {
     Mutation, Gene, ClinicalData, CancerStudy, MolecularProfile, SampleIdentifier
 } from "shared/api/generated/CBioPortalAPI";
-import {remoteData} from "public-lib/api/remoteData";
+import {
+    CancerGene,
+    remoteData,
+    VariantAnnotation
+} from "cbioportal-frontend-commons";
 import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
 import {IOncoKbData} from "shared/model/OncoKB";
-import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import {ICivicGene, ICivicVariant} from "shared/model/Civic";
 import {
     fetchCosmicData, fetchCivicGenes, fetchCivicVariants
@@ -16,7 +19,6 @@ import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import MutationMapperStore, {IMutationMapperStoreConfig} from "shared/components/mutationMapper/MutationMapperStore";
-import { VariantAnnotation } from "public-lib/api/generated/GenomeNexusAPI";
 import {IServerConfig} from "../../../config/IAppConfig";
 
 

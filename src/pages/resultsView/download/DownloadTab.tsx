@@ -20,21 +20,17 @@ import styles from "./styles.module.scss";
 import classNames from 'classnames';
 import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
-import {remoteData} from "../../../public-lib/api/remoteData";
+import {DefaultTooltip, remoteData} from "cbioportal-frontend-commons";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import {MolecularProfile, Sample, CancerStudy} from "shared/api/generated/CBioPortalAPI";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
-import sessionServiceClient from "shared/api//sessionServiceInstance";
-import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import { CUSTOM_CASE_LIST_ID } from 'shared/components/query/QueryStore';
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { Alteration } from 'shared/lib/oql/oql-parser';
-import ReactSelect from "react-select";
 import autobind from 'autobind-decorator';
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import FontAwesome from 'react-fontawesome';
 
 export interface IDownloadTabProps {

@@ -1,9 +1,8 @@
 import {default as URL, QueryParams} from "url";
 import AppConfig from "appConfig";
-import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
+import {BuildUrlParams, getBrowserWindow} from "cbioportal-frontend-commons";
 import * as _ from 'lodash';
 import {GroupComparisonLoadingParams} from "../../pages/groupComparison/GroupComparisonLoading";
-import {BuildUrlParams} from "../../public-lib/lib/urls";
 import {GroupComparisonURLQuery} from "../../pages/groupComparison/GroupComparisonURLWrapper";
 import { PagePath } from "shared/enums/PagePaths";
 

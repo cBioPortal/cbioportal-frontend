@@ -29,7 +29,7 @@ import {
     IQueriedMergedTrackCaseData
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {remoteData} from "public-lib/api/remoteData";
+import {remoteData} from "cbioportal-frontend-commons";
 import {makeClinicalTrackData, makeGeneticTrackData, makeHeatmapTrackData} from "./DataUtils";
 import ResultsViewOncoprint from "./ResultsViewOncoprint";
 import _ from "lodash";

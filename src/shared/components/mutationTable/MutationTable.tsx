@@ -45,7 +45,7 @@ import classnames from 'classnames';
 import {IPaginationControlsProps} from "../paginationControls/PaginationControls";
 import {IColumnVisibilityControlsProps} from "../columnVisibilityControls/ColumnVisibilityControls";
 import MobxPromise from "mobxpromise";
-import { VariantAnnotation } from "public-lib/api/generated/GenomeNexusAPI";
+import { CancerGene, VariantAnnotation } from "cbioportal-frontend-commons";
 import HgvscColumnFormatter from "./column/HgvscColumnFormatter";
 import {CancerGene, Query} from "public-lib/api/generated/OncoKbAPI";
 import GnomadColumnFormatter from "./column/GnomadColumnFormatter";

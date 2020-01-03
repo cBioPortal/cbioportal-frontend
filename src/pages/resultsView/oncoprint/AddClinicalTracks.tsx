@@ -3,12 +3,11 @@ import {observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import AddChartByType from "../../studyView/addChartButton/addChartByType/AddChartByType";
 import {action, computed, observable} from "mobx";
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip, remoteData} from "cbioportal-frontend-commons";
 import classNames from "classnames";
 import {serializeEvent} from "../../../shared/lib/tracking";
 import autobind from "autobind-decorator";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
-import {remoteData} from "public-lib/api/remoteData";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {
     clinicalAttributeIsINCOMPARISONGROUP,

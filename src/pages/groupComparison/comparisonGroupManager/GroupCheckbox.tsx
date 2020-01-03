@@ -7,15 +7,13 @@ import {
     MissingSamplesMessage,
     StudyViewComparisonGroup
 } from "../GroupComparisonUtils";
-import {Group} from "../../../shared/api/ComparisonGroupClient";
 import {StudyViewPageStore} from "../../studyView/StudyViewPageStore";
 import autobind from "autobind-decorator";
 import {computed, observable} from "mobx";
 import ErrorIcon from "../../../shared/components/ErrorIcon";
 import styles from "../styles.module.scss"
 import {SyntheticEvent} from "react";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
-import EllipsisTextTooltip from "../../../public-lib/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import {DefaultTooltip, EllipsisTextTooltip} from "cbioportal-frontend-commons";
 
 
 

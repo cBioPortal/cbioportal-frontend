@@ -383,8 +383,8 @@ describe('oncoprint', function() {
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
 
-            setInputText(inputSelector, 'adrenocortical carcinoma tcga provisional');
-            waitForNumberOfStudyCheckboxes(1, "Adrenocortical Carcinoma (TCGA, Provisional)");
+            setInputText(inputSelector, 'adrenocortical carcinoma tcga firehose legacy');
+            waitForNumberOfStudyCheckboxes(1, "Adrenocortical Carcinoma (TCGA, Firehose Legacy)");
 
             var checkBox = $('[data-test="StudySelect"]');
             checkBox.waitForExist(10000);

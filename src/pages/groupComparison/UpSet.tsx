@@ -6,10 +6,9 @@ import * as _ from 'lodash';
 import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from 'shared/theme/cBioPoralTheme';
 import autobind from 'autobind-decorator';
 import {ComparisonGroup} from './GroupComparisonUtils';
-import {getTextWidth, truncateWithEllipsis} from 'public-lib/lib/TextTruncationUtils';
+import {getTextWidth, pluralize, truncateWithEllipsis} from 'cbioportal-frontend-commons';
 import {tickFormatNumeral} from 'shared/components/plots/TickUtils';
 import {joinGroupNames, regionIsSelected, renderGroupNameWithOrdinal, toggleRegionSelected} from './OverlapUtils';
-import {capitalize, pluralize} from 'public-lib/lib/StringUtils';
 import {getPlotDomain} from './UpSetUtils';
 import * as ReactDOM from "react-dom";
 import {Popover} from "react-bootstrap";
@@ -18,7 +17,6 @@ import styles from "../resultsView/survival/styles.module.scss";
 import Timer = NodeJS.Timer;
 import WindowStore from "../../shared/components/window/WindowStore";
 import invertIncreasingFunction from "../../shared/lib/invertIncreasingFunction";
-import TruncatedTextWithTooltipSVG from "../../shared/components/TruncatedTextWithTooltipSVG";
 import GroupTickLabelComponent from "./labelComponents/GroupTickLabelComponent";
 
 export interface IUpSetProps {

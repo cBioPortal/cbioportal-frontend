@@ -28,8 +28,16 @@ import {
     SampleMolecularIdentifier,
 } from 'shared/api/generated/CBioPortalAPI';
 import client from 'shared/api/cbioportalClientInstance';
-import { action, computed, observable, ObservableMap, reaction } from 'mobx';
-import { remoteData } from 'public-lib/api/remoteData';
+import { action, computed, observable, ObservableMap , reaction} from 'mobx';
+import {
+    remoteData,
+    generateQueryVariantId,
+    stringListToSet,
+    CancerGene,
+    getProteinPositionFromProteinChange,
+    IndicatorQueryResp,
+    VariantAnnotation
+} from 'cbioportal-frontend-commons';
 import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
 import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
@@ -63,7 +71,6 @@ import {fetchHotspotsData} from 'shared/lib/CancerHotspotsUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import AppConfig from 'appConfig';
 import * as _ from 'lodash';
-import {stringListToSet} from '../../public-lib/lib/StringUtils';
 import {toSampleUuid} from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
 import { PatientSurvival } from '../../shared/model/PatientSurvival';
@@ -96,7 +103,6 @@ import {
     TreatmentFilter,
 } from '../../shared/api/generated/CBioPortalAPIInternal';
 import internalClient from '../../shared/api/cbioportalInternalClientInstance';
-import {CancerGene, IndicatorQueryResp,} from '../../public-lib/api/generated/OncoKbAPI';
 import {getAlterationString} from '../../shared/lib/CopyNumberUtils';
 import memoize from 'memoize-weak-decorator';
 import request from 'superagent';
@@ -133,8 +139,6 @@ import ClinicalDataCache, {
     SpecialAttribute,
 } from '../../shared/cache/ClinicalDataCache';
 import {getDefaultMolecularProfiles} from '../../shared/lib/getDefaultMolecularProfiles';
-import {getProteinPositionFromProteinChange} from 'public-lib/lib/ProteinChangeUtils';
-import {VariantAnnotation} from 'public-lib/api/generated/GenomeNexusAPI';
 import {ServerConfigHelpers} from '../../config/config';
 import {
     parseSamplesSpecifications,
@@ -182,7 +186,6 @@ import {FRACTION_GENOME_ALTERED, MUTATION_COUNT,} from 'pages/studyView/StudyVie
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
-import {generateQueryVariantId} from "public-lib";
 
 type Optional<T> =
     | { isApplicable: true; value: T }
