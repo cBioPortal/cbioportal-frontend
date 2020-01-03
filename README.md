@@ -282,5 +282,4 @@ Please make sure to not introduce any dependencies from `cbioportal-frontend` wo
  
 ### react-mutation-mapper
 
-Mutation Mapper component has been moved to a separate GitHub repository: [cBioPortal/react-mutation-mapper](https://github.com/cBioPortal/react-mutation-mapper).
-For more information about `react-mutation-mapper` development please see [react-mutation-mapper.md](docs/react-mutation-mapper.md).
+[react-mutation-mapper](https://www.npmjs.com/package/react-mutation-mapper/) is a separate public npm library that contains the Mutation Mapper and related components.
