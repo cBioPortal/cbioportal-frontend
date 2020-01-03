@@ -2,26 +2,20 @@ import * as React from "react";
 import styles from "./styles.module.scss";
 import {If} from 'react-if';
 import {ChartType, NumericalGroupComparisonType} from "pages/studyView/StudyViewUtils";
-import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
-import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import fileDownload from 'react-file-download';
 import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
-import {IChartContainerDownloadProps} from "../charts/ChartContainer";
 import {saveSvgAsPng} from "save-svg-as-png";
 import {ChartTypeEnum} from "../StudyViewConfig";
 import {ChartMeta, getClinicalAttributeOverlay} from "../StudyViewUtils";
-import svgToPdfDownload from "public-lib/lib/svgToPdfDownload";
-import {Dropdown, MenuItem} from "react-bootstrap";
-import Timer = NodeJS.Timer;
-import DownloadControls, {
+import {
     DataType,
+    DefaultTooltip,
+    DownloadControls,
     DownloadControlsButton
-} from "public-lib/components/downloadControls/DownloadControls";
+} from "cbioportal-frontend-commons";
 import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
-import {serializeEvent} from "shared/lib/tracking";
 import CustomBinsModal from "pages/studyView/charts/barChart/CustomBinsModal";
 import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
 

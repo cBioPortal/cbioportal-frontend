@@ -9,7 +9,7 @@ import {
     MutationStatusBadgeSelectorProps
 } from "react-mutation-mapper";
 
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip} from "cbioportal-frontend-commons";
 
 
 export function getFilterOptionLabel(content: {title: string, description?: string}): JSX.Element | string

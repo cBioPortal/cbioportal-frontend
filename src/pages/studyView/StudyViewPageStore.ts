@@ -1,6 +1,5 @@
 import * as _ from 'lodash';
 import AppConfig from "appConfig";
-import {remoteData} from "../../public-lib/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import oncoKBClient from "shared/api/oncokbClientInstance";
@@ -92,7 +91,6 @@ import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
 import autobind from "autobind-decorator";
 import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
-import {stringListToSet} from 'public-lib/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
@@ -122,8 +120,13 @@ import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";
-import {CancerGene, Gene as OncokbGene} from "../../public-lib/api/generated/OncoKbAPI";
-import {DataType} from "public-lib/components/downloadControls/DownloadControls";
+import {
+    DataType,
+    CancerGene,
+    OncoKbGene,
+    remoteData,
+    stringListToSet
+} from "cbioportal-frontend-commons";
 
 import { AppStore } from 'AppStore';
 import {
@@ -672,8 +675,6 @@ export class StudyViewPageStore {
 
     @observable studyIds: string[] = [];
 
-    @observable private sampleIdentifiers: SampleIdentifier[] = [];
-
     private _clinicalDataEqualityFilterSet = observable.shallowMap<ClinicalDataEqualityFilter>();
     private _clinicalDataIntervalFilterSet = observable.shallowMap<ClinicalDataIntervalFilter>();
 
@@ -874,11 +875,17 @@ export class StudyViewPageStore {
             initialFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result;
         }
 
-        return Object.assign({}, this.initialFiltersQuery, initialFilter);
+        const studyViewFilter: StudyViewFilter = Object.assign({}, toJS(this.initialFiltersQuery), initialFilter);
+        //studyViewFilter can only have studyIds or sampleIdentifiers
+        if (!_.isEmpty(studyViewFilter.sampleIdentifiers)) {
+            delete studyViewFilter.studyIds;
+        }
+
+        return studyViewFilter;
     }
 
     @computed
-    get isInitialFilterState(): boolean {
+    private get isInitialFilterState(): boolean {
         return _.isEqual(toJS(this.initialFilters), toJS(this.filters));
     }
 
@@ -2057,27 +2064,11 @@ export class StudyViewPageStore {
                 return acc;
             }, {} as { [id: string]: string[] });
 
-            if (!_.isEmpty(result) || this.sampleIdentifiers.length > 0) {
-
+            if (!_.isEmpty(result)) {
                 result = _.reduce(this.filteredPhysicalStudies.result, (acc, next) => {
                     acc[next.studyId] = [];
                     return acc;
                 }, result);
-
-                _.chain(this.sampleIdentifiers)
-                    .groupBy(sampleIdentifier => sampleIdentifier.studyId)
-                    .each((sampleIdentifiers, studyId) => {
-                        if (result[studyId] !== undefined) {
-                            if (result[studyId].length > 0) {
-                                const sampleIds = result[studyId];
-                                const filteredSampleIds = sampleIdentifiers.map(sampleIdentifier => sampleIdentifier.sampleId);
-                                result[studyId] = _.intersection(sampleIds, filteredSampleIds);
-                            } else {
-                                result[studyId] = sampleIdentifiers.map(sampleIdentifier => sampleIdentifier.sampleId);
-                            }
-                        }
-                    })
-                    .value();
 
                 let studySamplesToFetch = _.reduce(result, (acc, samples, studyId) => {
                     if (samples.length === 0) {
@@ -2270,7 +2261,7 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly oncokbGenes = remoteData<OncokbGene[]>({
+    readonly oncokbGenes = remoteData<OncoKbGene[]>({
         await: () => [],
         invoke: async () => {
             return oncoKBClient.genesGetUsingGET({});

@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { Button } from 'react-bootstrap';
 import autobind from 'autobind-decorator';
 import {ResultsViewTab} from "../ResultsViewPageHelpers";
-import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
+import {DefaultTooltip} from "cbioportal-frontend-commons";
 import {ResultsViewURLQueryEnum} from "pages/resultsView/ResultsViewURLWrapper";
 
 export interface IAddCheckedGenesProps {

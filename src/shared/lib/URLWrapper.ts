@@ -1,3 +1,4 @@
+import { remoteData } from 'cbioportal-frontend-commons';
 import {
     action,
     autorun,
@@ -19,7 +20,6 @@ import ExtendedRouterStore, {
 import hashString from 'shared/lib/hashString';
 import * as _ from 'lodash';
 import { log } from 'shared/lib/consoleLog';
-import { remoteData } from 'public-lib';
 import {QueryParams} from "url";
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
 import {Omit} from "./TypeScriptUtils";

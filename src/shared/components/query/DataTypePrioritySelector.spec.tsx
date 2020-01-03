@@ -2,11 +2,8 @@ import {assert} from 'chai';
 import React from 'react';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
-import {shallow} from "enzyme";
 import {checkBoxes} from "./DataTypePrioritySelector";
-import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
-import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
-import {stringListToSet} from "../../../public-lib/lib/StringUtils";
+import {stringListToSet} from "cbioportal-frontend-commons";
 import {QueryStore} from "./QueryStore";
 
 expect.extend(expectJSX);

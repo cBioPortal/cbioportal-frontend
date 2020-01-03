@@ -1,6 +1,8 @@
 import * as React from 'react';
-import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
-import {getProteinPositionFromProteinChange} from "public-lib/lib/ProteinChangeUtils";
+import {
+    DefaultTooltip,
+    getProteinPositionFromProteinChange
+} from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
