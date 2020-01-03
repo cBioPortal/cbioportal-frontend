@@ -257,7 +257,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                 render: (data: GeneTableRow) => (
                     <span
                         style={{
-                            color: getCNAColorByAlteration(data.alteration!),
+                            color: getCNAColorByAlteration(getCNAByAlteration(data.alteration!)),
                             fontWeight: "bold"
                         }}
                     >

@@ -3,7 +3,6 @@ import {ClinicalData, PatientIdentifier, Sample, SampleIdentifier} from "../../s
 import _ from "lodash";
 import {
     ClinicalDataEnrichment,
-    CopyNumberGeneFilterElement,
     StudyViewFilter
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
@@ -396,15 +395,10 @@ export function getDefaultGroupName(
             .map(key=>customChartFilterSet[key].join("+"))// get each attributes selected values, joined by +
             .value();
 
-    const mutatedGenes =
-        _.flattenDeep<string>((filters.mutatedGenes || []).map(filter=>filter.hugoGeneSymbols))
-            .map(hugoGeneSymbol=>`${hugoGeneSymbol} mutant`);
 
-    const cnaGenes =
-        _.flattenDeep<CopyNumberGeneFilterElement>((filters.cnaGenes || []).map(filter=>filter.alterations))
-            .map(filterElt=>{
-                return `${filterElt.hugoGeneSymbol} ${filterElt.alteration === 2 ? "amp" : "del"}`;
-            });
+    const geneFilters = _.chain(filters.geneFilters || [])
+        .flatMapDeep(geneFilter => geneFilter.geneQueries)
+        .value();
 
     const withData:string[] = [];
     if (filters.withMutationData) {
@@ -415,8 +409,7 @@ export function getDefaultGroupName(
     }
 
 
-    const allFilters = mutatedGenes
-                        .concat(cnaGenes)
+    const allFilters = geneFilters
                         .concat(equalityFilters)
                         .concat(customChartValues)
                         .concat(withData);
