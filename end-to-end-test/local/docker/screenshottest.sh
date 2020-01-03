@@ -11,6 +11,7 @@ yarn install --frozen-lockfile
 echo START SERVE_DIST
 cd /cbioportal-frontend
 yarn
+yarn buildModules
 yarn serveDistLocalDb &
 
 cd /cbioportal-frontend/end-to-end-test

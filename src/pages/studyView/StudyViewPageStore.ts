@@ -1,6 +1,5 @@
 import * as _ from 'lodash';
 import AppConfig from "appConfig";
-import {remoteData} from "../../public-lib/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import oncoKBClient from "shared/api/oncokbClientInstance";
@@ -92,7 +91,6 @@ import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
 import autobind from "autobind-decorator";
 import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
-import {stringListToSet} from 'public-lib/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
@@ -122,8 +120,13 @@ import {LoadingPhase} from "../groupComparison/GroupComparisonLoading";
 import {sleepUntil} from "../../shared/lib/TimeUtils";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import MobxPromiseCache from "shared/lib/MobxPromiseCache";
-import {CancerGene, Gene as OncokbGene} from "../../public-lib/api/generated/OncoKbAPI";
-import {DataType} from "public-lib/components/downloadControls/DownloadControls";
+import {
+    DataType,
+    CancerGene,
+    OncoKbGene,
+    remoteData,
+    stringListToSet
+} from "cbioportal-frontend-commons";
 
 import { AppStore } from 'AppStore';
 import {
@@ -2314,7 +2317,7 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly oncokbGenes = remoteData<OncokbGene[]>({
+    readonly oncokbGenes = remoteData<OncoKbGene[]>({
         await: () => [],
         invoke: async () => {
             return oncoKBClient.genesGetUsingGET({});

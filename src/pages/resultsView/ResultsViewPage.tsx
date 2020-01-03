@@ -22,7 +22,7 @@ import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import autobind from 'autobind-decorator';
 import { ITabConfiguration } from '../../shared/model/ITabConfiguration';
-import getBrowserWindow from '../../public-lib/lib/getBrowserWindow';
+import {getBrowserWindow} from 'cbioportal-frontend-commons';
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
 import { showCustomTab } from '../../shared/lib/customTabs';
@@ -525,50 +525,53 @@ export default class ResultsViewPage extends React.Component<
                             />
                         </div>
                     )}
-                    {this.resultsViewPageStore.studies.isComplete && (
-                        <Helmet>
-                            <title>
-                                {buildResultsViewPageTitle(
-                                    this.resultsViewPageStore.hugoGeneSymbols,
-                                    this.resultsViewPageStore.studies.result
-                                )}
-                            </title>
-                        </Helmet>
+                    {this.resultsViewPageStore.studies.isPending && (
+                        <LoadingIndicator isLoading={true} center={true} size={"big"}></LoadingIndicator>
                     )}
                     {this.resultsViewPageStore.studies.isComplete && (
-                        <div>
-                            <div className={'headBlock'}>
-                                <QuerySummary
-                                    routingStore={this.props.routing}
-                                    store={this.resultsViewPageStore}
-                                    onToggleQueryFormVisiblity={visible => {
-                                        this.showTabs = visible;
-                                    }}
-                                />
-                            </div>
+                        <>
+                            <Helmet>
+                                <title>
+                                    {buildResultsViewPageTitle(
+                                        this.resultsViewPageStore.hugoGeneSymbols,
+                                        this.resultsViewPageStore.studies.result
+                                    )}
+                                </title>
+                            </Helmet>
+                            <div>
+                                <div className={'headBlock'}>
+                                    <QuerySummary
+                                        routingStore={this.props.routing}
+                                        store={this.resultsViewPageStore}
+                                        onToggleQueryFormVisiblity={visible => {
+                                            this.showTabs = visible;
+                                        }}
+                                    />
+                                </div>
 
-                            {// we don't show the result tabs if we don't have valid query
-                            this.showTabs &&
-                                !this.resultsViewPageStore.genesInvalid &&
-                                !this.resultsViewPageStore.isQueryInvalid && (
-                                    <MSKTabs
-                                        key={
-                                            this.urlWrapper.hash
-                                        }
-                                        activeTabId={
-                                            this.resultsViewPageStore.tabId
-                                        }
-                                        unmountOnHide={false}
-                                        onTabClick={(id: string) =>
-                                            this.handleTabChange(id)
-                                        }
-                                        className="mainTabs"
-                                        getTabHref={this.getTabHref}
-                                    >
-                                        {this.tabs}
-                                    </MSKTabs>
-                                )}
-                        </div>
+                                {// we don't show the result tabs if we don't have valid query
+                                this.showTabs &&
+                                    !this.resultsViewPageStore.genesInvalid &&
+                                    !this.resultsViewPageStore.isQueryInvalid && (
+                                        <MSKTabs
+                                            key={
+                                                this.urlWrapper.hash
+                                            }
+                                            activeTabId={
+                                                this.resultsViewPageStore.tabId
+                                            }
+                                            unmountOnHide={false}
+                                            onTabClick={(id: string) =>
+                                                this.handleTabChange(id)
+                                            }
+                                            className="mainTabs"
+                                            getTabHref={this.getTabHref}
+                                        >
+                                            {this.tabs}
+                                        </MSKTabs>
+                                    )}
+                            </div>
+                        </>
                     )}
                 </>
             );

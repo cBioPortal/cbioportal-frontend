@@ -2,7 +2,6 @@ import * as React from 'react';
 import { observer } from "mobx-react";
 import { VictoryLabel, VictoryLegend } from 'victory';
 import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
-import _ from "lodash";
 import {action, computed, observable} from 'mobx';
 import {ComparisonGroup} from './GroupComparisonUtils';
 import RectangleVennDiagram from "./rectangleVennDiagram/RectangleVennDiagram";
@@ -10,7 +9,6 @@ import CreateGroupFromOverlap from "./CreateGroupFromOverlap";
 import GroupComparisonStore from "./GroupComparisonStore";
 import autobind from "autobind-decorator";
 import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
-import {truncateWithEllipsis} from "../../public-lib/lib/TextTruncationUtils";
 import {GroupLegendLabelComponent} from "./labelComponents/GroupLegendLabelComponent";
 
 export interface IVennProps {

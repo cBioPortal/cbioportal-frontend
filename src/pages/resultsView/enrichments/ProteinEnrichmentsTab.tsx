@@ -8,7 +8,7 @@ import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import autobind from 'autobind-decorator';
 import ErrorMessage from "../../../shared/components/ErrorMessage";
 import { makeUniqueColorGetter } from 'shared/components/plots/PlotUtils';
-import { remoteData } from 'public-lib';
+import { remoteData } from 'cbioportal-frontend-commons';
 import { MakeMobxView } from 'shared/components/MobxView';
 
 export interface IProteinEnrichmentsTabProps {

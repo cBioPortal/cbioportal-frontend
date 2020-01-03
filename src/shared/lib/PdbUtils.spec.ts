@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import {mergeAlignments} from './PdbUtils';
 import {initPdbAlignment} from "test/PdbMockUtils";
 import {IPdbChain} from "shared/model/Pdb";
-import {Alignment} from "public-lib/api/generated/Genome2StructureAPI";
+import {Alignment} from "cbioportal-frontend-commons";
 
 describe('PdbUtils', () => {
     it('merges alignments properly', () => {

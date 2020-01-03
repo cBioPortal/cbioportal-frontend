@@ -1,4 +1,4 @@
-import Genome2StructureAPI from "../../public-lib/api/generated/Genome2StructureAPI";
+import {Genome2StructureAPI} from "cbioportal-frontend-commons";
 
 const client = new Genome2StructureAPI();
 
