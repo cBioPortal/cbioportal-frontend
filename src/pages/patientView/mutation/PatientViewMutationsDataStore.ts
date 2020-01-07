@@ -89,7 +89,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
     constructor(getData:()=>Mutation[][]) {
         super(getData);
 
-        this.dataHighlighter = (d:Mutation[])=>{
+        this.dataHighlighter = (mergedMutation:Mutation[])=>{
             const highlightedMutations = [];
             if (!this.onlyShowSelectedInTable) {
                 // dont put highlight on selected mutations if those are all we're showing
@@ -98,7 +98,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
             if (this.mouseOverMutation) {
                 highlightedMutations.push(this.mouseOverMutation);
             }
-            return _.some(highlightedMutations, m=>mutationMatch(d,m));
+            return _.some(highlightedMutations, mutation=>mutationMatch(mergedMutation, mutation));
         }
     }
 }
