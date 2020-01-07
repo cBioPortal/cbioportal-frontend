@@ -91,7 +91,6 @@ import {computeGenePanelInformation, CoverageInformation} from "../../resultsVie
 import {getVariantAlleleFrequency} from "../../../shared/lib/MutationUtils";
 import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
-import getBrowserWindow from 'public-lib/lib/getBrowserWindow';
 import {checkNonProfiledGenesExist} from "../PatientViewPageUtils";
 
 

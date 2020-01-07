@@ -15,7 +15,7 @@ import PatientViewMutationsDataStore from "./PatientViewMutationsDataStore";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import ReactSelect from "react-select";
 import MutationOncoprint from "./oncoprint/MutationOncoprint";
-import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
+import {DownloadControls} from "cbioportal-frontend-commons";
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import PatientViewMutationTable from "./PatientViewMutationTable";
 import {GeneFilterOption} from "./GeneFilterMenu";
