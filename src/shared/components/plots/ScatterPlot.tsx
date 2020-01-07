@@ -8,12 +8,12 @@ import Timer = NodeJS.Timer;
 import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel, VictoryLine} from "victory";
 import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
-import ifNotDefined from "ifNotDefined.ts";
 import {tickFormatNumeral} from "./TickUtils";
 import {computeCorrelationPValue, makeScatterPlotSizeFunction, separateScatterDataByAppearance, dataPointIsLimited as dataPointIsLimited} from "./PlotUtils";
 import {toConditionalPrecision} from "../../lib/NumberUtils";
 import {getRegressionComputations} from "./ScatterPlotUtils";
 import { IAxisLogScaleParams, IPlotSampleData } from 'pages/resultsView/plots/PlotsTabUtils';
+import ifNotDefined from "../../lib/ifNotDefined";
 
 export interface IBaseScatterPlotData {
     x:number;
