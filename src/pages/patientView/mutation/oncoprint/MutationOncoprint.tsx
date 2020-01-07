@@ -30,6 +30,7 @@ import styles from "./styles.module.scss";
 import PatientViewMutationsDataStore from "../PatientViewMutationsDataStore";
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 import ReactDOM from "react-dom";
+import Timeout = NodeJS.Timeout;
 
 export interface IMutationOncoprintProps {
     store:PatientViewPageStore;
@@ -60,24 +61,21 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     @observable private mode:MutationOncoprintMode = MutationOncoprintMode.SAMPLE_TRACKS;
     @observable minZoom = 0;
 
-    private minZoomUpdater:IReactionDisposer;
+    private minZoomUpdater:Timeout;
 
     constructor(props:IMutationOncoprintProps) {
         super(props);
 
         (window as any).mutationOncoprint = this;
-        this.minZoomUpdater = reaction(
-            ()=>this.heatmapTracks.result, // react to changes in data, which are what would affect the min zoom
-            ()=>setTimeout(()=>{
-                if (this.oncoprint) {
-                    this.minZoom = this.oncoprint.model.getMinHorzZoom();
-                }
-            })
-        );
+        this.minZoomUpdater = setInterval(()=>{
+            if (this.oncoprint) {
+                this.minZoom = this.oncoprint.model.getMinHorzZoom();
+            }
+        }, 500);
     }
 
     componentWillUnmount() {
-        this.minZoomUpdater();
+        clearInterval(this.minZoomUpdater);
     }
 
     @autobind
