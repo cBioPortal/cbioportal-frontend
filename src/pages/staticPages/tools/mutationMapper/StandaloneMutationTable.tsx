@@ -24,6 +24,7 @@ export default class StandaloneMutationTable extends MutationTable<IStandaloneMu
             MutationTableColumnType.SAMPLE_ID,
             MutationTableColumnType.CANCER_TYPE,
             MutationTableColumnType.ANNOTATION,
+            MutationTableColumnType.HGVSG,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.REF_READS_N,
             MutationTableColumnType.VAR_READS_N,
@@ -66,6 +67,7 @@ export default class StandaloneMutationTable extends MutationTable<IStandaloneMu
         this._columns[MutationTableColumnType.CANCER_TYPE].order = 15;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 20;
         this._columns[MutationTableColumnType.ANNOTATION].order = 30;
+        this._columns[MutationTableColumnType.HGVSG].order = 35;
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
         //this._columns[MutationTableColumnType.COPY_NUM].order = 50;

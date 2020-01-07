@@ -7,6 +7,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     dat_method: 'none',
     disabled_tabs: '',
     genomenexus_url: 'https://v1.genomenexus.org',
+    genomenexus_website_url: 'https://www.genomenexus.org',
     g2s_url: 'https://g2s.genomenexus.org',
     mycancergenome_show: false,
 
