@@ -557,7 +557,7 @@ export type Citations = {
 };
 
 /**
- * OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.
+ * These endpoints are designed for premium users. Please contact OncoKB team(contact@oncokb.org) if you want to be upgraded.
  * @class OncoKbAPI
  * @param {(string)} [domainOrOptions] - The project domain.
  */
@@ -610,7 +610,7 @@ export default class OncoKbAPI {
         });
     }
 
-    annotateCopyNumberAlterationsGetUsingGETURL(parameters: {
+    annotateCopyNumberAlterationsGetUsingGET_1URL(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS",
@@ -648,13 +648,13 @@ export default class OncoKbAPI {
     /**
      * Annotate copy number alteration.
      * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsGetUsingGET
+     * @name OncoKbAPI#annotateCopyNumberAlterationsGetUsingGET_1
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
      * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
      * @param {string} copyNameAlterationType - Copy number alteration type
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      */
-    annotateCopyNumberAlterationsGetUsingGETWithHttpInfo(parameters: {
+    annotateCopyNumberAlterationsGetUsingGET_1WithHttpInfo(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS",
@@ -710,13 +710,13 @@ export default class OncoKbAPI {
     /**
      * Annotate copy number alteration.
      * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsGetUsingGET
+     * @name OncoKbAPI#annotateCopyNumberAlterationsGetUsingGET_1
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
      * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
      * @param {string} copyNameAlterationType - Copy number alteration type
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      */
-    annotateCopyNumberAlterationsGetUsingGET(parameters: {
+    annotateCopyNumberAlterationsGetUsingGET_1(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS",
@@ -724,11 +724,11 @@ export default class OncoKbAPI {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
-        return this.annotateCopyNumberAlterationsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.annotateCopyNumberAlterationsGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    annotateCopyNumberAlterationsPostUsingPOSTURL(parameters: {
+    annotateCopyNumberAlterationsPostUsingPOST_1URL(parameters: {
         'body': Array < AnnotateCopyNumberAlterationQuery > ,
         $queryParameters ? : any
     }): string {
@@ -748,10 +748,10 @@ export default class OncoKbAPI {
     /**
      * Annotate copy number alterations.
      * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsPostUsingPOST
+     * @name OncoKbAPI#annotateCopyNumberAlterationsPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateCopyNumberAlterationsPostUsingPOSTWithHttpInfo(parameters: {
+    annotateCopyNumberAlterationsPostUsingPOST_1WithHttpInfo(parameters: {
         'body': Array < AnnotateCopyNumberAlterationQuery > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -792,20 +792,20 @@ export default class OncoKbAPI {
     /**
      * Annotate copy number alterations.
      * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsPostUsingPOST
+     * @name OncoKbAPI#annotateCopyNumberAlterationsPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateCopyNumberAlterationsPostUsingPOST(parameters: {
+    annotateCopyNumberAlterationsPostUsingPOST_1(parameters: {
             'body': Array < AnnotateCopyNumberAlterationQuery > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            return this.annotateCopyNumberAlterationsPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.annotateCopyNumberAlterationsPostUsingPOST_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    annotateMutationsByGenomicChangeGetUsingGETURL(parameters: {
+    annotateMutationsByGenomicChangeGetUsingGET_1URL(parameters: {
         'genomicLocation': string,
         'tumorType' ? : string,
         $queryParameters ? : any
@@ -833,11 +833,11 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangeGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByGenomicChangeGetUsingGET_1
      * @param {string} genomicLocation - Genomic location. Example: 7,140453136,140453136,A,T
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      */
-    annotateMutationsByGenomicChangeGetUsingGETWithHttpInfo(parameters: {
+    annotateMutationsByGenomicChangeGetUsingGET_1WithHttpInfo(parameters: {
         'genomicLocation': string,
         'tumorType' ? : string,
         $queryParameters ? : any,
@@ -883,21 +883,21 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangeGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByGenomicChangeGetUsingGET_1
      * @param {string} genomicLocation - Genomic location. Example: 7,140453136,140453136,A,T
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      */
-    annotateMutationsByGenomicChangeGetUsingGET(parameters: {
+    annotateMutationsByGenomicChangeGetUsingGET_1(parameters: {
         'genomicLocation': string,
         'tumorType' ? : string,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < IndicatorQueryResp > {
-        return this.annotateMutationsByGenomicChangeGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.annotateMutationsByGenomicChangeGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    annotateMutationsByGenomicChangePostUsingPOSTURL(parameters: {
+    annotateMutationsByGenomicChangePostUsingPOST_1URL(parameters: {
         'body': Array < AnnotateMutationByGenomicChangeQuery > ,
         $queryParameters ? : any
     }): string {
@@ -917,10 +917,10 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangePostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByGenomicChangePostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByGenomicChangePostUsingPOSTWithHttpInfo(parameters: {
+    annotateMutationsByGenomicChangePostUsingPOST_1WithHttpInfo(parameters: {
         'body': Array < AnnotateMutationByGenomicChangeQuery > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -961,20 +961,20 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangePostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByGenomicChangePostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByGenomicChangePostUsingPOST(parameters: {
+    annotateMutationsByGenomicChangePostUsingPOST_1(parameters: {
             'body': Array < AnnotateMutationByGenomicChangeQuery > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            return this.annotateMutationsByGenomicChangePostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.annotateMutationsByGenomicChangePostUsingPOST_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    annotateMutationsByHGVSgGetUsingGETURL(parameters: {
+    annotateMutationsByHGVSgGetUsingGET_1URL(parameters: {
         'hgvsg': string,
         'tumorType' ? : string,
         $queryParameters ? : any
@@ -1002,11 +1002,11 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by HGVSg.
      * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByHGVSgGetUsingGET_1
      * @param {string} hgvsg - HGVS genomic format. Example: 7:g.140453136A>T
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      */
-    annotateMutationsByHGVSgGetUsingGETWithHttpInfo(parameters: {
+    annotateMutationsByHGVSgGetUsingGET_1WithHttpInfo(parameters: {
         'hgvsg': string,
         'tumorType' ? : string,
         $queryParameters ? : any,
@@ -1052,21 +1052,21 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by HGVSg.
      * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByHGVSgGetUsingGET_1
      * @param {string} hgvsg - HGVS genomic format. Example: 7:g.140453136A>T
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      */
-    annotateMutationsByHGVSgGetUsingGET(parameters: {
+    annotateMutationsByHGVSgGetUsingGET_1(parameters: {
         'hgvsg': string,
         'tumorType' ? : string,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < IndicatorQueryResp > {
-        return this.annotateMutationsByHGVSgGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.annotateMutationsByHGVSgGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    annotateMutationsByHGVSgPostUsingPOSTURL(parameters: {
+    annotateMutationsByHGVSgPostUsingPOST_1URL(parameters: {
         'body': Array < AnnotateMutationByHGVSgQuery > ,
         $queryParameters ? : any
     }): string {
@@ -1086,10 +1086,10 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgPostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByHGVSgPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByHGVSgPostUsingPOSTWithHttpInfo(parameters: {
+    annotateMutationsByHGVSgPostUsingPOST_1WithHttpInfo(parameters: {
         'body': Array < AnnotateMutationByHGVSgQuery > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1130,20 +1130,20 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgPostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByHGVSgPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByHGVSgPostUsingPOST(parameters: {
+    annotateMutationsByHGVSgPostUsingPOST_1(parameters: {
             'body': Array < AnnotateMutationByHGVSgQuery > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            return this.annotateMutationsByHGVSgPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.annotateMutationsByHGVSgPostUsingPOST_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    annotateMutationsByProteinChangeGetUsingGETURL(parameters: {
+    annotateMutationsByProteinChangeGetUsingGET_1URL(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'alteration' ? : string,
@@ -1196,7 +1196,7 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by protein change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangeGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByProteinChangeGetUsingGET_1
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
      * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
      * @param {string} alteration - Protein Change. Example: V600E
@@ -1205,7 +1205,7 @@ export default class OncoKbAPI {
      * @param {integer} proteinEnd - Protein End. Example: 600
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      */
-    annotateMutationsByProteinChangeGetUsingGETWithHttpInfo(parameters: {
+    annotateMutationsByProteinChangeGetUsingGET_1WithHttpInfo(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'alteration' ? : string,
@@ -1271,7 +1271,7 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by protein change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangeGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByProteinChangeGetUsingGET_1
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
      * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
      * @param {string} alteration - Protein Change. Example: V600E
@@ -1280,7 +1280,7 @@ export default class OncoKbAPI {
      * @param {integer} proteinEnd - Protein End. Example: 600
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      */
-    annotateMutationsByProteinChangeGetUsingGET(parameters: {
+    annotateMutationsByProteinChangeGetUsingGET_1(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'alteration' ? : string,
@@ -1291,11 +1291,11 @@ export default class OncoKbAPI {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
-        return this.annotateMutationsByProteinChangeGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.annotateMutationsByProteinChangeGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    annotateMutationsByProteinChangePostUsingPOSTURL(parameters: {
+    annotateMutationsByProteinChangePostUsingPOST_1URL(parameters: {
         'body': Array < AnnotateMutationByProteinChangeQuery > ,
         $queryParameters ? : any
     }): string {
@@ -1315,10 +1315,10 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by protein change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangePostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByProteinChangePostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByProteinChangePostUsingPOSTWithHttpInfo(parameters: {
+    annotateMutationsByProteinChangePostUsingPOST_1WithHttpInfo(parameters: {
         'body': Array < AnnotateMutationByProteinChangeQuery > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1359,20 +1359,20 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by protein change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangePostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByProteinChangePostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByProteinChangePostUsingPOST(parameters: {
+    annotateMutationsByProteinChangePostUsingPOST_1(parameters: {
             'body': Array < AnnotateMutationByProteinChangeQuery > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            return this.annotateMutationsByProteinChangePostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.annotateMutationsByProteinChangePostUsingPOST_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    annotateStructuralVariantsGetUsingGETURL(parameters: {
+    annotateStructuralVariantsGetUsingGET_1URL(parameters: {
         'hugoSymbolA' ? : string,
         'entrezGeneIdA' ? : number,
         'hugoSymbolB' ? : string,
@@ -1425,7 +1425,7 @@ export default class OncoKbAPI {
     /**
      * Annotate structural variant.
      * @method
-     * @name OncoKbAPI#annotateStructuralVariantsGetUsingGET
+     * @name OncoKbAPI#annotateStructuralVariantsGetUsingGET_1
      * @param {string} hugoSymbolA - The gene symbol A used in Human Genome Organisation. Example: ABL1
      * @param {integer} entrezGeneIdA - The entrez gene ID A. (Higher priority than hugoSymbolA) Example: 25
      * @param {string} hugoSymbolB - The gene symbol B used in Human Genome Organisation.Example: BCR 
@@ -1434,7 +1434,7 @@ export default class OncoKbAPI {
      * @param {boolean} isFunctionalFusion - Whether is functional fusion
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      */
-    annotateStructuralVariantsGetUsingGETWithHttpInfo(parameters: {
+    annotateStructuralVariantsGetUsingGET_1WithHttpInfo(parameters: {
         'hugoSymbolA' ? : string,
         'entrezGeneIdA' ? : number,
         'hugoSymbolB' ? : string,
@@ -1510,7 +1510,7 @@ export default class OncoKbAPI {
     /**
      * Annotate structural variant.
      * @method
-     * @name OncoKbAPI#annotateStructuralVariantsGetUsingGET
+     * @name OncoKbAPI#annotateStructuralVariantsGetUsingGET_1
      * @param {string} hugoSymbolA - The gene symbol A used in Human Genome Organisation. Example: ABL1
      * @param {integer} entrezGeneIdA - The entrez gene ID A. (Higher priority than hugoSymbolA) Example: 25
      * @param {string} hugoSymbolB - The gene symbol B used in Human Genome Organisation.Example: BCR 
@@ -1519,7 +1519,7 @@ export default class OncoKbAPI {
      * @param {boolean} isFunctionalFusion - Whether is functional fusion
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      */
-    annotateStructuralVariantsGetUsingGET(parameters: {
+    annotateStructuralVariantsGetUsingGET_1(parameters: {
         'hugoSymbolA' ? : string,
         'entrezGeneIdA' ? : number,
         'hugoSymbolB' ? : string,
@@ -1530,11 +1530,11 @@ export default class OncoKbAPI {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
-        return this.annotateStructuralVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.annotateStructuralVariantsGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    annotateStructuralVariantsPostUsingPOSTURL(parameters: {
+    annotateStructuralVariantsPostUsingPOST_1URL(parameters: {
         'body': Array < AnnotateStructuralVariantQuery > ,
         $queryParameters ? : any
     }): string {
@@ -1554,10 +1554,10 @@ export default class OncoKbAPI {
     /**
      * Annotate structural variants.
      * @method
-     * @name OncoKbAPI#annotateStructuralVariantsPostUsingPOST
+     * @name OncoKbAPI#annotateStructuralVariantsPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateStructuralVariantsPostUsingPOSTWithHttpInfo(parameters: {
+    annotateStructuralVariantsPostUsingPOST_1WithHttpInfo(parameters: {
         'body': Array < AnnotateStructuralVariantQuery > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1598,16 +1598,16 @@ export default class OncoKbAPI {
     /**
      * Annotate structural variants.
      * @method
-     * @name OncoKbAPI#annotateStructuralVariantsPostUsingPOST
+     * @name OncoKbAPI#annotateStructuralVariantsPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateStructuralVariantsPostUsingPOST(parameters: {
+    annotateStructuralVariantsPostUsingPOST_1(parameters: {
             'body': Array < AnnotateStructuralVariantQuery > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            return this.annotateStructuralVariantsPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.annotateStructuralVariantsPostUsingPOST_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -2935,7 +2935,7 @@ export default class OncoKbAPI {
             return response.body;
         });
     };
-    infoGetUsingGETURL(parameters: {
+    infoGetUsingGET_1URL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2954,9 +2954,9 @@ export default class OncoKbAPI {
     /**
      * infoGet
      * @method
-     * @name OncoKbAPI#infoGetUsingGET
+     * @name OncoKbAPI#infoGetUsingGET_1
      */
-    infoGetUsingGETWithHttpInfo(parameters: {
+    infoGetUsingGET_1WithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -2987,17 +2987,17 @@ export default class OncoKbAPI {
     /**
      * infoGet
      * @method
-     * @name OncoKbAPI#infoGetUsingGET
+     * @name OncoKbAPI#infoGetUsingGET_1
      */
-    infoGetUsingGET(parameters: {
+    infoGetUsingGET_1(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < OncoKBInfo > {
-        return this.infoGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.infoGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    levelsGetUsingGETURL(parameters: {
+    levelsGetUsingGET_1URL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3016,9 +3016,9 @@ export default class OncoKbAPI {
     /**
      * Get all levels.
      * @method
-     * @name OncoKbAPI#levelsGetUsingGET
+     * @name OncoKbAPI#levelsGetUsingGET_1
      */
-    levelsGetUsingGETWithHttpInfo(parameters: {
+    levelsGetUsingGET_1WithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3049,17 +3049,17 @@ export default class OncoKbAPI {
     /**
      * Get all levels.
      * @method
-     * @name OncoKbAPI#levelsGetUsingGET
+     * @name OncoKbAPI#levelsGetUsingGET_1
      */
-    levelsGetUsingGET(parameters: {
+    levelsGetUsingGET_1(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < {} > {
-        return this.levelsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.levelsGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    levelsResistanceGetUsingGETURL(parameters: {
+    levelsResistanceGetUsingGET_1URL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3078,9 +3078,9 @@ export default class OncoKbAPI {
     /**
      * Get all resistance levels.
      * @method
-     * @name OncoKbAPI#levelsResistanceGetUsingGET
+     * @name OncoKbAPI#levelsResistanceGetUsingGET_1
      */
-    levelsResistanceGetUsingGETWithHttpInfo(parameters: {
+    levelsResistanceGetUsingGET_1WithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3111,17 +3111,17 @@ export default class OncoKbAPI {
     /**
      * Get all resistance levels.
      * @method
-     * @name OncoKbAPI#levelsResistanceGetUsingGET
+     * @name OncoKbAPI#levelsResistanceGetUsingGET_1
      */
-    levelsResistanceGetUsingGET(parameters: {
+    levelsResistanceGetUsingGET_1(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < {} > {
-        return this.levelsResistanceGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.levelsResistanceGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    levelsSensitiveGetUsingGETURL(parameters: {
+    levelsSensitiveGetUsingGET_1URL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3140,9 +3140,9 @@ export default class OncoKbAPI {
     /**
      * Get all sensitive levels.
      * @method
-     * @name OncoKbAPI#levelsSensitiveGetUsingGET
+     * @name OncoKbAPI#levelsSensitiveGetUsingGET_1
      */
-    levelsSensitiveGetUsingGETWithHttpInfo(parameters: {
+    levelsSensitiveGetUsingGET_1WithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3173,13 +3173,13 @@ export default class OncoKbAPI {
     /**
      * Get all sensitive levels.
      * @method
-     * @name OncoKbAPI#levelsSensitiveGetUsingGET
+     * @name OncoKbAPI#levelsSensitiveGetUsingGET_1
      */
-    levelsSensitiveGetUsingGET(parameters: {
+    levelsSensitiveGetUsingGET_1(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < {} > {
-        return this.levelsSensitiveGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.levelsSensitiveGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
@@ -4002,7 +4002,7 @@ export default class OncoKbAPI {
             return response.body;
         });
     };
-    utilsCancerGeneListGetUsingGETURL(parameters: {
+    utilsCancerGeneListGetUsingGET_1URL(parameters: {
         'version' ? : string,
         $queryParameters ? : any
     }): string {
@@ -4025,10 +4025,10 @@ export default class OncoKbAPI {
     /**
      * Get cancer gene list
      * @method
-     * @name OncoKbAPI#utilsCancerGeneListGetUsingGET
+     * @name OncoKbAPI#utilsCancerGeneListGetUsingGET_1
      * @param {string} version - version
      */
-    utilsCancerGeneListGetUsingGETWithHttpInfo(parameters: {
+    utilsCancerGeneListGetUsingGET_1WithHttpInfo(parameters: {
         'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
@@ -4064,20 +4064,20 @@ export default class OncoKbAPI {
     /**
      * Get cancer gene list
      * @method
-     * @name OncoKbAPI#utilsCancerGeneListGetUsingGET
+     * @name OncoKbAPI#utilsCancerGeneListGetUsingGET_1
      * @param {string} version - version
      */
-    utilsCancerGeneListGetUsingGET(parameters: {
+    utilsCancerGeneListGetUsingGET_1(parameters: {
             'version' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < CancerGene >
         > {
-            return this.utilsCancerGeneListGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.utilsCancerGeneListGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    utilsCancerGeneListTxtGetUsingGETURL(parameters: {
+    utilsCancerGeneListTxtGetUsingGET_1URL(parameters: {
         'version' ? : string,
         $queryParameters ? : any
     }): string {
@@ -4100,10 +4100,10 @@ export default class OncoKbAPI {
     /**
      * Get cancer gene list in text file.
      * @method
-     * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET
+     * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET_1
      * @param {string} version - version
      */
-    utilsCancerGeneListTxtGetUsingGETWithHttpInfo(parameters: {
+    utilsCancerGeneListTxtGetUsingGET_1WithHttpInfo(parameters: {
         'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
@@ -4139,15 +4139,15 @@ export default class OncoKbAPI {
     /**
      * Get cancer gene list in text file.
      * @method
-     * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET
+     * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET_1
      * @param {string} version - version
      */
-    utilsCancerGeneListTxtGetUsingGET(parameters: {
+    utilsCancerGeneListTxtGetUsingGET_1(parameters: {
         'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < string > {
-        return this.utilsCancerGeneListTxtGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.utilsCancerGeneListTxtGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
