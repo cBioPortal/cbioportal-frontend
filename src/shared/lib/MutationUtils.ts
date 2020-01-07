@@ -237,7 +237,19 @@ export function extractGenomicLocation(mutation: Mutation)
 // TODO remove when done refactoring mutation mapper
 export function genomicLocationString(genomicLocation: GenomicLocation)
 {
-    return `${genomicLocation.chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele},${genomicLocation.variantAllele}`;
+    // mapping chromosome X with 23
+    let chromosome = genomicLocation.chromosome;
+    switch(genomicLocation.chromosome.toUpperCase()) {
+        case "X":
+            chromosome = "23";
+            break;
+        case "Y":
+            chromosome = "24";
+            break;
+        default:
+    }
+    
+    return `${chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele},${genomicLocation.variantAllele}`;
 }
 
 // TODO remove when done refactoring mutation mapper
@@ -268,4 +280,51 @@ export function getVariantAlleleFrequency(m:Mutation) {
     } else {
         return null;
     }
+}
+
+export function generateHgvsgByMutation(mutation: Partial<Mutation>): string | null {
+    if (isValidGenomicLocation(mutation)) {
+        // ins
+        if (mutation.referenceAllele === "-") {
+            return `${mutation.chr}:g.${mutation.startPosition}_${mutation.endPosition}ins${mutation.variantAllele}`;
+        }
+        // del (in new format that no ref after del, may differ with genome nexus hgvsg response)
+        else if (mutation.variantAllele === "-") {
+            if (mutation.startPosition === mutation.endPosition) {
+                return `${mutation.chr}:g.${mutation.startPosition}del`;
+            }
+            return `${mutation.chr}:g.${mutation.startPosition}_${mutation.endPosition}del`;
+        }
+        // substitution
+        else if (mutation.referenceAllele!.length === 1 && mutation.variantAllele!.length === 1) {
+            return `${mutation.chr}:g.${mutation.startPosition}${mutation.referenceAllele}>${mutation.variantAllele}`;
+        }
+        // delins (in new format that no ref after del, may differ with genome nexus hgvsg response)
+        else if (mutation.referenceAllele!.length === 1 && mutation.variantAllele!.length > 1) {
+            return `${mutation.chr}:g.${mutation.startPosition}delins${mutation.variantAllele}`;
+        }
+        // delins (in new format that no ref after del, may differ with genome nexus hgvsg response)
+        // for cases mutation.referenceAllele.length > 1 && mutation.variantAllele.length >= 1
+        else {
+            return `${mutation.chr}:g.${mutation.startPosition}_${mutation.endPosition}delins${mutation.variantAllele}`;
+        }
+    }
+
+    return null;
+}
+
+export function isValidGenomicLocation(mutation: Partial<Mutation>): boolean {
+    if (mutation.chr
+        && mutation.startPosition && mutation.startPosition !== -1
+        && mutation.endPosition && mutation.endPosition !== -1
+        && mutation.referenceAllele && mutation.referenceAllele !== "NA"
+        && mutation.variantAllele && mutation.variantAllele !== "NA") {
+            if (mutation.referenceAllele === "-" && mutation.variantAllele === "-") {
+                return false;
+            }
+            return true;
+    }
+    
+    return false;
+    
 }
