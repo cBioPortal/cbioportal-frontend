@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
 import { observer } from 'mobx-react';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import { observable, computed } from 'mobx';
 import autobind from 'autobind-decorator';
 import { fetchClinicalDataForPatient, fetchClinicalDataInStudy } from 'shared/lib/StoreUtils';
@@ -70,6 +69,12 @@ export default class PatientMatch extends React.Component<PatientMatchProps, {}>
         }
         return undefined;
     };
+
+    @computed
+    private get patientsAsString(): string {
+        return this.patients.map((p) => "msk_impact_2017:" + p.id).join(",");
+    }
+
     private async getAllPatientDetails() {
         console.log("getting clinical details for all patients");
         
@@ -104,6 +109,7 @@ export default class PatientMatch extends React.Component<PatientMatchProps, {}>
             return [];
         }
         var patientDetails = await this.getAllPatientDetails();
+        await this.populatePatientDetails();
         console.log("Details: ");
         console.log(patientDetails);
         var patients = Array.from(this.props.store.mutations.result!
@@ -137,10 +143,10 @@ export default class PatientMatch extends React.Component<PatientMatchProps, {}>
                     distance: hammingDistance(masterMatch, match.raw), 
                 }
             })
+            .filter((p) => p.id !== this.patientID)
             .sort((first, second) => {
                 return first.distance - second.distance;
-            })
-            .slice(1);
+            });
         console.log("Set patients");
         
     }
@@ -213,7 +219,14 @@ export default class PatientMatch extends React.Component<PatientMatchProps, {}>
                 </div>
             </div>
             <div>
-                <button onClick={this.viewStudy}>View Top 100 Matches in Study View</button>
+                {this.patients != undefined && this.patients.length > 0 &&  
+                <div><button onClick={this.viewStudy}>View Top 100 Matches in Study View</button></div>
+                }
+                {this.patients != undefined && this.patients.length > 0 && 
+                    <div><a href={`http://localhost:3000/patient?studyId=msk_impact_2017&caseId=${this.patients[0].id}#navCaseIds=${this.patientsAsString}`}>
+                        View Cohort in Patient Viewer
+                    </a></div>
+                }
             </div>
             <div>
                 <b>Similar Patients</b>
