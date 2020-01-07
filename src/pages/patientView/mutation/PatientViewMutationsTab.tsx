@@ -267,8 +267,14 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
             </div>
         )
     });
-    render() {
-        return (
+
+    readonly tabUI = MakeMobxView({
+        await:()=>[
+            this.table,
+            this.vafLineChart
+        ],
+        renderPending:()=><LoadingIndicator isLoading={true} size="big" center={true}/>,
+        render:()=>(
             <div data-test="GenomicEvolutionTab">
                 <MSKTabs
                     activeTabId={this.plotTab}
@@ -293,6 +299,10 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     {this.table.component}
                 </div>
             </div>
-        );
+        )
+    });
+
+    render() {
+        return this.tabUI.component;
     }
 }
