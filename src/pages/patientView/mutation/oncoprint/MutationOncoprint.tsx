@@ -1,29 +1,29 @@
 import * as React from "react";
 import {observer} from "mobx-react";
 import Oncoprint, {IOncoprintProps} from "../../../../shared/components/oncoprint/Oncoprint";
-import {remoteData} from "../../../../public-lib";
 import {MakeMobxView} from "../../../../shared/components/MobxView";
 import {PatientViewPageStore} from "../../clinicalInformation/PatientViewPageStore";
 import $ from "jquery";
 import {
-    getDownloadData, getMutationLabel,
-    IMutationOncoprintTrackDatum, IMutationOncoprintTrackSpec,
-    makeMutationHeatmapData, MUTATION_ONCOPRINT_NA_SHAPES
+    getDownloadData,
+    getMutationLabel,
+    IMutationOncoprintTrackDatum,
+    IMutationOncoprintTrackSpec,
+    makeMutationHeatmapData,
+    MUTATION_ONCOPRINT_NA_SHAPES
 } from "./MutationOncoprintUtils";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../../../shared/components/ErrorMessage";
 import {computed, IReactionDisposer, observable, reaction} from "mobx";
-import ReactSelect from "react-select";
-import OncoprintJS, {InitParams, ColumnLabel, TrackId, ColumnId} from "oncoprintjs";
+import OncoprintJS, {ColumnId, ColumnLabel, InitParams, TrackId} from "oncoprintjs";
 import autobind from "autobind-decorator";
-import DownloadControls, {DownloadControlsButton} from "../../../../public-lib/components/downloadControls/DownloadControls";
+import {DefaultTooltip, DownloadControls, remoteData} from "cbioportal-frontend-commons";
 import _ from "lodash";
 import SampleManager from "../../SampleManager";
 import WindowStore from "../../../../shared/components/window/WindowStore";
 import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../../shared/lib/StoreUtils";
 import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";
-import {MutationStatus, mutationTooltip} from "../PatientViewMutationsTabUtils";
-import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import {mutationTooltip} from "../PatientViewMutationsTabUtils";
 import Slider from "react-rangeslider";
 import "react-rangeslider/lib/index.css";
 import styles from "./styles.module.scss";
