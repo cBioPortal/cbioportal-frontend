@@ -8,7 +8,7 @@ import Timer = NodeJS.Timer;
 import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel, VictoryLine} from "victory";
 import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
-import ifndef from "shared/lib/ifndef";
+import ifNotDefined from "ifNotDefined.ts";
 import {tickFormatNumeral} from "./TickUtils";
 import {computeCorrelationPValue, makeScatterPlotSizeFunction, separateScatterDataByAppearance, dataPointIsLimited as dataPointIsLimited} from "./PlotUtils";
 import {toConditionalPrecision} from "../../lib/NumberUtils";
@@ -388,12 +388,12 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     @computed get data() {
         return separateScatterDataByAppearance(
             this.props.data,
-            ifndef(this.props.fill, "0x000000"),
-            ifndef(this.props.stroke, "0x000000"),
-            ifndef(this.props.strokeWidth, 0),
-            ifndef(this.props.strokeOpacity, 1),
-            ifndef(this.props.fillOpacity, 1),
-            ifndef(this.props.symbol, "circle"),
+            ifNotDefined(this.props.fill, "0x000000"),
+            ifNotDefined(this.props.stroke, "0x000000"),
+            ifNotDefined(this.props.strokeWidth, 0),
+            ifNotDefined(this.props.strokeOpacity, 1),
+            ifNotDefined(this.props.fillOpacity, 1),
+            ifNotDefined(this.props.symbol, "circle"),
             this.props.zIndexSortBy
         );
     }

@@ -25,7 +25,7 @@ import {
 } from "./TooltipUtils";
 import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {AlterationTypeConstants} from "pages/resultsView/ResultsViewPageStore";
-import ifndef from "../../lib/ifndef";
+import ifNotDefined from "../../lib/ifNotDefined";
 
 export function transition(
     nextProps:IOncoprintProps,
@@ -1002,7 +1002,7 @@ export function transitionHeatmapTrack(
             rule_set_params: getHeatmapTrackRuleSetParams(nextSpec),
             data: nextSpec.data,
             data_id_key: "uid",
-            has_column_spacing: ifndef(nextSpec.hasColumnSpacing, false),
+            has_column_spacing: ifNotDefined(nextSpec.hasColumnSpacing, false),
             track_padding: 0,
             label: nextSpec.label,
             track_label_color: nextSpec.labelColor,
@@ -1017,11 +1017,11 @@ export function transitionHeatmapTrack(
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
                 if (nextSpec.onRemove) nextSpec.onRemove();
             },
-            sort_direction_changeable: ifndef(nextSpec.sortDirectionChangeable, true),
+            sort_direction_changeable: ifNotDefined(nextSpec.sortDirectionChangeable, true),
             sortCmpFn: heatmapTrackSortComparator,
-            init_sort_direction: ifndef(nextSpec.initSortDirection, (0 as 0)),
+            init_sort_direction: ifNotDefined(nextSpec.initSortDirection, (0 as 0)),
             link_url: nextSpec.trackLinkUrl,
-            description: ifndef(nextSpec.description, `${nextSpec.label} data from ${nextSpec.molecularProfileId}`),
+            description: ifNotDefined(nextSpec.description, `${nextSpec.label} data from ${nextSpec.molecularProfileId}`),
             tooltipFn: nextSpec.tooltip || makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true),
             track_info: nextSpec.info || "",
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
