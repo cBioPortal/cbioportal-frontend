@@ -47,6 +47,7 @@ import {IColumnVisibilityControlsProps} from "../columnVisibilityControls/Column
 import MobxPromise from "mobxpromise";
 import { CancerGene, VariantAnnotation, Query } from "cbioportal-frontend-commons";
 import HgvscColumnFormatter from "./column/HgvscColumnFormatter";
+import HgvsgColumnFormatter from "./column/HgvsgColumnFormatter";
 import GnomadColumnFormatter from "./column/GnomadColumnFormatter";
 import ClinVarColumnFormatter from "./column/ClinVarColumnFormatter";
 import autobind from "autobind-decorator";
@@ -120,6 +121,7 @@ export enum MutationTableColumnType {
     NORMAL_ALLELE_FREQ,
     FUNCTIONAL_IMPACT,
     ANNOTATION,
+    HGVSG,
     COSMIC,
     COPY_NUM,
     MRNA_EXPR,
@@ -544,6 +546,15 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                     this.props.civicGenes,
                     this.props.civicVariants);
             }
+        };
+
+        this._columns[MutationTableColumnType.HGVSG] = {
+            name: "HGVSg",
+            render: (d:Mutation[]) => HgvsgColumnFormatter.renderFunction(d),
+            download: (d:Mutation[]) => HgvsgColumnFormatter.download(d),
+            sortBy: (d:Mutation[]) => HgvsgColumnFormatter.getSortValue(d),
+            visible: false,
+            align: "left"
         };
 
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
