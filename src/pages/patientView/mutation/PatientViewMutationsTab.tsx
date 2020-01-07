@@ -283,16 +283,18 @@ export default class PatientViewMutationsTab extends React.Component<IPatientVie
                     unmountOnHide={false}
                 >
                     <MSKTab id={PlotTab.LINE_CHART} linkText="Line Chart">
-                        <div style={{marginBottom:25}}>
+                        <div style={{paddingBottom:20}}>
                             {this.vafLineChart.component}
                         </div>
                     </MSKTab>
                     <MSKTab id={PlotTab.HEATMAP} linkText="Heatmap">
-                        <MutationOncoprint
-                            store={this.props.store}
-                            dataStore={this.dataStore}
-                            sampleManager={this.props.sampleManager}
-                        />
+                        <div style={{paddingBottom:20}}>
+                            <MutationOncoprint
+                                store={this.props.store}
+                                dataStore={this.dataStore}
+                                sampleManager={this.props.sampleManager}
+                            />
+                        </div>
                     </MSKTab>
                 </MSKTabs>
                 <div style={{marginTop:30}}>
