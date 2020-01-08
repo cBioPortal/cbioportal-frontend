@@ -17,6 +17,18 @@ function keyEquals(key1:ComplexKey, key2:ComplexKey) {
     return _.isEqual(key1, key2);
 }
 
+function narrowKey(key:ComplexKey, keyMembers?:string[]) {
+    if (!keyMembers) {
+        return key;
+    } else {
+        const ret:ComplexKey = {};
+        for (const keyMember of keyMembers) {
+            ret[keyMember] = key[keyMember];
+        }
+        return ret;
+    }
+}
+
 export default class ComplexKeyMap<V> {
 
     private map:{[stringKey:string]:Entry<V>[]} = {};
@@ -25,8 +37,10 @@ export default class ComplexKeyMap<V> {
         return _.flatten(_.values(this.map));
     }
 
-    public set(key:ComplexKey, value:V):boolean {
+    public set(key:ComplexKey, value:V, keyMembers?:string[]):boolean {
         // true if an entry was added, false if an entry existed and was updated
+
+        key = narrowKey(key, keyMembers);
         const existingEntry = this.getEntry(key);
         if (existingEntry) {
             existingEntry.value = value;
@@ -37,7 +51,8 @@ export default class ComplexKeyMap<V> {
         }
     }
 
-    public get(key:ComplexKey):V|undefined {
+    public get(key:ComplexKey, keyMembers?:string[]):V|undefined {
+        key = narrowKey(key, keyMembers);
         const entry = this.getEntry(key);
         if (!entry) {
             return undefined;
@@ -46,7 +61,8 @@ export default class ComplexKeyMap<V> {
         }
     }
 
-    public has(key:ComplexKey):boolean {
+    public has(key:ComplexKey, keyMembers?:string[]):boolean {
+        key = narrowKey(key, keyMembers);
         return !!this.getEntry(key);
     }
 
