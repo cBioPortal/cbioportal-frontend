@@ -23,13 +23,20 @@ import ResultsPageSettings from "../settings/ResultsPageSettings";
 import {createQueryStore} from "shared/lib/createQueryStore";
 import _ from "lodash";
 
+interface QuerySummaryProps {
+    routingStore:ExtendedRouterStore;
+    store: ResultsViewPageStore;
+    onToggleQueryFormVisibility:(visible:boolean)=>void;
+    onToggleOQLEditUIVisibility:()=>void;
+}
+
 @observer
-export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore, onToggleQueryFormVisiblity:(visible:boolean)=>void }, {}> {
+export default class QuerySummary extends React.Component<QuerySummaryProps, {}> {
 
     @autobind
     @action
     private toggleQueryFormVisibility() {
-        this.props.onToggleQueryFormVisiblity(this.props.store.queryFormVisible);
+        this.props.onToggleQueryFormVisibility(this.props.store.queryFormVisible);
         // if clicked the query button in the download tab and want to close the query form, clear the selected sample ids
         if (this.props.store.modifyQueryParams && this.props.store.queryFormVisible === true) {
             this.props.store.modifyQueryParams = undefined;
@@ -80,6 +87,12 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
+                    &nbsp;
+                    <DefaultTooltip overlay={'Edit genes or OQL'}>
+                        <a onClick={this.props.onToggleOQLEditUIVisibility}>
+                            <i className={'fa fa-pencil'}></i>
+                        </a>
+                    </DefaultTooltip>
                 </div>
             );
         }
