@@ -30,6 +30,7 @@ export interface IGeneSelectionBoxProps {
     validateInputGeneQuery?: boolean;
     location?: GeneBoxType;
     textBoxPrompt?: string;
+    submitButton?:JSX.Element;
     callback?: (
         oql: {
             query: SingleGeneQuery[];
@@ -264,7 +265,7 @@ export default class OQLTextArea extends React.Component<
     render() {
         return (
             <div className={styles.genesSelection}>
-
+                <div className={styles.topRow}>
                 <textarea
                     ref={this.textAreaRef as any}
                     onFocus={this.onFocus}
@@ -279,7 +280,11 @@ export default class OQLTextArea extends React.Component<
                     data-test="geneSet"
                 />
 
-                <div className={classnames({ [styles.minWidthContainer]: (this.props.location === GeneBoxType.DEFAULT) })}>
+                {
+                    (this.props.submitButton) && this.props.submitButton
+                }
+                </div>
+                <div className={'oqlValidationContainer'}>
                 <GeneSymbolValidator
                     focus={this.props.focus}
                     geneQuery={this.queryToBeValidated}
