@@ -25,6 +25,7 @@ import {
 } from "./TooltipUtils";
 import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {AlterationTypeConstants} from "pages/resultsView/ResultsViewPageStore";
+import ifNotDefined from "../../lib/ifNotDefined";
 
 export function transition(
     nextProps:IOncoprintProps,
@@ -42,9 +43,12 @@ export function transition(
         oncoprint.keepSorted(false);
     }
     trySuppressRendering(nextProps, prevProps, oncoprint);
+    transitionWidth(nextProps, prevProps, oncoprint);
+    transitionColumnLabels(nextProps, prevProps, oncoprint);
     transitionWhitespaceBetweenColumns(nextProps, prevProps, oncoprint);
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
+    transitionShowTrackLabels(nextProps, prevProps, oncoprint);
     transitionShowSublabels(nextProps, prevProps, oncoprint);
     transitionTrackHeaders(nextProps, prevProps, oncoprint);
     transitionTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId, getMolecularProfileMap);
@@ -53,7 +57,8 @@ export function transition(
     transitionHiddenIds(nextProps, prevProps, oncoprint);
     transitionHorzZoomToFit(nextProps, prevProps, oncoprint);
     transitionShowClinicalTrackLegends(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
-    transitionWidth(nextProps, prevProps, oncoprint);
+    transitionHighlightedIds(nextProps, prevProps, oncoprint);
+    transitionHighlightedTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
     tryReleaseRendering(nextProps, prevProps, oncoprint);
     if (notKeepingSorted) {
         oncoprint.keepSorted(true);
@@ -95,6 +100,40 @@ function transitionWidth(
         oncoprint.setWidth(nextProps.width);
     }
 }
+
+export function transitionHighlightedIds(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS
+) {
+    if (nextProps.highlightedIds !== prevProps.highlightedIds) {
+        oncoprint.setHighlightedIds(nextProps.highlightedIds || []);
+    }
+}
+
+export function transitionHighlightedTracks(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS,
+    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId}
+) {
+    if (nextProps.highlightedTracks !== prevProps.highlightedTracks) {
+        const highlightedTrackKeys = nextProps.highlightedTracks || [];
+        const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
+        oncoprint.setHighlightedTracks(highlightedTrackKeys.map(key=>trackSpecKeyToTrackId[key]));
+    }
+}
+
+export function transitionShowTrackLabels(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint: OncoprintJS
+) {
+    if (nextProps.showTrackLabels !== prevProps.showTrackLabels) {
+        oncoprint.setShowTrackLabels(!!nextProps.showTrackLabels);
+    }
+}
+
 
 export function transitionShowSublabels(
     nextProps:IOncoprintProps,
@@ -166,6 +205,16 @@ function tryReleaseRendering(
 ){
     if (!nextProps.suppressRendering && prevProps.suppressRendering) {
         doReleaseRendering(nextProps, oncoprint);
+    }
+}
+
+function transitionColumnLabels(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS
+) {
+    if (!_.isEqual(nextProps.columnLabels, prevProps.columnLabels)) {
+        oncoprint.setColumnLabels(nextProps.columnLabels || {});
     }
 }
 
@@ -549,6 +598,8 @@ function transitionTracks(
                                 undefined);
         }
     }
+    // Oncce tracks have been added and deleted, transition order
+    transitionHeatmapTrackOrder(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
 }
 
 function transitionGeneticTrackOrder(
@@ -568,6 +619,27 @@ function transitionGeneticTrackOrder(
         const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
         oncoprint.setTrackGroupOrder(GENETIC_TRACK_GROUP_INDEX, nextOrder.map(key=>trackSpecKeyToTrackId[key]));
     }
+}
+
+function transitionHeatmapTrackOrder(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS,
+    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId}
+) {
+    const nextTracksMap = _.keyBy(nextProps.heatmapTracks, "key");
+    const prevTracksMap = _.keyBy(prevProps.heatmapTracks || [], "key");
+
+    _.forEach(nextProps.heatmapTracksOrder || {}, (groupOrder:string[], trackGroupIndex:string)=>{
+        const nextOrder = groupOrder.filter(key=>(key in nextTracksMap));
+        const prevOrder = ((prevProps.heatmapTracksOrder || {})[trackGroupIndex as any] || []).filter(key=>(key in prevTracksMap));
+
+        if (!_.isEqual(nextOrder, prevOrder)) {
+            const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
+           // debugger;
+            oncoprint.setTrackGroupOrder(parseInt(trackGroupIndex, 10), nextOrder.map(key=>trackSpecKeyToTrackId[key]));
+        }
+    });
 }
 
 function tryRemoveTrack(
@@ -930,22 +1002,27 @@ export function transitionHeatmapTrack(
             rule_set_params: getHeatmapTrackRuleSetParams(nextSpec),
             data: nextSpec.data,
             data_id_key: "uid",
-            has_column_spacing: false,
+            has_column_spacing: ifNotDefined(nextSpec.hasColumnSpacing, false),
             track_padding: 0,
             label: nextSpec.label,
-            track_label_color: nextSpec.labelColor || undefined,
+            track_label_color: nextSpec.labelColor,
+            track_label_circle_color: nextSpec.labelCircleColor,
+            track_label_font_weight: nextSpec.labelFontWeight,
+            track_label_left_padding: nextSpec.labelLeftPadding,
             target_group: nextSpec.trackGroupIndex,
-            removable: true,
+            removable: !!nextSpec.onRemove,
+            movable: nextSpec.movable,
+            na_legend_label: nextSpec.naLegendLabel,
             removeCallback: ()=>{
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
-                nextSpec.onRemove();
+                if (nextSpec.onRemove) nextSpec.onRemove();
             },
-            sort_direction_changeable: true,
+            sort_direction_changeable: ifNotDefined(nextSpec.sortDirectionChangeable, true),
             sortCmpFn: heatmapTrackSortComparator,
-            init_sort_direction: 0 as 0,
+            init_sort_direction: ifNotDefined(nextSpec.initSortDirection, (0 as 0)),
             link_url: nextSpec.trackLinkUrl,
-            description: `${nextSpec.label} data from ${nextSpec.molecularProfileId}`,
-            tooltipFn: makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true),
+            description: ifNotDefined(nextSpec.description, `${nextSpec.label} data from ${nextSpec.molecularProfileId}`),
+            tooltipFn: nextSpec.tooltip || makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true),
             track_info: nextSpec.info || "",
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
             expansion_of: (
@@ -986,6 +1063,9 @@ export function transitionHeatmapTrack(
         if (nextSpec.info !== prevSpec.info && nextSpec.info !== undefined) {
             oncoprint.setTrackInfo(trackId, nextSpec.info);
         }
+        if (nextSpec.movable !== prevSpec.movable && nextSpec.movable !== undefined) {
+            oncoprint.setTrackMovable(trackId, nextSpec.movable);
+        }
         // treatment profile tracks always are associated with the last added added track id
         if (nextSpec.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY
              && trackIdForRuleSetSharing.treatment![nextSpec.molecularProfileId] !== undefined) {
@@ -993,6 +1073,6 @@ export function transitionHeatmapTrack(
                  oncoprint.shareRuleSet(rulesetTrackId!, trackId);
         }
         // set tooltip, its cheap
-        oncoprint.setTrackTooltipFn(trackId, makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true));
+        oncoprint.setTrackTooltipFn(trackId, nextSpec.tooltip || makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true));
     }
 }

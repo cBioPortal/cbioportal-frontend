@@ -548,7 +548,7 @@ export default class OncoprintControls extends React.Component<
             label: d.id,
         }));
     }
-    
+
     @computed get filteredTreatmentOptions() {
         if (this.treatmentFilter && this.props.treatmentSelectOptions) {
             const regex = new RegExp(this.treatmentFilter, 'i');
@@ -1234,13 +1234,19 @@ export default class OncoprintControls extends React.Component<
     private getHorzZoomControls() {
         return (
             <div className="btn btn-default oncoprint__zoom-controls">
-                <DefaultTooltip overlay={<span>Zoom out of oncoprint.</span>}>
-                    <div onClick={this.onZoomOutClick}>
+                <DefaultTooltip
+                    overlay={<span>Zoom out of oncoprint.</span>}
+                    placement="top"
+                >
+                    <div
+                        onClick={this.onZoomOutClick}
+                    >
                         <i className="fa fa-search-minus"></i>
                     </div>
                 </DefaultTooltip>
                 <DefaultTooltip
                     overlay={<span>Zoom in/out of oncoprint.</span>}
+                    placement="top"
                 >
                     <div style={{ width: '90px' }}>
                         <Slider
@@ -1275,9 +1281,14 @@ export default class OncoprintControls extends React.Component<
                 />
                 <div>%</div>
 
-                <DefaultTooltip overlay={<span>Zoom in to oncoprint.</span>}>
-                    <div onClick={this.onZoomInClick}>
-                        <i className="fa fa-search-plus"></i>
+                <DefaultTooltip
+                    overlay={<span>Zoom in to oncoprint.</span>}
+                    placement="top"
+                >
+                    <div
+                        onClick={this.onZoomInClick}
+                    >
+                          <i className="fa fa-search-plus"></i>
                     </div>
                 </DefaultTooltip>
             </div>

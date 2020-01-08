@@ -5,19 +5,22 @@ import Spinner from "react-spinkit";
 import {Portal} from 'react-portal';
 import classNames from 'classnames';
 import styles from './styles.module.scss';
+import {computed} from "mobx";
+import {observer} from "mobx-react";
 
 export interface ILoader {
     isLoading: boolean;
     style?: any;
-    small?: boolean;
-    big?: boolean;
     inline?: boolean;
     center?: boolean;
     centerRelativeToContainer?:boolean;
     size?: "big" | "small"
+    small?:boolean;
+    big?:boolean;
     className?:string;
 }
 
+@observer
 export default class LoadingIndicator extends React.Component<ILoader, {}> {
 
     public static defaultProps = {
@@ -26,11 +29,23 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
         size: "small"
     };
 
+    @computed get size() {
+        if (this.props.size) {
+            return this.props.size;
+        } else if (this.props.big) {
+            return "big";
+        } else if (this.props.small) {
+            return "small";
+        } else {
+            return undefined;
+        }
+    }
+
     public render() {
 
         const spinnerStyles = {
-            [styles.small]: this.props.size === "small",
-            [styles.big]: this.props.size === "big",
+            [styles.small]: this.size === "small",
+            [styles.big]: this.size === "big",
             inlineBlock: this.props.inline
         }
 

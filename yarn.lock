@@ -15699,10 +15699,10 @@ oncokb-styles@~0.1.2:
   resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-0.1.2.tgz#8b26c0a0829787cdc1b595d3a021b3266607102b"
   integrity sha512-tuy5s3qFxgf1ogMATQSRPNgLlAMrvOOTCAN1dm/wJ+VZoStbJ7g36/qHwc99UPfh3vrB05broLodF+k58p5tUw==
 
-oncoprintjs@4.0.8:
-  version "4.0.8"
-  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-4.0.8.tgz#03d586ea45c415805d952ddeb6fc5399a9e4737b"
-  integrity sha512-wSl9je+fEgitLRydOKae1gftKCB0XRv5oqbNYE9+Y1inLYj7RUVqDKTBS+HaYaAFD+vmEVoTPTtboRpiE5obQw==
+oncoprintjs@4.0.9:
+  version "4.0.9"
+  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-4.0.9.tgz#d4b7bb673e50c571a435a4a27e82247dfd2d0249"
+  integrity sha512-T6VutMr3g+hx8e6E/873CrnuWS3s+3rfSqfU0sjgboV3N6hajU3WX/PMe3WNFBCSRHYLIi1SQV9bWcwdouZNkw==
   dependencies:
     gl-matrix "2.3.2"
     jquery "^3.0.0"
