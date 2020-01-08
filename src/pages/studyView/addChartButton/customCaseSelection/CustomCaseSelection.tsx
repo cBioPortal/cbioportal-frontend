@@ -22,7 +22,7 @@ import {ClinicalDataType, ClinicalDataTypeEnum} from "../../StudyViewUtils";
 export interface ICustomCaseSelectionProps {
     allSamples: Sample[];
     selectedSamples: Sample[];
-    submitButtonText: string;
+    submitButtonText?: string;
     onSubmit: (chart: CustomChart) => void;
     queriedStudies: string[];
     disableGrouping?: boolean;
@@ -50,6 +50,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @observable validContent: string = '';
 
     public static defaultProps = {
+        submitButtonText: "Submit",
         disableGrouping: false
     };
 
@@ -152,6 +153,14 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
             and<br/>2) group_name of your choice<br/>group_name is optional if there is only one group.</span>;
     }
 
+    @computed
+    get submitButtonText() {
+        if(this.props.disableGrouping) {
+            return `Filter to listed ${this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? "samples" : "patients"}`
+        }
+        return this.props.submitButtonText;
+    }
+
     public mainContent() {
         return (
             <div className={styles.body}>
@@ -180,7 +189,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                                 this.onClick(SelectMode.SELECTED);
                             }}>
                             <i className='fa fa-arrow-down' style={{marginRight: 5}}></i>
-                            <span className={styles.selectionText}>all selected</span>
+                            <span className={styles.selectionText}>currently selected</span>
                         </span>
                         <span
                             className={styles.selection}
@@ -188,7 +197,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                                 this.onClick(SelectMode.UNSELECTED);
                             }}>
                             <i className='fa fa-arrow-down' style={{marginRight: 5}}></i>
-                            <span className={styles.selectionText}>all unselected</span>
+                            <span className={styles.selectionText}>currently unselected</span>
                         </span>
 
                         <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
@@ -219,6 +228,16 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                     data-test='CustomCaseSetInput'
                 />
 
+                {this.props.disableGrouping &&
+                    <div className="alert alert-warning" style={{ marginTop: "15px", marginBottom: "5px" }}>
+                        <i
+                            className="fa fa-warning"
+                            style={{ marginRight: 3 }}
+                        />
+                        Submitting will clear current filters.
+                    </div>
+                }
+
                 <div className={styles.operations}>
                     {!this.props.disableGrouping && (
                         <input placeholder={"Chart name (optional)"}
@@ -233,7 +252,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                         data-test='CustomCaseSetSubmitButton'
                         data-event={serializeEvent({ category:'studyPage', action:'customCaseSetSelection', label:this.props.queriedStudies.join(",")})}
                         onClick={this.onAddChart}>
-                        {this.props.submitButtonText}
+                        {this.submitButtonText}
                     </button>
                 </div>
                 {
