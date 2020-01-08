@@ -22,6 +22,8 @@ import autobind from "autobind-decorator";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
 import WindowStore from "../../../../shared/components/window/WindowStore";
 import {getGeneticTrackKey} from "./OncoprinterGeneticUtils";
+import SuccessBanner from "../../../studyView/infoBanner/SuccessBanner";
+import InfoBanner from "../../../../shared/components/banners/InfoBanner";
 
 interface IOncoprinterProps {
     divId: string;
@@ -32,6 +34,7 @@ interface IOncoprinterProps {
 export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> {
 
     @observable distinguishMutationType:boolean = true;
+    @observable distinguishGermlineMutations = true;
     @observable sortByMutationType:boolean = true;
     @observable sortByDrivers:boolean = true;
 
@@ -82,6 +85,9 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             get distinguishMutationType() {
                 return self.distinguishMutationType;
             },
+            get distinguishGermlineMutations() {
+                return self.distinguishGermlineMutations;
+            },
             get distinguishDrivers() {
                 return self.distinguishDrivers;
             },
@@ -99,6 +105,9 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             },
             get hidePutativePassengers() {
                 return self.props.store.driverAnnotationSettings.excludeVUS;
+            },
+            get hideGermlineMutations() {
+                return self.props.store.hideGermlineMutations;
             },
             get annotateCBioPortalInputValue() {
                 return self.props.store.driverAnnotationSettings.cbioportalCountThreshold + "";
@@ -119,6 +128,16 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             get annotateDriversHotspotsDisabled() {
                 return !AppConfig.serverConfig.show_hotspot;
             },
+            get annotateCustomDriverBinary() {
+                return self.props.store.driverAnnotationSettings.customBinary;
+            },
+            get customDriverAnnotationBinaryMenuLabel() {
+                if (self.props.store.existCustomDrivers) {
+                    return "User-specified drivers";
+                } else {
+                    return undefined;
+                }
+            }
         });
     }
 
@@ -148,16 +167,20 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show;},
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
+            onSelectDistinguishGermlineMutations:(s:boolean)=>{this.distinguishGermlineMutations = s;},
             onSelectDistinguishDrivers:action((s:boolean)=>{
                 if (!s) {
                     this.props.store.driverAnnotationSettings.oncoKb = false;
                     this.props.store.driverAnnotationSettings.cbioportalCount = false;
+                    this.props.store.driverAnnotationSettings.customBinary = false;
                     this.props.store.driverAnnotationSettings.excludeVUS = false;
                 } else {
-                    if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
+                    if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError) {
                         this.props.store.driverAnnotationSettings.oncoKb = true;
+                    }
 
                     this.props.store.driverAnnotationSettings.cbioportalCount = true;
+                    this.props.store.driverAnnotationSettings.customBinary = true;
                 }
             }),
             onSelectAnnotateOncoKb:action((s:boolean)=>{
@@ -173,8 +196,14 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                 this.props.store.driverAnnotationSettings.cbioportalCountThreshold = parseInt(s, 10);
                 this.controlsHandlers.onSelectAnnotateCBioPortal && this.controlsHandlers.onSelectAnnotateCBioPortal(true);
             }),
+            onSelectCustomDriverAnnotationBinary:action((s:boolean)=>{
+                this.props.store.driverAnnotationSettings.customBinary = s;
+            }),
             onSelectHidePutativePassengers:(s:boolean)=>{
                 this.props.store.driverAnnotationSettings.excludeVUS = s;
+            },
+            onSelectHideGermlineMutations:(s:boolean)=>{
+                this.props.store.hideGermlineMutations = s;
             },
             onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
             onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
@@ -327,6 +356,18 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                      onMouseEnter={this.onMouseEnter}
                      onMouseLeave={this.onMouseLeave}
                 >
+                    { this.props.store.existCustomDrivers && !this.props.store.customDriverWarningHidden &&
+                        this.props.store.driverAnnotationSettings.customBinary && (
+                            <InfoBanner
+                                message={
+                                    `Driver annotations reflect only user-provided data. Use the Mutations menu to modify annotation settings.`
+                                }
+                                style={{marginBottom:10}}
+                                hidden={this.props.store.customDriverWarningHidden}
+                                hide={()=>{ this.props.store.customDriverWarningHidden = true; }}
+                            />
+                        )
+                    }
                     <Observer>
                         {this.getControls}
                     </Observer>
@@ -353,6 +394,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
 
                                 horzZoomToFitIds={this.props.store.alteredSampleIds.result}
                                 distinguishMutationType={this.distinguishMutationType}
+                                distinguishGermlineMutations={this.distinguishGermlineMutations}
                                 distinguishDrivers={this.distinguishDrivers}
                                 sortConfig={this.sortConfig}
                                 showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
