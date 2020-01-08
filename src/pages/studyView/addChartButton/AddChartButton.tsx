@@ -21,7 +21,7 @@ import {
 } from "../StudyViewUtils";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import {ChartTypeEnum, ChartTypeNameEnum} from "../StudyViewConfig";
-import InfoBanner from "../infoBanner/InfoBanner";
+import SuccessBanner from "../infoBanner/SuccessBanner";
 import {GAEvent, serializeEvent, trackEvent} from "../../../shared/lib/tracking";
 import classNames from "classnames";
 
@@ -286,7 +286,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     </button>
                 )
             }
-            {this.infoMessage && <InfoBanner message={this.infoMessage}/>}
+            {this.infoMessage && <SuccessBanner message={this.infoMessage}/>}
         </div>
     }
 }
