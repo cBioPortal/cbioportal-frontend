@@ -277,24 +277,22 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     @computed get modalSelectedGenePanel() {
         return this.patientViewPageStore.genePanelIdToPanel.result[this.genePanelModal.genePanelId];
     }
-    readonly sampleManagerPromise = remoteData({
-        await:()=>[
-            this.patientViewPageStore.patientViewData,
-            this.patientViewPageStore.clinicalEvents
-        ],
-        invoke:()=>{
+    @computed get sampleManager() {
+        if (this.patientViewPageStore.patientViewData.isComplete && this.patientViewPageStore.studyMetaData.isComplete) {
             const patientData = this.patientViewPageStore.patientViewData.result;
-            if (this.patientViewPageStore.clinicalEvents.result!.length > 0) {
-                return Promise.resolve(new SampleManager(patientData.samples!, this.patientViewPageStore.clinicalEvents.result));
+
+            if (this.patientViewPageStore.clinicalEvents.isComplete && this.patientViewPageStore.clinicalEvents.result!.length > 0) {
+                return new SampleManager(patientData.samples!, this.patientViewPageStore.clinicalEvents.result);
             } else {
-                return Promise.resolve(new SampleManager(patientData.samples!));
+                return new SampleManager(patientData.samples!);
             }
-        },
-        default: null
-    });
+        } else {
+            return null;
+        }
+    }
 
     public render() {
-        const sampleManager = this.sampleManagerPromise.result!;
+        const sampleManager = this.sampleManager;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
         let cohortNav: JSX.Element | null = null;
         let studyName: JSX.Element | null = null;
