@@ -26,6 +26,22 @@ describe("oncoprinter screenshot tests", function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
+    it("oncoprinter example data, annotated by oncokb", function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
+        browser.waitForExist(".oncoprinterGeneticExampleData");
+        browser.click(".oncoprinterGeneticExampleData");
+        browser.click(".oncoprinterSubmit");
+        waitForOncoprint(TIMEOUT);
+
+        setOncoprintMutationsMenuOpen(true);
+        browser.click('input[data-test="annotateOncoKb"]');
+        browser.waitUntil(()=>{
+            return browser.getText('.oncoprint-legend-div').indexOf("Inframe Mutation (putative driver)") > -1;
+        });
+
+        var res = checkOncoprintElement();
+        assertScreenShotMatch(res);
+    });
     it("oncoprinter clinical example data", function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         browser.waitForExist(".oncoprinterClinicalExampleData");
