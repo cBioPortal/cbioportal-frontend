@@ -15,7 +15,7 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {EllipsisTextTooltip} from "cbioportal-frontend-commons";
 import {Omit} from "../../../../shared/lib/TypeScriptUtils";
-import ifndef from "../../../../shared/lib/ifndef";
+import ifNotDefined from "../../../../shared/lib/ifNotDefined";
 
 export type AddChartOption = Omit<ChartOption, "chartType">;
 export interface IAddChartByTypeProps {
@@ -96,7 +96,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
         defaultSortDirection: 'asc' as 'asc'
     }, {
         name: 'Freq',
-        tooltip: <span>{ifndef(this.props.frequencyHeaderTooltip, "% samples with data")}</span>,
+        tooltip: <span>{ifNotDefined(this.props.frequencyHeaderTooltip, "% samples with data")}</span>,
         render: (option: AddChartOption) =>
             <span style={{display: 'flex', flexDirection: 'row-reverse'}}
                   className={classnames(option.disabled ? styles.labelDisabled : '')}>

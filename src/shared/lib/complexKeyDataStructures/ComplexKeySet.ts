@@ -23,8 +23,12 @@ export default class ComplexKeySet {
         this.map.set(key, false);
     }
 
-    public has(key:ComplexKey) {
-        return !!this.map.get(key);
+    public has(key:ComplexKey, keyMembers?:string[]) {
+        return !!this.map.get(key, keyMembers);
+    }
+
+    public isEmpty() {
+        return this.keys().length === 0;
     }
 
     public clear() {

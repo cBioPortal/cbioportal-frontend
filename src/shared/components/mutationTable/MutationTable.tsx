@@ -23,7 +23,7 @@ import MutationStatusColumnFormatter from "./column/MutationStatusColumnFormatte
 import ValidationStatusColumnFormatter from "./column/ValidationStatusColumnFormatter";
 import StudyColumnFormatter from "./column/StudyColumnFormatter";
 import {ICosmicData} from "shared/model/Cosmic";
-import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
+import AnnotationColumnFormatter, {IAnnotation} from "./column/AnnotationColumnFormatter";
 import ExonColumnFormatter from "./column/ExonColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {IHotspotDataWrapper} from "shared/model/CancerHotspots";
@@ -45,11 +45,13 @@ import classnames from 'classnames';
 import {IPaginationControlsProps} from "../paginationControls/PaginationControls";
 import {IColumnVisibilityControlsProps} from "../columnVisibilityControls/ColumnVisibilityControls";
 import MobxPromise from "mobxpromise";
-import { CancerGene, VariantAnnotation } from "cbioportal-frontend-commons";
+import { CancerGene, VariantAnnotation, Query } from "cbioportal-frontend-commons";
 import HgvscColumnFormatter from "./column/HgvscColumnFormatter";
 import GnomadColumnFormatter from "./column/GnomadColumnFormatter";
 import ClinVarColumnFormatter from "./column/ClinVarColumnFormatter";
+import autobind from "autobind-decorator";
 import DbsnpColumnFormatter from "./column/DbsnpColumnFormatter";
+import {getEvidenceQuery} from "../../lib/OncoKbUtils";
 
 
 export interface IMutationTableProps {
@@ -94,6 +96,9 @@ export interface IMutationTableProps {
     showCountHeader?:boolean;
     columnVisibility?: {[columnId: string]: boolean};
     columnVisibilityProps?: IColumnVisibilityControlsProps;
+    onRowClick?:(d:Mutation[])=>void;
+    onRowMouseEnter?:(d:Mutation[])=>void;
+    onRowMouseLeave?:(d:Mutation[])=>void;
 }
 
 export enum MutationTableColumnType {
@@ -129,6 +134,7 @@ export enum MutationTableColumnType {
     HGVSC,
     GNOMAD,
     CLINVAR,
+    SELECTED,
     DBSNP,
     GENE_PANEL
 }
@@ -169,6 +175,7 @@ export function defaultFilter(data:Mutation[], dataField:string, filterStringUpp
 @observer
 export default class MutationTable<P extends IMutationTableProps> extends React.Component<P, {}> {
     @observable protected _columns:{[columnEnum:number]:MutationTableColumn};
+    @observable.ref public table:LazyMobXTable<Mutation[]>|null = null;
 
     public static defaultProps = {
         initialItemsPerPage: 25,
@@ -189,6 +196,11 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         super(props);
         this._columns = {};
         this.generateColumns();
+    }
+
+    @autobind
+    private tableRef(t:LazyMobXTable<Mutation[]>|null) {
+        this.table = t;
     }
 
     protected generateColumns() {
@@ -480,6 +492,40 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 userEmailAddress: this.props.userEmailAddress,
                 studyIdToStudy: this.props.studyIdToStudy
             })),
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string)=>{
+                let ret = false;
+                switch (filterStringUpper) {
+                    case "HOTSPOT":
+                        const annotation:IAnnotation = AnnotationColumnFormatter.getData(
+                            d,
+                            this.props.oncoKbCancerGenes,
+                            this.props.hotspotData,
+                            this.props.myCancerGenomeData,
+                            this.props.oncoKbData,
+                            this.props.civicGenes,
+                            this.props.civicVariants,
+                            this.props.studyIdToStudy);
+
+                        ret = annotation.isHotspot;
+                        break;
+                    case "ONCOGENIC":
+                        if (this.props.oncoKbData &&
+                            this.props.oncoKbData.result &&
+                            !(this.props.oncoKbData.result instanceof Error) &&
+                            this.props.oncoKbData.result.indicatorMap) {
+
+                            const evidenceQuery = getEvidenceQuery(d[0], this.props.oncoKbData.result);
+                            if (evidenceQuery) {
+                                const indicator = this.props.oncoKbData.result.indicatorMap[evidenceQuery.id];
+                                if (indicator) {
+                                    ret = indicator.oncogenic.toLowerCase().trim().includes("oncogenic");
+                                }
+                            }
+                        }
+                        break;
+                }
+                return ret;
+            },
             download:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.download(d,
                     this.props.oncoKbCancerGenes,
@@ -573,8 +619,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             download: (d:Mutation[]) => DbsnpColumnFormatter.download(d, this.props.genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
             tooltip: (
                 <span style={{maxWidth:370, display:"block", textAlign:"left"}}>
-                    The Single Nucleotide Polymorphism Database (<a href="https://www.ncbi.nlm.nih.gov/snp/" target="_blank">dbSNP</a>) 
-                    is a free public archive for genetic variation within and across different species. 
+                    The Single Nucleotide Polymorphism Database (<a href="https://www.ncbi.nlm.nih.gov/snp/" target="_blank">dbSNP</a>)
+                    is a free public archive for genetic variation within and across different species.
                     <br />NOTE: Currently only SNPs, single base deletions and insertions are supported.
                 </span>
             ),
@@ -616,6 +662,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
     {
         return (
             <MutationTableComponent
+                ref={this.tableRef}
                 columns={this.columns}
                 data={this.props.data}
                 dataStore={this.props.dataStore}
@@ -629,6 +676,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 showCountHeader={this.props.showCountHeader}
                 columnVisibility={this.props.columnVisibility}
                 columnVisibilityProps={this.props.columnVisibilityProps}
+                onRowClick={this.props.onRowClick}
+                onRowMouseEnter={this.props.onRowMouseEnter}
+                onRowMouseLeave={this.props.onRowMouseLeave}
             />
         );
     }
