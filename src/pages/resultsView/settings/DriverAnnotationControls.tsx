@@ -8,6 +8,7 @@ import {
     DefaultTooltip,
     getNCBIlink
 } from "cbioportal-frontend-commons";
+import 'rc-tooltip/assets/bootstrap_white.css';
 
 
 export interface IDriverAnnotationControlsState {
