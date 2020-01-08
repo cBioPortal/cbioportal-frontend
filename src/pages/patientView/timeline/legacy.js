@@ -7,7 +7,9 @@ import clinicalTimelineExports from './timeline-lib';
 
 function addStroke() {
     $(".timelineSeries_0").attr("stroke","black");
+    $(".timelineSeries_0").attr("stroke-width","0.5px");
     $(".timelineSeries_1").attr("stroke","black");
+    $(".timelineSeries_1").attr("stroke-width","0.5px");
 };
 
 function plotCaseLabelsInTimeline(caseIds, clinicalDataMap, caseMetaData) {
