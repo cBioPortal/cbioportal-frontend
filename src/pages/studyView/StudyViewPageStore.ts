@@ -2235,6 +2235,7 @@ export class StudyViewPageStore {
     @autobind
     @action
     updateCustomSelect(newChart: CustomChart) {
+        this.clearAllFilters();
         const sampleIdentifiers = _.reduce(newChart.groups, (acc, next) => {
             acc.push(...next.sampleIdentifiers.map((customCase: CustomChartIdentifier) => {
                 return {
