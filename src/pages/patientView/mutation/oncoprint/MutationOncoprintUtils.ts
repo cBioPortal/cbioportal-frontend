@@ -23,11 +23,11 @@ export const MUTATION_ONCOPRINT_NA_SHAPES:ShapeParams[] = [
     }, {
         'type': 'line',
         'stroke': 'rgba(190,190,190,1)',
-        'stroke-width': '1',
-        'x1': '20%',
-        'x2': '80%',
-        'y1':'50%',
-        'y2':'50%',
+        'stroke-width': 1,
+        'x1': 20,
+        'x2': 80,
+        'y1':50,
+        'y2':50,
         'z':1000
     }
 ];
