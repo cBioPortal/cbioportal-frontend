@@ -3,7 +3,7 @@ import {observer, Observer} from "mobx-react";
 import {computed, observable, action} from "mobx";
 import {bind} from "bind-decorator";
 import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from "../../theme/cBioPoralTheme";
-import ifndef from "../../lib/ifndef";
+import ifNotDefined from "../../lib/ifNotDefined";
 import {BoxPlotModel, calculateBoxPlotModel} from "../../lib/boxPlotUtils";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import Timer = NodeJS.Timer;
@@ -516,12 +516,12 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
         return separateScatterDataByAppearance<D>(
             data,
-            ifndef(this.props.fill, "0x000000"),
-            ifndef(this.props.stroke, "0x000000"),
-            ifndef(this.props.strokeWidth, 0),
-            ifndef(this.props.strokeOpacity, 1),
-            ifndef(this.props.fillOpacity, 1),
-            ifndef(this.props.symbol, "circle"),
+            ifNotDefined(this.props.fill, "0x000000"),
+            ifNotDefined(this.props.stroke, "0x000000"),
+            ifNotDefined(this.props.strokeWidth, 0),
+            ifNotDefined(this.props.strokeOpacity, 1),
+            ifNotDefined(this.props.fillOpacity, 1),
+            ifNotDefined(this.props.symbol, "circle"),
             this.props.zIndexSortBy
         );
     }

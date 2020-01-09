@@ -11,7 +11,7 @@ if [[ "$CIRCLECI" ]]; then
 elif [[ "$NETLIFY" ]]; then
     PR_BRANCH=$BRANCH
     PR_NUMBER=$REVIEW_ID
-    if [[ "$PULL_REQUEST" ]]; then
+    if [[ "$PULL_REQUEST" = true ]]; then
         PR_URL="${REPOSITORY_URL}/pull/${PR_NUMBER}"
     fi
 fi
