@@ -31,15 +31,15 @@ export function ifndef<T>(x:T|undefined, val:T):T {
     return (typeof x === "undefined" ? val : x);
 }
 
-export function shallowExtend(target:any, source:any) {
-    const ret:any = {};
-    for (const key of Object.keys(target)) {
-        ret[key] = target[key] as any;
+export function shallowExtend<T extends Object, S extends Object>(target:T, source:S):T&S {
+    const ret:Partial<T&S> = {};
+    for (const key of Object.keys(target) as (keyof T&S)[]) {
+        ret[key] = target[key as keyof T] as any;
     }
-    for (const key of Object.keys(source)) {
-        ret[key] = source[key] as any;
+    for (const key of Object.keys(source) as (keyof T&S)[]) {
+        ret[key] = source[key as keyof S] as any;
     }
-    return ret;
+    return ret as T&S;
 }
 
 export function objectValues<T extends Object>(obj:T):(T[keyof T][]) {

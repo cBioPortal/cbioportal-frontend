@@ -24,6 +24,7 @@ import heatmapColors from "./heatmapcolors";
 import binarysearch from "./binarysearch";
 import {Omit, cloneShallow, ifndef, objectValues, shallowExtend} from "./utils";
 import {ActiveRules, ColumnProp, Datum, RuleSetId} from "./oncoprintmodel";
+import _ from "lodash";
 
 export type RuleSetParams = ILinearInterpRuleSetParams | ICategoricalRuleSetParams |
     IGradientRuleSetParams |
@@ -102,12 +103,18 @@ export interface IGeneticAlterationRuleSetParams extends IGeneralRuleSetParams {
     rule_params: GeneticAlterationRuleParams;
 }
 
+type GeneticAlterationSingleRuleParams = {
+    shapes: ShapeParams[];
+    legend_label: string;
+    exclude_from_legend?:boolean;
+    legend_order?:number;
+};
+
 export type GeneticAlterationRuleParams = {
-    [datumKey:string]:{
-        [commaSeparatedDatumValues:string]: {
-            shapes: ShapeParams[];
-            legend_label: string;
-            exclude_from_legend?:boolean;
+    always?:GeneticAlterationSingleRuleParams,
+    conditional:{
+        [datumKey:string]:{
+            [commaSeparatedDatumValues:string]: GeneticAlterationSingleRuleParams
         }
     }
 };
@@ -211,7 +218,7 @@ function makeUniqueColorGetter(init_used_colors:string[]) {
     };
 }
 
-function makeNAShapes(z:number) {
+function makeNAShapes(z:number):ShapeParams[] {
     return [
         {
             'type': 'rectangle',
@@ -220,11 +227,11 @@ function makeNAShapes(z:number) {
         }, {
             'type': 'line',
             'stroke': 'rgba(190,190,190,1)',
-            'stroke-width': '1',
-            'x1': '0%',
-            'x2': '100%',
-            'y1':'50%',
-            'y2':'50%',
+            'stroke-width': 1,
+            'x1': 0,
+            'x2': 100,
+            'y1':50,
+            'y2':50,
             'z':z
         }
     ];
@@ -876,13 +883,13 @@ class BarRuleSet extends LinearInterpRuleSet {
         let ret;
         switch (this.getValueRangeType()) {
             case LinearInterpRangeType.NON_POSITIVE:
-                ret = (function(t:number) { return "0%"; });
+                ret = (function(t:number) { return 0; });
                 break;
             case LinearInterpRangeType.NON_NEGATIVE:
-                ret = (function(t:number) { return (1 - t) * 100 + "%"; });
+                ret = (function(t:number) { return (1 - t) * 100; });
                 break;
             case LinearInterpRangeType.ALL:
-                ret = (function(t:number) { return Math.min(1-t, 1)*50 + "%"; });
+                ret = (function(t:number) { return Math.min(1-t, 1)*50; });
                 break;
         }
         return ret;
@@ -892,13 +899,13 @@ class BarRuleSet extends LinearInterpRuleSet {
         let ret;
         switch (this.getValueRangeType()) {
             case LinearInterpRangeType.NON_POSITIVE:
-                ret = (function(t:number) { return -t * 100 + "%"; });
+                ret = (function(t:number) { return -t * 100; });
                 break;
             case LinearInterpRangeType.NON_NEGATIVE:
-                ret = (function(t:number) { return t * 100 + "%"; });
+                ret = (function(t:number) { return t * 100; });
                 break;
             case LinearInterpRangeType.ALL:
-                ret = (function(t:number) { return Math.abs(t) * 50 + "%"; });
+                ret = (function(t:number) { return Math.abs(t) * 50; });
                 break;
         }
         return ret;
@@ -933,13 +940,13 @@ class StackedBarRuleSet extends ConditionRuleSet {
                     {shapes: [{
                             type: 'rectangle',
                             fill: fills[I],
-                            width: '100%',
+                            width: 100,
                             height: function(d) {
                                 var total = 0;
                                 for (var j=0; j<categories.length; j++) {
                                     total += parseFloat(d[value_key][categories[j]]);
                                 }
-                                return parseFloat(d[value_key][categories[I]])*100/total + '%';
+                                return parseFloat(d[value_key][categories[I]])*100/total;
                             },
                             y: function(d) {
                                 var total = 0;
@@ -951,7 +958,7 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                     }
                                     total += new_val;
                                 }
-                                return prev_vals_sum*100/total + '%';
+                                return prev_vals_sum*100/total;
                             }
                         }],
                         exclude_from_legend: false,
@@ -965,37 +972,7 @@ class StackedBarRuleSet extends ConditionRuleSet {
 class GeneticAlterationRuleSet extends LookupRuleSet {
     constructor(params:IGeneticAlterationRuleSetParams) {
         super(params);
-        (function addRules(self) {
-            const rule_params = params.rule_params;
-            for (const key in rule_params) {
-                if (rule_params.hasOwnProperty(key)) {
-                    const key_rule_params = rule_params[key];
-                    if (key === '*') {
-                        self.addRule(null, null, shallowExtend(rule_params['*'], {'legend_config': {'type': 'rule', 'target': {}}}));
-                    } else {
-                        for (const value in key_rule_params) {
-                            if (key_rule_params.hasOwnProperty(value)) {
-                                const equiv_values = value.split(",");
-                                const legend_rule_target:any = {};
-                                legend_rule_target[equiv_values[0]] = value;
-                                const rule_id = self.addRule(
-                                    key,
-                                    (equiv_values[0] === '*' ? null : equiv_values[0]),
-                                    shallowExtend(key_rule_params[value],
-                                        {
-                                            'legend_config': {'type': 'rule', 'target': legend_rule_target},
-                                            'legend_base_color': typeof self.legend_base_color === "undefined" ? "" : self.legend_base_color
-                                        })
-                                );
-                                for (let i = 1; i < equiv_values.length; i++) {
-                                    self.linkExistingRule(key, (equiv_values[i] === '*' ? null : equiv_values[i]), rule_id);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        })(this);
+        this.addRulesFromParams(params);
         this.addRule(NA_STRING, true, {
             shapes: params.na_shapes || makeNAShapes(params.na_z || 1),
             legend_label: params.na_legend_label || NA_LABEL,
@@ -1003,6 +980,40 @@ class GeneticAlterationRuleSet extends LookupRuleSet {
             legend_config: {'type': 'rule', 'target': {'na': true}},
             legend_order: Number.POSITIVE_INFINITY
         });
+    }
+
+    private addRulesFromParams(params:IGeneticAlterationRuleSetParams) {
+        const rule_params = params.rule_params;
+        _.forEach(rule_params.conditional, (datumValuesToRuleParams:GeneticAlterationRuleParams["conditional"]["datumKey"], datumKey:string)=>{
+            _.forEach(datumValuesToRuleParams, (ruleParams:GeneticAlterationSingleRuleParams, commaSeparatedDatumValues:string)=>{
+                const equiv_values = commaSeparatedDatumValues.split(",");
+                const legend_rule_target:any = {};
+                legend_rule_target[equiv_values[0]] = commaSeparatedDatumValues;
+                const rule_id = this.addRule(
+                    datumKey,
+                    (equiv_values[0] === '*' ? null : equiv_values[0]),
+                    shallowExtend(ruleParams,
+                        {
+                            shapes: ruleParams.shapes,
+                            legend_config: {'type': 'rule' as 'rule', 'target': legend_rule_target},
+                            legend_base_color: ifndef(this.legend_base_color, "")
+                        }
+                    )
+                );
+                for (let i = 1; i < equiv_values.length; i++) {
+                    this.linkExistingRule(datumKey, (equiv_values[i] === '*' ? null : equiv_values[i]), rule_id);
+                }
+            });
+        });
+
+        if (rule_params.always) {
+            this.addRule(null, null,
+                shallowExtend(rule_params.always, {
+                    shapes:rule_params.always.shapes,
+                    legend_config: {'type': 'rule' as 'rule', 'target': {}}
+                })
+            );
+        }
     }
 }
 
