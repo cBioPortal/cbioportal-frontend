@@ -29,7 +29,7 @@ import {SampleAlteredMap} from "../../../resultsView/ResultsViewPageStoreUtils";
 import { AlteredStatus } from "pages/resultsView/mutualExclusivity/MutualExclusivityUtil";
 import {getClinicalTracks, parseClinicalInput} from "./OncoprinterClinicalUtils";
 
-export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "excludeVUS" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
+export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "excludeVUS" | "customBinary" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
 
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 function genomeNexusKey(l:OncoprinterInputLineType3_Incomplete){
@@ -49,10 +49,21 @@ export default class OncoprinterStore {
 
     @observable.ref _inputSampleIdOrder:string | undefined = undefined;
     @observable.ref _geneOrder:string | undefined = undefined;
-    @observable driverAnnotationSettings:OncoprinterDriverAnnotationSettings = initDriverAnnotationSettings(this);
+    @observable driverAnnotationSettings:OncoprinterDriverAnnotationSettings;
     @observable.ref _geneticDataInput:string|undefined = undefined;
     @observable.ref _clinicalDataInput:string|undefined = undefined;
     @observable public showUnalteredColumns:boolean = true;
+    @observable hideGermlineMutations = false;
+    @observable customDriverWarningHidden:boolean;
+
+    constructor() {
+        this.initialize();
+    }
+
+    private initialize() {
+        this.driverAnnotationSettings = initDriverAnnotationSettings(this);
+        this.customDriverWarningHidden = false;
+    }
 
     @computed get didOncoKbFail() {
         return this.oncoKbData.peekStatus === "complete" && (this.oncoKbData.result instanceof Error);
@@ -129,6 +140,8 @@ export default class OncoprinterStore {
         this.setDataInput(geneticData, clinicalData);
         this.setGeneOrder(genes);
         this.setSampleIdOrder(samples);
+
+        this.initialize();
     }
 
     @computed get parsedGeneticInputLines() {
@@ -195,6 +208,11 @@ export default class OncoprinterStore {
         } else {
             return [];
         }
+    }
+
+    @computed get existCustomDrivers() {
+        return this.parsedGeneticInputLines.result &&
+            this.parsedGeneticInputLines.result.findIndex(x=>!!(isType2(x) && x.isCustomDriver)) > -1;
     }
 
     readonly hugoGeneSymbolToGene = remoteData({
@@ -352,6 +370,7 @@ export default class OncoprinterStore {
         const params:any = {};
         // always
         params.useHotspots = this.driverAnnotationSettings.hotspots;
+        params.useCustomBinary = this.driverAnnotationSettings.customBinary;
         promisesMap.oncoKbCna = this.oncoKbCnaData;
 
         if (this.driverAnnotationSettings.driversAnnotated) {
@@ -375,7 +394,7 @@ export default class OncoprinterStore {
         await:()=>[this.hugoGeneSymbolToGene],
         invoke: async()=>{
             if (this.parsedGeneticInputLines.result) {
-                return getSampleGeneticTrackData(this.parsedGeneticInputLines.result, this.hugoGeneSymbolToGene.result!)
+                return getSampleGeneticTrackData(this.parsedGeneticInputLines.result, this.hugoGeneSymbolToGene.result!, this.hideGermlineMutations)
             } else {
                 return {};
             }
