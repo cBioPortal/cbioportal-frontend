@@ -1,24 +1,17 @@
 # cbioportal-frontend
-[![Join the chat at https://gitter.im/cBioPortal/public-chat](https://badges.gitter.im/cBioPortal/public-chat.svg)](https://gitter.im/cBioPortal/public-chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-## Live demo
-Master: http://cbioportal-frontend.herokuapp.com/patient?studyId=prad_fhcrc&caseId=00-090
+This is the frontend code for cBioPortal using React, MobX and TypeScript. Read more about the architecture of cBioPortal [here](https://docs.cbioportal.org/2.1-deployment/architecture-overview).
 
-Rc: http://cbioportal-frontend-rc.herokuapp.com/patient?studyId=prad_fhcrc&caseId=00-090
+## Live demo
+Master: https://master--cbioportalfrontend.netlify.com/
+
+Rc: https://rc--cbioportalfrontend.netlify.com/
 
 ## Test status & Code Quality
 | Branch | master | rc |
 | --- | --- | --- |
 | Status | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/master.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/master) | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/rc.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/rc) |
 
-[![codecov](https://codecov.io/gh/cbioportal/cbioportal-frontend/branch/master/graph/badge.svg)](https://codecov.io/gh/cbioportal/cbioportal-frontend)
-
-[![Code Climate](https://codeclimate.com/github/cBioPortal/cbioportal-frontend/badges/gpa.svg)](https://codeclimate.com/github/cBioPortal/cbioportal-frontend)
-
-## Deployment
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
-This is the frontend code for cBioPortal using React, MobX and TypeScript. The
-frontend for the new patient view is now completely in this repo. The results view page is currently being replaced one tab at a time by mounting certain React components to the results page (JSP) in [the backend repo](https://github.com/cbioportal/cbioportal)
+## Run
 
 Make sure you have installed the node version specified in [package.json](https://github.com/cBioPortal/cbioportal-frontend/blob/master/package.json). You might want to use NVM to install the particular version.
 
@@ -272,11 +265,43 @@ Making e2e-tests follows the current procedure for the e2e-tests:
 
 ## Workspaces
 
-We are utilizing `yarn workspaces` to have multiple packages in a single repo (monorepo). The `cbioportal-frontend` is the main web application workspace, and is used to build and deploy the cBioPortal frontend webapp. Workspaces under `packages` directory are separate modules (npm packages) designed to be imported by `cbioportal-frontend` workspace as well as by external repositories. `config` and `typings` directories under the `packages` directory are not workspaces or packages though. They are intended to share common settings among all packages under the `pakcages` directory.
+We are utilizing `yarn workspaces` to maintain multiple packages in a single repo (monorepo). The monorepo approach is an
+ efficient way of working on libraries in the same project as the application that is their primary consumer. 
 
-In order to add a new workspace, one should create a new directory under `packages` and add a proper `package.json` file. (See `cbioportal-frontend-commons` workspace for an example configuration).
+The `cbioportal-frontend` is the main web application workspace. It is used to build and deploy the cBioPortal frontend webapp. 
+Workspaces under `packages` directory are separate modules (npm packages) designed to be imported by `cbioportal-frontend` workspace as well as by external projects.
+ __Please note:__ `config` and `typings` directories under the `packages` directory are NOT workspaces or packages. They are intended to share common settings among all packages under the `packages` directory.
 
-Suggested way to add a new dependency to an existing workspace is to run `yarn workspace <workspace name> add <package name>` instead of just `yarn add <package name>`. For example, run `yarn workspace cbioportal-frontend add lodash` instead of `yarn add lodash`. Similarly to remove a package run `yarn workspace <workspace name> remove <package name>`.
+### Adding a new workspace
+
+To add a new workspace, create a new directory under `packages` and add a `package.json` file. (See `cbioportal-frontend-commons` workspace for example configuration).
+
+The recommended way to add a new dependency to an existing workspace is to run `yarn workspace <workspace name> add <package name>` instead of just `yarn add <package name>`. For example, run `yarn workspace cbioportal-frontend add lodash` instead of `yarn add lodash`. 
+Similarly, to remove a package, run `yarn workspace <workspace name> remove <package name>`.
+
+### Tips for dependency management
+
+Please abide by the following rules for importing dependencies in a monorepo:   
+
+1. If you are working on `cbioportal-frontend` repository, import modules from packages using the package's alias:
+
+```
+// CORRECT, uses alias:
+import {something} from 'cbioportal-frontend-commons'
+
+// INCORRECT, uses relative paths:
+`import {something} from ../../packages/cbioportal-frontend-commons/src/lib/someLib`
+```
+
+2. When working on a package, never import custom code from outside that package unless you really intend for that package to be a dependency.  For example, commons packages should not import from the main cbioportal project.  
+
+3. Avoid circular dependencies at all costs. For example, while it is okay to import a module from `cbioportal-frontend-commons` in `react-mutation-mapper`, there should not be any imports from `react-mutation-mapper` in `cbioportal-frontend-commons`. If you happen to need some component from from `react-mutation-mapper` in `cbioportal-frontend-commons`, consider moving that component into `cbioportal-frontend-commons` package.
+
+### Updating existing packages
+
+Remember that the packages are used by other projects and compatibility needs to be carefully managed. 
+
+Whenever you need to update code under packages, you should also consider updating the version number in the corresponding `package.json` as well as the dependencies of other packages depending on the package you updated. For example if you update the `cbioportal-frontend-commons` version from `0.1.1` to `0.1.2`, corresponding `cbioportal-frontend-commons` dependency in the `package.json` for `react-mutation-mapper` and `cbioportal-frontend` should also be updated to the new version.
 
 ## Components
 
@@ -289,5 +314,4 @@ Please make sure to not introduce any dependencies from `cbioportal-frontend` wo
  
 ### react-mutation-mapper
 
-Mutation Mapper component has been moved to a separate GitHub repository: [cBioPortal/react-mutation-mapper](https://github.com/cBioPortal/react-mutation-mapper).
-For more information about `react-mutation-mapper` development please see [react-mutation-mapper.md](docs/react-mutation-mapper.md).
+[react-mutation-mapper](https://www.npmjs.com/package/react-mutation-mapper/) is a separate public npm library that contains the Mutation Mapper and related components.

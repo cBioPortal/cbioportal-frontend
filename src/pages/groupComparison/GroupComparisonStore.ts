@@ -54,7 +54,7 @@ import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyM
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import {AppStore} from "../../AppStore";
 import {GACustomFieldsEnum, trackEvent} from "shared/lib/tracking";
-import ifndef from "../../shared/lib/ifndef";
+import ifNotDefined from "../../shared/lib/ifNotDefined";
 import {ISurvivalDescription} from "pages/resultsView/survival/SurvivalDescriptionTable";
 import GroupComparisonURLWrapper from "./GroupComparisonURLWrapper";
 import {CancerStudyQueryUrlParams} from "../../shared/components/query/QueryStore";
@@ -311,10 +311,10 @@ export default class GroupComparisonStore {
             let sorted:ComparisonGroup[];
             if (this.groupOrder) {
                 const order = stringListToIndexSet(this.groupOrder);
-                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifndef<number>(order[g.name], Number.POSITIVE_INFINITY));
+                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifNotDefined<number>(order[g.name], Number.POSITIVE_INFINITY));
             } else if (this._session.result!.groupNameOrder) {
                 const order = stringListToIndexSet(this._session.result!.groupNameOrder!);
-                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifndef<number>(order[g.name], Number.POSITIVE_INFINITY));
+                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g=>ifNotDefined<number>(order[g.name], Number.POSITIVE_INFINITY));
             } else {
                 sorted = defaultGroupOrder(this._unsortedOriginalGroups.result!);
             }

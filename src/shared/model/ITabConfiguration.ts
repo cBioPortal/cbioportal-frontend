@@ -10,6 +10,7 @@ export interface ICustomTabConfiguration {
     location: string,
     mountCallbackName: string,
     pathsToJs:string[],
+    pathsToCSS:string[],
     showWithMultipleStudies: boolean,
     customParameters: {[key:string]:any},
     unmountOnHide:boolean,

@@ -22,6 +22,10 @@ import MobxPromise from "mobxpromise";
 import {getOncoKbOncogenic} from "../../../resultsView/ResultsViewPageStoreUtils";
 import {mutationCountByPositionKey} from "../../../resultsView/mutationCountHelpers";
 import {getAlterationString} from "../../../../shared/lib/CopyNumberUtils";
+import {GERMLINE_REGEXP} from "../../../../shared/lib/MutationUtils";
+import {parseOQLQuery} from "../../../../shared/lib/oql/oqlfilter";
+import {Alteration, MUTCommand} from "../../../../shared/lib/oql/oql-parser";
+import {MUTATION_STATUS_GERMLINE, PUTATIVE_DRIVER} from "../../../../shared/constants";
 
 export type OncoprinterGeneticTrackDatum =
     Pick<GeneticTrackDatum, "trackLabel" | "study_id" | "uid" |
@@ -43,7 +47,9 @@ export type OncoprinterGeneticInputLineType1 = {
 export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 & {
     hugoGeneSymbol:string;
     alteration:OncoprintMutationType | "amp" | "homdel" | "gain" | "hetloss" | "mrnaHigh" | "mrnaLow" | "protHigh" | "protLow";
-    proteinChange?:string; // optional parameter: protein change
+    isGermline?:boolean;
+    isCustomDriver?:boolean;
+    proteinChange?:string;
 };
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 export type OncoprinterInputLineType3_Incomplete = OncoprinterInputLineType1 & {
@@ -76,18 +82,47 @@ export function isType3NoGene(inputLine:OncoprinterInputLine):inputLine is Oncop
 }*/
 
 export function initDriverAnnotationSettings(store:OncoprinterStore) {
+    let _oncoKb:boolean, _cbioportalCount:boolean, _customBinary:boolean;
+    if (store.existCustomDrivers) {
+        // if custom drivers, start with only custom drivers annotated
+        _oncoKb = false;
+        _cbioportalCount = false;
+        _customBinary = true;
+    } else {
+        _oncoKb = true;
+        _cbioportalCount = false;
+        _customBinary = false;
+    }
+
     return observable({
-        cbioportalCount: false,
         cbioportalCountThreshold: 0,
-        _oncoKb:true,
+        _oncoKb,
+        _cbioportalCount,
+        _customBinary,
         _excludeVUS: false,
         hotspots: false, // for now
 
+
+        get customBinary() {
+            return this._customBinary;
+        },
+        set customBinary(val:boolean) {
+            this._customBinary = val;
+            store.customDriverWarningHidden = true;
+        },
+        get cbioportalCount() {
+            return this._cbioportalCount;
+        },
+        set cbioportalCount(val:boolean) {
+            this._cbioportalCount = val;
+            store.customDriverWarningHidden = true;
+        },
         set oncoKb(val:boolean) {
             this._oncoKb = val;
+            store.customDriverWarningHidden = true;
         },
         get oncoKb() {
-            return AppConfig.serverConfig.show_oncokb && this._oncoKb && !store.didOncoKbFail;
+            return !!(AppConfig.serverConfig.show_oncokb && this._oncoKb && !store.didOncoKbFail);
         },
         set excludeVUS(val:boolean) {
             this._excludeVUS = val;
@@ -96,8 +131,11 @@ export function initDriverAnnotationSettings(store:OncoprinterStore) {
             return this._excludeVUS && this.driversAnnotated;
         },
         get driversAnnotated() {
-            const anySelected = this.oncoKb ||
-                this.cbioportalCount || this.hotspots;
+            const anySelected =
+                this.oncoKb ||
+                this.cbioportalCount ||
+                this.hotspots ||
+                (store.existCustomDrivers && this.customBinary);
 
             return anySelected;
         }
@@ -217,11 +255,8 @@ function makeGeneticTrackDatum_Data_Type3(oncoprinterInputLine:OncoprinterInputL
 export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:OncoprinterGeneticInputLineType2, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
     let ret:Partial<OncoprinterGeneticTrackDatum_Data> = {
         // we'll never set these values - theyre not needed for oncoprinter
-        driverFilter:"",
-        driverFilterAnnotation:"",
         driverTiersFilter:"",
         driverTiersFilterAnnotation:"",
-        mutationStatus: "", // used only for germline
 
         // we'll update these values later, not in this function
         oncoKbOncogenic: "",
@@ -231,6 +266,9 @@ export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:Oncoprinte
         // these are the same always or almost always
         hugoGeneSymbol:oncoprinterInputLine.hugoGeneSymbol,
         proteinChange:oncoprinterInputLine.proteinChange,
+        mutationStatus: oncoprinterInputLine.isGermline ? MUTATION_STATUS_GERMLINE : "",
+        driverFilter:oncoprinterInputLine.isCustomDriver ? PUTATIVE_DRIVER : "",
+        driverFilterAnnotation:oncoprinterInputLine.isCustomDriver ? "You indicated that this mutation is a driver." : "",
 
         // we'll update these later in this function
         molecularProfileAlterationType: undefined, // the profile type in AlterationTypeConstants
@@ -362,7 +400,8 @@ function getPercentAltered(data:OncoprinterGeneticTrackDatum[]) {
 
 export function getSampleGeneticTrackData(
     oncoprinterInput:OncoprinterGeneticInputLine[],
-    hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}
+    hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene},
+    excludeGermlineMutations:boolean
 ):{[hugoGeneSymbol:string]:{ sampleId:string, data:OncoprinterGeneticTrackDatum_Data[]}[]} {
     const geneToSampleIdToData:{[hugoGeneSymbol:string]:{[sampleId:string]:OncoprinterGeneticTrackDatum["data"]}} = {};
 
@@ -377,7 +416,10 @@ export function getSampleGeneticTrackData(
         if (!(inputLine.sampleId in sampleIdToData)) {
             sampleIdToData[inputLine.sampleId] = [];
         }
-        sampleIdToData[inputLine.sampleId].push(makeGeneticTrackDatum_Data(inputLine, hugoGeneSymbolToGene));
+        const newDatum = makeGeneticTrackDatum_Data(inputLine, hugoGeneSymbolToGene);
+        if (!excludeGermlineMutations || !GERMLINE_REGEXP.test(newDatum.mutationStatus)) {
+            sampleIdToData[inputLine.sampleId].push(newDatum);
+        }
     }
     // add missing samples
     for (const inputLine of oncoprinterInput) {
@@ -438,6 +480,7 @@ export function annotateGeneticTrackData(
     params:{
         cbioportalCountThreshold?:number;
         useHotspots:boolean;
+        useCustomBinary:boolean;
     },
     excludeVUS:boolean
 ) {
@@ -512,7 +555,12 @@ export function annotateGeneticTrackData(
                 }
                 if (d.molecularProfileAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
                     // tag mutations as putative driver, and filter them
-                    d.putativeDriver = !!(d.oncoKbOncogenic || (params.useHotspots && d.isHotspot) || getCBioAnnotation(d));
+                    d.putativeDriver = !!(
+                        d.oncoKbOncogenic ||
+                        (params.useHotspots && d.isHotspot) ||
+                        getCBioAnnotation(d) ||
+                        (params.useCustomBinary && d.driverFilter === "Putative_Driver")
+                    );
                     return (!excludeVUS || d.putativeDriver);
                 } else {
                     return true;
@@ -570,17 +618,46 @@ export function parseGeneticInput(input:string):{status:"complete", result:Oncop
                             throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "PROT"`);
                         }
                         break;
+                    case "fusion":
+                        if (lcType !== "fusion") {
+                            throw new Error(`${errorPrefix}Type "${type}" is not valid - it must be "FUSION" if Alteration is "FUSION"`);
+                        } else {
+                            ret.alteration = lcType as OncoprintMutationType;
+                            ret.proteinChange = alteration;
+                        }
+                        break;
                     default:
                         // everything else is a mutation
-                        if (["missense", "inframe", "fusion", "promoter", "trunc", "other"].indexOf(lcType) === -1) {
-                            if (lcAlteration === "fusion") {
-                                throw new Error(`${errorPrefix}Type "${type}" is not valid - it must be "FUSION" if Alteration is "FUSION"`);
-                            } else {
-                                throw new Error(`${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "PROMOTER", or "OTHER" for a mutation alteration.`);
+                        // use OQL parsing for handling mutation modifiers
+                        let parsedMutation:MUTCommand<any>;
+                        try {
+                            parsedMutation = (parseOQLQuery(`GENE: ${lcType}`)[0].alterations as Alteration[])[0] as MUTCommand<any>;
+                        } catch (e) {
+                            throw new Error(`${errorPrefix}Mutation type ${type} is not valid.`);
+                        }
+
+                        for (const modifier of parsedMutation.modifiers) {
+                            switch (modifier) {
+                                case "GERMLINE":
+                                    ret.isGermline = true;
+                                    break;
+                                case "DRIVER":
+                                    ret.isCustomDriver = true;
+                                    break;
+                                default:
+                                    throw new Error(`${errorPrefix}Only allowed mutation modifiers are GERMLINE and DRIVER`);
                             }
                         }
-                        ret.alteration = lcType as OncoprintMutationType;
+
+                        const lcMutationType = parsedMutation.constr_val!.toLowerCase();
+
+                        if (["missense", "inframe", "promoter", "trunc", "other"].indexOf(lcMutationType) === -1) {
+                            throw new Error(`${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "PROMOTER", or "OTHER" for a mutation alteration.`);
+                        }
+                        ret.alteration = lcMutationType as OncoprintMutationType;
                         ret.proteinChange = alteration;
+
+                        break;
                 }
                 return ret as OncoprinterGeneticInputLineType2;
             } else {
