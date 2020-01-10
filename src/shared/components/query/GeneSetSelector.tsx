@@ -117,7 +117,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
 
     render() {
         return (
-            <FlexRow padded overflow className={styles.GeneSetSelector}>
+            <FlexRow overflow padded className={styles.GeneSetSelector}>
                 <SectionHeader
                     className="sectionLabel"
                     secondaryComponent={
@@ -133,11 +133,6 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                             <i className={'fa fa-external-link'} />
                         </a>
                     }
-                    promises={[
-                        this.store.mutSigForSingleStudy,
-                        this.store.gisticForSingleStudy,
-                        this.store.genes,
-                    ]}
                 >
                     Enter Genes:
                 </SectionHeader>
