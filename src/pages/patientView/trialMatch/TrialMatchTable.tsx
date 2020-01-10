@@ -96,10 +96,12 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                                 <div>
                                     {armMatch.matches.map((clinicalGroupMatch: IClinicalGroupMatch, cgIndex:number) => (
                                         <div className={styles.criteriaContainer}>
-                                            <div className={styles.firstLeft}>
-                                                {clinicalGroupMatch.matches && this.getGenomicMatch(clinicalGroupMatch.matches)}
-                                                {clinicalGroupMatch.notMatches && this.getGenomicNotMatch(clinicalGroupMatch.notMatches)}
-                                            </div>
+                                            <If condition={clinicalGroupMatch.matches || clinicalGroupMatch.notMatches}>
+                                                <div className={styles.firstLeft}>
+                                                    {clinicalGroupMatch.matches && this.getGenomicMatch(clinicalGroupMatch.matches)}
+                                                    {clinicalGroupMatch.notMatches && this.getGenomicNotMatch(clinicalGroupMatch.notMatches)}
+                                                </div>
+                                            </If>
                                             {this.getClinicalMatch(clinicalGroupMatch)}
                                             <If condition={cgIndex < armMatch.matches.length - 1}><hr className={styles.criteriaHr}/></If>
                                         </div>
@@ -163,7 +165,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
 
     public getClinicalMatch(clinicalGroupMatch: IClinicalGroupMatch) {
         return (
-            <div className={styles.firstRight}>
+            <div className={styles.firstRight} style={(clinicalGroupMatch.matches || clinicalGroupMatch.notMatches) ? {} : {width: "100%"}}>
                 <span className={styles.secondLeft}>{getAgeRangeDisplay(clinicalGroupMatch.trialAgeNumerical)}</span>
                 <span className={styles.secondRight}>
                     {clinicalGroupMatch.trialOncotreePrimaryDiagnosis.positive.join(', ')}
