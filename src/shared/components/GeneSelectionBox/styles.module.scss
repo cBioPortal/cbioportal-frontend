@@ -1,8 +1,17 @@
+.validationBubbleBase {
+	margin: 0px 5px 3px 0;
+	padding: 2px 5px;
+	border-radius: $border-radius-base;
+}
+
+.minWidthContainer {
+	min-height:25px;
+}
+
 .genesSelection {
 	textarea.default {
 		width: 555px;
 		resize: vertical;
-		border-radius: 2px;
 	}
 	textarea.oncoprintHeatmap {
 		width: 100%;
@@ -10,17 +19,16 @@
 		border-radius: 2px;
 	}
 	textarea{
+		border-radius: $border-radius-base;
 		padding: 5px;
-		border: 1px solid #d3d3d3;
 		&.empty {
 		}
+		border-color: $borderColor;
 	}
 
 	textarea.studyView {
 		width: 200px;
-		//box-sizing: content-box;
 		height: 30px;
-		//color: darkgrey;
 		border-radius: $border-radius-base;
 		outline-offset: -2px;
 		font-size:12px;
@@ -39,13 +47,18 @@
 		cursor: default;
 		display: flex;
 		align-items: center;
-		padding-top: 5px;
+		padding-top: 1px;
 		flex-wrap:wrap;
 		&.nowrap {
 			white-space: nowrap;
 			flex-wrap:nowrap;
 			width:200px;
 		}
+
+		button {
+			line-height:1 !important;
+		}
+
 		span.icon {
 			text-align: center;
 			margin-right: 4px;
@@ -65,9 +78,7 @@
 			color: #fff;
 			display: flex;
 			align-items: center;
-			margin: 2px 2px 2px 0;
-			padding: 5px 10px;
-			border-radius: 2px;
+			@extend .validationBubbleBase;
 			span.icon {
 				color: #fff;
 				line-height: 17px;
@@ -87,8 +98,7 @@
 			cursor: pointer;
 			display: flex;
 			align-items: center;
-			margin: 2px;
-			padding: 5px 10px;
+			@extend .validationBubbleBase;
 			background-color: $lightGrey;
 			border-radius: 2px;
 			&:hover {

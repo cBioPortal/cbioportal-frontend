@@ -12,7 +12,7 @@ import {
 } from 'mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import { GeneReplacement, Focus } from 'shared/components/query/QueryStore';
+import {GeneReplacement, Focus, normalizeQuery} from 'shared/components/query/QueryStore';
 import {
     getEmptyGeneValidationResult,
     getFocusOutText,
@@ -22,6 +22,7 @@ import GeneSymbolValidator, {
     GeneValidationResult,
 } from './GeneSymbolValidator';
 import autobind from 'autobind-decorator';
+import bind from "bind-decorator";
 
 export interface IGeneSelectionBoxProps {
     focus?: Focus;
@@ -208,8 +209,7 @@ export default class OQLTextArea extends React.Component<
         oql: OQL
     ) {
         this.geneQueryIsValid = validQuery;
-        // no matter whether the query is valid, we need to sync queryToBeValidated with geneQuery
-        this.geneQuery = this.queryToBeValidated;
+
         if (this.props.callback) {
             this.props.callback(oql, validationResult, this.geneQuery);
         }
@@ -235,38 +235,65 @@ export default class OQLTextArea extends React.Component<
             : 'Click gene symbols below or enter here';
     }
 
+    @bind onChange(event:any){
+        this.currentTextAreaValue = event.currentTarget.value;
+        this.geneQuery = this.currentTextAreaValue;
+        this.updateQueryToBeValidateDebounce();
+    }
+
+    @bind onFocus(){
+        this.isFocused = true;
+    }
+
+    @bind onBlur(){
+        this.isFocused = false;
+    }
+
+    @bind replaceGene(oldSymbol: string, newSymbol: string) {
+        let updatedQuery = normalizeQuery(
+            this.getTextAreaValue()
+                .toUpperCase()
+                .replace(
+                    new RegExp(`\\b${oldSymbol.toUpperCase()}\\b`, 'g'),
+                    () => newSymbol.toUpperCase()
+                )
+        );
+        this.updateGeneQuery(updatedQuery);
+    }
+
     render() {
         return (
             <div className={styles.genesSelection}>
+
                 <textarea
-                    ref={this.textAreaRef}
-                    onFocus={() => (this.isFocused = true)}
-                    onBlur={() => (this.isFocused = false)}
-                    className={classnames(...this.textAreaClasses)}
+                    ref={this.textAreaRef as any}
+                    onFocus={this.onFocus}
+                    onBlur={this.onBlur}
+                    className={classnames(this.textAreaClasses)}
                     rows={5}
                     cols={80}
                     placeholder={this.promptText}
                     title={this.promptText}
                     defaultValue={this.getTextAreaValue()}
-                    onChange={event => {
-                        this.currentTextAreaValue = event.currentTarget.value;
-                        this.updateQueryToBeValidateDebounce();
-                    }}
+                    onChange={this.onChange}
                     data-test="geneSet"
                 />
 
+                <div className={classnames({ [styles.minWidthContainer]: (this.props.location === GeneBoxType.DEFAULT) })}>
                 <GeneSymbolValidator
                     focus={this.props.focus}
                     geneQuery={this.queryToBeValidated}
                     skipGeneValidation={this.skipGenesValidation}
                     updateGeneQuery={this.updateGeneQuery}
                     afterValidation={this.afterGeneSymbolValidation}
+                    replaceGene={this.replaceGene}
                     errorMessageOnly={
                         this.props.location === GeneBoxType.STUDY_VIEW_PAGE
                     }
                 >
                     {this.props.children}
                 </GeneSymbolValidator>
+                </div>
             </div>
         );
     }

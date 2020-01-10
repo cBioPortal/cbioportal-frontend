@@ -7,6 +7,7 @@ import { GeneReplacement } from 'shared/components/query/QueryStore';
 import ReactSelect from 'react-select1';
 import classNames from 'classnames';
 import * as _ from 'lodash';
+import {DropdownButton, MenuItem} from "react-bootstrap";
 
 export type GeneSymbolValidatorMessageProps = {
     errorMessageOnly?: boolean;
@@ -67,15 +68,21 @@ const RenderSuggestion = function(props: RenderSuggestionProps) {
         <div className={styles.suggestionBubble} title={title}>
             <FontAwesome className={styles.icon} name="question" />
             <span className={styles.multiChoiceLabel}>{props.alias}</span>
-            <span>{': '}</span>
-            <ReactSelect
-                placeholder="select a symbol"
-                options={options}
-                onChange={(option: any) =>
-                    option && props.replaceGene(props.alias, option.value)
+            <span>{':'}&nbsp;</span>
+            <DropdownButton
+                bsStyle={title.toLowerCase()}
+                bsSize="xsmall"
+                title="Select symbol"
+                id={`geneReplace_${props.alias}`}
+            >
+                {
+                    options.map((item, i)=>{
+                        return <MenuItem onClick={()=>{ props.replaceGene(props.alias, item.value)  }} eventKey={i+1}>{item.label}</MenuItem>
+                    })
                 }
-                autosize
-            />
+            </DropdownButton>
+
+
         </div>
     );
 };
@@ -131,14 +138,15 @@ const GeneSymbolValidatorMessageChild = (
                     <span>Invalid gene symbols.</span>
                 </div>
 
-                {props.genes.suggestions.map((suggestion, index) => (
+                {
+                    props.genes.suggestions.map((suggestion, index) =>
                     <RenderSuggestion
                         key={index}
                         genes={suggestion.genes}
                         alias={suggestion.alias}
                         replaceGene={props.replaceGene}
-                    />
-                ))}
+                    />)
+                }
             </div>
         );
     }
@@ -213,7 +221,7 @@ class GeneSymbolValidatorMessage extends React.Component<
 
         return (
             <div id="geneBoxValidationStatus">
-                <GeneSymbolValidatorMessageChild {...this.props} />
+                <GeneSymbolValidatorMessageChild replaceGene={this.props.replaceGene} {...this.props} />
             </div>
         );
     }
