@@ -4,7 +4,22 @@ import * as d3 from 'd3';
 
 import clinicalTimelineExports from './timeline-lib';
 
-function plotCaseLabelsInTimeline(caseIds, clinicalDataMap, caseMetaData) {
+
+// TODO: these are some styling hacks for genie. Need to figure out how to add
+// proper support for this in the library (or the future reactified library)
+function addMoreGenieTimelineStylingHacks() {
+    $("circle[id^='timelineItem_2']").attr("stroke","gray");
+    $("circle[id^='timelineItem_2']").attr("stroke-width","0.5px");
+    $("circle[id^='timelineItem_2']").attr("r","4.5");
+    $("circle[id^='timelineItem_3']").attr("stroke","gray");
+    $("circle[id^='timelineItem_3']").attr("stroke-width","0.5px");
+    $("circle[id^='timelineItem_3']").attr("r","4.5");
+    $("circle[id^='timelineItem_4']").attr("stroke","gray");
+    $("circle[id^='timelineItem_4']").attr("stroke-width","0.5px");
+    $("circle[id^='timelineItem_4']").attr("r","4.5");
+};
+
+function plotCaseLabelsInTimeline(timelineClasses, caseIds, clinicalDataMap, caseMetaData) {
 
 
     var fillColorAndLabelForCase = function (circle, caseId) {
@@ -13,6 +28,7 @@ function plotCaseLabelsInTimeline(caseIds, clinicalDataMap, caseMetaData) {
         circle.select("circle").attr("fill", color);
         circle.append("text")
             .attr("y", 4)
+            .attr("r",6)
             .attr("text-anchor", "middle")
             .attr("font-size", 10)
             .attr("fill", "white")
@@ -28,31 +44,33 @@ function plotCaseLabelsInTimeline(caseIds, clinicalDataMap, caseMetaData) {
         if (OtherSampleId) {
             compareAgainstIds = compareAgainstIds.concat(OtherSampleId);
         }
-        var circle = d3.selectAll(".timelineSeries_0").filter(function (x) {
-            if (x.tooltip_tables.length === 1) {
-                var specRefNum = x.tooltip_tables[0].filter(function (x) {
-                    return x[0] === "SpecimenReferenceNumber" || x[0] === "SPECIMEN_REFERENCE_NUMBER" || x[0] === "SAMPLE_ID";
-                })[0];
-                if (specRefNum) {
-                    return compareAgainstIds.indexOf(specRefNum[1]) !== -1;
+        timelineClasses.forEach(timelineRow => {
+            var circle = d3.selectAll(timelineRow).filter(function (x) {
+                if (x.tooltip_tables.length === 1) {
+                    var specRefNum = x.tooltip_tables[0].filter(function (x) {
+                        return x[0] === "SpecimenReferenceNumber" || x[0] === "SPECIMEN_REFERENCE_NUMBER" || x[0] === "SAMPLE_ID";
+                    })[0];
+                    if (specRefNum) {
+                        return compareAgainstIds.indexOf(specRefNum[1]) !== -1;
+                    }
                 }
+                return undefined;
+            });
+            if (circle[0][0]) {
+                var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                $(g).attr("transform", "translate(" + circle.attr("cx") + "," + circle.attr("cy") + ")");
+                $(circle[0]).removeAttr("cx");
+                $(circle[0]).removeAttr("cy");
+                $(circle[0]).removeAttr("style");
+                $(circle[0]).qtip('destroy');
+                $(circle[0]).unbind('mouseover mouseout');
+                $(circle[0]).wrap(g);
+                g = $(circle[0]).parent();
+                g.prop("__data__", $(circle[0]).prop("__data__"));
+                fillColorAndLabelForCase(d3.select(g.get(0)), caseId);
+                window.pvTimeline.addDataPointTooltip(g);
             }
-            return undefined;
         });
-        if (circle[0][0]) {
-            var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            $(g).attr("transform", "translate(" + circle.attr("cx") + "," + circle.attr("cy") + ")");
-            $(circle[0]).removeAttr("cx");
-            $(circle[0]).removeAttr("cy");
-            $(circle[0]).removeAttr("style");
-            $(circle[0]).qtip('destroy');
-            $(circle[0]).unbind('mouseover mouseout');
-            $(circle[0]).wrap(g);
-            g = $(circle[0]).parent();
-            g.prop("__data__", $(circle[0]).prop("__data__"));
-            fillColorAndLabelForCase(d3.select(g.get(0)), caseId);
-            window.pvTimeline.addDataPointTooltip(g);
-        }
     }
 }
 
@@ -62,6 +80,50 @@ export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, cas
 
     var timeData = clinicalTimelineExports.clinicalTimelineParser(data);
     if (timeData.length === 0) return;
+
+    // TODO: remove this, special dev configuration for genie_bpc* studies
+    var isGenieBpcStudy = window.location.href.includes("genie_bpc")
+    if (isGenieBpcStudy) {
+
+        // color based on state (need to rename Status to Med Onc Assessment)
+        var statusGenieData = _.find(timeData, (item) => item.label === 'Status' || item.label == "Med Onc Assessment");
+        if (statusGenieData) {
+            statusGenieData.label = "Med Onc Assessment";
+            statusGenieData.times.forEach(time => {
+                var state = _.find(time.tooltip_tables[0], row => row[0] === "STATUS")[1].toLowerCase();
+                if (state.includes("indeter")) {
+                    time["color"] = "white";
+                } else if (state.includes("stable")) {
+                    time["color"] = "gainsboro";
+                } else if (state.includes("mixed")) {
+                    time["color"] = "goldenrod";
+                } else if (state.includes("improving")) {
+                    time["color"] = "rgb(44, 160, 44)";
+                } else if (state.includes("worsening")) {
+                    time["color"] = "rgb(214, 39, 40)";
+                }
+            });
+        }
+        // same for imaging
+        var imagingGenieData = _.find(timeData, (item) => item.label === 'Imaging');
+        if (imagingGenieData) {
+            imagingGenieData.times.forEach(time => {
+                var imageOverall = _.find(time.tooltip_tables[0], row => row[0] === "IMAGE_OVERALL");
+                imageOverall = imageOverall? imageOverall[1].toLowerCase() : "indeterminate";
+                if (imageOverall.includes("indeter") || imageOverall.includes("does not mention")) {
+                    time["color"] = "white";
+                } else if (imageOverall.includes("stable")) {
+                    time["color"] = "gainsboro";
+                } else if (imageOverall.includes("mixed")) {
+                    time["color"] = "goldenrod";
+                } else if (imageOverall.includes("improving")) {
+                    time["color"] = "rgb(44, 160, 44)";
+                } else if (imageOverall.includes("worsening")) {
+                    time["color"] = "rgb(214, 39, 40)";
+                }
+            });
+        }
+    };
 
     // order specimens by svg label number
     var specimen = _.find(timeData, (item) => item.label === 'Specimen');
@@ -138,7 +200,7 @@ export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, cas
         .data(timeData)
         .divId("#timeline")
         .setTimepointsDisplay("Imaging", "square")
-        .orderTracks(["Specimen", "Surgery", "Status", "Diagnostics", "Diagnostic", "Imaging", "Lab_test", "Treatment"])
+        .orderTracks(["Specimen", "Surgery", "Med Onc Assessment", "Status", "Diagnostics", "Diagnostic", "Imaging", "Lab_test", "Treatment"])
         .splitByClinicalAttributes("Lab_test", "TEST")
     var splitData = window.pvTimeline.data();
     // Get TEST names that have a RESULT field in their clinical
@@ -164,15 +226,27 @@ export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, cas
             window.pvTimeline
                 .sizeByClinicalAttribute(test, "RESULT")
     })
-    window.pvTimeline =
-        window.pvTimeline
-            .splitByClinicalAttributes("Treatment", ["TREATMENT_TYPE","SUBTYPE", "AGENT"])
-            .splitByClinicalAttributes("Diagnosis", ["SUBTYPE"])
-            .collapseAll()
-            .toggleTrackCollapse("Specimen")
-            .enableTrackTooltips(false)
-            .plugins([{obj: new clinicalTimelineExports.trimClinicalTimeline("Trim Timeline"), enabled: true}])
-            .addPostTimelineHook(plotCaseLabelsInTimeline.bind(this, caseIds, clinicalDataMap, caseMetaData));
+    if (isGenieBpcStudy) {
+        window.pvTimeline =
+            window.pvTimeline
+                .orderTracks(["Sample acquisition", "Sequencing", "Surgery", "Med Onc Assessment", "Status", "Diagnostics", "Diagnostic", "Imaging", "Lab_test", "Treatment"])
+                .setTimepointsDisplay("Imaging", "circle")
+                .splitByClinicalAttributes("Treatment", ["TREATMENT_TYPE", "AGENT"])
+                .enableTrackTooltips(false)
+                .plugins([{ obj: new clinicalTimelineExports.trimClinicalTimeline("Trim Timeline"), enabled: true }])
+                .addPostTimelineHook(plotCaseLabelsInTimeline.bind(this, [".timelineSeries_0", ".timelineSeries_1"], caseIds, clinicalDataMap, caseMetaData))
+                .addPostTimelineHook(addMoreGenieTimelineStylingHacks.bind(this));
+    } else {
+        window.pvTimeline =
+            window.pvTimeline
+                .splitByClinicalAttributes("Treatment", ["TREATMENT_TYPE", "SUBTYPE", "AGENT"])
+                .splitByClinicalAttributes("Diagnosis", ["SUBTYPE"])
+                .collapseAll()
+                .toggleTrackCollapse("Specimen")
+                .enableTrackTooltips(false)
+                .plugins([{ obj: new clinicalTimelineExports.trimClinicalTimeline("Trim Timeline"), enabled: true }])
+                .addPostTimelineHook(plotCaseLabelsInTimeline.bind(this, [".timelineSeries_0"], caseIds, clinicalDataMap, caseMetaData));
+    }
     window.pvTimeline();
     $("#timeline-container").show();
 
