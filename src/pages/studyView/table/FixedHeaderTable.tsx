@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Column, LazyMobXTableStore, SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
+import {Column, LazyMobXTableStore, SortDirection, lazyMobXTableSort} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import {
     Column as RVColumn,
     SortDirection as RVSortDirection,
@@ -17,9 +17,11 @@ import {If} from 'react-if';
 import autobind from 'autobind-decorator';
 import {inputBoxChangeTimeoutEvent} from "../../../shared/lib/EventUtils";
 import {DefaultTooltip} from "cbioportal-frontend-commons";
+import { SimpleGetterLazyMobXTableApplicationDataStore } from "shared/lib/ILazyMobXTableApplicationDataStore";
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[],
+    fixedTopRowsData?: T[];
     data: T[];
     sortBy?: string;
     sortDirection?: SortDirection;
@@ -38,6 +40,7 @@ export type IFixedHeaderTableProps<T> = {
     removeAllDisabled?:boolean;
     showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
+    highlightedRowClassName?: (data: T) => string;
     autoFocusSearchAfterRendering?:boolean;
     afterSorting?: (sortBy: string, sortDirection: SortDirection) => void;
 };
@@ -46,6 +49,24 @@ const RVSDTtoStrType = {
     ['desc' as SortDirection]: RVSortDirection.DESC,
     ['asc' as SortDirection]: RVSortDirection.ASC
 };
+
+export class FixedHeaderTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<any> {
+
+    constructor(getData: () => any[], fixedTopRowsData: any[]) {
+        super(getData);
+        this.fixedTopRowsData = fixedTopRowsData;
+    }
+
+    private fixedTopRowsData: any[];
+
+    @computed get sortedData() {
+        // if not defined, use default values for sortMetric and sortAscending
+        const sortMetric = this.sortMetric || (() => 0);
+        const sortAscending = this.sortAscending !== undefined ? this.sortAscending : true;
+
+        return [...this.fixedTopRowsData, ...lazyMobXTableSort(this.allData, sortMetric, sortAscending)];
+    }
+}
 
 @observer
 export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTableProps<T>, {}> {
@@ -78,32 +99,51 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         this.initDataStore();
     }
 
-    componentWillReceiveProps(nextProps: any) {
+    componentWillReceiveProps(nextProps:  IFixedHeaderTableProps<T>) {
         this.updateDataStore(nextProps);
     }
 
-    updateDataStore(nextProps: any) {
+    updateDataStore(nextProps: IFixedHeaderTableProps<T>) {
+        const tableDataStore = new FixedHeaderTableDataStore(
+            () => {
+                return this.props.data;
+            },
+            this.props.fixedTopRowsData || []
+        );
         this._store.setProps({
             columns: nextProps.columns,
-            data: nextProps.data,
+            dataStore: tableDataStore,
             initialSortColumn: this._sortBy,
             initialSortDirection: this._sortDirection
         });
     }
 
     initDataStore() {
+        const tableDataStore = new FixedHeaderTableDataStore(
+            () => {
+                return this.props.data;
+            },
+            this.props.fixedTopRowsData || []
+        );
         this._store = new LazyMobXTableStore<T>({
             columns: this.props.columns,
-            data: this.props.data,
+            dataStore: tableDataStore,
             initialSortColumn: this._sortBy,
             initialSortDirection: this._sortDirection
         });
     }
 
     @autobind
-    rowClassName({index}: any) {
+    rowClassName({ index }: any) {
         if (index > -1 && this.isSelectedRow(this._store.dataStore.sortedFilteredData[index])) {
-            return classnames(styles.row, styles.highlightedRow);
+            const classNames: string[] = [styles.row]
+            if (this.props.highlightedRowClassName) {
+                const className = this.props.highlightedRowClassName(this._store.dataStore.sortedFilteredData[index]);
+                classNames.push(className);
+            } else {
+                classNames.push(styles.highlightedRow);
+            }
+            return classnames(classNames);
         } else if (index < 0) {
             return styles.headerRow;
         } else {

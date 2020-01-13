@@ -1412,7 +1412,7 @@ export class StudyViewPageStore {
     }
 
     public getGeneFiltersByUniqueKey(uniqueKey: string) {
-        return _.flatMapDeep(toJS(this._geneFilterSet.get(uniqueKey)) || []);
+        return toJS(this._geneFilterSet.get(uniqueKey)) || [];
     }
 
     public getClinicalDataFiltersByUniqueKey(uniqueKey: string) {
