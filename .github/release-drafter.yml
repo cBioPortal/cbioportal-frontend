@@ -44,7 +44,7 @@ categories:
       - 'chore'
       - 'dependencies'
   - title: ':shipit: Prototype'
-      labels:
+    labels:
       - 'cl-prototype'
 exclude-labels:
   - 'skip-changelog'      
